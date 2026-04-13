@@ -18,6 +18,8 @@
 #include <wx/frame.h>
 
 struct CListInfo {
+	bool m_bFileMode = false;
+	wxString m_strFilePath;
 	wxString m_strServer;
 	wxString m_strDatabase;
 	wxString m_strUser;
@@ -25,7 +27,7 @@ struct CListInfo {
 	wxString m_strPort;
 };
 
-class CFrameLauncher : public wxFrame {
+class ibFrameLauncher : public wxFrame {
 
 	wxListBox* m_listIBwnd;
 	wxStaticText* m_staticDBName;
@@ -43,8 +45,8 @@ public:
 	void LoadListIB();
 	void SaveListIB();
 
-	CFrameLauncher(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Launch OES"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(450, 375), long style = wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER);
-	virtual ~CFrameLauncher();
+	ibFrameLauncher(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Launch OES"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(520, 420), long style = wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER);
+	virtual ~ibFrameLauncher();
 
 	//events:
 protected:

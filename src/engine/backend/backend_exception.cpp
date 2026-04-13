@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Author		: Maxim Kornienko, 2Ñ-team
+//	Author		: Maxim Kornienko, 2ï¿½-team
 //	Description : translate error and exception handler 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -11,7 +11,7 @@
 
 #include "backend_mainFrame.h"
 
-wxString CBackendException::ms_strError;
+wxString ibBackendException::ms_strError;
 
 //////////////////////////////////////////////////////////////////////
 //					List of error messages							//
@@ -91,23 +91,23 @@ static bool gs_evalMode = false, gs_processBackendError = false;
 // Error handling
 //////////////////////////////////////////////////////////////////////
 
-CBackendException::CBackendException(const wxString& strErrorDescription)
+ibBackendException::ibBackendException(const wxString& strErrorDescription)
 	: m_strErrorDescription(strErrorDescription), m_errorHandled(false)
 {
 #ifdef DEBUG
 	wxLogDebug(strErrorDescription);
 #endif // !DEBUG
 
-	CProcUnit::Raise();
+	ibProcUnit::Raise();
 
 	ms_strError = strErrorDescription;
 }
 
 #include "backend/metaCollection/metaModuleObject.h"
 
-void CBackendException::ProcessError(const CBackendException* err, const CByteUnit& error)
+void ibBackendException::ProcessError(const ibBackendException* err, const ibByteUnit& error)
 {
-	const bool isEvalMode = CBackendException::IsEvalMode();
+	const bool isEvalMode = ibBackendException::IsEvalMode();
 
 	const wxString& strFileName = error.m_strFileName;
 	const wxString& strModuleName = error.m_strModuleName;
@@ -120,24 +120,24 @@ void CBackendException::ProcessError(const CBackendException* err, const CByteUn
 			wxString strModuleData;
 
 			if (!isEvalMode && strFileName.IsEmpty()) {
-				const CGuid& guidDocPath = error.m_strDocPath;
-				const IValueMetaObjectModule* foundedDoc = activeMetaData->FindAnyObjectByFilter<IValueMetaObjectModule>(guidDocPath, true);
+				const ibGuid& guidDocPath = error.m_strDocPath;
+				const ibValueMetaObjectModuleBase* foundedDoc = activeMetaData->FindAnyObjectByFilter<ibValueMetaObjectModuleBase>(guidDocPath, true);
 				wxASSERT(foundedDoc);
 				strModuleData = foundedDoc->GetModuleText();
 			}
 			else if (!isEvalMode && !strFileName.IsEmpty() && backend_mainFrame != nullptr) {
-				const IMetaData* metadata = backend_mainFrame->FindMetadataByPath(strFileName);
+				const ibMetaData* metadata = backend_mainFrame->FindMetadataByPath(strFileName);
 				wxASSERT(metadata);
-				const CGuid& guidDocPath = error.m_strDocPath;
-				const IValueMetaObjectModule* foundedDoc = metadata->FindAnyObjectByFilter<IValueMetaObjectModule>(guidDocPath, true);
+				const ibGuid& guidDocPath = error.m_strDocPath;
+				const ibValueMetaObjectModuleBase* foundedDoc = metadata->FindAnyObjectByFilter<ibValueMetaObjectModuleBase>(guidDocPath, true);
 				wxASSERT(foundedDoc);
 				strModuleData = foundedDoc->GetModuleText();
 			}
 
-			const wxString& strCodeError = isEvalMode ? wxEmptyString :
-				CBackendException::FindErrorCodeLine(strModuleData, error.m_numString);
+			const wxString strCodeError = isEvalMode ? wxString(wxEmptyString) :
+				ibBackendException::FindErrorCodeLine(strModuleData, error.m_numString);
 
-			CBackendException::ProcessExceptionError(strFileName,
+			ibBackendException::ProcessExceptionError(strFileName,
 				strModuleName, strDocPath,
 				error.m_numString, isEvalMode ? error.m_numLine : error.m_numLine + 1,
 				strCodeError, wxNOT_FOUND, err->GetErrorDescription()
@@ -145,7 +145,7 @@ void CBackendException::ProcessError(const CBackendException* err, const CByteUn
 		}
 		else {
 
-			CBackendException::ProcessExceptionError(strFileName,
+			ibBackendException::ProcessExceptionError(strFileName,
 				strModuleName, strDocPath,
 				error.m_numString, error.m_numLine + 1,
 				wxEmptyString, wxNOT_FOUND, err->GetErrorDescription()
@@ -159,28 +159,28 @@ void CBackendException::ProcessError(const CBackendException* err, const CByteUn
 	throw(err);
 }
 
-void CBackendException::ProcessError(const wxString& strFileName,
+void ibBackendException::ProcessError(const wxString& strFileName,
 	const wxString& strModuleName, const wxString& strDocPath,
 	const unsigned int currPos, const unsigned int currLine,
 	const wxString& strCodeError, const int codeError, const wxString& strErrorDesc)
 {
 	//throw this exception
-	CBackendCoreException::Error(
-		CBackendException::ProcessExceptionError(strFileName, strModuleName, strDocPath, currPos, currLine, strCodeError, codeError, strErrorDesc));
+	ibBackendCoreException::Error(
+		ibBackendException::ProcessExceptionError(strFileName, strModuleName, strDocPath, currPos, currLine, strCodeError, codeError, strErrorDesc));
 }
 
 ////////////////////////////////////////////////////////////////////
 
-wxString CBackendException::ProcessExceptionError(const wxString& strFileName,
+wxString ibBackendException::ProcessExceptionError(const wxString& strFileName,
 	const wxString& strModuleName, const wxString& strDocPath,
 	const unsigned int currPos, const unsigned int currLine,
 	const wxString& strCodeError, const int codeError, const wxString& strErrorDesc)
 {
 	wxString strErrorMessage;
 
-	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (gs_evalMode ? wxT(" ") : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
-	strErrorMessage += (codeError > 0 ? CBackendException::Format(codeError, strErrorDesc) : strErrorDesc) + wxT("\n");
-	strErrorMessage += (gs_evalMode ? wxEmptyString : strCodeError);
+	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (gs_evalMode ? wxString(wxT(" ")) : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
+	strErrorMessage += (codeError > 0 ? ibBackendException::Format(codeError, strErrorDesc) : strErrorDesc) + wxT("\n");
+	strErrorMessage += (gs_evalMode ? wxString(wxEmptyString) : strCodeError);
 
 	if (gs_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
 
@@ -189,10 +189,10 @@ wxString CBackendException::ProcessExceptionError(const wxString& strFileName,
 		// set stack 
 		wxString strStackMessage;
 
-		for (unsigned int i = 0; i < CProcUnit::GetCountRunContext(); i++) {
-			const CRunContext* stackContext = CProcUnit::GetRunContext(i);
+		for (unsigned int i = 0; i < ibProcUnit::GetCountRunContext(); i++) {
+			const ibRunContext* stackContext = ibProcUnit::GetRunContext(i);
 			wxASSERT(stackContext);
-			const CByteCode* stackByteCode = stackContext->GetByteCode();
+			const ibByteCode* stackByteCode = stackContext->GetByteCode();
 			wxASSERT(stackByteCode);
 			strStackMessage += wxString::Format(wxT("\n%i: %s (#line %d)"),
 				i + 1,
@@ -225,7 +225,7 @@ wxString CBackendException::ProcessExceptionError(const wxString& strFileName,
 
 ////////////////////////////////////////////////////////////////////
 
-const wxString& CBackendException::GetErrorDesc(int codeError)
+const wxString& ibBackendException::GetErrorDesc(int codeError)
 {
 	if (0 <= codeError && codeError < LastError)
 		return gs_listErrorString[codeError];
@@ -234,17 +234,17 @@ const wxString& CBackendException::GetErrorDesc(int codeError)
 
 ////////////////////////////////////////////////////////////////////
 
-bool CBackendException::IsErrorOutputProcessing()
+bool ibBackendException::IsErrorOutputProcessing()
 {
 	return gs_processBackendError;
 }
 
-void CBackendException::SetEvalMode(bool mode)
+void ibBackendException::SetEvalMode(bool mode)
 {
 	gs_evalMode = mode;
 }
 
-bool CBackendException::IsEvalMode()
+bool ibBackendException::IsEvalMode()
 {
 	return gs_evalMode;
 }
@@ -252,7 +252,7 @@ bool CBackendException::IsEvalMode()
 ////////////////////////////////////////////////////////////////////
 
 #if !wxUSE_UTF8_LOCALE_ONLY
-wxString CBackendException::DoFormatWchar(const wxChar* format, ...)
+wxString ibBackendException::DoFormatWchar(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -261,7 +261,7 @@ wxString CBackendException::DoFormatWchar(const wxChar* format, ...)
 #endif
 
 #if wxUSE_UNICODE_UTF8
-wxString CBackendException::DoFormatUtf8(const wxChar* format, ...)
+wxString ibBackendException::DoFormatUtf8(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -272,21 +272,21 @@ wxString CBackendException::DoFormatUtf8(const wxChar* format, ...)
 }
 #endif
 
-wxString CBackendException::FormatV(const wxString& format, va_list& list)
+wxString ibBackendException::FormatV(const wxString& format, va_list& list)
 {
 	wxString strErrorBuffer =
-		wxString::FormatV(_(format), list);
+		wxString::FormatV(wxGetTranslation(format), list);
 
 	va_end(list);
 
-	if (CBackendException::IsEvalMode())
+	if (ibBackendException::IsEvalMode())
 		strErrorBuffer.Replace(wxT('\n'), wxT(' '));
 
 	stringUtils::TrimAll(strErrorBuffer);
 	return strErrorBuffer;
 }
 
-wxString CBackendException::FindErrorCodeLine(const wxString& strBuffer, unsigned int currPos)
+wxString ibBackendException::FindErrorCodeLine(const wxString& strBuffer, unsigned int currPos)
 {
 	const unsigned int sizeText = strBuffer.length();
 
@@ -324,7 +324,7 @@ wxString CBackendException::FindErrorCodeLine(const wxString& strBuffer, unsigne
 //service error handling procedures
 
 #if !wxUSE_UTF8_LOCALE_ONLY
-void CBackendCoreException::DoErrorWchar(const wxChar* format, ...)
+void ibBackendCoreException::DoErrorWchar(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -332,12 +332,12 @@ void CBackendCoreException::DoErrorWchar(const wxChar* format, ...)
 	const wxString& strErrorBuffer =
 		FormatV(format, args);
 
-	throw(new CBackendCoreException(strErrorBuffer));
+	throw(new ibBackendCoreException(strErrorBuffer));
 }
 #endif
 
 #if wxUSE_UNICODE_UTF8
-void CBackendCoreException::DoErrorUtf8(const wxChar* format, ...)
+void ibBackendCoreException::DoErrorUtf8(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -345,14 +345,14 @@ void CBackendCoreException::DoErrorUtf8(const wxChar* format, ...)
 }
 #endif
 
-void CBackendInterruptException::Error()
+void ibBackendInterruptException::Error()
 {
-	throw(new CBackendInterruptException);
+	throw(new ibBackendInterruptException);
 }
 
-void CBackendAccessException::Error()
+void ibBackendAccessException::Error()
 {
-	throw(new CBackendAccessException);
+	throw(new ibBackendAccessException);
 }
 
 #pragma endregion

@@ -1,22 +1,22 @@
 #include "docViewDataReportFile.h"
 
 // ----------------------------------------------------------------------------
-// CTextEditView implementation
+// ibTextEditView implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CReportEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(ibReportEditView, ibMetaView);
 
-bool CReportEditView::OnCreate(CMetaDocument *doc, long flags)
+bool ibReportEditView::OnCreate(ibMetaDocument *doc, long flags)
 {
-	return CMetaView::OnCreate(doc, flags);
+	return ibMetaView::OnCreate(doc, flags);
 }
 
-void CReportEditView::OnDraw(wxDC *WXUNUSED(dc))
+void ibReportEditView::OnDraw(wxDC *WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-bool CReportEditView::OnClose(bool deleteWindow)
+bool ibReportEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
 
@@ -25,27 +25,27 @@ bool CReportEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	return CMetaView::OnClose(deleteWindow);
+	return ibMetaView::OnClose(deleteWindow);
 }
 
 // ----------------------------------------------------------------------------
 // ITextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CReportFileDocument, CMetaDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibReportFilibDocument, ibMetaDocument);
 
-bool CReportFileDocument::OnCreate(const wxString& path, long flags)
+bool ibReportFilibDocument::OnCreate(const wxString& path, long flags)
 {
-	/*if (!CMetaDocument::OnCreate(path, flags))
+	/*if (!ibMetaDocument::OnCreate(path, flags))
 		return false;*/
 
-	m_metaData = new CMetaDataReport();
+	m_metaData = new ibMetaDataReport();
 	return true;
 }
 
 #include "frontend/mainFrame/objinspect/objinspect.h"
 
-bool CReportFileDocument::OnCloseDocument()
+bool ibReportFilibDocument::OnCloseDocument()
 {
 	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
@@ -56,7 +56,7 @@ bool CReportFileDocument::OnCloseDocument()
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CReportFileDocument::DoOpenDocument(const wxString& filename)
+bool ibReportFilibDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_metaData->LoadFromFile(filename))
 		return false;
@@ -65,7 +65,7 @@ bool CReportFileDocument::DoOpenDocument(const wxString& filename)
 	return false;
 }
 
-bool CReportFileDocument::DoSaveDocument(const wxString& filename)
+bool ibReportFilibDocument::DoSaveDocument(const wxString& filename)
 {
 	/*if (!m_metaData->SaveToFile(filename))
 		return false;*/
@@ -73,12 +73,12 @@ bool CReportFileDocument::DoSaveDocument(const wxString& filename)
 	return true;
 }
 
-bool CReportFileDocument::IsModified() const
+bool ibReportFilibDocument::IsModified() const
 {
-	return CMetaDocument::IsModified();
+	return ibMetaDocument::IsModified();
 }
 
-void CReportFileDocument::Modify(bool modified)
+void ibReportFilibDocument::Modify(bool modified)
 {
-	CMetaDocument::Modify(modified);
+	ibMetaDocument::Modify(modified);
 }

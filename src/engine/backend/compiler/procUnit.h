@@ -3,17 +3,17 @@
 
 #include "procContext.h"
 
-class BACKEND_API CProcUnit {
+class BACKEND_API ibProcUnit {
 public:
 
 	//Constructors/destructors
-	CProcUnit() : m_pppArrayList(nullptr),
-		m_ppArrayCode(nullptr),
+	ibProcUnit() : m_numAutoDeleteParent(0),
 		m_pByteCode(nullptr),
-		m_numAutoDeleteParent(0) {
+		m_pppArrayList(nullptr),
+		m_ppArrayCode(nullptr) {
 	}
 
-	virtual ~CProcUnit() { Clear(); }
+	virtual ~ibProcUnit() { Clear(); }
 
 	//Methods
 	void Reset() {
@@ -42,7 +42,7 @@ public:
 		Reset();
 	}
 
-	void SetParent(CProcUnit* procParent) {
+	void SetParent(ibProcUnit* procParent) {
 		m_procParent.clear();
 		if (procParent != nullptr) {
 			unsigned int count = procParent->m_procParent.size();
@@ -53,7 +53,7 @@ public:
 		}
 	}
 
-	CProcUnit* GetParent(unsigned int iLevel = 0) const {
+	ibProcUnit* GetParent(unsigned int iLevel = 0) const {
 		if (iLevel >= m_procParent.size()) {
 			wxASSERT(iLevel == 0);
 			return nullptr;
@@ -65,19 +65,19 @@ public:
 	}
 
 	unsigned int GetParentCount() const { return m_procParent.size(); }
-	CByteCode* GetByteCode() const { return m_pByteCode; }
+	ibByteCode* GetByteCode() const { return m_pByteCode; }
 
-	void Execute(CByteCode& ByteCode) { Execute(ByteCode, nullptr, true); }
-	void Execute(CByteCode& ByteCode, bool bRunModule) { Execute(ByteCode, nullptr, bRunModule); }
-	void Execute(CByteCode& ByteCode, CValue& pvarRetValue, bool bRunModule = true) { Execute(ByteCode, &pvarRetValue, bRunModule); }
+	void Execute(ibByteCode& ByteCode) { Execute(ByteCode, nullptr, true); }
+	void Execute(ibByteCode& ByteCode, bool bRunModule) { Execute(ByteCode, nullptr, bRunModule); }
+	void Execute(ibByteCode& ByteCode, ibValue& pvarRetValue, bool bRunModule = true) { Execute(ByteCode, &pvarRetValue, bRunModule); }
 
 private:
-	void Execute(CByteCode& ByteCode, CValue* pvarRetValue, bool bRunModule = true);
-	void Execute(CRunContext* pContext, CValue* pvarRetValue, bool bDelta); // bDelta=true - flag for executing module operators that come at the end of functions and procedures
+	void Execute(ibByteCode& ByteCode, ibValue* pvarRetValue, bool bRunModule = true);
+	void Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDelta); // bDelta=true - flag for executing module operators that come at the end of functions and procedures
 public:
 
-	static bool Evaluate(const wxString& strExpression, CRunContext* pRunContext, CValue& pvarRetValue, bool bCompileBlock);
-	bool CompileExpression(CRunContext* pRunContext, CValue& pvarRetValue, CCompileCode& cModule, bool bCompileBlock);
+	static bool Evaluate(const wxString& strExpression, ibRunContext* pRunContext, ibValue& pvarRetValue, bool bCompileBlock);
+	bool CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetValue, ibCompileCode& cModule, bool bCompileBlock);
 
 	//call an arbitrary function of the executable module
 	long FindExportMethod(const wxString& strMethodName) const { return FindMethod(strMethodName, false, 2); }
@@ -90,60 +90,60 @@ public:
 
 	template <typename ...Types>
 	inline void CallAsProc(const wxString& funcName, Types&&... args) {
-		CValue* ppParams[] = { &args..., nullptr };
+		ibValue* ppParams[] = { &args..., nullptr };
 		CallAsProc(funcName, ppParams, (const long)sizeof ...(args));
 	}
 
 	template <typename ...Types>
-	inline void CallAsFunc(const wxString& funcName, CValue& pvarRetValue, Types&&... args) {
-		CValue* ppParams[] = { &args..., nullptr };
+	inline void CallAsFunc(const wxString& funcName, ibValue& pvarRetValue, Types&&... args) {
+		ibValue* ppParams[] = { &args..., nullptr };
 		CallAsFunc(funcName, pvarRetValue, ppParams, (const long)sizeof ...(args));
 	}
 
-	bool CallAsProc(const wxString& funcName, CValue** ppParams, const long lSizeArray);
-	bool CallAsFunc(const wxString& funcName, CValue& pvarRetValue, CValue** ppParams, const long lSizeArray);
+	bool CallAsProc(const wxString& funcName, ibValue** ppParams, const long lSizeArray);
+	bool CallAsFunc(const wxString& funcName, ibValue& pvarRetValue, ibValue** ppParams, const long lSizeArray);
 
-	void CallAsProc(const long lCodeLine, CValue** ppParams, const long lSizeArray);
-	void CallAsFunc(const long lCodeLine, CValue& pvarRetValue, CValue** ppParams, const long lSizeArray);
+	void CallAsProc(const long lCodeLine, ibValue** ppParams, const long lSizeArray);
+	void CallAsFunc(const long lCodeLine, ibValue& pvarRetValue, ibValue** ppParams, const long lSizeArray);
 
 	long FindProp(const wxString& strPropName) const;
 
-	bool SetPropVal(const wxString& strPropName, const CValue& varPropVal);
-	bool SetPropVal(const long lPropNum, const CValue& varPropVal); //setting attribute
+	bool SetPropVal(const wxString& strPropName, const ibValue& varPropVal);
+	bool SetPropVal(const long lPropNum, const ibValue& varPropVal); //setting attribute
 
-	bool GetPropVal(const wxString& strPropName, CValue& pvarPropVal);
-	bool GetPropVal(const long lPropNum, CValue& pvarPropVal);//attribute value
+	bool GetPropVal(const wxString& strPropName, ibValue& pvarPropVal);
+	bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);//attribute value
 
 	//run module 
-	static CProcUnit* GetCurrentRunModule() { return m_currentRunModule; }
+	static ibProcUnit* GetCurrentRunModule() { return m_currentRunModule; }
 	static void ClearCurrentRunModule() { m_currentRunModule = nullptr; }
 
 	//run context
-	static void CProcUnit::AddRunContext(CRunContext* runContext) { ms_runContext.push_back(runContext); }
-	static unsigned int CProcUnit::GetCountRunContext() { return ms_runContext.size(); }
+	static void AddRunContext(ibRunContext* runContext) { ms_runContext.push_back(runContext); }
+	static unsigned int GetCountRunContext() { return ms_runContext.size(); }
 
-	static CRunContext* CProcUnit::GetPrevRunContext() {
+	static ibRunContext* GetPrevRunContext() {
 		if (ms_runContext.size() < 2)
 			return nullptr;
 		return ms_runContext[ms_runContext.size() - 2];
 	}
 
-	static CRunContext* CProcUnit::GetCurrentRunContext() {
+	static ibRunContext* GetCurrentRunContext() {
 		if (!ms_runContext.size())
 			return nullptr;
 		return ms_runContext.back();
 	}
 
-	static CRunContext* CProcUnit::GetRunContext(unsigned int idx) {
+	static ibRunContext* GetRunContext(unsigned int idx) {
 		if (ms_runContext.size() < idx)
 			return nullptr;
 		return ms_runContext[idx];
 	}
 
-	static void CProcUnit::BackRunContext() { ms_runContext.pop_back(); }
+	static void BackRunContext() { ms_runContext.pop_back(); }
 
-	static CByteCode* GetCurrentByteCode() {
-		const CRunContext* runContext = GetCurrentRunContext();
+	static ibByteCode* GetCurrentByteCode() {
+		const ibRunContext* runContext = GetCurrentRunContext();
 		if (runContext != nullptr)
 			return runContext->GetByteCode();
 		return nullptr;
@@ -155,25 +155,25 @@ protected:
 
 	//attributes:
 	int m_numAutoDeleteParent; //flag for deleting the parent module
-	CByteCode* m_pByteCode = nullptr;
-	CValue*** m_pppArrayList = {}; //pointers to arrays of variable pointers (0 - local variables, 1 - variables of the current module, 2 and higher - variables of parent modules)
-	CProcUnit** m_ppArrayCode = {}; //pointers to arrays of executable modules (0 - current module, 1 and higher - parent modules)
-	std::vector <CProcUnit*> m_procParent;
+	ibByteCode* m_pByteCode = nullptr;
+	ibValue*** m_pppArrayList = {}; //pointers to arrays of variable pointers (0 - local variables, 1 - variables of the current module, 2 and higher - variables of parent modules)
+	ibProcUnit** m_ppArrayCode = {}; //pointers to arrays of executable modules (0 - current module, 1 and higher - parent modules)
+	std::vector <ibProcUnit*> m_procParent;
 
 	//static attributes
-	static CProcUnit* m_currentRunModule;
+	static ibProcUnit* m_currentRunModule;
 
-	CRunContext m_cCurContext;
+	ibRunContext m_cCurContext;
 
 	//static attributes
-	static std::vector <CRunContext*> ms_runContext; //list of executable module codes
+	static std::vector <ibRunContext*> ms_runContext; //list of executable module codes
 };
 
-class BACKEND_API CProcUnitEvaluate : public CProcUnit {
+class BACKEND_API ibProcUnitEvaluate : public ibProcUnit {
 public:
 
 	//Constructors/destructors
-	virtual ~CProcUnitEvaluate();
+	virtual ~ibProcUnitEvaluate();
 };
 
 #endif 

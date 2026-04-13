@@ -6,49 +6,49 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool clearTable)
+bool ibValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool clearTable)
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 
-		if (!CBackendException::IsEvalMode())
+		if (!ibBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Write()) {
-				CBackendAccessException::Error();
+				ibBackendAccessException::Error();
 				return false;
 			}
 
-			CTransactionGuard db_query_active_transaction = db_query;
+			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				db_query_active_transaction.BeginTransaction();
 
 				{
-					CValue cancel = false;
+					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CBackendCoreException::Error(_("Failed to write object in db!"));
+						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!SaveData(replace, clearTable)) {
 					db_query_active_transaction.RollBackTransaction();
-					CBackendCoreException::Error(_("Failed to write object in db!"));
+					ibBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
 
 				{
-					CValue cancel = false;
+					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CBackendCoreException::Error(_("Failed to write object in db!"));
+						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -63,49 +63,49 @@ bool CValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, boo
 	return true;
 }
 
-bool CValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
+bool ibValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 
-		if (!CBackendException::IsEvalMode())
+		if (!ibBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Delete()) {
-				CBackendAccessException::Error();
+				ibBackendAccessException::Error();
 				return false;
 			}
 
-			CTransactionGuard db_query_active_transaction = db_query;
+			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				db_query_active_transaction.BeginTransaction();
 
 				{
-					CValue cancel = false;
+					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CBackendCoreException::Error(_("Failed to write object in db!"));
+						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
 					db_query_active_transaction.RollBackTransaction();
-					CBackendCoreException::Error(_("Failed to write object in db!"));
+					ibBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
 
 				{
-					CValue cancel = false;
+					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CBackendCoreException::Error(_("Failed to write object in db!"));
+						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -144,7 +144,7 @@ enum prop
 //*                              Support methods                             *
 //****************************************************************************
 
-void CValueRecordSetObjectAccumulationRegister::PrepareNames() const
+void ibValueRecordSetObjectAccumulationRegister::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -163,12 +163,12 @@ void CValueRecordSetObjectAccumulationRegister::PrepareNames() const
 	m_methodHelper->AppendProp(wxT("Filter"), true, false, prop::eFilter, wxNOT_FOUND);
 }
 
-bool CValueRecordSetObjectAccumulationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueRecordSetObjectAccumulationRegister::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool CValueRecordSetObjectAccumulationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueRecordSetObjectAccumulationRegister::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -183,21 +183,21 @@ bool CValueRecordSetObjectAccumulationRegister::GetPropVal(const long lPropNum, 
 	return false;
 }
 
-bool CValueRecordSetObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueRecordSetObjectAccumulationRegister::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
 	case func::eAdd:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
+		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case func::eCount:
 		pvarRetValue = (unsigned int)GetRowCount();
 		return true;
 	case func::eClear:
-		IValueTable::Clear();
+		ibValueModelTableBase::Clear();
 		return true;
 	case func::eLoad:
-		LoadDataFromTable(paParams[0]->ConvertToType<IValueTable>());
+		LoadDataFromTable(paParams[0]->ConvertToType<ibValueModelTableBase>());
 		return true;
 	case func::eUnload:
 		pvarRetValue = SaveDataToTable();

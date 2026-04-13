@@ -11,7 +11,7 @@ wxString strContributors =
 	wxT("And also everyone who was not mentioned here")
 };
 
-CDialogAbout::CDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _("About..."), wxDefaultPosition, wxSize(450, 400))
+ibDialogAbout::ibDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _("About..."), wxDefaultPosition, wxSize(450, 400))
 {
 	SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -62,7 +62,7 @@ CDialogAbout::CDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _("A
 
 	wxStaticBoxSizer* infoSizer = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Info")), wxVERTICAL);
 
-	if (appData->GetDatabaseMode() != eDatabaseMode::eNONE) {
+	if (appData->GetDatabaseMode() != ibDatabaseMode::eNONE) {
 
 		wxBoxSizer* bSizer4 = new wxBoxSizer(wxHORIZONTAL);
 		m_staticDataBaseInfo = new wxStaticText(infoSizer->GetStaticBox(), wxID_ANY, appData->GetDatabaseModeDescr() + wxT(":"), wxDefaultPosition, wxSize(100, -1));
@@ -119,7 +119,7 @@ CDialogAbout::CDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _("A
 	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_metaCommonMetadataCLSID));
+	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_metaCommonMetadataCLSID));
 
 	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();

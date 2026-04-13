@@ -7,60 +7,60 @@
 
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueFrame::CValueEventContainer, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueFrame::ibValueEventContainer, ibValue);
 
 
 //////////////////////////////////////////////////////////////////////
 
-IValueFrame::CValueEventContainer::CValueEventContainer() : CValue(eValueTypes::TYPE_VALUE, true),
+ibValueFrame::ibValueEventContainer::ibValueEventContainer() : ibValue(ibValueTypes::TYPE_VALUE, true),
 m_controlEvent(nullptr), m_methodHelper(nullptr)
 {
 }
 
-IValueFrame::CValueEventContainer::CValueEventContainer(IValueFrame* controlEvent) : CValue(eValueTypes::TYPE_VALUE, true),
-m_controlEvent(controlEvent), m_methodHelper(new CMethodHelper())
+ibValueFrame::ibValueEventContainer::ibValueEventContainer(ibValueFrame* controlEvent) : ibValue(ibValueTypes::TYPE_VALUE, true),
+m_controlEvent(controlEvent), m_methodHelper(new ibValueMethodHelper())
 {
 }
 
 #include "backend/system/value/valueMap.h"
 //#include "backend/system/value/valueEvent.h"
 
-IValueFrame::CValueEventContainer::~CValueEventContainer()
+ibValueFrame::ibValueEventContainer::~ibValueEventContainer()
 {
 	if (m_methodHelper)
 		delete m_methodHelper;
 }
 
-CValue IValueFrame::CValueEventContainer::GetIteratorEmpty()
+ibValue ibValueFrame::ibValueEventContainer::GetIteratorEmpty()
 {
-	return CValue();
+	return ibValue();
 }
 
-CValue IValueFrame::CValueEventContainer::GetIteratorAt(unsigned int idx)
+ibValue ibValueFrame::ibValueEventContainer::GetIteratorAt(unsigned int idx)
 {
 	if (m_controlEvent->GetEventCount() < idx) {
-		return CValue();
+		return ibValue();
 	}
 
-	IEvent* event = m_controlEvent->GetEvent(idx);
-	if (event == nullptr) return CValue();
-	//return CValue::CreateAndPrepareValueRef<CValueEvent>(event->GetValue());
+	ibEvent* event = m_controlEvent->GetEvent(idx);
+	if (event == nullptr) return ibValue();
+	//return ibValue::CreateAndPrepareValueRef<ibValueEvent>(event->GetValue());
 
-	CValue retEvent;
+	ibValue retEvent;
 	event->GetDataValue(retEvent);
 	return retEvent;
 }
 
 #include "backend/appData.h"
 
-bool IValueFrame::CValueEventContainer::SetAt(const CValue& varKeyValue, const CValue& varValue)
+bool ibValueFrame::ibValueEventContainer::SetAt(const ibValue& varKeyValue, const ibValue& varValue)
 {
-	const number_t number = varKeyValue.GetNumber();
+	const ibNumber number = varKeyValue.GetNumber();
 	if (m_controlEvent->GetEventCount() < number.ToUInt())
 		return false;
-	IEvent* event = m_controlEvent->GetEvent(number.ToUInt());
+	ibEvent* event = m_controlEvent->GetEvent(number.ToUInt());
 	if (event == nullptr) return false;
-	//CValueEvent* eventValue = nullptr;
+	//ibValueEvent* eventValue = nullptr;
 	//if (varValue.ConvertToValue(eventValue)) {
 	//	event->SetValue(eventValue->GetString());
 	//}
@@ -71,29 +71,29 @@ bool IValueFrame::CValueEventContainer::SetAt(const CValue& varKeyValue, const C
 	return event->SetDataValue(varValue);
 }
 
-bool IValueFrame::CValueEventContainer::GetAt(const CValue& varKeyValue, CValue& pvarValue)
+bool ibValueFrame::ibValueEventContainer::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {
-	number_t number = varKeyValue.GetNumber();
+	ibNumber number = varKeyValue.GetNumber();
 	if (m_controlEvent->GetEventCount() < number.ToUInt())
 		return false;
-	IEvent* event = m_controlEvent->GetEvent(number.ToUInt());
+	ibEvent* event = m_controlEvent->GetEvent(number.ToUInt());
 	if (event == nullptr) return false;
 	//wxString eventValue = event->GetValue();
 	//if (eventValue.IsEmpty())
 	//	return false;
-	//pvarValue = CValue::CreateAndPrepareValueRef<CValueEvent>(eventValue);
+	//pvarValue = ibValue::CreateAndPrepareValueRef<ibValueEvent>(eventValue);
 	//return true;
 	return event->GetDataValue(pvarValue);
 }
 
-bool IValueFrame::CValueEventContainer::Property(const CValue& varKeyValue, CValue& cValueFound)
+bool ibValueFrame::ibValueEventContainer::Property(const ibValue& varKeyValue, ibValue& cValueFound)
 {
 	const wxString& key = varKeyValue.GetString();
 	for (unsigned int idx = 0; idx < m_controlEvent->GetEventCount(); idx++) {
-		IEvent* event = m_controlEvent->GetEvent(idx);
+		ibEvent* event = m_controlEvent->GetEvent(idx);
 		if (event == nullptr) continue;
 		if (stringUtils::CompareString(key, event->GetName())) {
-			//cValueFound = CValue::CreateAndPrepareValueRef<CValueEvent>(event->GetName());
+			//cValueFound = ibValue::CreateAndPrepareValueRef<ibValueEvent>(event->GetName());
 			//return true;
 			return event->GetDataValue(cValueFound);
 		}
@@ -107,7 +107,7 @@ enum
 	enControlCount
 };
 
-void IValueFrame::CValueEventContainer::PrepareNames() const
+void ibValueFrame::ibValueEventContainer::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -115,19 +115,19 @@ void IValueFrame::CValueEventContainer::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"));
 
 	for (unsigned int idx = 0; idx < m_controlEvent->GetEventCount(); idx++) {
-		IEvent* event = m_controlEvent->GetEvent(idx);
+		ibEvent* event = m_controlEvent->GetEvent(idx);
 		if (event == nullptr)
 			continue;
 		m_methodHelper->AppendProp(event->GetName());
 	}
 }
 
-bool IValueFrame::CValueEventContainer::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueFrame::ibValueEventContainer::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
-	//CValueEvent* eventValue = nullptr;
+	//ibValueEvent* eventValue = nullptr;
 	if (m_controlEvent->GetEventCount() < (unsigned int)lPropNum)
 		return false;
-	IEvent* event = m_controlEvent->GetEvent(lPropNum);
+	ibEvent* event = m_controlEvent->GetEvent(lPropNum);
 	if (event == nullptr) return false;
 	//if (varPropVal.ConvertToValue(eventValue)) {
 	//	event->SetValue(eventValue->GetString());
@@ -139,28 +139,29 @@ bool IValueFrame::CValueEventContainer::SetPropVal(const long lPropNum, const CV
 	return event->SetDataValue(varPropVal);
 }
 
-bool IValueFrame::CValueEventContainer::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueFrame::ibValueEventContainer::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	if (m_controlEvent->GetEventCount() < (unsigned int)lPropNum)
 		return false;
 
-	IEvent* event = m_controlEvent->GetEvent(lPropNum);
+	ibEvent* event = m_controlEvent->GetEvent(lPropNum);
 	if (event == nullptr) return false;
 
 	const wxString& eventValue = event->GetValue();
 	if (eventValue.IsEmpty()) return true;
-	//pvarPropVal = CValue::CreateAndPrepareValueRef<CValueEvent>(eventValue);
+	//pvarPropVal = ibValue::CreateAndPrepareValueRef<ibValueEvent>(eventValue);
 	return event->GetDataValue(pvarPropVal);
 }
 
 #include "backend/system/value/valueType.h"
 
-bool IValueFrame::CValueEventContainer::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueFrame::ibValueEventContainer::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
 	case enControlProperty:
-		pvarRetValue = Property(*paParams[0], lSizeArray > 1 ? *paParams[1] : CValue());
+	{	ibValue defaultVal;
+		pvarRetValue = Property(*paParams[0], lSizeArray > 1 ? *paParams[1] : defaultVal); }
 		return true;
 	case enControlCount:
 		pvarRetValue = Count();
@@ -174,4 +175,4 @@ bool IValueFrame::CValueEventContainer::CallAsFunc(const long lMethodNum, CValue
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(IValueFrame::CValueEventContainer, "EventContainer", string_to_clsid("VL_EVCT"));
+SYSTEM_TYPE_REGISTER(ibValueFrame::ibValueEventContainer, "EventContainer", string_to_clsid("VL_EVCT"));

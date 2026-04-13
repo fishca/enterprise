@@ -179,19 +179,33 @@ namespace stringUtils
 
 	inline wxString GenerateSynonym(const wxString& strSystemName) {
 		wxString strSynonym;
-		for (auto& c : strSystemName) {
+		for (size_t i = 0; i < strSystemName.length(); i++) {
+			const wxUniChar c = strSystemName[i];
+			const wxUniChar::value_type wc = c.GetValue();
 			if (strSynonym.IsEmpty()) {
-				strSynonym += wxToupper(c);
+				if (c.IsAscii()) {
+					strSynonym += wxToupper(c);
+				}
+				else {
+					strSynonym += c;
+				}
 			}
-			else if (c >= 'A' && c <= 'Z' ||
-				(c >= 'À' && c <= 'ß')) {
+			else if ((wc >= wxT('A') && wc <= wxT('Z')) ||
+				(wc >= 0x0410 && wc <= 0x042F)) {
 				strSynonym += wxT(' ');
-				strSynonym += wxTolower(c);
+				if (c.IsAscii()) {
+					strSynonym += wxTolower(c);
+				}
+				else if (wc >= 0x0410 && wc <= 0x042F) {
+					// Cyrillic uppercase to lowercase: add 0x20
+					strSynonym += wxUniChar(wc + 0x20);
+				}
+				else {
+					strSynonym += c;
+				}
 			}
 			else {
-				strSynonym += (strSynonym.Length() > 0 ?
-					c : wxToupper(c)
-					);
+				strSynonym += c;
 			}
 		}
 		return strSynonym;
@@ -201,7 +215,7 @@ namespace stringUtils
 		for (unsigned int i = 0; i < systemName.length(); i++) {
 			if (!((systemName[i] == '_') ||
 				(systemName[i] >= 'A' && systemName[i] <= 'Z') || (systemName[i] >= 'a' && systemName[i] <= 'z') ||
-				(systemName[i] >= 'À' && systemName[i] <= 'ß') || (systemName[i] >= 'à' && systemName[i] <= 'ÿ') ||
+				(systemName[i] >= L'\u0410' && systemName[i] <= L'\u042F') || (systemName[i] >= L'\u0430' && systemName[i] <= L'\u044F') ||
 				(systemName[i] >= '0' && systemName[i] <= '9'))) {
 				//wxMessageBox(wxT("You can enter only numbers, letters and the symbol \"_\""), wxT("Error entering value"));
 				return i;

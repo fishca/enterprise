@@ -14,9 +14,9 @@ enum action {
 	eMarkAsDelete,
 };
 
-CValueRecordDataObjectDocument::CActionCollection CValueRecordDataObjectDocument::GetActionCollection(const form_identifier_t &formType)
+ibValueRecordDataObjectDocument::ibActionCollection ibValueRecordDataObjectDocument::GetActionCollection(const ibFormID &formType)
 {
-	CActionCollection documentActions(this);
+	ibActionCollection documentActions(this);
 	documentActions.AddAction(wxT("PostAndClose"), _("Post and close"), g_picPostCLSID, true, eDefActionAndClose);
 	documentActions.AddAction(wxT("Post"), _("Post"), g_picPostCLSID, true, ePost);
 	documentActions.AddAction(wxT("ClearPosting"), _("Clear posting"), g_picSaveCLSID, true, eClearPosting);
@@ -28,17 +28,17 @@ CValueRecordDataObjectDocument::CActionCollection CValueRecordDataObjectDocument
 	return documentActions;
 }
 
-void CValueRecordDataObjectDocument::ExecuteAction(const action_identifier_t &action, IBackendValueForm* srcForm)
+void ibValueRecordDataObjectDocument::ExecuteAction(const ibActionID &action, ibBackendValueForm* srcForm)
 {
 	switch (action)
 	{
 	case eDefActionAndClose:
-		if (WriteObject(eDocumentWriteMode::eDocumentWriteMode_Posting, eDocumentPostingMode::eDocumentPostingMode_Regular)) {
+		if (WriteObject(ibDocumentWriteMode::ibDocumentWriteMode_Posting, ibDocumentPostingMode::ibDocumentPostingMode_Regular)) {
 			srcForm->CloseForm();
 		}
 		break;
-	case ePost: WriteObject(eDocumentWriteMode::eDocumentWriteMode_Posting, eDocumentPostingMode::eDocumentPostingMode_Regular); break;
-	case eClearPosting: WriteObject(eDocumentWriteMode::eDocumentWriteMode_UndoPosting, eDocumentPostingMode::eDocumentPostingMode_Regular); break;
+	case ePost: WriteObject(ibDocumentWriteMode::ibDocumentWriteMode_Posting, ibDocumentPostingMode::ibDocumentPostingMode_Regular); break;
+	case eClearPosting: WriteObject(ibDocumentWriteMode::ibDocumentWriteMode_UndoPosting, ibDocumentPostingMode::ibDocumentPostingMode_Regular); break;
 	case eGenerate: Generate(); break;
 	case eCopy: CopyObject(true); break;
 	}

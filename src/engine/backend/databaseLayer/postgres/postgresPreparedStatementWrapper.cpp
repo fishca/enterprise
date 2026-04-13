@@ -4,59 +4,59 @@
 
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
-CPostgresPreparedStatementWrapper::CPostgresPreparedStatementWrapper(CPostgresInterface* pInterface, PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName)
-	: CDatabaseErrorReporter(), m_strSQL(strSQL), m_strStatementName(strStatementName)
+ibPreparedStatementPostgresWrapper::ibPreparedStatementPostgresWrapper(ibInterfacePostgres* pInterface, PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName)
+	: ibDatabaseErrorReporter(), m_strSQL(strSQL), m_strStatementName(strStatementName)
 {
 	m_pInterface = pInterface;
 	m_pDatabase = pDatabase;
 }
 
-CPostgresPreparedStatementWrapper::~CPostgresPreparedStatementWrapper()
+ibPreparedStatementPostgresWrapper::~ibPreparedStatementPostgresWrapper()
 {
 }
 
 // set field
-void CPostgresPreparedStatementWrapper::SetParam(int nPosition, int nValue)
+void ibPreparedStatementPostgresWrapper::SetParam(int nPosition, int nValue)
 {
 	m_Parameters.SetParam(nPosition, nValue);
 }
 
-void CPostgresPreparedStatementWrapper::SetParam(int nPosition, double dblValue)
+void ibPreparedStatementPostgresWrapper::SetParam(int nPosition, double dblValue)
 {
 	m_Parameters.SetParam(nPosition, dblValue);
 }
 
-void CPostgresPreparedStatementWrapper::SetParam(int nPosition, const number_t& dblValue)
+void ibPreparedStatementPostgresWrapper::SetParam(int nPosition, const ibNumber& dblValue)
 {
 	m_Parameters.SetParam(nPosition, dblValue);
 }
 
-void CPostgresPreparedStatementWrapper::SetParam(int nPosition, const wxString& strValue)
+void ibPreparedStatementPostgresWrapper::SetParam(int nPosition, const wxString& strValue)
 {
 	m_Parameters.SetParam(nPosition, strValue);
 }
 
-void CPostgresPreparedStatementWrapper::SetParam(int nPosition)
+void ibPreparedStatementPostgresWrapper::SetParam(int nPosition)
 {
 	m_Parameters.SetParam(nPosition);
 }
 
-void CPostgresPreparedStatementWrapper::SetParam(int nPosition, const void* pData, long nDataLength)
+void ibPreparedStatementPostgresWrapper::SetParam(int nPosition, const void* pData, long nDataLength)
 {
 	m_Parameters.SetParam(nPosition, pData, nDataLength);
 }
 
-void CPostgresPreparedStatementWrapper::SetParam(int nPosition, const wxDateTime& dateValue)
+void ibPreparedStatementPostgresWrapper::SetParam(int nPosition, const wxDateTime& dateValue)
 {
 	m_Parameters.SetParam(nPosition, dateValue);
 }
 
-void CPostgresPreparedStatementWrapper::SetParam(int nPosition, bool bValue)
+void ibPreparedStatementPostgresWrapper::SetParam(int nPosition, bool bValue)
 {
 	m_Parameters.SetParam(nPosition, bValue);
 }
 
-int CPostgresPreparedStatementWrapper::GetParameterCount()
+int ibPreparedStatementPostgresWrapper::GetParameterCount()
 {
 	int nParameterCount = 0;
 	bool bInStringLiteral = false;
@@ -87,7 +87,7 @@ int CPostgresPreparedStatementWrapper::GetParameterCount()
 	return nParameterCount;
 }
 
-int CPostgresPreparedStatementWrapper::DoRunQuery()
+int ibPreparedStatementPostgresWrapper::DoRunQuery()
 {
 	long nRows = -1;
 	int nParameters = m_Parameters.GetSize();
@@ -102,7 +102,7 @@ int CPostgresPreparedStatementWrapper::DoRunQuery()
 		ExecStatusType status = m_pInterface->GetPQresultStatus()(pResult);
 		if ((status != PGRES_COMMAND_OK) && (status != PGRES_TUPLES_OK))
 		{
-			SetErrorCode(CPostgresDatabaseLayer::TranslateErrorCode(status));
+			SetErrorCode(ibDatabaseLayerPostgres::TranslateErrorCode(status));
 			SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetPQresultErrorMessage()(pResult)));
 		}
 
@@ -126,7 +126,7 @@ int CPostgresPreparedStatementWrapper::DoRunQuery()
 	return (int)nRows;
 }
 
-IDatabaseResultSet* CPostgresPreparedStatementWrapper::DoRunQueryWithResults()
+ibDatabaseResultSet* ibPreparedStatementPostgresWrapper::DoRunQueryWithResults()
 {
 	int nParameters = m_Parameters.GetSize();
 	char** paramValues = m_Parameters.GetParamValues();
@@ -140,7 +140,7 @@ IDatabaseResultSet* CPostgresPreparedStatementWrapper::DoRunQueryWithResults()
 		ExecStatusType status = m_pInterface->GetPQresultStatus()(pResult);
 		if ((status != PGRES_COMMAND_OK) && (status != PGRES_TUPLES_OK))
 		{
-			SetErrorCode(CPostgresDatabaseLayer::TranslateErrorCode(status));
+			SetErrorCode(ibDatabaseLayerPostgres::TranslateErrorCode(status));
 			SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetPQresultErrorMessage()(pResult)));
 		}
 		else
@@ -149,7 +149,7 @@ IDatabaseResultSet* CPostgresPreparedStatementWrapper::DoRunQueryWithResults()
 			delete[]paramLengths;
 			delete[]paramFormats;
 
-			CPostgresResultSet* pResultSet = new CPostgresResultSet(m_pInterface, pResult);
+			ibDatabaseResultSetPostgres* pResultSet = new ibDatabaseResultSetPostgres(m_pInterface, pResult);
 			pResultSet->SetEncoding(GetEncoding());
 			return pResultSet;
 		}

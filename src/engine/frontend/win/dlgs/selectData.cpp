@@ -3,7 +3,7 @@
 #include "backend/metaData.h"
 #include "frontend/mainFrame/mainFrame.h"
 
-bool CDialogSelectDataType::ShowModal(class_identifier_t& clsid)
+bool ibDialogSelectDataType::ShowModal(ibClassID& clsid)
 {
 	if (m_listData->GetItemCount() == 0) {
 		return false;
@@ -30,8 +30,8 @@ bool CDialogSelectDataType::ShowModal(class_identifier_t& clsid)
 
 #define ICON_SIZE 16
 
-CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, const std::vector<class_identifier_t>& array) :
-	wxDialog(CFrontendDocMDIFrame::GetFrame(), wxID_ANY, _("Select data type"), wxDefaultPosition, wxSize(315, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+ibDialogSelectDataType::ibDialogSelectDataType(ibMetaData* metaData, const std::vector<ibClassID>& array) :
+	wxDialog(ibFrontendDocMDIFrame::GetFrame(), wxID_ANY, _("Select data type"), wxDefaultPosition, wxSize(315, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -47,7 +47,7 @@ CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, const std::vec
 
 	for (const auto clsid : array) {
 		if (metaData->IsRegisterCtor(clsid)) {
-			const IAbstractTypeCtor* typeCtor = metaData->GetAvailableCtor(clsid);
+			const ibCtorAbstractType* typeCtor = metaData->GetAvailableCtor(clsid);
 			wxASSERT(typeCtor);
 			wxImageList* imageList = m_listData->GetImageList(wxIMAGE_LIST_SMALL);
 			long lSelectedItem = m_listData->InsertItem(m_listData->GetItemCount(), typeCtor->GetClassName(), imageList->Add(typeCtor->GetClassIcon()));
@@ -56,7 +56,7 @@ CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, const std::vec
 	}
 
 	// Connect Events
-	m_listData->Connect(wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler(CDialogSelectDataType::OnListItemSelected), nullptr, this);
+	m_listData->Connect(wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler(ibDialogSelectDataType::OnListItemSelected), nullptr, this);
 
 	m_listData->SetDoubleBuffered(true);
 
@@ -74,11 +74,11 @@ CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, const std::vec
 	wxDialog::Centre(wxBOTH);
 }
 
-CDialogSelectDataType::~CDialogSelectDataType()
+ibDialogSelectDataType::~ibDialogSelectDataType()
 {
 }
 
-void CDialogSelectDataType::OnListItemSelected(wxListEvent& event)
+void ibDialogSelectDataType::OnListItemSelected(wxListEvent& event)
 {
 	EndModal(wxID_OK);
 }

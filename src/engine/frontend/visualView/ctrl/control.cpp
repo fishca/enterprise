@@ -6,25 +6,25 @@
 #include "control.h"
 #include "form.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueControl, IValueFrame)
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueControl, ibValueFrame)
 
 //*************************************************************************
 //*                          ValueControl		                          *
 //*************************************************************************
 
-IValueControl::IValueControl()
-	: IValueFrame(), m_formOwner(nullptr)
+ibValueControl::ibValueControl()
+	: ibValueFrame(), m_formOwner(nullptr)
 {
 }
 
-IValueControl::~IValueControl()
+ibValueControl::~ibValueControl()
 {
 	SetOwnerForm(nullptr);
 }
 
 #include "backend/metaData.h"
 
-void IValueControl::SetOwnerForm(CValueForm* ownerForm)
+void ibValueControl::SetOwnerForm(ibValueForm* ownerForm)
 {
 	if (ownerForm && m_formOwner == nullptr) {
 		if (GetComponentType() != COMPONENT_TYPE_SIZERITEM)
@@ -36,18 +36,18 @@ void IValueControl::SetOwnerForm(CValueForm* ownerForm)
 	m_formOwner = ownerForm;
 }
 
-IMetaData* IValueControl::GetMetaData() const
+ibMetaData* ibValueControl::GetMetaData() const
 {
-	const IValueMetaObjectForm* metaFormObject = m_formOwner ?
+	const ibValueMetaObjectFormBase* metaFormObject = m_formOwner ?
 		m_formOwner->GetFormMetaObject() : nullptr;
 
 	//for form buider
 	if (metaFormObject == nullptr) {
-		ISourceDataObject* srcValue = m_formOwner ?
+		ibSourceDataObject* srcValue = m_formOwner ?
 			m_formOwner->GetSourceObject() :
 			nullptr;
 		if (srcValue != nullptr) {
-			IValueMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
+			ibValueMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
 			wxASSERT(metaValue);
 			return metaValue->GetMetaData();
 		}
@@ -60,20 +60,20 @@ IMetaData* IValueControl::GetMetaData() const
 
 #include "backend/metaCollection/metaFormObject.h"
 
-form_identifier_t IValueControl::GetTypeForm() const
+ibFormID ibValueControl::GetTypeForm() const
 {
 	if (m_formOwner == nullptr) {
 		wxASSERT(m_formOwner);
 		return 0;
 	}
 
-	const IValueMetaObjectForm* creator = m_formOwner->GetFormMetaObject();
+	const ibValueMetaObjectFormBase* creator = m_formOwner->GetFormMetaObject();
  	if (creator != nullptr) 
 		return creator->GetTypeForm();
 	return m_formOwner->GetTypeForm();
 }
 
-CProcUnit* IValueControl::GetFormProcUnit() const
+ibProcUnit* ibValueControl::GetFormProcUnit() const
 {
 	if (!m_formOwner) {
 		wxASSERT(m_formOwner);

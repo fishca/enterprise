@@ -6,14 +6,14 @@
 #include "valueMap.h"
 #include "backend/backend_exception.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueContainer, CValue);
-wxIMPLEMENT_DYNAMIC_CLASS(CValueStructure, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueContainer, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueStructure, ibValue);
 
-CValue::CMethodHelper CValueContainer::CValueReturnContainer::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueContainer::ibValueReturnContainer::m_methodHelper;
 
-bool CValueContainer::ContainerComparator::operator() (const CValue& lhs, const CValue& rhs) const {
-	if (lhs.GetType() == eValueTypes::TYPE_STRING
-		&& rhs.GetType() == eValueTypes::TYPE_STRING) {
+bool ibValueContainer::ContainerComparator::operator() (const ibValue& lhs, const ibValue& rhs) const {
+	if (lhs.GetType() == ibValueTypes::TYPE_STRING
+		&& rhs.GetType() == ibValueTypes::TYPE_STRING) {
 		return stringUtils::MakeUpper(lhs.GetString()) < stringUtils::MakeUpper(rhs.GetString());
 	}
 	else {
@@ -22,22 +22,22 @@ bool CValueContainer::ContainerComparator::operator() (const CValue& lhs, const 
 }
 
 //**********************************************************************
-//*                          CValueReturnMap                           *
+//*                          ibValueReturnMap                           *
 //**********************************************************************
 
-void CValueContainer::CValueReturnContainer::PrepareNames() const
+void ibValueContainer::ibValueReturnContainer::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 	m_methodHelper.AppendProp(wxT("Key"));
 	m_methodHelper.AppendProp(wxT("Value"));
 }
 
-bool CValueContainer::CValueReturnContainer::SetPropVal(const long lPropNum, CValue& cValue)
+bool ibValueContainer::ibValueReturnContainer::SetPropVal(const long lPropNum, ibValue& cValue)
 {
 	return false;
 }
 
-bool CValueContainer::CValueReturnContainer::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueContainer::ibValueReturnContainer::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -53,29 +53,29 @@ bool CValueContainer::CValueReturnContainer::GetPropVal(const long lPropNum, CVa
 }
 
 //**********************************************************************
-//*                            CValueContainer                         *
+//*                            ibValueContainer                         *
 //**********************************************************************
 
-CValueContainer::CValueContainer() : CValue(eValueTypes::TYPE_VALUE), m_methodHelper(new CMethodHelper) {}
+ibValueContainer::ibValueContainer() : ibValue(ibValueTypes::TYPE_VALUE), m_methodHelper(new ibValueMethodHelper) {}
 
-CValueContainer::CValueContainer(const std::map<CValue, CValue>& containerValues) : CValue(eValueTypes::TYPE_VALUE, true), m_methodHelper(new CMethodHelper) {
+ibValueContainer::ibValueContainer(const std::map<ibValue, ibValue>& containerValues) : ibValue(ibValueTypes::TYPE_VALUE, true), m_methodHelper(new ibValueMethodHelper) {
 	for (auto& cntVal : containerValues) {
 		m_containerValues.insert_or_assign(cntVal.first, cntVal.second);
 	}
 	PrepareNames();
 }
 
-CValueContainer::CValueContainer(bool readOnly) : CValue(eValueTypes::TYPE_VALUE, readOnly), m_methodHelper(new CMethodHelper) {
+ibValueContainer::ibValueContainer(bool readOnly) : ibValue(ibValueTypes::TYPE_VALUE, readOnly), m_methodHelper(new ibValueMethodHelper) {
 }
 
-CValueContainer::~CValueContainer() {
+ibValueContainer::~ibValueContainer() {
 	m_containerValues.clear();
 	wxDELETE(m_methodHelper);
 }
 
-//работа с массивом как с агрегатным объектом
-//перечисление строковых ключей
-void CValueContainer::PrepareNames() const
+//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+void ibValueContainer::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"));
@@ -88,28 +88,28 @@ void CValueContainer::PrepareNames() const
 	}
 
 	for (auto keyValue : m_containerValues) {
-		const CValue& cValKey = keyValue.first;
+		const ibValue& cValKey = keyValue.first;
 		if (!cValKey.IsEmpty()) {
 			m_methodHelper->AppendProp(cValKey.GetString());
 		}
 	}
 }
 
-bool CValueContainer::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueContainer::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return SetAt(
 		GetPropName(lPropNum), varPropVal
 	);
 }
 
-bool CValueContainer::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueContainer::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	return GetAt(
 		GetPropName(lPropNum), pvarPropVal
 	);
 }
 
-bool CValueContainer::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueContainer::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -126,14 +126,17 @@ bool CValueContainer::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 		Insert(*paParams[0], *paParams[1]);
 		return true;
 	case enProperty:
-		pvarRetValue = Property(*paParams[0], lSizeArray > 1 ? *paParams[1] : CValue());
+	{
+		ibValue defaultVal;
+		pvarRetValue = Property(*paParams[0], lSizeArray > 1 ? *paParams[1] : defaultVal);
+	}
 		return true;
 	}
 
 	return false;
 }
 
-void CValueContainer::Delete(const CValue& varKeyValue)
+void ibValueContainer::Delete(const ibValue& varKeyValue)
 {
 	if (m_methodHelper != nullptr) m_methodHelper->RemoveProp(varKeyValue.GetString());
 	m_containerValues.erase(varKeyValue);
@@ -141,21 +144,21 @@ void CValueContainer::Delete(const CValue& varKeyValue)
 
 #include "backend/appData.h"
 
-void CValueContainer::Insert(const CValue& varKeyValue, const CValue& cValue)
+void ibValueContainer::Insert(const ibValue& varKeyValue, const ibValue& cValue)
 {
-	std::map<const CValue, CValue>::iterator it = m_containerValues.find(varKeyValue);
+	std::map<const ibValue, ibValue>::iterator it = m_containerValues.find(varKeyValue);
 	if (it != m_containerValues.end()) {
 		if (!appData->DesignerMode())
-			CBackendCoreException::Error(_("Key '%s' is already using!"), varKeyValue.GetString());
+			ibBackendCoreException::Error(_("Key '%s' is already using!"), varKeyValue.GetString());
 		return;
 	}
 	if (m_methodHelper != nullptr) m_methodHelper->AppendProp(varKeyValue.GetString());
 	m_containerValues.insert_or_assign(varKeyValue, cValue);
 }
 
-bool CValueContainer::Property(const CValue& varKeyValue, CValue& cValueFound)
+bool ibValueContainer::Property(const ibValue& varKeyValue, ibValue& cValueFound)
 {
-	std::map<const CValue, CValue>::iterator itFound = m_containerValues.find(varKeyValue);
+	std::map<const ibValue, ibValue>::iterator itFound = m_containerValues.find(varKeyValue);
 	if (itFound != m_containerValues.end()) {
 		cValueFound = itFound->second;
 		return true;
@@ -163,103 +166,103 @@ bool CValueContainer::Property(const CValue& varKeyValue, CValue& cValueFound)
 	return false;
 }
 
-CValue CValueContainer::GetIteratorEmpty()
+ibValue ibValueContainer::GetIteratorEmpty()
 {
-	return CValue::CreateAndPrepareValueRef<CValueReturnContainer>();
+	return ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>();
 }
 
-CValue CValueContainer::GetIteratorAt(unsigned int idx)
+ibValue ibValueContainer::GetIteratorAt(unsigned int idx)
 {
 	if (m_containerValues.size() < idx)
-		return CValue();
+		return ibValue();
 	auto structurePos = m_containerValues.begin();
 	std::advance(structurePos, idx);
-	return CValue::CreateAndPrepareValueRef<CValueReturnContainer>(structurePos->first, structurePos->second);
+	return ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>(structurePos->first, structurePos->second);
 }
 
-bool CValueContainer::SetAt(const CValue& varKeyValue, const CValue& varValue)
+bool ibValueContainer::SetAt(const ibValue& varKeyValue, const ibValue& varValue)
 {
-	CValueContainer::Insert(varKeyValue, varValue);
+	ibValueContainer::Insert(varKeyValue, varValue);
 	return true;
 }
 
-bool CValueContainer::GetAt(const CValue& varKeyValue, CValue& pvarValue)
+bool ibValueContainer::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {
-	std::map<const CValue, CValue>::const_iterator itFound = m_containerValues.find(varKeyValue);
+	std::map<const ibValue, ibValue>::const_iterator itFound = m_containerValues.find(varKeyValue);
 	if (itFound != m_containerValues.end()) {
 		pvarValue = itFound->second; return true;
 	}
 	if (!appData->DesignerMode())
-		CBackendCoreException::Error(_("Key '%s' not found!"), varKeyValue.GetString());
+		ibBackendCoreException::Error(_("Key '%s' not found!"), varKeyValue.GetString());
 	return false;
 }
 
 //**********************************************************************
-//*                            CValueStructure                         *
+//*                            ibValueStructure                         *
 //**********************************************************************
 
 #define st_error_conversion _("Error conversion value. Must be string!")
 
-bool CValueStructure::GetAt(const CValue& varKeyValue, CValue& pvarValue)
+bool ibValueStructure::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {
-	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
+	if (varKeyValue.GetType() != ibValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode())
-			CBackendCoreException::Error(st_error_conversion);
+			ibBackendCoreException::Error(st_error_conversion);
 		return false;
 	}
-	return CValueContainer::GetAt(varKeyValue, pvarValue);
+	return ibValueContainer::GetAt(varKeyValue, pvarValue);
 }
 
-bool CValueStructure::SetAt(const CValue& varKeyValue, const CValue& cValue)
+bool ibValueStructure::SetAt(const ibValue& varKeyValue, const ibValue& cValue)
 {
-	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
+	if (varKeyValue.GetType() != ibValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode()) {
-			CBackendCoreException::Error(st_error_conversion);
+			ibBackendCoreException::Error(st_error_conversion);
 		} return false;
 	}
 
-	return CValueContainer::SetAt(varKeyValue, cValue);
+	return ibValueContainer::SetAt(varKeyValue, cValue);
 }
 
-void CValueStructure::Delete(const CValue& varKeyValue)
+void ibValueStructure::Delete(const ibValue& varKeyValue)
 {
-	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
+	if (varKeyValue.GetType() != ibValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode()) {
-			CBackendCoreException::Error(st_error_conversion);
+			ibBackendCoreException::Error(st_error_conversion);
 		} return;
 	}
 
-	CValueContainer::Delete(varKeyValue);
+	ibValueContainer::Delete(varKeyValue);
 }
 
-void CValueStructure::Insert(const CValue& varKeyValue, const CValue& cValue)
+void ibValueStructure::Insert(const ibValue& varKeyValue, const ibValue& cValue)
 {
-	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
+	if (varKeyValue.GetType() != ibValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode()) {
-			CBackendCoreException::Error(st_error_conversion);
+			ibBackendCoreException::Error(st_error_conversion);
 		} return;
 	}
 
-	CValueContainer::Insert(varKeyValue, cValue);
+	ibValueContainer::Insert(varKeyValue, cValue);
 }
 
-bool CValueStructure::Property(const CValue& varKeyValue, CValue& cValueFound)
+bool ibValueStructure::Property(const ibValue& varKeyValue, ibValue& cValueFound)
 {
-	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
+	if (varKeyValue.GetType() != ibValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode()) {
-			CBackendCoreException::Error(st_error_conversion);
+			ibBackendCoreException::Error(st_error_conversion);
 		}
 		return false;
 	}
 
-	return CValueContainer::Property(varKeyValue, cValueFound);
+	return ibValueContainer::Property(varKeyValue, cValueFound);
 }
 
 //**********************************************************************
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueContainer, "Container", string_to_clsid("VL_CONTR"));
-VALUE_TYPE_REGISTER(CValueStructure, "Structure", string_to_clsid("VL_STRUT"));
+VALUE_TYPE_REGISTER(ibValueContainer, "Container", string_to_clsid("VL_CONTR"));
+VALUE_TYPE_REGISTER(ibValueStructure, "Structure", string_to_clsid("VL_STRUT"));
 
-SYSTEM_TYPE_REGISTER(CValueContainer::CValueReturnContainer, "KeyValue", string_to_clsid("VL_KEVAL"));
+SYSTEM_TYPE_REGISTER(ibValueContainer::ibValueReturnContainer, "KeyValue", string_to_clsid("VL_KEVAL"));

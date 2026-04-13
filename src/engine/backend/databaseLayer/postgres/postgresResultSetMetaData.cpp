@@ -3,18 +3,18 @@
 
 /*
    SPECIAL NOTE:
-	The PQf* functions are 0-based, but the JDBC IResultSetMetaData
+	The PQf* functions are 0-based, but the JDBC ibResultSetMetaData
 	functions are 1-based.  To be consistent with the 1-based JDBC (and also
-	IPreparedStatement paramters, we are using a 1-based system here.)
+	ibPreparedStatement paramters, we are using a 1-based system here.)
  */
 
-PostgresResultSetMetaData::PostgresResultSetMetaData(CPostgresInterface* pInterface, PGresult* pResult)
+ibResultSetMetaDataPostgres::ibResultSetMetaDataPostgres(ibInterfacePostgres* pInterface, PGresult* pResult)
 {
 	m_pInterface = pInterface;
 	m_pResult = pResult;
 }
 
-int PostgresResultSetMetaData::GetColumnType(int i)
+int ibResultSetMetaDataPostgres::GetColumnType(int i)
 {
 	int columnType = m_pInterface->GetPQftype()(m_pResult, i - 1);
 	int returnType = COLUMN_UNKNOWN;
@@ -54,18 +54,18 @@ int PostgresResultSetMetaData::GetColumnType(int i)
 	return returnType;
 }
 
-int PostgresResultSetMetaData::GetColumnSize(int i)
+int ibResultSetMetaDataPostgres::GetColumnSize(int i)
 {
 	return m_pInterface->GetPQfsize()(m_pResult, i - 1);
 }
 
-wxString PostgresResultSetMetaData::GetColumnName(int i)
+wxString ibResultSetMetaDataPostgres::GetColumnName(int i)
 {
 	wxString columnName = ConvertFromUnicodeStream(m_pInterface->GetPQfname()(m_pResult, i - 1));
 	return columnName;
 }
 
-int PostgresResultSetMetaData::GetColumnCount()
+int ibResultSetMetaDataPostgres::GetColumnCount()
 {
 	return m_pInterface->GetPQnfields()(m_pResult);
 }

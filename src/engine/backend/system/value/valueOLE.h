@@ -3,15 +3,15 @@
 
 #include "backend/compiler/value.h"
 
-class BACKEND_API CValueOLE :
-	public CValue {
+class BACKEND_API ibValueOLE :
+	public ibValue {
 	wxString m_objectName;
 #ifdef __WXMSW__
 	IDispatch* m_dispatch = nullptr;
 	IStream* m_streamDispatch = nullptr;
 	IDispatch* m_currentDispatch = nullptr;
 #endif 
-	CMethodHelper* m_methodHelper;
+	ibValueMethodHelper* m_methodHelper;
 #ifdef __WXMSW__
 	CLSID m_clsId;
 #endif
@@ -20,13 +20,13 @@ private:
 	IDispatch* DoCreateInstance();
 #endif
 #ifdef __WXMSW__
-	void AddFromArray(CValue& pvarRetValue, long* aPos, SAFEARRAY* psa, SAFEARRAYBOUND* aDims, int nLastDim) const;
-	bool FromVariant(const VARIANT& oleVariant, CValue& pvarRetValue) const;
-	CValue FromVariantArray(SAFEARRAY* psa) const;
-	VARIANT FromValue(const CValue& varRetValue) const;
+	void AddFromArray(ibValue& pvarRetValue, long* aPos, SAFEARRAY* psa, SAFEARRAYBOUND* aDims, int nLastDim) const;
+	bool FromVariant(const VARIANT& oleVariant, ibValue& pvarRetValue) const;
+	ibValue FromVariantArray(SAFEARRAY* psa) const;
+	VARIANT FromValue(const ibValue& varRetValue) const;
 	void FreeValue(VARIANT& oleVariant);
 #endif
-	friend class CDebuggerServer;
+	friend class ibDebuggerServer;
 public:
 
 	//STA
@@ -46,7 +46,7 @@ public:
 	}
 #endif
 
-	virtual CMethodHelper* GetPMethods() const {
+	virtual ibValueMethodHelper* GetPMethods() const {
 		return m_methodHelper;
 	}
 
@@ -62,22 +62,22 @@ public:
 		return true;
 	}
 
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);//setting attribute
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);//attribute value
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);//setting attribute
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);//attribute value
 
 	//WORK AS AN AGGREGATE OBJECT
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
 #ifdef __WXMSW__
-	CValueOLE();
+	ibValueOLE();
 private:
-	CValueOLE(const CLSID& clsId, IDispatch* dispatch, const wxString& objectName);
+	ibValueOLE(const CLSID& clsId, IDispatch* dispatch, const wxString& objectName);
 public:
 #else
-	CValueOLE();
+	ibValueOLE();
 #endif
 
-	virtual ~CValueOLE();
+	virtual ~ibValueOLE();
 
 	bool Create(const wxString& strOleName);
 
@@ -85,24 +85,28 @@ public:
 		return false;
 	}
 
-	virtual bool Init(CValue** paParams, const long lSizeArray);
+	virtual bool Init(ibValue** paParams, const long lSizeArray);
 
 	virtual wxString GetString() const {
 		return m_objectName;
 	}
 
 	//operator '=='
-	virtual bool CompareValueEQ(const CValue& cParam) const {
-		CValueOLE* m_pValueOLE = dynamic_cast<CValueOLE*>(cParam.GetRef());
+	virtual bool CompareValueEQ(const ibValue& cParam) const {
+#ifdef __WXMSW__
+		ibValueOLE* m_pValueOLE = dynamic_cast<ibValueOLE*>(cParam.GetRef());
 		if (m_pValueOLE) return m_dispatch == m_pValueOLE->m_dispatch;
-		else return false;
+#endif
+		return false;
 	}
 
 	//operator '!='
-	virtual bool CompareValueNE(const CValue& cParam) const {
-		CValueOLE* m_pValueOLE = dynamic_cast<CValueOLE*>(cParam.GetRef());
+	virtual bool CompareValueNE(const ibValue& cParam) const {
+#ifdef __WXMSW__
+		ibValueOLE* m_pValueOLE = dynamic_cast<ibValueOLE*>(cParam.GetRef());
 		if (m_pValueOLE) return m_dispatch != m_pValueOLE->m_dispatch;
-		else return false;
+#endif
+		return false;
 	}
 
 	//check is empty
@@ -111,7 +115,7 @@ public:
 	}
 
 protected:
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(CValueOLE);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibValueOLE);
 };
 
 #endif 

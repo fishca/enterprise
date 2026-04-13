@@ -8,15 +8,15 @@
 //*							  Class: compiler                       *
 //*******************************************************************
 
-class BACKEND_API CCompileCode : public CTranslateCode {
+class BACKEND_API ibCompileCode : public ibTranslateCode {
 
-	struct CCallFunction {
+	struct ibCallFunction {
 
 		wxString m_strName;			// name of called function
 		wxString m_strRealName;		// name of called function
 
-		CParamUnit m_puRetValue;	// variable where the result of the function execution should be returned
-		CParamUnit m_puContextVal;  // pointer to the Context variable
+		ibParamUnit m_puRetValue;	// variable where the result of the function execution should be returned
+		ibParamUnit m_puContextVal;  // pointer to the Context variable
 
 		unsigned int m_numAddLine = 0;	// position in the bytecode array where the call was encountered (for the case where there is a call, but the function has not yet been declared)
 		unsigned int m_numError = 0;	// to display error messages
@@ -28,18 +28,18 @@ class BACKEND_API CCompileCode : public CTranslateCode {
 
 		wxString m_strModuleName;	// module name (since it is possible to include connections from different modules)
 
-		std::vector<CParamUnit> m_listParam; // list of passed parameters (list of variables, if the value is not specified, then d.b. (-1, -1))
+		std::vector<ibParamUnit> m_listParam; // list of passed parameters (list of variables, if the value is not specified, then d.b. (-1, -1))
 	};
 
-	friend class CProcUnit;
+	friend class ibProcUnit;
 
 public:
 
-	CCompileCode();
-	CCompileCode(const wxString& strModuleName, const wxString& strDocPath, bool onlyFunction = false);
-	CCompileCode(const wxString& strFileName);
+	ibCompileCode();
+	ibCompileCode(const wxString& strModuleName, const wxString& strDocPath, bool onlyFunction = false);
+	ibCompileCode(const wxString& strFileName);
 
-	virtual ~CCompileCode();
+	virtual ~ibCompileCode();
 
 	// basic methods:
 	void Reset(); // resetting data to reuse an object	
@@ -47,16 +47,16 @@ public:
 
 	void PrepareModuleData();
 
-	void AddVariable(const wxString& strName, const CValue& value);	// support for external variables
-	void AddVariable(const wxString& strName, CValue* pValue);		// support for external variables
+	void AddVariable(const wxString& strName, const ibValue& value);	// support for external variables
+	void AddVariable(const wxString& strName, ibValue* pValue);		// support for external variables
 
-	void AddContextVariable(const wxString& strName, const CValue& value);
-	void AddContextVariable(const wxString& strName, CValue* pValue);
+	void AddContextVariable(const wxString& strName, const ibValue& value);
+	void AddContextVariable(const wxString& strName, ibValue* pValue);
 
 	void RemoveVariable(const wxString& strName);
 
-	void SetParent(CCompileCode* parent); // setting the parent module and prohibited max. ancestor
-	virtual CCompileCode* GetParent() const { return m_parent; }
+	void SetParent(ibCompileCode* parent); // setting the parent module and prohibited max. ancestor
+	virtual ibCompileCode* GetParent() const { return m_parent; }
 
 	virtual bool Recompile(); // recompiling a module from a meta object
 
@@ -66,37 +66,33 @@ public:
 public:
 
 	static void InitializeCompileModule();
-	CCompileContext* GetContext() const { return m_rootContext; }
+	static void SetCodeStyle(short codeStyle);
 
-private:
-
-	// methods for displaying errors during compilation::
-	void SetError(int nErr, const wxString& strError = wxEmptyString);
-	void SetError(int nErr, const wxUniChar& c);
+	ibCompileContext* GetContext() const { return m_rootContext; }
 
 public:
 
-	CParamUnit GetExpression(CCompileContext* context, int priority = 0);
+	ibParamUnit GetExpression(ibCompileContext* context, int priority = 0);
 
 	//attributes:
 	bool m_onlyFunction; // true - only functions and export functions 
 
-	CCompileCode* m_parent; // parent module (i.e., in relation to the current one, it acts as a global module)
+	ibCompileCode* m_parent; // parent module (i.e., in relation to the current one, it acts as a global module)
 
 	// current context of variables, functions and labels
-	CByteCode		m_cByteCode;        // output array of bytecodes for execution by the virtual machine
+	ibByteCode		m_cByteCode;        // output array of bytecodes for execution by the virtual machine
 
-	CCompileContext* m_rootContext; // root context 
+	ibCompileContext* m_rootContext; // root context 
 
 	int				m_numCurrentCompile;		// current position in the token array
 	bool			m_bExpressionOnly;		// expression evaluation only(no new function assignments)
 	bool			m_changedCode;
 
 	// matching external variables
-	std::map<wxString, CValue*> m_listExternValue;
+	std::map<wxString, ibValue*> m_listExternValue;
 
 	// matching context variables
-	std::map<wxString, CValue*> m_listContextValue;
+	std::map<wxString, ibValue*> m_listContextValue;
 
 protected:
 
@@ -105,9 +101,9 @@ protected:
 		unsigned int currPos, unsigned int currLine,
 		const wxString& strErrorDesc) const;
 
-	const CLexem& PreviewGetLexem();
-	const CLexem& GetLexem();
-	const CLexem& GETLexem();
+	const ibLexem& PreviewGetLexem();
+	const ibLexem& GetLexem();
+	const ibLexem& GETLexem();
 
 	void GETDelimeter(const wxUniChar& c);
 
@@ -120,39 +116,48 @@ protected:
 	void GETKeyWord(int nKey);
 
 	wxString GETIdentifier(bool strRealName = false);
-	CValue GETConstant();
+	ibValue GETConstant();
 
-	void AddLineInfo(CByteUnit& code);
+	void AddLineInfo(ibByteUnit& code);
 
 	bool CompileModule();
-	bool CompileFunction(CCompileContext* context);
-	bool CompileDeclaration(CCompileContext* context);
-	bool CompileBlock(CCompileContext* context);
-	bool CompileNewObject(CCompileContext* context);
-	bool CompileGoto(CCompileContext* context);
-	bool CompileIf(CCompileContext* context);
-	bool CompileWhile(CCompileContext* context);
-	bool CompileFor(CCompileContext* context);
-	bool CompileForeach(CCompileContext* context);
+	bool CompileFunction(ibCompileContext* context);
+	bool CompileDeclaration(ibCompileContext* context);
+	bool CompileBlock(ibCompileContext* context);
+	bool CompileNewObject(ibCompileContext* context);
+	bool CompileGoto(ibCompileContext* context);
+	bool CompileIf(ibCompileContext* context);
+	bool CompileWhile(ibCompileContext* context);
+	bool CompileFor(ibCompileContext* context);
+	bool CompileForeach(ibCompileContext* context);
+	bool CompileException(ibCompileContext* context);
 
-	CParamUnit GetCallFunction(CCompileContext* context, const wxString& strName, const int& nIsSet);
-	CParamUnit GetCurrentIdentifier(CCompileContext* context, int& nIsSet);
+	ibParamUnit GetCallFunction(ibCompileContext* context, const wxString& strName, const int& nIsSet);
+	ibParamUnit GetCurrentIdentifier(ibCompileContext* context, int& nIsSet);
 
-	CParamUnit FindConst(const CValue& constData);
+	ibParamUnit FindConst(const ibValue& constData);
 
-	bool PushCallFunction(const std::shared_ptr<CCallFunction>& function);
-	bool GetFunction(const wxString& strName, std::shared_ptr<CCompileContext::CFunction>& function, int* pNumFunction = nullptr);
+	bool PushCallFunction(const std::shared_ptr<ibCallFunction>& function);
+	bool GetFunction(const wxString& strName, std::shared_ptr<ibCompileContext::ibFunction>& function, int* pNumFunction = nullptr);
 
 	bool IsTypeVar(const wxString& sVariable = wxEmptyString);
 	wxString GetTypeVar(const wxString& sVariable = wxEmptyString);
-	void AddTypeSet(const CParamUnit& sVariable);
+	void AddTypeSet(const ibParamUnit& sVariable);
 
 	const int GetConstString(const wxString& strConstName);
 
 	std::map<wxString, unsigned int> m_listHashConst;
-	std::vector<std::shared_ptr<CCallFunction>> m_listCallFunc;	// list of encountered procedure and function calls
+	std::vector<std::shared_ptr<ibCallFunction>> m_listCallFunc;	// list of encountered procedure and function calls
 
-	friend struct CCompileContext;
+private:
+
+	// methods for displaying errors during compilation::
+	void SetError(int nErr, const wxString& strError = wxEmptyString);
+	void SetError(int nErr, const wxUniChar& c);
+
+	wxString m_strCurFuncName;//name of the current compiled function (for processing the recursive function call option)
+
+	friend struct ibCompileContext;
 };
 
 #endif 

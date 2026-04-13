@@ -31,12 +31,12 @@ static char* s_dataviewlist_column_xpm[] = {
 	" X+++++O+++++O..."
 };
 
-wxIcon CValueTableBoxColumn::GetIcon() const
+wxIcon ibValueModelTableBoxColumn::GetIcon() const
 {
 	return wxIcon(s_dataviewlist_column_xpm);
 }
 
-wxIcon CValueTableBoxColumn::GetIconGroup()
+wxIcon ibValueModelTableBoxColumn::GetIconGroup()
 {
 	return wxIcon(s_dataviewlist_column_xpm);
 }

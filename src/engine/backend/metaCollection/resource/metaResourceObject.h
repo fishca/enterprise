@@ -3,11 +3,11 @@
 
 #include "backend/metaCollection/attribute/metaAttributeObject.h"
 
-class BACKEND_API CValueMetaObjectResource : public CValueMetaObjectAttribute {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectResource);
+class BACKEND_API ibValueMetaObjectResource : public ibValueMetaObjectAttribute {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectResource);
 public:
 
-	CValueMetaObjectResource() : CValueMetaObjectAttribute(eValueTypes::TYPE_NUMBER) {
+	ibValueMetaObjectResource() : ibValueMetaObjectAttribute(ibValueTypes::TYPE_NUMBER) {
 	}
 
 	//support icons
@@ -15,7 +15,7 @@ public:
 	static wxIcon GetIconGroup();
 
 	//get data selector 
-	virtual eSelectorDataType GetFilterDataType() const;
+	virtual ibSelectorDataType GetFilterDataType() const;
 };
 
 #endif

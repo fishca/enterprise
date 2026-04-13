@@ -10,14 +10,14 @@
 #include "backend/appData.h"
 
 // -----------------------------------------------------------------------
-// IBackendCommandItem
+// ibBackendCommandItem
 // -----------------------------------------------------------------------
 
 #include "backend/system/systemManager.h"
 
-bool IBackendCommandItem::ShowFormByCommandType(EInterfaceCommandType cmdType)
+bool ibBackendCommandItem::ShowFormByCommandType(ibInterfaceCommandType cmdType)
 {
-	IBackendValueForm* valueForm = nullptr;
+	ibBackendValueForm* valueForm = nullptr;
 
 	try {
 
@@ -28,12 +28,12 @@ bool IBackendCommandItem::ShowFormByCommandType(EInterfaceCommandType cmdType)
 
 		valueForm->ShowForm();
 	}
-	catch (const CBackendAccessException* err) {
+	catch (const ibBackendAccessException* err) {
 		wxDELETE(valueForm);
-		CSystemFunction::Alert(err->GetErrorDescription());
+		ibValueSystemFunction::Alert(err->GetErrorDescription());
 		return false;
 	}
-	catch (const CBackendException*) {
+	catch (const ibBackendException*) {
 		wxDELETE(valueForm);
 		return false;
 	}
@@ -42,20 +42,20 @@ bool IBackendCommandItem::ShowFormByCommandType(EInterfaceCommandType cmdType)
 }
 
 // -----------------------------------------------------------------------
-// IValueMetaObjectForm
+// ibValueMetaObjectFormBase
 // -----------------------------------------------------------------------
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueMetaObjectForm, CValueMetaObjectModule);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueMetaObjectFormBase, ibValueMetaObjectModule);
 
 //***********************************************************************
 //*                          common value object                        *
 //***********************************************************************
 
-bool IValueMetaObjectForm::LoadFormData(IBackendValueForm* valueForm) const {
+bool ibValueMetaObjectFormBase::LoadFormData(ibBackendValueForm* valueForm) const {
 	return valueForm->LoadForm(GetFormData());
 }
 
-bool IValueMetaObjectForm::SaveFormData(IBackendValueForm* valueForm) {
+bool ibValueMetaObjectFormBase::SaveFormData(ibBackendValueForm* valueForm) {
 	const wxMemoryBuffer& memoryBuffer = valueForm->SaveForm();
 	SetFormData(memoryBuffer);
 	return !memoryBuffer.IsEmpty();
@@ -65,25 +65,25 @@ bool IValueMetaObjectForm::SaveFormData(IBackendValueForm* valueForm) {
 
 #pragma region _form_creator_h_
 
-IBackendValueForm* IValueMetaObjectForm::CreateAndBuildForm(const IValueMetaObjectForm* creator,
-	IBackendControlFrame* ownerControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectFormBase::CreateAndBuildForm(const ibValueMetaObjectFormBase* creator,
+	ibBackendControlFrame* ownerControl, ibSourceDataObject* srcObject, const ibUniqueKey& formGuid)
 {
 	return CreateAndBuildForm(creator,
 		creator != nullptr ? creator->GetTypeForm() : defaultFormType, ownerControl, srcObject, formGuid);
 }
 
-IBackendValueForm* IValueMetaObjectForm::CreateAndBuildForm(const IValueMetaObjectForm* creator, const form_identifier_t& form_id,
-	IBackendControlFrame* ownerControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectFormBase::CreateAndBuildForm(const ibValueMetaObjectFormBase* creator, const ibFormID& form_id,
+	ibBackendControlFrame* ownerControl, ibSourceDataObject* srcObject, const ibUniqueKey& formGuid)
 {
-	IBackendValueForm* result = nullptr;
+	ibBackendValueForm* result = nullptr;
 
 	if (creator != nullptr) {
-		const IMetaData* metaData = creator->GetMetaData();
+		const ibMetaData* metaData = creator->GetMetaData();
 		wxASSERT(metaData);
-		const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 		if (!moduleManager->FindCompileModule(creator, result)) {
-			result = IBackendValueForm::CreateNewForm(creator, ownerControl, srcObject, formGuid);
+			result = ibBackendValueForm::CreateNewForm(creator, ownerControl, srcObject, formGuid);
 			if (!creator->GetFormData().IsEmpty() && !creator->LoadFormData(result)) {
 				wxDELETE(result);
 				return nullptr;
@@ -94,7 +94,7 @@ IBackendValueForm* IValueMetaObjectForm::CreateAndBuildForm(const IValueMetaObje
 		}
 	}
 	else {
-		result = IBackendValueForm::CreateNewForm(nullptr, ownerControl, srcObject, formGuid);
+		result = ibBackendValueForm::CreateNewForm(nullptr, ownerControl, srcObject, formGuid);
 		result->BuildForm(form_id);
 	}
 
@@ -124,54 +124,54 @@ IBackendValueForm* IValueMetaObjectForm::CreateAndBuildForm(const IValueMetaObje
 
 ///////////////////////////////////////////////////////////////////////////
 
-wxMemoryBuffer IValueMetaObjectForm::CopyFormData() const
+wxMemoryBuffer ibValueMetaObjectFormBase::CopyFormData() const
 {
-	IBackendValueForm* valueForm = nullptr;
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibBackendValueForm* valueForm = nullptr;
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	if (moduleManager->FindCompileModule(this, valueForm))
 		return valueForm->SaveForm();
 	return wxMemoryBuffer();
 }
 
-bool IValueMetaObjectForm::PasteFormData()
+bool ibValueMetaObjectFormBase::PasteFormData()
 {
 	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
-IValueMetaObjectForm::IValueMetaObjectForm(const wxString& name, const wxString& synonym, const wxString& comment) :
-	IValueMetaObjectModule(name, synonym, comment)
+ibValueMetaObjectFormBase::ibValueMetaObjectFormBase(const wxString& name, const wxString& synonym, const wxString& comment) :
+	ibValueMetaObjectModuleBase(name, synonym, comment)
 {
 	//set default proc
-	SetDefaultProcedure(wxT("BeforeOpen"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
-	SetDefaultProcedure(wxT("OnOpen"), eContentHelper::eProcedureHelper);
-	SetDefaultProcedure(wxT("BeforeClose"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
-	SetDefaultProcedure(wxT("OnClose"), eContentHelper::eProcedureHelper);
+	SetDefaultProcedure(wxT("BeforeOpen"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	SetDefaultProcedure(wxT("OnOpen"), ibContentHelper::eProcedureHelper);
+	SetDefaultProcedure(wxT("BeforeClose"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	SetDefaultProcedure(wxT("OnClose"), ibContentHelper::eProcedureHelper);
 
-	SetDefaultProcedure(wxT("OnReOpen"), eContentHelper::eProcedureHelper);
-	SetDefaultProcedure(wxT("ChoiceProcessing"), eContentHelper::eProcedureHelper, { { wxT("SelectedValue") }, { wxT("ChoiceSource") } });
-	SetDefaultProcedure(wxT("RefreshDisplay"), eContentHelper::eProcedureHelper);
+	SetDefaultProcedure(wxT("OnReOpen"), ibContentHelper::eProcedureHelper);
+	SetDefaultProcedure(wxT("ChoiceProcessing"), ibContentHelper::eProcedureHelper, { { wxT("SelectedValue") }, { wxT("ChoiceSource") } });
+	SetDefaultProcedure(wxT("RefreshDisplay"), ibContentHelper::eProcedureHelper);
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectForm, IValueMetaObjectForm)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectForm, ibValueMetaObjectFormBase)
 
 //***********************************************************************
 //*                            Metaform                                 *
 //***********************************************************************
 
-CValueMetaObjectForm::CValueMetaObjectForm(const wxString& name, const wxString& synonym, const wxString& comment) : IValueMetaObjectForm(name, synonym, comment)
+ibValueMetaObjectForm::ibValueMetaObjectForm(const wxString& name, const wxString& synonym, const wxString& comment) : ibValueMetaObjectFormBase(name, synonym, comment)
 {
 }
 
-bool CValueMetaObjectForm::LoadData(CMemoryReader& reader)
+bool ibValueMetaObjectForm::LoadData(ibReaderMemory& reader)
 {
 	m_properyFormType->SetValue(reader.r_s32());
 	return m_propertyForm->LoadData(reader);
 }
 
-bool CValueMetaObjectForm::SaveData(CMemoryWriter& writer)
+bool ibValueMetaObjectForm::SaveData(ibWriterMemory& writer)
 {
 	writer.w_s32(m_properyFormType->GetValueAsInteger());
 	return m_propertyForm->SaveData(writer);
@@ -179,14 +179,14 @@ bool CValueMetaObjectForm::SaveData(CMemoryWriter& writer)
 
 //***********************************************************************
 
-bool CValueMetaObjectForm::FillGenericFormType(CPropertyList* prop)
+bool ibValueMetaObjectForm::FillGenericFormType(ibPropertyList* prop)
 {
-	const IValueMetaObjectGenericData* geneticObject = m_parent != nullptr ?
-		m_parent->ConvertToType<IValueMetaObjectGenericData>() : nullptr;
+	const ibValueMetaObjectGenericData* geneticObject = m_parent != nullptr ?
+		m_parent->ConvertToType<ibValueMetaObjectGenericData>() : nullptr;
 
 	if (geneticObject != nullptr) {
 
-		CFormTypeList formList = geneticObject->GetFormType();
+		ibFormTypeList formList = geneticObject->GetFormType();
 		for (unsigned int idx = 0; idx < formList.GetItemCount(); idx++) {
 			prop->AppendItem(
 				formList.GetItemName(idx),
@@ -208,22 +208,22 @@ bool CValueMetaObjectForm::FillGenericFormType(CPropertyList* prop)
 //*                             event object                            *
 //***********************************************************************
 
-bool CValueMetaObjectForm::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool ibValueMetaObjectForm::OnCreateMetaObject(ibMetaData* metaData, int flags)
 {
-	if (!IValueMetaObjectForm::OnCreateMetaObject(metaData, flags))
+	if (!ibValueMetaObjectFormBase::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	if ((flags & newObjectFlag) != 0) {
 
-		IValueMetaObjectGenericData* metaObject = wxDynamicCast(
-			m_parent, IValueMetaObjectGenericData
+		ibValueMetaObjectGenericData* metaObject = wxDynamicCast(
+			m_parent, ibValueMetaObjectGenericData
 		);
 
 		wxASSERT(metaObject);
 
-		form_identifier_t res = wxNOT_FOUND;
+		ibFormID res = wxNOT_FOUND;
 		if (metaData != nullptr) {
-			IBackendMetadataTree* metaTree = metaData->GetMetaTree();
+			ibBackendMetadataTree* metaTree = metaData->GetMetaTree();
 			if (metaTree != nullptr) {
 				res = metaTree->SelectFormType(this);
 			}
@@ -236,7 +236,7 @@ bool CValueMetaObjectForm::OnCreateMetaObject(IMetaData* metaData, int flags)
 		}
 		metaObject->OnCreateFormObject(this);
 		if (metaData != nullptr) {
-			IBackendMetadataTree* metaTree = metaData->GetMetaTree();
+			ibBackendMetadataTree* metaTree = metaData->GetMetaTree();
 			if (metaTree != nullptr) {
 				metaTree->UpdateChoiceSelection();
 			}
@@ -246,89 +246,89 @@ bool CValueMetaObjectForm::OnCreateMetaObject(IMetaData* metaData, int flags)
 	return true;
 }
 
-bool CValueMetaObjectForm::OnLoadMetaObject(IMetaData* metaData)
+bool ibValueMetaObjectForm::OnLoadMetaObject(ibMetaData* metaData)
 {
-	return IValueMetaObjectForm::OnLoadMetaObject(metaData);
+	return ibValueMetaObjectFormBase::OnLoadMetaObject(metaData);
 }
 
-bool CValueMetaObjectForm::OnSaveMetaObject(int flags)
+bool ibValueMetaObjectForm::OnSaveMetaObject(int flags)
 {
-	return IValueMetaObjectForm::OnSaveMetaObject(flags);
+	return ibValueMetaObjectFormBase::OnSaveMetaObject(flags);
 }
 
-bool CValueMetaObjectForm::OnDeleteMetaObject()
+bool ibValueMetaObjectForm::OnDeleteMetaObject()
 {
-	IValueMetaObjectGenericData* metaObject = wxDynamicCast(m_parent, IValueMetaObjectGenericData);
+	ibValueMetaObjectGenericData* metaObject = wxDynamicCast(m_parent, ibValueMetaObjectGenericData);
 	wxASSERT(metaObject);
 	metaObject->OnRemoveMetaForm(this);
 
-	return IValueMetaObjectForm::OnDeleteMetaObject();
+	return ibValueMetaObjectFormBase::OnDeleteMetaObject();
 }
 
-bool CValueMetaObjectForm::OnBeforeRunMetaObject(int flags)
+bool ibValueMetaObjectForm::OnBeforeRunMetaObject(int flags)
 {
-	return IValueMetaObjectForm::OnBeforeRunMetaObject(flags);
+	return ibValueMetaObjectFormBase::OnBeforeRunMetaObject(flags);
 }
 
-bool CValueMetaObjectForm::OnAfterRunMetaObject(int flags)
+bool ibValueMetaObjectForm::OnAfterRunMetaObject(int flags)
 {
 	if (appData->DesignerMode()) {
 
-		IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+		ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 		wxASSERT(moduleManager);
-		IValueMetaObjectGenericData* metaObject = wxDynamicCast(m_parent, IValueMetaObjectGenericData);
+		ibValueMetaObjectGenericData* metaObject = wxDynamicCast(m_parent, ibValueMetaObjectGenericData);
 		wxASSERT(metaObject);
 
 		return moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(metaObject->CreateObjectForm(this)));
 	}
 
-	return IValueMetaObjectForm::OnAfterRunMetaObject(flags);
+	return ibValueMetaObjectFormBase::OnAfterRunMetaObject(flags);
 }
 
-bool CValueMetaObjectForm::OnBeforeCloseMetaObject()
+bool ibValueMetaObjectForm::OnBeforeCloseMetaObject()
 {
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->RemoveCompileModule(this))
 		return false;
 
-	return IValueMetaObjectForm::OnBeforeCloseMetaObject();
+	return ibValueMetaObjectFormBase::OnBeforeCloseMetaObject();
 }
 
-bool CValueMetaObjectForm::OnAfterCloseMetaObject()
+bool ibValueMetaObjectForm::OnAfterCloseMetaObject()
 {
-	return IValueMetaObjectForm::OnAfterCloseMetaObject();
+	return ibValueMetaObjectFormBase::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                           CommonFormObject metaData                 *
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectCommonForm, IValueMetaObjectForm)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectCommonForm, ibValueMetaObjectFormBase)
 
-CValueMetaObjectCommonForm::CValueMetaObjectCommonForm(const wxString& name, const wxString& synonym, const wxString& comment) : IValueMetaObjectForm(name, synonym, comment) {}
+ibValueMetaObjectCommonForm::ibValueMetaObjectCommonForm(const wxString& name, const wxString& synonym, const wxString& comment) : ibValueMetaObjectFormBase(name, synonym, comment) {}
 
-bool CValueMetaObjectCommonForm::LoadData(CMemoryReader& reader)
+bool ibValueMetaObjectCommonForm::LoadData(ibReaderMemory& reader)
 {
 	return m_propertyForm->LoadData(reader);
 }
 
-bool CValueMetaObjectCommonForm::SaveData(CMemoryWriter& writer)
+bool ibValueMetaObjectCommonForm::SaveData(ibWriterMemory& writer)
 {
 	return m_propertyForm->SaveData(writer);
 }
 
 #include "backend/system/systemManager.h"
 
-IBackendValueForm* CValueMetaObjectCommonForm::GetObjectForm(IBackendControlFrame* ownerControl, const CUniqueKey& formGuid) const
+ibBackendValueForm* ibValueMetaObjectCommonForm::GetObjectForm(ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	if (!AccessRight_Use()) {
-		CBackendAccessException::Error();
-		return false;
+		ibBackendAccessException::Error();
+		return nullptr;
 	}
 
-	return IValueMetaObjectForm::CreateAndBuildForm(
+	return ibValueMetaObjectFormBase::CreateAndBuildForm(
 		this,
 		ownerControl,
 		nullptr,
@@ -340,46 +340,46 @@ IBackendValueForm* CValueMetaObjectCommonForm::GetObjectForm(IBackendControlFram
 //*                             event object                            *
 //***********************************************************************
 
-bool CValueMetaObjectCommonForm::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool ibValueMetaObjectCommonForm::OnCreateMetaObject(ibMetaData* metaData, int flags)
 {
-	return IValueMetaObjectModule::OnCreateMetaObject(metaData, flags);
+	return ibValueMetaObjectModuleBase::OnCreateMetaObject(metaData, flags);
 }
 
-bool CValueMetaObjectCommonForm::OnBeforeRunMetaObject(int flags)
+bool ibValueMetaObjectCommonForm::OnBeforeRunMetaObject(int flags)
 {
-	return IValueMetaObjectModule::OnBeforeRunMetaObject(flags);
+	return ibValueMetaObjectModuleBase::OnBeforeRunMetaObject(flags);
 }
 
-bool CValueMetaObjectCommonForm::OnAfterRunMetaObject(int flags)
+bool ibValueMetaObjectCommonForm::OnAfterRunMetaObject(int flags)
 {
 	if (appData->DesignerMode()) {
-		IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+		ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 		wxASSERT(moduleManager);
-		if (moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(IValueMetaObjectForm::CreateAndBuildForm(this, defaultFormType)))) {
-			return IValueMetaObjectModule::OnAfterRunMetaObject(flags);
+		if (moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(ibValueMetaObjectFormBase::CreateAndBuildForm(this, defaultFormType)))) {
+			return ibValueMetaObjectModuleBase::OnAfterRunMetaObject(flags);
 		}
 		return false;
 	}
-	return IValueMetaObjectModule::OnAfterRunMetaObject(flags);
+	return ibValueMetaObjectModuleBase::OnAfterRunMetaObject(flags);
 }
 
-bool CValueMetaObjectCommonForm::OnBeforeCloseMetaObject()
+bool ibValueMetaObjectCommonForm::OnBeforeCloseMetaObject()
 {
 	if (appData->DesignerMode()) {
-		IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+		ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 		if (moduleManager->RemoveCompileModule(this)) {
-			return IValueMetaObjectModule::OnBeforeCloseMetaObject();
+			return ibValueMetaObjectModuleBase::OnBeforeCloseMetaObject();
 		}
 		return false;
 	}
 
-	return IValueMetaObjectModule::OnBeforeCloseMetaObject();
+	return ibValueMetaObjectModuleBase::OnBeforeCloseMetaObject();
 }
 
-bool CValueMetaObjectCommonForm::OnAfterCloseMetaObject()
+bool ibValueMetaObjectCommonForm::OnAfterCloseMetaObject()
 {
-	return IValueMetaObjectModule::OnAfterCloseMetaObject();
+	return ibValueMetaObjectModuleBase::OnAfterCloseMetaObject();
 }
 
 
@@ -387,5 +387,5 @@ bool CValueMetaObjectCommonForm::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectForm, "Form", g_metaFormCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectCommonForm, "CommonForm", g_metaCommonFormCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectForm, "Form", g_metaFormCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectCommonForm, "CommonForm", g_metaCommonFormCLSID);

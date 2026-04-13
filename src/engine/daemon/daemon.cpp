@@ -7,7 +7,9 @@
 #include <wx/sysopt.h>
 #include <wx/utils.h> 
 
+#ifdef __WXMSW__
 #include <windows.h>
+#endif
 
 #include "backend/appData.h"
 
@@ -79,7 +81,7 @@ int main(int argc, char** argv)
 	wxSocketBase::Initialize();
 
 	// Init appData
-	bool connected = appDataCreateServer(eRunMode::eENTERPRISE_MODE,
+	bool connected = appDataCreateServer(ibRunMode::eENTERPRISE_MODE,
 		strServer, strPort, strUser, strPassword, strDatabase, wxT("en")
 	);
 

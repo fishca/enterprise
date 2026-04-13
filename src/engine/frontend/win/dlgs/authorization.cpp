@@ -6,7 +6,7 @@
 
 #include "frontend/visualView/ctrl/frame.h"
 
-CDialogAuthentication::CDialogAuthentication(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
+ibDialogAuthentication::ibDialogAuthentication(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -28,7 +28,7 @@ CDialogAuthentication::CDialogAuthentication(wxWindow* parent, wxWindowID id, co
 
 	m_comboBoxLogin = new wxBitmapComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize);
 	for (const auto userInfo : appData->GetAllowedUser()) {
-		m_comboBoxLogin->Append(userInfo.m_strUserName, CBackendPicture::GetPicture(g_picUserCLSID));
+		m_comboBoxLogin->Append(userInfo.m_strUserName, ibBackendPicture::GetPicture(g_picUserCLSID));
 	}
 
 	bSizerBottom->Add(m_comboBoxLogin, 0, wxALL | wxEXPAND, 5);
@@ -52,7 +52,7 @@ CDialogAuthentication::CDialogAuthentication(wxWindow* parent, wxWindowID id, co
 	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picAuthenticationCLSID));
+	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picAuthenticationCLSID));
 
 	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();

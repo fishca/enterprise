@@ -1,22 +1,22 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko 
-//	Description : module information for CValue 
+//	Description : module information for ibValue 
 ////////////////////////////////////////////////////////////////////////////
 
 #include "moduleInfo.h"
 
-IModuleDataObject::IModuleDataObject() :
+ibModuleDataObject::ibModuleDataObject() :
 	m_compileModule(nullptr),
 	m_procUnit(nullptr)
 {
 }
 
-IModuleDataObject::IModuleDataObject(CCompileModule* compileCode) :
+ibModuleDataObject::ibModuleDataObject(ibCompileModule* compileCode) :
 	m_compileModule(compileCode), m_procUnit(nullptr)
 {
 }
 
-IModuleDataObject::~IModuleDataObject()
+ibModuleDataObject::~ibModuleDataObject()
 {
 	wxDELETE(m_compileModule);
 	wxDELETE(m_procUnit);

@@ -20,17 +20,17 @@
 
 #include "engine/mysql.h"
 
-WX_DECLARE_HASH_MAP(int, CMysqlPreparedStatementParameter*, wxIntegerHash, wxIntegerEqual, IntToMysqlParameterMap);
+WX_DECLARE_HASH_MAP(int, ibPreparedStatementMySQLParameter*, wxIntegerHash, wxIntegerEqual, IntToMysqlParameterMap);
 
-class CMysqlPreparedStatementResultSet : public IDatabaseResultSet
+class ibDatabaseResultSetMySQL : public ibDatabaseResultSet
 {
 public:
 	// ctor
-	CMysqlPreparedStatementResultSet(CMysqlInterface* pInterface);
-	CMysqlPreparedStatementResultSet(CMysqlInterface* pInterface, MYSQL_STMT* pStatement, bool bManageStatement = false);
+	ibDatabaseResultSetMySQL(ibInterfaceMySQL* pInterface);
+	ibDatabaseResultSetMySQL(ibInterfaceMySQL* pInterface, MYSQL_STMT* pStatement, bool bManageStatement = false);
 
 	//dtor
-	virtual ~CMysqlPreparedStatementResultSet();
+	virtual ~ibDatabaseResultSetMySQL();
 
 	virtual bool Next();
 	virtual void Close();
@@ -45,17 +45,17 @@ public:
 	virtual wxDateTime GetResultDate(int nField);
 	virtual void* GetResultBlob(int nField, wxMemoryBuffer& buffer);
 	virtual double GetResultDouble(int nField);
-	virtual number_t GetResultNumber(int nField);
+	virtual ibNumber GetResultNumber(int nField);
 	virtual bool IsFieldNull(int nField);
 
 	// get MetaData
-	virtual IResultSetMetaData* GetMetaData();
+	virtual ibResultSetMetaData* GetMetaData();
 
 private:
 	void ClearPreviousData();
 	MYSQL_BIND* GetResultBinding(int nField);
 
-	CMysqlInterface* m_pInterface;
+	ibInterfaceMySQL* m_pInterface;
 	MYSQL_STMT* m_pStatement;
 	MYSQL_BIND* m_pResultBindings;
 

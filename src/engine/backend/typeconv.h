@@ -25,12 +25,12 @@
 
 namespace typeConv
 {
-	inline wxString _StringToWxString(const std::string& str) {
-		return _StringToWxString(str.c_str());
-	}
-
 	inline wxString _StringToWxString(const char* str) {
 		return wxString(str, wxConvUTF8);
+	}
+
+	inline wxString _StringToWxString(const std::string& str) {
+		return _StringToWxString(str.c_str());
 	}
 
 	inline std::string _WxStringToString(const wxString& str) {
@@ -812,13 +812,13 @@ namespace typeConv
 		return result;
 	}
 
-	inline number_t StringToNumber(const wxString& str) {
-		number_t out;
+	inline ibNumber StringToNumber(const wxString& str) {
+		ibNumber out;
 		out.FromString(str.ToStdWstring());
 		return out;
 	}
 
-	inline wxString NumberToString(const number_t& val) {
+	inline wxString NumberToString(const ibNumber& val) {
 		wxString convert;
 		convert << val.ToString();
 		return convert;

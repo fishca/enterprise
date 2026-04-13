@@ -1,90 +1,90 @@
 #include "gridEditor.h"
 
-class wxGridExtCommandClipboard : public wxGridExtCommandComposite
+class ibGridCommandClipboard : public ibGridCommandComposite
 {
 public:
 
-	wxGridExtCommandClipboard(wxGridExt* view,
-		const wxVector<CSpreadsheetCellDescription>& cells) : wxGridExtCommandComposite()
+	ibGridCommandClipboard(ibGrid* view,
+		const wxVector<ibSpreadsheetCellDescription>& cells) : ibGridCommandComposite()
 	{
 		for (const auto& cell : cells) AppendCellCommand(view, cell.m_row, cell.m_col, cell);
 	}
 
 private:
 
-	wxGridExtCellBorder GetCellGridBorder(const CSpreadsheetBorderDescription& rhs) const {
-		wxGridExtCellBorder border;
+	ibGridCellBorder GetCellGridBorder(const ibSpreadsheetBorderDescription& rhs) const {
+		ibGridCellBorder border;
 		border.m_colour = rhs.m_colour;
 		border.m_style = rhs.m_style;
 		border.m_width = rhs.m_width;
 		return border;
 	}
 
-	void AppendCellCommand(wxGridExt* view, int row, int col, const CSpreadsheetCellDescription& cell)
+	void AppendCellCommand(ibGrid* view, int row, int col, const ibSpreadsheetCellDescription& cell)
 	{
-		AppendCommand<wxGridExtCommandAttrBackgroundColour>(row, col, cell.m_backgroundColour,
-			wxGridExtCommandAttrBackgroundColour::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrBackgroundColour>(row, col, cell.m_backgroundColour,
+			ibGridCommandAttrBackgroundColour::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrTextColour>(row, col, cell.m_textColour,
-			wxGridExtCommandAttrTextColour::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrTextColour>(row, col, cell.m_textColour,
+			ibGridCommandAttrTextColour::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrTextOrient>(row, col, cell.m_textOrient,
-			wxGridExtCommandAttrTextOrient::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrTextOrient>(row, col, cell.m_textOrient,
+			ibGridCommandAttrTextOrient::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrFont>(row, col, cell.m_font,
-			wxGridExtCommandAttrFont::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrFont>(row, col, cell.m_font,
+			ibGridCommandAttrFont::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrAlignment>(row, col, wxSize(cell.m_alignHorz, cell.m_alignVert),
-			wxGridExtCommandAttrAlignment::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrAlignment>(row, col, wxSize(cell.m_alignHorz, cell.m_alignVert),
+			ibGridCommandAttrAlignment::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrBorderLeft>(row, col, GetCellGridBorder(cell.m_borderAt[0]),
-			wxGridExtCommandAttrBorderLeft::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrBorderLeft>(row, col, GetCellGridBorder(cell.m_borderAt[0]),
+			ibGridCommandAttrBorderLeft::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrBorderRight>(row, col, GetCellGridBorder(cell.m_borderAt[1]),
-			wxGridExtCommandAttrBorderRight::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrBorderRight>(row, col, GetCellGridBorder(cell.m_borderAt[1]),
+			ibGridCommandAttrBorderRight::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrBorderTop>(row, col, GetCellGridBorder(cell.m_borderAt[2]),
-			wxGridExtCommandAttrBorderTop::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrBorderTop>(row, col, GetCellGridBorder(cell.m_borderAt[2]),
+			ibGridCommandAttrBorderTop::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrBorderBottom>(row, col, GetCellGridBorder(cell.m_borderAt[3]),
-			wxGridExtCommandAttrBorderBottom::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrBorderBottom>(row, col, GetCellGridBorder(cell.m_borderAt[3]),
+			ibGridCommandAttrBorderBottom::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrFitMode>(row, col, cell.m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip(),
-			wxGridExtCommandAttrFitMode::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrFitMode>(row, col, cell.m_fitMode == ibSpreadsheetCellDescription::ibFitMode::Mode_Overflow ? ibGridFitMode::Overflow() : ibGridFitMode::Clip(),
+			ibGridCommandAttrFitMode::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrSize>(row, col, wxSize(cell.m_row_size, cell.m_col_size),
-			wxGridExtCommandAttrSize::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrSize>(row, col, wxSize(cell.m_row_size, cell.m_col_size),
+			ibGridCommandAttrSize::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandAttrReadOnly>(row, col, cell.m_isReadOnly,
-			wxGridExtCommandAttrReadOnly::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
+		AppendCommand<ibGridCommandAttrReadOnly>(row, col, cell.m_isReadOnly,
+			ibGridCommandAttrReadOnly::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 
-		AppendCommand<wxGridExtCommandCellValue>(row, col, cell.m_value,
+		AppendCommand<ibGridCommandCellValue>(row, col, cell.m_value,
 			view->GetCellValue(row, col));
 	}
 
-	wxVector<CSpreadsheetCellDescription> m_cells;
+	wxVector<ibSpreadsheetCellDescription> m_cells;
 };
 
 #include <wx/clipbrd.h>
 
-void CGridEditor::Copy()
+void ibGridEditor::Copy()
 {
 	if (wxTheClipboard->Open()) {
 
 		bool hasBlocks = false;
 
-		CMemoryWriter dataWritter;
-		CMemoryWriter cellWriter;
+		ibWriterMemory dataWritter;
+		ibWriterMemory cellWriter;
 
-		for (const auto& coords : wxGridExt::GetSelectedBlocks())
+		for (const auto& coords : ibGrid::GetSelectedBlocks())
 		{
 			for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 			{
 				for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
 				{
-					CMemoryWriter bodyWriter;
+					ibWriterMemory bodyWriter;
 
-					const CSpreadsheetCellDescription* cell =
+					const ibSpreadsheetCellDescription* cell =
 						m_spreadsheetObject->GetSpreadsheetDesc().GetCell(row, col);
 
 					bodyWriter.w_s32(row - coords.GetTopRow());
@@ -92,7 +92,7 @@ void CGridEditor::Copy()
 
 					bodyWriter.w_u8(cell != nullptr);
 
-					if (cell != nullptr && !CSpreadsheetCellDescriptionMemory::SaveData(bodyWriter, *cell))
+					if (cell != nullptr && !ibSpreadsheetCellDescriptionMemory::SaveData(bodyWriter, *cell))
 						continue;
 
 					wxString s;
@@ -112,15 +112,15 @@ void CGridEditor::Copy()
 			int start_row = m_numRows,
 				start_col = m_numCols;
 
-			if (start_row > wxGridExt::GetGridCursorRow() && wxGridExt::GetGridCursorRow() >= 0)
-				start_row = wxGridExt::GetGridCursorRow(); else start_row = 0;
+			if (start_row > ibGrid::GetGridCursorRow() && ibGrid::GetGridCursorRow() >= 0)
+				start_row = ibGrid::GetGridCursorRow(); else start_row = 0;
 
-			if (start_col > wxGridExt::GetGridCursorCol() && wxGridExt::GetGridCursorCol() >= 0)
-				start_col = wxGridExt::GetGridCursorCol(); else start_col = 0;
+			if (start_col > ibGrid::GetGridCursorCol() && ibGrid::GetGridCursorCol() >= 0)
+				start_col = ibGrid::GetGridCursorCol(); else start_col = 0;
 
-			CMemoryWriter bodyWriter;
+			ibWriterMemory bodyWriter;
 
-			const CSpreadsheetCellDescription* cell =
+			const ibSpreadsheetCellDescription* cell =
 				m_spreadsheetObject->GetSpreadsheetDesc().GetCell(start_row, start_col);
 
 			bodyWriter.w_s32(0);
@@ -131,7 +131,7 @@ void CGridEditor::Copy()
 			wxString s;
 			s << start_row << start_col;
 
-			if (cell != nullptr) CSpreadsheetCellDescriptionMemory::SaveData(bodyWriter, *cell);
+			if (cell != nullptr) ibSpreadsheetCellDescriptionMemory::SaveData(bodyWriter, *cell);
 
 			cellWriter.w_chunk(stringUtils::StrToUInt(s), bodyWriter.buffer());
 		}
@@ -172,7 +172,7 @@ void CGridEditor::Copy()
 	}
 }
 
-void CGridEditor::Paste()
+void ibGridEditor::Paste()
 {
 	if (wxTheClipboard->Open() &&
 		wxTheClipboard->IsSupported(oes_clipboard_template))
@@ -186,7 +186,7 @@ void CGridEditor::Paste()
 
 			bool hasBlocks = false;
 
-			for (const auto& coords : wxGridExt::GetSelectedBlocks()) {
+			for (const auto& coords : ibGrid::GetSelectedBlocks()) {
 
 				if (start_row > coords.GetTopRow())
 					start_row = coords.GetTopRow();
@@ -199,30 +199,30 @@ void CGridEditor::Paste()
 
 			if (!hasBlocks) {
 
-				if (start_row > wxGridExt::GetGridCursorRow() && wxGridExt::GetGridCursorRow() >= 0)
-					start_row = wxGridExt::GetGridCursorRow(); else start_row = 0;
+				if (start_row > ibGrid::GetGridCursorRow() && ibGrid::GetGridCursorRow() >= 0)
+					start_row = ibGrid::GetGridCursorRow(); else start_row = 0;
 
-				if (start_col > wxGridExt::GetGridCursorCol() && wxGridExt::GetGridCursorCol() >= 0)
-					start_col = wxGridExt::GetGridCursorCol(); else start_col = 0;
+				if (start_col > ibGrid::GetGridCursorCol() && ibGrid::GetGridCursorCol() >= 0)
+					start_col = ibGrid::GetGridCursorCol(); else start_col = 0;
 			}
 
-			CMemoryReader* prevReaderCellMemory = nullptr;
-			CMemoryReader reader(data.GetData(), data.GetDataSize());
+			ibReaderMemory* prevReaderCellMemory = nullptr;
+			ibReaderMemory reader(data.GetData(), data.GetDataSize());
 
-			wxVector<CSpreadsheetCellDescription> cells;
+			wxVector<ibSpreadsheetCellDescription> cells;
 
 			wxMemoryBuffer buf;
 			if (reader.r_chunk(1, buf)) {
 
 				int i = GetGridCursorRow(), j = GetGridCursorCol();
 
-				CMemoryReader readerData(buf);
+				ibReaderMemory readerData(buf);
 
 				while (!readerData.eof()) {
 
 					u64 id = 0;
 
-					CMemoryReader* readerCellMemory = readerData.open_chunk_iterator(id, prevReaderCellMemory);
+					ibReaderMemory* readerCellMemory = readerData.open_chunk_iterator(id, prevReaderCellMemory);
 					if (!readerCellMemory)
 						break;
 
@@ -230,18 +230,18 @@ void CGridEditor::Paste()
 					const int col = start_col + readerCellMemory->r_s32();
 
 					if (readerCellMemory->r_u8()) {
-						CSpreadsheetCellDescription cell(row, col);
-						if (CSpreadsheetCellDescriptionMemory::LoadData(*readerCellMemory, cell))
+						ibSpreadsheetCellDescription cell(row, col);
+						if (ibSpreadsheetCellDescriptionMemory::LoadData(*readerCellMemory, cell))
 							cells.push_back(cell);
 					}
 
-					if (m_numRows <= row) wxGridExt::AppendRows(row - m_numRows + 1);
-					if (m_numCols <= col) wxGridExt::AppendCols(col - m_numCols + 1);
+					if (m_numRows <= row) ibGrid::AppendRows(row - m_numRows + 1);
+					if (m_numCols <= col) ibGrid::AppendCols(col - m_numCols + 1);
 
 					prevReaderCellMemory = readerCellMemory;
 				}
 
-				PushCommand<wxGridExtCommandClipboard>(this, cells);
+				PushCommand<ibGridCommandClipboard>(this, cells);
 
 				for (const auto& cell : cells) {
 
@@ -260,18 +260,18 @@ void CGridEditor::Paste()
 					SetCellBorderTop(cell.m_row, cell.m_col, cell.m_borderAt[2].m_style, cell.m_borderAt[2].m_colour, cell.m_borderAt[2].m_width, false);
 					SetCellBorderBottom(cell.m_row, cell.m_col, cell.m_borderAt[3].m_style, cell.m_borderAt[3].m_colour, cell.m_borderAt[3].m_width, false);
 
-					SetCellFitMode(cell.m_row, cell.m_col, cell.m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip(), false);
+					SetCellFitMode(cell.m_row, cell.m_col, cell.m_fitMode == ibSpreadsheetCellDescription::ibFitMode::Mode_Overflow ? ibGridFitMode::Overflow() : ibGridFitMode::Clip(), false);
 					SetCellReadOnly(cell.m_row, cell.m_col, cell.m_isReadOnly, false);
 
-					if (cell.m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrText) {
+					if (cell.m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrText) {
 						wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(cell.m_value));
 						m_table->SetValueAsCustom(cell.m_row, cell.m_col, s_strTypeTextOrString, ptr.get());
 					}
-					else if (cell.m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
+					else if (cell.m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
 						wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(cell.m_value));
 						m_table->SetValueAsCustom(cell.m_row, cell.m_col, s_strTypeTemplate, ptr.get());
 					}
-					else if (cell.m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+					else if (cell.m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
 						wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(cell.m_value));
 						m_table->SetValueAsCustom(cell.m_row, cell.m_col, s_strTypeParameter, ptr.get());
 					}
@@ -312,5 +312,5 @@ void CGridEditor::Paste()
 		}
 	}
 
-	wxGridExt::ForceRefresh();
+	ibGrid::ForceRefresh();
 }

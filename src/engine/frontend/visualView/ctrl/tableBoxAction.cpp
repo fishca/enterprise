@@ -6,12 +6,12 @@
 //*                              actionData                                     *
 //****************************************************************************
 
-CValueTableBox::CActionCollection CValueTableBox::GetActionCollection(const form_identifier_t& formType)
+ibValueModelTableBox::ibActionCollection ibValueModelTableBox::GetActionCollection(const ibFormID& formType)
 {
 	if (m_tableModel == nullptr) {
 		//if (m_dataSource.isValid()) {
 		//	if (srcObject != nullptr) {
-		//		IValueModel* tableModel = nullptr;
+		//		ibValueModel* tableModel = nullptr;
 		//		if (srcObject->GetModel(tableModel, GetIdByGuid(m_dataSource))) {
 		//			return tableModel->GetActionCollection(formType);
 		//		}
@@ -19,16 +19,16 @@ CValueTableBox::CActionCollection CValueTableBox::GetActionCollection(const form
 		//}
 
 		if (!m_propertySource->IsEmptyProperty()) {
-			ISourceDataObject* srcObject = m_formOwner->GetSourceObject();
+			ibSourceDataObject* srcObject = m_formOwner->GetSourceObject();
 			if (srcObject != nullptr) {
-				IValueModel* tableModel = nullptr;
+				ibValueModel* tableModel = nullptr;
 				if (srcObject->GetModel(tableModel, m_propertySource->GetValueAsSource())) {
 					return tableModel->GetActionCollection(formType);
 				}
 			}
 		}
 
-		return CActionCollection();
+		return ibActionCollection();
 	}
 
 	return m_tableModel->GetActionCollection(formType);
@@ -36,7 +36,7 @@ CValueTableBox::CActionCollection CValueTableBox::GetActionCollection(const form
 
 #include "backend/appData.h"
 
-void CValueTableBox::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
+void ibValueModelTableBox::ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm)
 {
 	if (m_tableModel == nullptr) return;
 	if (!appData->DesignerMode()) {

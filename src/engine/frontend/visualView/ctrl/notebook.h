@@ -4,26 +4,26 @@
 #include "window.h"
 #include <wx/aui/auibook.h>
 
-class CValueNotebookPage;
+class ibValueNotebookPage;
 
 //********************************************************************************************
 //*                                 define commom clsid									     *
 //********************************************************************************************
 
 //COMMON FORM
-const class_identifier_t g_controlNotebookCLSID = string_to_clsid("CT_NTBK");
-const class_identifier_t g_controlNotebookPageCLSID = string_to_clsid("CT_NTPG");
+const ibClassID g_controlNotebookCLSID = string_to_clsid("CT_NTBK");
+const ibClassID g_controlNotebookPageCLSID = string_to_clsid("CT_NTPG");
 
 //********************************************************************************************
 //*                                 Value Notebook                                           *
 //********************************************************************************************
 
-class CValueNotebook : public IValueWindow {
-	wxDECLARE_DYNAMIC_CLASS(CValueNotebook);
+class ibValueNotebook : public ibValueWindow {
+	wxDECLARE_DYNAMIC_CLASS(ibValueNotebook);
 
 public:
 
-	CValueNotebook();
+	ibValueNotebook();
 
 	//get title
 	virtual wxString GetControlTitle() const {
@@ -31,22 +31,22 @@ public:
 	}
 
 	//control factory 
-	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
+	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first–°reated) override;
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void OnSelected(wxObject* wxobject) override;
-	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
-	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//methods 
 	virtual void PrepareNames() const;                          // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray) override;       //method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray) override;       //method call
 
 	/**
 	* Support default menu
 	*/
 	virtual void PrepareDefaultMenu(wxMenu* m_menu);
-	virtual void ExecuteMenu(IVisualHost* visualHost, int id);
+	virtual void ExecuteMenu(ibVisualHost* visualHost, int id);
 
 	void AddNotebookPage();
 
@@ -55,8 +55,8 @@ public:
 	static wxIcon GetIconGroup();
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
 
@@ -65,43 +65,43 @@ private:
 	void OnBGDClick(wxAuiNotebookEvent& event);
 	void OnEndDrag(wxAuiNotebookEvent& event);
 
-	CValueNotebookPage* m_activePage;
-	std::vector< CValueNotebookPage*> m_pageArray;
+	ibValueNotebookPage* m_activePage;
+	std::vector< ibValueNotebookPage*> m_pageArray;
 
-	CPropertyCategory* m_categoryNotebook = IPropertyObject::CreatePropertyCategory(wxT("Notebook"), _("Notebook"));
-	CPropertyEnum<CValueEnumOrientNotebookPage>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrientNotebookPage>>(m_categoryNotebook, wxT("OrientPage"), _("Orient page"), wxAUI_NB_TOP);
-	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
-	CEventControl* m_eventOnPageChanged = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("OnPageChanged"), _("Page changed"), wxArrayString{ wxT("Page") });
+	ibPropertyCategory* m_categoryNotebook = ibPropertyObject::CreatePropertyCategory(wxT("Notebook"), _("Notebook"));
+	ibPropertyEnum<ibValueEnumOrientNotebookPage>* m_propertyOrient = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumOrientNotebookPage>>(m_categoryNotebook, wxT("OrientPage"), _("Orient page"), wxAUI_NB_TOP);
+	ibPropertyCategory* m_categoryEvent = ibPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
+	ibEventControl* m_eventOnPageChanged = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("OnPageChanged"), _("Page changed"), wxArrayString{ wxT("Page") });
 
-	friend class CValueNotebookPage;
+	friend class ibValueNotebookPage;
 };
 
-class CValueNotebookPage : public IValueControl {
-	wxDECLARE_DYNAMIC_CLASS(CValueNotebookPage);
+class ibValueNotebookPage : public ibValueControl {
+	wxDECLARE_DYNAMIC_CLASS(ibValueNotebookPage);
 
 public:
 
 	///////////////////////////////////////////////////////////////////////
 
-	CValueNotebook* GetOwner() const { return m_parent->ConvertToType<CValueNotebook>(); }
+	ibValueNotebook* GetOwner() const { return m_parent->ConvertToType<ibValueNotebook>(); }
 
 	///////////////////////////////////////////////////////////////////////
 
-	CValueNotebookPage();
+	ibValueNotebookPage();
 
 	//get title
 	virtual wxString GetControlTitle() const {
 		if (!m_propertyTitle->IsEmptyProperty())
-			return _("Page item: ") + CBackendLocalization::GetTranslateGetRawLocText(m_propertyTitle->GetValueAsString());
+			return _("Page item: ") + ibBackendLocalization::GetTranslateGetRawLocText(m_propertyTitle->GetValueAsString());
 		return _("Page item: ") + _("<empty caption>");
 	}
 
 	//control factory 
-	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
+	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first–°reated) override;
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void OnSelected(wxObject* wxobject) override;
-	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	virtual bool CanDeleteControl() const;
 
@@ -112,20 +112,20 @@ public:
 	static wxIcon GetIconGroup();
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
 
-	CPropertyCategory* m_categoryPage = IPropertyObject::CreatePropertyCategory(wxT("Page"), _("Page"));
-	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryPage, wxT("Title"), _("Title"), wxT("New page"));
-	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPage, wxT("Visible"), _("Visible"), true);
-	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryPage, wxT("Representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
-	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryPage, wxT("Picture"), _("Picture"));
-	CPropertyCategory* m_categorySizer = IPropertyObject::CreatePropertyCategory(wxT("Sizer"), _("Sizer"));
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxVERTICAL);
+	ibPropertyCategory* m_categoryPage = ibPropertyObject::CreatePropertyCategory(wxT("Page"), _("Page"));
+	ibPropertyTString* m_propertyTitle = ibPropertyObject::CreateProperty<ibPropertyTString>(m_categoryPage, wxT("Title"), _("Title"), wxT("New page"));
+	ibPropertyBoolean* m_propertyVisible = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryPage, wxT("Visible"), _("Visible"), true);
+	ibPropertyEnum<ibValueEnumRepresentation>* m_propertyRepresentation = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumRepresentation>>(m_categoryPage, wxT("Representation"), _("Representation"), ibRepresentation::ibRepresentation_Auto);
+	ibPropertyPicture* m_propertyPicture = ibPropertyObject::CreateProperty<ibPropertyPicture>(m_categoryPage, wxT("Picture"), _("Picture"));
+	ibPropertyCategory* m_categorySizer = ibPropertyObject::CreatePropertyCategory(wxT("Sizer"), _("Sizer"));
+	ibPropertyEnum<ibValueEnumOrient>* m_propertyOrient = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxVERTICAL);
 
-	friend class CValueNotebook;
+	friend class ibValueNotebook;
 };
 
 #endif 

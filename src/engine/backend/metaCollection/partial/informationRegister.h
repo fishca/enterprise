@@ -4,8 +4,8 @@
 #include "commonObject.h"
 #include "informationRegisterEnum.h"
 
-class CValueMetaObjectInformationRegister : public IValueMetaObjectRegisterData {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectInformationRegister);
+class ibValueMetaObjectInformationRegister : public ibValueMetaObjectRegisterData {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectInformationRegister);
 private:
 	enum
 	{
@@ -13,8 +13,8 @@ private:
 		eFormList = 2,
 	};
 
-	virtual CFormTypeList GetFormType() const override {
-		CFormTypeList formList;
+	virtual ibFormTypeList GetFormType() const override {
+		ibFormTypeList formList;
 		formList.AppendItem(wxT("FormRecord"), _("Form record"), eFormRecord);
 		formList.AppendItem(wxT("FormList"), _("Form list"), eFormList);
 		return formList;
@@ -27,35 +27,35 @@ private:
 	};
 
 public:
-	class CValueMetaObjectRecordManager : public IValueMetaObject {
-		wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectRecordManager);
+	class ibValueMetaObjectRecordManager : public ibValueMetaObject {
+		wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectRecordManager);
 	public:
-		CValueMetaObjectRecordManager() : IValueMetaObject() {}
+		ibValueMetaObjectRecordManager() : ibValueMetaObject() {}
 	};
 
 public:
 
-	CValueMetaObjectInformationRegister();
-	virtual ~CValueMetaObjectInformationRegister();
+	ibValueMetaObjectInformationRegister();
+	virtual ~ibValueMetaObjectInformationRegister();
 
-	eWriteRegisterMode GetWriteRegisterMode() const {
+	ibWriteRegisterMode GetWriteRegisterMode() const {
 		return m_propertyWriteMode->GetValueAsEnum();
 	}
 
-	ePeriodicity GetPeriodicity() const {
+	ibPeriodicity GetPeriodicity() const {
 		return m_propertyPeriodicity->GetValueAsEnum();
 	}
 
-	bool CreateAndUpdateSliceFirstTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
-	bool CreateAndUpdateSliceLastTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
+	bool CreateAndUpdateSliceFirstTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
+	bool CreateAndUpdateSliceLastTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//events: 
-	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
-	virtual bool OnLoadMetaObject(IMetaData* metaData);
+	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
+	virtual bool OnLoadMetaObject(ibMetaData* metaData);
 	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
@@ -70,27 +70,27 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 
-	virtual void OnCreateFormObject(IValueMetaObjectForm* metaForm);
-	virtual void OnRemoveMetaForm(IValueMetaObjectForm* metaForm);
+	virtual void OnCreateFormObject(ibValueMetaObjectFormBase* metaForm);
+	virtual void OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm);
 
 	//has record manager 
-	virtual bool HasRecordManager() const { return GetWriteRegisterMode() == eWriteRegisterMode::eIndependent; }
+	virtual bool HasRecordManager() const { return GetWriteRegisterMode() == ibWriteRegisterMode::eIndependent; }
 
 	//has recorder and period 
-	virtual bool HasPeriod() const { return GetPeriodicity() != ePeriodicity::eNonPeriodic; }
-	virtual bool HasRecorder() const { return GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder; }
+	virtual bool HasPeriod() const { return GetPeriodicity() != ibPeriodicity::eNonPeriodic; }
+	virtual bool HasRecorder() const { return GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder; }
 
 	//get module object in compose object 
-	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
+	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	//create associate value 
-	virtual IValueMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
+	virtual ibValueMetaObjectFormBase* GetDefaultFormByID(const ibFormID& id) const;
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual IBackendValueForm* GetRecordForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
-	virtual IBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
+	virtual ibBackendValueForm* GetRecordForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullUniqueKey);
+	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullUniqueKey);
 #pragma endregion
 
 	//prepare menu for item
@@ -98,28 +98,28 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 
 	//create and update table 
-	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
+	virtual bool CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
 
 	/**
 	* Property events
 	*/
-	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
 protected:
 
 	//get default attributes
-	virtual bool FillArrayObjectByPredefined(std::vector<IValueMetaObjectAttribute*>& array) const {
+	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 
-		if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+		if (GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
 			array.emplace_back(m_propertyAttributeLineActive->GetMetaObject());
 		}
 
-		if (GetPeriodicity() != ePeriodicity::eNonPeriodic ||
-			GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+		if (GetPeriodicity() != ibPeriodicity::eNonPeriodic ||
+			GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
 			array.emplace_back(m_propertyAttributePeriod->GetMetaObject());
 		}
 
-		if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+		if (GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
 			array.emplace_back(m_propertyAttributeRecorder->GetMetaObject());
 			array.emplace_back(m_propertyAttributeLineNumber->GetMetaObject());
 		}
@@ -129,15 +129,15 @@ protected:
 
 	//get dimension keys 
 	virtual bool FillArrayObjectByDimention(
-		std::vector<IValueMetaObjectAttribute*>& array) const {
+		std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 
-		if (GetWriteRegisterMode() != eWriteRegisterMode::eSubordinateRecorder) {
+		if (GetWriteRegisterMode() != ibWriteRegisterMode::eSubordinateRecorder) {
 
-			if (GetPeriodicity() != ePeriodicity::eNonPeriodic) {
+			if (GetPeriodicity() != ibPeriodicity::eNonPeriodic) {
 				array.emplace_back(m_propertyAttributePeriod->GetMetaObject());
 			}
 
-			FillArrayObjectByFilter<IValueMetaObjectAttribute>(array, { g_metaDimensionCLSID });
+			FillArrayObjectByFilter<ibValueMetaObjectAttributeBase>(array, { g_metaDimensionCLSID });
 		}
 		else {
 			array = { m_propertyAttributeRecorder->GetMetaObject() };
@@ -146,30 +146,30 @@ protected:
 	}
 
 	//create manager
-	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
+	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create record set
-	virtual IValueRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
-	virtual IValueRecordManagerObject* CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
+	virtual ibValueRecordSetObject* CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey);
+	virtual ibValueRecordManagerObject* CreateRecordManagerObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey);
 
 	//create object data with meta form
-	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
+	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
 
 	//get command section 
-	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Combined; }
+	virtual ibInterfaceCommandSection GetCommandSection() const { return ibInterfaceCommandSection::ibInterfaceCommandSection_Combined; }
 
 	//load & save metaData from DB 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 
 protected:
 
 	//get default form 
-	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+	virtual ibBackendValueForm* GetFormByCommandType(ibInterfaceCommandType cmdType = ibInterfaceCommandType::ibInterfaceCommandType_Default) {
 
-		if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Create)
+		if (cmdType == ibInterfaceCommandType::ibInterfaceCommandType_Create)
 			return GetRecordForm();
-		else if (cmdType == EInterfaceCommandType::EInterfaceCommandType_List)
+		else if (cmdType == ibInterfaceCommandType::ibInterfaceCommandType_List)
 			return GetListForm();
 
 		return GetListForm();
@@ -177,7 +177,7 @@ protected:
 
 private:
 
-	bool FillFormRecord(CPropertyList* prop) {
+	bool FillFormRecord(ibPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormRecord == object->GetTypeForm()) {
@@ -191,7 +191,7 @@ private:
 		return true;
 	}
 
-	bool FillFormList(CPropertyList* prop) {
+	bool FillFormList(ibPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormList == object->GetTypeForm()) {
@@ -205,41 +205,41 @@ private:
 		return true;
 	}
 
-	CValueMetaObjectRecordManager* m_metaRecordManager;
+	ibValueMetaObjectRecordManager* m_metaRecordManager;
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categoryContext, wxT("RecordSetModule"), _("Record set module"));
-	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
+	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModuleObject = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("RecordSetModule"), _("Record set module"));
+	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyModuleManager = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
 
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormRecord"), _("Default Record Form"), &CValueMetaObjectInformationRegister::FillFormRecord);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &CValueMetaObjectInformationRegister::FillFormList);
+	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
+	ibPropertyList* m_propertyDefFormRecord = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormRecord"), _("Default Record Form"), &ibValueMetaObjectInformationRegister::FillFormRecord);
+	ibPropertyList* m_propertyDefFormList = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &ibValueMetaObjectInformationRegister::FillFormList);
 
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
-	CPropertyEnum<CValueEnumPeriodicity>* m_propertyPeriodicity = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumPeriodicity>>(m_categoryData, wxT("Periodicity"), _("Periodicity"), ePeriodicity::eNonPeriodic);
-	CPropertyEnum<CValueEnumWriteRegisterMode>* m_propertyWriteMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumWriteRegisterMode>>(m_categoryData, wxT("WriteMode"), _("Write mode"), eWriteRegisterMode::eIndependent);
+	ibPropertyCategory* m_categoryData = ibPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
+	ibPropertyEnum<ibValueEnumPeriodicity>* m_propertyPeriodicity = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumPeriodicity>>(m_categoryData, wxT("Periodicity"), _("Periodicity"), ibPeriodicity::eNonPeriodic);
+	ibPropertyEnum<ibValueEnumWriteRegisterMode>* m_propertyWriteMode = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumWriteRegisterMode>>(m_categoryData, wxT("WriteMode"), _("Write mode"), ibWriteRegisterMode::eIndependent);
 
-	friend class CValueRecordSetObjectInformationRegister;
-	friend class CValueRecordManagerObjectInformationRegister;
+	friend class ibValueRecordSetObjectInformationRegister;
+	friend class ibValueRecordManagerObjectInformationRegister;
 
-	friend class IMetaData;
+	friend class ibMetaData;
 };
 
 //********************************************************************************************
 //*                                      Object                                              *
 //********************************************************************************************
 
-class CValueRecordSetObjectInformationRegister : public IValueRecordSetObject {
-	CValueRecordSetObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
-		IValueRecordSetObject(metaObject, uniqueKey) {
+class ibValueRecordSetObjectInformationRegister : public ibValueRecordSetObject {
+	ibValueRecordSetObjectInformationRegister(ibValueMetaObjectInformationRegister* metaObject, const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) :
+		ibValueRecordSetObject(metaObject, uniqueKey) {
 	}
-	CValueRecordSetObjectInformationRegister(const CValueRecordSetObjectInformationRegister& source) :
-		IValueRecordSetObject(source) {
+	ibValueRecordSetObjectInformationRegister(const ibValueRecordSetObjectInformationRegister& source) :
+		ibValueRecordSetObject(source) {
 	}
 public:
 
 	//default methods
-	virtual IValueRecordSetObject* CopyRegisterValue() {
-		return new CValueRecordSetObjectInformationRegister(*this);
+	virtual ibValueRecordSetObject* CopyRegisterValue() {
+		return new ibValueRecordSetObjectInformationRegister(*this);
 	}
 
 	virtual bool WriteRecordSet(bool replace = true, bool clearTable = true);
@@ -254,28 +254,28 @@ public:
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
 
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
 protected:
-	friend class CValue;
-	friend class CValueMetaObjectInformationRegister;
+	friend class ibValue;
+	friend class ibValueMetaObjectInformationRegister;
 };
 
-class CValueRecordManagerObjectInformationRegister : public IValueRecordManagerObject {
+class ibValueRecordManagerObjectInformationRegister : public ibValueRecordManagerObject {
 public:
-	CValueRecordManagerObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
-		IValueRecordManagerObject(metaObject, uniqueKey)
+	ibValueRecordManagerObjectInformationRegister(ibValueMetaObjectInformationRegister* metaObject, const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) :
+		ibValueRecordManagerObject(metaObject, uniqueKey)
 	{
 	}
-	CValueRecordManagerObjectInformationRegister(const CValueRecordManagerObjectInformationRegister& source) :
-		IValueRecordManagerObject(source)
+	ibValueRecordManagerObjectInformationRegister(const ibValueRecordManagerObjectInformationRegister& source) :
+		ibValueRecordManagerObject(source)
 	{
 	}
-	virtual IValueRecordManagerObject* CopyRegister(bool showValue = false) {
-		IValueRecordManagerObject* objectRef = CopyRegisterValue();
+	virtual ibValueRecordManagerObject* CopyRegister(bool showValue = false) {
+		ibValueRecordManagerObject* objectRef = CopyRegisterValue();
 		if (objectRef != nullptr && showValue)
 			objectRef->ShowFormValue();
 		return objectRef;
@@ -292,27 +292,27 @@ public:
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
 
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 
 #pragma region _form_builder_h_
 	//support show 
-	virtual void ShowFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr);
-	virtual IBackendValueForm* GetFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr);
+	virtual void ShowFormValue(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr);
+	virtual ibBackendValueForm* GetFormValue(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr);
 #pragma endregion
 
 	//support actionData
-	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);
-	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm);
+	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
+	virtual void ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm);
 
 protected:
-	friend class CValue;
-	friend class CValueMetaObjectInformationRegister;
+	friend class ibValue;
+	friend class ibValueMetaObjectInformationRegister;
 };
 
 #endif 

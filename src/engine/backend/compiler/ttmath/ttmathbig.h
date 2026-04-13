@@ -3203,7 +3203,7 @@ namespace ttmath
 			UInt<2> temp; // 64 bits container
 
 			uint c = ToUInt(temp);
-			temp.ToUInt(result);
+			temp.ToInt(result);
 
 			return c;
 		}

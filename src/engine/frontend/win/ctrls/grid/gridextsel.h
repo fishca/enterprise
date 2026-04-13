@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
 // Name:        wx/generic/gridsel.h
-// Purpose:     wxGridExtSelection
+// Purpose:     ibGridSelection
 // Author:      Stefan Neis
 // Modified by:
 // Created:     20/02/2000
@@ -19,33 +19,33 @@
 
 #include <wx/vector.h>
 
-typedef wxVector<wxGridExtBlockCoords> wxVectorGridBlockCoords;
+typedef wxVector<ibGridBlockCoords> wxVectorGridBlockCoords;
 
 // Note: for all eventType arguments of the methods of this class wxEVT_NULL
 //       may be passed to forbid events generation completely.
-class FRONTEND_API wxGridExtSelection
+class FRONTEND_API ibGridSelection
 {
 public:
-	wxGridExtSelection(wxGridExt* grid,
-		wxGridExt::wxGridExtSelectionModes sel = wxGridExt::wxGridExtSelectCells);
+	ibGridSelection(ibGrid* grid,
+		ibGrid::ibGridSelectionModes sel = ibGrid::ibGridSelectCells);
 
 	bool IsSelection();
 	bool IsInSelection(int row, int col) const;
-	bool IsInSelection(const wxGridExtCellCoords& coords) const
+	bool IsInSelection(const ibGridCellCoords& coords) const
 	{
 		return IsInSelection(coords.GetRow(), coords.GetCol());
 	}
 
-	void SetSelectionMode(wxGridExt::wxGridExtSelectionModes selmode);
-	wxGridExt::wxGridExtSelectionModes GetSelectionMode() { return m_selectionMode; }
+	void SetSelectionMode(ibGrid::ibGridSelectionModes selmode);
+	ibGrid::ibGridSelectionModes GetSelectionMode() { return m_selectionMode; }
 	void SelectRow(int row, const wxKeyboardState& kbd = wxKeyboardState());
 	void SelectCol(int col, const wxKeyboardState& kbd = wxKeyboardState());
 	void SelectBlock(int topRow, int leftCol,
 		int bottomRow, int rightCol,
 		const wxKeyboardState& kbd = wxKeyboardState(),
 		wxEventType eventType = wxEVT_GRID_RANGE_SELECTED);
-	void SelectBlock(const wxGridExtCellCoords& topLeft,
-		const wxGridExtCellCoords& bottomRight,
+	void SelectBlock(const ibGridCellCoords& topLeft,
+		const ibGridCellCoords& bottomRight,
 		const wxKeyboardState& kbd = wxKeyboardState(),
 		wxEventType eventType = wxEVT_GRID_RANGE_SELECTED)
 	{
@@ -58,7 +58,7 @@ public:
 	// redundant) with a single block covering the entire grid.
 	void SelectAll();
 
-	void DeselectBlock(const wxGridExtBlockCoords& block,
+	void DeselectBlock(const ibGridBlockCoords& block,
 		const wxKeyboardState& kbd = wxKeyboardState(),
 		wxEventType eventType = wxEVT_GRID_RANGE_SELECTED);
 
@@ -76,7 +76,7 @@ public:
 	// coordinates of its opposite corners (which don't have to be in
 	// top/bottom left/right order).
 	//
-	// Note that blockStart is equal to wxGridExt::m_currentCellCoords almost
+	// Note that blockStart is equal to ibGrid::m_currentCellCoords almost
 	// always, but not always (the exception is when we scrolled out from
 	// the top of the grid and select a column or scrolled right and select
 	// a row: in this case the lowest visible row/column will be set as
@@ -90,8 +90,8 @@ public:
 	// final yet.
 	//
 	// Return true if the current block was actually changed.
-	bool ExtendCurrentBlock(const wxGridExtCellCoords& blockStart,
-		const wxGridExtCellCoords& blockEnd,
+	bool ExtendCurrentBlock(const ibGridCellCoords& blockStart,
+		const ibGridCellCoords& blockEnd,
 		const wxKeyboardState& kbd,
 		wxEventType eventType = wxEVT_GRID_RANGE_SELECTED);
 
@@ -101,11 +101,11 @@ public:
 	// last selected block from the current cell coordinates.
 	//
 	// If there is no selection, just returns the current cell coordinates.
-	wxGridExtCellCoords GetExtensionAnchor() const;
+	ibGridCellCoords GetExtensionAnchor() const;
 
-	wxGridExtCellCoordsArray GetCellSelection() const;
-	wxGridExtCellCoordsArray GetBlockSelectionTopLeft() const;
-	wxGridExtCellCoordsArray GetBlockSelectionBottomRight() const;
+	ibGridCellCoordsArray GetCellSelection() const;
+	ibGridCellCoordsArray GetBlockSelectionTopLeft() const;
+	ibGridCellCoordsArray GetBlockSelectionBottomRight() const;
 	wxArrayInt GetRowSelection() const;
 	wxArrayInt GetColSelection() const;
 
@@ -115,7 +115,7 @@ public:
 	void CancelSelecting();
 
 private:
-	void SelectBlockNoEvent(const wxGridExtBlockCoords& block)
+	void SelectBlockNoEvent(const ibGridBlockCoords& block)
 	{
 		SelectBlock(block.GetTopRow(), block.GetLeftCol(),
 			block.GetBottomRow(), block.GetRightCol(),
@@ -123,7 +123,7 @@ private:
 	}
 
 	// Really select the block and don't check for the current selection mode.
-	void Select(const wxGridExtBlockCoords& block,
+	void Select(const ibGridBlockCoords& block,
 		const wxKeyboardState& kbd,
 		wxEventType eventType);
 
@@ -137,7 +137,7 @@ private:
 	// existing blocks, as this would be more difficult and doesn't seem to be
 	// really needed in practice.
 	void MergeOrAddBlock(wxVectorGridBlockCoords& blocks,
-		const wxGridExtBlockCoords& block);
+		const ibGridBlockCoords& block);
 
 	// All currently selected blocks. We expect there to be a relatively small
 	// amount of them, even for very large grids, as each block must be
@@ -148,10 +148,10 @@ private:
 	// extending the current selection from keyboard.
 	wxVectorGridBlockCoords             m_selection;
 
-	wxGridExt* m_grid;
-	wxGridExt::wxGridExtSelectionModes        m_selectionMode;
+	ibGrid* m_grid;
+	ibGrid::ibGridSelectionModes        m_selectionMode;
 
-	wxDECLARE_NO_COPY_CLASS(wxGridExtSelection);
+	wxDECLARE_NO_COPY_CLASS(ibGridSelection);
 };
 
 #endif  // wxUSE_GRID

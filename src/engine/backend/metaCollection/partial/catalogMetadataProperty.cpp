@@ -2,24 +2,24 @@
 #include "backend/metadata.h"
 #include "backend/objCtor.h"
 
-void CValueMetaObjectCatalog::OnPropertyCreated(IProperty* property)
+void ibValueMetaObjectCatalog::OnPropertyCreated(ibProperty* property)
 {
-	IValueMetaObjectRecordDataMutableRef::OnPropertyCreated(property);
+	ibValueMetaObjectRecordDataMutableRef::OnPropertyCreated(property);
 }
 
-bool CValueMetaObjectCatalog::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool ibValueMetaObjectCatalog::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
 {
-	return IValueMetaObjectRecordDataMutableRef::OnPropertyChanging(property, newValue);
+	return ibValueMetaObjectRecordDataMutableRef::OnPropertyChanging(property, newValue);
 }
 
-void CValueMetaObjectCatalog::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueMetaObjectCatalog::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_propertyOwner == property) {
-		const CMetaDescription& metaDesc = m_propertyOwner->GetValueAsMetaDesc(); CTypeDescription typeDesc;
+		const ibMetaDescription& metaDesc = m_propertyOwner->GetValueAsMetaDesc(); ibTypeDescription typeDesc;
 		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-			const IValueMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
+			const ibValueMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
 			if (catalog != nullptr) {
-				const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
+				const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(catalog, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 				wxASSERT(so);
 				typeDesc.AppendMetaType(so->GetClassType());
 			}
@@ -30,5 +30,5 @@ void CValueMetaObjectCatalog::OnPropertyChanged(IProperty* property, const wxVar
 	if ((*m_propertyAttributeOwner)->GetClsidCount() > 0) (*m_propertyAttributeOwner)->ClearFlag(metaDisableFlag);
 	else (*m_propertyAttributeOwner)->SetFlag(metaDisableFlag);
 	
-	IValueMetaObjectRecordDataMutableRef::OnPropertyChanged(property, oldValue, newValue);
+	ibValueMetaObjectRecordDataMutableRef::OnPropertyChanged(property, oldValue, newValue);
 }

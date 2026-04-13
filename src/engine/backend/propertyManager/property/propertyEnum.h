@@ -4,80 +4,87 @@
 #include "backend/propertyManager/propertyObject.h"
 
 //base property for "enum"
-class BACKEND_API IPropertyEnum : public IProperty {
+class BACKEND_API ibPropertyEnumBase : public ibProperty {
 public:
 
 	long GetValueAsInteger() const { return m_propValue; }
 	void SetValue(const long& i) { m_propValue = i; }
 
-	IPropertyEnum(CPropertyCategory* cat, const wxString& name,
-		const wxVariant& value) : IProperty(cat, name, value)
+	ibPropertyEnumBase(ibPropertyCategory* cat, const wxString& name,
+		const wxVariant& value) : ibProperty(cat, name, value)
 	{
 	}
 
-	IPropertyEnum(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxVariant& value) : IProperty(cat, name, label, value)
+	ibPropertyEnumBase(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxVariant& value) : ibProperty(cat, name, label, value)
 	{
 	}
 
-	IPropertyEnum(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxVariant& value) : IProperty(cat, name, label, helpString, value)
+	ibPropertyEnumBase(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxVariant& value) : ibProperty(cat, name, label, helpString, value)
 	{
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxEnumProperty(m_propLabel, m_propName, GetEnumList(), GetValueAsInteger());
+	virtual wxObject* GetPGProperty() const final {
+		if (ms_propertyEnum != nullptr)
+			return ms_propertyEnum(m_propLabel, m_propName, GetEnumList(), GetValueAsInteger());
+		return nullptr;
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal) = 0;
-	virtual bool GetDataValue(CValue& pvarPropVal) const = 0;
+	virtual bool SetDataValue(const ibValue& varPropVal) = 0;
+	virtual bool GetDataValue(ibValue& pvarPropVal) const = 0;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyEnum)(const wxString&, const wxString&, const wxPGChoices&, const int&);
 
 protected:
+
 	virtual wxPGChoices GetEnumList() const = 0;
 };
 
 #include "backend/compiler/enumUnit.h"
 
 template <typename valEnumProp>
-class CPropertyEnum : public IPropertyEnum {
+class ibPropertyEnum : public ibPropertyEnumBase {
 	using valueEnumType = typename valEnumProp::valEnumType;
 public:
 
-	valueEnumType GetValueAsEnum() const { return static_cast<valueEnumType>(IPropertyEnum::GetValueAsInteger()); }
-	int GetValueAsInteger() const { return IPropertyEnum::GetValueAsInteger(); }
-	void SetValue(const valueEnumType& e) { IPropertyEnum::SetValue(static_cast<int>(e)); }
-	void SetValue(const int& i) { IPropertyEnum::SetValue(i); }
+	valueEnumType GetValueAsEnum() const { return static_cast<valueEnumType>(ibPropertyEnumBase::GetValueAsInteger()); }
+	int GetValueAsInteger() const { return ibPropertyEnumBase::GetValueAsInteger(); }
+	void SetValue(const valueEnumType& e) { ibPropertyEnumBase::SetValue(static_cast<int>(e)); }
+	void SetValue(const int& i) { ibPropertyEnumBase::SetValue(i); }
 
-	CPropertyEnum(CPropertyCategory* cat, const wxString& name,
-		const valueEnumType& value) : IPropertyEnum(cat, name, static_cast<long>(value))
+	ibPropertyEnum(ibPropertyCategory* cat, const wxString& name,
+		const valueEnumType& value) : ibPropertyEnumBase(cat, name, static_cast<long>(value))
 	{
 	}
 
-	CPropertyEnum(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const valueEnumType& value) : IPropertyEnum(cat, name, label, static_cast<long>(value))
+	ibPropertyEnum(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const valueEnumType& value) : ibPropertyEnumBase(cat, name, label, static_cast<long>(value))
 	{
 	}
 
-	CPropertyEnum(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const valueEnumType& value) : IPropertyEnum(cat, name, label, helpString, static_cast<long>(value))
+	ibPropertyEnum(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const valueEnumType& value) : ibPropertyEnumBase(cat, name, label, helpString, static_cast<long>(value))
 	{
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal) {
+	virtual bool SetDataValue(const ibValue& varPropVal) {
 		SetValue(varPropVal.ConvertToEnumValue<valueEnumType>());
 		return true;
 	};
 
-	virtual bool GetDataValue(CValue& pvarPropVal) const {
-		CValue enumVariant = CPropertyEnum::GetValueAsInteger();
-		CValue* ppParams[] = {&enumVariant, nullptr};
+	virtual bool GetDataValue(ibValue& pvarPropVal) const {
+		ibValue enumVariant = ibPropertyEnum::GetValueAsInteger();
+		ibValue* ppParams[] = { &enumVariant, nullptr };
 		if (m_enumCreator->Init(ppParams, 1)) {
 			pvarPropVal = m_enumCreator->GetEnumVariantValue();
 			return true;
@@ -95,7 +102,7 @@ protected:
 		return list;
 	}
 private:
-	CValuePtr<valEnumProp> m_enumCreator = CValuePtr<valEnumProp>(CValue::CreateAndConvertObjectRef<valEnumProp>());
+	ibValuePtr<valEnumProp> m_enumCreator = ibValuePtr<valEnumProp>(ibValue::CreateAndConvertObjectRef<valEnumProp>());
 };
 
 #endif

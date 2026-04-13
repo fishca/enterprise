@@ -9,18 +9,18 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-CValueRecordDataObjectReport::CValueRecordDataObjectReport(CValueMetaObjectReport* metaObject) : IValueRecordDataObjectExt(metaObject)
+ibValueRecordDataObjectReport::ibValueRecordDataObjectReport(ibValueMetaObjectReport* metaObject) : ibValueRecordDataObjectExt(metaObject)
 {
 }
 
-CValueRecordDataObjectReport::CValueRecordDataObjectReport(const CValueRecordDataObjectReport& source) : IValueRecordDataObjectExt(source)
+ibValueRecordDataObjectReport::ibValueRecordDataObjectReport(const ibValueRecordDataObjectReport& source) : ibValueRecordDataObjectExt(source)
 {
 }
 
 #pragma region _form_builder_h_
-void CValueRecordDataObjectReport::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+void ibValueRecordDataObjectReport::ShowFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
 {
-	IBackendValueForm* const foundedForm = GetForm();
+	ibBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm && foundedForm->IsShown()) {
 		foundedForm->ActivateForm();
@@ -28,7 +28,7 @@ void CValueRecordDataObjectReport::ShowFormValue(const wxString& strFormName, IB
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* const valueForm =
+	ibBackendValueForm* const valueForm =
 		GetFormValue(strFormName, ownerControl);
 
 	if (valueForm != nullptr) {
@@ -37,15 +37,15 @@ void CValueRecordDataObjectReport::ShowFormValue(const wxString& strFormName, IB
 	}
 }
 
-IBackendValueForm* CValueRecordDataObjectReport::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+ibBackendValueForm* ibValueRecordDataObjectReport::GetFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
 {
-	IBackendValueForm* const foundedForm = GetForm();
+	ibBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm == nullptr) {
 
-		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+		ibBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			CValueMetaObjectReport::eFormReport,
+			ibValueMetaObjectReport::eFormReport,
 			ownerControl,
 			this,
 			m_objGuid

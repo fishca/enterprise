@@ -1,16 +1,16 @@
 #include "userItem.h"
 
 #include "backend/appData.h"
-#include "backend/utils/wxmd5.hpp"
+#include "backend/utils/md5.hpp"
 
 #include "backend/metadataConfiguration.h"
 
-bool CDialogUserItem::ReadUserData(const CGuid& userGuid, bool copy)
+bool ibDialogUserItem::ReadUserData(const ibGuid& userGuid, bool copy)
 {
 	if (m_userGuid.isValid())
 		return false;
 
-	const CApplicationDataUserInfo& userInfo = appData->ReadUserData(userGuid);
+	const ibApplicationDataUserInfo& userInfo = appData->ReadUserData(userGuid);
 	if (userInfo.IsOk()) {
 
 		m_textName->SetValue(userInfo.m_strUserName);
@@ -64,7 +64,7 @@ bool CDialogUserItem::ReadUserData(const CGuid& userGuid, bool copy)
 #include "backend/metaCollection/metaRoleObject.h"
 #include "backend/metaCollection/metaLanguageObject.h"
 
-CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style), m_bInitialized(false)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -125,24 +125,24 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 
 	wxImageList* imageList = new wxImageList(16, 16);
 
-	m_choiceRole = new wxCheckTree(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_ROW_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
+	m_choiceRole = new ibCheckTree(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_ROW_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
 	m_choiceRole->AssignImageList(imageList);
 
 	const wxTreeItemId& root = m_choiceRole->AddRoot(wxT(""));
 
-	for (const auto object : activeMetaData->GetAnyArrayObject<CValueMetaObjectRole>(g_metaRoleCLSID)) {
+	for (const auto object : activeMetaData->GetAnyArrayObject<ibValueMetaObjectRole>(g_metaRoleCLSID)) {
 		CDataUserRole entry;
 		entry.m_strRoleGuid = object->GetDocPath();
 		entry.m_strRoleName = object->GetName();
 		entry.m_miRoleId = object->GetMetaID();
 		const int image = imageList->Add(object->GetIcon());
 		const wxTreeItemId& id = m_choiceRole->AppendItem(root, object->GetSynonym(), image, image);
-		m_choiceRole->SetItemState(id, wxCheckTree::UNCHECKED);
+		m_choiceRole->SetItemState(id, ibCheckTree::UNCHECKED);
 		m_roleArray.insert_or_assign(id, entry);
 	}
 
 	m_choiceLanguage = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	for (const auto object : activeMetaData->GetAnyArrayObject<CValueMetaObjectLanguage>(g_metaLanguageCLSID)) {
+	for (const auto object : activeMetaData->GetAnyArrayObject<ibValueMetaObjectLanguage>(g_metaLanguageCLSID)) {
 
 		CDataUserLanguageItem entry;
 		entry.m_strLanguageGuid = object->GetDocPath();
@@ -185,7 +185,7 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserCLSID));
+	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picUserCLSID));
 
 	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();
@@ -203,7 +203,7 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 			if (m_bInitialized) {
 				const wxString& strUserPassword = m_textPassword->GetValue();
 				if (!strUserPassword.IsEmpty()) {
-					m_strUserPassword = wxMD5::ComputeMd5(strUserPassword);
+					m_strUserPassword = ibMD5::ComputeMd5(strUserPassword);
 				}
 				else {
 					m_strUserPassword.Clear();
@@ -225,14 +225,14 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 			if (!m_userGuid.isValid())
 				m_userGuid = wxNewUniqueGuid;
 
-			CApplicationDataUserInfo userInfo;
+			ibApplicationDataUserInfo userInfo;
 
 			userInfo.m_strUserGuid = m_userGuid.str();
 			userInfo.m_strUserName = m_textName->GetValue();
 			userInfo.m_strUserFullName = m_textFullName->GetValue();
 			userInfo.m_strUserPassword = m_strUserPassword;
 
-			const CValueMetaObjectConfiguration* commonObject = activeMetaData->GetCommonMetaObject();
+			const ibValueMetaObjectConfiguration* commonObject = activeMetaData->GetCommonMetaObject();
 			wxASSERT(commonObject);
 
 			const int selection = m_choiceLanguage->GetSelection();
@@ -249,7 +249,7 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 			wxTreeItemId item = m_choiceRole->GetFirstChild(root, coockie);
 
 			while (item.IsOk()) {
-				if (wxCheckTree::CHECKED == m_choiceRole->GetItemState(item)) {
+				if (ibCheckTree::CHECKED == m_choiceRole->GetItemState(item)) {
 					const CDataUserRole& info = m_roleArray.at(item);
 					auto& entry = userInfo.m_roleArray.emplace_back();
 					entry.m_strRoleGuid = info.m_strRoleGuid;
@@ -263,10 +263,10 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 
 			if (!access_right) {
 				for (const auto userInfo : appData->GetAllowedUser()) {
-					const CGuid& userGuid = userInfo.m_strUserGuid;
+					const ibGuid& userGuid = userInfo.m_strUserGuid;
 					if (userGuid == m_userGuid)
 						continue;
-					const CApplicationDataUserInfo& userEntry = appData->ReadUserData(userGuid);
+					const ibApplicationDataUserInfo& userEntry = appData->ReadUserData(userGuid);
 					for (const auto role : userEntry.m_roleArray) {
 						access_right = commonObject->AccessRight_Administration(role.m_miRoleId) &&
 							commonObject->AccessRight_DataAdministration(role.m_miRoleId);

@@ -2,17 +2,17 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueStaticText, IValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueStaticText, ibValueWindow)
 
 //****************************************************************************
 //*                              StaticText                                  *
 //****************************************************************************
 
-CValueStaticText::CValueStaticText() : IValueWindow()
+ibValueStaticText::ibValueStaticText() : ibValueWindow()
 {
 }
 
-wxObject* CValueStaticText::Create(wxWindow* wxparent, IVisualHost* visualHost)
+wxObject* ibValueStaticText::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
 	wxStaticText* staticText = new wxStaticText(wxparent, wxID_ANY,
 		m_propertyTitle->GetValueAsTranslateString(),
@@ -22,11 +22,11 @@ wxObject* CValueStaticText::Create(wxWindow* wxparent, IVisualHost* visualHost)
 	return staticText;
 }
 
-void CValueStaticText::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
+void ibValueStaticText::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first–°reated)
 {
 }
 
-void CValueStaticText::Update(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueStaticText::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
 	wxStaticText* staticText = dynamic_cast<wxStaticText*>(wxobject);
 
@@ -43,7 +43,7 @@ void CValueStaticText::Update(wxObject* wxobject, IVisualHost* visualHost)
 	UpdateWindow(staticText);
 }
 
-void CValueStaticText::Cleanup(wxObject* obj, IVisualHost* visualHost)
+void ibValueStaticText::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
 }
 
@@ -51,26 +51,26 @@ void CValueStaticText::Cleanup(wxObject* obj, IVisualHost* visualHost)
 //*                              Data	                            *
 //*******************************************************************
 
-bool CValueStaticText::LoadData(CMemoryReader& reader)
+bool ibValueStaticText::LoadData(ibReaderMemory& reader)
 {
 	m_propertyMarkup->SetValue(reader.r_u8());
 	m_propertyWrap->SetValue(reader.r_u32());
 	wxString label; reader.r_stringZ(label);
 	m_propertyTitle->SetValue(label);
-	return IValueWindow::LoadData(reader);
+	return ibValueWindow::LoadData(reader);
 }
 
-bool CValueStaticText::SaveData(CMemoryWriter& writer)
+bool ibValueStaticText::SaveData(ibWriterMemory& writer)
 {
 	writer.w_u8(m_propertyMarkup->GetValueAsBoolean());
 	writer.w_u32(m_propertyWrap->GetValueAsUInteger());
 	writer.w_stringZ(m_propertyTitle->GetValueAsString());
 
-	return IValueWindow::SaveData(writer);
+	return ibValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueStaticText, "Statictext", "Widget", string_to_clsid("CT_STTX"));
+CONTROL_TYPE_REGISTER(ibValueStaticText, "Statictext", "Widget", string_to_clsid("CT_STTX"));

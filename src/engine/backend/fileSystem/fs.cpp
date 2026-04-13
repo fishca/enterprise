@@ -7,14 +7,14 @@ typedef unsigned char byte_t;
 // Write
 //------------------------------------------------------------------------------------
 
-void	IWriter::open_chunk(u64 type)
+void	ibWriter::open_chunk(u64 type)
 {
 	w_u64(type);
 	m_chunk_pos.push(tell());
 	w_u64(0);	// the place for 'size'
 }
 
-void	IWriter::close_chunk()
+void	ibWriter::close_chunk()
 {
 	wxASSERT(!m_chunk_pos.empty());
 
@@ -25,13 +25,13 @@ void	IWriter::close_chunk()
 	m_chunk_pos.pop();
 }
 
-u32	IWriter::chunk_size() const // returns size of currently opened chunk, 0 otherwise
+u32	ibWriter::chunk_size() const // returns size of currently opened chunk, 0 otherwise
 {
 	if (m_chunk_pos.empty())	return 0;
 	return tell() - m_chunk_pos.top() - 8;
 }
 
-void	IWriter::w_compressed(void* ptr, u32 count)
+void	ibWriter::w_compressed(void* ptr, u32 count)
 {
 	byte_t* dest = 0;
 	unsigned	dest_sz = 0;
@@ -42,30 +42,34 @@ void	IWriter::w_compressed(void* ptr, u32 count)
 	wxDELETE(dest);
 }
 
-void IWriter::w_compressed(const wxMemoryBuffer& data)
+void ibWriter::w_compressed(const wxMemoryBuffer& data)
 {
 	w_compressed(data.GetData(), data.GetDataLen());
 }
 
-void	IWriter::w_chunk(u64 type, void* data, u32 size)
+void	ibWriter::w_chunk(u64 type, void* data, u32 size)
 {
 	open_chunk(type);
 	w(data, size);
 	close_chunk();
 }
 
-void IWriter::w_chunk(u64 type, const wxMemoryBuffer& data)
+void ibWriter::w_chunk(u64 type, const wxMemoryBuffer& data)
 {
 	w_chunk(type, data.GetData(), data.GetDataLen());
 }
 
-void	IWriter::w_printf(const char* format, ...)
+void	ibWriter::w_printf(const char* format, ...)
 {
 	va_list mark;
 	char buf[1024];
 
 	va_start(mark, format);
+#ifdef __WXMSW__
 	vsprintf_s(buf, format, mark);
+#else
+	vsnprintf(buf, sizeof(buf), format, mark);
+#endif
 	va_end(mark);
 
 	w(buf, strlen(buf));
@@ -76,12 +80,12 @@ void	IWriter::w_printf(const char* format, ...)
 //////////////////////////////////////////////////////////////////////
 //---------------------------------------------------
 // memory
-CMemoryWriter::~CMemoryWriter()
+ibWriterMemory::~ibWriterMemory()
 {
 	wxDELETE(m_data);
 }
 
-void CMemoryWriter::w(const void* ptr, u32 count)
+void ibWriterMemory::w(const void* ptr, u32 count)
 {
 	if (m_pos + count > m_mem_size) {
 		// reallocate
@@ -106,7 +110,7 @@ void CMemoryWriter::w(const void* ptr, u32 count)
 }
 
 //static const u32 mb_sz = 0x1000000;
-void* CMemoryWriter::save_to()
+void* ibWriterMemory::save_to()
 {
 	return pointer();
 }
@@ -117,7 +121,7 @@ void* CMemoryWriter::save_to()
 
 #pragma warning (disable:4701)
 
-IReader* IReader::open_chunk(u64 ID) const
+ibReader* ibReader::open_chunk(u64 ID) const
 {
 	bool	bCompressed;
 
@@ -127,21 +131,21 @@ IReader* IReader::open_chunk(u64 ID) const
 			byte_t* dest;
 			unsigned	dest_sz;
 			_decompressLZ(&dest, &dest_sz, pointer(), dwSize);
-			return new IReader(dest, dest_sz, tell() + dwSize);
+			return new ibReader(dest, dest_sz, tell() + dwSize);
 		}
 		else {
-			return new IReader(pointer(), dwSize, tell() + dwSize);
+			return new ibReader(pointer(), dwSize, tell() + dwSize);
 		}
 	}
 	else return 0;
 };
 
-void	IReader::close()
+void	ibReader::close()
 {
-	delete((IReader*)this);
+	delete((ibReader*)this);
 }
 
-u64 IReader::find_chunk(u64 ID, bool* bCompressed) const
+u64 ibReader::find_chunk(u64 ID, bool* bCompressed) const
 {
 	u64	dwSize, dwType;
 	bool success = false;
@@ -195,7 +199,7 @@ u64 IReader::find_chunk(u64 ID, bool* bCompressed) const
 	return dwSize;
 }
 
-IReader* IReader::open_chunk_iterator(u64& ID, IReader* _prev) const
+ibReader* ibReader::open_chunk_iterator(u64& ID, ibReader* _prev) const
 {
 	if (0 == _prev) {
 		// first
@@ -220,15 +224,15 @@ IReader* IReader::open_chunk_iterator(u64& ID, IReader* _prev) const
 		u8* dest;
 		unsigned		dest_sz;
 		_decompressLZ(&dest, &dest_sz, pointer(), _size);
-		return new IReader(dest, dest_sz, tell() + _size);
+		return new ibReader(dest, dest_sz, tell() + _size);
 	}
 	else {
 		// normal
-		return new IReader(pointer(), _size, tell() + _size);
+		return new ibReader(pointer(), _size, tell() + _size);
 	}
 }
  
-void	IReader::r(void* p, int cnt) const
+void	ibReader::r(void* p, int cnt) const
 {
 	wxASSERT(m_pos + cnt <= m_size);
 	std::memcpy(p, pointer(), cnt);
@@ -239,7 +243,7 @@ inline bool is_term(const wxUniChar &c) {
 	return (c == 13) || (c == 10);
 };
 
-inline u32	IReader::advance_term_string() const
+inline u32	ibReader::advance_term_string() const
 {
 	u32 sz = 0;
 	char* src = (char*)m_data;
@@ -255,39 +259,42 @@ inline u32	IReader::advance_term_string() const
 	}
 	return sz;
 }
-void	IReader::r_string(char* dest, u32 tgt_sz) const
+void	ibReader::r_string(char* dest, u32 tgt_sz) const
 {
 	char* src = (char*)m_data + m_pos;
 	u32 sz = advance_term_string();
 	wxASSERT(sz < (tgt_sz - 1));
+#ifdef __WXMSW__
 	wxASSERT(!IsBadReadPtr((void*)src, sz));
-
 	strncpy_s(dest, tgt_sz, src, sz);
+#else
+	strncpy(dest, src, tgt_sz - 1);
+#endif
 
 	dest[sz] = 0;
 }
-void	IReader::r_string(std::string& dest) const
+void	ibReader::r_string(std::string& dest) const
 {
 	char* src = (char*)m_data + m_pos;
 	u32 sz = advance_term_string();
 	dest.assign(src, sz);
 }
 
-void	IReader::r_string(wxString& dest) const
+void	ibReader::r_string(wxString& dest) const
 {
 	char* src = (char*)m_data + m_pos;
 	u32 sz = advance_term_string();
 	dest = wxString::FromUTF8(src, sz);
 }
 
-wxString IReader::r_stringZ() const
+wxString ibReader::r_stringZ() const
 {
 	std::string destSrc = (char*)m_data + m_pos;
 	m_pos += int(destSrc.size() + 1);
 	return wxString::FromUTF8(destSrc);
 }
 
-void	IReader::r_stringZ(char* dest, u32 tgt_sz) const
+void	ibReader::r_stringZ(char* dest, u32 tgt_sz) const
 {
 	char* src = (char*)m_data;
 	u32 sz = strlen(src);
@@ -297,27 +304,27 @@ void	IReader::r_stringZ(char* dest, u32 tgt_sz) const
 	m_pos++;
 }
 
-void	IReader::r_stringZ(std::string& dest) const
+void	ibReader::r_stringZ(std::string& dest) const
 {
 	dest = (char*)(m_data + m_pos);
 	m_pos += int(dest.size() + 1);
 }
 
-void	IReader::r_stringZ(wxString& dest) const
+void	ibReader::r_stringZ(wxString& dest) const
 {
 	std::string destSrc = (char*)(m_data + m_pos);
 	m_pos += int(destSrc.size() + 1);
 	dest = wxString::FromUTF8(destSrc);
 }
 
-void	IReader::skip_stringZ() const
+void	ibReader::skip_stringZ() const
 {
 	char* src = (char*)m_data;
 	while ((src[m_pos] != 0) && (!eof())) m_pos++;
 	m_pos++;
 }
 
-CMemoryReader* CMemoryReader::open_chunk(u64 ID) const 
+ibReaderMemory* ibReaderMemory::open_chunk(u64 ID) const 
 {
 	bool	bCompressed;
 
@@ -328,17 +335,17 @@ CMemoryReader* CMemoryReader::open_chunk(u64 ID) const
 			byte_t* dest;
 			unsigned	dest_sz;
 			_decompressLZ(&dest, &dest_sz, pointer(), dwSize);
-			return new CMemoryReader(dest, dest_sz, tell() + dwSize);
+			return new ibReaderMemory(dest, dest_sz, tell() + dwSize);
 		}
 		else {
-			return new CMemoryReader(pointer(), dwSize, tell() + dwSize);
+			return new ibReaderMemory(pointer(), dwSize, tell() + dwSize);
 		}
 	}
 
 	return nullptr;
 };
 
-CMemoryReader* CMemoryReader::open_chunk_iterator(u64& ID, CMemoryReader* _prev) const
+ibReaderMemory* ibReaderMemory::open_chunk_iterator(u64& ID, ibReaderMemory* _prev) const
 {
 	if (0 == _prev) {
 		// first
@@ -362,10 +369,10 @@ CMemoryReader* CMemoryReader::open_chunk_iterator(u64& ID, CMemoryReader* _prev)
 		u8* dest;
 		unsigned		dest_sz;
 		_decompressLZ(&dest, &dest_sz, pointer(), _size);
-		return new CMemoryReader(dest, dest_sz, tell() + _size);
+		return new ibReaderMemory(dest, dest_sz, tell() + _size);
 	}
 	else {
 		// normal
-		return new CMemoryReader(pointer(), _size, tell() + _size);
+		return new ibReaderMemory(pointer(), _size, tell() + _size);
 	}
 }

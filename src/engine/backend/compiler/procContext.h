@@ -6,25 +6,25 @@
 
 //*******************************************************************************
 
-class BACKEND_API CProcUnit;
-class BACKEND_API CProcUnitEvaluate;
+class BACKEND_API ibProcUnit;
+class BACKEND_API ibProcUnitEvaluate;
 
 //*******************************************************************************
 
-struct CRunContextSmall {
+struct ibRunContextSmall {
 
-	CRunContextSmall(int varCount = wxNOT_FOUND) :
-		m_lVarCount(0), m_lParamCount(0) {
+	ibRunContextSmall(int varCount = wxNOT_FOUND) :
+		m_lParamCount(0), m_lVarCount(0) {
 		if (varCount >= 0) SetLocalCount(varCount);
 	}
 
-	~CRunContextSmall();
+	~ibRunContextSmall();
 
 	void SetLocalCount(const long varCount) {
 		m_lVarCount = varCount;
 		if (m_lVarCount > MAX_STATIC_VAR) {
-			m_pLocVars = new CValue[m_lVarCount];
-			m_pRefLocVars = new CValue * [m_lVarCount];
+			m_pLocVars = new ibValue[m_lVarCount];
+			m_pRefLocVars = new ibValue * [m_lVarCount];
 		}
 		else {
 			m_pLocVars = m_cLocVars;
@@ -39,31 +39,31 @@ struct CRunContextSmall {
 
 	long m_lStart, m_lParamCount;
 
-	CValue m_cLocVars[MAX_STATIC_VAR] = {};
-	CValue* m_pLocVars = nullptr;
+	ibValue m_cLocVars[MAX_STATIC_VAR] = {};
+	ibValue* m_pLocVars = nullptr;
 
-	CValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
-	CValue** m_pRefLocVars = nullptr;
+	ibValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
+	ibValue** m_pRefLocVars = nullptr;
 
 	long m_lVarCount;
 };
 
-struct CRunContext {
+struct ibRunContext {
 
-	CRunContext(int varCount = wxNOT_FOUND) :
-		m_lVarCount(0), m_lParamCount(0), m_lStart(0), m_lCurLine(0) {
+	ibRunContext(int varCount = wxNOT_FOUND) :
+		m_lStart(0), m_lCurLine(0), m_lVarCount(0), m_lParamCount(0) {
 		if (varCount >= 0) SetLocalCount(varCount);
 	}
 
-	~CRunContext();
+	~ibRunContext();
 
 	void SetLocalCount(const long varCount) {
 
 		m_lVarCount = varCount;
 
 		if (m_lVarCount > MAX_STATIC_VAR) {
-			m_pLocVars = new CValue[m_lVarCount];
-			m_pRefLocVars = new CValue * [m_lVarCount];
+			m_pLocVars = new ibValue[m_lVarCount];
+			m_pRefLocVars = new ibValue * [m_lVarCount];
 		}
 		else {
 			m_pLocVars = m_cLocVars;
@@ -74,24 +74,24 @@ struct CRunContext {
 	}
 
 	long GetLocalCount() const { return m_lVarCount; }
-	CByteCode* GetByteCode() const;
+	ibByteCode* GetByteCode() const;
 
-	void SetProcUnit(CProcUnit* procUnit) { m_procUnit = procUnit; }
-	CProcUnit* GetProcUnit() const { return m_procUnit; }
+	void SetProcUnit(ibProcUnit* procUnit) { m_procUnit = procUnit; }
+	ibProcUnit* GetProcUnit() const { return m_procUnit; }
 
-	CProcUnit* m_procUnit = nullptr;
-	CCompileContext* m_compileContext = nullptr;
+	ibProcUnit* m_procUnit = nullptr;
+	ibCompileContext* m_compileContext = nullptr;
 
 	long m_lStart, m_lCurLine; //current executing bytecode line
 	long m_lVarCount, m_lParamCount;
 
-	CValue m_cLocVars[MAX_STATIC_VAR] = {};
-	CValue* m_pLocVars = nullptr;
+	ibValue m_cLocVars[MAX_STATIC_VAR] = {};
+	ibValue* m_pLocVars = nullptr;
 
-	CValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
-	CValue** m_pRefLocVars = nullptr;
+	ibValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
+	ibValue** m_pRefLocVars = nullptr;
 
-	std::map<wxString, std::shared_ptr<CProcUnitEvaluate>> m_listEval;
+	std::map<wxString, std::shared_ptr<ibProcUnitEvaluate>> m_listEval;
 };
 
 #endif // ! _PROC_CONTEXT__H__

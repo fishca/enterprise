@@ -15,7 +15,7 @@ inline int RoundXYPosition(float xyPos) {
 
 #define EXTENT_TEST wxT(" `~!@#$%^&*()-_=+\\|[]{};:\"\'<,>.?/1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-CCallTip::CCallTip(wxStyledTextCtrl* owner)
+ibCallTip::ibCallTip(wxStyledTextCtrl* owner)
 {
 	m_callTip = nullptr;
 	m_evtHandler = nullptr;
@@ -52,7 +52,7 @@ CCallTip::CCallTip(wxStyledTextCtrl* owner)
 	clickPlace = 0;
 }
 
-CCallTip::~CCallTip()
+ibCallTip::~ibCallTip()
 {
 	if (m_callTip) m_callTip->Destroy();
 }
@@ -64,12 +64,12 @@ static bool IsArrowCharacter(char ch)
 }
 
 // We ignore tabs unless a tab width has been set.
-bool CCallTip::IsTabCharacter(const char& ch) const
+bool ibCallTip::IsTabCharacter(const char& ch) const
 {
 	return (tabSize > 0) && (ch == '\t');
 }
 
-int CCallTip::NextTabPos(int x) const
+int ibCallTip::NextTabPos(int x) const
 {
 	if (tabSize > 0) {              // paranoia... not called unless this is true
 		x -= insetX;                // position relative to text
@@ -83,7 +83,7 @@ int CCallTip::NextTabPos(int x) const
 
 // Draw a section of the call tip that does not include \n in one colour.
 // The text may include up to numEnds tabs or arrow characters.
-void CCallTip::DrawChunk(wxDC& dc, int& x, const char* s,
+void ibCallTip::DrawChunk(wxDC& dc, int& x, const char* s,
 	int posStart, int posEnd, int ytext, wxRect rcClient,
 	bool highlight, bool draw)
 {
@@ -211,7 +211,7 @@ void CCallTip::DrawChunk(wxDC& dc, int& x, const char* s,
 	}
 }
 
-int CCallTip::PaintContents(wxDC& dc, bool draw)
+int ibCallTip::PaintContents(wxDC& dc, bool draw)
 {
 	wxSize sz = m_callTip->GetClientSize();
 	wxRect rcClientPos(0, 0, sz.x, sz.y);
@@ -276,7 +276,7 @@ int CCallTip::PaintContents(wxDC& dc, bool draw)
 	return maxWidth;
 }
 
-void CCallTip::PaintCT(wxDC& dc)
+void ibCallTip::PaintCT(wxDC& dc)
 {
 	if (val.empty())
 		return;
@@ -312,7 +312,7 @@ void CCallTip::PaintCT(wxDC& dc)
 #endif
 }
 
-void CCallTip::MouseClick(wxPoint pt)
+void ibCallTip::MouseClick(wxPoint pt)
 {
 	clickPlace = 0;
 
@@ -323,12 +323,12 @@ void CCallTip::MouseClick(wxPoint pt)
 		clickPlace = 2;
 }
 
-bool CCallTip::Active() const
+bool ibCallTip::Active() const
 {
 	return inCallTipMode;
 }
 
-void CCallTip::Show(int currentPos, const wxString& sTitleText)
+void ibCallTip::Show(int currentPos, const wxString& sTitleText)
 {
 	if (m_callTip) {
 		wxDELETE(m_callTip);
@@ -341,29 +341,29 @@ void CCallTip::Show(int currentPos, const wxString& sTitleText)
 	m_callTip = new wxSTCCallTip(m_owner, this);
 
 	m_evtHandler = new wxEvtHandler();
-	m_evtHandler->Bind(wxEVT_KEY_DOWN, &CCallTip::OnKeyDown, this);
+	m_evtHandler->Bind(wxEVT_KEY_DOWN, &ibCallTip::OnKeyDown, this);
 
 	//focus kill/set
-	m_evtHandler->Bind(wxEVT_SET_FOCUS, &CCallTip::OnProcessFocus, this);
-	m_evtHandler->Bind(wxEVT_KILL_FOCUS, &CCallTip::OnProcessFocus, this);
-	m_evtHandler->Bind(wxEVT_CHILD_FOCUS, &CCallTip::OnProcessChildFocus, this);
+	m_evtHandler->Bind(wxEVT_SET_FOCUS, &ibCallTip::OnProcessFocus, this);
+	m_evtHandler->Bind(wxEVT_KILL_FOCUS, &ibCallTip::OnProcessFocus, this);
+	m_evtHandler->Bind(wxEVT_CHILD_FOCUS, &ibCallTip::OnProcessChildFocus, this);
 
 	//on sizing 
-	m_evtHandler->Bind(wxEVT_SIZE, &CCallTip::OnProcessSize, this);
-	m_evtHandler->Bind(wxEVT_SIZING, &CCallTip::OnProcessSize, this);
+	m_evtHandler->Bind(wxEVT_SIZE, &ibCallTip::OnProcessSize, this);
+	m_evtHandler->Bind(wxEVT_SIZING, &ibCallTip::OnProcessSize, this);
 
 	//on mouse event
-	m_evtHandler->Bind(wxEVT_LEFT_DCLICK, &CCallTip::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_RIGHT_DCLICK, &CCallTip::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_MIDDLE_DCLICK, &CCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_LEFT_DCLICK, &ibCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_RIGHT_DCLICK, &ibCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_MIDDLE_DCLICK, &ibCallTip::OnProcessMouse, this);
 
-	m_evtHandler->Bind(wxEVT_LEFT_UP, &CCallTip::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_RIGHT_UP, &CCallTip::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_MIDDLE_UP, &CCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_LEFT_UP, &ibCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_RIGHT_UP, &ibCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_MIDDLE_UP, &ibCallTip::OnProcessMouse, this);
 
-	m_evtHandler->Bind(wxEVT_LEFT_DOWN, &CCallTip::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_RIGHT_DOWN, &CCallTip::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_MIDDLE_DOWN, &CCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_LEFT_DOWN, &ibCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_RIGHT_DOWN, &ibCallTip::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_MIDDLE_DOWN, &ibCallTip::OnProcessMouse, this);
 
 	wxPoint pt = m_owner->PointFromPosition(currentPos);
 	int textHeight = m_owner->TextHeight(m_owner->GetCurrentLine());
@@ -454,7 +454,7 @@ void CCallTip::Show(int currentPos, const wxString& sTitleText)
 	m_callTip->Show();
 }
 
-void CCallTip::Cancel()
+void ibCallTip::Cancel()
 {
 	inCallTipMode = false;
 
@@ -467,7 +467,7 @@ void CCallTip::Cancel()
 	if (m_evtHandler) wxDELETE(m_evtHandler);
 }
 
-void CCallTip::SetHighlight(int start, int end)
+void ibCallTip::SetHighlight(int start, int end)
 {
 	// Avoid flashing by checking something has really changed
 	if ((start != startHighlight) || (end != endHighlight))
@@ -483,7 +483,7 @@ void CCallTip::SetHighlight(int start, int end)
 
 // Set the tab size (sizes > 0 enable the use of tabs). This also enables the
 // use of the STYLE_CALLTIP.
-void CCallTip::SetTabSize(int tabSz)
+void ibCallTip::SetTabSize(int tabSz)
 {
 	tabSize = tabSz;
 	useStyleCallTip = true;
@@ -491,13 +491,13 @@ void CCallTip::SetTabSize(int tabSz)
 
 // It might be better to have two access functions for this and to use
 // them for all settings of colours.
-void CCallTip::SetForeBack(const wxColour& fore, const wxColour& back)
+void ibCallTip::SetForeBack(const wxColour& fore, const wxColour& back)
 {
 	colourBG = back;
 	colourUnSel = fore;
 }
 
-bool CCallTip::CallEvent(wxEvent& event)
+bool ibCallTip::CallEvent(wxEvent& event)
 {
 	if (!inCallTipMode) return false;
 	bool result = m_evtHandler->ProcessEvent(event);
@@ -505,7 +505,7 @@ bool CCallTip::CallEvent(wxEvent& event)
 	return false;
 }
 
-void CCallTip::OnKeyDown(wxKeyEvent& event)
+void ibCallTip::OnKeyDown(wxKeyEvent& event)
 {
 	switch (event.GetKeyCode())
 	{
@@ -516,22 +516,22 @@ void CCallTip::OnKeyDown(wxKeyEvent& event)
 	}
 }
 
-void CCallTip::OnProcessFocus(wxFocusEvent& event)
+void ibCallTip::OnProcessFocus(wxFocusEvent& event)
 {
 	Cancel();
 }
 
-void CCallTip::OnProcessChildFocus(wxChildFocusEvent& event)
+void ibCallTip::OnProcessChildFocus(wxChildFocusEvent& event)
 {
 	Cancel();
 }
 
-void CCallTip::OnProcessSize(wxSizeEvent& event)
+void ibCallTip::OnProcessSize(wxSizeEvent& event)
 {
 	Cancel();
 }
 
-void CCallTip::OnProcessMouse(wxMouseEvent& event)
+void ibCallTip::OnProcessMouse(wxMouseEvent& event)
 {
 	if (event.GetEventType() != wxEVT_LEFT_UP) Cancel();
 }

@@ -3,8 +3,8 @@
 
 #include "metaObject.h"
 
-class BACKEND_API IValueMetaObjectSpreadsheet : public IValueMetaObject {
-	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectSpreadsheet);
+class BACKEND_API ibValueMetaObjectSpreadsheetBase : public ibValueMetaObject {
+	wxDECLARE_ABSTRACT_CLASS(ibValueMetaObjectSpreadsheetBase);
 protected:
 	enum
 	{
@@ -14,8 +14,8 @@ protected:
 public:
 
 	//set spreadsheet code 
-	virtual void SetSpreadsheetDesc(const CSpreadsheetDescription& spreadsheetDescription) = 0;
-	virtual CSpreadsheetDescription& GetSpreadsheetDesc() const = 0;
+	virtual void SetSpreadsheetDesc(const ibSpreadsheetDescription& spreadsheetDescription) = 0;
+	virtual ibSpreadsheetDescription& GetSpreadsheetDesc() const = 0;
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -30,32 +30,32 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 };
 
-class BACKEND_API CValueMetaObjectSpreadsheet : public IValueMetaObjectSpreadsheet {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCommonSpreadsheet);
+class BACKEND_API ibValueMetaObjectSpreadsheet : public ibValueMetaObjectSpreadsheetBase {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectCommonSpreadsheet);
 public:
 	//set spreadsheet code 
-	virtual void SetSpreadsheetDesc(const CSpreadsheetDescription& spreadsheetDescription) { m_propertyTemplate->SetValue(spreadsheetDescription); }
-	virtual CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_propertyTemplate->GetValueAsSpreadsheetDesc(); }
+	virtual void SetSpreadsheetDesc(const ibSpreadsheetDescription& spreadsheetDescription) { m_propertyTemplate->SetValue(spreadsheetDescription); }
+	virtual ibSpreadsheetDescription& GetSpreadsheetDesc() const { return m_propertyTemplate->GetValueAsSpreadsheetDesc(); }
 protected:
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 private:
-	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("Template"), _("Template"));
-	CPropertySpreadsheet* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertySpreadsheet>(m_categoryTemplate, wxT("TemplateData"), _("Template data"));
+	ibPropertyCategory* m_categoryTemplate = ibPropertyObject::CreatePropertyCategory(wxT("Template"), _("Template"));
+	ibPropertySpreadsheet* m_propertyTemplate = ibPropertyObject::CreateProperty<ibPropertySpreadsheet>(m_categoryTemplate, wxT("TemplateData"), _("Template data"));
 };
 
-class BACKEND_API CValueMetaObjectCommonSpreadsheet : public IValueMetaObjectSpreadsheet {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCommonSpreadsheet);
+class BACKEND_API ibValueMetaObjectCommonSpreadsheet : public ibValueMetaObjectSpreadsheetBase {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectCommonSpreadsheet);
 public:
 	//set spreadsheet code 
-	virtual void SetSpreadsheetDesc(const CSpreadsheetDescription& spreadsheetDescription) { m_propertyTemplate->SetValue(spreadsheetDescription); }
-	virtual CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_propertyTemplate->GetValueAsSpreadsheetDesc(); }
+	virtual void SetSpreadsheetDesc(const ibSpreadsheetDescription& spreadsheetDescription) { m_propertyTemplate->SetValue(spreadsheetDescription); }
+	virtual ibSpreadsheetDescription& GetSpreadsheetDesc() const { return m_propertyTemplate->GetValueAsSpreadsheetDesc(); }
 protected:
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 private:
-	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("CommonTemplate"), _("Common template"));
-	CPropertySpreadsheet* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertySpreadsheet>(m_categoryTemplate, wxT("TemplateData"), _("Template data"));
+	ibPropertyCategory* m_categoryTemplate = ibPropertyObject::CreatePropertyCategory(wxT("CommonTemplate"), _("Common template"));
+	ibPropertySpreadsheet* m_propertyTemplate = ibPropertyObject::CreateProperty<ibPropertySpreadsheet>(m_categoryTemplate, wxT("TemplateData"), _("Template data"));
 };
 
 #endif 

@@ -12,30 +12,30 @@
 #include "backend/system/systemManager.h"
 
 //*********************************************************************************************
-//*                                  CRecorderRegisterDocument	                              *
+//*                                  ibRecorderRegisterDocument	                              *
 //*********************************************************************************************
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(CValueRecordDataObjectDocument::CRecorderRegisterDocument, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordDataObjectDocument::ibRecorderRegisterDocument, ibValue);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CValueRecordDataObjectDocument::CRecorderRegisterDocument::CreateRecordSet()
+void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::CreateRecordSet()
 {
-	CValueMetaObjectDocument* metaDocument = dynamic_cast<CValueMetaObjectDocument*>(m_document->GetMetaObject());
+	ibValueMetaObjectDocument* metaDocument = dynamic_cast<ibValueMetaObjectDocument*>(m_document->GetMetaObject());
 	wxASSERT(metaDocument);
-	IMetaData* metaData = metaDocument->GetMetaData();
+	ibMetaData* metaData = metaDocument->GetMetaData();
 	wxASSERT(metaData);
 
-	CRecorderRegisterDocument::ClearRecordSet();
+	ibRecorderRegisterDocument::ClearRecordSet();
 
-	const CMetaDescription& metaDesc = metaDocument->GetRecordDescription();
+	const ibMetaDescription& metaDesc = metaDocument->GetRecordDescription();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-		IValueMetaObjectRegisterData* metaObject = metaData->FindAnyObjectByFilter<IValueMetaObjectRegisterData>(metaDesc.GetByIdx(idx));
+		ibValueMetaObjectRegisterData* metaObject = metaData->FindAnyObjectByFilter<ibValueMetaObjectRegisterData>(metaDesc.GetByIdx(idx));
 		if (metaObject == nullptr || !metaObject->IsAllowed())
 			continue;
-		CValueMetaObjectAttributePredefined* registerRecord = metaObject->GetRegisterRecorder();
+		ibValueMetaObjectAttributePredefined* registerRecord = metaObject->GetRegisterRecorder();
 		wxASSERT(registerRecord);
-		CValuePtr<IValueRecordSetObject> recordSet(metaObject->CreateRecordSetObjectValue());
+		ibValuePtr<ibValueRecordSetObject> recordSet(metaObject->CreateRecordSetObjectValue());
 		recordSet->SetKeyValue(registerRecord->GetMetaID(), m_document->GetReference());
 		m_records.insert_or_assign(metaObject->GetMetaID(), recordSet);
 	}
@@ -43,10 +43,10 @@ void CValueRecordDataObjectDocument::CRecorderRegisterDocument::CreateRecordSet(
 	PrepareNames();
 }
 
-bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::WriteRecordSet()
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::WriteRecordSet()
 {
 	for (auto& pair : m_records) {
-		IValueRecordSetObject* record = pair.second;
+		ibValueRecordSetObject* record = pair.second;
 		wxASSERT(record);
 		try {
 			if (!record->WriteRecordSet()) {
@@ -61,10 +61,10 @@ bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::WriteRecordSet()
 	return true;
 }
 
-bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::DeleteRecordSet()
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::DeleteRecordSet()
 {
 	for (auto& pair : m_records) {
-		IValueRecordSetObject* record = pair.second;
+		ibValueRecordSetObject* record = pair.second;
 		wxASSERT(record);
 		try {
 			if (!record->DeleteRecordSet()) {
@@ -79,83 +79,83 @@ bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::DeleteRecordSet(
 	return true;
 }
 
-void CValueRecordDataObjectDocument::CRecorderRegisterDocument::ClearRecordSet()
+void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::ClearRecordSet()
 {
 	m_records.clear();
 }
 
-void CValueRecordDataObjectDocument::CRecorderRegisterDocument::RefreshRecordSet()
+void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::RefreshRecordSet()
 {
 	for (auto& pair : m_records) {
-		IValueRecordSetObject* record = pair.second;
+		ibValueRecordSetObject* record = pair.second;
 		wxASSERT(record);
 
-		IValueMetaObjectRegisterData* object = record->GetMetaObject();
+		ibValueMetaObjectRegisterData* object = record->GetMetaObject();
 		wxASSERT(object);
-		IBackendValueForm* backendFrame = IBackendValueForm::FindFormBySourceUniqueKey(object->GetGuid());
+		ibBackendValueForm* backendFrame = ibBackendValueForm::FindFormBySourceUniqueKey(object->GetGuid());
 		if (backendFrame != nullptr) backendFrame->UpdateForm();
 	}
 }
 
-CValueRecordDataObjectDocument::CRecorderRegisterDocument::CRecorderRegisterDocument(CValueRecordDataObjectDocument* currentDoc) :
-	CValue(eValueTypes::TYPE_VALUE), m_document(currentDoc), m_methodHelper(new CMethodHelper())
+ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::ibRecorderRegisterDocument(ibValueRecordDataObjectDocument* currentDoc) :
+	ibValue(ibValueTypes::TYPE_VALUE), m_document(currentDoc), m_methodHelper(new ibValueMethodHelper())
 {
-	CRecorderRegisterDocument::CreateRecordSet();
+	ibRecorderRegisterDocument::CreateRecordSet();
 }
 
-CValueRecordDataObjectDocument::CRecorderRegisterDocument::~CRecorderRegisterDocument()
+ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::~ibRecorderRegisterDocument()
 {
-	CRecorderRegisterDocument::ClearRecordSet();
+	ibRecorderRegisterDocument::ClearRecordSet();
 	wxDELETE(m_methodHelper);
 }
 
 //*********************************************************************************************
-//*                                  CValueRecordDataObjectDocument	                                      *
+//*                                  ibValueRecordDataObjectDocument	                                      *
 //*********************************************************************************************
 
-CValueRecordDataObjectDocument::CValueRecordDataObjectDocument(CValueMetaObjectDocument* metaObject, const CGuid& objGuid) :
-	IValueRecordDataObjectRef(metaObject, objGuid),
-	m_registerRecords(new CRecorderRegisterDocument(this))
+ibValueRecordDataObjectDocument::ibValueRecordDataObjectDocument(ibValueMetaObjectDocument* metaObject, const ibGuid& objGuid) :
+	ibValueRecordDataObjectRef(metaObject, objGuid),
+	m_registerRecords(new ibRecorderRegisterDocument(this))
 {
 }
 
-CValueRecordDataObjectDocument::CValueRecordDataObjectDocument(const CValueRecordDataObjectDocument& source) :
-	IValueRecordDataObjectRef(source),
-	m_registerRecords(new CRecorderRegisterDocument(this))
+ibValueRecordDataObjectDocument::ibValueRecordDataObjectDocument(const ibValueRecordDataObjectDocument& source) :
+	ibValueRecordDataObjectRef(source),
+	m_registerRecords(new ibRecorderRegisterDocument(this))
 {
 }
 
-CValueRecordDataObjectDocument::~CValueRecordDataObjectDocument()
+ibValueRecordDataObjectDocument::~ibValueRecordDataObjectDocument()
 {
 }
 
-bool CValueRecordDataObjectDocument::IsPosted() const
+bool ibValueRecordDataObjectDocument::IsPosted() const
 {
-	CValueMetaObjectDocument* metaDocRef = nullptr;
+	ibValueMetaObjectDocument* metaDocRef = nullptr;
 	if (m_metaObject->ConvertToValue(metaDocRef)) {
 		return GetValueByMetaID(*metaDocRef->GetDocumentPosted()).GetBoolean();
 	}
 	return false;
 }
 
-void CValueRecordDataObjectDocument::SetDeletionMark(bool deletionMark)
+void ibValueRecordDataObjectDocument::SetDeletionMark(bool deletionMark)
 {
 	WriteObject(
-		eDocumentWriteMode::eDocumentWriteMode_UndoPosting,
-		eDocumentPostingMode::eDocumentPostingMode_Regular
+		ibDocumentWriteMode::ibDocumentWriteMode_UndoPosting,
+		ibDocumentPostingMode::ibDocumentPostingMode_Regular
 	);
 
-	IValueRecordDataObjectRef::SetDeletionMark(deletionMark);
+	ibValueRecordDataObjectRef::SetDeletionMark(deletionMark);
 }
 
-CSourceExplorer CValueRecordDataObjectDocument::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordDataObjectDocument::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);
 
-	CValueMetaObjectDocument* metaRef = nullptr;
+	ibValueMetaObjectDocument* metaRef = nullptr;
 
 	if (m_metaObject->ConvertToValue(metaRef)) {
 		srcHelper.AppendSource(metaRef->GetDocumentNumber(), false);
@@ -174,9 +174,9 @@ CSourceExplorer CValueRecordDataObjectDocument::GetSourceExplorer() const
 }
 
 #pragma region _form_builder_h_
-void CValueRecordDataObjectDocument::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+void ibValueRecordDataObjectDocument::ShowFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
 {
-	IBackendValueForm* const foundedForm = GetForm();
+	ibBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm && foundedForm->IsShown()) {
 		foundedForm->ActivateForm();
@@ -184,7 +184,7 @@ void CValueRecordDataObjectDocument::ShowFormValue(const wxString& strFormName, 
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* const valueForm =
+	ibBackendValueForm* const valueForm =
 		GetFormValue(strFormName, ownerControl);
 
 	if (valueForm != nullptr) {
@@ -193,15 +193,15 @@ void CValueRecordDataObjectDocument::ShowFormValue(const wxString& strFormName, 
 	}
 }
 
-IBackendValueForm* CValueRecordDataObjectDocument::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+ibBackendValueForm* ibValueRecordDataObjectDocument::GetFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
 {
-	IBackendValueForm* const foundedForm = GetForm();
+	ibBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm == nullptr) {
 
-		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+		ibBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			CValueMetaObjectDocument::eFormObject,
+			ibValueMetaObjectDocument::eFormObject,
 			ownerControl,
 			this,
 			m_objGuid
@@ -223,89 +223,89 @@ IBackendValueForm* CValueRecordDataObjectDocument::GetFormValue(const wxString& 
 
 #include "backend/backend_mainFrame.h"
 
-bool CValueRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocumentPostingMode postingMode)
+bool ibValueRecordDataObjectDocument::WriteObject(ibDocumentWriteMode writeMode, ibDocumentPostingMode postingMode)
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 
-		if (!CBackendException::IsEvalMode())
+		if (!ibBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Write()) {
-				CBackendAccessException::Error();
+				ibBackendAccessException::Error();
 				return false;
 			}
 
-			if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
-				CValue deletionMark = false;
-				CValueMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
+			if (writeMode == ibDocumentWriteMode::ibDocumentWriteMode_Posting) {
+				ibValue deletionMark = false;
+				ibValueMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
 				wxASSERT(attributeDeletionMark);
-				IValueRecordDataObjectRef::GetValueByMetaID(*attributeDeletionMark, deletionMark);
+				ibValueRecordDataObjectRef::GetValueByMetaID(*attributeDeletionMark, deletionMark);
 				if (deletionMark.GetBoolean()) {
-					CBackendCoreException::Error(_("Failed to post object in db!"));
+					ibBackendCoreException::Error(_("Failed to post object in db!"));
 					return false;
 				}
 			}
 
-			CTransactionGuard db_query_active_transaction = db_query;
+			ibTransactionGuard db_query_active_transaction = db_query;
 			{
-				IBackendValueForm* const valueForm = GetForm();
+				ibBackendValueForm* const valueForm = GetForm();
 				{
 					db_query_active_transaction.BeginTransaction();
 
 					{
-						CValue cancel = false;
+						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel,
-							CValue::CreateEnumObject<CValueEnumDocumentWriteMode>(writeMode),
-							CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode)
+							ibValue::CreateEnumObject<ibValueEnumDocumentWriteMode>(writeMode),
+							ibValue::CreateEnumObject<ibValueEnumDocumentPostingMode>(postingMode)
 						);
 
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							CBackendCoreException::Error(_("Failed to write object in db!"));
+							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 
-						CValueMetaObjectDocument* dataRef = nullptr;
+						ibValueMetaObjectDocument* dataRef = nullptr;
 						if (m_metaObject->ConvertToValue(dataRef)) {
-							CValueMetaObjectAttributePredefined* metaPosted = dataRef->GetDocumentPosted();
+							ibValueMetaObjectAttributePredefined* metaPosted = dataRef->GetDocumentPosted();
 							wxASSERT(metaPosted);
-							if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting)
+							if (writeMode == ibDocumentWriteMode::ibDocumentWriteMode_Posting)
 								m_listObjectValue.insert_or_assign(metaPosted->GetMetaID(), true);
-							else if (writeMode == eDocumentWriteMode::eDocumentWriteMode_UndoPosting)
+							else if (writeMode == ibDocumentWriteMode::ibDocumentWriteMode_UndoPosting)
 								m_listObjectValue.insert_or_assign(metaPosted->GetMetaID(), false);
 						}
 					}
 
-					bool newObject = CValueRecordDataObjectDocument::IsNewObject();
+					bool newObject = ibValueRecordDataObjectDocument::IsNewObject();
 					bool generateUniqueIdentifier = false;
 
 					if (!IsSetUniqueIdentifier()) {
-						CValue prefix = "", standartProcessing = true;
+						ibValue prefix = "", standartProcessing = true;
 						m_procUnit->CallAsProc(wxT("SetNewNumber"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
 							generateUniqueIdentifier =
-								CValueRecordDataObjectDocument::GenerateUniqueIdentifier(prefix.GetString());
+								ibValueRecordDataObjectDocument::GenerateUniqueIdentifier(prefix.GetString());
 						}
 					}
 
 					//set current date if empty 
-					CValueMetaObjectDocument* dataRef = nullptr;
+					ibValueMetaObjectDocument* dataRef = nullptr;
 					if (newObject && m_metaObject->ConvertToValue(dataRef)) {
-						const CValue& docDate = GetValueByMetaID(*dataRef->GetDocumentDate());
+						const ibValue& docDate = GetValueByMetaID(*dataRef->GetDocumentDate());
 						if (docDate.IsEmpty()) {
-							SetValueByMetaID(*dataRef->GetDocumentDate(), CSystemFunction::CurrentDate());
+							SetValueByMetaID(*dataRef->GetDocumentDate(), ibValueSystemFunction::CurrentDate());
 						}
 					}
 
-					if (!CValueRecordDataObjectDocument::SaveData()) {
+					if (!ibValueRecordDataObjectDocument::SaveData()) {
 						if (generateUniqueIdentifier)
-							CValueRecordDataObjectDocument::ResetUniqueIdentifier();
+							ibValueRecordDataObjectDocument::ResetUniqueIdentifier();
 						db_query_active_transaction.RollBackTransaction();
-						CBackendCoreException::Error(_("Failed to write object in db!"));
+						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 
@@ -313,57 +313,57 @@ bool CValueRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, e
 						m_registerRecords->CreateRecordSet();
 					}
 
-					if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
+					if (writeMode == ibDocumentWriteMode::ibDocumentWriteMode_Posting) {
 
-						CValue cancel = false;
+						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("Posting"), cancel,
-							CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode)
+							ibValue::CreateEnumObject<ibValueEnumDocumentPostingMode>(postingMode)
 						);
 
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
-								CValueRecordDataObjectDocument::ResetUniqueIdentifier();
+								ibValueRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CBackendCoreException::Error(_("Failed to write object in db!"));
+							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 
 						if (!m_registerRecords->WriteRecordSet()) {
 							if (generateUniqueIdentifier)
-								CValueRecordDataObjectDocument::ResetUniqueIdentifier();
+								ibValueRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CBackendCoreException::Error(_("Failed to write object in db!"));
+							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 					}
-					else if (writeMode == eDocumentWriteMode::eDocumentWriteMode_UndoPosting) {
+					else if (writeMode == ibDocumentWriteMode::ibDocumentWriteMode_UndoPosting) {
 
-						CValue cancel = false;
+						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("UndoPosting"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
-								CValueRecordDataObjectDocument::ResetUniqueIdentifier();
+								ibValueRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CBackendCoreException::Error(_("Failed to write object in db!"));
+							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 
 						if (!m_registerRecords->DeleteRecordSet()) {
 							if (generateUniqueIdentifier)
-								CValueRecordDataObjectDocument::ResetUniqueIdentifier();
+								ibValueRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CBackendCoreException::Error(_("Failed to write object in db!"));
+							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 					}
 					{
-						CValue cancel = false;
+						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
-								CValueRecordDataObjectDocument::ResetUniqueIdentifier();
+								ibValueRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CBackendCoreException::Error(_("Failed to write object in db!"));
+							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 					}
@@ -384,57 +384,57 @@ bool CValueRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, e
 	return true;
 }
 
-bool CValueRecordDataObjectDocument::DeleteObject()
+bool ibValueRecordDataObjectDocument::DeleteObject()
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 
-		if (!CBackendException::IsEvalMode())
+		if (!ibBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Delete()) {
-				CBackendAccessException::Error();
+				ibBackendAccessException::Error();
 				return false;
 			}
 
-			CTransactionGuard db_query_active_transaction = db_query;
+			ibTransactionGuard db_query_active_transaction = db_query;
 			{
-				IBackendValueForm* const valueForm = GetForm();
+				ibBackendValueForm* const valueForm = GetForm();
 				{
 					db_query_active_transaction.BeginTransaction();
 					{
-						CValue cancel = false;
+						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							CBackendCoreException::Error(_("Failed to delete object in db!"));
+							ibBackendCoreException::Error(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
 					if (!m_registerRecords->DeleteRecordSet()) {
 						db_query_active_transaction.RollBackTransaction();
-						CBackendCoreException::Error(_("Failed to write object in db!"));
+						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 
 					{
-						CValue cancel = false;
+						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
 
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							CBackendCoreException::Error(_("Failed to delete object in db!"));
+							ibBackendCoreException::Error(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
 					if (!DeleteData()) {
 						db_query_active_transaction.RollBackTransaction();
-						CBackendCoreException::Error(_("Failed to delete object in db!"));
+						ibBackendCoreException::Error(_("Failed to delete object in db!"));
 						return false;
 					}
 
@@ -470,7 +470,7 @@ enum Prop {
 	eRegisterRecords
 };
 
-void CValueRecordDataObjectDocument::PrepareNames() const
+void ibValueRecordDataObjectDocument::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -521,7 +521,7 @@ void CValueRecordDataObjectDocument::PrepareNames() const
 	}
 
 	if (m_procUnit != nullptr) {
-		CByteCode* byteCode = m_procUnit->GetByteCode();
+		ibByteCode* byteCode = m_procUnit->GetByteCode();
 		if (byteCode != nullptr) {
 			for (auto exportFunction : byteCode->m_listExportFunc) {
 				m_methodHelper->AppendMethod(
@@ -545,7 +545,7 @@ void CValueRecordDataObjectDocument::PrepareNames() const
 	m_registerRecords->PrepareNames();
 }
 
-bool CValueRecordDataObjectDocument::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueRecordDataObjectDocument::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -564,7 +564,7 @@ bool CValueRecordDataObjectDocument::SetPropVal(const long lPropNum, const CValu
 	return false;
 }
 
-bool CValueRecordDataObjectDocument::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueRecordDataObjectDocument::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -596,7 +596,7 @@ bool CValueRecordDataObjectDocument::GetPropVal(const long lPropNum, CValue& pva
 	return false;
 }
 
-bool CValueRecordDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueRecordDataObjectDocument::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -611,8 +611,8 @@ bool CValueRecordDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& p
 		return true;
 	case eWrite:
 		WriteObject(
-			lSizeArray > 0 ? paParams[0]->ConvertToEnumValue<eDocumentWriteMode>() : eDocumentWriteMode::eDocumentWriteMode_Write,
-			lSizeArray > 1 ? paParams[1]->ConvertToEnumValue<eDocumentPostingMode>() : eDocumentPostingMode::eDocumentPostingMode_RealTime
+			lSizeArray > 0 ? paParams[0]->ConvertToEnumValue<ibDocumentWriteMode>() : ibDocumentWriteMode::ibDocumentWriteMode_Write,
+			lSizeArray > 1 ? paParams[1]->ConvertToEnumValue<ibDocumentPostingMode>() : ibDocumentPostingMode::ibDocumentPostingMode_RealTime
 		);
 		return true;
 	case eDelete:
@@ -623,8 +623,8 @@ bool CValueRecordDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& p
 		return true;
 	case Func::eGetFormObject:
 		pvarRetValue = GetFormValue(
-			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
-			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
+			lSizeArray > 0 ? paParams[0]->GetString() : wxString(wxEmptyString),
+			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr
 		);
 		return true;
 	case Func::enGetTemplate:
@@ -635,7 +635,7 @@ bool CValueRecordDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& p
 		return true;
 	}
 
-	return IModuleDataObject::ExecuteFunc(
+	return ibModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
@@ -644,14 +644,14 @@ enum {
 	enWriteRegister = 0
 };
 
-void CValueRecordDataObjectDocument::CRecorderRegisterDocument::PrepareNames() const
+void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc(wxT("Write"), wxT("Write()"));
 	for (auto& pair : m_records) {
-		IValueRecordSetObject* record = pair.second;
+		ibValueRecordSetObject* record = pair.second;
 		wxASSERT(record);
-		IValueMetaObjectRegisterData* metaObject =
+		ibValueMetaObjectRegisterData* metaObject =
 			record->GetMetaObject();
 		wxASSERT(metaObject);
 		m_methodHelper->AppendProp(
@@ -660,14 +660,14 @@ void CValueRecordDataObjectDocument::CRecorderRegisterDocument::PrepareNames() c
 	}
 }
 
-bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
-	auto& it = m_records.find(m_methodHelper->GetPropData(lPropNum));
+	auto it = m_records.find(m_methodHelper->GetPropData(lPropNum));
 	if (it != m_records.end()) {
 		pvarPropVal = it->second;
 		return true;
@@ -675,7 +675,7 @@ bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::GetPropVal(const
 	return false;
 }
 
-bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -691,4 +691,4 @@ bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::CallAsFunc(const
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueRecordDataObjectDocument::CRecorderRegisterDocument, "RecorderRegister", string_to_clsid("VL_RGST"));
+SYSTEM_TYPE_REGISTER(ibValueRecordDataObjectDocument::ibRecorderRegisterDocument, "RecorderRegister", string_to_clsid("VL_RGST"));

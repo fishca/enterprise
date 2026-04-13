@@ -5,41 +5,41 @@
 //*                                     Defines                                              *
 //********************************************************************************************
 
-class BACKEND_API IValueMetaObjectCompositeData;
+class BACKEND_API ibValueMetaObjectCompositeData;
 
 //********************************************************************************************
-//*								      ISourceObject											 *
+//*								      ibSourceObject											 *
 //********************************************************************************************
 
-class ISourceObject {
+class ibSourceObject {
 public:
 
-	virtual ~ISourceObject() {}
+	virtual ~ibSourceObject() {}
 	
 	//get metaData from object 
-	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
+	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
 	
 	//Get ref class 
-	virtual class_identifier_t GetSourceClassType() const = 0;
+	virtual ibClassID GetSourceClassType() const = 0;
 
 	//Get presentation 
 	virtual wxString GetSourceCaption() const = 0;
 };
 
 //********************************************************************************************
-//*								      ITabularObject										 *
+//*								      ibTabularObject										 *
 //********************************************************************************************
 
-class ITabularObject {
+class ibTabularObject {
 public:
 
-	virtual ~ITabularObject() {}
+	virtual ~ibTabularObject() {}
 
 	//get metaData from object 
-	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
+	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
 
 	//Get ref class 
-	virtual class_identifier_t GetSourceClassType() const = 0;
+	virtual ibClassID GetSourceClassType() const = 0;
 };
 
 #endif 

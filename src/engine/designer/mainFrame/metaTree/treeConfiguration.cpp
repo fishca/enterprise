@@ -7,8 +7,8 @@
 #include "backend/debugger/debugClient.h"
 #include "frontend/win/theme/luna_toolbarart.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IMetaDataTree, wxPanel);
-wxIMPLEMENT_DYNAMIC_CLASS(CMetadataTree, IMetaDataTree);
+wxIMPLEMENT_ABSTRACT_CLASS(ibMetaDataTree, wxPanel);
+wxIMPLEMENT_DYNAMIC_CLASS(ibMetadataTree, ibMetaDataTree);
 
 //**********************************************************************************
 //*                                  metaTree									   *
@@ -18,7 +18,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetadataTree, IMetaDataTree);
 
 #include "frontend/artProvider/artProvider.h"
 
-void IMetaDataTree::CreateToolBar(wxWindow* parent)
+void ibMetaDataTree::CreateToolBar(wxWindow* parent)
 {
 	wxASSERT(m_metaTreeToolbar);
 
@@ -36,15 +36,15 @@ void IMetaDataTree::CreateToolBar(wxWindow* parent)
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
 }
 
-CMetadataTree::CMetadataTree()
-	: IMetaDataTree(), m_metaData(nullptr)
+ibMetadataTree::ibMetadataTree()
+	: ibMetaDataTree(), m_metaData(nullptr)
 {
 	m_metaTreeToolbar = nullptr;
 	m_metaTreeCtrl = nullptr;
 }
 
-CMetadataTree::CMetadataTree(wxWindow* parent, int id)
-	: IMetaDataTree(parent, id), m_metaData(nullptr)
+ibMetadataTree::ibMetadataTree(wxWindow* parent, int id)
+	: ibMetaDataTree(parent, id), m_metaData(nullptr)
 {
 	m_metaTreeToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
 	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)), _("New item"));
@@ -60,8 +60,8 @@ CMetadataTree::CMetadataTree(wxWindow* parent, int id)
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
 
 	//Create main tree
-	m_metaTreeCtrl = new CMetaTreeCtrl(this);
-	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
+	m_metaTreeCtrl = new ibMetaTreeCtrl(this);
+	m_metaTreeCtrl->SetBackgroundColour(wxColour(250, 250, 250));
 
 	//set image list
 	m_metaTreeCtrl->AssignImageList(
@@ -69,17 +69,17 @@ CMetadataTree::CMetadataTree(wxWindow* parent, int id)
 	);
 
 	m_searchTree = new wxSearchCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-	m_searchTree->Bind(wxEVT_SEARCH, &CMetadataTree::CMetaTreeCtrl::OnStartSearch, m_metaTreeCtrl);
-	m_searchTree->Bind(wxEVT_COMMAND_TEXT_UPDATED, &CMetadataTree::CMetaTreeCtrl::OnCancelSearch, m_metaTreeCtrl);
+	m_searchTree->Bind(wxEVT_SEARCH, &ibMetadataTree::ibMetaTreeCtrl::OnStartSearch, m_metaTreeCtrl);
+	m_searchTree->Bind(wxEVT_COMMAND_TEXT_UPDATED, &ibMetadataTree::ibMetaTreeCtrl::OnCancelSearch, m_metaTreeCtrl);
 	m_searchTree->ShowCancelButton(true);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
 	// Set up the sizer for the panel
 	wxBoxSizer* panelSizer = new wxBoxSizer(wxVERTICAL);
@@ -92,8 +92,8 @@ CMetadataTree::CMetadataTree(wxWindow* parent, int id)
 	InitTree();
 }
 
-CMetadataTree::CMetadataTree(CMetaDocument* docParent, wxWindow* parent, int id)
-	: IMetaDataTree(docParent, parent, id), m_metaData(nullptr)
+ibMetadataTree::ibMetadataTree(ibMetaDocument* docParent, wxWindow* parent, int id)
+	: ibMetaDataTree(docParent, parent, id), m_metaData(nullptr)
 {
 	wxASSERT(m_metaTreeToolbar);
 
@@ -111,21 +111,21 @@ CMetadataTree::CMetadataTree(CMetaDocument* docParent, wxWindow* parent, int id)
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
 
 	//Create main tree
-	m_metaTreeCtrl = new CMetaTreeCtrl(this);
-	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
+	m_metaTreeCtrl = new ibMetaTreeCtrl(this);
+	m_metaTreeCtrl->SetBackgroundColour(wxColour(250, 250, 250));
 
 	//set image list
 	m_metaTreeCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
 	// Set up the sizer for the panel
 	wxBoxSizer* panelSizer = new wxBoxSizer(wxVERTICAL);
@@ -137,17 +137,17 @@ CMetadataTree::CMetadataTree(CMetaDocument* docParent, wxWindow* parent, int id)
 	InitTree();
 }
 
-CMetadataTree::~CMetadataTree()
+ibMetadataTree::~ibMetadataTree()
 {
 	if (m_metaData != nullptr) m_metaData->SetMetaTree(nullptr);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
 	if (m_searchTree)
 		m_searchTree->Destroy();
@@ -155,15 +155,15 @@ CMetadataTree::~CMetadataTree()
 
 //**********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetadataTree::CMetaTreeCtrl, wxTreeCtrl);
+wxIMPLEMENT_DYNAMIC_CLASS(ibMetadataTree::ibMetaTreeCtrl, wxTreeCtrl);
 
 //**********************************************************************************
 
 #include "win/dlg/predefinedEditor.h"
 
-void CMetadataTree::EditPredefinedValues(IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
+void ibMetadataTree::EditPredefinedValues(ibValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
 {
-	CDialogPredefinedEditor dlg(this, valueMetaObjectHierarchy);
+	ibDialogPredefinedEditor dlg(this, valueMetaObjectHierarchy);
 	dlg.ShowModal();
 }
 
@@ -171,53 +171,55 @@ void CMetadataTree::EditPredefinedValues(IValueMetaObjectRecordDataHierarchyMuta
 //*                                  metaTree window						       *
 //**********************************************************************************
 
-wxBEGIN_EVENT_TABLE(CMetadataTree::CMetaTreeCtrl, wxTreeCtrl)
+wxBEGIN_EVENT_TABLE(ibMetadataTree::ibMetaTreeCtrl, wxTreeCtrl)
 
-EVT_LEFT_UP(CMetadataTree::CMetaTreeCtrl::OnLeftUp)
-EVT_LEFT_DOWN(CMetadataTree::CMetaTreeCtrl::OnLeftDown)
-EVT_LEFT_DCLICK(CMetadataTree::CMetaTreeCtrl::OnLeftDClick)
-EVT_RIGHT_UP(CMetadataTree::CMetaTreeCtrl::OnRightUp)
-EVT_RIGHT_DOWN(CMetadataTree::CMetaTreeCtrl::OnRightDown)
-EVT_RIGHT_DCLICK(CMetadataTree::CMetaTreeCtrl::OnRightDClick)
-EVT_MOTION(CMetadataTree::CMetaTreeCtrl::OnMouseMove)
-EVT_KEY_UP(CMetadataTree::CMetaTreeCtrl::OnKeyUp)
-EVT_KEY_DOWN(CMetadataTree::CMetaTreeCtrl::OnKeyDown)
+EVT_LEFT_UP(ibMetadataTree::ibMetaTreeCtrl::OnLeftUp)
+EVT_LEFT_DOWN(ibMetadataTree::ibMetaTreeCtrl::OnLeftDown)
+EVT_LEFT_DCLICK(ibMetadataTree::ibMetaTreeCtrl::OnLeftDClick)
+EVT_RIGHT_UP(ibMetadataTree::ibMetaTreeCtrl::OnRightUp)
+EVT_RIGHT_DOWN(ibMetadataTree::ibMetaTreeCtrl::OnRightDown)
+EVT_RIGHT_DCLICK(ibMetadataTree::ibMetaTreeCtrl::OnRightDClick)
+EVT_MOTION(ibMetadataTree::ibMetaTreeCtrl::OnMouseMove)
+EVT_KEY_UP(ibMetadataTree::ibMetaTreeCtrl::OnKeyUp)
+EVT_KEY_DOWN(ibMetadataTree::ibMetaTreeCtrl::OnKeyDown)
 
-EVT_TREE_SEL_CHANGING(wxID_ANY, CMetadataTree::CMetaTreeCtrl::OnSelecting)
-EVT_TREE_SEL_CHANGED(wxID_ANY, CMetadataTree::CMetaTreeCtrl::OnSelected)
+EVT_TREE_SEL_CHANGING(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnSelecting)
+EVT_TREE_SEL_CHANGED(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnSelected)
 
-EVT_TREE_ITEM_COLLAPSING(wxID_ANY, CMetadataTree::CMetaTreeCtrl::OnCollapsing)
-EVT_TREE_ITEM_EXPANDING(wxID_ANY, CMetadataTree::CMetaTreeCtrl::OnExpanding)
+EVT_TREE_ITEM_COLLAPSING(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnCollapsing)
+EVT_TREE_ITEM_EXPANDING(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnExpanding)
 
-EVT_TREE_BEGIN_DRAG(wxID_ANY, CMetadataTree::CMetaTreeCtrl::OnBeginDrag)
-EVT_TREE_END_DRAG(wxID_ANY, CMetadataTree::CMetaTreeCtrl::OnEndDrag)
+EVT_TREE_BEGIN_DRAG(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnBeginDrag)
+EVT_TREE_END_DRAG(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnEndDrag)
 
-EVT_MENU(ID_METATREE_NEW, CMetadataTree::CMetaTreeCtrl::OnCreateItem)
-EVT_MENU(ID_METATREE_EDIT, CMetadataTree::CMetaTreeCtrl::OnEditItem)
-EVT_MENU(ID_METATREE_DELETE, CMetadataTree::CMetaTreeCtrl::OnRemoveItem)
-EVT_MENU(ID_METATREE_PROPERTY, CMetadataTree::CMetaTreeCtrl::OnPropertyItem)
+EVT_TREE_ITEM_ACTIVATED(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnItemActivated)
 
-EVT_MENU(ID_METATREE_INSERT, CMetadataTree::CMetaTreeCtrl::OnInsertItem)
-EVT_MENU(ID_METATREE_REPLACE, CMetadataTree::CMetaTreeCtrl::OnReplaceItem)
-EVT_MENU(ID_METATREE_SAVE, CMetadataTree::CMetaTreeCtrl::OnSaveItem)
+EVT_MENU(ID_METATREE_NEW, ibMetadataTree::ibMetaTreeCtrl::OnCreateItem)
+EVT_MENU(ID_METATREE_EDIT, ibMetadataTree::ibMetaTreeCtrl::OnEditItem)
+EVT_MENU(ID_METATREE_DELETE, ibMetadataTree::ibMetaTreeCtrl::OnRemoveItem)
+EVT_MENU(ID_METATREE_PROPERTY, ibMetadataTree::ibMetaTreeCtrl::OnPropertyItem)
 
-EVT_SET_FOCUS(CMetadataTree::CMetaTreeCtrl::OnSetFocus)
-EVT_KILL_FOCUS(CMetadataTree::CMetaTreeCtrl::OnSetFocus)
+EVT_MENU(ID_METATREE_INSERT, ibMetadataTree::ibMetaTreeCtrl::OnInsertItem)
+EVT_MENU(ID_METATREE_REPLACE, ibMetadataTree::ibMetaTreeCtrl::OnReplaceItem)
+EVT_MENU(ID_METATREE_SAVE, ibMetadataTree::ibMetaTreeCtrl::OnSaveItem)
 
-EVT_MENU(wxID_COPY, CMetadataTree::CMetaTreeCtrl::OnCopyItem)
-EVT_MENU(wxID_PASTE, CMetadataTree::CMetaTreeCtrl::OnPasteItem)
+EVT_SET_FOCUS(ibMetadataTree::ibMetaTreeCtrl::OnSetFocus)
+EVT_KILL_FOCUS(ibMetadataTree::ibMetaTreeCtrl::OnSetFocus)
+
+EVT_MENU(wxID_COPY, ibMetadataTree::ibMetaTreeCtrl::OnCopyItem)
+EVT_MENU(wxID_PASTE, ibMetadataTree::ibMetaTreeCtrl::OnPasteItem)
 
 wxEND_EVENT_TABLE()
 
-CMetadataTree::CMetaTreeCtrl::CMetaTreeCtrl()
-	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new CMatadataTreeView(this))
+ibMetadataTree::ibMetaTreeCtrl::ibMetaTreeCtrl()
+	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new ibMatadataTreeView(this))
 {
 	//set double buffered
 	SetDoubleBuffered(true);
 }
 
-CMetadataTree::CMetaTreeCtrl::CMetaTreeCtrl(CMetadataTree* parent)
-	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_NO_LINES | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new CMatadataTreeView(this))
+ibMetadataTree::ibMetaTreeCtrl::ibMetaTreeCtrl(ibMetadataTree* parent)
+	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_NO_LINES | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new ibMatadataTreeView(this))
 {
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
@@ -232,7 +234,7 @@ CMetadataTree::CMetaTreeCtrl::CMetaTreeCtrl(CMetadataTree* parent)
 
 #include "frontend/docView/docManager.h"
 
-CMetadataTree::CMetaTreeCtrl::~CMetaTreeCtrl()
+ibMetadataTree::ibMetaTreeCtrl::~ibMetaTreeCtrl()
 {
 	if (docManager != nullptr &&
 		m_metaView == docManager->GetAnyUsableView()) {
@@ -246,7 +248,7 @@ CMetadataTree::CMetaTreeCtrl::~CMetaTreeCtrl()
 
 #include "frontend/mainFrame/mainFrame.h"
 
-void CMetadataTree::CMetaTreeCtrl::CMatadataTreeView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+void ibMetadataTree::ibMetaTreeCtrl::ibMatadataTreeView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
 	if (activate) {
 		const wxTreeItemId& item = m_ownerTree->GetSelection();

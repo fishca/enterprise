@@ -12,17 +12,17 @@
 //------------------------------------------------------------------------------------
 // Write
 //------------------------------------------------------------------------------------
-class BACKEND_API IWriter
+class BACKEND_API ibWriter
 {
 private:
 	std::stack<u64>		m_chunk_pos;
 public:
 	std::string			m_fName;
 public:
-	IWriter()
+	ibWriter()
 	{
 	}
-	virtual	~IWriter()
+	virtual	~ibWriter()
 	{
 	}
 
@@ -47,7 +47,11 @@ public:
 	inline void			w_stringZ(const std::string& p) { w(p.c_str() ? p.c_str() : "", (u32)p.size()); w_u8(0); }
 	inline void			w_stringZ(const wxString& p) { const wxScopedCharBuffer s = p.utf8_str(); w(s.data() ? s.data() : "", (u32)s.length()); w_u8(0); }
 
+#ifdef _MSC_VER
 	void	__cdecl  	w_printf(const char* format, ...);
+#else
+	void	w_printf(const char* format, ...);
+#endif
 
 	// generalized chunking
 	u32				align();
@@ -62,7 +66,7 @@ public:
 	virtual	void	flush() = 0;
 };
 
-class BACKEND_API CMemoryWriter : public IWriter
+class BACKEND_API ibWriterMemory : public ibWriter
 {
 	u8* m_data;
 	mutable u32		m_pos;
@@ -70,14 +74,14 @@ class BACKEND_API CMemoryWriter : public IWriter
 	u32				m_file_size;
 public:
 
-	CMemoryWriter() {
+	ibWriterMemory() {
 		m_data = 0;
 		m_pos = 0;
 		m_mem_size = 0;
 		m_file_size = 0;
 	}
 
-	virtual	~CMemoryWriter();
+	virtual	~ibWriterMemory();
 
 	// kernel
 	virtual void	w(const void* ptr, u32 count);
@@ -96,10 +100,14 @@ public:
 	inline u8* pointer() const { return m_data; }
 	inline u32			size() const { return m_file_size; }
 	inline void			clear() { m_file_size = 0; m_pos = 0; }
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4995)
+#endif
 	inline void			free() { m_file_size = 0; m_pos = 0; m_mem_size = 0; wxDELETE(m_data); }
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 	void* save_to();
 	virtual	void	flush() { };
 };
@@ -108,7 +116,7 @@ public:
 // Read
 //------------------------------------------------------------------------------------
 
-class BACKEND_API IReader
+class BACKEND_API ibReader
 {
 protected:
 
@@ -120,18 +128,18 @@ protected:
 
 public:
 
-	inline IReader() : m_last_pos(0) {
+	inline ibReader() : m_last_pos(0) {
 		m_pos = 0;
 	}
 
-	inline IReader(void* _data, int _size, int _iterpos = 0) : m_last_pos(0) {
+	inline ibReader(void* _data, int _size, int _iterpos = 0) : m_last_pos(0) {
 		m_data = (char*)_data;
 		m_size = _size;
 		m_pos = 0;
 		m_iterpos = _iterpos;
 	}
 
-	virtual ~IReader() {}
+	virtual ~ibReader() {}
 
 protected:
 	inline u32			correction(u32 p) const {
@@ -154,7 +162,7 @@ public:
 public:
 
 	inline bool			eof()	const { return elapsed() <= 0; }
-	inline void			r(void* p, int cnt) const;
+	void			r(void* p, int cnt) const;
 
 	inline u64			r_u64() const { u64   tmp;	r(&tmp, sizeof(tmp)); return tmp; }
 	inline u32			r_u32() const { u32   tmp;	r(&tmp, sizeof(tmp)); return tmp; }
@@ -170,7 +178,7 @@ public:
 	inline	void		rewind() const { seek(0); }
 	u64 			    find_chunk(u64 ID, bool* bCompressed = nullptr) const;
 
-	inline	bool		r_chunk(u64 ID, void* dest) const {	// чтение Chunk'ов (4b-ID,4b-size,??b-m_data)
+	inline	bool		r_chunk(u64 ID, void* dest) const {	// пїЅпїЅпїЅпїЅпїЅпїЅ Chunk'пїЅпїЅ (4b-ID,4b-size,??b-m_data)
 		m_last_pos = tell();
 		u32	dwSize = find_chunk(ID);
 		if (dwSize != 0) {
@@ -180,7 +188,7 @@ public:
 		return false;
 	}
 
-	inline	bool		r_chunk(u64 ID, wxMemoryBuffer& dest) const {	// чтение Chunk'ов (4b-ID,4b-size,??b-m_data)
+	inline	bool		r_chunk(u64 ID, wxMemoryBuffer& dest) const {	// пїЅпїЅпїЅпїЅпїЅпїЅ Chunk'пїЅпїЅ (4b-ID,4b-size,??b-m_data)
 		m_last_pos = tell();
 		u32	dwSize = find_chunk(ID);
 		if (dwSize != 0) {
@@ -191,7 +199,7 @@ public:
 		return false;
 	}
 
-	inline	bool		r_chunk_safe(u64 ID, void* dest, u32 dest_size) const { // чтение Chunk'ов (4b-ID,4b-size,??b-m_data)
+	inline	bool		r_chunk_safe(u64 ID, void* dest, u32 dest_size) const { // пїЅпїЅпїЅпїЅпїЅпїЅ Chunk'пїЅпїЅ (4b-ID,4b-size,??b-m_data)
 		m_last_pos = tell();
 		u64	dwSize = find_chunk(ID);
 		if (dwSize != 0) {
@@ -202,7 +210,7 @@ public:
 		return false;
 	}
 
-	inline	bool		r_chunk_safe(u64 ID, wxMemoryBuffer& dest, u32 dest_size) const { // чтение Chunk'ов (4b-ID,4b-size,??b-m_data)
+	inline	bool		r_chunk_safe(u64 ID, wxMemoryBuffer& dest, u32 dest_size) const { // пїЅпїЅпїЅпїЅпїЅпїЅ Chunk'пїЅпїЅ (4b-ID,4b-size,??b-m_data)
 		m_last_pos = tell();
 		u64	dwSize = find_chunk(ID);
 		if (dwSize != 0) {
@@ -232,33 +240,33 @@ public:
 
 public:
 
-	// поиск Chunk'ов - возврат - размер или 0
-	IReader* open_chunk(u64 ID) const;
+	// пїЅпїЅпїЅпїЅпїЅ Chunk'пїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ 0
+	ibReader* open_chunk(u64 ID) const;
 	// iterators
-	IReader* open_chunk_iterator(u64& ID, IReader* previous = nullptr) const;	// nullptr=first
+	ibReader* open_chunk_iterator(u64& ID, ibReader* previous = nullptr) const;	// nullptr=first
 
 private:
 	mutable u64					m_last_pos;
 };
 
-class BACKEND_API CMemoryReader : public IReader {
+class BACKEND_API ibReaderMemory : public ibReader {
 public:
 
-	CMemoryReader(const wxMemoryBuffer& buf, int _iterpos = 0) :
-		IReader(buf.GetData(), buf.GetDataLen(), _iterpos)
+	ibReaderMemory(const wxMemoryBuffer& buf, int _iterpos = 0) :
+		ibReader(buf.GetData(), buf.GetDataLen(), _iterpos)
 	{
 	}
 
-	CMemoryReader(void* _data, int _size, int _iterpos = 0) :
-		IReader(_data, _size, _iterpos)
+	ibReaderMemory(void* _data, int _size, int _iterpos = 0) :
+		ibReader(_data, _size, _iterpos)
 	{
 	}
 
-	// поиск Chunk'ов - возврат - размер или 0
-	CMemoryReader* open_chunk(u64 ID) const;
+	// пїЅпїЅпїЅпїЅпїЅ Chunk'пїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ 0
+	ibReaderMemory* open_chunk(u64 ID) const;
 	
 	// iterators
-	CMemoryReader* open_chunk_iterator(u64& ID, CMemoryReader* previous = nullptr) const;	// nullptr=first
+	ibReaderMemory* open_chunk_iterator(u64& ID, ibReaderMemory* previous = nullptr) const;	// nullptr=first
 };
 
 #endif // !_FS_H__

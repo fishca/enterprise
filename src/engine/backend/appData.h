@@ -3,23 +3,23 @@
 
 #include "backend/backend_core.h"
 
-#define appData				(CApplicationData::Get())
+#define appData				(ibApplicationData::Get())
 
-#define appDataCreateFile(mode,database,locale) (CApplicationData::CreateFileAppDataEnv(mode,database,locale))
-#define appDataCreateServer(mode,server,port,user,password,database,locale) (CApplicationData::CreateServerAppDataEnv(mode,server,port,user,password,database,locale))
+#define appDataCreateFile(mode,database,locale) (ibApplicationData::CreateFileAppDataEnv(mode,database,locale))
+#define appDataCreateServer(mode,server,port,user,password,database,locale) (ibApplicationData::CreateServerAppDataEnv(mode,server,port,user,password,database,locale))
 
-#define appDataDestroy()	(CApplicationData::DestroyAppDataEnv())
+#define appDataDestroy()	(ibApplicationData::DestroyAppDataEnv())
 
-#define db_query  (CApplicationData::GetDatabaseLayer())
+#define db_query  (ibApplicationData::GetDatabaseLayer())
 
-enum eRunMode {
+enum ibRunMode {
 	eLAUNCHER_MODE = 1,		// for create db, only backmode  
 	eDESIGNER_MODE = 2,		// backmode + frontmode
 	eENTERPRISE_MODE = 3,	// backmode + frontmode
 	eSERVICE_MODE = 4		// only backmode 
 };
 
-enum eDatabaseMode {
+enum ibDatabaseMode {
 	eFILE,
 	eSERVER,
 
@@ -31,20 +31,20 @@ enum eDatabaseMode {
 #define _app_start_create_debug_server_flag 0x0080
 //////////////////////////////////////////////////////////////////
 
-class BACKEND_API IDatabaseLayer;
+class BACKEND_API ibDatabaseLayer;
 
 #pragma region session  
-class BACKEND_API CApplicationDataSessionArray {
+class BACKEND_API ibApplicationDataSessionArray {
 
-	struct CApplicationDataSessionUnit {
+	struct ibApplicationDataSessionUnit {
 
-		CApplicationDataSessionUnit(eRunMode runMode, const wxDateTime& startedDateTime,
+		ibApplicationDataSessionUnit(ibRunMode runMode, const wxDateTime& startedDateTime,
 			const wxString strUserName, const wxString strComputerName, const wxString& strSession) :
 			m_runMode(runMode), m_startedDate(startedDateTime), m_strUserName(strUserName), m_strComputerName(strComputerName), m_strSession(strSession)
 		{
 		}
 
-		eRunMode m_runMode;
+		ibRunMode m_runMode;
 		wxDateTime m_startedDate;
 		wxString m_strUserName;
 		wxString m_strComputerName;
@@ -53,14 +53,14 @@ class BACKEND_API CApplicationDataSessionArray {
 
 public:
 
-	CApplicationDataSessionArray() : m_sessionArrayHash(wxNewUniqueGuid) {}
+	ibApplicationDataSessionArray() : m_sessionArrayHash(wxNewUniqueGuid) {}
 
-	void AppendSession(eRunMode runMode, const wxDateTime& startedTime,
+	void AppendSession(ibRunMode runMode, const wxDateTime& startedTime,
 		const wxString strUserName, const wxString strComputerName, const wxString& strSession) {
 		m_listSession.emplace_back(runMode, startedTime, strUserName, strComputerName, strSession);
 	}
 
-	wxString GetSessionArrayHash() const { return m_sessionArrayHash; }
+	wxString GetSessionArrayHash() const { return wxString(m_sessionArrayHash.str()); }
 
 	wxString GetUserName(unsigned int idx) const;
 	wxString GetComputerName(unsigned int idx) const;
@@ -73,17 +73,17 @@ public:
 		m_listSession.clear();
 	}
 
-	eRunMode GetSessionApplication(unsigned int idx) const;
+	ibRunMode GetSessionApplication(unsigned int idx) const;
 	unsigned int const GetSessionCount() const { return m_listSession.size(); }
 
 private:
-	CGuid m_sessionArrayHash;
-	std::vector<CApplicationDataSessionUnit> m_listSession;
+	ibGuid m_sessionArrayHash;
+	std::vector<ibApplicationDataSessionUnit> m_listSession;
 };
 #pragma endregion
 
 #pragma region config
-struct CApplicationDataConfigInfo {
+struct ibApplicationDataConfigInfo {
 
 	bool IsSetLocale() const { return !m_strLocale.IsEmpty(); }
 
@@ -93,18 +93,18 @@ struct CApplicationDataConfigInfo {
 #pragma endregion 
 
 #pragma region user
-struct CApplicationDataShortUserInfo {
+struct ibApplicationDataShortUserInfo {
 	wxString m_strUserGuid;
 	wxString m_strUserName;
 	wxString m_strUserFullName;
 };
 
-struct CApplicationDataUserInfo {
+struct ibApplicationDataUserInfo {
 
-	struct CApplicationDataUserRole {
+	struct ibApplicationDataUserRole {
 		wxString m_strRoleGuid;
 		wxString m_strRoleName;
-		role_identifier_t m_miRoleId = wxNOT_FOUND;
+		ibRoleID m_miRoleId = wxNOT_FOUND;
 	};
 
 	bool IsOk() const { return !m_strUserGuid.IsEmpty(); }
@@ -120,7 +120,7 @@ struct CApplicationDataUserInfo {
 	wxString m_strUserPassword;
 
 	//Role info 
-	std::vector<CApplicationDataUserRole> m_roleArray;
+	std::vector<ibApplicationDataUserRole> m_roleArray;
 
 	//Language info 
 	wxString m_strLanguageGuid;
@@ -130,16 +130,16 @@ struct CApplicationDataUserInfo {
 #pragma endregion
 
 // This class is a singleton class.
-class BACKEND_API CApplicationData {
+class BACKEND_API ibApplicationData {
 
 #pragma region session  
-	class CApplicationDataSessionUpdater : public wxThread {
+	class ibApplicationDataSessionUpdater : public wxThread {
 	public:
-		CApplicationDataSessionUpdater(CApplicationData* application, const CGuid& session);
-		virtual ~CApplicationDataSessionUpdater();
+		ibApplicationDataSessionUpdater(ibApplicationData* application, const ibGuid& session);
+		virtual ~ibApplicationDataSessionUpdater();
 		bool InitSessionUpdater();
 		void StartSessionUpdater();
-		const CApplicationDataSessionArray GetSessionArray() const;
+		const ibApplicationDataSessionArray GetSessionArray() const;
 	protected:
 
 		virtual ExitCode Entry();
@@ -169,27 +169,27 @@ class BACKEND_API CApplicationData {
 		bool m_sessionCreated, m_sessionStarted;
 		bool m_sessionUpdaterLoop;
 
-		CApplicationDataSessionArray m_sessionArray;
-		std::shared_ptr<IDatabaseLayer> m_session_db;
-		const CGuid m_session;
+		ibApplicationDataSessionArray m_sessionArray;
+		std::shared_ptr<ibDatabaseLayer> m_session_db;
+		const ibGuid m_session;
 		wxDateTime m_currentDateTime;
 		static wxCriticalSection ms_sessionLocker;
 	};
 #pragma endregion
 
-	CApplicationData(eRunMode runMode);
+	ibApplicationData(ibRunMode runMode);
 
 public:
 
-	virtual ~CApplicationData();
-	static CApplicationData* Get() { return s_instance; }
+	virtual ~ibApplicationData();
+	static ibApplicationData* Get() { return s_instance; }
 
 	///////////////////////////////////////////////////////////////////////////
-	static bool CreateAppDataEnv(eRunMode runMode = eRunMode::eENTERPRISE_MODE);
+	static bool CreateAppDataEnv(ibRunMode runMode = ibRunMode::eENTERPRISE_MODE);
 	///////////////////////////////////////////////////////////////////////////
 
-	static bool CreateFileAppDataEnv(eRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale = wxT(""));
-	static bool CreateServerAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
+	static bool CreateFileAppDataEnv(ibRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale = wxT(""));
+	static bool CreateServerAppDataEnv(ibRunMode runMode, const wxString& strServer, const wxString& strPort,
 		const wxString& strUser = wxT(""), const wxString& strPassword = wxT(""), const wxString& strDatabase = wxT(""), const wxString& strLocale = wxT(""));
 
 	static bool SetLocaleAppDataEnv(const wxString& strLocale = wxT(""));
@@ -207,7 +207,7 @@ public:
 	void ReadEngineConfig();
 #pragma endregion
 
-	static std::shared_ptr<IDatabaseLayer> GetDatabaseLayer() {
+	static std::shared_ptr<ibDatabaseLayer> GetDatabaseLayer() {
 		if (s_instance != nullptr)
 			return s_instance->m_db;
 		return nullptr;
@@ -218,16 +218,18 @@ public:
 	long RunApplication(const wxString& strAppName, const wxString& strUserName, const wxString& strUserPassword, bool searchDebug = true) const;
 #pragma endregion
 
-	eRunMode GetAppMode() const { return m_runMode; }
+	ibRunMode GetAppMode() const { return m_runMode; }
 
-	bool LauncherMode() const { return m_runMode == eRunMode::eLAUNCHER_MODE; }
-	bool DesignerMode() const { return m_runMode == eRunMode::eDESIGNER_MODE; }
-	bool EnterpriseMode() const { return m_runMode == eRunMode::eENTERPRISE_MODE; }
-	bool ServiceMode() const { return m_runMode == eRunMode::eSERVICE_MODE; }
+	bool LauncherMode() const { return m_runMode == ibRunMode::eLAUNCHER_MODE; }
+	bool DesignerMode() const { return m_runMode == ibRunMode::eDESIGNER_MODE; }
+	bool EnterpriseMode() const { return m_runMode == ibRunMode::eENTERPRISE_MODE; }
+	bool ServiceMode() const { return m_runMode == ibRunMode::eSERVICE_MODE; }
 
-	inline wxString GetRunModeDescr(const eRunMode& mode) const {
+	inline wxString GetRunModeDescr(const ibRunMode& mode) const {
 		switch (mode)
 		{
+		case eLAUNCHER_MODE:
+			return wxEmptyString;
 		case eDESIGNER_MODE:
 			return _("Designer");
 		case eENTERPRISE_MODE:
@@ -237,14 +239,16 @@ public:
 		}
 		return wxEmptyString;
 	}
-	
+
 	inline wxString GetRunModeDescr() const { return GetRunModeDescr(m_runMode); }
 
-	eDatabaseMode GetDatabaseMode() const { return m_dbMode; }
+	ibDatabaseMode GetDatabaseMode() const { return m_dbMode; }
 
-	inline wxString GetDatabaseModeDescr(const eDatabaseMode& mode) const {
+	inline wxString GetDatabaseModeDescr(const ibDatabaseMode& mode) const {
 		switch (mode)
 		{
+		case eNONE:
+			return wxEmptyString;
 		case eFILE:
 			return _("File");
 		case eSERVER:
@@ -252,7 +256,7 @@ public:
 		}
 		return wxEmptyString;
 	}
-	
+
 	inline wxString GetDatabaseModeDescr() const { return GetDatabaseModeDescr(m_dbMode); }
 
 	bool AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword);
@@ -266,29 +270,20 @@ public:
 
 	wxString GetLocale() const { return m_locale.GetCanonicalName(); }
 
-	std::vector<CApplicationDataShortUserInfo> GetAllowedUser() const;
+	std::vector<ibApplicationDataShortUserInfo> GetAllowedUser() const;
 
 #pragma region session  
 
-	const CApplicationDataSessionArray GetSessionArray() const {
-		return m_sessionUpdater->GetSessionArray();
-	}
+	const ibApplicationDataSessionArray GetSessionArray() const { return m_sessionUpdater->GetSessionArray(); }
 
 #pragma endregion 
 
-	const std::vector<CApplicationDataUserInfo::CApplicationDataUserRole>& GetUserRoleArray() const {
-		return m_userInfo.m_roleArray;
-	}
+	const std::vector<ibApplicationDataUserInfo::ibApplicationDataUserRole>& GetUserRoleArray() const { return m_userInfo.m_roleArray; }
 
 #pragma region language  
 
-	CGuid GetUserLanguageGuid() const {
-		return m_userInfo.m_strLanguageGuid;
-	}
-
-	wxString GetUserLanguageCode() const {
-		return m_userInfo.m_strLanguageCode;
-	}
+	ibGuid GetUserLanguageGuid() const { return m_userInfo.m_strLanguageGuid; }
+	wxString GetUserLanguageCode() const { return m_userInfo.m_strLanguageCode; }
 
 #pragma endregion 
 
@@ -310,9 +305,9 @@ public:
 	}
 
 #pragma region user  
-	CApplicationDataUserInfo ReadUserData(const CGuid& userGuid) const;
-	CApplicationDataUserInfo ReadUserData(const wxString& userName) const;
-	bool SaveUserData(const CApplicationDataUserInfo& userInfo) const;
+	ibApplicationDataUserInfo ReadUserData(const ibGuid& userGuid) const;
+	ibApplicationDataUserInfo ReadUserData(const wxString& userName) const;
+	bool SaveUserData(const ibApplicationDataUserInfo& userInfo) const;
 #pragma endregion
 
 #pragma region database
@@ -332,13 +327,13 @@ private:
 	bool StartSession(const wxString& userName, const wxString& md5Password);
 	bool CloseSession();
 
-	void ReadUserData_Password(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
-	void ReadUserData_Role(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
-	void ReadUserData_Language(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
+	void ReadUserData_Password(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
+	void ReadUserData_Role(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
+	void ReadUserData_Language(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
 
-	wxMemoryBuffer SaveUserData_Password(const CApplicationDataUserInfo& userInfo) const;
-	wxMemoryBuffer SaveUserData_Role(const CApplicationDataUserInfo& userInfo) const;
-	wxMemoryBuffer SaveUserData_Language(const CApplicationDataUserInfo& userInfo) const;
+	wxMemoryBuffer SaveUserData_Password(const ibApplicationDataUserInfo& userInfo) const;
+	wxMemoryBuffer SaveUserData_Role(const ibApplicationDataUserInfo& userInfo) const;
+	wxMemoryBuffer SaveUserData_Language(const ibApplicationDataUserInfo& userInfo) const;
 
 	bool LoadUserInfoFromBuffer(wxMemoryBuffer& buffer);
 	bool SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const;
@@ -355,32 +350,32 @@ private:
 
 private:
 
-	static CApplicationData* s_instance;
+	static ibApplicationData* s_instance;
 
-	eRunMode m_runMode;
+	ibRunMode m_runMode;
 	wxString m_strComputer;
 	wxDateTime m_startedDate;
 	wxDateTime m_lastActivity;
-	CGuid m_sessionGuid;
+	ibGuid m_sessionGuid;
 
 #pragma region config
-	CApplicationDataConfigInfo m_configInfo;
+	ibApplicationDataConfigInfo m_configInfo;
 #pragma endregion 
 #pragma region user
-	CApplicationDataUserInfo m_userInfo;
+	ibApplicationDataUserInfo m_userInfo;
 #pragma endregion 
 
 	static bool m_forceExit;
 	static wxCriticalSection m_cs_force_exit;
 
-	std::shared_ptr<IDatabaseLayer> m_db;
-	std::shared_ptr<CApplicationDataSessionUpdater> m_sessionUpdater;
+	std::shared_ptr<ibDatabaseLayer> m_db;
+	std::shared_ptr<ibApplicationDataSessionUpdater> m_sessionUpdater;
 
 	bool m_connected_to_db = false;
 	bool m_created_metadata = false;
 	bool m_run_metadata = false;
 
-	eDatabaseMode m_dbMode;
+	ibDatabaseMode m_dbMode;
 
 	// FILE ENTRY
 	wxString m_strFile;

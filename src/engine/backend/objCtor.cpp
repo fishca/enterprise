@@ -4,114 +4,114 @@
 #include "objCtor.h"
 
 //reference class 
-wxClassInfo* CMetaValueRefTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeReference::GetClassInfo() const
 {
-	return CLASSINFO(CValueReferenceDataObject);
+	return CLASSINFO(ibValueReferenceDataObject);
 }
 
-CValue* CMetaValueRefTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeReference::CreateObject() const
 {
-	return CValue::CreateAndPrepareValueRef<CValueReferenceDataObject>(m_metaObject);
+	return ibValue::CreateAndPrepareValueRef<ibValueReferenceDataObject>(m_metaObject);
 }
 
 //list class 
-wxClassInfo* CMetaValueListRefTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeReferenceList::GetClassInfo() const
 {
-	IValueMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
-	IValueMetaObjectRecordDataEnumRef* enumRef = nullptr;
+	ibValueMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
+	ibValueMetaObjectRecordDataEnumRef* enumRef = nullptr;
 	if (m_metaObject->ConvertToValue(folderRef)) {
-		return CLASSINFO(CValueTreeDataObjectFolderRef);
+		return CLASSINFO(ibValueModelTreeDataObjectFolderRef);
 	}
 	else if (m_metaObject->ConvertToValue(enumRef)) {
-		return CLASSINFO(CValueListDataObjectEnumRef);
+		return CLASSINFO(ibValueListDataObjectEnumRef);
 	}
-	return CLASSINFO(CValueListDataObjectRef);
+	return CLASSINFO(ibValueListDataObjectRef);
 }
 
-CValue* CMetaValueListRefTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeReferenceList::CreateObject() const
 {
-	IValueMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
-	IValueMetaObjectRecordDataEnumRef* enumRef = nullptr;
+	ibValueMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
+	ibValueMetaObjectRecordDataEnumRef* enumRef = nullptr;
 
 	if (m_metaObject->ConvertToValue(folderRef)) {
-		return CValue::CreateAndPrepareValueRef<CValueTreeDataObjectFolderRef>(folderRef);
+		return ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(folderRef);
 	}
 	else if (m_metaObject->ConvertToValue(enumRef)) {
-		return CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(enumRef);
+		return ibValue::CreateAndPrepareValueRef<ibValueListDataObjectEnumRef>(enumRef);
 	}
 
-	return CValue::CreateAndPrepareValueRef<CValueListDataObjectRef>((IValueMetaObjectRecordDataMutableRef*)m_metaObject);
+	return ibValue::CreateAndPrepareValueRef<ibValueListDataObjectRef>((ibValueMetaObjectRecordDataMutableRef*)m_metaObject);
 }
 
-wxClassInfo* CMetaValueListRegisterTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeRegisterList::GetClassInfo() const
 {
-	return CLASSINFO(CValueListRegisterObject);
+	return CLASSINFO(ibValueListRegisterObject);
 }
 
-CValue* CMetaValueListRegisterTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeRegisterList::CreateObject() const
 {
-	return CValue::CreateAndPrepareValueRef<CValueListRegisterObject>(m_metaObject);
+	return ibValue::CreateAndPrepareValueRef<ibValueListRegisterObject>(m_metaObject);
 }
 
 //object class
-wxClassInfo* CMetaValueObjectTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeObject::GetClassInfo() const
 {
-	CValuePtr<IValueRecordDataObject> recordDataObjectValue = 
-		m_metaObject->CreateRecordDataObjectValue();
+	ibValuePtr<ibValueRecordDataObject> recordDataObjectValue(
+		m_metaObject->CreateRecordDataObjectValue());
 	return recordDataObjectValue->GetClassInfo();
 }
 
-CValue* CMetaValueObjectTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeObject::CreateObject() const
 {
 	return m_metaObject->CreateRecordDataObjectValue();
 }
 
 //manager class
-wxClassInfo* CMetaValueManagerTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeManager::GetClassInfo() const
 {
-	CValuePtr<IValueManagerDataObject> managerDataObject = 
-		m_metaObject->CreateManagerDataObjectValue();
+	ibValuePtr<ibValueManagerDataObject> managerDataObject(
+		m_metaObject->CreateManagerDataObjectValue());
 	return managerDataObject->GetClassInfo();
 }
 
-CValue* CMetaValueManagerTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeManager::CreateObject() const
 {
 	return m_metaObject->CreateManagerDataObjectValue();
 }
 
 //object record key
-wxClassInfo* CMetaValueRecordKeyTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeRecord::GetClassInfo() const
 {
-	return CLASSINFO(CValueRecordKeyObject);
+	return CLASSINFO(ibValueRecordKeyObject);
 }
 
-CValue* CMetaValueRecordKeyTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeRecord::CreateObject() const
 {
 	return m_metaObject->CreateRecordKeyObjectValue();
 }
 
 //object record manager
-wxClassInfo* CMetaValueRecordManagerTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeRecordManager::GetClassInfo() const
 {
-	CValuePtr<IValueRecordManagerObject> recordManagerObject = 
-		m_metaObject->CreateRecordManagerObjectValue();
+	ibValuePtr<ibValueRecordManagerObject> recordManagerObject(
+		m_metaObject->CreateRecordManagerObjectValue());
 	return recordManagerObject->GetClassInfo();
 }
 
-CValue* CMetaValueRecordManagerTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeRecordManager::CreateObject() const
 {
 	return m_metaObject->CreateRecordManagerObjectValue();
 }
 
 //object record set
-wxClassInfo* CMetaValueRecordSetTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeRecordSet::GetClassInfo() const
 {
-	CValuePtr<IValueRecordSetObject> recordSetObject = 
-		m_metaObject->CreateRecordSetObjectValue();
+	ibValuePtr<ibValueRecordSetObject> recordSetObject(
+		m_metaObject->CreateRecordSetObjectValue());
 	return recordSetObject->GetClassInfo();
 }
 
-CValue* CMetaValueRecordSetTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeRecordSet::CreateObject() const
 {
 	return m_metaObject->CreateRecordSetObjectValue();
 }

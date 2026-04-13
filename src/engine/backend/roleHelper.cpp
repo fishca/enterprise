@@ -4,7 +4,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-void CRole::InitRole(IAccessObject* obj, const bool& value)
+void ibRole::InitRole(ibAccessObject* obj, const bool& value)
 {
 	m_owner->AddRole(this);
 	m_defValue = value;
@@ -14,18 +14,18 @@ void CRole::InitRole(IAccessObject* obj, const bool& value)
 
 #pragma region role 
 
-IAccessObject::~IAccessObject()
+ibAccessObject::~ibAccessObject()
 {
 	for (auto& role : m_roles) { wxDELETE(role.second); }
 	m_roles.clear();
 }
 
-void IAccessObject::AddRole(CRole* role)
+void ibAccessObject::AddRole(ibRole* role)
 {
 	m_roles.emplace_back(role->GetName(), role);
 }
 
-bool IAccessObject::AccessRight(const CRole* role, const CUserRoleInfo& roleInfo) const
+bool ibAccessObject::AccessRight(const ibRole* role, const ibRoleUserInfo& roleInfo) const
 {
 	if (!DoAccessRight(role))
 		return false;
@@ -46,7 +46,7 @@ bool IAccessObject::AccessRight(const CRole* role, const CUserRoleInfo& roleInfo
 	return access;
 }
 
-bool IAccessObject::SetRight(const CRole* role, const role_identifier_t& id, const bool& set)
+bool ibAccessObject::SetRight(const ibRole* role, const ibRoleID& id, const bool& set)
 {
 	if (role == nullptr)
 		return false;
@@ -55,10 +55,10 @@ bool IAccessObject::SetRight(const CRole* role, const role_identifier_t& id, con
 	return true;
 }
 
-CRole* IAccessObject::GetRole(const wxString& nameParam) const
+ibRole* ibAccessObject::GetRole(const wxString& nameParam) const
 {
 	auto iterator = std::find_if(m_roles.begin(), m_roles.end(),
-		[nameParam](const std::pair<wxString, CRole*>& pair) { return stringUtils::CompareString(nameParam, pair.first); });
+		[nameParam](const std::pair<wxString, ibRole*>& pair) { return stringUtils::CompareString(nameParam, pair.first); });
 
 	if (iterator != m_roles.end())
 		return &(*iterator->second);
@@ -66,7 +66,7 @@ CRole* IAccessObject::GetRole(const wxString& nameParam) const
 	return nullptr;
 }
 
-CRole* IAccessObject::GetRole(unsigned int idx) const
+ibRole* ibAccessObject::GetRole(unsigned int idx) const
 {
 	assert(idx < m_roles.size());
 
@@ -83,15 +83,15 @@ CRole* IAccessObject::GetRole(unsigned int idx) const
 	return nullptr;
 }
 
-bool IAccessObject::LoadRole(CMemoryReader& dataReader)
+bool ibAccessObject::LoadRole(ibReaderMemory& dataReader)
 {
 	wxMemoryBuffer buf;
 	if (dataReader.r_chunk(roleBlock, buf)) {
-		std::shared_ptr<CMemoryReader> dataRoleReader(new CMemoryReader(buf));
+		std::shared_ptr<ibReaderMemory> dataRoleReader(new ibReaderMemory(buf));
 		unsigned int countRole = dataRoleReader->r_u32(); m_valRoles.clear();
 		for (unsigned int idx = 0; idx < countRole; idx++) {
 			unsigned int countData = dataRoleReader->r_u32();
-			role_identifier_t id = dataRoleReader->r_s32();
+			ibRoleID id = dataRoleReader->r_s32();
 			for (unsigned int idc = 0; idc < countData; idc++) {
 				wxString roleName = dataRoleReader->r_stringZ();
 				bool roleValue = dataRoleReader->r_u8();
@@ -105,9 +105,9 @@ bool IAccessObject::LoadRole(CMemoryReader& dataReader)
 	return false;
 }
 
-bool IAccessObject::SaveRole(CMemoryWriter& dataWritter) const
+bool ibAccessObject::SaveRole(ibWriterMemory& dataWritter) const
 {
-	CMemoryWriter dataRoleWritter;
+	ibWriterMemory dataRoleWritter;
 	dataRoleWritter.w_u32(m_valRoles.size());
 	for (auto role_id : m_valRoles) {
 		dataRoleWritter.w_u32(role_id.second.size());

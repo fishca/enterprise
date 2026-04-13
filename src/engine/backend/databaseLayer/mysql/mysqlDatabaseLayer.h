@@ -19,12 +19,12 @@
 #include "backend/databaseLayer/preparedStatement.h"
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-class CMysqlInterface;
+class ibInterfaceMySQL;
 #endif
 
 WX_DECLARE_VOIDPTR_HASH_MAP(void*, PointerLookupMap);
 
-class BACKEND_API CMysqlDatabaseLayer : public IDatabaseLayer
+class BACKEND_API ibDatabaseLayerMySQL : public ibDatabaseLayer
 {
 public:
 	// Information that can be specified for a MySQL database
@@ -34,16 +34,16 @@ public:
 	//  user
 	//  password
 	// ctor
-	CMysqlDatabaseLayer();
-	CMysqlDatabaseLayer(const wxString& strDatabase);
-	CMysqlDatabaseLayer(const wxString& strServer, const wxString& strDatabase);
-	CMysqlDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CMysqlDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CMysqlDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
-	CMysqlDatabaseLayer(const CMysqlDatabaseLayer& src);
+	ibDatabaseLayerMySQL();
+	ibDatabaseLayerMySQL(const wxString& strDatabase);
+	ibDatabaseLayerMySQL(const wxString& strServer, const wxString& strDatabase);
+	ibDatabaseLayerMySQL(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerMySQL(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerMySQL(void* pDatabase) { m_pDatabase = pDatabase; }
+	ibDatabaseLayerMySQL(const ibDatabaseLayerMySQL& src);
 
 	// dtor
-	virtual ~CMysqlDatabaseLayer();
+	virtual ~ibDatabaseLayerMySQL();
 
 	// open database
 	virtual bool Open(const wxString& strDatabase);
@@ -58,7 +58,7 @@ public:
 	virtual bool IsOpen();
 
 	/// clone database  
-	virtual IDatabaseLayer* Clone() { return new CMysqlDatabaseLayer(*this); }
+	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerMySQL(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();
@@ -85,17 +85,17 @@ protected:
 
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
-	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
+	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
 
-	// IPreparedStatement support
-	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+	// ibPreparedStatement support
+	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
 
 private:
 	void InitDatabase();
 	void ParseServerAndPort(const wxString& strServer);
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	CMysqlInterface* m_pInterface;
+	ibInterfaceMySQL* m_pInterface;
 #endif
 	wxString m_strServer;
 	wxString m_strDatabase;

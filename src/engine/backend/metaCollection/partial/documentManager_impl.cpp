@@ -7,58 +7,58 @@
 #include "backend/appData.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-CValueReferenceDataObject* CValueManagerDataObjectDocument::FindByNumber(const CValue& vNumber, const CValue& vPeriod)
+ibValueReferenceDataObject* ibValueManagerDataObjectDocument::FindByNumber(const ibValue& vNumber, const ibValue& vPeriod)
 {
 	if (!appData->DesignerMode()) {
 	
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendCoreException::Error(_("Database is not open!"));
+			ibBackendCoreException::Error(_("Database is not open!"));
 	
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		if (db_query->TableExists(tableName)) {
-			CValueMetaObjectAttributePredefined* attributeNumber = m_metaObject->GetDocumentNumber();
-			CValueMetaObjectAttributePredefined* attributeDate = m_metaObject->GetDocumentDate();
+			ibValueMetaObjectAttributePredefined* attributeNumber = m_metaObject->GetDocumentNumber();
+			ibValueMetaObjectAttributePredefined* attributeDate = m_metaObject->GetDocumentDate();
 			wxASSERT(attributeNumber && attributeDate);
 			wxString sqlQuery = "";
-			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
-				sqlQuery = "SELECT uuid FROM %s WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "LIKE") + " LIMIT 1;";
+			if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
+				sqlQuery = "SELECT uuid FROM %s WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attributeNumber, "LIKE") + " LIMIT 1;";
 				if (!vPeriod.IsEmpty()) {
-					sqlQuery += IValueMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "<=");
+					sqlQuery += ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attributeNumber, "<=");
 				}
 			}
 			else {
-				sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "LIKE") + ";";
+				sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attributeNumber, "LIKE") + ";";
 				if (!vPeriod.IsEmpty()) {
-					sqlQuery += IValueMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "<=");
+					sqlQuery += ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attributeNumber, "<=");
 				}
 			}
-			IPreparedStatement* statement = nullptr;
+			ibPreparedStatement* statement = nullptr;
 			if (!vPeriod.IsEmpty()) {
 				statement = db_query->PrepareStatement(sqlQuery, tableName);
-				if (statement == nullptr) return CValueReferenceDataObject::Create(m_metaObject);
+				if (statement == nullptr) return ibValueReferenceDataObject::Create(m_metaObject);
 				int position = 1;
-				IValueMetaObjectAttribute::SetValueAttribute(attributeNumber, attributeNumber->AdjustValue(vNumber), statement, position);
-				IValueMetaObjectAttribute::SetValueAttribute(attributeDate, attributeDate->AdjustValue(vPeriod), statement, position);
+				ibValueMetaObjectAttributeBase::SetValueAttribute(attributeNumber, attributeNumber->AdjustValue(vNumber), statement, position);
+				ibValueMetaObjectAttributeBase::SetValueAttribute(attributeDate, attributeDate->AdjustValue(vPeriod), statement, position);
 			}
 			else {
 				statement = db_query->PrepareStatement(sqlQuery, tableName);
-				if (statement == nullptr) return CValueReferenceDataObject::Create(m_metaObject);		
+				if (statement == nullptr) return ibValueReferenceDataObject::Create(m_metaObject);		
 				int position = 1;
-				IValueMetaObjectAttribute::SetValueAttribute(attributeNumber, attributeNumber->AdjustValue(vNumber), statement, position);
+				ibValueMetaObjectAttributeBase::SetValueAttribute(attributeNumber, attributeNumber->AdjustValue(vNumber), statement, position);
 			}
-			CValueReferenceDataObject* foundedReference = nullptr;
-			IDatabaseResultSet* databaseResultSet = statement->RunQueryWithResults();
+			ibValueReferenceDataObject* foundedReference = nullptr;
+			ibDatabaseResultSet* databaseResultSet = statement->RunQueryWithResults();
 			wxASSERT(databaseResultSet);
 			if (databaseResultSet->Next()) {
-				const CGuid& foundedGuid = databaseResultSet->GetResultString(guidName);
-				if (foundedGuid.isValid()) foundedReference = CValueReferenceDataObject::Create(m_metaObject, foundedGuid);
+				const ibGuid& foundedGuid = databaseResultSet->GetResultString(guidName);
+				if (foundedGuid.isValid()) foundedReference = ibValueReferenceDataObject::Create(m_metaObject, foundedGuid);
 			}
 			db_query->CloseResultSet(databaseResultSet);
 			db_query->CloseStatement(statement);
 			if (foundedReference != nullptr) return foundedReference;		
 		}
 	}
-	return CValueReferenceDataObject::Create(m_metaObject);
+	return ibValueReferenceDataObject::Create(m_metaObject);
 }

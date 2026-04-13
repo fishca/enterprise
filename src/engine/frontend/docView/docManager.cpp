@@ -3,6 +3,7 @@
 //	Description : report manager 
 ////////////////////////////////////////////////////////////////////////////
 
+#include <wx/except.h>
 #include <wx/docview.h>
 #include <wx/cmdproc.h>
 #include <wx/config.h>
@@ -20,55 +21,55 @@
 
 #include "backend/metadataConfiguration.h"
 
-wxBEGIN_EVENT_TABLE(CMetaDocManager, wxDocManager)
+wxBEGIN_EVENT_TABLE(ibMetaDocManager, wxDocManager)
 
-EVT_MENU(wxID_OPEN, CMetaDocManager::OnFileOpen)
-EVT_MENU(wxID_CLOSE, CMetaDocManager::OnFileClose)
-EVT_MENU(wxID_CLOSE_ALL, CMetaDocManager::OnFileCloseAll)
-EVT_MENU(wxID_REVERT, CMetaDocManager::OnFileRevert)
-EVT_MENU(wxID_NEW, CMetaDocManager::OnFileNew)
-EVT_MENU(wxID_SAVE, CMetaDocManager::OnFileSave)
-EVT_MENU(wxID_SAVEAS, CMetaDocManager::OnFileSaveAs)
-EVT_MENU(wxID_UNDO, CMetaDocManager::OnUndo)
-EVT_MENU(wxID_REDO, CMetaDocManager::OnRedo)
+EVT_MENU(wxID_OPEN, ibMetaDocManager::OnFileOpen)
+EVT_MENU(wxID_CLOSE, ibMetaDocManager::OnFileClose)
+EVT_MENU(wxID_CLOSE_ALL, ibMetaDocManager::OnFileCloseAll)
+EVT_MENU(wxID_REVERT, ibMetaDocManager::OnFileRevert)
+EVT_MENU(wxID_NEW, ibMetaDocManager::OnFileNew)
+EVT_MENU(wxID_SAVE, ibMetaDocManager::OnFileSave)
+EVT_MENU(wxID_SAVEAS, ibMetaDocManager::OnFileSaveAs)
+EVT_MENU(wxID_UNDO, ibMetaDocManager::OnUndo)
+EVT_MENU(wxID_REDO, ibMetaDocManager::OnRedo)
 
 // We don't know in advance how many items can there be in the MRU files
 // list so set up OnMRUFile() as a handler for all menu events and do the
 // check for the id of the menu item clicked inside it.
-EVT_MENU(wxID_ANY, CMetaDocManager::OnMRUFile)
+EVT_MENU(wxID_ANY, ibMetaDocManager::OnMRUFile)
 
-EVT_UPDATE_UI(wxID_OPEN, CMetaDocManager::OnUpdateFileOpen)
-EVT_UPDATE_UI(wxID_CLOSE, CMetaDocManager::OnUpdateDisableIfNoDoc)
-EVT_UPDATE_UI(wxID_CLOSE_ALL, CMetaDocManager::OnUpdateDisableIfNoDoc)
-EVT_UPDATE_UI(wxID_REVERT, CMetaDocManager::OnUpdateFileRevert)
-EVT_UPDATE_UI(wxID_NEW, CMetaDocManager::OnUpdateFileNew)
-EVT_UPDATE_UI(wxID_SAVE, CMetaDocManager::OnUpdateFileSave)
-EVT_UPDATE_UI(wxID_SAVEAS, CMetaDocManager::OnUpdateFileSaveAs)
-EVT_UPDATE_UI(wxID_UNDO, CMetaDocManager::OnUpdateUndo)
-EVT_UPDATE_UI(wxID_REDO, CMetaDocManager::OnUpdateRedo)
+EVT_UPDATE_UI(wxID_OPEN, ibMetaDocManager::OnUpdateFileOpen)
+EVT_UPDATE_UI(wxID_CLOSE, ibMetaDocManager::OnUpdateDisableIfNoDoc)
+EVT_UPDATE_UI(wxID_CLOSE_ALL, ibMetaDocManager::OnUpdateDisableIfNoDoc)
+EVT_UPDATE_UI(wxID_REVERT, ibMetaDocManager::OnUpdateFileRevert)
+EVT_UPDATE_UI(wxID_NEW, ibMetaDocManager::OnUpdateFileNew)
+EVT_UPDATE_UI(wxID_SAVE, ibMetaDocManager::OnUpdateFileSave)
+EVT_UPDATE_UI(wxID_SAVEAS, ibMetaDocManager::OnUpdateFileSaveAs)
+EVT_UPDATE_UI(wxID_UNDO, ibMetaDocManager::OnUpdateUndo)
+EVT_UPDATE_UI(wxID_REDO, ibMetaDocManager::OnUpdateRedo)
 
 #if wxUSE_PRINTING_ARCHITECTURE
-EVT_MENU(wxID_PRINT, CMetaDocManager::OnPrint)
-EVT_MENU(wxID_PREVIEW, CMetaDocManager::OnPreview)
-EVT_MENU(wxID_PRINT_SETUP, CMetaDocManager::OnPageSetup)
+EVT_MENU(wxID_PRINT, ibMetaDocManager::OnPrint)
+EVT_MENU(wxID_PREVIEW, ibMetaDocManager::OnPreview)
+EVT_MENU(wxID_PRINT_SETUP, ibMetaDocManager::OnPageSetup)
 
-EVT_UPDATE_UI(wxID_PRINT, CMetaDocManager::OnUpdateDisableIfNoDoc)
-EVT_UPDATE_UI(wxID_PREVIEW, CMetaDocManager::OnUpdateDisableIfNoDoc)
+EVT_UPDATE_UI(wxID_PRINT, ibMetaDocManager::OnUpdateDisableIfNoDoc)
+EVT_UPDATE_UI(wxID_PREVIEW, ibMetaDocManager::OnUpdateDisableIfNoDoc)
 // NB: we keep "Print setup" menu item always enabled as it can be used
 //     even without an active document
 #endif // wxUSE_PRINTING_ARCHITECTURE
 
-EVT_MENU(wxID_FIND, CMetaDocManager::OnFindDialog)
+EVT_MENU(wxID_FIND, ibMetaDocManager::OnFindDialog)
 
 wxEND_EVENT_TABLE()
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaDocManager, wxDocManager);
+wxIMPLEMENT_DYNAMIC_CLASS(ibMetaDocManager, wxDocManager);
 
 //****************************************************************
-//*                           CMetaDocManager					 *
+//*                           ibMetaDocManager					 *
 //****************************************************************
 
-bool CMetaDocManager::CMetaDocTemplate::InitDocument(wxDocument* doc, const wxString& path, long flags)
+bool ibMetaDocManager::ibMetaDocTemplate::InitDocument(wxDocument* doc, const wxString& path, long flags)
 {
 	wxTRY
 	{
@@ -100,17 +101,17 @@ bool CMetaDocManager::CMetaDocTemplate::InitDocument(wxDocument* doc, const wxSt
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-CMetaDocManager::CMetaDocManager()
+ibMetaDocManager::ibMetaDocManager()
 	: wxDocManager(), m_findDialog(nullptr)
 {
 	AddDocTemplate(g_metaModuleCLSID,
-		_("Text document"), wxT("*.txt;*.text"), wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextFileDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
+		_("Text document"), wxT("*.txt;*.text"), wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(ibTextFilibDocument), CLASSINFO(ibTextEditView), wxTEMPLATE_VISIBLE);
 
 	AddDocTemplate(g_metaTemplateCLSID,
-		_("Spreadsheet document"), wxT("*.oxl"), wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CSpreadsheetFileDocument), CLASSINFO(CSpreadsheetEditView), wxTEMPLATE_VISIBLE);
+		_("Spreadsheet document"), wxT("*.oxl"), wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(ibSpreadsheetFilibDocument), CLASSINFO(ibSpreadsheetEditView), wxTEMPLATE_VISIBLE);
 
 	AddDocTemplate(g_metaInterfaceCLSID,
-		_("Help document"), wxT("*.hle"), wxT("hle"), _("Help Doc"), _("Help View"), CLASSINFO(CHelpFileDocument), CLASSINFO(CHelpEditView), wxTEMPLATE_INVISIBLE);
+		_("Help document"), wxT("*.hle"), wxT("hle"), _("Help Doc"), _("Help View"), CLASSINFO(ibHelpFilibDocument), CLASSINFO(ibHelpEditView), wxTEMPLATE_INVISIBLE);
 
 #if wxUSE_PRINTING_ARCHITECTURE
 
@@ -129,46 +130,46 @@ CMetaDocManager::CMetaDocManager()
 #endif // wxUSE_PRINTING_ARCHITECTURE
 }
 
-CMetaDocManager::~CMetaDocManager()
+ibMetaDocManager::~ibMetaDocManager()
 {
 	wxDELETE(m_findDialog);
 }
 
-void CMetaDocManager::OnFileClose(wxCommandEvent& WXUNUSED(event))
+void ibMetaDocManager::OnFileClose(wxCommandEvent& WXUNUSED(event))
 {
-	CMetaDocument* doc = GetCurrentDocument();
+	ibMetaDocument* doc = GetCurrentDocument();
 	if (doc) {
 		CloseDocument(doc);
 	}
 }
 
-void CMetaDocManager::OnFileCloseAll(wxCommandEvent& WXUNUSED(event))
+void ibMetaDocManager::OnFileCloseAll(wxCommandEvent& WXUNUSED(event))
 {
 	CloseDocuments(false);
 }
 
-void CMetaDocManager::OnFileNew(wxCommandEvent& WXUNUSED(event))
+void ibMetaDocManager::OnFileNew(wxCommandEvent& WXUNUSED(event))
 {
 	CreateNewDocument();
 }
 
-void CMetaDocManager::OnFileOpen(wxCommandEvent& WXUNUSED(event))
+void ibMetaDocManager::OnFileOpen(wxCommandEvent& WXUNUSED(event))
 {
 	if (!CreateDocument(wxT(""), 0)) 
 		OnOpenFileFailure();	
 }
 
-void CMetaDocManager::OnFileRevert(wxCommandEvent& WXUNUSED(event))
+void ibMetaDocManager::OnFileRevert(wxCommandEvent& WXUNUSED(event))
 {
-	CMetaDocument* doc = GetCurrentDocument();
+	ibMetaDocument* doc = GetCurrentDocument();
 	if (!doc)
 		return;
 	doc->Revert();
 }
 
-void CMetaDocManager::OnFileSave(wxCommandEvent& WXUNUSED(event))
+void ibMetaDocManager::OnFileSave(wxCommandEvent& WXUNUSED(event))
 {
-	CMetaDocument* doc = GetCurrentDocument();
+	ibMetaDocument* doc = GetCurrentDocument();
 
 	if (!doc) {
 
@@ -181,15 +182,15 @@ void CMetaDocManager::OnFileSave(wxCommandEvent& WXUNUSED(event))
 	doc->Save();
 }
 
-void CMetaDocManager::OnFileSaveAs(wxCommandEvent& WXUNUSED(event))
+void ibMetaDocManager::OnFileSaveAs(wxCommandEvent& WXUNUSED(event))
 {
-	CMetaDocument* doc = GetCurrentDocument();
+	ibMetaDocument* doc = GetCurrentDocument();
 	if (!doc)
 		return;
 	doc->SaveAs();
 }
 
-void CMetaDocManager::OnMRUFile(wxCommandEvent& event)
+void ibMetaDocManager::OnMRUFile(wxCommandEvent& event)
 {
 	if (m_fileHistory) {
 		// Check if the id is in the range assigned to MRU list entries.
@@ -208,24 +209,24 @@ void CMetaDocManager::OnMRUFile(wxCommandEvent& event)
 
 #if wxUSE_PRINTING_ARCHITECTURE
 
-void CMetaDocManager::OnPrint(wxCommandEvent& event)
+void ibMetaDocManager::OnPrint(wxCommandEvent& event)
 {
 	wxDocManager::OnPrint(event);
 }
 
-void CMetaDocManager::OnPreview(wxCommandEvent& event)
+void ibMetaDocManager::OnPreview(wxCommandEvent& event)
 {
 	wxDocManager::OnPreview(event);
 }
 
-void CMetaDocManager::OnPageSetup(wxCommandEvent& event)
+void ibMetaDocManager::OnPageSetup(wxCommandEvent& event)
 {
 	wxDocManager::OnPageSetup(event);
 }
 
 #endif // wxUSE_PRINTING_ARCHITECTURE
 
-void CMetaDocManager::OnUndo(wxCommandEvent& event)
+void ibMetaDocManager::OnUndo(wxCommandEvent& event)
 {
 	wxCommandProcessor* const cmdproc = GetCurrentCommandProcessor();
 	if (!cmdproc) {
@@ -236,7 +237,7 @@ void CMetaDocManager::OnUndo(wxCommandEvent& event)
 	cmdproc->Undo();
 }
 
-void CMetaDocManager::OnRedo(wxCommandEvent& event)
+void ibMetaDocManager::OnRedo(wxCommandEvent& event)
 {
 	wxCommandProcessor* const cmdproc = GetCurrentCommandProcessor();
 	if (!cmdproc) {
@@ -249,34 +250,34 @@ void CMetaDocManager::OnRedo(wxCommandEvent& event)
 
 #include "frontend/mainFrame/mainFrame.h"
 
-void CMetaDocManager::OnFindDialog(wxCommandEvent& event)
+void ibMetaDocManager::OnFindDialog(wxCommandEvent& event)
 {
 	if (nullptr == m_findDialog)
 	{
 		m_findDialog = new wxFindReplaceDialog(mainFrame, &m_findData, _("Find"));
 		m_findDialog->Centre(wxCENTRE_ON_SCREEN | wxBOTH);
 
-		m_findDialog->Bind(wxEVT_FIND, &CMetaDocManager::OnFind, this);
-		m_findDialog->Bind(wxEVT_FIND_NEXT, &CMetaDocManager::OnFind, this);
-		m_findDialog->Bind(wxEVT_FIND_CLOSE, &CMetaDocManager::OnFindClose, this);
+		m_findDialog->Bind(wxEVT_FIND, &ibMetaDocManager::OnFind, this);
+		m_findDialog->Bind(wxEVT_FIND_NEXT, &ibMetaDocManager::OnFind, this);
+		m_findDialog->Bind(wxEVT_FIND_CLOSE, &ibMetaDocManager::OnFindClose, this);
 	}
 
 	m_findDialog->Show(true);
 }
 
-void CMetaDocManager::OnFindClose(wxFindDialogEvent& event)
+void ibMetaDocManager::OnFindClose(wxFindDialogEvent& event)
 {
-	m_findDialog->Unbind(wxEVT_FIND, &CMetaDocManager::OnFind, this);
-	m_findDialog->Unbind(wxEVT_FIND_NEXT, &CMetaDocManager::OnFind, this);
-	m_findDialog->Unbind(wxEVT_FIND_CLOSE, &CMetaDocManager::OnFindClose, this);
+	m_findDialog->Unbind(wxEVT_FIND, &ibMetaDocManager::OnFind, this);
+	m_findDialog->Unbind(wxEVT_FIND_NEXT, &ibMetaDocManager::OnFind, this);
+	m_findDialog->Unbind(wxEVT_FIND_CLOSE, &ibMetaDocManager::OnFindClose, this);
 
 	m_findDialog->Destroy();
 	m_findDialog = nullptr;
 }
 
-void CMetaDocManager::OnFind(wxFindDialogEvent& event)
+void ibMetaDocManager::OnFind(wxFindDialogEvent& event)
 {
-	CMetaDocument* currDocument = GetCurrentDocument();
+	ibMetaDocument* currDocument = GetCurrentDocument();
 	if (currDocument != nullptr) {
 		wxView* firstView = currDocument->GetFirstView();
 		if (firstView != nullptr) {
@@ -289,43 +290,43 @@ void CMetaDocManager::OnFind(wxFindDialogEvent& event)
 
 // Handlers for UI update commands
 
-void CMetaDocManager::OnUpdateFileOpen(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateFileOpen(wxUpdateUIEvent& event)
 {
 	// CreateDocument() (which is called from OnFileOpen) may succeed
 	// only when there is at least a template:
 	event.Enable(GetTemplates().GetCount() > 0);
 }
 
-void CMetaDocManager::OnUpdateDisableIfNoDoc(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateDisableIfNoDoc(wxUpdateUIEvent& event)
 {
 	event.Enable(GetCurrentDocument() != nullptr);
 }
 
-void CMetaDocManager::OnUpdateFileRevert(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateFileRevert(wxUpdateUIEvent& event)
 {
-	CMetaDocument* doc = GetCurrentDocument();
+	ibMetaDocument* doc = GetCurrentDocument();
 	event.Enable(doc && doc->IsModified() && doc->GetDocumentSaved());
 }
 
-void CMetaDocManager::OnUpdateFileNew(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateFileNew(wxUpdateUIEvent& event)
 {
 	// CreateDocument() (which is called from OnFileNew) may succeed
 	// only when there is at least a template:
 	event.Enable(GetTemplates().GetCount() > 0);
 }
 
-void CMetaDocManager::OnUpdateFileSave(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateFileSave(wxUpdateUIEvent& event)
 {
-	CMetaDocument* const doc = GetCurrentDocument();
+	ibMetaDocument* const doc = GetCurrentDocument();
 	event.Enable(
 		(doc && !doc->AlreadySaved()) ||
 		(doc == nullptr && (activeMetaData != nullptr && activeMetaData->IsModified()))
 	);
 }
 
-void CMetaDocManager::OnUpdateFileSaveAs(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateFileSaveAs(wxUpdateUIEvent& event)
 {
-	CMetaDocument* const doc = GetCurrentDocument();
+	ibMetaDocument* const doc = GetCurrentDocument();
 	wxDocTemplate* const docTemplate = doc != nullptr ?
 		doc->GetDocumentTemplate() : nullptr;
 
@@ -338,7 +339,7 @@ void CMetaDocManager::OnUpdateFileSaveAs(wxUpdateUIEvent& event)
 	event.Enable(enable_save_as);
 }
 
-void CMetaDocManager::OnUpdateUndo(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateUndo(wxUpdateUIEvent& event)
 {
 	wxCommandProcessor* const cmdproc = GetCurrentCommandProcessor();
 	if (!cmdproc) {
@@ -354,7 +355,7 @@ void CMetaDocManager::OnUpdateUndo(wxUpdateUIEvent& event)
 	cmdproc->SetMenuStrings();
 }
 
-void CMetaDocManager::OnUpdateRedo(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateRedo(wxUpdateUIEvent& event)
 {
 	wxCommandProcessor* const cmdproc = GetCurrentCommandProcessor();
 	if (!cmdproc) {
@@ -369,12 +370,12 @@ void CMetaDocManager::OnUpdateRedo(wxUpdateUIEvent& event)
 	cmdproc->SetMenuStrings();
 }
 
-void CMetaDocManager::OnUpdateSaveMetadata(wxUpdateUIEvent& event)
+void ibMetaDocManager::OnUpdateSaveMetadata(wxUpdateUIEvent& event)
 {
 	event.Enable(activeMetaData != nullptr && activeMetaData->IsModified());
 }
 
-wxDocument* CMetaDocManager::CreateDocument(const wxString& pathOrig, long flags)
+wxDocument* ibMetaDocManager::CreateDocument(const wxString& pathOrig, long flags)
 {
 	// this ought to be const but SelectDocumentType/Path() are not
 	// const-correct and can't be changed as, being virtual, this risks
@@ -479,7 +480,7 @@ wxDocument* CMetaDocManager::CreateDocument(const wxString& pathOrig, long flags
 	return docNew;
 }
 
-wxDocTemplate* CMetaDocManager::SelectDocumentPath(wxDocTemplate** templates, int noTemplates, wxString& path, long flags, bool save)
+wxDocTemplate* ibMetaDocManager::SelectDocumentPath(wxDocTemplate** templates, int noTemplates, wxString& path, long flags, bool save)
 {
 #ifdef wxHAS_MULTIPLE_FILEDLG_FILTERS
 	wxString descrBuf;
@@ -592,7 +593,7 @@ wxDocTemplate* CMetaDocManager::SelectDocumentPath(wxDocTemplate** templates, in
 
 #include "frontend/win/dlgs/choiceTemplate.h"
 
-wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, int noTemplates, bool sort)
+wxDocTemplate* ibMetaDocManager::SelectDocumentType(wxDocTemplate** templates, int noTemplates, bool sort)
 {
 	int i;
 	int n = 0;
@@ -619,7 +620,7 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 			{
 				wxDocTemplate* docTemplate = templates[i];
 				auto iterator = std::find_if(m_templateVector.begin(), m_templateVector.end(),
-					[docTemplate](const CMetaDocManagerItem& value) { return value.m_docTemplate == docTemplate; });
+					[docTemplate](const ibMetaDocManagerItem& value) { return value.m_docTemplate == docTemplate; });
 
 				if (iterator != m_templateVector.end())
 				{
@@ -664,7 +665,7 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 	default:
 
 		// propose the user to choose one of several
-		CDialogChoiceTemplate dlg(choices);
+		ibDialogChoiceTemplate dlg(choices);
 		theTemplate = dlg.ShowModal() == wxID_OK ?
 			dlg.GetSelectionData() : NULL;
 	}
@@ -672,7 +673,7 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 	return theTemplate;
 }
 
-wxDocTemplate* CMetaDocManager::FindTemplateByDocClassInfo(const wxClassInfo* classInfo) const
+wxDocTemplate* ibMetaDocManager::FindTemplateByDocClassInfo(const wxClassInfo* classInfo) const
 {
 	auto iterator = std::find_if(m_templateVector.begin(), m_templateVector.end(),
 		[classInfo](const auto& value) {
@@ -687,8 +688,8 @@ wxDocTemplate* CMetaDocManager::FindTemplateByDocClassInfo(const wxClassInfo* cl
 	return nullptr;
 }
 
-void CMetaDocManager::AddDocTemplate(
-	const picture_identifier_t& id,
+void ibMetaDocManager::AddDocTemplate(
+	const ibPictureID& id,
 	const wxString& descr,
 	const wxString& filter,
 	const wxString& dir,
@@ -698,11 +699,11 @@ void CMetaDocManager::AddDocTemplate(
 	wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo,
 	long flags)
 {
-	CMetaDocManagerItem entry;
+	ibMetaDocManagerItem entry;
 
 	entry.m_className = docTypeName;
 	entry.m_classDescr = descr;
-	entry.m_docTemplate = new CMetaDocTemplate(
+	entry.m_docTemplate = new ibMetaDocTemplate(
 		this,
 		descr,
 		filter,
@@ -716,12 +717,12 @@ void CMetaDocManager::AddDocTemplate(
 	);
 
 	entry.m_guidTemplate = wxNewUniqueGuid;
-	entry.m_classIcon = CBackendPicture::GetPictureAsIcon(id);
+	entry.m_classIcon = ibBackendPicture::GetPictureAsIcon(id);
 
 	m_templateVector.emplace_back(std::move(entry));
 }
 
-void CMetaDocManager::AddDocTemplate(const picture_identifier_t& id,
+void ibMetaDocManager::AddDocTemplate(const ibPictureID& id,
 	const wxString& descr,
 	const wxString& filter,
 	const wxString& ext,
@@ -735,17 +736,17 @@ void CMetaDocManager::AddDocTemplate(const picture_identifier_t& id,
 		descr, filter, wxEmptyString, ext, docTypeName, viewTypeName, docClassInfo, viewClassInfo, flags);
 }
 
-void CMetaDocManager::AddDocTemplate(const class_identifier_t& clsid,
+void ibMetaDocManager::AddDocTemplate(const ibClassID& clsid,
 	const wxString& descr,
 	const wxString& filter,
 	const wxString& ext,
 	wxClassInfo* docClassInfo,
 	wxClassInfo* viewClassInfo)
 {
-	CMetaDocManagerItem entry;
+	ibMetaDocManagerItem entry;
 
 	entry.m_clsid = clsid;
-	entry.m_docTemplate = new CMetaDocTemplate(
+	entry.m_docTemplate = new ibMetaDocTemplate(
 		this,
 		descr,
 		filter,
@@ -759,12 +760,12 @@ void CMetaDocManager::AddDocTemplate(const class_identifier_t& clsid,
 	);
 
 	entry.m_guidTemplate = wxNewUniqueGuid;
-	entry.m_classIcon = CBackendPicture::GetPictureAsIcon(clsid);
+	entry.m_classIcon = ibBackendPicture::GetPictureAsIcon(clsid);
 
 	m_templateVector.push_back(std::move(entry));
 }
 
-void CMetaDocManager::AddDocTemplate(const class_identifier_t& id,
+void ibMetaDocManager::AddDocTemplate(const ibClassID& id,
 	wxClassInfo* docClassInfo,
 	wxClassInfo* viewClassInfo)
 {
@@ -772,35 +773,35 @@ void CMetaDocManager::AddDocTemplate(const class_identifier_t& id,
 		wxEmptyString, wxEmptyString, wxEmptyString, docClassInfo, viewClassInfo);
 }
 
-CMetaDocument* CMetaDocManager::GetCurrentDocument() const
+ibMetaDocument* ibMetaDocManager::GetCurrentDocument() const
 {
-	return dynamic_cast<CMetaDocument*>(wxDocManager::GetCurrentDocument());
+	return dynamic_cast<ibMetaDocument*>(wxDocManager::GetCurrentDocument());
 }
 
 #include "backend/metaCollection/metaObject.h"
 
-CMetaDocument* CMetaDocManager::OpenFormMDI(IValueMetaObject* metaObject, long flags)
+ibMetaDocument* ibMetaDocManager::OpenFormMDI(ibValueMetaObject* metaObject, long flags)
 {
 	return docManager->OpenForm(metaObject, nullptr, flags);
 }
 
-CMetaDocument* CMetaDocManager::OpenFormMDI(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags)
+ibMetaDocument* ibMetaDocManager::OpenFormMDI(ibValueMetaObject* metaObject, ibMetaDocument* docParent, long flags)
 {
 	return docManager->OpenForm(metaObject, docParent, flags);
 }
 
-CMetaDocument* CMetaDocManager::OpenForm(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags)
+ibMetaDocument* ibMetaDocManager::OpenForm(ibValueMetaObject* metaObject, ibMetaDocument* docParent, long flags)
 {
 	for (auto currTemplate : m_templateVector) {
 
 		if (currTemplate.m_clsid == metaObject->GetClassType()) {
 
-			CMetaDocTemplate* docTemplate = currTemplate.m_docTemplate;
+			ibMetaDocTemplate* docTemplate = currTemplate.m_docTemplate;
 			wxASSERT(docTemplate);
 			wxClassInfo* docClassInfo = docTemplate->GetDocClassInfo();
 			wxASSERT(docClassInfo);
-			CMetaDocument* newDocument = wxDynamicCast(
-				docClassInfo->CreateObject(), CMetaDocument
+			ibMetaDocument* newDocument = wxDynamicCast(
+				docClassInfo->CreateObject(), ibMetaDocument
 			);
 
 			wxASSERT(newDocument);
@@ -838,7 +839,8 @@ CMetaDocument* CMetaDocManager::OpenForm(IValueMetaObject* metaObject, CMetaDocu
 				return nullptr;
 			}
 			catch (...) {
-				if (CMetaDocManager::GetDocuments().Member(newDocument)) {
+				wxLogError(wxT("OpenForm: failed to create document view"));
+				if (ibMetaDocManager::GetDocuments().Member(newDocument)) {
 					newDocument->DeleteAllViews();
 				}
 			}
@@ -849,7 +851,7 @@ CMetaDocument* CMetaDocManager::OpenForm(IValueMetaObject* metaObject, CMetaDocu
 	return nullptr;
 }
 
-bool CMetaDocManager::CloseDocument(wxDocument* doc, bool force)
+bool ibMetaDocManager::CloseDocument(wxDocument* doc, bool force)
 {
 	if (!doc->Close() && !force)
 		return false;
@@ -865,11 +867,11 @@ bool CMetaDocManager::CloseDocument(wxDocument* doc, bool force)
 	return true;
 }
 
-bool CMetaDocManager::CloseDocuments(bool force)
+bool ibMetaDocManager::CloseDocuments(bool force)
 {
 	wxList::compatibility_iterator node = m_docs.GetFirst();
 	while (node) {
-		CMetaDocument* doc = (CMetaDocument*)node->GetData();
+		ibMetaDocument* doc = (ibMetaDocument*)node->GetData();
 		wxList::compatibility_iterator next = node->GetNext();
 		if (!CloseDocument(doc, force))
 			return false;
@@ -881,14 +883,14 @@ bool CMetaDocManager::CloseDocuments(bool force)
 	return true;
 }
 
-bool CMetaDocManager::Clear(bool force)
+bool ibMetaDocManager::Clear(bool force)
 {
 	if (!CloseDocuments(force))
 		return false;
 	m_currentView = nullptr;
 	wxList::compatibility_iterator node = m_templates.GetFirst();
 	while (node) {
-		CMetaDocTemplate* templ = (CMetaDocTemplate*)node->GetData();
+		ibMetaDocTemplate* templ = (ibMetaDocTemplate*)node->GetData();
 		wxList::compatibility_iterator next = node->GetNext();
 		delete templ;
 		node = next;

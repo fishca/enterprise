@@ -7,12 +7,12 @@
 #include "form.h"
 
 
-IValueFrame* IValueFrame::DoFindControlByName(const wxString& controlName, IValueFrame* top) const
+ibValueFrame* ibValueFrame::DoFindControlByName(const wxString& controlName, ibValueFrame* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IValueFrame* child = top->GetChild(idx);
+		ibValueFrame* child = top->GetChild(idx);
 		wxASSERT(child);
-		IValueFrame* foundedMeta = DoFindControlByName(controlName, child);
+		ibValueFrame* foundedMeta = DoFindControlByName(controlName, child);
 		if (foundedMeta) {
 			return foundedMeta;
 		}
@@ -25,17 +25,17 @@ IValueFrame* IValueFrame::DoFindControlByName(const wxString& controlName, IValu
 	return nullptr;
 }
 
-IValueFrame* IValueFrame::FindControlByName(const wxString& controlName) const
+ibValueFrame* ibValueFrame::FindControlByName(const wxString& controlName) const
 {
 	return DoFindControlByName(controlName, GetOwnerForm());
 }
 
-void IValueFrame::DoGenerateNewID(form_identifier_t& id, IValueFrame* top) const
+void ibValueFrame::DoGenerateNewID(ibFormID& id, ibValueFrame* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IValueFrame* child = top->GetChild(idx);
+		ibValueFrame* child = top->GetChild(idx);
 		wxASSERT(child);
-		form_identifier_t newID = child->GetControlID() + 1;
+		ibFormID newID = child->GetControlID() + 1;
 		if (newID > id) {
 			id = newID;
 		}
@@ -43,23 +43,23 @@ void IValueFrame::DoGenerateNewID(form_identifier_t& id, IValueFrame* top) const
 	}
 }
 
-form_identifier_t IValueFrame::GenerateNewID()
+ibFormID ibValueFrame::GenerateNewID()
 {
 	wxASSERT(m_controlId == 0);
-	CValueForm* ownerForm = GetOwnerForm();
+	ibValueForm* ownerForm = GetOwnerForm();
 	wxASSERT(ownerForm);
-	form_identifier_t id = ownerForm->GetControlID() + 1; // 1 is valueForm  
+	ibFormID id = ownerForm->GetControlID() + 1; // 1 is valueForm  
 	DoGenerateNewID(id, ownerForm);
 	m_controlId = id;
 	return id;
 }
 
-IValueFrame* IValueFrame::DoFindControlByID(const form_identifier_t& id, IValueFrame* top) const
+ibValueFrame* ibValueFrame::DoFindControlByID(const ibFormID& id, ibValueFrame* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IValueFrame* child = top->GetChild(idx);
+		ibValueFrame* child = top->GetChild(idx);
 		wxASSERT(child);
-		IValueFrame* foundedMeta = DoFindControlByID(id, child);
+		ibValueFrame* foundedMeta = DoFindControlByID(id, child);
 		if (foundedMeta) {
 			return foundedMeta;
 		}
@@ -72,7 +72,7 @@ IValueFrame* IValueFrame::DoFindControlByID(const form_identifier_t& id, IValueF
 	return nullptr;
 }
 
-IValueFrame* IValueFrame::FindControlByID(const form_identifier_t& id) const
+ibValueFrame* ibValueFrame::FindControlByID(const ibFormID& id) const
 {
 	return DoFindControlByID(id, GetOwnerForm());
 }

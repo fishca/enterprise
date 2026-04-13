@@ -1,18 +1,18 @@
 #include "metaResourceObject.h"
 #include "backend/metadata.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectResource, CValueMetaObjectAttribute);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectResource, ibValueMetaObjectAttribute);
 
-eSelectorDataType CValueMetaObjectResource::GetFilterDataType() const
+ibSelectorDataType ibValueMetaObjectResource::GetFilterDataType() const
 {
-	IValueMetaObjectGenericData* metaObject = dynamic_cast<IValueMetaObjectGenericData*>(m_parent);
+	ibValueMetaObjectGenericData* metaObject = dynamic_cast<ibValueMetaObjectGenericData*>(m_parent);
 	if (metaObject->GetClassType() == g_metaInformationRegisterCLSID) 
 		return metaObject->GetFilterDataType();
-	return eSelectorDataType::eSelectorDataType_resource;
+	return ibSelectorDataType::ibSelectorDataType_resource;
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectResource, "Resource", g_metaResourceCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectResource, "Resource", g_metaResourceCLSID);

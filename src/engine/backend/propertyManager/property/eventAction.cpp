@@ -1,16 +1,21 @@
 #include "eventAction.h"
 #include "backend/propertyManager/property/variant/variantAction.h"
 
-wxVariantData* CEventAction::CreateVariantData(const IPropertyObject* property, const CActionDescription& act) const
+// get property for grid
+wxObject* (*ibEventAction::ms_propertyEventAction)(const wxString&, const wxString&, const wxPGChoices&, const wxVariant&) = nullptr;
+
+//////////////////////////////////////////////////////////////////
+
+wxVariantData* ibEventAction::CreateVariantData(const ibPropertyObject* property, const ibActionDescription& act) const
 {
-	return new wxVariantDataAction(act);
+	return new ibVariantDataAction(act);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-action_identifier_t CEventAction::GetValueAsInteger() const {
-	const action_identifier_t sel = GetValueAsActionDesc().GetSystemAction();
-	if (m_functor->Invoke(const_cast<CEventAction*>(this))) {
+ibActionID ibEventAction::GetValueAsInteger() const {
+	const ibActionID sel = GetValueAsActionDesc().GetSystemAction();
+	if (m_functor->Invoke(const_cast<ibEventAction*>(this))) {
 		for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
 			if (m_listPropValue.GetItemId(idx) == sel) {
 				return sel;
@@ -20,17 +25,17 @@ action_identifier_t CEventAction::GetValueAsInteger() const {
 	return wxNOT_FOUND;
 }
 
-wxString CEventAction::GetValueAsString() const
+wxString ibEventAction::GetValueAsString() const
 {
 	return GetValueAsActionDesc().GetCustomAction();
 }
 
-CActionDescription& CEventAction::GetValueAsActionDesc() const
+ibActionDescription& ibEventAction::GetValueAsActionDesc() const
 {
-	return get_cell_variant<wxVariantDataAction>()->GetValueAsActionDesc();
+	return get_cell_variant<ibVariantDataAction>()->GetValueAsActionDesc();
 }
 
-void CEventAction::SetValue(const CActionDescription& val)
+void ibEventAction::SetValue(const ibActionDescription& val)
 {
 	m_propValue = CreateVariantData(m_owner, val);
 }
@@ -38,7 +43,7 @@ void CEventAction::SetValue(const CActionDescription& val)
 ////////////////////////////////////////////////////////////////////////
 
 //base property for "action"
-bool CEventAction::SetDataValue(const CValue& varPropVal)
+bool ibEventAction::SetDataValue(const ibValue& varPropVal)
 {
 	if (!m_functor->Invoke(this))
 		return false;
@@ -51,9 +56,9 @@ bool CEventAction::SetDataValue(const CValue& varPropVal)
 	return false;
 }
 
-bool CEventAction::GetDataValue(CValue& pvarPropVal) const
+bool ibEventAction::GetDataValue(ibValue& pvarPropVal) const
 {
-	if (!m_functor->Invoke(const_cast<CEventAction*>(this)))
+	if (!m_functor->Invoke(const_cast<ibEventAction*>(this)))
 		return false;
 	for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
 		if (m_listPropValue.GetItemId(idx) == GetValueAsInteger()) {
@@ -64,14 +69,14 @@ bool CEventAction::GetDataValue(CValue& pvarPropVal) const
 	return false;
 }
 
-bool CActionDescriptionMemory::LoadData(CMemoryReader& reader, CActionDescription& typeDesc)
+bool ibActionDescriptionMemory::LoadData(ibReaderMemory& reader, ibActionDescription& typeDesc)
 {
 	typeDesc.m_lAction = reader.r_s32();
 	typeDesc.m_strAction = reader.r_stringZ();
 	return true;
 }
 
-bool CActionDescriptionMemory::SaveData(CMemoryWriter& writer, CActionDescription& typeDesc)
+bool ibActionDescriptionMemory::SaveData(ibWriterMemory& writer, ibActionDescription& typeDesc)
 {
 	writer.w_s32(typeDesc.m_lAction);
 	writer.w_stringZ(typeDesc.m_strAction);
@@ -79,12 +84,12 @@ bool CActionDescriptionMemory::SaveData(CMemoryWriter& writer, CActionDescriptio
 }
 
 
-bool CEventAction::LoadData(CMemoryReader& reader)
+bool ibEventAction::LoadData(ibReaderMemory& reader)
 {
-	return CActionDescriptionMemory::LoadData(reader, GetValueAsActionDesc());
+	return ibActionDescriptionMemory::LoadData(reader, GetValueAsActionDesc());
 }
 
-bool CEventAction::SaveData(CMemoryWriter& writer)
+bool ibEventAction::SaveData(ibWriterMemory& writer)
 {
-	return CActionDescriptionMemory::SaveData(writer, GetValueAsActionDesc());
+	return ibActionDescriptionMemory::SaveData(writer, GetValueAsActionDesc());
 }

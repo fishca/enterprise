@@ -16,12 +16,12 @@ static const wxString s_strTypeParameter = wxT("stringParameter");
 #include "frontend/win/ctrls/grid/gridextctrl.h"
 #include "frontend/win/ctrls/grid/gridexteditors.h"
 
-class FRONTEND_API CGridEditor : public wxGridExt {
+class FRONTEND_API ibGridEditor : public ibGrid {
 
-	class CGenericSpreadsheetNotifier : public IBackendSpreadsheetNotifier {
+	class ibGenericSpreadsheetNotifier : public ibBackendSpreadsheetNotifier {
 	public:
 
-		CGenericSpreadsheetNotifier(CGridEditor* view) : m_view(view) {}
+		ibGenericSpreadsheetNotifier(ibGridEditor* view) : m_view(view) {}
 		virtual void ClearSpreadsheet() { m_view->ClearGrid(); }
 		virtual void EnableEditing(bool edit) { m_view->EnableEditing(edit); }
 
@@ -41,12 +41,12 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual void SetCellTextOrient(int row, int col, const int orient) { GetOrCreateCell(row, col)->SetCellTextOrient(row, col, orient, false); }
 		virtual void SetCellFont(int row, int col, const wxFont& font) { GetOrCreateCell(row, col)->SetCellFont(row, col, font, false); }
 		virtual void SetCellAlignment(int row, int col, const int horiz, const int vert) { GetOrCreateCell(row, col)->SetCellAlignment(row, col, horiz, vert, false); }
-		virtual void SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc) {}
-		virtual void SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc) {}
-		virtual void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc) {}
-		virtual void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc) {}
+		virtual void SetCellBorderLeft(int row, int col, const ibSpreadsheetBorderDescription& desc) {}
+		virtual void SetCellBorderRight(int row, int col, const ibSpreadsheetBorderDescription& desc) {}
+		virtual void SetCellBorderTop(int row, int col, const ibSpreadsheetBorderDescription& desc) {}
+		virtual void SetCellBorderBottom(int row, int col, const ibSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellSize(int row, int col, int num_rows, int num_cols) { GetOrCreateCell(row, col)->SetCellSize(row, col, num_rows, num_cols, false); }
-		virtual void SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode) { GetOrCreateCell(row, col)->SetCellFitMode(row, col, fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip(), false); }
+		virtual void SetCellFitMode(int row, int col, ibSpreadsheetCellDescription::ibFitMode fitMode) { GetOrCreateCell(row, col)->SetCellFitMode(row, col, fitMode == ibSpreadsheetCellDescription::ibFitMode::Mode_Overflow ? ibGridFitMode::Overflow() : ibGridFitMode::Clip(), false); }
 		virtual void SetCellReadOnly(int row, int col, bool isReadOnly = true) { GetOrCreateCell(row, col)->SetCellReadOnly(row, col, isReadOnly, false); }
 
 		// ------ cell brake accessors
@@ -68,18 +68,18 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		// ------ area value accessors
 		//
 		virtual void PutArea(
-			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) {
+			const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc) {
 			m_view->PutDocument(doc);
 		}
 
 		virtual void JoinArea(
-			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) {
+			const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc) {
 			m_view->JoinDocument(doc);
 		}
 
 	private:
 
-		CGridEditor* GetOrCreateCell(int row, int col) const {
+		ibGridEditor* GetOrCreateCell(int row, int col) const {
 
 			if (m_view->GetTable() != nullptr) {
 
@@ -93,20 +93,20 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 			return m_view;
 		}
 
-		CGridEditor* m_view;
+		ibGridEditor* m_view;
 	};
 
 	// the editor for string/text data
-	class CGridEditorCellTextEditor : public wxGridExtCellEditor
+	class ibGridEditorCellTextEditor : public ibGridCellEditor
 	{
 	public:
-		explicit CGridEditorCellTextEditor(size_t maxChars = 0)
-			: wxGridExtCellEditor(),
+		explicit ibGridEditorCellTextEditor(size_t maxChars = 0)
+			: ibGridCellEditor(),
 			m_maxChars(maxChars)
 		{
 		}
 
-		CGridEditorCellTextEditor(const CGridEditorCellTextEditor& other);
+		ibGridEditorCellTextEditor(const ibGridEditorCellTextEditor& other);
 
 		virtual void Create(wxWindow* parent,
 			wxWindowID id,
@@ -115,10 +115,10 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual void SetSize(const wxRect& rect) override;
 
 		virtual bool IsAcceptedKey(wxKeyEvent& event) override;
-		virtual void BeginEdit(int row, int col, wxGridExt* grid) override;
-		virtual bool EndEdit(int row, int col, const wxGridExt* grid,
+		virtual void BeginEdit(int row, int col, ibGrid* grid) override;
+		virtual bool EndEdit(int row, int col, const ibGrid* grid,
 			const wxString& oldval, wxString* newval) override;
-		virtual void ApplyEdit(int row, int col, wxGridExt* grid) override;
+		virtual void ApplyEdit(int row, int col, ibGrid* grid) override;
 
 		virtual void Reset() override;
 		virtual void StartingKey(wxKeyEvent& event) override;
@@ -130,8 +130,8 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual void SetValidator(const wxValidator& validator);
 #endif
 
-		virtual wxGridExtCellEditor* Clone() const override {
-			return new CGridEditorCellTextEditor(*this);
+		virtual ibGridCellEditor* Clone() const override {
+			return new ibGridEditorCellTextEditor(*this);
 		}
 
 		// added GetValue so we can get the value which is in the control
@@ -154,43 +154,43 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		wxString                 m_value;
 	};
 
-	class CGridEditorStringTable : public wxGridExtStringTable {
+	class ibGridEditorStringTable : public ibGridStringTable {
 
-		struct CGridEditorStringTableFillType {
+		struct ibGridEditorStringTableFillType {
 
-			CGridEditorStringTableFillType(int row, int col, enSpreadsheetFillType type) :
+			ibGridEditorStringTableFillType(int row, int col, ibSpreadsheetFillType type) :
 				m_row(row), m_col(col), m_fillType(type) {
 			}
 
 			int m_row, m_col;
-			enSpreadsheetFillType m_fillType;
+			ibSpreadsheetFillType m_fillType;
 		};
 
 	public:
 
-		CGridEditorStringTable() : wxGridExtStringTable() {}
-		CGridEditorStringTable(int numRows, int numCols) : wxGridExtStringTable(numRows, numCols) {}
+		ibGridEditorStringTable() : ibGridStringTable() {}
+		ibGridEditorStringTable(int numRows, int numCols) : ibGridStringTable(numRows, numCols) {}
 
 		virtual bool IsEmptyCell(int row, int col) {
 			wxCHECK_MSG((row >= 0 && row < GetNumberRows()) &&
 				(col >= 0 && col < GetNumberCols()),
 				true,
-				wxT("invalid row or column index in wxGridExtStringTable"));
+				wxT("invalid row or column index in ibGridStringTable"));
 
-			const enSpreadsheetFillType type = GetTypeString(row, col);
-			return type == enSpreadsheetFillType_StrText || type == enSpreadsheetFillType_StrTemplate ?
-				CBackendLocalization::IsEmptyLocalizationString(m_data[row][col]) : m_data[row][col].IsEmpty();
+			const ibSpreadsheetFillType type = GetTypeString(row, col);
+			return type == ibSpreadsheetFillType_StrText || type == ibSpreadsheetFillType_StrTemplate ?
+				ibBackendLocalization::IsEmptyLocalizationString(m_data[row][col]) : m_data[row][col].IsEmpty();
 		}
 
 		virtual bool CanGetValueAs(int row, int col, const wxString& typeName)
 		{
-			const enSpreadsheetFillType type = GetTypeString(row, col);
+			const ibSpreadsheetFillType type = GetTypeString(row, col);
 
-			if (type == enSpreadsheetFillType_StrText)
+			if (type == ibSpreadsheetFillType_StrText)
 				return typeName == s_strTypeTextOrString;
-			else if (type == enSpreadsheetFillType_StrTemplate)
+			else if (type == ibSpreadsheetFillType_StrTemplate)
 				return typeName == s_strTypeTemplate;
-			else if (type == enSpreadsheetFillType_StrParameter)
+			else if (type == ibSpreadsheetFillType_StrParameter)
 				return typeName == s_strTypeParameter;
 
 			return typeName == wxT("string");
@@ -198,48 +198,48 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 
 		virtual bool CanSetValueAs(int row, int col, const wxString& typeName)
 		{
-			const enSpreadsheetFillType type = GetTypeString(row, col);
+			const ibSpreadsheetFillType type = GetTypeString(row, col);
 
-			if (type == enSpreadsheetFillType_StrText)
+			if (type == ibSpreadsheetFillType_StrText)
 				return typeName == s_strTypeTextOrString;
-			else if (type == enSpreadsheetFillType_StrTemplate)
+			else if (type == ibSpreadsheetFillType_StrTemplate)
 				return typeName == s_strTypeTemplate;
-			else if (type == enSpreadsheetFillType_StrParameter)
+			else if (type == ibSpreadsheetFillType_StrParameter)
 				return typeName == s_strTypeParameter;
 
 			return typeName == wxT("string");
 		}
 
 		virtual void GetValue(int row, int col, wxString& s) override {
-			const enSpreadsheetFillType type = GetTypeString(row, col);
-			if (type == enSpreadsheetFillType_StrText || type == enSpreadsheetFillType_StrTemplate)
-				CBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], s);
-			else if (type == enSpreadsheetFillType_StrParameter)
+			const ibSpreadsheetFillType type = GetTypeString(row, col);
+			if (type == ibSpreadsheetFillType_StrText || type == ibSpreadsheetFillType_StrTemplate)
+				ibBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], s);
+			else if (type == ibSpreadsheetFillType_StrParameter)
 				s = m_data[row][col];
 		}
 
 		virtual void SetValue(int row, int col, const wxString& s) override {
 			const wxString& value = m_data[row][col];
 			if (s != value) {
-				const enSpreadsheetFillType type = GetTypeString(row, col);
-				if (type == enSpreadsheetFillType_StrText || type == enSpreadsheetFillType_StrTemplate) {
-					if (CBackendLocalization::IsLocalizationString(s)) {
-						wxGridExtStringTable::SetValue(row, col, s);
+				const ibSpreadsheetFillType type = GetTypeString(row, col);
+				if (type == ibSpreadsheetFillType_StrText || type == ibSpreadsheetFillType_StrTemplate) {
+					if (ibBackendLocalization::IsLocalizationString(s)) {
+						ibGridStringTable::SetValue(row, col, s);
 					}
-					else if (CBackendLocalization::IsLocalizationString(value)) {
-						static CBackendLocalizationEntryArray array;
-						if (CBackendLocalization::CreateLocalizationArray(value, array)) {
-							CBackendLocalization::SetArrayTranslate(array, s);
-							wxGridExtStringTable::SetValue(row, col,
-								CBackendLocalization::GetRawLocText(array));
+					else if (ibBackendLocalization::IsLocalizationString(value)) {
+						static ibBackendLocalizationEntryArray array;
+						if (ibBackendLocalization::CreateLocalizationArray(value, array)) {
+							ibBackendLocalization::SetArrayTranslate(array, s);
+							ibGridStringTable::SetValue(row, col,
+								ibBackendLocalization::GetRawLocText(array));
 						}
 					}
 					else {
-						wxGridExtStringTable::SetValue(row, col, CBackendLocalization::CreateLocalizationRawLocText(s));
+						ibGridStringTable::SetValue(row, col, ibBackendLocalization::CreateLocalizationRawLocText(s));
 					}
 				}
-				else if (type == enSpreadsheetFillType_StrParameter) {
-					wxGridExtStringTable::SetValue(row, col, s);
+				else if (type == ibSpreadsheetFillType_StrParameter) {
+					ibGridStringTable::SetValue(row, col, s);
 				}
 			}
 		}
@@ -253,57 +253,57 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 					[row, col](const auto& value) { return value.m_row == row && value.m_col == col; });
 				if (iterator != m_setColRowType.end())
 					m_setColRowType.erase(iterator);
-				CGridEditorStringTable::SetValue(row, col, *s);
+				ibGridEditorStringTable::SetValue(row, col, *s);
 			}
 			else if (value && stringUtils::CompareString(typeName, s_strTypeTemplate)) {
 				const wxString* s = static_cast<wxString*>(value);
 				auto iterator = std::find_if(m_setColRowType.begin(), m_setColRowType.end(),
 					[row, col](const auto& value) { return value.m_row == row && value.m_col == col; });
 				if (iterator == m_setColRowType.end())
-					m_setColRowType.emplace_back(row, col, enSpreadsheetFillType_StrTemplate);
+					m_setColRowType.emplace_back(row, col, ibSpreadsheetFillType_StrTemplate);
 				else
-					iterator->m_fillType = enSpreadsheetFillType_StrTemplate;
-				CGridEditorStringTable::SetValue(row, col, *s);
+					iterator->m_fillType = ibSpreadsheetFillType_StrTemplate;
+				ibGridEditorStringTable::SetValue(row, col, *s);
 			}
 			else if (value && stringUtils::CompareString(typeName, s_strTypeParameter)) {
 				const wxString* s = static_cast<wxString*>(value);
 				auto iterator = std::find_if(m_setColRowType.begin(), m_setColRowType.end(),
 					[row, col](const auto& value) { return value.m_row == row && value.m_col == col; });
 				if (iterator == m_setColRowType.end())
-					m_setColRowType.emplace_back(row, col, enSpreadsheetFillType_StrParameter);
+					m_setColRowType.emplace_back(row, col, ibSpreadsheetFillType_StrParameter);
 				else
-					iterator->m_fillType = enSpreadsheetFillType_StrParameter;
-				CGridEditorStringTable::SetValue(row, col, *s);
+					iterator->m_fillType = ibSpreadsheetFillType_StrParameter;
+				ibGridEditorStringTable::SetValue(row, col, *s);
 			}
 		}
 
 		virtual void* GetValueAsCustom(int row, int col, const wxString& typeName) {
 
-			const enSpreadsheetFillType typeFill = GetTypeString(row, col);
+			const ibSpreadsheetFillType typeFill = GetTypeString(row, col);
 			if (stringUtils::CompareString(typeName, s_strTypeTextOrString)) {
-				if (typeFill == enSpreadsheetFillType::enSpreadsheetFillType_StrText || typeFill == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
-					CBackendLocalizationEntryArray array;
-					CBackendLocalization::CreateLocalizationArray(m_data[row][col], array);
+				if (typeFill == ibSpreadsheetFillType::ibSpreadsheetFillType_StrText || typeFill == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
+					ibBackendLocalizationEntryArray array;
+					ibBackendLocalization::CreateLocalizationArray(m_data[row][col], array);
 					wxString* s = new wxString;
-					CBackendLocalization::GetRawLocText(array, *s);
+					ibBackendLocalization::GetRawLocText(array, *s);
 					return s;
 				}
-				return new wxString(CBackendLocalization::CreateLocalizationRawLocText(m_data[row][col]));
+				return new wxString(ibBackendLocalization::CreateLocalizationRawLocText(m_data[row][col]));
 			}
 			else if (stringUtils::CompareString(typeName, s_strTypeTemplate)) {
-				if (typeFill == enSpreadsheetFillType::enSpreadsheetFillType_StrText || typeFill == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
-					CBackendLocalizationEntryArray array;
-					CBackendLocalization::CreateLocalizationArray(m_data[row][col], array);
+				if (typeFill == ibSpreadsheetFillType::ibSpreadsheetFillType_StrText || typeFill == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
+					ibBackendLocalizationEntryArray array;
+					ibBackendLocalization::CreateLocalizationArray(m_data[row][col], array);
 					wxString* s = new wxString;
-					CBackendLocalization::GetRawLocText(array, *s);
+					ibBackendLocalization::GetRawLocText(array, *s);
 					return s;
 				}
-				return new wxString(CBackendLocalization::CreateLocalizationRawLocText(m_data[row][col]));
+				return new wxString(ibBackendLocalization::CreateLocalizationRawLocText(m_data[row][col]));
 			}
 			else if (stringUtils::CompareString(typeName, s_strTypeParameter)) {
-				if (typeFill == enSpreadsheetFillType::enSpreadsheetFillType_StrText || typeFill == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
+				if (typeFill == ibSpreadsheetFillType::ibSpreadsheetFillType_StrText || typeFill == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
 					wxString* s = new wxString;
-					CBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], *s);
+					ibBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], *s);
 					return s;
 				}
 				return new wxString(m_data[row][col]);
@@ -312,7 +312,7 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 			return nullptr;
 		}
 
-		// overridden functions from wxGridExtTableBase
+		// overridden functions from ibGridTableBase
 		//
 		wxString GetRowLabelValue(int row) {
 			// RD: Starting the rows at zero confuses users,
@@ -326,32 +326,32 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 
 	private:
 
-		enSpreadsheetFillType GetTypeString(int row, int col) const {
+		ibSpreadsheetFillType GetTypeString(int row, int col) const {
 
 			for (const auto& value : m_setColRowType) {
 				if (value.m_row == row && value.m_col == col)
 					return value.m_fillType;
 			}
 
-			return enSpreadsheetFillType_StrText;
+			return ibSpreadsheetFillType_StrText;
 		}
 
-		std::vector<CGridEditorStringTableFillType> m_setColRowType;
+		std::vector<ibGridEditorStringTableFillType> m_setColRowType;
 	};
 
 	// the property of grid 
-	class CPropertyGridEditorSpreadsheet :
-		public IPropertyObject {
+	class ibPropertyGridEditorSpreadsheet :
+		public ibPropertyObject {
 	public:
 
-		CPropertyGridEditorSpreadsheet(CGridEditor* view) : m_view(view) {
+		ibPropertyGridEditorSpreadsheet(ibGridEditor* view) : m_view(view) {
 			if (m_view != nullptr) {
-				m_view->Bind(wxEVT_GRID_SELECT_CELL, &CPropertyGridEditorSpreadsheet::OnSelectCell, this);
-				m_view->Bind(wxEVT_GRID_RANGE_SELECTED, &CPropertyGridEditorSpreadsheet::OnSelectCells, this);
+				m_view->Bind(wxEVT_GRID_SELECT_CELL, &ibPropertyGridEditorSpreadsheet::OnSelectCell, this);
+				m_view->Bind(wxEVT_GRID_RANGE_SELECTED, &ibPropertyGridEditorSpreadsheet::OnSelectCells, this);
 			}
 		}
 
-		virtual ~CPropertyGridEditorSpreadsheet() {
+		virtual ~ibPropertyGridEditorSpreadsheet() {
 			if (m_view != nullptr) m_view->DeletePendingEvents();
 		}
 
@@ -362,64 +362,64 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual wxString GetClassName() const { return s_strPropertyClass; }
 
 		/// Gets the metadata object
-		virtual IMetaData* GetMetaData() const;
+		virtual ibMetaData* GetMetaData() const;
 
 		/**
 		* Property events
 		*/
-		virtual void OnPropertyCreated(IProperty* property);
-		virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IProperty* property);
-		virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+		virtual void OnPropertyCreated(ibProperty* property);
+		virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, ibProperty* property);
+		virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
-		friend class CGridEditor;
+		friend class ibGridEditor;
 
 	protected:
 
-		void OnSelectCell(wxGridExtEvent& event);
-		void OnSelectCells(wxGridExtRangeSelectEvent& event);
+		void OnSelectCell(ibGridEvent& event);
+		void OnSelectCells(ibGridRangeSelectEvent& event);
 
-		CGridEditor* m_view;
+		ibGridEditor* m_view;
 
-		wxVector<wxGridExtBlockCoords> m_selection;
+		wxVector<ibGridBlockCoords> m_selection;
 
 	private:
 
 		void ShowInspector();
 
-		void OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords);
-		void OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords);
+		void OnPropertyCreated(ibProperty* property, const ibGridBlockCoords& coords);
+		void OnPropertyChanged(ibProperty* property, const ibGridBlockCoords& coords);
 
 		const wxString s_strPropertyClass = wxT("propertySpreadsheet");
 
 	private:
 
-		CPropertyCategory* m_categoryGeneral = IPropertyObject::CreatePropertyCategory(wxT("General"), _("General"));
-		CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryGeneral, wxT("Name"), _("Name"), wxEmptyString);
-		CPropertyTString* m_propertyText = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryGeneral, wxT("Text"), _("Text"), wxEmptyString);
-		CPropertyBoolean* m_propertyReadOnly = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryGeneral, wxT("ReadOnly"), _("Read only"), false);
+		ibPropertyCategory* m_categoryGeneral = ibPropertyObject::CreatePropertyCategory(wxT("General"), _("General"));
+		ibPropertyUString* m_propertyName = ibPropertyObject::CreateProperty<ibPropertyUString>(m_categoryGeneral, wxT("Name"), _("Name"), wxEmptyString);
+		ibPropertyTString* m_propertyText = ibPropertyObject::CreateProperty<ibPropertyTString>(m_categoryGeneral, wxT("Text"), _("Text"), wxEmptyString);
+		ibPropertyBoolean* m_propertyReadOnly = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryGeneral, wxT("ReadOnly"), _("Read only"), false);
 
-		CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("Template"), _("Template"));
-		CPropertyEnum<CValueEnumSpreadsheetFillType>* m_propertyFillType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFillType>>(m_categoryTemplate, wxT("FillType"), _("Fill type"), enSpreadsheetFillType::enSpreadsheetFillType_StrText);
-		CPropertyUEString* m_propertyParameter = IPropertyObject::CreateProperty<CPropertyUEString>(m_categoryTemplate, wxT("Parameter"), _("Parameter"), wxEmptyString);
-		CPropertyUEString* m_propertyDetailsParameter = IPropertyObject::CreateProperty<CPropertyUEString>(m_categoryTemplate, wxT("DetailsParameter"), _("Details parameter"), wxEmptyString);
+		ibPropertyCategory* m_categoryTemplate = ibPropertyObject::CreatePropertyCategory(wxT("Template"), _("Template"));
+		ibPropertyEnum<ibValueEnumSpreadsheetFillType>* m_propertyFillType = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetFillType>>(m_categoryTemplate, wxT("FillType"), _("Fill type"), ibSpreadsheetFillType::ibSpreadsheetFillType_StrText);
+		ibPropertyUEString* m_propertyParameter = ibPropertyObject::CreateProperty<ibPropertyUEString>(m_categoryTemplate, wxT("Parameter"), _("Parameter"), wxEmptyString);
+		ibPropertyUEString* m_propertyDetailsParameter = ibPropertyObject::CreateProperty<ibPropertyUEString>(m_categoryTemplate, wxT("DetailsParameter"), _("Details parameter"), wxEmptyString);
 
-		CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("Alignment"), _("Alignment"));
-		CPropertyEnum<CValueEnumSpreadsheetFitMode>* m_propertyFitMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFitMode>>(m_categoryAlignment, wxT("Git_mode"), _("Fit mode"), enSpreadsheetFitMode::enFitMode_Overflow);
-		CPropertyEnum<CValueEnumSpreadsheetHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetHorizontalAlignment>>(m_categoryAlignment, wxT("Align_horz"), _("Horizontal"), enSpreadsheetAlignmentHorz::enAlignmentHorz_Left);
-		CPropertyEnum<CValueEnumSpreadsheetVerticalAlignment>* m_propertyAlignVert = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetVerticalAlignment>>(m_categoryAlignment, wxT("Align_vert"), _("Vertical"), enSpreadsheetAlignmentVert::enAlignmentVert_Center);
-		CPropertyEnum<CValueEnumSpreadsheetOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetOrient>>(m_categoryAlignment, wxT("Orient_text"), _("Orientation text"), enSpreadsheetOrientation::enOrient_Vertical);
+		ibPropertyCategory* m_categoryAlignment = ibPropertyObject::CreatePropertyCategory(wxT("Alignment"), _("Alignment"));
+		ibPropertyEnum<ibValueEnumSpreadsheetFitMode>* m_propertyFitMode = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetFitMode>>(m_categoryAlignment, wxT("Git_mode"), _("Fit mode"), ibSpreadsheetFitMode::ibFitMode_Overflow);
+		ibPropertyEnum<ibValueEnumSpreadsheetHorizontalAlignment>* m_propertyAlignHorz = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetHorizontalAlignment>>(m_categoryAlignment, wxT("Align_horz"), _("Horizontal"), ibSpreadsheetAlignmentHorz::ibAlignmentHorz_Left);
+		ibPropertyEnum<ibValueEnumSpreadsheetVerticalAlignment>* m_propertyAlignVert = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetVerticalAlignment>>(m_categoryAlignment, wxT("Align_vert"), _("Vertical"), ibSpreadsheetAlignmentVert::ibAlignmentVert_Center);
+		ibPropertyEnum<ibValueEnumSpreadsheetOrient>* m_propertyOrient = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetOrient>>(m_categoryAlignment, wxT("Orient_text"), _("Orientation text"), ibSpreadsheetOrientation::ibOrient_Vertical);
 
-		CPropertyCategory* m_categoryAppearance = IPropertyObject::CreatePropertyCategory(wxT("Appearance"), _("Appearance"));
-		CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categoryAppearance, wxT("Font"), _("Font"));
-		CPropertyColour* m_propertyBackgroundColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("Background_colour"), _("Background colour"), wxNullColour);
-		CPropertyColour* m_propertyTextColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("Text_colour"), _("Text colour"), wxNullColour);
+		ibPropertyCategory* m_categoryAppearance = ibPropertyObject::CreatePropertyCategory(wxT("Appearance"), _("Appearance"));
+		ibPropertyFont* m_propertyFont = ibPropertyObject::CreateProperty<ibPropertyFont>(m_categoryAppearance, wxT("Font"), _("Font"));
+		ibPropertyColour* m_propertyBackgroundColour = ibPropertyObject::CreateProperty<ibPropertyColour>(m_categoryAppearance, wxT("Background_colour"), _("Background colour"), wxNullColour);
+		ibPropertyColour* m_propertyTextColour = ibPropertyObject::CreateProperty<ibPropertyColour>(m_categoryAppearance, wxT("Text_colour"), _("Text colour"), wxNullColour);
 
-		CPropertyCategory* m_categoryBorder = IPropertyObject::CreatePropertyCategory(wxT("Border"), _("Border"));
-		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyLeftBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Left_border"), _("Left"), enSpreadsheetPenStyle::enPenStyle_Transparent);
-		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyRightBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Right_border"), _("Right"), enSpreadsheetPenStyle::enPenStyle_Transparent);
-		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyTopBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Top_border"), _("Top"), enSpreadsheetPenStyle::enPenStyle_Transparent);
-		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyBottomBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Bottom_border"), _("Bottom"), enSpreadsheetPenStyle::enPenStyle_Transparent);
-		CPropertyColour* m_propertyColourBorder = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryBorder, wxT("Border_colour"), _("Colour"), wxNullColour);
+		ibPropertyCategory* m_categoryBorder = ibPropertyObject::CreatePropertyCategory(wxT("Border"), _("Border"));
+		ibPropertyEnum<ibValueEnumSpreadsheetBorder>* m_propertyLeftBorder = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Left_border"), _("Left"), ibSpreadsheetPenStyle::ibPenStyle_Transparent);
+		ibPropertyEnum<ibValueEnumSpreadsheetBorder>* m_propertyRightBorder = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Right_border"), _("Right"), ibSpreadsheetPenStyle::ibPenStyle_Transparent);
+		ibPropertyEnum<ibValueEnumSpreadsheetBorder>* m_propertyTopBorder = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Top_border"), _("Top"), ibSpreadsheetPenStyle::ibPenStyle_Transparent);
+		ibPropertyEnum<ibValueEnumSpreadsheetBorder>* m_propertyBottomBorder = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Bottom_border"), _("Bottom"), ibSpreadsheetPenStyle::ibPenStyle_Transparent);
+		ibPropertyColour* m_propertyColourBorder = ibPropertyObject::CreateProperty<ibPropertyColour>(m_categoryBorder, wxT("Border_colour"), _("Colour"), wxNullColour);
 	};
 
 public:
@@ -427,11 +427,11 @@ public:
 	void ActivateEditor();
 
 	void SendPropertyModify() {
-		wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, m_currentCellCoords);
+		ibGrid::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, m_currentCellCoords);
 	}
 
-	void SendPropertyModify(const wxGridExtCellCoords& coords) {
-		wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, coords);
+	void SendPropertyModify(const ibGridCellCoords& coords) {
+		ibGrid::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, coords);
 	}
 
 	bool IsPropertyEnabled() const { return m_enableProperty; }
@@ -440,12 +440,12 @@ public:
 	////////////////////////////////////////////////////////////
 
 	// ctor and Create() create the grid window, as with the other controls
-	CGridEditor();
-	CGridEditor(class CMetaDocument* document, wxWindow* parent,
+	ibGridEditor();
+	ibGridEditor(class ibMetaDocument* document, wxWindow* parent,
 		wxWindowID id, const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
 
-	virtual ~CGridEditor();
+	virtual ~ibGridEditor();
 
 #pragma region area
 
@@ -456,22 +456,22 @@ public:
 
 	bool GridHeaderEnabled() const { return m_rowLabelWidth > 0 || m_colLabelHeight > 0; }
 
-	void ShowCells() { wxGridExt::EnableGridLines(!m_gridLinesEnabled); }
+	void ShowCells() { ibGrid::EnableGridLines(!m_gridLinesEnabled); }
 
 	void ShowHeader() {
 		if (m_rowLabelWidth > 0) {
-			wxGridExt::EnableGridArea(false);
-			wxGridExt::SetRowLabelSize(0);
-			wxGridExt::SetColLabelSize(0);
+			ibGrid::EnableGridArea(false);
+			ibGrid::SetRowLabelSize(0);
+			ibGrid::SetColLabelSize(0);
 		}
 		else {
-			wxGridExt::EnableGridArea(true);
-			wxGridExt::SetRowLabelSize(WXGRID_DEFAULT_ROW_LABEL_WIDTH - 42);
-			wxGridExt::SetColLabelSize(WXGRID_MIN_COL_WIDTH);
+			ibGrid::EnableGridArea(true);
+			ibGrid::SetRowLabelSize(WXGRID_DEFAULT_ROW_LABEL_WIDTH - 42);
+			ibGrid::SetColLabelSize(WXGRID_MIN_COL_WIDTH);
 		}
 	}
 
-	void ShowArea() { wxGridExt::EnableGridArea(!m_areaEnabled); }
+	void ShowArea() { ibGrid::EnableGridArea(!m_areaEnabled); }
 
 	void MergeCells();
 	void DockTable();
@@ -479,22 +479,22 @@ public:
 	void Copy();
 	void Paste();
 
-	bool AssociateDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
-	bool GetActiveDocument(wxObjectDataPtr<CBackendSpreadsheetObject>& doc) const;
+	bool AssociatibDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
+	bool GetActivibDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) const;
 
 #pragma region file
 
-	bool LoadDocument(const CSpreadsheetDescription& spreadsheetDesc);
-	bool LoadDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
-	bool SaveDocument(CSpreadsheetDescription& spreadsheetDesc) const;
-	bool SaveDocument(wxObjectDataPtr<CBackendSpreadsheetObject>& doc) const;
+	bool LoadDocument(const ibSpreadsheetDescription& spreadsheetDesc);
+	bool LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
+	bool SaveDocument(ibSpreadsheetDescription& spreadsheetDesc) const;
+	bool SaveDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) const;
 
 #pragma endregion 
 
-	void PutDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
-	void JoinDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
+	void PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
+	void JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
 
-	class CGridEditorPrintout* CreatePrintout() const;
+	class ibGridEditorPrintout* CreatePrintout() const;
 
 protected:
 
@@ -507,31 +507,31 @@ protected:
 		return s;
 	}
 
-	void SetCellDetailsParameter(const wxGridExtBlockCoords& coords, const wxString& s, bool sendUndoCommand = true);
+	void SetCellDetailsParameter(const ibGridBlockCoords& coords, const wxString& s, bool sendUndoCommand = true);
 
-	bool LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc);
-	bool SaveSpreadsheet(CSpreadsheetDescription& spreadsheetDesc) const;
+	bool LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDesc);
+	bool SaveSpreadsheet(ibSpreadsheetDescription& spreadsheetDesc) const;
 
 	//events:
-	void OnMouseLeftDown(wxGridExtEvent& event);
-	void OnMouseRightDown(wxGridExtEvent& event);
+	void OnMouseLeftDown(ibGridEvent& event);
+	void OnMouseRightDown(ibGridEvent& event);
 
 	// This seems to be required for wxMotif/wxGTK otherwise the mouse
 	// cursor must be in the cell edit control to get key events
 	//
 	void OnKeyDown(wxKeyEvent& event);
 
-	void OnGridRowSize(wxGridExtSizeEvent& event);
-	void OnGridColSize(wxGridExtSizeEvent& event);
-	void OnGridRowBrake(wxGridExtSizeEvent& event);
-	void OnGridColBrake(wxGridExtSizeEvent& event);
-	void OnGridRowArea(wxGridExtAreaEvent& event);
-	void OnGridColArea(wxGridExtAreaEvent& event);
-	void OnGridRowFreeze(wxGridExtSizeEvent& event);
-	void OnGridColFreeze(wxGridExtSizeEvent& event);
+	void OnGridRowSize(ibGridSizeEvent& event);
+	void OnGridColSize(ibGridSizeEvent& event);
+	void OnGridRowBrake(ibGridSizeEvent& event);
+	void OnGridColBrake(ibGridSizeEvent& event);
+	void OnGridRowArea(ibGridAreaEvent& event);
+	void OnGridColArea(ibGridAreaEvent& event);
+	void OnGridRowFreeze(ibGridSizeEvent& event);
+	void OnGridColFreeze(ibGridSizeEvent& event);
 
-	void OnGridTableModified(wxGridExtEvent& event);
-	void OnGridTableAttrModified(wxGridExtEvent& event);
+	void OnGridTableModified(ibGridEvent& event);
+	void OnGridTableAttrModified(ibGridEvent& event);
 
 	void OnCopy(wxCommandEvent& event);
 	void OnPaste(wxCommandEvent& event);
@@ -549,21 +549,21 @@ protected:
 	void OnIdle(wxIdleEvent& event);
 	void OnSize(wxSizeEvent& event);
 
-	void OnGridZoom(wxGridExtEvent& event);
+	void OnGridZoom(ibGridEvent& event);
 
 private:
 
 	const wxString m_GRID_VALUE_STRING = wxGRID_VALUE_STRING;
 
 	//document 
-	CMetaDocument* m_document;
+	ibMetaDocument* m_document;
 
 	// grid property
-	CPropertyGridEditorSpreadsheet* m_propertySpreadsheet;
+	ibPropertyGridEditorSpreadsheet* m_propertySpreadsheet;
 
 	//grid doc
-	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetObject;
-	wxSharedPtr<IBackendSpreadsheetNotifier> m_notifier;
+	wxObjectDataPtr<ibBackendSpreadsheetObject> m_spreadsheetObject;
+	wxSharedPtr<ibBackendSpreadsheetNotifier> m_notifier;
 
 	//grid enabled property? 
 	bool m_enableProperty;

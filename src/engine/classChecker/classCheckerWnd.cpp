@@ -1,6 +1,6 @@
 #include "classCheckerWnd.h"
 
-CFrameClassChecker::CFrameClassChecker(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(parent, id, title, pos, size, style)
+ibFrameClassChecker::ibFrameClassChecker(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxSize(500, 130), wxSize(500, 130));
 	this->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOTEXT));
@@ -50,21 +50,21 @@ CFrameClassChecker::CFrameClassChecker(wxWindow* parent, wxWindowID id, const wx
 	this->Centre(wxBOTH);
 
 	// Connect Events
-	m_textCtrlCode->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CFrameClassChecker::ClsidOnText), nullptr, this);
-	m_textCtrlResult->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CFrameClassChecker::OutputOnText), nullptr, this);
+	m_textCtrlCode->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(ibFrameClassChecker::ClsidOnText), nullptr, this);
+	m_textCtrlResult->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(ibFrameClassChecker::OutputOnText), nullptr, this);
 
 	m_textCtrlResult->SetValue("VL_TEST1");
 }
 
-CFrameClassChecker::~CFrameClassChecker()
+ibFrameClassChecker::~ibFrameClassChecker()
 {
 }
 
 #include "backend/backend_core.h"
 
-void CFrameClassChecker::ClsidOnText(wxCommandEvent& event)
+void ibFrameClassChecker::ClsidOnText(wxCommandEvent& event)
 {
-	class_identifier_t clsid = 0;
+	ibClassID clsid = 0;
 	if (m_textCtrlCode->GetValue().ToULongLong(&clsid)) {
 		const wxString& str_clsid = clsid_to_string(clsid);
 		m_textCtrlResult->SetValue(stringUtils::TrimAll(str_clsid));
@@ -72,9 +72,9 @@ void CFrameClassChecker::ClsidOnText(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CFrameClassChecker::OutputOnText(wxCommandEvent& event)
+void ibFrameClassChecker::OutputOnText(wxCommandEvent& event)
 {
-	const class_identifier_t& clsid = string_to_clsid(m_textCtrlResult->GetValue());
+	const ibClassID& clsid = string_to_clsid(m_textCtrlResult->GetValue());
 	wxString str_clsid;
 	str_clsid << clsid;
 	m_textCtrlCode->SetValue(str_clsid);

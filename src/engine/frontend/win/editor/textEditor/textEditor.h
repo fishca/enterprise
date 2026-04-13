@@ -5,11 +5,11 @@
 #include <wx/print.h>
 #include <wx/stc/stc.h>
 
-class CTextCommandProcessor :
+class ibTextCommandProcessor :
 	public wxCommandProcessor {
 public:
 
-	CTextCommandProcessor(wxStyledTextCtrl* codeEditor) :
+	ibTextCommandProcessor(wxStyledTextCtrl* codeEditor) :
 		wxCommandProcessor(), m_codeEditor(codeEditor) {
 	}
 
@@ -33,26 +33,26 @@ private:
 #include "frontend/mainFrame/settings/editorsettings.h"
 #include "frontend/mainFrame/settings/fontcolorsettings.h"
 
-class CTextEditor : public wxStyledTextCtrl {
+class ibTextEditor : public wxStyledTextCtrl {
 public:
 
-	CTextEditor(class CMetaDocument *doc, wxWindow* parent, wxWindowID id = wxID_ANY,
+	ibTextEditor(class ibMetaDocument *doc, wxWindow* parent, wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = 0,
 		const wxString& name = wxSTCNameStr);
 
 	//Editor setting 
-	void SetEditorSettings(const CEditorSettings& settings);
+	void SetEditorSettings(const ibEditorSettings& settings);
 	
 	//Font setting 
-	void SetFontColorSettings(const CFontColorSettings& settings);
+	void SetFontColorSettings(const ibFontColorSettings& settings);
 
 private:
 
 	void OnTextChange(wxCommandEvent& event);
 
 	//document 
-	CMetaDocument* m_document;
+	ibMetaDocument* m_document;
 };
 
 

@@ -21,19 +21,19 @@
 
 #include "engine/mysql.h"
 
-class IDatabaseResultSet;
+class ibDatabaseResultSet;
 
-WX_DEFINE_ARRAY_PTR(CMysqlPreparedStatementWrapper*, MysqlStatementWrapperArray);
+WX_DEFINE_ARRAY_PTR(ibPreparedStatementMySQLWrapper*, MysqlStatementWrapperArray);
 
-class CMysqlPreparedStatement : public IPreparedStatement
+class ibPreparedStatementMySQL : public ibPreparedStatement
 {
 public:
 	// ctor
-	CMysqlPreparedStatement(CMysqlInterface* pInterface);
-	CMysqlPreparedStatement(CMysqlInterface* pInterface, MYSQL_STMT* pStatement);
+	ibPreparedStatementMySQL(ibInterfaceMySQL* pInterface);
+	ibPreparedStatementMySQL(ibInterfaceMySQL* pInterface, MYSQL_STMT* pStatement);
 
 	// dtor
-	virtual ~CMysqlPreparedStatement();
+	virtual ~ibPreparedStatementMySQL();
 
 	virtual void Close();
 
@@ -42,7 +42,7 @@ public:
 	// get field
 	virtual void SetParamInt(int nPosition, int nValue);
 	virtual void SetParamDouble(int nPosition, double dblValue);
-	virtual void SetParamNumber(int nPosition, const number_t &dblValue);
+	virtual void SetParamNumber(int nPosition, const ibNumber &dblValue);
 	virtual void SetParamString(int nPosition, const wxString& strValue);
 	virtual void SetParamNull(int nPosition);
 	virtual void SetParamBlob(int nPosition, const void* pData, long nDataLength);
@@ -51,12 +51,12 @@ public:
 	virtual int GetParameterCount();
 
 	virtual int RunQuery();
-	virtual IDatabaseResultSet* RunQueryWithResults();
+	virtual ibDatabaseResultSet* RunQueryWithResults();
 
 private:
 	int FindStatementAndAdjustPositionIndex(int* pPosition);
 
-	CMysqlInterface* m_pInterface;
+	ibInterfaceMySQL* m_pInterface;
 	MysqlStatementWrapperArray m_Statements;
 };
 

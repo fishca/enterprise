@@ -9,22 +9,22 @@
 #include "backend/metaCollection/partial/tabularSection/tabularSection.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueReferenceDataObject, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueReferenceDataObject, ibValue);
 
 //**********************************************************************************************
 //*                                     reference                                              *        
 //**********************************************************************************************
-//static std::vector <CValueReferenceDataObject*> gs_references;
+//static std::vector <ibValueReferenceDataObject*> gs_references;
 //**********************************************************************************************
 
-void CValueReferenceDataObject::PrepareRef(bool createData)
+void ibValueReferenceDataObject::PrepareRef(bool createData)
 {
 	wxASSERT(m_metaObject != nullptr);
 
 	if (m_initializedRef)
 		return;
 
-	if (CValueReferenceDataObject::IsEmpty()) {
+	if (ibValueReferenceDataObject::IsEmpty()) {
 		//attrbutes can refValue 
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			if (object->IsDeleted())
@@ -38,10 +38,10 @@ void CValueReferenceDataObject::PrepareRef(bool createData)
 			if (object->IsDeleted())
 				continue;
 			m_listObjectValue.insert_or_assign(object->GetMetaID(),
-				CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectRef>(this, object));
+				ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectRef>(this, object));
 		}
 	}
-	else if (CValueReferenceDataObject::ReadData(createData)) {
+	else if (ibValueReferenceDataObject::ReadData(createData)) {
 		m_foundedRef = true; m_newObject = false;
 	}
 
@@ -52,33 +52,33 @@ void CValueReferenceDataObject::PrepareRef(bool createData)
 	PrepareNames();
 }
 
-CValueReferenceDataObject::CValueReferenceDataObject(IValueMetaObjectRecordDataRef* metaObject, const CGuid& objGuid) : CValue(eValueTypes::TYPE_VALUE, true), IValueDataObject(objGuid, !objGuid.isValid()),
-m_metaObject(metaObject), m_methodHelper(new CMethodHelper()), m_initializedRef(false), m_reference_impl(nullptr), m_foundedRef(false)
+ibValueReferenceDataObject::ibValueReferenceDataObject(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid) : ibValue(ibValueTypes::TYPE_VALUE, true), ibValueDataObject(objGuid, !objGuid.isValid()),
+m_metaObject(metaObject), m_methodHelper(new ibValueMethodHelper()), m_initializedRef(false), m_reference_impl(nullptr), m_foundedRef(false)
 {
-	m_reference_impl = new reference_t(m_metaObject->GetMetaID(), m_objGuid);
+	m_reference_impl = new ibReference(m_metaObject->GetMetaID(), m_objGuid);
 	//gs_references.emplace_back(this);
 }
 
-CValueReferenceDataObject::~CValueReferenceDataObject()
+ibValueReferenceDataObject::~ibValueReferenceDataObject()
 {
 	wxDELETE(m_reference_impl);
 	//gs_references.erase(
 	//	std::remove_if(gs_references.begin(), gs_references.end(),
-	//		[this](CValueReferenceDataObject* ref) { return ref == this;}), gs_references.end()
+	//		[this](ibValueReferenceDataObject* ref) { return ref == this;}), gs_references.end()
 	//);
 	wxDELETE(m_methodHelper);
 }
 
-CValueReferenceDataObject* CValueReferenceDataObject::Create(IMetaData* metaData, const meta_identifier_t& id, const CGuid& objGuid)
+ibValueReferenceDataObject* ibValueReferenceDataObject::Create(ibMetaData* metaData, const ibMetaID& id, const ibGuid& objGuid)
 {
-	IValueMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<IValueMetaObjectRecordDataRef>(id);
+	ibValueMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<ibValueMetaObjectRecordDataRef>(id);
 	if (metaObject != nullptr) {
-		//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, objGuid](CValueReferenceDataObject* ref) {
+		//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, objGuid](ibValueReferenceDataObject* ref) {
 		//	return metaObject == ref->GetMetaObject() && objGuid == ref->GetGuid(); }
 		//);
 		//if (it != gs_references.end())
 		//	return *it;
-		CValueReferenceDataObject* refData = new CValueReferenceDataObject(metaObject, objGuid);
+		ibValueReferenceDataObject* refData = new ibValueReferenceDataObject(metaObject, objGuid);
 		if (refData != nullptr)
 			refData->PrepareRef(true);
 		return refData;
@@ -86,48 +86,48 @@ CValueReferenceDataObject* CValueReferenceDataObject::Create(IMetaData* metaData
 	return nullptr;
 }
 
-CValueReferenceDataObject* CValueReferenceDataObject::Create(IValueMetaObjectRecordDataRef* metaObject, const CGuid& objGuid)
+ibValueReferenceDataObject* ibValueReferenceDataObject::Create(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid)
 {
-	//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, objGuid](CValueReferenceDataObject* ref) {
+	//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, objGuid](ibValueReferenceDataObject* ref) {
 	//	return metaObject == ref->GetMetaObject() && objGuid == ref->GetGuid(); }
 	//);
 	//if (it != gs_references.end())
 	//	return *it;
-	CValueReferenceDataObject* refData = new CValueReferenceDataObject(metaObject, objGuid);
+	ibValueReferenceDataObject* refData = new ibValueReferenceDataObject(metaObject, objGuid);
 	if (refData != nullptr)
 		refData->PrepareRef(true);
 	return refData;
 }
 
-CValueReferenceDataObject* CValueReferenceDataObject::Create(IMetaData* metaData, void* ptr)
+ibValueReferenceDataObject* ibValueReferenceDataObject::Create(ibMetaData* metaData, void* ptr)
 {
-	reference_t* reference = static_cast<reference_t*>(ptr);
+	ibReference* reference = static_cast<ibReference*>(ptr);
 	if (reference != nullptr) {
-		IValueMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<IValueMetaObjectRecordDataRef>(reference->m_id);
+		ibValueMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<ibValueMetaObjectRecordDataRef>(reference->m_id);
 		if (metaObject != nullptr) {
-			//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, reference](CValueReferenceDataObject* ref) {
+			//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, reference](ibValueReferenceDataObject* ref) {
 			//	return metaObject == ref->GetMetaObject() && ref->GetGuid() == reference->m_guid; }
 			//);
 			//if (it != gs_references.end())
 			//	return *it;
-			return new CValueReferenceDataObject(metaObject, reference->m_guid);
+			return new ibValueReferenceDataObject(metaObject, reference->m_guid);
 		}
 	}
 	return nullptr;
 }
 
-CValueReferenceDataObject* CValueReferenceDataObject::CreateFromPtr(IMetaData* metaData, void* ptr)
+ibValueReferenceDataObject* ibValueReferenceDataObject::CreateFromPtr(ibMetaData* metaData, void* ptr)
 {
-	reference_t* reference = static_cast<reference_t*>(ptr);
+	ibReference* reference = static_cast<ibReference*>(ptr);
 	if (reference != nullptr) {
-		IValueMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<IValueMetaObjectRecordDataRef>(reference->m_id);
+		ibValueMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<ibValueMetaObjectRecordDataRef>(reference->m_id);
 		if (metaObject != nullptr) {
-			//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, reference](CValueReferenceDataObject* ref) {
+			//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, reference](ibValueReferenceDataObject* ref) {
 			//	return metaObject == ref->GetMetaObject() && ref->GetGuid() == reference->m_guid; }
 			//);
 			//if (it != gs_references.end())
 			//	return *it;
-			CValueReferenceDataObject* refData = new CValueReferenceDataObject(metaObject, reference->m_guid);
+			ibValueReferenceDataObject* refData = new ibValueReferenceDataObject(metaObject, reference->m_guid);
 			if (refData != nullptr)
 				refData->PrepareRef(false);
 			return refData;
@@ -136,15 +136,15 @@ CValueReferenceDataObject* CValueReferenceDataObject::CreateFromPtr(IMetaData* m
 	return nullptr;
 }
 
-CValueReferenceDataObject* CValueReferenceDataObject::CreateFromResultSet(IDatabaseResultSet* rs, IValueMetaObjectRecordDataRef* metaObject, const CGuid& refGuid)
+ibValueReferenceDataObject* ibValueReferenceDataObject::CreateFromResultSet(ibDatabaseResultSet* rs, ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& refGuid)
 {
-	//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, refGuid](CValueReferenceDataObject* ref) {
+	//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, refGuid](ibValueReferenceDataObject* ref) {
 	//	return metaObject == ref->GetMetaObject() && refGuid == ref->GetGuid(); }
 	//);
 	//if (it != gs_references.end())
 	//	return *it;
 
-	CValueReferenceDataObject* refData = new CValueReferenceDataObject(metaObject, refGuid);
+	ibValueReferenceDataObject* refData = new ibValueReferenceDataObject(metaObject, refGuid);
 
 	//load attributes 
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
@@ -152,7 +152,7 @@ CValueReferenceDataObject* CValueReferenceDataObject::CreateFromResultSet(IDatab
 			continue;
 		if (metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		IValueMetaObjectAttribute::GetValueAttribute(
+		ibValueMetaObjectAttributeBase::GetValueAttribute(
 			object,
 			refData->m_listObjectValue[object->GetMetaID()],
 			rs,
@@ -166,7 +166,7 @@ CValueReferenceDataObject* CValueReferenceDataObject::CreateFromResultSet(IDatab
 			continue;
 		refData->m_listObjectValue.insert_or_assign(
 			object->GetMetaID(),
-			CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectRef>(refData, object, true)
+			ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectRef>(refData, object, true)
 		);
 	}
 
@@ -174,22 +174,22 @@ CValueReferenceDataObject* CValueReferenceDataObject::CreateFromResultSet(IDatab
 	return refData;
 }
 
-bool CValueReferenceDataObject::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
+bool ibValueReferenceDataObject::SetValueByMetaID(const ibMetaID& id, const ibValue& varMetaVal)
 {
 	return false;
 }
 
-bool CValueReferenceDataObject::GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool ibValueReferenceDataObject::GetValueByMetaID(const ibMetaID& id, ibValue& pvarMetaVal) const
 {
 	if (m_metaObject->IsDataReference(id)) {
-		if (!CValueReferenceDataObject::IsEmpty()) {
-			pvarMetaVal = CValueReferenceDataObject::Create(m_metaObject, m_objGuid);
+		if (!ibValueReferenceDataObject::IsEmpty()) {
+			pvarMetaVal = ibValueReferenceDataObject::Create(m_metaObject, m_objGuid);
 			return true;
 		}
-		pvarMetaVal = CValueReferenceDataObject::Create(m_metaObject);
+		pvarMetaVal = ibValueReferenceDataObject::Create(m_metaObject);
 		return true;
 	}
-	auto& it = m_listObjectValue.find(id);
+	auto it = m_listObjectValue.find(id);
 	//wxASSERT(it != m_listObjectValue.end());
 	if (it != m_listObjectValue.end()) {
 		pvarMetaVal = it->second;
@@ -198,11 +198,11 @@ bool CValueReferenceDataObject::GetValueByMetaID(const meta_identifier_t& id, CV
 	return false;
 }
 
-void CValueReferenceDataObject::ShowValue()
+void ibValueReferenceDataObject::ShowValue()
 {
-	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
+	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
-		IValueRecordDataObject* objValue = nullptr;
+		ibValueRecordDataObject* objValue = nullptr;
 		if (metaObject != nullptr && m_objGuid.isValid())
 			objValue = metaObject->CreateObjectValue(m_objGuid);
 		else
@@ -212,9 +212,9 @@ void CValueReferenceDataObject::ShowValue()
 	}
 }
 
-IValueRecordDataObjectRef* CValueReferenceDataObject::GetObject() const
+ibValueRecordDataObjectRef* ibValueReferenceDataObject::GetObject() const
 {
-	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
+	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 		if (m_newObject)
 			return metaObject->CreateObjectValue();
@@ -225,15 +225,15 @@ IValueRecordDataObjectRef* CValueReferenceDataObject::GetObject() const
 
 #include "backend/objCtor.h"
 
-class_identifier_t CValueReferenceDataObject::GetClassType() const
+ibClassID ibValueReferenceDataObject::GetClassType() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Reference);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
-wxString CValueReferenceDataObject::GetString() const
+wxString ibValueReferenceDataObject::GetString() const
 {
 	if (m_newObject)
 		return wxEmptyString;
@@ -244,10 +244,10 @@ wxString CValueReferenceDataObject::GetString() const
 	return m_metaObject->GetDataPresentation(this);
 }
 
-wxString CValueReferenceDataObject::GetClassName() const
+wxString ibValueReferenceDataObject::GetClassName() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Reference);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -263,11 +263,11 @@ enum Func {
 	enGetGuid
 };
 
-void CValueReferenceDataObject::PrepareNames() const
+void ibValueReferenceDataObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
+	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
 		m_methodHelper->AppendFunc(wxT("IsEmpty"), wxT("IsEmpty()"));
@@ -313,24 +313,24 @@ void CValueReferenceDataObject::PrepareNames() const
 	}
 }
 
-bool CValueReferenceDataObject::SetPropVal(const long lPropNum, const CValue& value)
+bool ibValueReferenceDataObject::SetPropVal(const long lPropNum, const ibValue& value)
 {
 	return false;
 }
 
-bool CValueReferenceDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueReferenceDataObject::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
-	CValueReferenceDataObject::PrepareRef();
-	const meta_identifier_t& id = m_methodHelper->GetPropData(lPropNum);
+	ibValueReferenceDataObject::PrepareRef();
+	const ibMetaID& id = m_methodHelper->GetPropData(lPropNum);
 	if (!m_metaObject->IsDataReference(id)) {
 		if (lPropAlias == eTable && !GetValueByMetaID(id, pvarPropVal)) {
 			m_listObjectValue.insert_or_assign(id,
-				CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectRef>(this, m_metaObject->FindTableObjectByFilter(id), !m_newObject)
+				ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectRef>(this, m_metaObject->FindTableObjectByFilter(id), !m_newObject)
 			);
 		}
 		if (lPropAlias == eTable && GetValueByMetaID(id, pvarPropVal)) {
-			CValueTabularSectionDataObjectRef* tabularSection = nullptr;
+			ibValueTabularSectionDataObjectRef* tabularSection = nullptr;
 			if (pvarPropVal.ConvertToValue(tabularSection)) {
 				if (tabularSection->IsReadAfter()) {
 					if (!tabularSection->LoadData(m_objGuid, true)) {
@@ -346,16 +346,16 @@ bool CValueReferenceDataObject::GetPropVal(const long lPropNum, CValue& pvarProp
 		return GetValueByMetaID(id, pvarPropVal);
 	}
 
-	if (!CValueReferenceDataObject::IsEmpty()) {
-		pvarPropVal = CValueReferenceDataObject::Create(m_metaObject, m_objGuid);
+	if (!ibValueReferenceDataObject::IsEmpty()) {
+		pvarPropVal = ibValueReferenceDataObject::Create(m_metaObject, m_objGuid);
 		return true;
 	}
 
-	pvarPropVal = CValueReferenceDataObject::Create(m_metaObject);
+	pvarPropVal = ibValueReferenceDataObject::Create(m_metaObject);
 	return true;
 }
 
-bool CValueReferenceDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueReferenceDataObject::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -369,7 +369,7 @@ bool CValueReferenceDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRe
 		pvarRetValue = GetObject();
 		return true;
 	case enGetGuid:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueGuid>(m_objGuid);
+		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueGuid>(m_objGuid);
 		return true;
 	}
 

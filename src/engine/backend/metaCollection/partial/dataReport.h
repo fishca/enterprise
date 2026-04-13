@@ -3,8 +3,8 @@
 
 #include "commonObject.h"
 
-class CValueMetaObjectReport : public IValueMetaObjectRecordDataExt {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectReport);
+class ibValueMetaObjectReport : public ibValueMetaObjectRecordDataExt {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectReport);
 protected:
 	enum
 	{
@@ -19,32 +19,32 @@ public:
 		eFormReport = 1,
 	};
 
-	virtual CFormTypeList GetFormType() const override {
-		CFormTypeList formList;
+	virtual ibFormTypeList GetFormType() const override {
+		ibFormTypeList formList;
 		formList.AppendItem(wxT("FormReport"), _("Form report"), eFormReport);
 		return formList;
 	}
 
 public:
 
-	form_identifier_t GetDefFormObject() const {
+	ibFormID GetDefFormObject() const {
 		return m_propertyDefFormObject->GetValueAsInteger();
 	}
 
-	void SetDefFormObject(const form_identifier_t& id) const {
+	void SetDefFormObject(const ibFormID& id) const {
 		m_propertyDefFormObject->SetValue(id);
 	}
 
-	CValueMetaObjectReport();
-	virtual ~CValueMetaObjectReport();
+	ibValueMetaObjectReport();
+	virtual ~ibValueMetaObjectReport();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//events: 
-	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
-	virtual bool OnLoadMetaObject(IMetaData* metaData);
+	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
+	virtual bool OnLoadMetaObject(ibMetaData* metaData);
 	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
@@ -59,46 +59,46 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 
-	virtual void OnCreateFormObject(IValueMetaObjectForm* metaForm);
-	virtual void OnRemoveMetaForm(IValueMetaObjectForm* metaForm);
+	virtual void OnCreateFormObject(ibValueMetaObjectFormBase* metaForm);
+	virtual void OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm);
 
 	//create associate value 
-	virtual IValueMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
+	virtual ibValueMetaObjectFormBase* GetDefaultFormByID(const ibFormID& id) const;
 
 #pragma region _form_builder_h_
 	//support form
-	virtual IBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
 #pragma endregion
 
 	//get module object in compose object 
-	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
+	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	//prepare menu for item
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
 	virtual void ProcessCommand(unsigned int id);
 
 	//get command section 
-	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Report; }
+	virtual ibInterfaceCommandSection GetCommandSection() const { return ibInterfaceCommandSection::ibInterfaceCommandSection_Report; }
 
 protected:
 
 	//create manager
-	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
+	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create empty object
-	virtual IValueRecordDataObjectExt* CreateObjectExtValue();  //create object 
+	virtual ibValueRecordDataObjectExt* CreateObjectExtValue();  //create object 
 
 	//create object data with meta form
-	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
+	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
 
 	//load & save metaData from DB 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 
 private:
 
-	bool FillFormObject(CPropertyList* prop) {
+	bool FillFormObject(ibPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormReport == object->GetTypeForm()) {
@@ -113,26 +113,26 @@ private:
 		return true;
 	}
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
-	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
+	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModuleObject = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
+	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyModuleManager = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
 
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormObject"), _("Default Object Form"), &CValueMetaObjectReport::FillFormObject);
+	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
+	ibPropertyList* m_propertyDefFormObject = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormObject"), _("Default Object Form"), &ibValueMetaObjectReport::FillFormObject);
 
-	friend class CValueRecordDataObjectReport;
-	friend class IMetaData;
+	friend class ibValueRecordDataObjectReport;
+	friend class ibMetaData;
 };
 
 #define default_meta_id 10 //for reports
 
-class CValueMetaObjectExternalReport : public CValueMetaObjectReport {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectExternalReport);
+class ibValueMetaObjectExternalReport : public ibValueMetaObjectReport {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectExternalReport);
 public:
-	CValueMetaObjectExternalReport() : CValueMetaObjectReport() {
+	ibValueMetaObjectExternalReport() : ibValueMetaObjectReport() {
 		m_metaId = default_meta_id;
 	}
 
-	//Òreate from file?
+	//—Åreate from file?
 	virtual bool IsExternalCreate() const { return true; }
 };
 
@@ -140,25 +140,25 @@ public:
 //*                                      Object                                              *
 //********************************************************************************************
 
-class CValueRecordDataObjectReport : public IValueRecordDataObjectExt {
-	CValueRecordDataObjectReport(const CValueRecordDataObjectReport& source);
-	CValueRecordDataObjectReport(CValueMetaObjectReport* metaObject);
+class ibValueRecordDataObjectReport : public ibValueRecordDataObjectExt {
+	ibValueRecordDataObjectReport(const ibValueRecordDataObjectReport& source);
+	ibValueRecordDataObjectReport(ibValueMetaObjectReport* metaObject);
 public:
 
 #pragma region _form_builder_h_
 	//support show 
-	virtual void ShowFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr);
-	virtual IBackendValueForm* GetFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr);
+	virtual void ShowFormValue(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr);
+	virtual ibBackendValueForm* GetFormValue(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr);
 #pragma endregion
 
 	//support actionData
-	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);
-	virtual void ExecuteAction(const action_identifier_t& action, IBackendValueForm* srcForm);
+	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
+	virtual void ExecuteAction(const ibActionID& action, ibBackendValueForm* srcForm);
 
 protected:
-	friend class CValue;
-	friend class CValueMetaObjectReport;
-	friend class CValueModuleManagerExternalReport;
+	friend class ibValue;
+	friend class ibValueMetaObjectReport;
+	friend class ibValueModuleManagerExternalReport;
 };
 
 #endif

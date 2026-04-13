@@ -6,7 +6,7 @@
 #include "mainFrameChild.h"
 
 wxIMPLEMENT_CLASS(CAuiDocChildFrame, wxAuiMDIChildFrame);
-wxIMPLEMENT_CLASS(CDialogDocChildFrame, wxDialog);
+wxIMPLEMENT_CLASS(ibDialogDocChildFrame, wxDialog);
 
 #include "mainFrame.h"
 
@@ -14,7 +14,7 @@ CAuiDocChildFrame::~CAuiDocChildFrame()
 {
 	wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
 
-	if (pParentFrame && CFrontendDocMDIFrame::GetFrame()) {
+	if (pParentFrame && ibFrontendDocMDIFrame::GetFrame()) {
 		if (pParentFrame->GetActiveChild() == this) {
 			pParentFrame->SetActiveChild(nullptr);
 			pParentFrame->SetChildMenuBar(nullptr);
@@ -34,7 +34,7 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 	wxMenuBar* pOldMenuBar = m_pMenuBar;
 	m_pMenuBar = menuBar;
 
-	struct CProcSubMenu {
+	struct ibProcSubMenu {
 
 		static void ConstructMenu(wxMenu* dst, wxMenu* src) {
 
@@ -50,7 +50,9 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 				menuItem->Enable(it->IsEnabled());
 
 				menuItem->SetBitmap(it->GetBitmap());
+#ifdef __WXMSW__
 				menuItem->SetMarginWidth(it->GetMarginWidth());
+#endif
 				menuItem->SetHelp(it->GetHelp());
 
 				if (it->IsSubMenu()) {
@@ -106,7 +108,7 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 					);
 				}
 
-				CProcSubMenu::ConstructMenu(dst, src);
+				ibProcSubMenu::ConstructMenu(dst, src);
 			}
 		}
 

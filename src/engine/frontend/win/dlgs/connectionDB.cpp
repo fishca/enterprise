@@ -2,7 +2,7 @@
 
 #include <wx/xml/xml.h>
 
-CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+ibDialogConnection::ibDialogConnection(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -77,13 +77,13 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 	wxDialog::Centre(wxBOTH);
 
 	// Connect Events
-	m_buttonTestConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogConnection::TestConnectionOnButtonClick), NULL, this);
-	m_buttonSaveConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogConnection::SaveConnectionOnButtonClick), NULL, this);
+	m_buttonTestConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogConnection::TestConnectionOnButtonClick), NULL, this);
+	m_buttonSaveConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogConnection::SaveConnectionOnButtonClick), NULL, this);
 }
 
 #include "backend/appData.h"
 
-void CDialogConnection::LoadConnectionData()
+void ibDialogConnection::LoadConnectionData()
 {
 	//const wxString& strFileName = appData->GetApplicationPath() + wxT("\\") + wxT("connection.dat");
 	//wxXmlDocument document;
@@ -120,7 +120,7 @@ void CDialogConnection::LoadConnectionData()
 	//}
 }
 
-void CDialogConnection::SaveConnectionData()
+void ibDialogConnection::SaveConnectionData()
 {
 	//wxXmlDocument document;
 	//wxXmlNode* root = new wxXmlNode(wxXML_ELEMENT_NODE, "connection");
@@ -146,11 +146,14 @@ void CDialogConnection::SaveConnectionData()
 	//document.Save(strFileName);
 }
 
+#ifdef OES_USE_POSTGRESQL
 #include "backend/databaseLayer/postgres/postgresDatabaseLayer.h"
+#endif
 
-void CDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
+void ibDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
 {
-	CPostgresDatabaseLayer* postgresDatabaseLayer = new CPostgresDatabaseLayer;
+#ifdef OES_USE_POSTGRESQL
+	ibDatabaseLayerPostgres* postgresDatabaseLayer = new ibDatabaseLayerPostgres;
 	bool sucess = postgresDatabaseLayer->Open(
 		m_textCtrlServer->GetValue(),
 		m_textCtrlPort->GetValue(),
@@ -160,10 +163,13 @@ void CDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
 	);
 
 	postgresDatabaseLayer->Close();
+#else
+	wxMessageBox(_("PostgreSQL driver not available"));
+#endif
 	event.Skip();
 }
 
-void CDialogConnection::SaveConnectionOnButtonClick(wxCommandEvent& event)
+void ibDialogConnection::SaveConnectionOnButtonClick(wxCommandEvent& event)
 {
 	SaveConnectionData();
 	event.Skip();

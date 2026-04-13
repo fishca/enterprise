@@ -3,11 +3,11 @@
 #include "frontend/win/ctrls/controlTextEditor.h"
 #include "backend/appData.h"
 
-wxWindow* CDataViewValueRenderer::CreateEditorCtrl(wxWindow* dv,
+wxWindow* ibDataViewValueRenderer::CreateEditorCtrl(wxWindow* dv,
 	wxRect labelRect,
 	const wxVariant& value)
 {
-	wxControlTextEditor* textEditor = new wxControlTextEditor;
+	ibControlTextEditor* textEditor = new ibControlTextEditor;
 
 	textEditor->SetDVCMode(true);
 	
@@ -25,7 +25,7 @@ wxWindow* CDataViewValueRenderer::CreateEditorCtrl(wxWindow* dv,
 	textEditor->ShowClearButton(m_tableBoxColumn->GetClearButton());
 	textEditor->ShowOpenButton(m_tableBoxColumn->GetOpenButton());
 
-	wxDataViewExtCtrl* parentWnd = dynamic_cast<wxDataViewExtCtrl*>(dv->GetParent());
+	ibDataViewCtrl* parentWnd = dynamic_cast<ibDataViewCtrl*>(dv->GetParent());
 	if (parentWnd != nullptr) {
 		textEditor->SetBackgroundColour(parentWnd->GetBackgroundColour());
 		textEditor->SetForegroundColour(parentWnd->GetForegroundColour());
@@ -43,11 +43,11 @@ wxWindow* CDataViewValueRenderer::CreateEditorCtrl(wxWindow* dv,
 
 	if (!appData->DesignerMode()) {
 		
-		textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTableBoxColumn::OnSelectButtonPressed, m_tableBoxColumn);
-		textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTableBoxColumn::OnOpenButtonPressed, m_tableBoxColumn);
-		textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTableBoxColumn::OnClearButtonPressed, m_tableBoxColumn);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &ibValueModelTableBoxColumn::OnSelectButtonPressed, m_tableBoxColumn);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &ibValueModelTableBoxColumn::OnOpenButtonPressed, m_tableBoxColumn);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &ibValueModelTableBoxColumn::OnClearButtonPressed, m_tableBoxColumn);
 		
-		textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &CValueTableBoxColumn::OnTextEnter, m_tableBoxColumn);
+		textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &ibValueModelTableBoxColumn::OnTextEnter, m_tableBoxColumn);
 	}
 
 	textEditor->LayoutControls();
@@ -57,20 +57,20 @@ wxWindow* CDataViewValueRenderer::CreateEditorCtrl(wxWindow* dv,
 	return textEditor;
 }
 
-bool CDataViewValueRenderer::GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value)
+bool ibDataViewValueRenderer::GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value)
 {
-	wxControlTextEditor* textEditor = wxDynamicCast(ctrl, wxControlTextEditor);
+	ibControlTextEditor* textEditor = wxDynamicCast(ctrl, ibControlTextEditor);
 
 	if (textEditor == nullptr)
 		return false;
 
 	if (!appData->DesignerMode()) {
 		
-		textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTableBoxColumn::OnSelectButtonPressed, m_tableBoxColumn);
-		textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTableBoxColumn::OnOpenButtonPressed, m_tableBoxColumn);
-		textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTableBoxColumn::OnClearButtonPressed, m_tableBoxColumn);
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &ibValueModelTableBoxColumn::OnSelectButtonPressed, m_tableBoxColumn);
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &ibValueModelTableBoxColumn::OnOpenButtonPressed, m_tableBoxColumn);
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &ibValueModelTableBoxColumn::OnClearButtonPressed, m_tableBoxColumn);
 
-		textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &CValueTableBoxColumn::OnTextEnter, m_tableBoxColumn);
+		textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &ibValueModelTableBoxColumn::OnTextEnter, m_tableBoxColumn);
 	}
 
 	value = textEditor->GetValue();

@@ -106,12 +106,12 @@ static char* s_chartBox_xpm[] = {
 	"          ((    "
 };
 
-wxIcon CValueChartBox::GetIcon() const
+wxIcon ibValueChartBox::GetIcon() const
 {
 	return wxIcon(s_chartBox_xpm);
 }
 
-wxIcon CValueChartBox::GetIconGroup()
+wxIcon ibValueChartBox::GetIconGroup()
 {
 	return wxIcon(s_chartBox_xpm);
 }

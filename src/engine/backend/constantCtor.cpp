@@ -4,23 +4,23 @@
 #include "constantCtor.h"
 
 //const-object class
-wxClassInfo* CMetaValueConstantObjectTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeConstantObject::GetClassInfo() const
 {
-	return CLASSINFO(CValueRecordDataObjectConstant);
+	return CLASSINFO(ibValueRecordDataObjectConstant);
 }
 
-CValue* CMetaValueConstantObjectTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeConstantObject::CreateObject() const
 {
 	return m_metaObject->CreateRecordDataObjectValue();
 }
 
 //const-manager class
-wxClassInfo* CMetaValueConstManagerTypeCtor::GetClassInfo() const
+wxClassInfo* ibCtorMetaValueTypeConstantManager::GetClassInfo() const
 {
-	return CLASSINFO(CValueManagerDataObjectConstant);
+	return CLASSINFO(ibValueManagerDataObjectConstant);
 }
 
-CValue* CMetaValueConstManagerTypeCtor::CreateObject() const
+ibValue* ibCtorMetaValueTypeConstantManager::CreateObject() const
 {
-	return CValue::CreateAndPrepareValueRef<CValueManagerDataObjectConstant>(m_metaObject);
+	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectConstant>(m_metaObject);
 }

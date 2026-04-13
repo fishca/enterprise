@@ -8,7 +8,7 @@
 #include "frontend/mainFrame/mainFrame.h"
 #include "frontend/mainFrame/mainFrameChild.h"
 
-void CDesignerApp::OnKeyEvent(wxKeyEvent& event)
+void ibAppDesigner::OnKeyEvent(wxKeyEvent& event)
 {
 	if (event.GetKeyCode() == WXK_ESCAPE) {
 		wxAuiMDIChildFrame* childFrame = mainFrame->GetActiveChild();
@@ -21,15 +21,15 @@ void CDesignerApp::OnKeyEvent(wxKeyEvent& event)
 
 #include "frontend/visualView/visualHost.h"
 
-void CDesignerApp::OnMouseEvent(wxMouseEvent& event)
+void ibAppDesigner::OnMouseEvent(wxMouseEvent& event)
 {
 	if (event.LeftIsDown() || event.RightIsDown()) {
 		wxWindow* currentWindow = dynamic_cast<wxWindow*>(event.GetEventObject()); wxWindow* windowFocus = currentWindow;
-		while (windowFocus && !windowFocus->IsKindOf(CLASSINFO(IVisualHost))) {
+		while (windowFocus && !windowFocus->IsKindOf(CLASSINFO(ibVisualHost))) {
 			windowFocus = windowFocus->GetParent();
 		}
 		if (windowFocus) {
-			IVisualHost* visualEditor = dynamic_cast<IVisualHost*>(windowFocus);
+			ibVisualHost* visualEditor = dynamic_cast<ibVisualHost*>(windowFocus);
 			if (visualEditor != nullptr) {
 				if (event.GetEventType() == wxEVT_LEFT_DOWN
 					|| event.GetEventType() == wxEVT_RIGHT_DOWN) {
@@ -42,7 +42,7 @@ void CDesignerApp::OnMouseEvent(wxMouseEvent& event)
 	event.Skip();
 }
 
-void CDesignerApp::OnSetFocus(wxFocusEvent& event)
+void ibAppDesigner::OnSetFocus(wxFocusEvent& event)
 {
 	wxWindow* child = dynamic_cast<wxWindow*>(event.GetEventObject());
 	while (child != nullptr && !child->IsKindOf(CLASSINFO(wxAuiMDIChildFrame))) {
@@ -59,7 +59,7 @@ void CDesignerApp::OnSetFocus(wxFocusEvent& event)
 	event.Skip();
 }
 
-int CDesignerApp::FilterEvent(wxEvent& event)
+int ibAppDesigner::FilterEvent(wxEvent& event)
 {
 	if (event.GetEventType() == wxEVT_KEY_DOWN) {
 		OnKeyEvent(

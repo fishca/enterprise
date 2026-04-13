@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Author		: Maxim Kornienko, 2Ñ-team
+//	Author		: Maxim Kornienko, 2ï¿½-team
 //	Description : Processor unit 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -39,9 +39,9 @@
 //*                                              support error place                                           *
 //**************************************************************************************************************
 
-CProcUnit* CProcUnit::m_currentRunModule = nullptr;
+ibProcUnit* ibProcUnit::m_currentRunModule = nullptr;
 
-struct CErrorPlace {
+struct ibErrorPlace {
 
 	bool IsEmpty() const { return m_errorLine == wxNOT_FOUND; }
 
@@ -52,19 +52,19 @@ struct CErrorPlace {
 
 	long m_errorLine = wxNOT_FOUND;
 
-	CByteCode* m_byteCode = nullptr;
-	CByteCode* m_skipByteCode = nullptr;
+	ibByteCode* m_byteCode = nullptr;
+	ibByteCode* m_skipByteCode = nullptr;
 };
 
-static CErrorPlace s_errorPlace;
+static ibErrorPlace s_errorPlace;
 
-void CProcUnit::Raise() {
+void ibProcUnit::Raise() {
 
 	s_errorPlace.Reset(); //initialize the error place	
-	s_errorPlace.m_skipByteCode = CProcUnit::GetCurrentByteCode(); //return back to the called module (if any)
+	s_errorPlace.m_skipByteCode = ibProcUnit::GetCurrentByteCode(); //return back to the called module (if any)
 }
 
-std::vector <CRunContext*> CProcUnit::ms_runContext;
+std::vector <ibRunContext*> ibProcUnit::ms_runContext;
 
 //**************************************************************************************************************
 //*                                              stack support                                                 *
@@ -72,12 +72,12 @@ std::vector <CRunContext*> CProcUnit::ms_runContext;
 
 static short s_nRecCount = 0; //control looping
 
-inline void BeginByteCode(CRunContext* pCode) { CProcUnit::AddRunContext(pCode); }
+inline void BeginByteCode(ibRunContext* pCode) { ibProcUnit::AddRunContext(pCode); }
 inline bool EndByteCode()
 {
-	unsigned int n = CProcUnit::GetCountRunContext();
+	unsigned int n = ibProcUnit::GetCountRunContext();
 	if (n > 0)
-		CProcUnit::BackRunContext();
+		ibProcUnit::BackRunContext();
 	n--;
 	if (n <= 0)
 		return false;
@@ -87,32 +87,32 @@ inline bool EndByteCode()
 //Stack reset
 inline void ResetByteCode() { while (EndByteCode()); }
 
-struct CProcStackGuard {
+struct ibProcStackGuard {
 
-	CProcStackGuard(CRunContext* runContext) {
+	ibProcStackGuard(ibRunContext* runContext) {
 		if (s_nRecCount > MAX_REC_COUNT) { //critical error
 			wxString strError;
-			for (unsigned int i = 0; i < CProcUnit::GetCountRunContext(); i++) {
-				const CRunContext* stackContext = CProcUnit::GetRunContext(i);
+			for (unsigned int i = 0; i < ibProcUnit::GetCountRunContext(); i++) {
+				const ibRunContext* stackContext = ibProcUnit::GetRunContext(i);
 				wxASSERT(stackContext);
-				const CByteCode* stackByteCode = stackContext->GetByteCode();
+				const ibByteCode* stackByteCode = stackContext->GetByteCode();
 				wxASSERT(stackByteCode);
 				strError += wxString::Format(wxT("\n%s (#line %d)"),
 					stackByteCode->m_strModuleName,
 					stackByteCode->m_listCode[stackContext->m_lCurLine].m_numLine + 1
 				);
 			}
-			CBackendCoreException::Error(_("Number of recursive calls exceeded the maximum allowed value!\nCall stack :") + strError);
+			ibBackendCoreException::Error(_("Number of recursive calls exceeded the maximum allowed value!\nCall stack :") + strError);
 		}
 		s_nRecCount++;
 		m_currentContext = runContext;
 		BeginByteCode(runContext);
 	}
 
-	~CProcStackGuard() { s_nRecCount--; EndByteCode(); }
+	~ibProcStackGuard() { s_nRecCount--; EndByteCode(); }
 
 private:
-	CRunContext* m_currentContext;
+	ibRunContext* m_currentContext;
 };
 
 //**************************************************************************************************************
@@ -123,25 +123,25 @@ private:
 #define CHECK_READONLY(Operation)\
 if(cValue1.m_bReadOnly)\
 {\
- CValue cVal;\
+ ibValue cVal;\
  Operation(cVal,cValue2,cValue3);\
  cValue1.SetValue(cVal);\
  return;\
 }\
-if(cValue1.m_typeClass==eValueTypes::TYPE_REFFER)\
+if(cValue1.m_typeClass==ibValueTypes::TYPE_REFFER)\
  cValue1.m_pRef->DecrRef();\
 
-//Functions for quickly working with the CValue type
-inline void AddValue(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+//Functions for quickly working with the ibValue type
+inline void AddValue(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(AddValue);
 	cValue1.m_typeClass = cValue2.GetType();
-	if (cValue1.m_typeClass == eValueTypes::TYPE_NUMBER) {
+	if (cValue1.m_typeClass == ibValueTypes::TYPE_NUMBER) {
 		cValue1.m_fData = cValue2.GetNumber() + cValue3.GetNumber();
 	}
-	else if (cValue1.m_typeClass == eValueTypes::TYPE_DATE) {
-		if (cValue3.m_typeClass == eValueTypes::TYPE_DATE) { //date + date -> number
-			cValue1.m_typeClass = eValueTypes::TYPE_NUMBER;
+	else if (cValue1.m_typeClass == ibValueTypes::TYPE_DATE) {
+		if (cValue3.m_typeClass == ibValueTypes::TYPE_DATE) { //date + date -> number
+			cValue1.m_typeClass = ibValueTypes::TYPE_NUMBER;
 			cValue1.m_fData = cValue2.GetDate() + cValue3.GetDate();
 		}
 		else {
@@ -149,21 +149,21 @@ inline void AddValue(CValue& cValue1, const CValue& cValue2, const CValue& cValu
 		}
 	}
 	else {
-		cValue1.m_typeClass = eValueTypes::TYPE_STRING;
+		cValue1.m_typeClass = ibValueTypes::TYPE_STRING;
 		cValue1.m_sData = cValue2.GetString() + cValue3.GetString();
 	}
 }
 
-inline void SubValue(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void SubValue(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(SubValue);
 	cValue1.m_typeClass = cValue2.GetType();
-	if (cValue1.m_typeClass == eValueTypes::TYPE_NUMBER) {
+	if (cValue1.m_typeClass == ibValueTypes::TYPE_NUMBER) {
 		cValue1.m_fData = cValue2.GetNumber() - cValue3.GetNumber();
 	}
-	else if (cValue1.m_typeClass == eValueTypes::TYPE_DATE) {
-		if (cValue3.m_typeClass == eValueTypes::TYPE_DATE) { //date - date -> number
-			cValue1.m_typeClass = eValueTypes::TYPE_NUMBER;
+	else if (cValue1.m_typeClass == ibValueTypes::TYPE_DATE) {
+		if (cValue3.m_typeClass == ibValueTypes::TYPE_DATE) { //date - date -> number
+			cValue1.m_typeClass = ibValueTypes::TYPE_NUMBER;
 			cValue1.m_fData = cValue2.GetDate() - cValue3.GetDate();
 		}
 		else {
@@ -171,20 +171,20 @@ inline void SubValue(CValue& cValue1, const CValue& cValue2, const CValue& cValu
 		}
 	}
 	else {
-		CBackendCoreException::Error(_("Subtraction operation cannot be applied for this type (%s)"), cValue2.GetClassName());
+		ibBackendCoreException::Error(_("Subtraction operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
-inline void MultValue(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void MultValue(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(MultValue);
 	cValue1.m_typeClass = cValue2.GetType();
-	if (cValue1.m_typeClass == eValueTypes::TYPE_NUMBER) {
+	if (cValue1.m_typeClass == ibValueTypes::TYPE_NUMBER) {
 		cValue1.m_fData = cValue2.GetNumber() * cValue3.GetNumber();
 	}
-	else if (cValue1.m_typeClass == eValueTypes::TYPE_DATE) {
-		if (cValue3.m_typeClass == eValueTypes::TYPE_DATE) { //date * date -> number
-			cValue1.m_typeClass = eValueTypes::TYPE_NUMBER;
+	else if (cValue1.m_typeClass == ibValueTypes::TYPE_DATE) {
+		if (cValue3.m_typeClass == ibValueTypes::TYPE_DATE) { //date * date -> number
+			cValue1.m_typeClass = ibValueTypes::TYPE_NUMBER;
 			cValue1.m_fData = cValue2.GetDate() * cValue3.GetDate();
 		}
 		else {
@@ -192,86 +192,86 @@ inline void MultValue(CValue& cValue1, const CValue& cValue2, const CValue& cVal
 		}
 	}
 	else {
-		CBackendCoreException::Error(_("Multiplication operation cannot be applied for this type (%s)"), cValue2.GetClassName());
+		ibBackendCoreException::Error(_("Multiplication operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
-inline void DivValue(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void DivValue(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(DivValue);
 	cValue1.m_typeClass = cValue2.GetType();
-	if (cValue1.m_typeClass == eValueTypes::TYPE_NUMBER) {
-		const number_t& flNumber3 = cValue3.GetNumber();
+	if (cValue1.m_typeClass == ibValueTypes::TYPE_NUMBER) {
+		const ibNumber& flNumber3 = cValue3.GetNumber();
 		if (flNumber3.IsZero())
-			CBackendCoreException::Error(_("Divide by zero"));
+			ibBackendCoreException::Error(_("Divide by zero"));
 		cValue1.m_fData = cValue2.GetNumber() / flNumber3;
 	}
 	else {
-		CBackendCoreException::Error(_("Division operation cannot be applied for this type (%s)"), cValue2.GetClassName());
+		ibBackendCoreException::Error(_("Division operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	};
 }
 
-inline void ModValue(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void ModValue(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(ModValue);
 	cValue1.m_typeClass = cValue2.GetType();
-	if (cValue1.m_typeClass == eValueTypes::TYPE_NUMBER) {
+	if (cValue1.m_typeClass == ibValueTypes::TYPE_NUMBER) {
 		ttmath::Int<TTMATH_BITS(128)> val128_2, val128_3;
-		const number_t& flNumber3 = cValue3.GetNumber(); flNumber3.ToInt(val128_3);
+		const ibNumber& flNumber3 = cValue3.GetNumber(); flNumber3.ToInt(val128_3);
 		if (val128_3.IsZero())
-			CBackendCoreException::Error(_("Divide by zero"));
-		const number_t& flNumber2 = cValue2.GetNumber(); flNumber2.ToInt(val128_2);
+			ibBackendCoreException::Error(_("Divide by zero"));
+		const ibNumber& flNumber2 = cValue2.GetNumber(); flNumber2.ToInt(val128_2);
 		cValue1.m_fData = val128_2 % val128_3;
 	}
 	else {
-		CBackendCoreException::Error(_("Modulo operation cannot be applied for this type (%s)"), cValue2.GetClassName());
+		ibBackendCoreException::Error(_("Modulo operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
 //Implementation of comparison operators
-inline void CompareValueGT(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void CompareValueGT(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(CompareValueGT);
-	cValue1.m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	cValue1.m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	cValue1.m_bData = cValue2.CompareValueGT(cValue3);
 }
 
-inline void CompareValueGE(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void CompareValueGE(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(CompareValueGE);
-	cValue1.m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	cValue1.m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	cValue1.m_bData = cValue2.CompareValueGE(cValue3);
 }
 
-inline void CompareValueLS(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void CompareValueLS(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(CompareValueLS);
-	cValue1.m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	cValue1.m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	cValue1.m_bData = cValue2.CompareValueLS(cValue3);
 }
 
-inline void CompareValueLE(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void CompareValueLE(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(CompareValueLE);
-	cValue1.m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	cValue1.m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	cValue1.m_bData = cValue2.CompareValueLE(cValue3);
 }
 
-inline void CompareValueEQ(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void CompareValueEQ(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(CompareValueEQ);
-	cValue1.m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	cValue1.m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	cValue1.m_bData = cValue2.CompareValueEQ(cValue3);
 }
 
-inline void CompareValueNE(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
+inline void CompareValueNE(ibValue& cValue1, const ibValue& cValue2, const ibValue& cValue3)
 {
 	CHECK_READONLY(CompareValueNE);
-	cValue1.m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	cValue1.m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	cValue1.m_bData = cValue2.CompareValueNE(cValue3);
 }
 
-inline void CopyValue(CValue& cValue1, CValue& cValue2)
+inline void CopyValue(ibValue& cValue1, ibValue& cValue2)
 {
 	if (&cValue1 == &cValue2)
 		return;
@@ -282,16 +282,16 @@ inline void CopyValue(CValue& cValue1, CValue& cValue2)
 		return;
 	}
 	else {//Reset
-		if (cValue1.m_pRef && cValue1.m_typeClass == eValueTypes::TYPE_REFFER)
+		if (cValue1.m_pRef && cValue1.m_typeClass == ibValueTypes::TYPE_REFFER)
 			cValue1.m_pRef->DecrRef();
 
-		cValue1.m_typeClass = eValueTypes::TYPE_EMPTY;
+		cValue1.m_typeClass = ibValueTypes::TYPE_EMPTY;
 		cValue1.m_sData = wxEmptyString;
 
 		cValue1.m_pRef = nullptr;
 	}
 
-	if (cValue2.m_typeClass == eValueTypes::TYPE_REFFER) {
+	if (cValue2.m_typeClass == ibValueTypes::TYPE_REFFER) {
 		cValue1 = cValue2.GetValue();
 		return;
 	}
@@ -300,34 +300,41 @@ inline void CopyValue(CValue& cValue1, CValue& cValue2)
 
 	switch (cValue2.m_typeClass)
 	{
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		break;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		cValue1.m_bData = cValue2.m_bData;
 		break;
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		cValue1.m_fData = cValue2.m_fData;
 		break;
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		cValue1.m_sData = cValue2.m_sData;
 		break;
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		cValue1.m_dData = cValue2.m_dData;
 		break;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		cValue1.m_pRef = cValue2.m_pRef; cValue1.m_pRef->IncrRef();
 		break;
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_VALUE:
-		cValue1.m_typeClass = eValueTypes::TYPE_REFFER;
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_VALUE:
+		cValue1.m_typeClass = ibValueTypes::TYPE_REFFER;
 		cValue1.m_pRef = &cValue2; cValue1.m_pRef->IncrRef();
 		break;
-	default: cValue1.m_typeClass = eValueTypes::TYPE_EMPTY;
+	default: cValue1.m_typeClass = ibValueTypes::TYPE_EMPTY;
 	}
 }
 
-inline void MoveValue(CValue&& cValue1, CValue&& cValue2)
+inline void CopyValue(ibValue& cValue1, ibValue&& cValue2)
+{
+	// For temporaries: store into local lvalue, then delegate to lvalue version
+	ibValue tmp = std::move(cValue2);
+	CopyValue(cValue1, tmp);
+}
+
+inline void MoveValue(ibValue&& cValue1, ibValue&& cValue2)
 {
 	if (&cValue1 == &cValue2)
 		return;
@@ -336,45 +343,45 @@ inline void MoveValue(CValue&& cValue1, CValue&& cValue2)
 
 	switch (cValue2.m_typeClass)
 	{
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		break;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		cValue1.m_bData = std::move(cValue2.m_bData);
 		break;
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		cValue1.m_fData = std::move(cValue2.m_fData);
 		break;
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		cValue1.m_sData = std::move(cValue2.m_sData);
 		break;
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		cValue1.m_dData = std::move(cValue2.m_dData);
 		break;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		cValue1.m_pRef = cValue2.m_pRef;
 		cValue1.m_pRef->IncrRef();
 		break;
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_VALUE:
-		cValue1.m_typeClass = eValueTypes::TYPE_REFFER;
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_VALUE:
+		cValue1.m_typeClass = ibValueTypes::TYPE_REFFER;
 		cValue1.m_pRef = &cValue2;
 		cValue1.m_pRef->IncrRef();
 		break;
-	default: cValue1.m_typeClass = eValueTypes::TYPE_EMPTY;
+	default: cValue1.m_typeClass = ibValueTypes::TYPE_EMPTY;
 	}
 
 	cValue2.Reset();
 }
 
-inline bool IsEmptyValue(const CValue& cValue1)
+inline bool IsEmptyValue(const ibValue& cValue1)
 {
 	return cValue1.IsEmpty();
 }
 
 #define IsHasValue(cValue1) (!IsEmptyValue(cValue1))
 
-inline void SetTypeBoolean(CValue& cValue1, bool bValue)
+inline void SetTypeBoolean(ibValue& cValue1, bool bValue)
 {
 	//check variable availability and reference check
 	if (cValue1.m_bReadOnly) {
@@ -382,11 +389,11 @@ inline void SetTypeBoolean(CValue& cValue1, bool bValue)
 		return;
 	}
 	cValue1.Reset();
-	cValue1.m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	cValue1.m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	cValue1.m_bData = bValue;
 }
 
-inline void SetTypeNumber(CValue& cValue1, const number_t& fValue)
+inline void SetTypeNumber(ibValue& cValue1, const ibNumber& fValue)
 {
 	//check variable availability and reference check
 	if (cValue1.m_bReadOnly) {
@@ -394,27 +401,33 @@ inline void SetTypeNumber(CValue& cValue1, const number_t& fValue)
 		return;
 	}
 	cValue1.Reset();
-	cValue1.m_typeClass = eValueTypes::TYPE_NUMBER;
+	cValue1.m_typeClass = ibValueTypes::TYPE_NUMBER;
 	cValue1.m_fData = fValue;
 }
 
 #define CheckAndError(variable, name)\
 {\
- if(variable.m_typeClass!=eValueTypes::TYPE_REFFER)\
- CBackendCoreException::Error(_("No attribute or method found '%s' - a variable is not an aggregate object"), name);\
+ if(variable.m_typeClass!=ibValueTypes::TYPE_REFFER)\
+ ibBackendCoreException::Error(_("No attribute or method found '%s' - a variable is not an aggregate object"), name);\
  else\
- CBackendCoreException::Error(_("Aggregate object field not found '%s'"), name);\
+ ibBackendCoreException::Error(_("Aggregate object field not found '%s'"), name);\
 }
 
 //Index arrays
-inline bool SetArrayValue(CValue& cValue1, const CValue& cValue2, CValue& cValue3)
+inline bool SetArrayValue(ibValue& cValue1, const ibValue& cValue2, ibValue& cValue3)
 {
 	return cValue1.SetAt(cValue2, cValue3);
 }
 
-inline bool GetArrayValue(CValue& cValue1, CValue& cValue2, const CValue& cValue3)
+inline bool SetArrayValue(ibValue& cValue1, const ibValue& cValue2, ibValue&& cValue3)
 {
-	CValue retValue;
+	ibValue tmp = std::move(cValue3);
+	return cValue1.SetAt(cValue2, tmp);
+}
+
+inline bool GetArrayValue(ibValue& cValue1, ibValue& cValue2, const ibValue& cValue3)
+{
+	ibValue retValue;
 	if (cValue2.GetAt(cValue3, retValue)) {
 		CopyValue(cValue1, retValue);
 		return true;
@@ -422,11 +435,11 @@ inline bool GetArrayValue(CValue& cValue1, CValue& cValue2, const CValue& cValue
 	return false;
 }
 
-inline CValue GetValue(CValue& cValue1)
+inline ibValue GetValue(ibValue& cValue1)
 {
 	if (cValue1.m_bReadOnly
-		&& cValue1.m_typeClass != eValueTypes::TYPE_REFFER) {
-		CValue cVal;
+		&& cValue1.m_typeClass != ibValueTypes::TYPE_REFFER) {
+		ibValue cVal;
 		CopyValue(cVal, cValue1);
 		return cVal;
 	}
@@ -434,15 +447,19 @@ inline CValue GetValue(CValue& cValue1)
 }
 
 #pragma region iterator_support
-class CValueIterator : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CValueIterator);
+class ibValueIterator : public ibValue {
+	wxDECLARE_DYNAMIC_CLASS(ibValueIterator);
+	static ibValue s_defaultOwner;
 public:
-	CValueIterator(CValue& ownerValue = CValue()) : CValue(eValueTypes::TYPE_VALUE),
+	ibValueIterator() : ibValue(ibValueTypes::TYPE_VALUE),
+		m_ownerValue(s_defaultOwner), m_currentPos(0) {
+	}
+	ibValueIterator(ibValue& ownerValue) : ibValue(ibValueTypes::TYPE_VALUE),
 		m_ownerValue(ownerValue), m_currentPos(0) {
 		ResetIterator();
 	}
-	virtual ~CValueIterator() { Reset(); }
-	bool GetCurrentValue(CValue& pvarParamValue) const {
+	virtual ~ibValueIterator() { Reset(); }
+	bool GetCurrentValue(ibValue& pvarParamValue) const {
 		if (m_currentPos >= m_ownerValue.GetIteratorCount())
 			return false;
 		CopyValue(pvarParamValue, m_ownerValue.GetIteratorAt(m_currentPos));
@@ -458,69 +475,70 @@ public:
 protected:
 	unsigned long m_currentPos = 0;
 private:
-	CValue& m_ownerValue;
+	ibValue& m_ownerValue;
 };
 
 //**************************************************************************************************************
-wxIMPLEMENT_DYNAMIC_CLASS(CValueIterator, CValue);
+ibValue ibValueIterator::s_defaultOwner;
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueIterator, ibValue);
 //**************************************************************************************************************
 
-const class_identifier_t g_valueIterator = string_to_clsid("SO_ITER");
+const ibClassID g_valueIterator = string_to_clsid("SO_ITER");
 #pragma endregion
 
 //////////////////////////////////////////////////////////////////////
 //						Construction/Destruction                    //
 //////////////////////////////////////////////////////////////////////
 
-void CProcUnit::Execute(CRunContext* pContext, CValue* pvarRetValue, bool bDelta)
+void ibProcUnit::Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDelta)
 {
-	struct CTryLabel {
+	struct ibTryLabel {
 
-		CTryLabel() :m_lStartLine(0), m_lEndLine(0) {}
-		CTryLabel(const long& lStartLine, const long& lEndLine) :m_lStartLine(lStartLine), m_lEndLine(lEndLine) {}
+		ibTryLabel() :m_lStartLine(0), m_lEndLine(0) {}
+		ibTryLabel(const long& lStartLine, const long& lEndLine) :m_lStartLine(lStartLine), m_lEndLine(lEndLine) {}
 
 		long m_lStartLine, m_lEndLine;
 	};
 
 #ifdef DEBUG
 	if (pContext == nullptr) {
-		CBackendCoreException::Error(_("No execution context defined!"));
+		ibBackendCoreException::Error(_("No execution context defined!"));
 		if (m_pByteCode == nullptr)
-			CBackendCoreException::Error(_("No execution code set!"));
+			ibBackendCoreException::Error(_("No execution code set!"));
 	}
 #endif
 
 	pContext->SetProcUnit(this);
 
-	CProcStackGuard stackGuard(pContext);
+	ibProcStackGuard stackGuard(pContext);
 
-	CValue* pLocVars = pContext->m_pLocVars;
-	CValue** pRefLocVars = pContext->m_pRefLocVars;
+	ibValue* pLocVars = pContext->m_pLocVars;
+	ibValue** pRefLocVars = pContext->m_pRefLocVars;
 
-	CByteUnit* pCodeList = m_pByteCode->m_listCode.data();
+	ibByteUnit* pCodeList = m_pByteCode->m_listCode.data();
 
 	long lCodeLine = pContext->m_lStart;
 	long lFinish = m_pByteCode->m_listCode.size();
 	long lPrevLine = wxNOT_FOUND;
 
-	std::vector<CTryLabel> tryList;
+	std::vector<ibTryLabel> tryList;
 
 start_label:
 
 	try { //slower by 2-3% for each nested module
 		while (lCodeLine < lFinish) {
 
-			if (!CBackendException::IsEvalMode()) {
+			if (!ibBackendException::IsEvalMode()) {
 				pContext->m_lCurLine = lCodeLine;
 				m_currentRunModule = this;
 			}
 
 			//if force exit - terminate 
-			if (CApplicationData::IsForceExit())
+			if (ibApplicationData::IsForceExit())
 				break;
 
 			//enter in debugger
-			if (debugServer != nullptr && !CBackendException::IsEvalMode())
+			if (debugServer != nullptr && !ibBackendException::IsEvalMode())
 				debugServer->EnterDebugger(pContext, curCode, lPrevLine);
 
 			switch (curCode.m_numOper)
@@ -553,32 +571,32 @@ start_label:
 					lCodeLine = index2 - 1;
 				break;
 			case OPER_FOR:
-				if (variable1.m_typeClass != eValueTypes::TYPE_NUMBER)
-					CBackendCoreException::Error(_("Only variables with type can be used to organize the loop \"number\""));
+				if (variable1.m_typeClass != ibValueTypes::TYPE_NUMBER)
+					ibBackendCoreException::Error(_("Only variables with type can be used to organize the loop \"number\""));
 				if (variable1.m_fData == variable2.m_fData)
 					lCodeLine = index3 - 1;
 				break;
 			case OPER_FOREACH:
 			{
 				if (!variable2.HasIterator())
-					CBackendCoreException::Error(_("Undefined value iterator"));
+					ibBackendCoreException::Error(_("Undefined value iterator"));
 				if (g_valueIterator != variable3.GetClassType())
-					CopyValue(variable3, CValue(new CValueIterator(variable2)));
-				CValueIterator* iterator = variable3.ConvertToType<CValueIterator>();
+					CopyValue(variable3, ibValue(new ibValueIterator(variable2)));
+				ibValueIterator* iterator = variable3.ConvertToType<ibValueIterator>();
 				if (!iterator->GetCurrentValue(variable1)) {
 					variable3.Reset(); lCodeLine = index4 - 1;
 				}
 			} break;
 			case OPER_NEXT:
 			{
-				if (variable1.m_typeClass == eValueTypes::TYPE_NUMBER)
+				if (variable1.m_typeClass == ibValueTypes::TYPE_NUMBER)
 					variable1.m_fData++;
 				lCodeLine = index2 - 1;
 			} break;
 			case OPER_NEXT_ITER:
 			{
-				CValueIterator* value_iterator =
-					variable1.ConvertToType<CValueIterator>();
+				ibValueIterator* value_iterator =
+					variable1.ConvertToType<ibValueIterator>();
 				value_iterator->NextIterator();
 				lCodeLine = index2 - 1;
 			} break;
@@ -591,15 +609,15 @@ start_label:
 			}  break;
 			case OPER_NEW:
 			{
-				CValue* pRetValue = &variable1;
-				CRunContextSmall cRunContext(array2);
+				ibValue* pRetValue = &variable1;
+				ibRunContextSmall cRunContext(array2);
 				cRunContext.m_lParamCount = array2;
 				const wxString className = m_pByteCode->m_listConst[index2].m_sData;
 				//load parameters
 				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
 					lCodeLine++;
 					if (index1 >= 0) {
-						if (variable1.m_bReadOnly && variable1.m_typeClass != eValueTypes::TYPE_REFFER) {
+						if (variable1.m_bReadOnly && variable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
 							CopyValue(cRunContext.m_pLocVars[i], variable1);
 						}
 						else {
@@ -607,26 +625,26 @@ start_label:
 						}
 					}
 				}
-				CopyValue(*pRetValue, CValue::CreateObject(className, cRunContext.m_lParamCount > 0 ? cRunContext.m_pRefLocVars : nullptr, cRunContext.m_lParamCount));
+				CopyValue(*pRetValue, ibValue::CreateObject(className, cRunContext.m_lParamCount > 0 ? cRunContext.m_pRefLocVars : nullptr, cRunContext.m_lParamCount));
 			} break;
 			case OPER_SET_A:
 			{//setting attribute
 				const wxString& strPropName = m_pByteCode->m_listConst[index2].m_sData;
 				const long lPropNum = variable1.FindProp(strPropName);
 				if (lPropNum < 0) CheckAndError(variable1, strPropName);
-				if (!variable1.IsPropWritable(lPropNum)) CBackendCoreException::Error(_("Object field not writable (%s)"), strPropName);
+				if (!variable1.IsPropWritable(lPropNum)) ibBackendCoreException::Error(_("Object field not writable (%s)"), strPropName);
 				variable1.SetPropVal(lPropNum, GetValue(variable3));
 			} break;
 			case OPER_GET_A://get attribute
 			{
-				CValue* pRetValue = &variable1;
-				CValue* pVariable2 = &variable2;
+				ibValue* pRetValue = &variable1;
+				ibValue* pVariable2 = &variable2;
 				const wxString& strPropName = m_pByteCode->m_listConst[index3].m_sData;
 				const long lPropNum = variable2.FindProp(strPropName);
 				if (lPropNum < 0) CheckAndError(variable2, strPropName);
-				if (!variable2.IsPropReadable(lPropNum)) CBackendCoreException::Error(_("Object field not readable (%s)"), strPropName);
-				CValue vRet; bool result = variable2.GetPropVal(lPropNum, vRet);
-				if (result && vRet.m_typeClass == eValueTypes::TYPE_REFFER)
+				if (!variable2.IsPropReadable(lPropNum)) ibBackendCoreException::Error(_("Object field not readable (%s)"), strPropName);
+				ibValue vRet; bool result = variable2.GetPropVal(lPropNum, vRet);
+				if (result && vRet.m_typeClass == ibValueTypes::TYPE_REFFER)
 					*pRetValue = vRet;
 				else if (result)
 					CopyValue(*pRetValue, vRet);
@@ -634,18 +652,18 @@ start_label:
 			}
 			case OPER_CALL_M://method call
 			{
-				CValue* pRetValue = &variable1;
-				CValue* pVariable2 = &variable2;
+				ibValue* pRetValue = &variable1;
+				ibValue* pVariable2 = &variable2;
 
 				const wxString& funcName = m_pByteCode->m_listConst[index3].m_sData;
 				long lMethodNum = wxNOT_FOUND;
 				//call optimization
-				CValue* storageValue = reinterpret_cast<CValue*>(array4);
+				ibValue* storageValue = reinterpret_cast<ibValue*>(array4);
 				if (storageValue && storageValue == pVariable2->GetRef()) { //previously there were calls
 					lMethodNum = index4;
 #ifdef DEBUG
 					lMethodNum = pVariable2->FindMethod(funcName);
-					if (lMethodNum != index4) CBackendCoreException::Error(_("Error value %d must %d (It is recommended to turn off method optimization)"), index4, lMethodNum);
+					if (lMethodNum != index4) ibBackendCoreException::Error(_("Error value %d must %d (It is recommended to turn off method optimization)"), index4, lMethodNum);
 #endif
 				}
 				else {//there were no calls
@@ -657,22 +675,22 @@ start_label:
 				if (lMethodNum < 0)
 					CheckAndError(variable2, funcName);
 
-				CRunContextSmall cRunContext(std::max(array3, MAX_STATIC_VAR));
+				ibRunContextSmall cRunContext(std::max(array3, MAX_STATIC_VAR));
 				cRunContext.m_lParamCount = array3;
 
 				// too many parameters
 				const long paramCount = pVariable2->GetNParams(lMethodNum);
 
 				if (paramCount < cRunContext.m_lParamCount)
-					CBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+					ibBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
 				else if (paramCount == wxNOT_FOUND && cRunContext.m_lParamCount == 0)
-					CBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+					ibBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
 
 				//load parameters
 				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
 					lCodeLine++;
 					if (index1 >= 0 && !pVariable2->GetParamDefValue(lMethodNum, i, *cRunContext.m_pRefLocVars[i])) {
-						if (variable1.m_bReadOnly && variable1.m_typeClass != eValueTypes::TYPE_REFFER) {
+						if (variable1.m_bReadOnly && variable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
 							CopyValue(cRunContext.m_pLocVars[i], variable1);
 						}
 						else {
@@ -688,17 +706,17 @@ start_label:
 					// operator =
 					if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_LET) {
 						lCodeLine++;
-						CValue* pNextVariable2 = &variable2;
+						ibValue* pNextVariable2 = &variable2;
 						lCodeLine--;
 						if (pRetValue == pNextVariable2)
-							CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
+							ibBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
 					}
 					else if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_RET) {
 						lCodeLine++;
-						CValue* pNextVariable1 = &variable1;
+						ibValue* pNextVariable1 = &variable1;
 						lCodeLine--;
 						if (pRetValue == pNextVariable1)
-							CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
+							ibBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
 					}
 					pVariable2->CallAsProc(lMethodNum, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
 				} break;
@@ -706,12 +724,12 @@ start_label:
 			case OPER_CALL:
 			{ //call a regular function
 				const long lModuleNumber = array2;
-				CRunContext cRunContext(index3);
+				ibRunContext cRunContext(index3);
 				cRunContext.m_lStart = index2;
 				cRunContext.m_lParamCount = array3;
-				CByteCode* pLocalByteCode = m_ppArrayCode[lModuleNumber]->m_pByteCode;
-				cRunContext.m_compileContext = reinterpret_cast<CCompileContext*>(pLocalByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
-				CValue* pRetValue = &variable1;
+				ibByteCode* pLocalByteCode = m_ppArrayCode[lModuleNumber]->m_pByteCode;
+				cRunContext.m_compileContext = reinterpret_cast<ibCompileContext*>(pLocalByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
+				ibValue* pRetValue = &variable1;
 				//load parameters
 				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
 					lCodeLine++;
@@ -732,11 +750,11 @@ start_label:
 			}
 			case OPER_SET_ARRAY:
 				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					CBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+					ibBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
 				break; //setting the array value
 			case OPER_GET_ARRAY:
 				if (!GetArrayValue(variable1, variable2, variable3))
-					CBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+					ibBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
 				break; //getting the array value
 			case OPER_GOTO: case OPER_ENDTRY:
 			{
@@ -753,12 +771,12 @@ start_label:
 			case OPER_TRY:
 				tryList.emplace_back(lCodeLine, index1);
 				break; //transition on error
-			case OPER_RAISE: CBackendCoreException::Error(CBackendException::GetLastError()); break;
-			case OPER_RAISE_T: CBackendCoreException::Error(m_pByteCode->m_listConst[index1].GetString()); break;
+			case OPER_RAISE: ibBackendCoreException::Error(ibBackendException::GetLastError()); break;
+			case OPER_RAISE_T: ibBackendCoreException::Error(m_pByteCode->m_listConst[index1].GetString()); break;
 			case OPER_RET:
 				if (index1 != DEF_VAR_NORET) {
 					if (pvarRetValue == nullptr)
-						CBackendCoreException::Error(_("Cannot set return value in procedure!"));
+						ibBackendCoreException::Error(_("Cannot set return value in procedure!"));
 					CopyValue(*pvarRetValue, variable1);
 				}
 			case OPER_ENDFUNC:
@@ -774,14 +792,14 @@ start_label:
 				}
 			} break; //this is the initial run - skip the bodies of procedures and functions
 			case OPER_SET_TYPE:
-				variable1.SetType(CValue::GetVTByID(array2));
+				variable1.SetType(ibValue::GetVTByID(array2));
 				break;
 				//Operators for working with typed data
 				//NUMBER
 			case OPER_ADD + TYPE_DELTA1: variable1.m_fData = variable2.m_fData + variable3.m_fData; break;
 			case OPER_SUB + TYPE_DELTA1: variable1.m_fData = variable2.m_fData - variable3.m_fData; break;
-			case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
-			case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
+			case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
+			case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
 			case OPER_MULT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData * variable3.m_fData; break;
 			case OPER_LET + TYPE_DELTA1: variable1.m_fData = variable2.m_fData; break;
 			case OPER_NOT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData.IsZero(); break;
@@ -794,11 +812,11 @@ start_label:
 			case OPER_LE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData <= variable3.m_fData); break;
 			case OPER_SET_ARRAY + TYPE_DELTA1:
 				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					CBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+					ibBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
 				break;//set array value
 			case OPER_GET_ARRAY + TYPE_DELTA1:
 				if (!GetArrayValue(variable1, variable2, variable3))
-					CBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+					ibBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
 				break; //getting the array value
 			case OPER_IF + TYPE_DELTA1: if (variable1.m_fData.IsZero()) lCodeLine = index2 - 1; break;
 				//STRING
@@ -806,18 +824,18 @@ start_label:
 			case OPER_LET + TYPE_DELTA2: variable1.m_sData = variable2.m_sData; break;
 			case OPER_SET_ARRAY + TYPE_DELTA2:
 				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					CBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+					ibBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
 				break; //set array value
 			case OPER_GET_ARRAY + TYPE_DELTA2:
 				if (!GetArrayValue(variable1, variable2, variable3))
-					CBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+					ibBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
 				break; //getting the array value
 			case OPER_IF + TYPE_DELTA2: if (variable1.m_sData.IsEmpty()) lCodeLine = index2 - 1; break;
 				//DATE
 			case OPER_ADD + TYPE_DELTA3: variable1.m_dData = variable2.m_dData + variable3.m_dData; break;
 			case OPER_SUB + TYPE_DELTA3: variable1.m_dData = variable2.m_dData - variable3.m_dData; break;
-			case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
-			case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
+			case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
+			case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
 			case OPER_MULT + TYPE_DELTA3: variable1.m_dData = variable2.m_dData * variable3.m_dData; break;
 			case OPER_LET + TYPE_DELTA3: variable1.m_dData = variable2.m_dData; break;
 			case OPER_NOT + TYPE_DELTA3: variable1.m_dData = ~variable2.m_dData; break;
@@ -830,11 +848,11 @@ start_label:
 			case OPER_LE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData <= variable3.m_dData); break;
 			case OPER_SET_ARRAY + TYPE_DELTA3:
 				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					CBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+					ibBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
 				break; //setting the array value
 			case OPER_GET_ARRAY + TYPE_DELTA3:
 				if (!GetArrayValue(variable1, variable2, variable3))
-					CBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+					ibBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
 				break; //getting the array value
 			case OPER_IF + TYPE_DELTA3: if (!variable1.m_dData) lCodeLine = index2 - 1; break;
 				//BOOLEAN
@@ -853,10 +871,10 @@ start_label:
 			lCodeLine++;
 		}
 	}
-	catch (const CBackendInterruptException* err) {
+	catch (const ibBackendInterruptException* err) {
 
-		CSystemFunction::Message(err->GetErrorDescription(),
-			eStatusMessage::eStatusMessage_Error);
+		ibValueSystemFunction::Message(err->GetErrorDescription(),
+			ibStatusMessage::ibStatusMessage_Error);
 
 		while (lCodeLine < lFinish) {
 			if (curCode.m_numOper != OPER_GOTO
@@ -874,7 +892,7 @@ start_label:
 		s_errorPlace.Reset(); //Error is handled in this module - erase the error location
 
 	}
-	catch (const CBackendException* err) {
+	catch (const ibBackendException* err) {
 
 		const long trySize = tryList.size() - 1;
 		if (trySize >= 0) {
@@ -897,19 +915,19 @@ start_label:
 		}
 
 		//show and throw error message
-		CBackendException::ProcessError(err, m_pByteCode->m_listCode[lCodeLine]);
+		ibBackendException::ProcessError(err, m_pByteCode->m_listCode[lCodeLine]);
 	}
 }
 
 //nRunModule parameters:
 //false-do not run
 //true-run
-void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunModule)
+void ibProcUnit::Execute(ibByteCode& cByteCode, ibValue* pvarRetValue, bool bRunModule)
 {
 	Reset();
 
 	if (!cByteCode.m_bCompile)
-		CBackendCoreException::Error(_("Module: %s not compiled!"), cByteCode.m_strModuleName);
+		ibBackendCoreException::Error(_("Module: %s not compiled!"), cByteCode.m_strModuleName);
 
 	s_nRecCount = 0;
 	m_pByteCode = &cByteCode;
@@ -917,7 +935,7 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 	//check the conformity of modules (compiled and running)
 	if (GetParent() && GetParent()->m_pByteCode != m_pByteCode->m_parent) {
 		m_pByteCode = nullptr;
-		CBackendCoreException::Error(_("System error - compilation failed (#1)\nModule:%s\nParent1:%s\nParent2:%s"),
+		ibBackendCoreException::Error(_("System error - compilation failed (#1)\nModule:%s\nParent1:%s\nParent2:%s"),
 			cByteCode.m_strModuleName,
 			cByteCode.m_parent->m_strModuleName,
 			GetParent()->m_pByteCode->m_strModuleName
@@ -925,7 +943,7 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 	}
 	else if (!GetParent() && m_pByteCode->m_parent) {
 		m_pByteCode = nullptr;
-		CBackendCoreException::Error(_("System error - compilation failed (#2)\nModule1:%s\nParent1:%s"),
+		ibBackendCoreException::Error(_("System error - compilation failed (#2)\nModule1:%s\nParent1:%s"),
 			cByteCode.m_strModuleName,
 			cByteCode.m_parent->m_strModuleName
 		);
@@ -936,15 +954,15 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 
 	unsigned int nParentCount = GetParentCount();
 
-	m_ppArrayCode = new CProcUnit * [nParentCount + 1];
+	m_ppArrayCode = new ibProcUnit * [nParentCount + 1];
 	m_ppArrayCode[0] = this;
 
-	m_pppArrayList = new CValue * *[nParentCount + 2];
+	m_pppArrayList = new ibValue * *[nParentCount + 2];
 	m_pppArrayList[0] = m_cCurContext.m_pRefLocVars;
 	m_pppArrayList[1] = m_cCurContext.m_pRefLocVars;//start with 1, because 0 means local context
 
 	for (unsigned int i = 0; i < nParentCount; i++) {
-		CProcUnit* pCurUnit = GetParent(i);
+		ibProcUnit* pCurUnit = GetParent(i);
 		m_ppArrayCode[i + 1] = pCurUnit;
 		m_pppArrayList[i + 2] = pCurUnit->m_cCurContext.m_pRefLocVars;
 	}
@@ -960,12 +978,12 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 
 	//Initial initialization of module variables
 	unsigned int lFinish = m_pByteCode->m_listCode.size();
-	CValue** pRefLocVars = m_cCurContext.m_pRefLocVars;
+	ibValue** pRefLocVars = m_cCurContext.m_pRefLocVars;
 
 	for (unsigned int lCodeLine = 0; lCodeLine < lFinish; lCodeLine++) {
-		CByteUnit& byte = m_pByteCode->m_listCode[lCodeLine];
+		ibByteUnit& byte = m_pByteCode->m_listCode[lCodeLine];
 		if (byte.m_numOper == OPER_SET_TYPE) {
-			variable1.SetType(CValue::GetVTByID(array2));
+			variable1.SetType(ibValue::GetVTByID(array2));
 		}
 	}
 
@@ -984,11 +1002,11 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 //bExportOnly=0-search for any functions in the current module + exported ones in parent modules
 //bExportOnly=1-search for exported functions in the current and parent modules
 //bExportOnly=2-search for exported functions in the current module only
-long CProcUnit::FindMethod(const wxString& strMethodName, bool bError, int bExportOnly) const
+long ibProcUnit::FindMethod(const wxString& strMethodName, bool bError, int bExportOnly) const
 {
 	if (m_pByteCode == nullptr ||
 		!m_pByteCode->m_bCompile) {
-		CBackendCoreException::Error(_("Module not compiled!"));
+		ibBackendCoreException::Error(_("Module not compiled!"));
 	}
 
 	long lCodeLine = bExportOnly ?
@@ -996,7 +1014,7 @@ long CProcUnit::FindMethod(const wxString& strMethodName, bool bError, int bExpo
 		m_pByteCode->FindMethod(strMethodName);
 
 	if (bError && lCodeLine < 0)
-		CBackendCoreException::Error(_("Procedure or function \"%s\" not found!"), strMethodName);
+		ibBackendCoreException::Error(_("Procedure or function \"%s\" not found!"), strMethodName);
 
 	if (lCodeLine >= 0) {
 		return lCodeLine;
@@ -1012,11 +1030,11 @@ long CProcUnit::FindMethod(const wxString& strMethodName, bool bError, int bExpo
 	return wxNOT_FOUND;
 }
 
-long CProcUnit::FindFunction(const wxString& strMethodName, bool bError, int bExportOnly) const
+long ibProcUnit::FindFunction(const wxString& strMethodName, bool bError, int bExportOnly) const
 {
 	if (m_pByteCode == nullptr ||
 		!m_pByteCode->m_bCompile) {
-		CBackendCoreException::Error(_("Module not compiled!"));
+		ibBackendCoreException::Error(_("Module not compiled!"));
 	}
 
 	long lCodeLine = bExportOnly ?
@@ -1024,7 +1042,7 @@ long CProcUnit::FindFunction(const wxString& strMethodName, bool bError, int bEx
 		m_pByteCode->FindFunction(strMethodName);
 
 	if (bError && lCodeLine < 0)
-		CBackendCoreException::Error(_("Function \"%s\" not found!"), strMethodName);
+		ibBackendCoreException::Error(_("Function \"%s\" not found!"), strMethodName);
 
 	if (lCodeLine >= 0)
 		return lCodeLine;
@@ -1040,11 +1058,11 @@ long CProcUnit::FindFunction(const wxString& strMethodName, bool bError, int bEx
 	return wxNOT_FOUND;
 }
 
-long CProcUnit::FindProcedure(const wxString& strMethodName, bool bError, int bExportOnly) const
+long ibProcUnit::FindProcedure(const wxString& strMethodName, bool bError, int bExportOnly) const
 {
 	if (m_pByteCode == nullptr ||
 		!m_pByteCode->m_bCompile) {
-		CBackendCoreException::Error(_("Module not compiled!"));
+		ibBackendCoreException::Error(_("Module not compiled!"));
 	}
 
 	long lCodeLine = bExportOnly ?
@@ -1052,7 +1070,7 @@ long CProcUnit::FindProcedure(const wxString& strMethodName, bool bError, int bE
 		m_pByteCode->FindProcedure(strMethodName);
 
 	if (bError && lCodeLine < 0)
-		CBackendCoreException::Error(_("Procedure \"%s\" not found!"), strMethodName);
+		ibBackendCoreException::Error(_("Procedure \"%s\" not found!"), strMethodName);
 
 	if (lCodeLine >= 0) {
 		return lCodeLine;
@@ -1070,7 +1088,7 @@ long CProcUnit::FindProcedure(const wxString& strMethodName, bool bError, int bE
 
 //Calling a procedure by name
 //The call is made only in the current module
-bool CProcUnit::CallAsProc(const wxString& funcName, CValue** ppParams, const long lSizeArray)
+bool ibProcUnit::CallAsProc(const wxString& funcName, ibValue** ppParams, const long lSizeArray)
 {
 	if (m_pByteCode != nullptr) {
 		const long lCodeLine = m_pByteCode->FindMethod(funcName);
@@ -1084,7 +1102,7 @@ bool CProcUnit::CallAsProc(const wxString& funcName, CValue** ppParams, const lo
 
 //Calling a function by name
 //The call is made only in the current module
-bool CProcUnit::CallAsFunc(const wxString& funcName, CValue& pvarRetValue, CValue** ppParams, const long lSizeArray)
+bool ibProcUnit::CallAsFunc(const wxString& funcName, ibValue& pvarRetValue, ibValue** ppParams, const long lSizeArray)
 {
 	if (m_pByteCode != nullptr) {
 		const long lCodeLine = m_pByteCode->FindMethod(funcName);
@@ -1098,26 +1116,26 @@ bool CProcUnit::CallAsFunc(const wxString& funcName, CValue& pvarRetValue, CValu
 
 //Calling a procedure by its address in the byte code array
 //The call is made incl. and in the parent module
-void CProcUnit::CallAsProc(const long lCodeLine, CValue** ppParams, const long lSizeArray)
+void ibProcUnit::CallAsProc(const long lCodeLine, ibValue** ppParams, const long lSizeArray)
 {
 	if (m_pByteCode == nullptr || !m_pByteCode->m_bCompile)
-		CBackendCoreException::Error(_("Module not compiled!"));
+		ibBackendCoreException::Error(_("Module not compiled!"));
 
 	const long lCodeSize = m_pByteCode->m_listCode.size();
 	if (lCodeLine >= lCodeSize) {
 		if (!GetParent())
-			CBackendCoreException::Error(_("Error calling module procedure!"));
+			ibBackendCoreException::Error(_("Error calling module procedure!"));
 		GetParent()->CallAsProc(lCodeLine - lCodeSize, ppParams, lSizeArray);
 	}
 
-	CRunContext cRunContext(index3);// number of local variables
+	ibRunContext cRunContext(index3);// number of local variables
 
 	cRunContext.m_lParamCount = array3;//number of formal parameters
 	cRunContext.m_lStart = lCodeLine;
-	cRunContext.m_compileContext = reinterpret_cast<CCompileContext*>(m_pByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
+	cRunContext.m_compileContext = reinterpret_cast<ibCompileContext*>(m_pByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
 
 	//load parameters
-	memcpy(&cRunContext.m_pRefLocVars[0], &ppParams[0], std::min(lSizeArray, cRunContext.m_lParamCount) * sizeof(CValue*));
+	memcpy(&cRunContext.m_pRefLocVars[0], &ppParams[0], std::min(lSizeArray, cRunContext.m_lParamCount) * sizeof(ibValue*));
 
 	//execute arbitrary code
 	Execute(&cRunContext, nullptr, false);
@@ -1125,32 +1143,32 @@ void CProcUnit::CallAsProc(const long lCodeLine, CValue** ppParams, const long l
 
 //Calling a function by its address in the byte code array
 //The call is made incl. and in the parent module
-void CProcUnit::CallAsFunc(const long lCodeLine, CValue& pvarRetValue, CValue** ppParams, const long lSizeArray)
+void ibProcUnit::CallAsFunc(const long lCodeLine, ibValue& pvarRetValue, ibValue** ppParams, const long lSizeArray)
 {
 	if (m_pByteCode == nullptr || !m_pByteCode->m_bCompile)
-		CBackendCoreException::Error(_("Module not compiled!"));
+		ibBackendCoreException::Error(_("Module not compiled!"));
 
 	const long lCodeSize = m_pByteCode->m_listCode.size();
 	if (lCodeLine >= lCodeSize) {
 		if (!GetParent())
-			CBackendCoreException::Error(_("Error calling module function!"));
+			ibBackendCoreException::Error(_("Error calling module function!"));
 		GetParent()->CallAsFunc(lCodeLine - lCodeSize, pvarRetValue, ppParams, lSizeArray);
 	}
 
-	CRunContext cRunContext(index3);// number of local variables
+	ibRunContext cRunContext(index3);// number of local variables
 
 	cRunContext.m_lParamCount = array3;//number of formal parameters
 	cRunContext.m_lStart = lCodeLine;
-	cRunContext.m_compileContext = reinterpret_cast<CCompileContext*>(m_pByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
+	cRunContext.m_compileContext = reinterpret_cast<ibCompileContext*>(m_pByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
 
 	//load parameters
-	memcpy(&cRunContext.m_pRefLocVars[0], &ppParams[0], std::min(lSizeArray, cRunContext.m_lParamCount) * sizeof(CValue*));
+	memcpy(&cRunContext.m_pRefLocVars[0], &ppParams[0], std::min(lSizeArray, cRunContext.m_lParamCount) * sizeof(ibValue*));
 
 	//execute arbitrary code
 	Execute(&cRunContext, &pvarRetValue, false);
 }
 
-long CProcUnit::FindProp(const wxString& strPropName) const
+long ibProcUnit::FindProp(const wxString& strPropName) const
 {
 	auto iterator = std::find_if(m_pByteCode->m_listExportVar.begin(), m_pByteCode->m_listExportVar.end(),
 		[strPropName](const auto pair) {return stringUtils::CompareString(strPropName, pair.first); });
@@ -1159,13 +1177,13 @@ long CProcUnit::FindProp(const wxString& strPropName) const
 	return wxNOT_FOUND;
 }
 
-bool CProcUnit::SetPropVal(const long lPropNum, const CValue& varPropVal)//setting attribute
+bool ibProcUnit::SetPropVal(const long lPropNum, const ibValue& varPropVal)//setting attribute
 {
 	*m_cCurContext.m_pRefLocVars[lPropNum] = varPropVal;
 	return true;
 }
 
-bool CProcUnit::SetPropVal(const wxString& strPropName, const CValue& varPropVal)//setting attribute
+bool ibProcUnit::SetPropVal(const wxString& strPropName, const ibValue& varPropVal)//setting attribute
 {
 	long lPropNum = FindProp(strPropName);
 	if (lPropNum != wxNOT_FOUND) {
@@ -1174,19 +1192,19 @@ bool CProcUnit::SetPropVal(const wxString& strPropName, const CValue& varPropVal
 	else {
 		const long lPropPos = m_cCurContext.GetLocalCount();
 		m_cCurContext.SetLocalCount(lPropPos + 1);
-		m_cCurContext.m_cLocVars[lPropPos] = CValue(strPropName);
+		m_cCurContext.m_cLocVars[lPropPos] = ibValue(strPropName);
 		*m_cCurContext.m_pRefLocVars[lPropPos] = varPropVal;
 	}
 	return true;
 }
 
-bool CProcUnit::GetPropVal(const long lPropNum, CValue& pvarPropVal) //attribute value
+bool ibProcUnit::GetPropVal(const long lPropNum, ibValue& pvarPropVal) //attribute value
 {
 	pvarPropVal = m_cCurContext.m_pRefLocVars[lPropNum];
 	return true;
 }
 
-bool CProcUnit::GetPropVal(const wxString& strPropName, CValue& pvarPropVal) //setting attribute
+bool ibProcUnit::GetPropVal(const wxString& strPropName, ibValue& pvarPropVal) //setting attribute
 {
 	const long lPropNum = FindProp(strPropName);
 	if (lPropNum != wxNOT_FOUND) {
@@ -1196,36 +1214,36 @@ bool CProcUnit::GetPropVal(const wxString& strPropName, CValue& pvarPropVal) //s
 	return false;
 }
 
-bool CProcUnit::Evaluate(const wxString& strExpression, CRunContext* pRunContext, CValue& pvarRetValue, bool ñompileBlock)
+bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunContext, ibValue& pvarRetValue, bool compileBlock)
 {
 	if (pRunContext == nullptr)
-		pRunContext = CProcUnit::GetCurrentRunContext();
+		pRunContext = ibProcUnit::GetCurrentRunContext();
 
 	if (strExpression.IsEmpty() || pRunContext == nullptr)
 		return false;
 
-	bool isEvalMode = CBackendException::IsEvalMode();
-	if (!isEvalMode) CBackendException::SetEvalMode(true);
+	bool isEvalMode = ibBackendException::IsEvalMode();
+	if (!isEvalMode) ibBackendException::SetEvalMode(true);
 
 	auto iterator = std::find_if(pRunContext->m_listEval.begin(), pRunContext->m_listEval.end(),
 		[strExpression](const auto pair) {return stringUtils::CompareString(strExpression, pair.first); });
 
-	std::shared_ptr<CProcUnitEvaluate> runEvaluate = nullptr;
+	std::shared_ptr<ibProcUnitEvaluate> runEvaluate = nullptr;
 	if (iterator == pRunContext->m_listEval.end()) { //this text has not yet been compiled
 
-		CCompileCode* compileExpression = new CCompileCode;
+		ibCompileCode* compileExpression = new ibCompileCode;
 		compileExpression->Load(strExpression);
 
-		CProcUnitEvaluate* evalUnit = new CProcUnitEvaluate;
-		if (!evalUnit->CompileExpression(pRunContext, pvarRetValue, *compileExpression, ñompileBlock)) {
+		ibProcUnitEvaluate* evalUnit = new ibProcUnitEvaluate;
+		if (!evalUnit->CompileExpression(pRunContext, pvarRetValue, *compileExpression, compileBlock)) {
 			//delete from memory
 			wxDELETE(evalUnit);
 			wxDELETE(compileExpression);
-			if (!isEvalMode) CBackendException::SetEvalMode(false);
+			if (!isEvalMode) ibBackendException::SetEvalMode(false);
 			return false;
 		}
 
-		runEvaluate = std::shared_ptr<CProcUnitEvaluate>(evalUnit);
+		runEvaluate = std::shared_ptr<ibProcUnitEvaluate>(evalUnit);
 
 		//everything is OK
 		pRunContext->m_listEval.insert_or_assign(stringUtils::MakeUpper(strExpression), runEvaluate);
@@ -1237,13 +1255,13 @@ bool CProcUnit::Evaluate(const wxString& strExpression, CRunContext* pRunContext
 	//Launch
 	bool bDelta = false;
 
-	CCompileContext* compileContext = pRunContext->m_compileContext;
+	ibCompileContext* compileContext = pRunContext->m_compileContext;
 	wxASSERT(compileContext);
-	CCompileCode* compileCode = compileContext->m_compileModule;
+	ibCompileCode* compileCode = compileContext->m_compileModule;
 	wxASSERT(compileCode);
 	if (compileCode->m_bExpressionOnly) {
-		CCompileContext* curContext = compileContext;
-		CCompileCode* curModule = compileCode;
+		ibCompileContext* curContext = compileContext;
+		ibCompileCode* curModule = compileCode;
 		while (curContext != nullptr) {
 			if (!curModule->m_bExpressionOnly)
 				break;
@@ -1261,18 +1279,18 @@ bool CProcUnit::Evaluate(const wxString& strExpression, CRunContext* pRunContext
 	try {
 		runEvaluate->Execute(&runEvaluate->m_cCurContext, &pvarRetValue, bDelta);
 	}
-	catch (const CBackendException*) {
-		if (!isEvalMode) CBackendException::SetEvalMode(false);
+	catch (const ibBackendException*) {
+		if (!isEvalMode) ibBackendException::SetEvalMode(false);
 		return false;
 	}
 
-	if (!isEvalMode) CBackendException::SetEvalMode(false);
+	if (!isEvalMode) ibBackendException::SetEvalMode(false);
 	return true;
 }
 
-bool CProcUnit::CompileExpression(CRunContext* pRunContext, CValue& pvarRetValue, CCompileCode& cModule, bool bCompileBlock)
+bool ibProcUnit::CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetValue, ibCompileCode& cModule, bool bCompileBlock)
 {
-	CByteCode* const byteCode = pRunContext->GetByteCode();
+	ibByteCode* const byteCode = pRunContext->GetByteCode();
 
 	//set the expression calling context as parents
 	if (byteCode != nullptr) {
@@ -1297,7 +1315,7 @@ bool CProcUnit::CompileExpression(CRunContext* pRunContext, CValue& pvarRetValue
 	cModule.m_cByteCode.m_compileModule = &cModule;
 
 	//process the bytecode array to return the expression result
-	CByteUnit code;
+	ibByteUnit code;
 	code.m_numOper = OPER_RET;
 
 	try {
@@ -1315,7 +1333,7 @@ bool CProcUnit::CompileExpression(CRunContext* pRunContext, CValue& pvarRetValue
 		cModule.m_cByteCode.m_listCode.push_back(code);
 	}
 
-	CByteUnit code2;
+	ibByteUnit code2;
 	code2.m_numOper = OPER_END;
 
 	cModule.m_cByteCode.m_listCode.push_back(code2);
@@ -1328,15 +1346,15 @@ bool CProcUnit::CompileExpression(CRunContext* pRunContext, CValue& pvarRetValue
 	SetParent(pRunContext->m_procUnit);
 
 	try {
-		CCompileContext* compileContext = pRunContext->m_compileContext;
+		ibCompileContext* compileContext = pRunContext->m_compileContext;
 		wxASSERT(compileContext);
-		CCompileCode* compleModule = compileContext->m_compileModule;
+		ibCompileCode* compleModule = compileContext->m_compileModule;
 		wxASSERT(compleModule);
 		Execute(cModule.m_cByteCode, pvarRetValue, false);
 		if (compleModule->m_bExpressionOnly) {
 			int nParentNumber = 1;
-			CCompileContext* curContext = compileContext;
-			CCompileCode* curModule = compleModule;
+			ibCompileContext* curContext = compileContext;
+			ibCompileCode* curModule = compleModule;
 			while (curContext != nullptr) {
 				if (curModule->m_bExpressionOnly)
 					nParentNumber++;
@@ -1360,7 +1378,7 @@ bool CProcUnit::CompileExpression(CRunContext* pRunContext, CValue& pvarRetValue
 //						Construction/Destruction                    //
 //////////////////////////////////////////////////////////////////////
 
-CProcUnitEvaluate::~CProcUnitEvaluate()
+ibProcUnitEvaluate::~ibProcUnitEvaluate()
 {
 	if (m_pByteCode != nullptr) {
 		delete m_pByteCode->m_compileModule;
@@ -1371,4 +1389,4 @@ CProcUnitEvaluate::~CProcUnitEvaluate()
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueIterator, "Iterator", g_valueIterator);
+SYSTEM_TYPE_REGISTER(ibValueIterator, "Iterator", g_valueIterator);

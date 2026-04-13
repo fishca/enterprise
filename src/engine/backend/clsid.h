@@ -1,20 +1,20 @@
 #ifndef __CLSID_H__
 #define __CLSID_H__
 
-typedef unsigned wxLongLong_t class_identifier_t;
+typedef unsigned wxLongLong_t ibClassID;
 
 //*******************************************************************************************
 //*                                 Clsid support											*
 //*******************************************************************************************
 
 #define MK_CLSID(a,b,c,d,e,f,g,h) \
-    	class_identifier_t((class_identifier_t(a)<<class_identifier_t(56))|(class_identifier_t(b)<<class_identifier_t(48))|(class_identifier_t(c)<<class_identifier_t(40))|(class_identifier_t(d)<<class_identifier_t(32))|(class_identifier_t(e)<<class_identifier_t(24))|(class_identifier_t(f)<<class_identifier_t(16))|(class_identifier_t(g)<<class_identifier_t(8))|(class_identifier_t(h)))
+    	ibClassID((ibClassID(a)<<ibClassID(56))|(ibClassID(b)<<ibClassID(48))|(ibClassID(c)<<ibClassID(40))|(ibClassID(d)<<ibClassID(32))|(ibClassID(e)<<ibClassID(24))|(ibClassID(f)<<ibClassID(16))|(ibClassID(g)<<ibClassID(8))|(ibClassID(h)))
 
 #define MK_CLSID_INV(a,b,c,d,e,f,g,h) MK_CLSID(h,g,f,e,d,c,b,a)
 
-inline wxString clsid_to_string(const class_identifier_t& clsid) {
+inline wxString clsid_to_string(const ibClassID& clsid) {
 	if (clsid != 0) {
-		return std::initializer_list{
+		const char buf[] = {
 			char((clsid >> 56) & 0xff),
 			char((clsid >> 48) & 0xff),
 			char((clsid >> 40) & 0xff),
@@ -22,13 +22,15 @@ inline wxString clsid_to_string(const class_identifier_t& clsid) {
 			char((clsid >> 24) & 0xff),
 			char((clsid >> 16) & 0xff),
 			char((clsid >> 8) & 0xff),
-			char((clsid >> 0) & 0xff)
+			char((clsid >> 0) & 0xff),
+			'\0'
 		};
+		return wxString::FromAscii(buf);
 	}
 	return wxEmptyString;
 }
 
-inline class_identifier_t string_to_clsid(const wxString& buf) {
+inline ibClassID string_to_clsid(const wxString& buf) {
 
 	const size_t length = buf.length();
 	wxASSERT(length < 9);

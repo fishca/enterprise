@@ -1,6 +1,6 @@
 #include "tableBox.h"
 
-void CValueTableBoxColumn::OnPropertyCreated(IProperty* property)
+void ibValueModelTableBoxColumn::OnPropertyCreated(ibProperty* property)
 {
 }
 
@@ -9,16 +9,16 @@ void CValueTableBoxColumn::OnPropertyCreated(IProperty* property)
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-void CValueTableBoxColumn::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
+void ibValueModelTableBoxColumn::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
 {
 	if (m_propertyChoiceForm == property) {
 		if (GetClsidCount() > 1) {
 			pg->HideProperty(pgProperty, true);
 		}
 		else {
-			const IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
+			const ibCtorMetaValueType* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
-				if (so->GetMetaTypeCtor() != eCtorMetaType::eCtorMetaType_Reference)
+				if (so->GetMetaTypeCtor() != ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)
 					pg->HideProperty(pgProperty, true);
 				else
 					pg->HideProperty(pgProperty, false);
@@ -30,7 +30,7 @@ void CValueTableBoxColumn::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProp
 	}
 }
 
-bool CValueTableBoxColumn::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool ibValueModelTableBoxColumn::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
 {
-	return IValueControl::OnPropertyChanging(property, newValue);
+	return ibValueControl::OnPropertyChanging(property, newValue);
 }

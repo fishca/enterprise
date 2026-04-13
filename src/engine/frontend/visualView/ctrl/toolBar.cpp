@@ -6,24 +6,24 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueToolbar, IValueWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueToolbar, ibValueWindow);
 
 //***********************************************************************************
 //*                                  Custom Aui toolbar                             *
 //***********************************************************************************
 
-void CValueToolbar::AddToolItem()
+void ibValueToolbar::AddToolItem()
 {
 	wxASSERT(m_formOwner);
-	IValueFrame* toolItem = m_formOwner->NewObject(g_controlToolBarItemCLSID, this);
+	ibValueFrame* toolItem = m_formOwner->NewObject(g_controlToolBarItemCLSID, this);
 	g_visualHostContext->InsertControl(toolItem, this);
 	g_visualHostContext->RefreshEditor();
 }
 
-void CValueToolbar::AddToolSeparator()
+void ibValueToolbar::AddToolSeparator()
 {
 	wxASSERT(m_formOwner);
-	IValueFrame* toolSeparator = m_formOwner->NewObject(g_controlToolBarSeparatorCLSID, this);
+	ibValueFrame* toolSeparator = m_formOwner->NewObject(g_controlToolBarSeparatorCLSID, this);
 	g_visualHostContext->InsertControl(toolSeparator, this);
 	g_visualHostContext->RefreshEditor();
 }
@@ -32,76 +32,77 @@ void CValueToolbar::AddToolSeparator()
 //*                                 Value Toolbar                                   *
 //***********************************************************************************
 
-CValueToolbar::CValueToolbar() : IValueWindow()
+ibValueToolbar::ibValueToolbar() : ibValueWindow()
 {
 }
 
-wxObject* CValueToolbar::Create(wxWindow* wxparent, IVisualHost* visualHost)
+wxObject* ibValueToolbar::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	CAuiToolBar* toolbar = new CAuiToolBar(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_TEXT | wxAUI_TB_OVERFLOW);
+	ibAuiToolBar* toolbar = new ibAuiToolBar(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_NO_AUTORESIZE | wxAUI_TB_HORZ_TEXT | wxAUI_TB_OVERFLOW);
 	toolbar->SetArtProvider(new wxAuiLunaToolBarArt());
-	toolbar->Bind(wxEVT_TOOL, &CValueToolbar::OnTool, this);
-	toolbar->Bind(wxEVT_AUITOOLBAR_TOOL_DROPDOWN, &CValueToolbar::OnToolDropDown, this);
-	toolbar->Bind(wxEVT_LEFT_DOWN, &CValueToolbar::OnToolBarLeftDown, this);
+	toolbar->Bind(wxEVT_TOOL, &ibValueToolbar::OnTool, this);
+	toolbar->Bind(wxEVT_AUITOOLBAR_TOOL_DROPDOWN, &ibValueToolbar::OnToolDropDown, this);
+	toolbar->Bind(wxEVT_LEFT_DOWN, &ibValueToolbar::OnToolBarLeftDown, this);
+
 	return toolbar;
 }
 
-void CValueToolbar::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
+void ibValueToolbar::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first–°reated)
 {
 	if (visualHost->IsDesignerHost() && GetChildCount() == 0
-		&& first—reated) {
-		CValueToolbar::AddToolItem();
+		&& first–°reated) {
+		ibValueToolbar::AddToolItem();
 	}
 }
 
-void CValueToolbar::Update(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueToolbar::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(wxobject);
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(wxobject);
 
 	if (toolbar != nullptr) {
 
-		const action_identifier_t id = GetActionSrc(); 
-		IValueFrame* sourceElement =
+		const ibActionID id = GetActionSrc(); 
+		ibValueFrame* sourceElement =
 			id != wxNOT_FOUND ? FindControlByID(id) : nullptr;
 	
 		if (sourceElement != nullptr)
 			m_actionArray = sourceElement->GetActionCollection(sourceElement->GetTypeForm());
 		else
-			m_actionArray = CActionCollection();
+			m_actionArray = ibActionCollection();
 
 	}
 
 	UpdateWindow(toolbar);
 }
 
-void CValueToolbar::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
+void ibValueToolbar::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
 {
 }
 
-void CValueToolbar::Cleanup(wxObject* obj, IVisualHost* visualHost)
+void ibValueToolbar::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
-	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(obj);
-	toolbar->Unbind(wxEVT_TOOL, &CValueToolbar::OnTool, this);
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(obj);
+	toolbar->Unbind(wxEVT_TOOL, &ibValueToolbar::OnTool, this);
 }
 
 //**********************************************************************************
 //*										 Property                                  *
 //**********************************************************************************
 
-bool CValueToolbar::LoadData(CMemoryReader& reader)
+bool ibValueToolbar::LoadData(ibReaderMemory& reader)
 {
 	m_actSource->LoadData(reader);
-	return IValueWindow::LoadData(reader);
+	return ibValueWindow::LoadData(reader);
 }
 
-bool CValueToolbar::SaveData(CMemoryWriter& writer)
+bool ibValueToolbar::SaveData(ibWriterMemory& writer)
 {
 	m_actSource->SaveData(writer);
-	return IValueWindow::SaveData(writer);
+	return ibValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueToolbar, "Toolbar", "Toolbar", g_controlToolBarCLSID);
+CONTROL_TYPE_REGISTER(ibValueToolbar, "Toolbar", "Toolbar", g_controlToolBarCLSID);

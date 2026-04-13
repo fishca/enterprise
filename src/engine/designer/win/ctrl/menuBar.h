@@ -6,15 +6,15 @@
 
 #include "backend/backend_core.h"
 
-class CPanelMenuBar : public wxPanel
+class ibPanelMenuBar : public wxPanel
 {
 public:
-	CPanelMenuBar();
-	CPanelMenuBar(
+	ibPanelMenuBar();
+	ibPanelMenuBar(
 		wxWindow* parent, int id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
 		long style = 0, const wxString& name = wxT("menubar"));
 	
-	virtual ~CPanelMenuBar();
+	virtual ~ibPanelMenuBar();
 
 	void AppendMenu(wxMenu* menu, const wxString& name);
 
@@ -34,10 +34,10 @@ private:
 	wxBoxSizer* m_sizer;
 };
 
-class CMenuEvtHandler : public wxEvtHandler
+class ibMenuEvtHandler : public wxEvtHandler
 {
 public:
-	CMenuEvtHandler(wxStaticText* st, wxMenu* menu);
+	ibMenuEvtHandler(wxStaticText* st, wxMenu* menu);
 	void OnMouseEvent(wxMouseEvent& event);
 	wxDECLARE_EVENT_TABLE();
 private:

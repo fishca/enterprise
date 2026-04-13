@@ -48,10 +48,10 @@ typedef Oid(*PQftypeType)(const PGresult*, int);
 typedef int(*PQfsizeType)(const PGresult*, int);
 typedef int(*PQnfieldsType)(const PGresult*);
 
-class CPostgresInterface
+class ibInterfacePostgres
 {
 public:
-	CPostgresInterface() {}
+	ibInterfacePostgres() {}
 	bool Init();
 
 	PQstatusType GetPQstatus() { return m_pPQstatus; }

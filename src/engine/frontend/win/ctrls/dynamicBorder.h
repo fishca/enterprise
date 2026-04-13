@@ -6,7 +6,7 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API wxDynamicStaticText : public wxStaticText {
+class FRONTEND_API ibDynamicStaticText : public wxStaticText {
 
 	mutable struct {
 
@@ -24,7 +24,7 @@ class FRONTEND_API wxDynamicStaticText : public wxStaticText {
 
 public:
 
-	wxDynamicStaticText(wxWindow* parent,
+	ibDynamicStaticText(wxWindow* parent,
 		wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr))
 	{
 		wxStaticText::Create(parent, id, label, pos, size, style | wxST_NO_AUTORESIZE, name);
@@ -39,7 +39,7 @@ protected:
 	virtual wxSize DoGetBestClientSize() const override;
 };
 
-class FRONTEND_API wxControlDynamicBorder {
+class FRONTEND_API ibControlDynamicBorder {
 public:
 
 	virtual bool AllowCalc() const { return true; }

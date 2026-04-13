@@ -3,26 +3,26 @@
 
 #include "accumulationRegister.h"
 
-class CValueManagerDataObjectAccumulationRegister :
-	public IValueManagerDataObject {
+class ibValueManagerDataObjectAccumulationRegister :
+	public ibValueManagerDataObject {
 public:
 
-	CValue Balance(const CValue& cPeriod, const CValue& cFilter = CValue());
-	CValue Turnovers(const CValue& cBeginOfPeriod, const CValue& cEndOfPeriod, const CValue& cFilter = CValue());
+	ibValue Balance(const ibValue& cPeriod, const ibValue& cFilter = ibValue());
+	ibValue Turnovers(const ibValue& cBeginOfPeriod, const ibValue& cEndOfPeriod, const ibValue& cFilter = ibValue());
 
-	CValueManagerDataObjectAccumulationRegister(CValueMetaObjectAccumulationRegister* metaObject = nullptr) : m_metaObject(metaObject) {}
-	virtual ~CValueManagerDataObjectAccumulationRegister() {}
+	ibValueManagerDataObjectAccumulationRegister(ibValueMetaObjectAccumulationRegister* metaObject = nullptr) : m_metaObject(metaObject) {}
+	virtual ~ibValueManagerDataObjectAccumulationRegister() {}
 
-	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
-	virtual CValueMetaObjectAccumulationRegister* GetMetaObject() const { return m_metaObject; }
+	virtual ibValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual ibValueMetaObjectAccumulationRegister* GetMetaObject() const { return m_metaObject; }
 
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
 
 protected:
-	CValueMetaObjectAccumulationRegister* m_metaObject;
+	ibValueMetaObjectAccumulationRegister* m_metaObject;
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectAccumulationRegister);
+	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectAccumulationRegister);
 };
 
 #endif 

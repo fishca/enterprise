@@ -4,17 +4,17 @@
 
 WX_DEFINE_OBJARRAY(ArrayOfPostgresParameters);
 
-CPostgresPreparedStatementParameterCollection::~CPostgresPreparedStatementParameterCollection()
+ibPreparedStatementPostgresParameterCollection::~ibPreparedStatementPostgresParameterCollection()
 {
 	m_Parameters.Clear();
 }
 
-int CPostgresPreparedStatementParameterCollection::GetSize()
+int ibPreparedStatementPostgresParameterCollection::GetSize()
 {
 	return m_Parameters.size();
 }
 
-char** CPostgresPreparedStatementParameterCollection::GetParamValues()
+char** ibPreparedStatementPostgresParameterCollection::GetParamValues()
 {
 	char** paramValues = new char*[m_Parameters.size()];
 
@@ -27,7 +27,7 @@ char** CPostgresPreparedStatementParameterCollection::GetParamValues()
 	return paramValues;
 }
 
-int* CPostgresPreparedStatementParameterCollection::GetParamLengths()
+int* ibPreparedStatementPostgresParameterCollection::GetParamLengths()
 {
 	int* paramLengths = new int[m_Parameters.size()];
 
@@ -40,7 +40,7 @@ int* CPostgresPreparedStatementParameterCollection::GetParamLengths()
 	return paramLengths;
 }
 
-int* CPostgresPreparedStatementParameterCollection::GetParamFormats()
+int* ibPreparedStatementPostgresParameterCollection::GetParamFormats()
 {
 	int* paramFormats = new int[m_Parameters.size()];
 
@@ -52,60 +52,60 @@ int* CPostgresPreparedStatementParameterCollection::GetParamFormats()
 	return paramFormats;
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition, int nValue)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition, int nValue)
 {
-	CPostgresParameter Parameter(nValue);
+	ibDatabaseParameterPostgres Parameter(nValue);
 	SetParam(nPosition, Parameter);
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition, double dblValue)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition, double dblValue)
 {
-	CPostgresParameter Parameter(dblValue);
+	ibDatabaseParameterPostgres Parameter(dblValue);
 	SetParam(nPosition, Parameter);
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition, const number_t& dblValue)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition, const ibNumber& dblValue)
 {
-	CPostgresParameter Parameter(dblValue);
+	ibDatabaseParameterPostgres Parameter(dblValue);
 	SetParam(nPosition, Parameter);
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition, const wxString& strValue)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition, const wxString& strValue)
 {
-	CPostgresParameter Parameter(strValue);
+	ibDatabaseParameterPostgres Parameter(strValue);
 	SetParam(nPosition, Parameter);
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition)
 {
-	CPostgresParameter Parameter;
+	ibDatabaseParameterPostgres Parameter;
 	SetParam(nPosition, Parameter);
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition, const void* pData, long nDataLength)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition, const void* pData, long nDataLength)
 {
-	CPostgresParameter Parameter(pData, nDataLength);
+	ibDatabaseParameterPostgres Parameter(pData, nDataLength);
 	SetParam(nPosition, Parameter);
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition, const wxDateTime& dateValue)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition, const wxDateTime& dateValue)
 {
-	CPostgresParameter Parameter(dateValue);
+	ibDatabaseParameterPostgres Parameter(dateValue);
 	SetParam(nPosition, Parameter);
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition, bool bValue)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition, bool bValue)
 {
-	CPostgresParameter Parameter(bValue);
+	ibDatabaseParameterPostgres Parameter(bValue);
 	SetParam(nPosition, Parameter);
 }
 
-void CPostgresPreparedStatementParameterCollection::SetParam(int nPosition, CPostgresParameter& Parameter)
+void ibPreparedStatementPostgresParameterCollection::SetParam(int nPosition, ibDatabaseParameterPostgres& Parameter)
 {
 	// First make sure that there are enough elements in the collection
 	while (m_Parameters.size() < (unsigned int)(nPosition))
 	{
-		CPostgresParameter EmptyParameter;
+		ibDatabaseParameterPostgres EmptyParameter;
 		m_Parameters.push_back(EmptyParameter);
 	}
 	m_Parameters[nPosition - 1] = Parameter;

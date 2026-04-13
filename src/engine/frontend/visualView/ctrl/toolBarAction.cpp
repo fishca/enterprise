@@ -1,19 +1,19 @@
 #include "toolbar.h"
 #include "form.h"
 
-bool CValueToolbar::GetActionSource(CPropertyList* property)
+bool ibValueToolbar::GetActionSource(ibPropertyList* property)
 {
 	property->AppendItem(
 		wxT("form"),
 		_("Form"),
 		FORM_ACTION,
 		m_formOwner->GetIcon(),
-		(IValueFrame*)m_formOwner
+		(ibValueFrame*)m_formOwner
 	);
 
-	class CValueToolbarActionParser {
+	class ibValueToolbarActionParser {
 	public:
-		static inline void FillActionSource(IValueFrame* element, CPropertyList* property) {
+		static inline void FillActionSource(ibValueFrame* element, ibPropertyList* property) {
 			if (element->GetClassName() == wxT("Tablebox")) {
 				property->AppendItem(
 					element->GetControlName(),
@@ -29,6 +29,6 @@ bool CValueToolbar::GetActionSource(CPropertyList* property)
 		}
 	};
 
-	CValueToolbarActionParser::FillActionSource(m_formOwner, property);
+	ibValueToolbarActionParser::FillActionSource(m_formOwner, property);
 	return true;
 }

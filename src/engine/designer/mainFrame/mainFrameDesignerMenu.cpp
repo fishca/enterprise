@@ -9,7 +9,7 @@
 //*                                Hotkey support                                *
 //********************************************************************************
 
-void CFrontendDocMDIFrameDesigner::SetDefaultHotKeys()
+void ibFrontendDocMDIFrameDesigner::SetDefaultHotKeys()
 {
 	// Setup the hotkeys.
 	m_keyBinder.SetShortcut(wxID_NEW, wxT("Ctrl+N"));
@@ -50,7 +50,7 @@ enum MDI_MENU_ID
 
 #include "frontend/artProvider/artProvider.h"
 
-void CFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
+void ibFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 {
 	m_frameMenuBar = new wxMenuBar;
 
@@ -162,27 +162,27 @@ void CFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 	m_menuHelp->Append(wxID_DESIGNER_ABOUT, _("About"));
 	m_frameMenuBar->Append(m_menuHelp, wxGetStockLabel(wxID_HELP, wxSTOCK_NOFLAGS));
 
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnOpenConfiguration, this, wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnRollbackConfiguration, this, wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnUpdateConfiguration, this, wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnOpenConfiguration, this, wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnRollbackConfiguration, this, wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnUpdateConfiguration, this, wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE);
 
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnConfiguration, this, wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnConfiguration, this, wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE);
 
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnStartDebug, this, wxID_DESIGNER_DEBUG_START);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug, this, wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnAttachForDebugging, this, wxID_DESIGNER_DEBUG_ATTACH_FOR_DEBUGGING);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnStartDebug, this, wxID_DESIGNER_DEBUG_START);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug, this, wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnAttachForDebugging, this, wxID_DESIGNER_DEBUG_ATTACH_FOR_DEBUGGING);
 
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnRunDebugCommand, this, wxID_DESIGNER_DEBUG_EDIT_POINT, wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnToolsSettings, this, wxID_APPLICATION_SETTING);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnUsers, this, wxID_APPLICATION_USERS);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnActiveUsers, this, wxID_APPLICATION_ACTIVE_USERS);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnConnection, this, wxID_APPLICATION_CONNECTION);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnRunDebugCommand, this, wxID_DESIGNER_DEBUG_EDIT_POINT, wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnToolsSettings, this, wxID_APPLICATION_SETTING);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnUsers, this, wxID_APPLICATION_USERS);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnActiveUsers, this, wxID_APPLICATION_ACTIVE_USERS);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnConnection, this, wxID_APPLICATION_CONNECTION);
 
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnLoadDatabase, this, wxID_DESIGNER_DATABASE_LOAD_FROM_FILE);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnSaveDatabase, this, wxID_DESIGNER_DATABASE_SAVE_TO_FILE);
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnClearDatabase, this, wxID_DESIGNER_DATABASE_CLEAR);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnLoadDatabase, this, wxID_DESIGNER_DATABASE_LOAD_FROM_FILE);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnSaveDatabase, this, wxID_DESIGNER_DATABASE_SAVE_TO_FILE);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnClearDatabase, this, wxID_DESIGNER_DATABASE_CLEAR);
 
-	Bind(wxEVT_MENU, &CFrontendDocMDIFrameDesigner::OnAbout, this, wxID_DESIGNER_ABOUT);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnAbout, this, wxID_DESIGNER_ABOUT);
 
 	LoadOptions();
 }

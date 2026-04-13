@@ -121,10 +121,10 @@ void RegisterAllBackendPicture()
 	::RegisterBackendPicture(wxT("Authentication"), g_picAuthenticationCLSID, s_authentication_16_png);
 }
 
-class CBackendPictureAutoLoader {
+class ibBackendPictureAutoLoader {
 public:
 
-	CBackendPictureAutoLoader() {
+	ibBackendPictureAutoLoader() {
 
 		// Init handlers
 		wxInitAllImageHandlers();
@@ -133,9 +133,9 @@ public:
 		RegisterAllBackendPicture();
 	}
 
-	~CBackendPictureAutoLoader()
+	~ibBackendPictureAutoLoader()
 	{
 	}
 };
 
-CBackendPictureAutoLoader m_autoLoader;
+ibBackendPictureAutoLoader m_autoLoader;

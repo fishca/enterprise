@@ -85,12 +85,12 @@ static char* s_radio_button_xpm[] = {
 	"                "
 };
 
-wxIcon CValueRadioButton::GetIcon() const
+wxIcon ibValueRadioButton::GetIcon() const
 {
 	return wxIcon(s_radio_button_xpm);
 }
 
-wxIcon CValueRadioButton::GetIconGroup()
+wxIcon ibValueRadioButton::GetIconGroup()
 {
 	return wxIcon(s_radio_button_xpm);
 }

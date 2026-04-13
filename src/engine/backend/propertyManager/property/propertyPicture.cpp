@@ -1,42 +1,45 @@
 #include "propertyPicture.h"
 #include "backend/propertyManager/property/variant/variantPicture.h"
 
-////////////////////////////////////////////////////////////////////////
-
-wxVariantData* CPropertyPicture::CreateVariantData(IPropertyObject* property, const CPictureDescription& id) const
-{
-	return new wxVariantDataPicture(property, id);
-}
+// get property for grid
+wxObject* (*ibPropertyPicture::ms_propertyPicture)(const wxString&, const wxString&, const wxVariant&) = nullptr;
 
 ////////////////////////////////////////////////////////////////////////
 
-wxBitmap CPropertyPicture::GetValueAsBitmap() const
+wxVariantData* ibPropertyPicture::CreateVariantData(ibPropertyObject* property, const ibPictureDescription& id) const
 {
-	return get_cell_variant<wxVariantDataPicture>()->GetPictureBitmap();
+	return new ibVariantDataPicture(property, id);
 }
 
-CPictureDescription& CPropertyPicture::GetValueAsPictureDesc() const
+////////////////////////////////////////////////////////////////////////
+
+wxBitmap ibPropertyPicture::GetValueAsBitmap() const
 {
-	return get_cell_variant<wxVariantDataPicture>()->GetPictureDesc();
+	return get_cell_variant<ibVariantDataPicture>()->GetPictureBitmap();
 }
 
-void CPropertyPicture::SetValue(const CPictureDescription& val)
+ibPictureDescription& ibPropertyPicture::GetValueAsPictureDesc() const
+{
+	return get_cell_variant<ibVariantDataPicture>()->GetPictureDesc();
+}
+
+void ibPropertyPicture::SetValue(const ibPictureDescription& val)
 {
 	m_propValue = CreateVariantData(m_owner, val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-bool CPropertyPicture::IsEmptyProperty() const {
-	return get_cell_variant<wxVariantDataPicture>()->IsEmptyPicture();
+bool ibPropertyPicture::IsEmptyProperty() const {
+	return get_cell_variant<ibVariantDataPicture>()->IsEmptyPicture();
 }
 
 #include "backend/system/value/valuePicture.h"
 
 //base property for "picture"
-bool CPropertyPicture::SetDataValue(const CValue& varPropVal)
+bool ibPropertyPicture::SetDataValue(const ibValue& varPropVal)
 {
-	CValuePicture* valueType = varPropVal.ConvertToType<CValuePicture>();
+	ibValuePicture* valueType = varPropVal.ConvertToType<ibValuePicture>();
 	if (valueType != nullptr) {
 		SetValue(valueType->GetPictureDesc());
 		return true;
@@ -44,18 +47,18 @@ bool CPropertyPicture::SetDataValue(const CValue& varPropVal)
 	return false;
 }
 
-bool CPropertyPicture::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyPicture::GetDataValue(ibValue& pvarPropVal) const
 {
-	pvarPropVal = CValue::CreateObjectValue<CValuePicture>(GetValueAsPictureDesc());
+	pvarPropVal = ibValue::CreateObjectValue<ibValuePicture>(GetValueAsPictureDesc());
 	return true;
 }
 
-bool CPropertyPicture::LoadData(CMemoryReader& reader)
+bool ibPropertyPicture::LoadData(ibReaderMemory& reader)
 {
-	return CPictureDescriptionMemory::LoadData(reader, GetValueAsPictureDesc());
+	return ibPictureDescriptionMemory::LoadData(reader, GetValueAsPictureDesc());
 }
 
-bool CPropertyPicture::SaveData(CMemoryWriter& writer)
+bool ibPropertyPicture::SaveData(ibWriterMemory& writer)
 {
-	return CPictureDescriptionMemory::SaveData(writer, GetValueAsPictureDesc());
+	return ibPictureDescriptionMemory::SaveData(writer, GetValueAsPictureDesc());
 }

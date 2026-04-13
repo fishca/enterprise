@@ -7,8 +7,8 @@
 
 #include "engine/libpq/libpq-fs.h"
 
-CPostgresResultSet::CPostgresResultSet(CPostgresInterface* pInterface)
-	: IDatabaseResultSet()
+ibDatabaseResultSetPostgres::ibDatabaseResultSetPostgres(ibInterfacePostgres* pInterface)
+	: ibDatabaseResultSet()
 {
 	m_pInterface = pInterface;
 	m_pResult = nullptr;
@@ -18,8 +18,8 @@ CPostgresResultSet::CPostgresResultSet(CPostgresInterface* pInterface)
 	m_bBinaryResults = false;
 }
 
-CPostgresResultSet::CPostgresResultSet(CPostgresInterface* pInterface, PGresult* pResult)
-	: IDatabaseResultSet()
+ibDatabaseResultSetPostgres::ibDatabaseResultSetPostgres(ibInterfacePostgres* pInterface, PGresult* pResult)
+	: ibDatabaseResultSet()
 {
 	m_pInterface = pInterface;
 	m_pResult = pResult;
@@ -36,12 +36,12 @@ CPostgresResultSet::CPostgresResultSet(CPostgresInterface* pInterface, PGresult*
 	}
 }
 
-CPostgresResultSet::~CPostgresResultSet()
+ibDatabaseResultSetPostgres::~ibDatabaseResultSetPostgres()
 {
 	Close();
 }
 
-bool CPostgresResultSet::Next()
+bool ibDatabaseResultSetPostgres::Next()
 {
 	if (m_nTotalRows < 1)
 		return false;
@@ -51,7 +51,7 @@ bool CPostgresResultSet::Next()
 	return (m_nCurrentRow < m_nTotalRows);
 }
 
-void CPostgresResultSet::Close()
+void ibDatabaseResultSetPostgres::Close()
 {
 	CloseMetaData();
 
@@ -64,13 +64,13 @@ void CPostgresResultSet::Close()
 }
 
 // get field
-int CPostgresResultSet::GetResultInt(int nField)
+int ibDatabaseResultSetPostgres::GetResultInt(int nField)
 {
 	// Don't use nField-1 here since GetResultLong will take care of that
 	return GetResultLong(nField);
 }
 
-wxString CPostgresResultSet::GetResultString(int nField)
+wxString ibDatabaseResultSetPostgres::GetResultString(int nField)
 {
 	wxString strValue = wxEmptyString;
 	if (m_bBinaryResults)
@@ -91,7 +91,7 @@ wxString CPostgresResultSet::GetResultString(int nField)
 	return strValue;
 }
 
-long long CPostgresResultSet::GetResultLong(int nField)
+long long ibDatabaseResultSetPostgres::GetResultLong(int nField)
 {
 	long long nValue = 0;
 	if (m_bBinaryResults)
@@ -113,7 +113,7 @@ long long CPostgresResultSet::GetResultLong(int nField)
 	return nValue;
 }
 
-bool CPostgresResultSet::GetResultBool(int nField)
+bool ibDatabaseResultSetPostgres::GetResultBool(int nField)
 {
 	bool bValue = false;
 	if (m_bBinaryResults)
@@ -135,7 +135,7 @@ bool CPostgresResultSet::GetResultBool(int nField)
 	return bValue;
 }
 
-wxDateTime CPostgresResultSet::GetResultDate(int nField)
+wxDateTime ibDatabaseResultSetPostgres::GetResultDate(int nField)
 {
 	wxDateTime dateValue = wxDefaultDateTime;
 	// TIMESTAMP results should be the same in binary or text results
@@ -185,7 +185,7 @@ wxDateTime CPostgresResultSet::GetResultDate(int nField)
 	return dateValue;
 }
 
-void* CPostgresResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
+void* ibDatabaseResultSetPostgres::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 {
 	//int nLength = m_pInterface->GetPQgetlength()(m_pResult, m_nCurrentRow, nIndex);
 	unsigned char* pBlob = (unsigned char*)m_pInterface->GetPQgetvalue()(m_pResult, m_nCurrentRow, nField - 1);
@@ -214,7 +214,7 @@ void* CPostgresResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 	return buffer.GetData();
 }
 
-double CPostgresResultSet::GetResultDouble(int nField)
+double ibDatabaseResultSetPostgres::GetResultDouble(int nField)
 {
 	double dblValue = 0;
 	if (m_bBinaryResults)
@@ -233,9 +233,9 @@ double CPostgresResultSet::GetResultDouble(int nField)
 	return dblValue;
 }
 
-number_t CPostgresResultSet::GetResultNumber(int nField)
+ibNumber ibDatabaseResultSetPostgres::GetResultNumber(int nField)
 {
-	number_t dblValue = 0;
+	ibNumber dblValue = 0;
 	if (m_bBinaryResults)
 	{
 		wxLogError(wxT("Not implemented\n"));
@@ -252,12 +252,12 @@ number_t CPostgresResultSet::GetResultNumber(int nField)
 	return dblValue;
 }
 
-bool CPostgresResultSet::IsFieldNull(int nField)
+bool ibDatabaseResultSetPostgres::IsFieldNull(int nField)
 {
 	return (m_pInterface->GetPQgetisnull()(m_pResult, m_nCurrentRow, nField - 1) == 1);
 }
 
-int CPostgresResultSet::LookupField(const wxString& strField)
+int ibDatabaseResultSetPostgres::LookupField(const wxString& strField)
 {
 	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
 		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
@@ -266,7 +266,7 @@ int CPostgresResultSet::LookupField(const wxString& strField)
 	{
 		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
-		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
+		ibDatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;
 #else
 		wxLogError(msg);
@@ -279,9 +279,9 @@ int CPostgresResultSet::LookupField(const wxString& strField)
 	}
 }
 
-IResultSetMetaData* CPostgresResultSet::GetMetaData()
+ibResultSetMetaData* ibDatabaseResultSetPostgres::GetMetaData()
 {
-	IResultSetMetaData* pMetaData = new PostgresResultSetMetaData(m_pInterface, m_pResult);
+	ibResultSetMetaData* pMetaData = new ibResultSetMetaDataPostgres(m_pInterface, m_pResult);
 	LogMetaDataForCleanup(pMetaData);
 	return pMetaData;
 }

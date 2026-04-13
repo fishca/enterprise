@@ -11,51 +11,51 @@ enum {
 };
 
 #pragma region __command_h__
-class CModifyPropertyCmd : public CFormEditorCmd {
+class ibModifyPropertyCmd : public ibFormEditorCmd {
 public:
-	CModifyPropertyCmd(IValueFrame* object, IProperty* prop, const wxVariant& newValue)
+	ibModifyPropertyCmd(ibValueFrame* object, ibProperty* prop, const wxVariant& newValue)
 		: m_object(object), m_property(prop), m_newValue(newValue)
 	{
 	}
 protected:
 	virtual void DoExecute() override {
-		// Get the IValueFrame from the event
+		// Get the ibValueFrame from the event
 		m_property->SetValue(m_newValue);
 	}
 private:
-	IValueFrame* m_object = nullptr;
-	IProperty* m_property;
+	ibValueFrame* m_object = nullptr;
+	ibProperty* m_property;
 	wxVariant m_newValue;
 };
 
-class CShiftChildCmd : public CFormEditorCmd {
+class ibShiftChildCmd : public ibFormEditorCmd {
 public:
-	CShiftChildCmd(IValueFrame* object, int pos)
+	ibShiftChildCmd(ibValueFrame* object, int pos)
 		: m_object(object), m_newPos(pos)
 	{
 	}
 protected:
 	virtual void DoExecute() override {
-		IValueFrame* parent(m_object->GetParent());
+		ibValueFrame* parent(m_object->GetParent());
 		parent->ChangeChildPosition(m_object,
 			parent->GetChildPosition(m_object) + m_newPos);
 	}
 
 private:
-	IValueFrame* m_object = nullptr;
+	ibValueFrame* m_object = nullptr;
 	int m_newPos;
 };
 #pragma endregion 
 
 #define ICON_SIZE 16
 
-void CDialogFormEditor::CreateTree()
+void ibDialogFormEditor::CreateTree()
 {
 	if (m_iconList != nullptr)
 		delete m_iconList;
 
 	m_iconList = new wxImageList(ICON_SIZE, ICON_SIZE);
-	for (auto objClass : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
+	for (auto objClass : ibValue::GetListCtorsByType(ibCtorObjectType::ibCtorObjectType_object_control)) {
 		const wxIcon& controlIcon = objClass->GetClassIcon();
 		if (controlIcon.IsOk()) {
 			const int retIndex = m_iconList->Add(controlIcon);
@@ -70,7 +70,7 @@ void CDialogFormEditor::CreateTree()
 	m_treeControl->AssignImageList(m_iconList);
 }
 
-void CDialogFormEditor::AddChildren(IValueFrame* obj, const wxTreeItemId& parent, bool is_root)
+void ibDialogFormEditor::AddChildren(ibValueFrame* obj, const wxTreeItemId& parent, bool is_root)
 {
 	if (obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 		if (obj->GetChildCount() > 0) {
@@ -80,7 +80,7 @@ void CDialogFormEditor::AddChildren(IValueFrame* obj, const wxTreeItemId& parent
 			// Si hemos llegado aquí ha sido porque el arbol no está bien formado
 			// y habrá que revisar cómo se ha creado.
 			wxString msg;
-			IValueFrame* itemParent = obj->GetParent();
+			ibValueFrame* itemParent = obj->GetParent();
 			assert(parent);
 
 			msg = wxString::Format(wxT("Item without object as child of \'%s:%s\'"),
@@ -92,14 +92,14 @@ void CDialogFormEditor::AddChildren(IValueFrame* obj, const wxTreeItemId& parent
 	}
 	else {
 		wxTreeItemId new_parent;
-		CDialogFormEditorObjectTreeItemData* item_data = new CDialogFormEditorObjectTreeItemData(obj);
+		ibDialogFormEditorObjectTreeItemData* item_data = new ibDialogFormEditorObjectTreeItemData(obj);
 		if (is_root) {
 			new_parent = m_treeControl->AddRoot(wxT(""), wxNOT_FOUND, wxNOT_FOUND, item_data);
 		}
 		else {
 			unsigned int pos = 0;
 
-			IValueFrame* parent_obj = obj->GetParent();
+			ibValueFrame* parent_obj = obj->GetParent();
 
 			// find a proper position where the added object should be displayed at
 			if (parent_obj && parent_obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
@@ -123,7 +123,7 @@ void CDialogFormEditor::AddChildren(IValueFrame* obj, const wxTreeItemId& parent
 
 		// Add the item to the map
 		m_listItem.insert(
-			std::map< IValueFrame*, wxTreeItemId>::value_type(obj, new_parent)
+			std::map< ibValueFrame*, wxTreeItemId>::value_type(obj, new_parent)
 		);
 
 		// Set the image
@@ -140,38 +140,38 @@ void CDialogFormEditor::AddChildren(IValueFrame* obj, const wxTreeItemId& parent
 		unsigned int count = obj->GetChildCount();
 
 		for (unsigned int i = 0; i < count; i++) {
-			IValueFrame* child = obj->GetChild(i);
+			ibValueFrame* child = obj->GetChild(i);
 			AddChildren(child, new_parent);
 		}
 	}
 }
 
-wxBEGIN_EVENT_TABLE(CDialogFormEditor, wxDialog)
+wxBEGIN_EVENT_TABLE(ibDialogFormEditor, wxDialog)
 
-EVT_UPDATE_UI(wxID_ANY, CDialogFormEditor::OnUpdateEvent)
+EVT_UPDATE_UI(wxID_ANY, ibDialogFormEditor::OnUpdateEvent)
 
-EVT_BUTTON(wxID_OK, CDialogFormEditor::OnButtonEvent)
-EVT_BUTTON(wxID_CANCEL, CDialogFormEditor::OnButtonEvent)
-EVT_BUTTON(wxID_APPLY, CDialogFormEditor::OnButtonEvent)
+EVT_BUTTON(wxID_OK, ibDialogFormEditor::OnButtonEvent)
+EVT_BUTTON(wxID_CANCEL, ibDialogFormEditor::OnButtonEvent)
+EVT_BUTTON(wxID_APPLY, ibDialogFormEditor::OnButtonEvent)
 
-EVT_MENU(MENU_MOVE_UP, CDialogFormEditor::OnMenuEvent)
-EVT_MENU(MENU_MOVE_DOWN, CDialogFormEditor::OnMenuEvent)
+EVT_MENU(MENU_MOVE_UP, ibDialogFormEditor::OnMenuEvent)
+EVT_MENU(MENU_MOVE_DOWN, ibDialogFormEditor::OnMenuEvent)
 
-EVT_TREE_SEL_CHANGED(wxID_ANY, CDialogFormEditor::OnSelChanged)
-EVT_TREE_ITEM_RIGHT_CLICK(wxID_ANY, CDialogFormEditor::OnRightClick)
-EVT_TREE_BEGIN_DRAG(wxID_ANY, CDialogFormEditor::OnBeginDrag)
-EVT_TREE_END_DRAG(wxID_ANY, CDialogFormEditor::OnEndDrag)
-EVT_TREE_KEY_DOWN(wxID_ANY, CDialogFormEditor::OnKeyDown)
+EVT_TREE_SEL_CHANGED(wxID_ANY, ibDialogFormEditor::OnSelChanged)
+EVT_TREE_ITEM_RIGHT_CLICK(wxID_ANY, ibDialogFormEditor::OnRightClick)
+EVT_TREE_BEGIN_DRAG(wxID_ANY, ibDialogFormEditor::OnBeginDrag)
+EVT_TREE_END_DRAG(wxID_ANY, ibDialogFormEditor::OnEndDrag)
+EVT_TREE_KEY_DOWN(wxID_ANY, ibDialogFormEditor::OnKeyDown)
 
-EVT_PG_CHANGING(WXOES_PROPERTY_GRID, CDialogFormEditor::OnPropertyGridChanging)
-EVT_PG_SELECTED(WXOES_PROPERTY_GRID, CDialogFormEditor::OnPropertyGridItemSelected)
+EVT_PG_CHANGING(WXOES_PROPERTY_GRID, ibDialogFormEditor::OnPropertyGridChanging)
+EVT_PG_SELECTED(WXOES_PROPERTY_GRID, ibDialogFormEditor::OnPropertyGridItemSelected)
 
 wxEND_EVENT_TABLE()
 
 #include "frontend/win/theme/luna_toolbarart.h"
 #include "frontend/visualView/visualHostClient.h"
 
-CDialogFormEditor::CDialogFormEditor(CValueForm* valueForm) :
+ibDialogFormEditor::ibDialogFormEditor(ibValueForm* valueForm) :
 	wxDialog(valueForm->GetVisualDocument()->GetDocumentWindow(), wxID_ANY, _("Form editor"), wxDefaultPosition, wxSize(600, 350), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), m_owner(valueForm), m_selectedControl(nullptr)
 {
 	wxBoxSizer* commonSizer = new wxBoxSizer(wxVERTICAL);
@@ -218,19 +218,19 @@ CDialogFormEditor::CDialogFormEditor(CValueForm* valueForm) :
 	Centre(wxBOTH);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picChangeFormCLSID));
+	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picChangeFormCLSID));
 	
 	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();
 }
 
-void CDialogFormEditor::OnUpdateEvent(wxUpdateUIEvent& event)
+void ibDialogFormEditor::OnUpdateEvent(wxUpdateUIEvent& event)
 {
 	if (event.GetId() == wxID_APPLY)
 		event.Enable(m_cmdArray.size() > 0);
 }
 
-void CDialogFormEditor::OnMenuEvent(wxCommandEvent& e)
+void ibDialogFormEditor::OnMenuEvent(wxCommandEvent& e)
 {
 	switch (e.GetId())
 	{
@@ -245,7 +245,7 @@ void CDialogFormEditor::OnMenuEvent(wxCommandEvent& e)
 	e.Skip();
 }
 
-void CDialogFormEditor::OnButtonEvent(wxCommandEvent& e)
+void ibDialogFormEditor::OnButtonEvent(wxCommandEvent& e)
 {
 	if (e.GetId() == wxID_OK || e.GetId() == wxID_APPLY) {
 		for (auto& cmd : m_cmdArray) {
@@ -260,7 +260,7 @@ void CDialogFormEditor::OnButtonEvent(wxCommandEvent& e)
 	e.Skip();
 }
 
-void CDialogFormEditor::OnSelChanged(wxTreeEvent& event)
+void ibDialogFormEditor::OnSelChanged(wxTreeEvent& event)
 {
 	// Make selected items bold
 	wxTreeItemId oldId = event.GetOldItem();
@@ -281,20 +281,20 @@ void CDialogFormEditor::OnSelChanged(wxTreeEvent& event)
 
 	if (item_data != nullptr) {
 
-		IValueFrame* obj(((CDialogFormEditorObjectTreeItemData*)item_data)->GetObject());
+		ibValueFrame* obj(((ibDialogFormEditorObjectTreeItemData*)item_data)->GetObject());
 		assert(obj);
 
-		struct CPropertyConnector {
+		struct ibPropertyConnector {
 
-			static void FillPropertyByFrameValue(wxPropertyGridPage* propertyGridPage, IValueFrame* obj, std::map<wxPGProperty*, IProperty*>& pgArray) {
+			static void FillPropertyByFrameValue(wxPropertyGridPage* propertyGridPage, ibValueFrame* obj, std::map<wxPGProperty*, ibProperty*>& pgArray) {
 				pgArray.clear(); propertyGridPage->Clear();
 
-				for (auto strProperty : IValueFrame::GetAllowedUserProperty()) {
+				for (auto strProperty : ibValueFrame::GetAllowedUserProperty()) {
 
-					IProperty* prop = obj->GetProperty(strProperty);
+					ibProperty* prop = obj->GetProperty(strProperty);
 					if (prop == nullptr) {
 
-						IValueFrame* parent = obj->GetParent();
+						ibValueFrame* parent = obj->GetParent();
 						if (parent != nullptr && parent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 							prop = parent->GetProperty(strProperty);
 						}
@@ -303,7 +303,7 @@ void CDialogFormEditor::OnSelChanged(wxTreeEvent& event)
 							continue;
 					}
 
-					wxPGProperty* pg = prop->GetPGProperty();
+					wxPGProperty* pg = (wxPGProperty *)prop->GetPGProperty();
 					propertyGridPage->Append(pg);
 					pg->SetHelpString(prop->GetHelp());
 					pg->RefreshChildren();
@@ -316,7 +316,7 @@ void CDialogFormEditor::OnSelChanged(wxTreeEvent& event)
 		};
 
 		m_selectedControl = obj;
-		CPropertyConnector::FillPropertyByFrameValue(m_propertyGridPage, obj, m_pgArray);
+		ibPropertyConnector::FillPropertyByFrameValue(m_propertyGridPage, obj, m_pgArray);
 	}
 
 	m_propertyGridManager->Refresh();
@@ -325,20 +325,20 @@ void CDialogFormEditor::OnSelChanged(wxTreeEvent& event)
 	m_propertyGridManager->Thaw();
 }
 
-void CDialogFormEditor::OnRightClick(wxTreeEvent& event)
+void ibDialogFormEditor::OnRightClick(wxTreeEvent& event)
 {
 	wxTreeItemId id = event.GetItem();
 	wxTreeItemData* item_data = m_treeControl->GetItemData(id);
 	if (item_data != nullptr) {
-		IValueFrame* obj(((CDialogFormEditorObjectTreeItemData*)item_data)->GetObject());
+		ibValueFrame* obj(((ibDialogFormEditorObjectTreeItemData*)item_data)->GetObject());
 		assert(obj);
-		wxMenu* menu = new CDialogFormEditorItemPopupMenu(this, obj);
+		wxMenu* menu = new ibDialogFormEditorItemPopupMenu(this, obj);
 		wxPoint pos = event.GetPoint();
 		menu->UpdateUI(menu); PopupMenu(menu, pos.x, pos.y);
 	}
 }
 
-void CDialogFormEditor::OnBeginDrag(wxTreeEvent& event)
+void ibDialogFormEditor::OnBeginDrag(wxTreeEvent& event)
 {
 	// need to explicitly allow drag
 	if (event.GetItem() == m_treeControl->GetRootItem())
@@ -348,7 +348,7 @@ void CDialogFormEditor::OnBeginDrag(wxTreeEvent& event)
 	event.Allow();
 }
 
-void CDialogFormEditor::OnEndDrag(wxTreeEvent& event)
+void ibDialogFormEditor::OnEndDrag(wxTreeEvent& event)
 {
 	wxTreeItemId itemSrc = m_draggedItem, itemDst = event.GetItem();
 	m_draggedItem = (wxTreeItemId)0l;
@@ -361,11 +361,11 @@ void CDialogFormEditor::OnEndDrag(wxTreeEvent& event)
 		item = m_treeControl->GetItemParent(item);
 	}
 
-	IValueFrame* objSrc = GetObjectFromTreeItem(itemSrc);
+	ibValueFrame* objSrc = GetObjectFromTreeItem(itemSrc);
 	if (!objSrc)
 		return;
 
-	IValueFrame* objDst = GetObjectFromTreeItem(itemDst);
+	ibValueFrame* objDst = GetObjectFromTreeItem(itemDst);
 	if (!objDst)
 		return;
 
@@ -390,24 +390,24 @@ void CDialogFormEditor::OnEndDrag(wxTreeEvent& event)
 		pos1 > pos2 ? pos1 - pos2 : pos2 - pos1);
 }
 
-void CDialogFormEditor::OnKeyDown(wxTreeEvent& event)
+void ibDialogFormEditor::OnKeyDown(wxTreeEvent& event)
 {
 	event.Skip();
 }
 
-void CDialogFormEditor::OnPropertyGridChanging(wxPropertyGridEvent& event)
+void ibDialogFormEditor::OnPropertyGridChanging(wxPropertyGridEvent& event)
 {
 	auto it = m_pgArray.find(event.GetProperty());
 	if (it != m_pgArray.end()) {
 		ExecuteCommand(
-			new CModifyPropertyCmd(m_selectedControl, it->second, event.GetValue())
+			new ibModifyPropertyCmd(m_selectedControl, it->second, event.GetValue())
 		);
 	}
 
 	event.Skip();
 }
 
-void CDialogFormEditor::OnPropertyGridItemSelected(wxPropertyGridEvent& event)
+void ibDialogFormEditor::OnPropertyGridItemSelected(wxPropertyGridEvent& event)
 {
 	wxPGProperty* propPtr = event.GetProperty();
 
@@ -421,7 +421,7 @@ void CDialogFormEditor::OnPropertyGridItemSelected(wxPropertyGridEvent& event)
 	event.Skip();
 }
 
-void CDialogFormEditor::MovePosition(IValueFrame* move_obj, bool right, unsigned int num)
+void ibDialogFormEditor::MovePosition(ibValueFrame* move_obj, bool right, unsigned int num)
 {
 	auto it = m_listItem.find(move_obj);
 	if (it != m_listItem.end() && num > 0) {
@@ -450,9 +450,9 @@ void CDialogFormEditor::MovePosition(IValueFrame* move_obj, bool right, unsigned
 			m_treeControl->GetItemData(it->second)
 		);
 
-		struct CTreeMove {
+		struct ibTreeMove {
 
-			static void Swap(CDialogFormEditor* formEditor, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			static void Swap(ibDialogFormEditor* formEditor, const wxTreeItemId& dst, const wxTreeItemId& src) {
 
 				wxTreeItemIdValue coockie; wxTreeItemId next_item = formEditor->m_treeControl->GetFirstChild(dst, coockie);
 				while (next_item.IsOk()) {
@@ -475,26 +475,26 @@ void CDialogFormEditor::MovePosition(IValueFrame* move_obj, bool right, unsigned
 			}
 		};
 
-		CTreeMove::Swap(this, it->second, inserted_item);
+		ibTreeMove::Swap(this, it->second, inserted_item);
 
 		m_treeControl->SetItemData(it->second, nullptr);
 		m_treeControl->DeleteChildren(it->second);
 		m_treeControl->Delete(it->second);
 
-		IValueFrame* parent = move_obj->GetParent();
+		ibValueFrame* parent = move_obj->GetParent();
 
 		if (parent != nullptr) {
 
 			// Si el objeto está incluido dentro de un item hay que desplazar
 			// el item
-			IValueFrame* object = move_obj;
+			ibValueFrame* object = move_obj;
 
 			while (parent && parent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 				object = parent;
 				parent = object->GetParent();
 			}
 
-			ExecuteCommand(new CShiftChildCmd(object, (right ? num : -1 * num)));
+			ExecuteCommand(new ibShiftChildCmd(object, (right ? num : -1 * num)));
 		}
 
 		m_listItem[move_obj] = inserted_item;
@@ -502,19 +502,19 @@ void CDialogFormEditor::MovePosition(IValueFrame* move_obj, bool right, unsigned
 	}
 }
 
-wxBEGIN_EVENT_TABLE(CDialogFormEditor::CDialogFormEditorItemPopupMenu, wxMenu)
-EVT_MENU(wxID_ANY, CDialogFormEditor::CDialogFormEditorItemPopupMenu::OnMenuEvent)
-EVT_UPDATE_UI(wxID_ANY, CDialogFormEditor::CDialogFormEditorItemPopupMenu::OnUpdateEvent)
+wxBEGIN_EVENT_TABLE(ibDialogFormEditor::ibDialogFormEditorItemPopupMenu, wxMenu)
+EVT_MENU(wxID_ANY, ibDialogFormEditor::ibDialogFormEditorItemPopupMenu::OnMenuEvent)
+EVT_UPDATE_UI(wxID_ANY, ibDialogFormEditor::ibDialogFormEditorItemPopupMenu::OnUpdateEvent)
 wxEND_EVENT_TABLE()
 
-CDialogFormEditor::CDialogFormEditorItemPopupMenu::CDialogFormEditorItemPopupMenu(CDialogFormEditor* parent, IValueFrame* obj)
+ibDialogFormEditor::ibDialogFormEditorItemPopupMenu::ibDialogFormEditorItemPopupMenu(ibDialogFormEditor* parent, ibValueFrame* obj)
 	: wxMenu(), m_handler(parent), m_object(obj)
 {
 	Append(MENU_MOVE_UP, wxT("Move Up\tAlt+Up"))->SetBitmap(wxArtProvider::GetBitmap(wxASCII_STR(wxART_GO_UP), wxASCII_STR(wxART_MENU)));
 	Append(MENU_MOVE_DOWN, wxT("Move Down\tAlt+Down"))->SetBitmap(wxArtProvider::GetBitmap(wxASCII_STR(wxART_GO_DOWN), wxASCII_STR(wxART_MENU)));
 }
 
-void CDialogFormEditor::CDialogFormEditorItemPopupMenu::OnMenuEvent(wxCommandEvent& event)
+void ibDialogFormEditor::ibDialogFormEditorItemPopupMenu::OnMenuEvent(wxCommandEvent& event)
 {
 	m_selID = event.GetId();
 
@@ -525,9 +525,9 @@ void CDialogFormEditor::CDialogFormEditorItemPopupMenu::OnMenuEvent(wxCommandEve
 	}
 }
 
-void CDialogFormEditor::CDialogFormEditorItemPopupMenu::OnUpdateEvent(wxUpdateUIEvent& e)
+void ibDialogFormEditor::ibDialogFormEditorItemPopupMenu::OnUpdateEvent(wxUpdateUIEvent& e)
 {
-	IValueFrame* currentControl = m_handler->GetSelectedObject();
+	ibValueFrame* currentControl = m_handler->GetSelectedObject();
 
 	switch (e.GetId())
 	{

@@ -5,36 +5,36 @@
 #include "backend/compiler/compileCode.h"
 
 //////////////////////////////////////////////////////////////////////
-class BACKEND_API IValueMetaObjectModule;
+class BACKEND_API ibValueMetaObjectModuleBase;
 //////////////////////////////////////////////////////////////////////
 
-class BACKEND_API CCompileModule : public CCompileCode {
+class BACKEND_API ibCompileModule : public ibCompileCode {
 public:
 	virtual bool Recompile(); // recompile current module from meta-object
 	virtual bool Compile(); // compile current module from meta-object
 public:
 
-	CCompileModule(const IValueMetaObjectModule* moduleObject, bool onlyFunction = false);
-	virtual ~CCompileModule() {}
+	ibCompileModule(const ibValueMetaObjectModuleBase* moduleObject, bool onlyFunction = false);
+	virtual ~ibCompileModule() {}
 
-	virtual CCompileModule* GetParent() const { return dynamic_cast<CCompileModule*>(m_parent); }
-	virtual const IValueMetaObjectModule* GetModuleObject() const { return m_moduleObject; }
+	virtual ibCompileModule* GetParent() const { return dynamic_cast<ibCompileModule*>(m_parent); }
+	virtual const ibValueMetaObjectModuleBase* GetModuleObject() const { return m_moduleObject; }
 
 protected:
-	const IValueMetaObjectModule* m_moduleObject;
+	const ibValueMetaObjectModuleBase* m_moduleObject;
 };
 
-class BACKEND_API CCompileCommonModule : public CCompileModule {
+class BACKEND_API ibCompileCommonModule : public ibCompileModule {
 public:
-	CCompileCommonModule(const IValueMetaObjectModule* moduleObject) :
-		CCompileModule(moduleObject, true) {
+	ibCompileCommonModule(const ibValueMetaObjectModuleBase* moduleObject) :
+		ibCompileModule(moduleObject, true) {
 	}
 };
 
-class BACKEND_API CCompileGlobalModule : public CCompileCommonModule {
+class BACKEND_API ibCompileGlobalModule : public ibCompileCommonModule {
 public:
-	CCompileGlobalModule(const IValueMetaObjectModule* moduleObject) :
-		CCompileCommonModule(moduleObject) {
+	ibCompileGlobalModule(const ibValueMetaObjectModuleBase* moduleObject) :
+		ibCompileCommonModule(moduleObject) {
 	}
 };
 

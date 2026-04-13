@@ -5,31 +5,31 @@
 #include "backend/metadataReport.h"
 
 // The view using a standard wxTextCtrl to show its contents
-class CReportEditView : public CMetaView
+class ibReportEditView : public ibMetaView
 {
 public:
 
-	CReportEditView() : CMetaView() {}
+	ibReportEditView() : ibMetaView() {}
 
-	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
 protected:
 
-	wxDECLARE_DYNAMIC_CLASS(CReportEditView);
+	wxDECLARE_DYNAMIC_CLASS(ibReportEditView);
 };
 
-class CReportFileDocument : public IMetaDataDocument {
-	CMetaDataReport* m_metaData;
+class ibReportFilibDocument : public ibMetaDataDocument {
+	ibMetaDataReport* m_metaData;
 public:
 
-	CReportFileDocument() : IMetaDataDocument() {}
-	virtual ~CReportFileDocument() { 
+	ibReportFilibDocument() : ibMetaDataDocument() {}
+	virtual ~ibReportFilibDocument() { 
 		/*wxDELETE(m_metaData);*/ 
 	}
 
-	virtual CMetaDataReport* GetMetaData() const {
+	virtual ibMetaDataReport* GetMetaData() const {
 		return m_metaData;
 	}
 
@@ -51,7 +51,7 @@ public:
 		SetTitle(name);
 		SetFilename(name, true);
 
-		IValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
+		ibValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
 		wxASSERT(commonObject);
 		commonObject->SetName(name);
 
@@ -71,8 +71,8 @@ protected:
 	virtual bool DoOpenDocument(const wxString& filename) override;
 	virtual bool DoSaveDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(CReportFileDocument);
-	wxDECLARE_DYNAMIC_CLASS(CReportFileDocument);
+	wxDECLARE_NO_COPY_CLASS(ibReportFilibDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibReportFilibDocument);
 };
 
 #endif 

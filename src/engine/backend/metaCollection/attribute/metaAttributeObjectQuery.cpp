@@ -9,32 +9,32 @@
 #include "backend/objCtor.h"
 #include "backend/metaCollection/partial/reference/reference.h"
 
-wxString IValueMetaObjectAttribute::GetSQLTypeObject(const class_identifier_t& clsid) const
+wxString ibValueMetaObjectAttributeBase::GetSQLTypeObject(const ibClassID& clsid) const
 {
-	const CTypeDescription& typeDesc = GetTypeDesc();
+	const ibTypeDescription& typeDesc = GetTypeDesc();
 
-	switch (CValue::GetVTByID(clsid))
+	switch (ibValue::GetVTByID(clsid))
 	{
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return wxString::Format("SMALLINT");
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		if (typeDesc.GetScale() > 0)
 			return wxString::Format("NUMERIC(%i,%i)", typeDesc.GetPrecision(), typeDesc.GetScale());
 		else
 			return wxString::Format("NUMERIC(%i)", typeDesc.GetPrecision());
-	case eValueTypes::TYPE_DATE:
-		if (typeDesc.GetDateFraction() == eDateFractions::eDateFractions_Date)
+	case ibValueTypes::TYPE_DATE:
+		if (typeDesc.GetDateFraction() == ibDateFractions::ibDateFractions_Date)
 			return wxString::Format("DATE");
-		else if (typeDesc.GetDateFraction() == eDateFractions::eDateFractions_DateTime)
+		else if (typeDesc.GetDateFraction() == ibDateFractions::ibDateFractions_DateTime)
 			return wxString::Format("TIMESTAMP");
 		else
 			return wxString::Format("TIME");
-	case eValueTypes::TYPE_STRING:
-		if (typeDesc.GetAllowedLength() == eAllowedLength::eAllowedLength_Variable)
+	case ibValueTypes::TYPE_STRING:
+		if (typeDesc.GetAllowedLength() == ibAllowedLength::ibAllowedLength_Variable)
 			return wxString::Format("VARCHAR(%i)", typeDesc.GetLength());
 		else
 			return wxString::Format("CHAR(%i)", typeDesc.GetLength());
-	case eValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_ENUM:
 		return wxString::Format("INTEGER");
 	default:
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
@@ -45,42 +45,42 @@ wxString IValueMetaObjectAttribute::GetSQLTypeObject(const class_identifier_t& c
 	return wxEmptyString;
 }
 
-unsigned short IValueMetaObjectAttribute::GetSQLFieldCount(const IValueMetaObjectAttribute* metaAttr)
+unsigned short ibValueMetaObjectAttributeBase::GetSQLFieldCount(const ibValueMetaObjectAttributeBase* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); unsigned short sqlField = 1;
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN)) {
 		sqlField += 1;
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)) {
 		sqlField += 1;
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_DATE)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_DATE)) {
 		sqlField += 1;
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_STRING)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_STRING)) {
 		sqlField += 1;
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_ENUM)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM)) {
 		sqlField += 1;
 	}
-	if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		sqlField += 2;
 	}
 
 	return sqlField;
 }
 
-wxString IValueMetaObjectAttribute::GetSQLFieldName(const IValueMetaObjectAttribute* metaAttr, const wxString& aggr)
+wxString ibValueMetaObjectAttributeBase::GetSQLFieldName(const ibValueMetaObjectAttributeBase* metaAttr, const wxString& aggr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ",";
 		sqlField += fieldName + "_B";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ",";
 		if (aggr.IsEmpty())
@@ -88,7 +88,7 @@ wxString IValueMetaObjectAttribute::GetSQLFieldName(const IValueMetaObjectAttrib
 		else
 			sqlField += aggr + "(" + fieldName + "_N" + ") AS " + fieldName + "_N";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_DATE)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_DATE)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ",";
 		if (aggr.IsEmpty())
@@ -96,17 +96,17 @@ wxString IValueMetaObjectAttribute::GetSQLFieldName(const IValueMetaObjectAttrib
 		else
 			sqlField += aggr + "(" + fieldName + "_D" + ") AS " + fieldName + "_D";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_STRING)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_STRING)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ",";
 		sqlField += fieldName + "_S";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_ENUM)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ",";
 		sqlField += fieldName + "_E";
 	}
-	if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ",";
 		sqlField += fieldName + "_RTRef" + "," + fieldName + "_RRRef";
@@ -117,36 +117,36 @@ wxString IValueMetaObjectAttribute::GetSQLFieldName(const IValueMetaObjectAttrib
 		+ sqlField;
 }
 
-wxString IValueMetaObjectAttribute::GetCompositeSQLFieldName(const IValueMetaObjectAttribute* metaAttr, const wxString& cmp)
+wxString ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(const ibValueMetaObjectAttributeBase* metaAttr, const wxString& cmp)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN)) {
 		if (!sqlField.IsEmpty())
 			sqlField += " AND ";
 		sqlField += fieldName + "_B " + cmp + " ? ";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)) {
 		if (!sqlField.IsEmpty())
 			sqlField += " AND ";
 		sqlField += fieldName + "_N " + cmp + " ? ";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_DATE)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_DATE)) {
 		if (!sqlField.IsEmpty())
 			sqlField += " AND ";
 		sqlField += fieldName + "_D " + cmp + " ? ";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_STRING)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_STRING)) {
 		if (!sqlField.IsEmpty())
 			sqlField += " AND ";
 		sqlField += fieldName + "_S " + cmp + " ? ";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_ENUM)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM)) {
 		if (!sqlField.IsEmpty())
 			sqlField += " AND ";
 		sqlField += fieldName + "_E " + cmp + " ? ";
 	}
-	if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		if (!sqlField.IsEmpty())
 			sqlField += " AND ";
 		sqlField += fieldName + "_RTRef = ? AND " + fieldName + "_RRRef " + cmp + " ? ";
@@ -157,36 +157,36 @@ wxString IValueMetaObjectAttribute::GetCompositeSQLFieldName(const IValueMetaObj
 		+ sqlField;
 }
 
-wxString IValueMetaObjectAttribute::GetExcludeSQLFieldName(const IValueMetaObjectAttribute* metaAttr)
+wxString ibValueMetaObjectAttributeBase::GetExcludeSQLFieldName(const ibValueMetaObjectAttributeBase* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ", ";
 		sqlField += fieldName + "_B = excluded." + fieldName + "_B";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ", ";
 		sqlField += fieldName + "_N = excluded." + fieldName + "_N";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_DATE)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_DATE)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ", ";
 		sqlField += fieldName + "_D = excluded." + fieldName + "_D";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_STRING)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_STRING)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ", ";
 		sqlField += fieldName + "_S = excluded." + fieldName + "_S";
 	}
-	if (metaAttr->ContainType(eValueTypes::TYPE_ENUM)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ", ";
 		sqlField += fieldName + "_E = excluded." + fieldName + "_E";
 	}
-	if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ", ";
 		sqlField += fieldName + "_RTRef = excluded." + fieldName + "_RTRef, " + fieldName + "_RRRef = excluded." + fieldName + "_RRRef";
@@ -197,48 +197,48 @@ wxString IValueMetaObjectAttribute::GetExcludeSQLFieldName(const IValueMetaObjec
 		+ sqlField;
 }
 
-IValueMetaObjectAttribute::sqlField_t IValueMetaObjectAttribute::GetSQLFieldData(const IValueMetaObjectAttribute* metaAttr)
+ibValueMetaObjectAttributeBase::ibSQLField ibValueMetaObjectAttributeBase::GetSQLFieldData(const ibValueMetaObjectAttributeBase* metaAttr)
 {
-	const wxString& fieldName = metaAttr->GetFieldNameDB(); sqlField_t sqlData(fieldName + "_TYPE");
+	const wxString& fieldName = metaAttr->GetFieldNameDB(); ibSQLField sqlData(fieldName + "_TYPE");
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN)) {
 		sqlData.AppendType(
-			eFieldTypes::eFieldTypes_Boolean,
+			ibFieldTypes::ibFieldTypes_Boolean,
 			fieldName + "_B"
 		);
 	}
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)) {
 		sqlData.AppendType(
-			eFieldTypes::eFieldTypes_Number,
+			ibFieldTypes::ibFieldTypes_Number,
 			fieldName + "_N"
 		);
 	}
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_DATE)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_DATE)) {
 		sqlData.AppendType(
-			eFieldTypes::eFieldTypes_Date,
+			ibFieldTypes::ibFieldTypes_Date,
 			fieldName + "_D"
 		);
 	}
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_STRING)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_STRING)) {
 		sqlData.AppendType(
-			eFieldTypes::eFieldTypes_String,
+			ibFieldTypes::ibFieldTypes_String,
 			fieldName + "_S"
 		);
 	}
 
-	if (metaAttr->ContainType(eValueTypes::TYPE_ENUM)) {
+	if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM)) {
 		sqlData.AppendType(
-			eFieldTypes::eFieldTypes_Enum,
+			ibFieldTypes::ibFieldTypes_Enum,
 			fieldName + "_E"
 		);
 	}
 
-	if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		sqlData.AppendType(
-			eFieldTypes::eFieldTypes_Reference,
+			ibFieldTypes::ibFieldTypes_Reference,
 			fieldName + "_RTRef",
 			fieldName + "_RRRef"
 		);
@@ -249,39 +249,39 @@ IValueMetaObjectAttribute::sqlField_t IValueMetaObjectAttribute::GetSQLFieldData
 
 #include "backend/valueInfo.h"
 
-int IValueMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
-	const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
+int ibValueMetaObjectAttributeBase::ProcessAttribute(const wxString& tableName,
+	const ibValueMetaObjectAttributeBase* srcAttr, const ibValueMetaObjectAttributeBase* dstAttr)
 {
 	int retCode = 1;
 	//is null - create
 	if (dstAttr == nullptr) {
-		const wxString& fieldName = srcAttr->GetFieldNameDB(); bool createReference = false; IMetaData* metaData = srcAttr->GetMetaData();
+		const wxString& fieldName = srcAttr->GetFieldNameDB(); bool createReference = false; ibMetaData* metaData = srcAttr->GetMetaData();
 		retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_TYPE %s DEFAULT 0 NOT NULL;", tableName, fieldName, "INTEGER");
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return retCode;
-		const CTypeDescription& typeDesc = srcAttr->GetTypeDesc();
+		const ibTypeDescription& typeDesc = srcAttr->GetTypeDesc();
 		for (auto clsid : typeDesc.GetClsidList()) {
-			eValueTypes valType = CValue::GetVTByID(clsid);
+			ibValueTypes valType = ibValue::GetVTByID(clsid);
 			switch (valType) {
-			case eValueTypes::TYPE_BOOLEAN:
+			case ibValueTypes::TYPE_BOOLEAN:
 				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_B %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 				break;
-			case eValueTypes::TYPE_NUMBER:
+			case ibValueTypes::TYPE_NUMBER:
 				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_N %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 				break;
-			case eValueTypes::TYPE_DATE:
+			case ibValueTypes::TYPE_DATE:
 				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_D %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 				break;
-			case eValueTypes::TYPE_STRING:
+			case ibValueTypes::TYPE_STRING:
 				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_S %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 				break;
-			case eValueTypes::TYPE_ENUM:
+			case ibValueTypes::TYPE_ENUM:
 				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_E %s DEFAULT 0;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 				break;
 			default:
-				const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+				const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 				wxASSERT(typeCtor);
-				if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+				if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 					createReference = true;
 				}
 			}
@@ -299,56 +299,56 @@ int IValueMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 	// update 
 	else if (srcAttr != nullptr) {
 		if (srcAttr->GetTypeDesc() != dstAttr->GetTypeDesc()) {
-			const CTypeDescription& srcTypeDesc = srcAttr->GetTypeDesc();
-			const wxString& fieldName = srcAttr->GetFieldNameDB(); std::set<class_identifier_t> createdRef, currentRef, removedRef; IMetaData* metaData = srcAttr->GetMetaData();
+			const ibTypeDescription& srcTypeDesc = srcAttr->GetTypeDesc();
+			const wxString& fieldName = srcAttr->GetFieldNameDB(); std::set<ibClassID> createdRef, currentRef, removedRef; ibMetaData* metaData = srcAttr->GetMetaData();
 			for (auto clsid : srcTypeDesc.GetClsidList()) {
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 				if (!dstAttr->ContainType(clsid)) {
-					eValueTypes valType = CValue::GetVTByID(clsid);
+					ibValueTypes valType = ibValue::GetVTByID(clsid);
 					switch (valType) {
-					case eValueTypes::TYPE_BOOLEAN:
+					case ibValueTypes::TYPE_BOOLEAN:
 						retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_B %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
-					case eValueTypes::TYPE_NUMBER:
+					case ibValueTypes::TYPE_NUMBER:
 						retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_N %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
-					case eValueTypes::TYPE_DATE:
+					case ibValueTypes::TYPE_DATE:
 						retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_D %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
-					case eValueTypes::TYPE_STRING:
+					case ibValueTypes::TYPE_STRING:
 						retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_S %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
-					case eValueTypes::TYPE_ENUM:
+					case ibValueTypes::TYPE_ENUM:
 						retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_E %s DEFAULT 0;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
 					default:
-						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+						const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 						//wxASSERT(typeCtor);
-						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+						if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							createdRef.insert(clsid);
 						}
 					}
 				}
 			}
-			const CTypeDescription& dstTypeDesc = dstAttr->GetTypeDesc();
+			const ibTypeDescription& dstTypeDesc = dstAttr->GetTypeDesc();
 			for (auto clsid : dstTypeDesc.GetClsidList()) {
-				eValueTypes valType = CValue::GetVTByID(clsid);
+				ibValueTypes valType = ibValue::GetVTByID(clsid);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 				if (srcAttr->ContainType(clsid)) {
 					switch (valType) {
-					case eValueTypes::TYPE_BOOLEAN:
+					case ibValueTypes::TYPE_BOOLEAN:
 						if (!srcAttr->EqualType(clsid, dstAttr->GetTypeDesc()))
 							retCode = db_query->RunQuery("ALTER TABLE %s ALTER COLUMN %s_B TYPE %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
-					case eValueTypes::TYPE_NUMBER:
+					case ibValueTypes::TYPE_NUMBER:
 						if (!srcAttr->EqualType(clsid, dstAttr->GetTypeDesc()))
 							retCode = db_query->RunQuery("ALTER TABLE %s ALTER COLUMN %s_N TYPE %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
-					case eValueTypes::TYPE_DATE:
+					case ibValueTypes::TYPE_DATE:
 						if (!srcAttr->EqualType(clsid, dstAttr->GetTypeDesc())) {
-							if (srcTypeDesc.GetDateFraction() != eDateFractions::eDateFractions_Time && dstTypeDesc.GetDateFraction() == eDateFractions::eDateFractions_Time) {
+							if (srcTypeDesc.GetDateFraction() != ibDateFractions::ibDateFractions_Time && dstTypeDesc.GetDateFraction() == ibDateFractions::ibDateFractions_Time) {
 								retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_D;", tableName, fieldName);
 								if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 									return retCode;
@@ -359,58 +359,58 @@ int IValueMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 							}
 						}
 						break;
-					case eValueTypes::TYPE_STRING:
+					case ibValueTypes::TYPE_STRING:
 						if (!srcAttr->EqualType(clsid, dstAttr->GetTypeDesc()))
 							retCode = db_query->RunQuery("ALTER TABLE %s ALTER COLUMN %s_S TYPE %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
-					case eValueTypes::TYPE_ENUM:
+					case ibValueTypes::TYPE_ENUM:
 						if (!srcAttr->EqualType(clsid, dstAttr->GetTypeDesc()))
 							retCode = db_query->RunQuery("ALTER TABLE %s ALTER COLUMN %s_E TYPE %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
 					default:
-						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+						const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 						//wxASSERT(typeCtor);
-						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+						if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							currentRef.insert(clsid);
 						}
 					}
 				}
 				else {
 					switch (valType) {
-					case eValueTypes::TYPE_BOOLEAN:
+					case ibValueTypes::TYPE_BOOLEAN:
 						retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_B;", tableName, fieldName);
 						if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 							return retCode;
-						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)eFieldTypes::eFieldTypes_Boolean);
+						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)ibFieldTypes::ibFieldTypes_Boolean);
 						break;
-					case eValueTypes::TYPE_NUMBER:
+					case ibValueTypes::TYPE_NUMBER:
 						retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_N;", tableName, fieldName);
 						if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 							return retCode;
-						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)eFieldTypes::eFieldTypes_Number);
+						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)ibFieldTypes::ibFieldTypes_Number);
 						break;
-					case eValueTypes::TYPE_DATE:
+					case ibValueTypes::TYPE_DATE:
 						retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_D;", tableName, fieldName);
 						if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 							return retCode;
-						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)eFieldTypes::eFieldTypes_Date);
+						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)ibFieldTypes::ibFieldTypes_Date);
 						break;
-					case eValueTypes::TYPE_STRING:
+					case ibValueTypes::TYPE_STRING:
 						retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_S;", tableName, fieldName);
 						if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 							return retCode;
-						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)eFieldTypes::eFieldTypes_String);
+						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)ibFieldTypes::ibFieldTypes_String);
 						break;
-					case eValueTypes::TYPE_ENUM:
+					case ibValueTypes::TYPE_ENUM:
 						retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_E;", tableName, fieldName);
 						if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 							return retCode;
-						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)eFieldTypes::eFieldTypes_Enum);
+						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)ibFieldTypes::ibFieldTypes_Enum);
 						break;
 					default:
-						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+						const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 						//wxASSERT(typeCtor);
-						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+						if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							removedRef.insert(clsid);
 						}
 					}
@@ -433,7 +433,7 @@ int IValueMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 				}
 			}
 			if (removedRef.size() > 0 && currentRef.size() == 0) {
-				retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)eFieldTypes::eFieldTypes_Reference);
+				retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)ibFieldTypes::ibFieldTypes_Reference);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 				retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_RTRef;", tableName, fieldName);
@@ -447,43 +447,43 @@ int IValueMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 	}
 	//delete 
 	else if (srcAttr == nullptr) {
-		const wxString& fieldName = dstAttr->GetFieldNameDB(); bool removeReference = false; IMetaData* metaData = dstAttr->GetMetaData();
+		const wxString& fieldName = dstAttr->GetFieldNameDB(); bool removeReference = false; ibMetaData* metaData = dstAttr->GetMetaData();
 		retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_TYPE;", tableName, fieldName);
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return retCode;
-		const CTypeDescription& dstTypeDesc = dstAttr->GetTypeDesc();
+		const ibTypeDescription& dstTypeDesc = dstAttr->GetTypeDesc();
 		for (auto clsid : dstTypeDesc.GetClsidList()) {
-			eValueTypes valType = CValue::GetVTByID(clsid);
+			ibValueTypes valType = ibValue::GetVTByID(clsid);
 			switch (valType) {
-			case eValueTypes::TYPE_BOOLEAN:
+			case ibValueTypes::TYPE_BOOLEAN:
 				retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_B;", tableName, fieldName);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 				break;
-			case eValueTypes::TYPE_NUMBER:
+			case ibValueTypes::TYPE_NUMBER:
 				retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_N;", tableName, fieldName);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 				break;
-			case eValueTypes::TYPE_DATE:
+			case ibValueTypes::TYPE_DATE:
 				retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_D;", tableName, fieldName);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 				break;
-			case eValueTypes::TYPE_STRING:
+			case ibValueTypes::TYPE_STRING:
 				retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_S;", tableName, fieldName);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 				break;
-			case eValueTypes::TYPE_ENUM:
+			case ibValueTypes::TYPE_ENUM:
 				retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_E;", tableName, fieldName);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 				break;
 			default:
-				const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+				const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 				//wxASSERT(typeCtor);
-				if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+				if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 					removeReference = true;
 				}
 				break;
@@ -503,187 +503,187 @@ int IValueMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 	return retCode;
 }
 
-void IValueMetaObjectAttribute::SetValueAttribute(const IValueMetaObjectAttribute* metaAttr,
-	const CValue& cValue, IPreparedStatement* statement, int& position)
+void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAttributeBase* metaAttr,
+	const ibValue& cValue, ibPreparedStatement* statement, int& position)
 {
 	//write type & data
-	if (cValue.GetType() == eValueTypes::TYPE_EMPTY) {
+	if (cValue.GetType() == ibValueTypes::TYPE_EMPTY) {
 
-		statement->SetParamInt(position++, eFieldTypes_Empty); //TYPE
+		statement->SetParamInt(position++, ibFieldTypes_Empty); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (cValue.GetType() == eValueTypes::TYPE_BOOLEAN) {
+	else if (cValue.GetType() == ibValueTypes::TYPE_BOOLEAN) {
 
-		statement->SetParamInt(position++, eFieldTypes_Boolean); //TYPE
+		statement->SetParamInt(position++, ibFieldTypes_Boolean); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, cValue.GetBoolean()); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (cValue.GetType() == eValueTypes::TYPE_NUMBER) {
+	else if (cValue.GetType() == ibValueTypes::TYPE_NUMBER) {
 
-		statement->SetParamInt(position++, eFieldTypes_Number); //TYPE
+		statement->SetParamInt(position++, ibFieldTypes_Number); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, cValue.GetNumber()); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (cValue.GetType() == eValueTypes::TYPE_DATE) {
+	else if (cValue.GetType() == ibValueTypes::TYPE_DATE) {
 
-		statement->SetParamInt(position++, eFieldTypes_Date); //TYPE
+		statement->SetParamInt(position++, ibFieldTypes_Date); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, cValue.GetDate()); //DATA date 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (cValue.GetType() == eValueTypes::TYPE_STRING) {
+	else if (cValue.GetType() == ibValueTypes::TYPE_STRING) {
 
-		statement->SetParamInt(position++, eFieldTypes_String); //TYPE
+		statement->SetParamInt(position++, ibFieldTypes_String); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, cValue.GetString()); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (cValue.GetType() == eValueTypes::TYPE_NULL) {
+	else if (cValue.GetType() == ibValueTypes::TYPE_NULL) {
 
-		statement->SetParamInt(position++, eFieldTypes_Null); //TYPE
+		statement->SetParamInt(position++, ibFieldTypes_Null); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (cValue.GetType() == eValueTypes::TYPE_ENUM) {
+	else if (cValue.GetType() == ibValueTypes::TYPE_ENUM) {
 
-		statement->SetParamInt(position++, eFieldTypes_Enum); //TYPE
+		statement->SetParamInt(position++, ibFieldTypes_Enum); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, cValue.GetNumber()); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 	
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, cValue.GetInteger()); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
 	else {
 
-		statement->SetParamInt(position++, eFieldTypes_Reference); //TYPE
+		statement->SetParamInt(position++, ibFieldTypes_Reference); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		const class_identifier_t& clsid = cValue.GetClassType();
+		const ibClassID& clsid = cValue.GetClassType();
 		wxASSERT(clsid > 0);
 
-		const IMetaData* metaData = metaAttr->GetMetaData();
+		const ibMetaData* metaData = metaAttr->GetMetaData();
 		wxASSERT(metaData);
 
-		const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+		const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 		wxASSERT(typeCtor);
 
-		if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == eCtorMetaType::eCtorMetaType_Reference) {
-			CValueReferenceDataObject* refData = nullptr;
+		if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == ibCtorObjectMetaType::ibCtorObjectMetaType_Reference) {
+			ibValueReferenceDataObject* refData = nullptr;
 			if (cValue.ConvertToValue(refData)) {
 				statement->SetParamNumber(position++, clsid); //TYPE REF
-				statement->SetParamBlob(position++, refData->GetReferenceData(), sizeof(reference_t)); //DATA REF
+				statement->SetParamBlob(position++, refData->GetReferenceData(), sizeof(ibReference)); //DATA REF
 			}
 			else {
 				statement->SetParamNumber(position++, 0); //TYPE REF
@@ -697,7 +697,7 @@ void IValueMetaObjectAttribute::SetValueAttribute(const IValueMetaObjectAttribut
 	}
 }
 
-void IValueMetaObjectAttribute::SetValueAttribute(const IValueMetaObjectAttribute* attribute, const CValue& cValue, IPreparedStatement* statement)
+void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAttributeBase* attribute, const ibValue& cValue, ibPreparedStatement* statement)
 {
 	int position = 1;
 	SetValueAttribute(attribute, cValue, statement, position);
@@ -705,42 +705,42 @@ void IValueMetaObjectAttribute::SetValueAttribute(const IValueMetaObjectAttribut
 
 #include "backend/compiler/enumUnit.h"
 
-bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
-	const eFieldTypes& fieldType, const IValueMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+bool ibValueMetaObjectAttributeBase::GetValueAttribute(const wxString& fieldName,
+	const ibFieldTypes& fieldType, const ibValueMetaObjectAttributeBase* metaAttr, ibValue& retValue, ibDatabaseResultSet* resultSet, bool createData)
 {
 	switch (fieldType)
 	{
-	case eFieldTypes_Boolean:
+	case ibFieldTypes_Boolean:
 		retValue = resultSet->GetResultBool(fieldName);
 		return true;
-	case eFieldTypes_Number:
+	case ibFieldTypes_Number:
 		retValue = resultSet->GetResultNumber(fieldName);
 		return true;
-	case eFieldTypes_Date:
+	case ibFieldTypes_Date:
 		retValue = resultSet->GetResultDate(fieldName);
 		return true;
-	case eFieldTypes_String:
+	case ibFieldTypes_String:
 		retValue = resultSet->GetResultString(fieldName);
 		return true;
-	case eFieldTypes_Null:
-		retValue = eValueTypes::TYPE_NULL;
+	case ibFieldTypes_Null:
+		retValue = ibValueTypes::TYPE_NULL;
 		return true;
-	case eFieldTypes_Enum:
+	case ibFieldTypes_Enum:
 	{
-		const IMetaData* metaData = metaAttr->GetMetaData();
+		const ibMetaData* metaData = metaAttr->GetMetaData();
 		wxASSERT(metaData);
 
-		const CValue& defValue = metaAttr->CreateValue();
-		const IAbstractTypeCtor* so = metaData->GetAvailableCtor(defValue.GetClassType());
+		const ibValue& defValue = metaAttr->CreateValue();
+		const ibCtorAbstractType* so = metaData->GetAvailableCtor(defValue.GetClassType());
 
 		if (so != nullptr) {
 
-			CValue enumVariant(resultSet->GetResultInt(fieldName));
-			CValue* ppParams[] = { &enumVariant };
+			ibValue enumVariant(resultSet->GetResultInt(fieldName));
+			ibValue* ppParams[] = { &enumVariant };
 
 			try {
-				CValuePtr<IEnumerationWrapper> creator(
-					metaData->CreateAndConvertObjectRef<IEnumerationWrapper>(so->GetClassName(), ppParams, 1));
+				ibValuePtr<ibValueEnumerationWrapper> creator(
+					metaData->CreateAndConvertObjectRef<ibValueEnumerationWrapper>(so->GetClassName(), ppParams, 1));
 				retValue = creator->GetEnumVariantValue();
 			}
 			catch (...) {
@@ -754,11 +754,11 @@ bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 		retValue = defValue;
 		return false;
 	}
-	case eFieldTypes_Reference:
+	case ibFieldTypes_Reference:
 	{
-		IMetaData* metaData = metaAttr->GetMetaData();
+		ibMetaData* metaData = metaAttr->GetMetaData();
 		wxASSERT(metaData);
-		const class_identifier_t& refType = resultSet->GetResultLong(fieldName + wxT("_RTRef"));
+		const ibClassID& refType = resultSet->GetResultLong(fieldName + wxT("_RTRef"));
 
 		wxMemoryBuffer bufferData;
 		resultSet->GetResultBlob(fieldName + wxT("_RRRef"), bufferData);
@@ -766,29 +766,29 @@ bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 
 			if (createData) {
 
-				CValuePtr<CValueReferenceDataObject> created_reference =
-					CValueReferenceDataObject::CreateFromPtr(metaData, bufferData.GetData());
+				ibValuePtr<ibValueReferenceDataObject> created_reference(
+					ibValueReferenceDataObject::CreateFromPtr(metaData, bufferData.GetData()));
 
 				retValue = created_reference;
 				return created_reference != nullptr;
 			}
 
-			CValuePtr<CValueReferenceDataObject> created_reference =
-				CValueReferenceDataObject::Create(metaData, bufferData.GetData());
+			ibValuePtr<ibValueReferenceDataObject> created_reference(
+				ibValueReferenceDataObject::Create(metaData, bufferData.GetData()));
 
 			retValue = created_reference;
 			return created_reference != nullptr;
 		}
 		else if (refType > 0) {
 
-			const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(refType);
+			const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(refType);
 			if (typeCtor != nullptr) {
 
-				const IValueMetaObject* metaObject = typeCtor->GetMetaObject();
+				const ibValueMetaObject* metaObject = typeCtor->GetMetaObject();
 				wxASSERT(metaObject);
 
-				CValuePtr<CValueReferenceDataObject> created_reference =
-					CValueReferenceDataObject::Create(metaData, metaObject->GetMetaID());
+				ibValuePtr<ibValueReferenceDataObject> created_reference(
+					ibValueReferenceDataObject::Create(metaData, metaObject->GetMetaID()));
 
 				retValue = created_reference;
 				return created_reference != nullptr;
@@ -804,29 +804,29 @@ bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 	return false;
 }
 
-bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
-	const IValueMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+bool ibValueMetaObjectAttributeBase::GetValueAttribute(const wxString& fieldName,
+	const ibValueMetaObjectAttributeBase* metaAttr, ibValue& retValue, ibDatabaseResultSet* resultSet, bool createData)
 {
-	eFieldTypes fieldType =
-		static_cast<eFieldTypes>(resultSet->GetResultInt(fieldName + wxT("_TYPE")));
+	ibFieldTypes fieldType =
+		static_cast<ibFieldTypes>(resultSet->GetResultInt(fieldName + wxT("_TYPE")));
 
 	switch (fieldType)
 	{
-	case eFieldTypes_Boolean:
-		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_B"), eFieldTypes_Boolean, metaAttr, retValue, resultSet, createData);
-	case eFieldTypes_Number:
-		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_N"), eFieldTypes_Number, metaAttr, retValue, resultSet, createData);
-	case eFieldTypes_Date:
-		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_D"), eFieldTypes_Date, metaAttr, retValue, resultSet, createData);
-	case eFieldTypes_String:
-		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_S"), eFieldTypes_String, metaAttr, retValue, resultSet, createData);
-	case eFieldTypes_Null:
-		retValue = eValueTypes::TYPE_NULL;
+	case ibFieldTypes_Boolean:
+		return ibValueMetaObjectAttributeBase::GetValueAttribute(fieldName + wxT("_B"), ibFieldTypes_Boolean, metaAttr, retValue, resultSet, createData);
+	case ibFieldTypes_Number:
+		return ibValueMetaObjectAttributeBase::GetValueAttribute(fieldName + wxT("_N"), ibFieldTypes_Number, metaAttr, retValue, resultSet, createData);
+	case ibFieldTypes_Date:
+		return ibValueMetaObjectAttributeBase::GetValueAttribute(fieldName + wxT("_D"), ibFieldTypes_Date, metaAttr, retValue, resultSet, createData);
+	case ibFieldTypes_String:
+		return ibValueMetaObjectAttributeBase::GetValueAttribute(fieldName + wxT("_S"), ibFieldTypes_String, metaAttr, retValue, resultSet, createData);
+	case ibFieldTypes_Null:
+		retValue = ibValueTypes::TYPE_NULL;
 		return true;
-	case eFieldTypes_Enum:
-		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_E"), eFieldTypes_Enum, metaAttr, retValue, resultSet, createData);
-	case eFieldTypes_Reference:
-		return IValueMetaObjectAttribute::GetValueAttribute(fieldName, eFieldTypes_Reference, metaAttr, retValue, resultSet, createData);
+	case ibFieldTypes_Enum:
+		return ibValueMetaObjectAttributeBase::GetValueAttribute(fieldName + wxT("_E"), ibFieldTypes_Enum, metaAttr, retValue, resultSet, createData);
+	case ibFieldTypes_Reference:
+		return ibValueMetaObjectAttributeBase::GetValueAttribute(fieldName, ibFieldTypes_Reference, metaAttr, retValue, resultSet, createData);
 	default:
 		retValue = metaAttr->CreateValue(); // if attribute was updated after 
 		return true;
@@ -835,9 +835,9 @@ bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 	return false;
 }
 
-bool IValueMetaObjectAttribute::GetValueAttribute(const IValueMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+bool ibValueMetaObjectAttributeBase::GetValueAttribute(const ibValueMetaObjectAttributeBase* metaAttr, ibValue& retValue, ibDatabaseResultSet* resultSet, bool createData)
 {
-	return IValueMetaObjectAttribute::GetValueAttribute(
+	return ibValueMetaObjectAttributeBase::GetValueAttribute(
 		metaAttr->GetFieldNameDB(),
 		metaAttr, retValue, resultSet, createData
 	);
@@ -845,70 +845,70 @@ bool IValueMetaObjectAttribute::GetValueAttribute(const IValueMetaObjectAttribut
 
 ///////////////////////////////////////////////////
 
-void IValueMetaObjectAttribute::SetBinaryData(const IValueMetaObjectAttribute* metaAttr, const CMemoryReader& reader, IPreparedStatement* statement,
+void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttributeBase* metaAttr, const ibReaderMemory& reader, ibPreparedStatement* statement,
 	int& position)
 {
 	const int fieldType = reader.r_s32();
 
 	//write type & data
-	if (fieldType == eFieldTypes_Empty || fieldType == eFieldTypes_Null) {
+	if (fieldType == ibFieldTypes_Empty || fieldType == ibFieldTypes_Null) {
 
 		statement->SetParamInt(position++, fieldType); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (fieldType == eFieldTypes_Boolean) {
+	else if (fieldType == ibFieldTypes_Boolean) {
 
 		statement->SetParamInt(position++, fieldType); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, reader.r_u8()); //DATA binary 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (fieldType == eFieldTypes_Number) {
+	else if (fieldType == ibFieldTypes_Number) {
 
 		statement->SetParamInt(position++, fieldType); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER)) {
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)) {
 
-			number_t value;
+			ibNumber value;
 			reader.r(&value.exponent, sizeof(value.exponent));
 			reader.r(&value.mantissa, sizeof(value.mantissa));
 			reader.r(&value.info, sizeof(value.info));
@@ -916,89 +916,89 @@ void IValueMetaObjectAttribute::SetBinaryData(const IValueMetaObjectAttribute* m
 			statement->SetParamNumber(position++, value); //DATA number 
 		}
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (fieldType == eFieldTypes_Date) {
+	else if (fieldType == ibFieldTypes_Date) {
 
 		statement->SetParamInt(position++, fieldType); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, wxLongLong(reader.r_u64())); //DATA date 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (fieldType == eFieldTypes_String) {
+	else if (fieldType == ibFieldTypes_String) {
 
 		statement->SetParamInt(position++, fieldType); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING)) {
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING)) {
 			statement->SetParamString(position++, reader.r_stringZ()); //DATA string 
 		}
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
 	}
-	else if (fieldType == eFieldTypes_Enum) {
+	else if (fieldType == ibFieldTypes_Enum) {
 
 		statement->SetParamInt(position++, fieldType); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 	
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, reader.r_s32()); //DATA enum 
 
-		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -1009,16 +1009,16 @@ void IValueMetaObjectAttribute::SetBinaryData(const IValueMetaObjectAttribute* m
 
 		statement->SetParamInt(position++, fieldType); //TYPE
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN))
 			statement->SetParamBool(position++, false); //DATA binary 
-		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER))
 			statement->SetParamNumber(position++, 0); //DATA number 
-		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
 			statement->SetParamDate(position++, emptyDate); //DATA date 
-		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_STRING))
 			statement->SetParamString(position++, wxEmptyString); //DATA string 
 
-		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
 		statement->SetParamNumber(position++, reader.r_u64()); //TYPE REF
@@ -1027,13 +1027,13 @@ void IValueMetaObjectAttribute::SetBinaryData(const IValueMetaObjectAttribute* m
 	}
 }
 
-void IValueMetaObjectAttribute::SetBinaryData(const IValueMetaObjectAttribute* metaAttr, const CMemoryReader& reader, IPreparedStatement* statement)
+void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttributeBase* metaAttr, const ibReaderMemory& reader, ibPreparedStatement* statement)
 {
 	int position = 1;
 	SetBinaryData(metaAttr, reader, statement, position);
 }
 
-void IValueMetaObjectAttribute::GetBinaryData(const IValueMetaObjectAttribute* metaAttr, CMemoryWriter& writer, IDatabaseResultSet* resultSet)
+void ibValueMetaObjectAttributeBase::GetBinaryData(const ibValueMetaObjectAttributeBase* metaAttr, ibWriterMemory& writer, ibDatabaseResultSet* resultSet)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB();
 	const int fieldType = resultSet->GetResultInt(fieldName + wxT("_TYPE"));
@@ -1041,73 +1041,73 @@ void IValueMetaObjectAttribute::GetBinaryData(const IValueMetaObjectAttribute* m
 	writer.w_s32(fieldType);
 
 	//DATA boolean 
-	if (fieldType == eFieldTypes_Boolean
-		&& metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN)
+	if (fieldType == ibFieldTypes_Boolean
+		&& metaAttr->ContainType(ibValueTypes::TYPE_BOOLEAN)
 		&& resultSet != nullptr) {
 		writer.w_u8(resultSet->GetResultBool(fieldName + wxT("_B")));
 	}
-	else if (fieldType == eFieldTypes_Boolean) {
+	else if (fieldType == ibFieldTypes_Boolean) {
 		writer.w_u8(false);
 	}
 
 	//DATA number 
-	if (fieldType == eFieldTypes_Number
-		&& metaAttr->ContainType(eValueTypes::TYPE_NUMBER)
+	if (fieldType == ibFieldTypes_Number
+		&& metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)
 		&& resultSet != nullptr) {
-		const number_t& value = resultSet->GetResultNumber(fieldName + wxT("_N"));
+		const ibNumber& value = resultSet->GetResultNumber(fieldName + wxT("_N"));
 		writer.w(&value.exponent, sizeof(value.exponent));
 		writer.w(&value.mantissa, sizeof(value.mantissa));
 		writer.w(&value.info, sizeof(value.info));
 	}
-	else if (fieldType == eFieldTypes_Number) {
-		const number_t& value = 0;
+	else if (fieldType == ibFieldTypes_Number) {
+		const ibNumber& value = 0;
 		writer.w(&value.exponent, sizeof(value.exponent));
 		writer.w(&value.mantissa, sizeof(value.mantissa));
 		writer.w(&value.info, sizeof(value.info));
 	}
 
 	//DATA date 
-	if (fieldType == eFieldTypes_Date
-		&& metaAttr->ContainType(eValueTypes::TYPE_DATE)
+	if (fieldType == ibFieldTypes_Date
+		&& metaAttr->ContainType(ibValueTypes::TYPE_DATE)
 		&& resultSet != nullptr) {
 		const wxDateTime& dt = resultSet->GetResultDate(fieldName + wxT("_D"));
 		const wxLongLong& llData = dt.GetValue();
 		writer.w_u64(llData.GetValue());
 	}
-	else if (fieldType == eFieldTypes_Date) {
+	else if (fieldType == ibFieldTypes_Date) {
 		writer.w_u64(emptyDate);
 	}
 
 	//DATA string 
-	if (fieldType == eFieldTypes_String
-		&& metaAttr->ContainType(eValueTypes::TYPE_STRING)
+	if (fieldType == ibFieldTypes_String
+		&& metaAttr->ContainType(ibValueTypes::TYPE_STRING)
 		&& resultSet != nullptr) {
 		writer.w_stringZ(resultSet->GetResultString(fieldName + wxT("_S")));
 	}
-	else if (fieldType == eFieldTypes_String) {
+	else if (fieldType == ibFieldTypes_String) {
 		writer.w_stringZ(wxEmptyString);
 	}
 
 	//DATA enum 
-	if (fieldType == eFieldTypes_Enum
-		&& metaAttr->ContainType(eValueTypes::TYPE_ENUM)
+	if (fieldType == ibFieldTypes_Enum
+		&& metaAttr->ContainType(ibValueTypes::TYPE_ENUM)
 		&& resultSet != nullptr) {
 		writer.w_s32(resultSet->GetResultInt(fieldName + wxT("_E")));
 	}
-	else if (fieldType == eFieldTypes_Enum) {
+	else if (fieldType == ibFieldTypes_Enum) {
 		writer.w_s32(wxNOT_FOUND);
 	}
 
 	//DATA reference 
-	if (fieldType == eFieldTypes_Reference
-		&& metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)
+	if (fieldType == ibFieldTypes_Reference
+		&& metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)
 		&& resultSet != nullptr) {
 		wxMemoryBuffer bufferData;
 		resultSet->GetResultBlob(fieldName + wxT("_RRRef"), bufferData);
 		writer.w_u64(resultSet->GetResultLong(fieldName + wxT("_RTRef")));
 		writer.w_chunk(rt_ref_chunk, bufferData);
 	}
-	else if (fieldType == eFieldTypes_Reference) {
+	else if (fieldType == ibFieldTypes_Reference) {
 		writer.w_u64(0);
 		writer.w_chunk(rt_ref_chunk, wxMemoryBuffer());
 	}

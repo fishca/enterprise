@@ -8,10 +8,10 @@
 
 ////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueMetaObjectAttribute, IValueMetaObject);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueMetaObjectAttributeBase, ibValueMetaObject);
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectAttribute, IValueMetaObjectAttribute);
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectAttributePredefined, IValueMetaObjectAttribute);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectAttribute, ibValueMetaObjectAttributeBase);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectAttributePredefined, ibValueMetaObjectAttributeBase);
 
 //***********************************************************************
 //*                         Attributes                                  * 
@@ -19,25 +19,25 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectAttributePredefined, IValueMetaObjectA
 
 #include "backend/objCtor.h"
 
-bool IValueMetaObjectAttribute::ContainType(const eValueTypes& valType) const
+bool ibValueMetaObjectAttributeBase::ContainType(const ibValueTypes& valType) const
 {
 	return GetTypeDesc().ContainType(valType);
 }
 
-bool IValueMetaObjectAttribute::ContainType(const class_identifier_t& clsid) const
+bool ibValueMetaObjectAttributeBase::ContainType(const ibClassID& clsid) const
 {
 	return GetTypeDesc().ContainType(clsid);
 }
 
-bool IValueMetaObjectAttribute::EqualType(const class_identifier_t& clsid, const CTypeDescription& rhs) const
+bool ibValueMetaObjectAttributeBase::EqualType(const ibClassID& clsid, const ibTypeDescription& rhs) const
 {
 	return GetTypeDesc().EqualType(clsid, rhs);
 }
 
-bool IValueMetaObjectAttribute::ContainMetaType(eCtorMetaType type) const
+bool ibValueMetaObjectAttributeBase::ContainMetaType(ibCtorObjectMetaType type) const
 {
 	for (auto& clsid : GetTypeDesc().GetClsidList()) {
-		const IMetaValueTypeCtor* typeCtor = m_metaData->GetTypeCtor(clsid);
+		const ibCtorMetaValueType* typeCtor = m_metaData->GetTypeCtor(clsid);
 		if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == type)
 			return true;
 	}
@@ -47,95 +47,95 @@ bool IValueMetaObjectAttribute::ContainMetaType(eCtorMetaType type) const
 
 /////////////////////////////////////////////////////////////////////////
 
-eItemMode CValueMetaObjectAttribute::GetItemMode() const {
-	IValueMetaObjectRecordDataHierarchyMutableRef* metaObject =
-		dynamic_cast<IValueMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
+ibItemMode ibValueMetaObjectAttribute::GetItemMode() const {
+	ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject =
+		dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
 	if (metaObject != nullptr)
 		return m_propertyItemMode->GetValueAsEnum();
-	return eItemMode::eItemMode_Item;
+	return ibItemMode::ibItemMode_Item;
 }
 
-eSelectMode CValueMetaObjectAttribute::GetSelectMode() const
+ibSelectMode ibValueMetaObjectAttribute::GetSelectMode() const
 {
 	if (GetTypeDesc().GetClsidCount() > 1)
-		return eSelectMode::eSelectMode_Items;
-	const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(GetTypeDesc().GetFirstClsid());
+		return ibSelectMode::ibSelectMode_Items;
+	const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(GetTypeDesc().GetFirstClsid());
 	if (so != nullptr) {
-		IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
-		if (so->GetMetaTypeCtor() == eCtorMetaType::eCtorMetaType_Reference && metaObject != nullptr)
-			return (eSelectMode)m_propertySelectMode->GetValueAsInteger();
-		return eSelectMode::eSelectMode_Items;
+		ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
+		if (so->GetMetaTypeCtor() == ibCtorObjectMetaType::ibCtorObjectMetaType_Reference && metaObject != nullptr)
+			return (ibSelectMode)m_propertySelectMode->GetValueAsInteger();
+		return ibSelectMode::ibSelectMode_Items;
 	}
-	return eSelectMode::eSelectMode_Items;
+	return ibSelectMode::ibSelectMode_Items;
 }
 
 /////////////////////////////////////////////////////////////////////////
 
-eSelectorDataType IValueMetaObjectAttribute::GetFilterDataType() const
+ibSelectorDataType ibValueMetaObjectAttributeBase::GetFilterDataType() const
 {
-	IValueMetaObjectGenericData* metaObject = dynamic_cast<IValueMetaObjectGenericData*>(m_parent);
+	ibValueMetaObjectGenericData* metaObject = dynamic_cast<ibValueMetaObjectGenericData*>(m_parent);
 	if (metaObject != nullptr) return metaObject->GetFilterDataType();
-	return eSelectorDataType::eSelectorDataType_reference;
+	return ibSelectorDataType::ibSelectorDataType_reference;
 }
 
 /////////////////////////////////////////////////////////////////////////
 
-CValue IValueMetaObjectAttribute::CreateValue() const
+ibValue ibValueMetaObjectAttributeBase::CreateValue() const
 {
-	CValue* refData = CreateValueRef();
+	ibValue* refData = CreateValueRef();
 	if (refData == nullptr)
-		return CValue();
+		return ibValue();
 	return refData;
 }
 
-CValue* IValueMetaObjectAttribute::CreateValueRef() const
+ibValue* ibValueMetaObjectAttributeBase::CreateValueRef() const
 {
 	if (m_defValue.IsEmpty()) 
-		return IBackendTypeConfigFactory::CreateValueRef();
-	return new CValue(m_defValue);
+		return ibBackendTypeConfigFactory::CreateValueRef();
+	return new ibValue(m_defValue);
 }
 
 //***********************************************************************
 //*								Events								    *
 //***********************************************************************
 
-bool IValueMetaObjectAttribute::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool ibValueMetaObjectAttributeBase::OnCreateMetaObject(ibMetaData* metaData, int flags)
 {
-	return IValueMetaObject::OnCreateMetaObject(metaData, flags);
+	return ibValueMetaObject::OnCreateMetaObject(metaData, flags);
 }
 
-bool IValueMetaObjectAttribute::OnDeleteMetaObject()
+bool ibValueMetaObjectAttributeBase::OnDeleteMetaObject()
 {
-	return IValueMetaObject::OnDeleteMetaObject();
+	return ibValueMetaObject::OnDeleteMetaObject();
 }
 
-bool IValueMetaObjectAttribute::OnReloadMetaObject()
+bool ibValueMetaObjectAttributeBase::OnReloadMetaObject()
 {
-	IValueMetaObject* metaObject = GetParent();
+	ibValueMetaObject* metaObject = GetParent();
 	wxASSERT(metaObject);
 	if (metaObject->OnReloadMetaObject())
-		return IValueMetaObject::OnReloadMetaObject();
+		return ibValueMetaObject::OnReloadMetaObject();
 	return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
-bool IValueMetaObjectAttribute::OnBeforeRunMetaObject(int flags)
+bool ibValueMetaObjectAttributeBase::OnBeforeRunMetaObject(int flags)
 {
-	return IValueMetaObject::OnBeforeRunMetaObject(flags);
+	return ibValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool IValueMetaObjectAttribute::OnAfterRunMetaObject(int flags)
+bool ibValueMetaObjectAttributeBase::OnAfterRunMetaObject(int flags)
 {
 	if ((flags & newObjectFlag) != 0 || (flags & pasteObjectFlag) != 0) OnReloadMetaObject();
-	return IValueMetaObject::OnAfterRunMetaObject(flags);
+	return ibValueMetaObject::OnAfterRunMetaObject(flags);
 }
 
 //***********************************************************************
 //*                               Data				                    *
 //***********************************************************************
 
-bool CValueMetaObjectAttribute::LoadData(CMemoryReader& reader)
+bool ibValueMetaObjectAttribute::LoadData(ibReaderMemory& reader)
 {
 	if (!m_propertyType->LoadData(reader))
 		return false;
@@ -147,7 +147,7 @@ bool CValueMetaObjectAttribute::LoadData(CMemoryReader& reader)
 	return true;
 }
 
-bool CValueMetaObjectAttribute::SaveData(CMemoryWriter& writer)
+bool ibValueMetaObjectAttribute::SaveData(ibWriterMemory& writer)
 {
 	if (!m_propertyType->SaveData(writer))
 		return false;
@@ -158,18 +158,18 @@ bool CValueMetaObjectAttribute::SaveData(CMemoryWriter& writer)
 	return true;
 }
 
-bool CValueMetaObjectAttributePredefined::LoadData(CMemoryReader& reader)
+bool ibValueMetaObjectAttributePredefined::LoadData(ibReaderMemory& reader)
 {
-	if (!CTypeDescriptionMemory::LoadData(reader, m_typeDesc))
+	if (!ibTypeDescriptionMemory::LoadData(reader, m_typeDesc))
 		return false;
 
 	m_fillCheck = reader.r_u8();
 	return true;
 }
 
-bool CValueMetaObjectAttributePredefined::SaveData(CMemoryWriter& writer)
+bool ibValueMetaObjectAttributePredefined::SaveData(ibWriterMemory& writer)
 {
-	if (!CTypeDescriptionMemory::SaveData(writer, m_typeDesc))
+	if (!ibTypeDescriptionMemory::SaveData(writer, m_typeDesc))
 		return false;
 
 	writer.w_u8(m_fillCheck);
@@ -180,5 +180,5 @@ bool CValueMetaObjectAttributePredefined::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectAttribute, "Attribute", g_metaAttributeCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectAttributePredefined, "PredefinedAttribute", g_metaPredefinedAttributeCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectAttribute, "Attribute", g_metaAttributeCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectAttributePredefined, "PredefinedAttribute", g_metaPredefinedAttributeCLSID);

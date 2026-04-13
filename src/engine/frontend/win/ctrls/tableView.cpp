@@ -1,7 +1,7 @@
 #include "tableView.h"
 #include "backend/tableInfo.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxTableViewCtrl, wxDataViewExtCtrl);
+wxIMPLEMENT_DYNAMIC_CLASS(ibTableViewCtrl, ibDataViewCtrl);
 
 #include "backend/metadataConfiguration.h"
 
@@ -11,7 +11,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(wxTableViewCtrl, wxDataViewExtCtrl);
 
 #include "backend/objCtor.h"
 
-bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
+bool ibTableViewCtrl::ShowFilter(struct ibFilterRow& filter)
 {
 	enum {
 		eModelUse = 1,
@@ -22,25 +22,25 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 	class wxFilterDialog : public wxDialog {
 
-		class wxDataViewFilterModel : public wxDataViewExtVirtualListModel {
-			CFilterRow m_filter;
+		class wxDataViewFilterModel : public ibDataViewVirtualListModel {
+			ibFilterRow m_filter;
 		public:
 
-			inline void CopyValue(wxVariant& variant, const CValue& cValue) const {
+			inline void CopyValue(wxVariant& variant, const ibValue& cValue) const {
 				variant = cValue.GetString();
 			}
 
-			void SetFilter(const CFilterRow& filter) {
+			void SetFilter(const ibFilterRow& filter) {
 				m_filter = filter;
 				Reset(filter.m_filters.size());
 			};
 
-			CFilterRow& GetFilter() {
+			ibFilterRow& GetFilter() {
 				return m_filter;
 			};
 
 			wxDataViewFilterModel() :
-				wxDataViewExtVirtualListModel() {
+				ibDataViewVirtualListModel() {
 			}
 
 			virtual void GetValueByRow(wxVariant& variant,
@@ -71,17 +71,17 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 					return true;
 				}
 				else if (col == eModelComparison) {
-					m_filter.m_filters[row].m_filterComparison = (eComparisonType)variant.GetLong();
+					m_filter.m_filters[row].m_filterComparison = (ibComparisonType)variant.GetLong();
 					return true;
 				}
 				else if (col == eModelValue) {
-					const CValue& selValue = m_filter.m_filters[row].m_filterValue;
-					const CValue& newValue = activeMetaData->CreateObject(selValue.GetClassType());
+					const ibValue& selValue = m_filter.m_filters[row].m_filterValue;
+					const ibValue& newValue = activeMetaData->CreateObject(selValue.GetClassType());
 					const wxString& strData = variant.GetString();
 					if (strData.Length() > 0) {
-						std::vector<CValue> listValue;
+						std::vector<ibValue> listValue;
 						if (newValue.FindValue(strData, listValue)) {
-							m_filter.m_filters[row].m_filterValue = CValueTypeDescription::AdjustValue(
+							m_filter.m_filters[row].m_filterValue = ibValueTypeDescription::AdjustValue(
 								m_filter.m_filters[row].m_filterTypeDescription, listValue.at(0)
 							);
 						}
@@ -90,7 +90,7 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 						}
 					}
 					else {
-						m_filter.m_filters[row].m_filterValue = CValueTypeDescription::AdjustValue(
+						m_filter.m_filters[row].m_filterValue = ibValueTypeDescription::AdjustValue(
 							m_filter.m_filters[row].m_filterTypeDescription, newValue
 						);
 					}
@@ -101,8 +101,8 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			};
 		};
 
-		class wxValueViewRenderer : public wxDataViewExtCustomRenderer,
-			public IControlFrame {
+		class wxValueViewRenderer : public ibDataViewCustomRenderer,
+			public ibControlFrame {
 			wxFilterDialog* m_filterDialog;
 		public:
 
@@ -132,7 +132,7 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			// able to activate or edit the cell and it doesn't make sense to switch
 			// between the two -- but this is just an example, so it doesn't stop us.
 			wxValueViewRenderer(wxFilterDialog* filterDialog)
-				: wxDataViewExtCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_filterDialog(filterDialog) {
+				: ibDataViewCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_filterDialog(filterDialog) {
 			}
 
 			virtual bool Render(wxRect rect, wxDC* dc, int state) override {
@@ -146,8 +146,8 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			virtual bool ActivateCell(const wxRect& cell,
-				wxDataViewExtModel* model,
-				const wxDataViewExtItem& item,
+				ibDataViewModel* model,
+				const ibDataViewItem& item,
 				unsigned int col,
 				const wxMouseEvent* mouseEvent) override {
 				return false;
@@ -186,7 +186,7 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 				wxRect labelRect,
 				const wxVariant& value) override {
 
-				wxControlTextEditor* textEditor = new wxControlTextEditor;
+				ibControlTextEditor* textEditor = new ibControlTextEditor;
 				textEditor->SetDVCMode(true);
 
 				// create the window hidden to prevent flicker
@@ -203,7 +203,7 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 				textEditor->ShowClearButton(true);
 				textEditor->ShowOpenButton(false);
 
-				wxDataViewExtCtrl* parentWnd = dynamic_cast<wxDataViewExtCtrl*>(dv->GetParent());
+				ibDataViewCtrl* parentWnd = dynamic_cast<ibDataViewCtrl*>(dv->GetParent());
 				if (parentWnd != nullptr) {
 					textEditor->SetBackgroundColour(parentWnd->GetBackgroundColour());
 					textEditor->SetForegroundColour(parentWnd->GetForegroundColour());
@@ -230,7 +230,7 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			virtual bool GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value) override {
-				wxControlTextEditor* textEditor = wxDynamicCast(ctrl, wxControlTextEditor);
+				ibControlTextEditor* textEditor = wxDynamicCast(ctrl, ibControlTextEditor);
 				if (textEditor == nullptr)
 					return false;
 				value = textEditor->GetValue();
@@ -243,51 +243,51 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 		public:
 
-			virtual bool GetControlValue(CValue& pvarControlVal) const {
-				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+			virtual bool GetControlValue(ibValue& pvarControlVal) const {
+				const ibDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return false;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				pvarControlVal = filterData.m_filterValue;
 				return true;
 			}
 
-			virtual CGuid GetControlGuid() const {
-				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+			virtual ibGuid GetControlGuid() const {
+				const ibDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return wxNullGuid;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				return filterData.m_filterGuid;
 			}
 
-			virtual bool SetControlValue(const CValue& varValue) const {
-				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+			virtual bool SetControlValue(const ibValue& varValue) const {
+				const ibDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return false;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				filterData.m_filterValue = varValue;
 				return true;
 			}
 
 			virtual bool HasQuickChoice() const {
-				CValue selValue; GetControlValue(selValue);
-				const IAbstractTypeCtor* so = activeMetaData->GetAvailableCtor(selValue.GetClassType());
-				if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_primitive) {
+				ibValue selValue; GetControlValue(selValue);
+				const ibCtorAbstractType* so = activeMetaData->GetAvailableCtor(selValue.GetClassType());
+				if (so != nullptr && so->GetObjectTypeCtor() == ibCtorObjectType_object_primitive) {
 					return true;
 				}
-				else if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_enum) {
+				else if (so != nullptr && so->GetObjectTypeCtor() == ibCtorObjectType_object_enum) {
 					return true;
 				}
-				else if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_meta_value) {
-					const IMetaValueTypeCtor* meta_so = dynamic_cast<const IMetaValueTypeCtor*>(so);
+				else if (so != nullptr && so->GetObjectTypeCtor() == ibCtorObjectType_object_meta_value) {
+					const ibCtorMetaValueType* meta_so = dynamic_cast<const ibCtorMetaValueType*>(so);
 					if (meta_so != nullptr) {
-						IValueMetaObjectRecordDataRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
+						ibValueMetaObjectRecordDataRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
 						if (metaObject != nullptr)
 							return metaObject->HasQuickChoice();
 					}
@@ -299,15 +299,15 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 			//events
 			void OnSelectButtonPressed(wxCommandEvent& event) {
-				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				const ibDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
-				CTypeDescription& typeDescription = filterData.m_filterTypeDescription;
-				if (filterData.m_filterValue.GetType() == eValueTypes::TYPE_EMPTY) {
-					const class_identifier_t& clsid = ITypeControlFactory::ShowSelectType(activeMetaData,
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
+				ibTypeDescription& typeDescription = filterData.m_filterTypeDescription;
+				if (filterData.m_filterValue.GetType() == ibValueTypes::TYPE_EMPTY) {
+					const ibClassID& clsid = ibTypeControlFactory::ShowSelectType(activeMetaData,
 						filterData.m_filterTypeDescription
 					);
 					if (clsid != 0 && activeMetaData->IsRegisterCtor(clsid)) {
@@ -315,15 +315,15 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 					}
 					return;
 				}
-				const class_identifier_t& clsid = filterData.m_filterValue.GetClassType();
-				if (!ITypeControlFactory::QuickChoice(this, clsid, GetEditorCtrl())) {
-					const IMetaValueTypeCtor* singleValue = activeMetaData->GetTypeCtor(clsid);
+				const ibClassID& clsid = filterData.m_filterValue.GetClassType();
+				if (!ibTypeControlFactory::QuickChoice(this, clsid, GetEditorCtrl())) {
+					const ibCtorMetaValueType* singleValue = activeMetaData->GetTypeCtor(clsid);
 					if (singleValue != nullptr) {
-						IValueMetaObject* metaObject = singleValue->GetMetaObject();
+						ibValueMetaObject* metaObject = singleValue->GetMetaObject();
 						wxASSERT(metaObject);
-						const IValueMetaObjectAttribute* attribute = activeMetaData->FindAnyObjectByFilter<IValueMetaObjectAttribute>(filterData.m_filterModel, true);
+						const ibValueMetaObjectAttributeBase* attribute = activeMetaData->FindAnyObjectByFilter<ibValueMetaObjectAttributeBase>(filterData.m_filterModel, true);
 
-						eSelectMode selMode = eSelectMode::eSelectMode_Items;
+						ibSelectMode selMode = ibSelectMode::ibSelectMode_Items;
 						if (attribute != nullptr)
 							selMode = attribute->GetSelectMode();
 						metaObject->ProcessChoice(this, wxEmptyString, selMode);
@@ -332,24 +332,24 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			void OnClearButtonPressed(wxCommandEvent& event) {
-				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				const ibDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
-				filterData.m_filterValue = CValueTypeDescription::AdjustValue(filterData.m_filterTypeDescription);
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
+				filterData.m_filterValue = ibValueTypeDescription::AdjustValue(filterData.m_filterTypeDescription);
 				filterData.m_filterUse = true;
 				FinishSelecting();
 			}
 
-			virtual void ChoiceProcessing(CValue& vSelected) {
-				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+			virtual void ChoiceProcessing(ibValue& vSelected) {
+				const ibDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				filterData.m_filterValue = vSelected;
 				filterData.m_filterUse = true;
 				FinishSelecting();
@@ -361,11 +361,11 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 	private:
 
-		wxDataViewExtCtrl* m_dataViewFilter;
-		wxDataViewExtColumn* m_dataViewColumnUse;
-		wxDataViewExtColumn* m_dataViewColumnName;
-		wxDataViewExtColumn* m_dataViewColumnComparison;
-		wxDataViewExtColumn* m_dataViewColumnValue;
+		ibDataViewCtrl* m_dataViewFilter;
+		ibDataViewColumn* m_dataViewColumnUse;
+		ibDataViewColumn* m_dataViewColumnName;
+		ibDataViewColumn* m_dataViewColumnComparison;
+		ibDataViewColumn* m_dataViewColumnValue;
 		wxStdDialogButtonSizer* m_sdbSizer;
 		wxButton* m_sdbSizerOK;
 		wxButton* m_sdbSizerCancel;
@@ -373,23 +373,23 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 	public:
 
-		void SetFilter(const CFilterRow& filter) {
+		void SetFilter(const ibFilterRow& filter) {
 			m_filterModel->SetFilter(filter);
 		}
 
-		CFilterRow GetFilter() const {
+		ibFilterRow GetFilter() const {
 			if (m_filterModel != nullptr)
 				return m_filterModel->GetFilter();
-			return CFilterRow();
+			return ibFilterRow();
 		}
 
-		wxFilterDialog::wxFilterDialog(wxWindow* parent, wxWindowID id,
+		wxFilterDialog(wxWindow* parent, wxWindowID id,
 			const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(600, 250), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) :
 			wxDialog(parent, id, _("Filter"), pos, size, style)
 		{
 			wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
-			m_dataViewFilter = new wxDataViewExtCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES | wxDV_SINGLE);
+			m_dataViewFilter = new ibDataViewCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES | wxDV_SINGLE);
 
 			m_dataViewFilter->SetBackgroundColour(parent->GetBackgroundColour());
 			m_dataViewFilter->SetForegroundColour(parent->GetForegroundColour());
@@ -403,15 +403,15 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			m_dataViewColumnUse = m_dataViewFilter->AppendToggleColumn(_("Use"), eModelUse, wxDATAVIEW_CELL_ACTIVATABLE, wxNOT_FOUND, wxAlignment::wxALIGN_LEFT);
 			m_dataViewColumnName = m_dataViewFilter->AppendTextColumn(_("Name"), eModelName, wxDATAVIEW_CELL_INERT, wxNOT_FOUND, wxAlignment::wxALIGN_LEFT);
 
-			m_dataViewColumnComparison = new wxDataViewExtColumn(_("Comparison"),
-				new wxDataViewExtChoiceByIndexRenderer(arr, wxDATAVIEW_CELL_EDITABLE, wxAlignment::wxALIGN_LEFT),
+			m_dataViewColumnComparison = new ibDataViewColumn(_("Comparison"),
+				new ibDataViewChoiceByIndexRenderer(arr, wxDATAVIEW_CELL_EDITABLE, wxAlignment::wxALIGN_LEFT),
 				eModelComparison,
 				wxNOT_FOUND,
 				wxAlignment::wxALIGN_LEFT
 			);
 			m_dataViewFilter->AppendColumn(m_dataViewColumnComparison);
 
-			m_dataViewColumnValue = new wxDataViewExtColumn(_("Value"),
+			m_dataViewColumnValue = new ibDataViewColumn(_("Value"),
 				new wxValueViewRenderer(this),
 				eModelValue,
 				wxNOT_FOUND,
@@ -437,7 +437,7 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			m_dataViewFilter->AssociateModel(m_filterModel);
 
 			wxIcon dlg_icon;
-			dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picFilterCLSID));
+			dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picFilterCLSID));
 
 			wxDialog::SetIcon(dlg_icon);
 
@@ -450,7 +450,7 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			delete m_filterModel;
 		}
 
-		void OnItemActivated(wxDataViewExtEvent& event) {
+		void OnItemActivated(ibDataViewEvent& event) {
 			m_dataViewFilter->EditItem(event.GetItem(), event.GetDataViewColumn());
 			event.Skip();
 		}
@@ -467,13 +467,13 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 	return result;
 }
 
-bool wxTableViewCtrl::ShowViewMode()
+bool ibTableViewCtrl::ShowViewMode()
 {
 	class wxTableViewModeDialog : public wxDialog {
 
 	public:
 
-		wxTableViewModeDialog(wxWindow* parent, wxWindowID id, wxDataViewExtViewMode mode) :
+		wxTableViewModeDialog(wxWindow* parent, wxWindowID id, ibDataViewViewMode mode) :
 			wxDialog(parent, id, _("View mode"))
 		{
 			this->SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -483,11 +483,11 @@ bool wxTableViewCtrl::ShowViewMode()
 			wxStaticBoxSizer* sbSizerView = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("View")), wxVERTICAL);
 
 			m_radioBtnTree = new wxRadioButton(sbSizerView->GetStaticBox(), wxID_ANY, _("Tree"), wxDefaultPosition, wxDefaultSize, 0);
-			if (mode == wxDataViewExtViewMode::wxDataViewExtTree) m_radioBtnTree->SetValue(true);
+			if (mode == ibDataViewViewMode::ibDataViewTree) m_radioBtnTree->SetValue(true);
 			m_radioBtnHierarchy = new wxRadioButton(sbSizerView->GetStaticBox(), wxID_ANY, _("Hierarchy"), wxDefaultPosition, wxDefaultSize, 0);
-			if (mode == wxDataViewExtViewMode::wxDataViewExtHierarchical) m_radioBtnHierarchy->SetValue(true);
+			if (mode == ibDataViewViewMode::ibDataViewHierarchical) m_radioBtnHierarchy->SetValue(true);
 			m_radioBtnList = new wxRadioButton(sbSizerView->GetStaticBox(), wxID_ANY, _("List"), wxDefaultPosition, wxDefaultSize, 0);
-			if (mode == wxDataViewExtViewMode::wxDataViewExtList) m_radioBtnList->SetValue(true);
+			if (mode == ibDataViewViewMode::ibDataViewList) m_radioBtnList->SetValue(true);
 
 			sbSizerView->Add(m_radioBtnTree, 0, wxALL, 5);
 			sbSizerView->Add(m_radioBtnHierarchy, 0, wxALL, 5);
@@ -509,22 +509,22 @@ bool wxTableViewCtrl::ShowViewMode()
 			bSizerMain->Fit(this);
 
 			wxIcon dlg_icon;
-			dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picHierarchyCLSID));
+			dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picHierarchyCLSID));
 
 			wxDialog::SetIcon(dlg_icon);
 			wxDialog::Centre(wxBOTH);
 		}
 
-		wxDataViewExtViewMode GetViewMode() const
+		ibDataViewViewMode GetViewMode() const
 		{
 			if (m_radioBtnTree->GetValue())
-				return wxDataViewExtViewMode::wxDataViewExtTree;
+				return ibDataViewViewMode::ibDataViewTree;
 			else if (m_radioBtnHierarchy->GetValue())
-				return wxDataViewExtViewMode::wxDataViewExtHierarchical;
+				return ibDataViewViewMode::ibDataViewHierarchical;
 			else if (m_radioBtnList->GetValue())
-				return wxDataViewExtViewMode::wxDataViewExtList;
+				return ibDataViewViewMode::ibDataViewList;
 
-			return wxDataViewExtViewMode::wxDataViewExtList;
+			return ibDataViewViewMode::ibDataViewList;
 		}
 
 	private:
@@ -543,7 +543,7 @@ bool wxTableViewCtrl::ShowViewMode()
 	bool result = false;
 	if (dialog->ShowModal() == wxID_OK) {
 
-		wxTableViewCtrl::SetViewMode(dialog->GetViewMode());
+		ibTableViewCtrl::SetViewMode(dialog->GetViewMode());
 		result = true;
 	}
 	

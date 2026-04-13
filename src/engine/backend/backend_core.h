@@ -27,24 +27,23 @@ extern BACKEND_API unsigned int GetBuildId();
 
 #define emptyDate -62135604000000ll
 
-typedef int role_identifier_t;
-typedef int meta_identifier_t;
-typedef int form_identifier_t;
-typedef int action_identifier_t;
+typedef int ibRoleID;
+typedef int ibMetaID;
+typedef int ibFormID;
+typedef int ibActionID;
 
-typedef unsigned wxLongLong_t picture_identifier_t;
-typedef unsigned int version_identifier_t;
+typedef unsigned wxLongLong_t ibPictureID;
+typedef unsigned int ibVersionID;
 
 typedef std::map<
-	meta_identifier_t, class BACKEND_API CValue
-> valueArray_t;
-
+	ibMetaID, class BACKEND_API ibValue
+> ibMetaValueArray;
 
 //*******************************************************************************************
 //*                                 Special enumeration                                     *
 //*******************************************************************************************
 
-enum eValueTypes {
+enum ibValueTypes {
 
 	TYPE_EMPTY = 0,
 	TYPE_BOOLEAN = 1,
@@ -102,10 +101,15 @@ enum eValueTypes {
 #define version_generate(major, minor, release) \
 		( (major * 1000) + (minor * 100) + release )
 
-enum eProgramVersion {
+enum ibProgramVersion {
 	version_oes_1_0_0 = version_generate(1, 0, 0),
 	version_oes_1_0_1 = version_generate(1, 0, 1),
 	version_oes_last  = version_oes_1_0_1
+};
+
+enum ibProgramSyntax {
+	syntax_vbs, 
+	syntax_ces,
 };
 
 //*******************************************************************************************

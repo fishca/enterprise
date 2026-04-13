@@ -2,61 +2,61 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-static std::set<CFormVisualDocument*> s_createdDocFormArray = {};
+static std::set<ibFormVisualDocument*> s_createdDocFormArray = {};
 
 //********************************************************************************************
 //*                                  Visual Document & View                                  *
 //********************************************************************************************
 
-CFormVisualEditView* CFormVisualDocument::GetFirstView() const
+ibFormVisualEditView* ibFormVisualDocument::GetFirstView() const
 {
 	return wxDynamicCast(
-		CMetaDocument::GetFirstView(), CFormVisualEditView
+		ibMetaDocument::GetFirstView(), ibFormVisualEditView
 	);
 }
 
-const CUniqueKey& CFormVisualDocument::GetFormKey() const
+const ibUniqueKey& ibFormVisualDocument::GetFormKey() const
 {
 	return m_valueForm->GetFormKey();
 }
 
-bool CFormVisualDocument::CompareFormKey(const CUniqueKey& formKey) const
+bool ibFormVisualDocument::CompareFormKey(const ibUniqueKey& formKey) const
 {
 	return m_valueForm->CompareFormKey(formKey);
 }
 
-CValueForm* CFormVisualDocument::GetValueForm() const
+ibValueForm* ibFormVisualDocument::GetValueForm() const
 {
 	return m_valueForm;
 }
 
-bool CFormVisualDocument::OnCreate(const wxString& path, long flags)
+bool ibFormVisualDocument::OnCreate(const wxString& path, long flags)
 {
-	const ISourceDataObject* sourceObject = m_valueForm->GetSourceObject();
+	const ibSourceDataObject* sourceObject = m_valueForm->GetSourceObject();
 
 	if (sourceObject != nullptr && !IsVisualDemonstrationDoc()) {
-		const IValueMetaObjectGenericData* genericObject = sourceObject->GetSourceMetaObject();
+		const ibValueMetaObjectGenericData* genericObject = sourceObject->GetSourceMetaObject();
 		if (genericObject != nullptr) {
-			CFormVisualDocument::SetIcon(genericObject->GetIcon());
-			CFormVisualDocument::SetFilename(genericObject->GetFileName());
+			ibFormVisualDocument::SetIcon(genericObject->GetIcon());
+			ibFormVisualDocument::SetFilename(genericObject->GetFileName());
 		}
 	}
 	else {
-		const IValueMetaObjectForm* creator = m_valueForm->GetFormMetaObject();
+		const ibValueMetaObjectFormBase* creator = m_valueForm->GetFormMetaObject();
 		if (creator != nullptr) {
-			CFormVisualDocument::SetIcon(creator->GetIcon());
+			ibFormVisualDocument::SetIcon(creator->GetIcon());
 		}
-		CFormVisualDocument::SetFilename(creator->GetFileName());
+		ibFormVisualDocument::SetFilename(creator->GetFileName());
 	}
 
-	CFormVisualDocument::SetTitle(m_valueForm->GetCaption());
+	ibFormVisualDocument::SetTitle(m_valueForm->GetCaption());
 
 	if (IsVisualDemonstrationDoc()) m_childDoc = false;
 
-	return CMetaDocument::OnCreate(path, flags);
+	return ibMetaDocument::OnCreate(path, flags);
 }
 
-bool CFormVisualDocument::OnCloseDocument()
+bool ibFormVisualDocument::OnCloseDocument()
 {
 	if (m_valueForm != nullptr)
 		m_valueForm->m_formModified = false;
@@ -65,22 +65,22 @@ bool CFormVisualDocument::OnCloseDocument()
 
 	// When the parent document closes, its children must be closed as well as
 	// they can't exist without the parent.
-	CMetaDocument const* documentParent = m_documentParent;
+	ibMetaDocument const* documentParent = m_documentParent;
 
 	if (documentManager != nullptr && documentParent != nullptr)
 		documentManager->ActivateView(documentParent->GetFirstView());
 
-	return CMetaDocument::OnCloseDocument();
+	return ibMetaDocument::OnCloseDocument();
 }
 
-bool CFormVisualDocument::IsCloseOnOwnerClose() const
+bool ibFormVisualDocument::IsCloseOnOwnerClose() const
 {
 	if (m_valueForm != nullptr)
 		return m_valueForm->IsCloseOnOwnerClose();
 	return true;
 }
 
-void CFormVisualDocument::Modify(bool modify)
+void ibFormVisualDocument::Modify(bool modify)
 {
 	if (m_valueForm != nullptr)
 		m_valueForm->m_formModified = modify;
@@ -90,16 +90,16 @@ void CFormVisualDocument::Modify(bool modify)
 		m_documentModified = modify;
 
 		// Allow views to append asterix to the title
-		CFormVisualEditView* view = GetFirstView();
+		ibFormVisualEditView* view = GetFirstView();
 		if (view != nullptr) view->OnChangeFilename();
 	}
 }
 
 #include "backend/system/systemManager.h"
 
-bool CFormVisualDocument::Save()
+bool ibFormVisualDocument::Save()
 {
-	ISourceDataObject* sourceObject = m_valueForm != nullptr ?
+	ibSourceDataObject* sourceObject = m_valueForm != nullptr ?
 		m_valueForm->GetSourceObject() : nullptr;
 
 	bool success = true;
@@ -108,26 +108,26 @@ bool CFormVisualDocument::Save()
 		success = sourceObject != nullptr ?
 			sourceObject->SaveModify() : true;
 	}
-	catch (const CBackendAccessException* err) {
-		CSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendAccessException* err) {
+		ibValueSystemFunction::Alert(err->GetErrorDescription());
 		success = false;
 	}
-	catch (const CBackendException*) {
-		CSystemFunction::Alert(_("An error occurred while trying to save the form!"));
+	catch (const ibBackendException*) {
+		ibValueSystemFunction::Alert(_("An error occurred while trying to save the form!"));
 		success = false;
 	}
 
 	if (success) {
-		CFormVisualDocument::Modify(false);
+		ibFormVisualDocument::Modify(false);
 		return true;
 	}
 
 	return true;
 }
 
-void CFormVisualDocument::SetDocParent(CMetaDocument* docParent)
+void ibFormVisualDocument::SetDocParent(ibMetaDocument* docParent)
 {
-	CMetaDocument::SetDocParent(docParent);
+	ibMetaDocument::SetDocParent(docParent);
 
 	if (docParent == nullptr &&
 		(m_valueForm != nullptr && m_valueForm->m_controlOwner != nullptr)) {
@@ -137,33 +137,33 @@ void CFormVisualDocument::SetDocParent(CMetaDocument* docParent)
 	}
 }
 
-CMetaView* CFormVisualDocument::DoCreateView()
+ibMetaView* ibFormVisualDocument::DoCreateView()
 {
-	return new CFormVisualEditView();
+	return new ibFormVisualEditView();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-CFormVisualDocument::CFormVisualDocument(CValueForm* valueForm)
+ibFormVisualDocument::ibFormVisualDocument(ibValueForm* valueForm)
 	: m_valueForm(valueForm) {
 
 	if (m_valueForm != nullptr) {
 
-		CFormVisualDocument::SetCommandProcessor(new CFormVisualCommandProcessor);
-		CFormVisualDocument::SetMetaObject(nullptr);
+		ibFormVisualDocument::SetCommandProcessor(new ibFormVisualCommandProcessor);
+		ibFormVisualDocument::SetMetaObject(nullptr);
 	}
 
 	s_createdDocFormArray.insert(this);
 }
 
-CFormVisualDocument::~CFormVisualDocument()
+ibFormVisualDocument::~ibFormVisualDocument()
 {
 	s_createdDocFormArray.erase(this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-IMetaData* CFormVisualDocument::GetMetaData() const
+ibMetaData* ibFormVisualDocument::GetMetaData() const
 {
 	return m_valueForm != nullptr ?
 		m_valueForm->GetMetaData() : nullptr;
@@ -171,7 +171,7 @@ IMetaData* CFormVisualDocument::GetMetaData() const
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-CUniqueKey CFormVisualDocument::CreateFormUniqueKey(const IBackendControlFrame* ownerControl, const ISourceDataObject* sourceObject, const CUniqueKey& formKey)
+ibUniqueKey ibFormVisualDocument::CreateFormUniqueKey(const ibBackendControlFrame* ownerControl, const ibSourceDataObject* sourceObject, const ibUniqueKey& formKey)
 {
 	if (formKey.isValid()) {
 		// 1. if set guid from user
@@ -190,26 +190,26 @@ CUniqueKey CFormVisualDocument::CreateFormUniqueKey(const IBackendControlFrame* 
 	return wxNewUniqueGuid;
 }
 
-CValueForm* CFormVisualDocument::FindFormByUniqueKey(const IBackendControlFrame* ownerControl, const ISourceDataObject* sourceObject, const CUniqueKey& formKey)
+ibValueForm* ibFormVisualDocument::FindFormByUniqueKey(const ibBackendControlFrame* ownerControl, const ibSourceDataObject* sourceObject, const ibUniqueKey& formKey)
 {
 	return FindFormByUniqueKey(
 		CreateFormUniqueKey(ownerControl, sourceObject, formKey)
 	);
 }
 
-CValueForm* CFormVisualDocument::FindFormByUniqueKey(const CUniqueKey& formKey)
+ibValueForm* ibFormVisualDocument::FindFormByUniqueKey(const ibUniqueKey& formKey)
 {
 	if (formKey.isValid()) {
 
-		std::set<CFormVisualDocument*>::iterator foundedForm =
+		std::set<ibFormVisualDocument*>::iterator foundedForm =
 			std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
-				[formKey](const CFormVisualDocument* visualDoc) {
+				[formKey](const ibFormVisualDocument* visualDoc) {
 					return visualDoc->CompareFormKey(formKey);
 				}
 			);
 
 		if (foundedForm != s_createdDocFormArray.end()) {
-			CFormVisualDocument* foundedVisualDocument = *foundedForm;
+			ibFormVisualDocument* foundedVisualDocument = *foundedForm;
 			wxASSERT(foundedVisualDocument);
 			return foundedVisualDocument->GetValueForm();
 		}
@@ -218,23 +218,23 @@ CValueForm* CFormVisualDocument::FindFormByUniqueKey(const CUniqueKey& formKey)
 	return nullptr;
 }
 
-CValueForm* CFormVisualDocument::FindFormByControlUniqueKey(const CUniqueKey& formKey)
+ibValueForm* ibFormVisualDocument::FindFormByControlUniqueKey(const ibUniqueKey& formKey)
 {
 	if (formKey.isValid()) {
-		std::set<CFormVisualDocument*>::iterator foundedSourceForm =
+		std::set<ibFormVisualDocument*>::iterator foundedSourceForm =
 			std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
-				[formKey](const CFormVisualDocument* visualDoc) {
+				[formKey](const ibFormVisualDocument* visualDoc) {
 					wxASSERT(visualDoc);
-					CValueForm* valueForm = visualDoc->GetValueForm();
+					ibValueForm* valueForm = visualDoc->GetValueForm();
 					wxASSERT(valueForm);
-					IValueFrame* ownerControl = valueForm->GetOwnerControl();
+					ibValueFrame* ownerControl = valueForm->GetOwnerControl();
 					if (ownerControl != nullptr) return formKey == ownerControl->GetControlGuid();
 					return false;
 				}
 			);
 
 		if (foundedSourceForm != s_createdDocFormArray.end()) {
-			CFormVisualDocument* foundedVisualDocument = *foundedSourceForm;
+			ibFormVisualDocument* foundedVisualDocument = *foundedSourceForm;
 			wxASSERT(foundedVisualDocument);
 			return foundedVisualDocument->GetValueForm();
 		}
@@ -243,22 +243,22 @@ CValueForm* CFormVisualDocument::FindFormByControlUniqueKey(const CUniqueKey& fo
 	return nullptr;
 }
 
-CValueForm* CFormVisualDocument::FindFormBySourceUniqueKey(const CUniqueKey& formKey)
+ibValueForm* ibFormVisualDocument::FindFormBySourceUniqueKey(const ibUniqueKey& formKey)
 {
 	if (formKey.isValid()) {
-		std::set<CFormVisualDocument*>::iterator foundedSourceForm =
+		std::set<ibFormVisualDocument*>::iterator foundedSourceForm =
 			std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
-				[formKey](const CFormVisualDocument* visualDoc) {
-					CValueForm* valueForm = visualDoc->GetValueForm();
+				[formKey](const ibFormVisualDocument* visualDoc) {
+					ibValueForm* valueForm = visualDoc->GetValueForm();
 					wxASSERT(valueForm);
-					ISourceDataObject* sourceObject = valueForm->GetSourceObject();
+					ibSourceDataObject* sourceObject = valueForm->GetSourceObject();
 					if (sourceObject != nullptr) return formKey == sourceObject->GetGuid();
 					return false;
 				}
 			);
 
 		if (foundedSourceForm != s_createdDocFormArray.end()) {
-			CFormVisualDocument* foundedVisualDocument = *foundedSourceForm;
+			ibFormVisualDocument* foundedVisualDocument = *foundedSourceForm;
 			wxASSERT(foundedVisualDocument);
 			return foundedVisualDocument->GetValueForm();
 		}
@@ -267,7 +267,7 @@ CValueForm* CFormVisualDocument::FindFormBySourceUniqueKey(const CUniqueKey& for
 	return nullptr;
 }
 
-CFormVisualDocument* CFormVisualDocument::FindDocByUniqueKey(const CUniqueKey& formKey)
+ibFormVisualDocument* ibFormVisualDocument::FindDocByUniqueKey(const ibUniqueKey& formKey)
 {
 	for (auto& visualDocument : s_createdDocFormArray) {
 		if (visualDocument != nullptr &&
@@ -280,20 +280,20 @@ CFormVisualDocument* CFormVisualDocument::FindDocByUniqueKey(const CUniqueKey& f
 	return nullptr;
 }
 
-bool CFormVisualDocument::UpdateFormUniqueKey(const CUniquePairKey& formKey)
+bool ibFormVisualDocument::UpdateFormUniqueKey(const ibUniqueKeyPair& formKey)
 {
-	std::set<CFormVisualDocument*>::iterator foundedForm =
+	std::set<ibFormVisualDocument*>::iterator foundedForm =
 		std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
-			[formKey](const CFormVisualDocument* visualDoc) {
+			[formKey](const ibFormVisualDocument* visualDoc) {
 				return visualDoc != nullptr &&
 					visualDoc->GetFormKey().GetGuid() == formKey.GetGuid();
 			}
 		);
 
 	if (foundedForm != s_createdDocFormArray.end()) {
-		CFormVisualDocument* visualDocument = *foundedForm;
+		ibFormVisualDocument* visualDocument = *foundedForm;
 		wxASSERT(visualDocument);
-		CValueForm* formValue = visualDocument->GetValueForm();
+		ibValueForm* formValue = visualDocument->GetValueForm();
 		wxASSERT(formValue);
 		formValue->m_formKey = formKey;
 		return true;
@@ -304,12 +304,12 @@ bool CFormVisualDocument::UpdateFormUniqueKey(const CUniquePairKey& formKey)
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxPrintout* CFormVisualEditView::OnCreatePrintout()
+wxPrintout* ibFormVisualEditView::OnCreatePrintout()
 {
 	wxWindow* focusedWindow = wxWindow::FindFocus();
 	while (focusedWindow != nullptr) {
 
-		IValueFrame* currentFrame = m_visualHost->GetObjectBase(focusedWindow);
+		ibValueFrame* currentFrame = m_visualHost->GetObjectBase(focusedWindow);
 		if (currentFrame != nullptr)
 			return currentFrame->CreatePrintout();
 
@@ -319,51 +319,51 @@ wxPrintout* CFormVisualEditView::OnCreatePrintout()
 	return nullptr;
 }
 
-bool CFormVisualEditView::OnCreate(CMetaDocument* doc, long flags)
+bool ibFormVisualEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	std::set<CFormVisualDocument*>::iterator foundedVisualDoc =
+	std::set<ibFormVisualDocument*>::iterator foundedVisualDoc =
 
 		std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
-			[doc](const CFormVisualDocument* visualDoc) {
+			[doc](const ibFormVisualDocument* visualDoc) {
 				return doc != nullptr &&
 					doc == visualDoc;
 			}
 		);
 
 	if (foundedVisualDoc != s_createdDocFormArray.end()) {
-		CValueForm* const valueForm = (*foundedVisualDoc)->GetValueForm();
+		ibValueForm* const valueForm = (*foundedVisualDoc)->GetValueForm();
 		wxASSERT(valueForm);
-		m_visualHost = new CVisualClientHost(*foundedVisualDoc, valueForm, m_viewFrame);
+		m_visualHost = new ibVisualHostClient(*foundedVisualDoc, valueForm, m_viewFrame);
 		return m_visualHost->CreateAndUpdateVisualHost();
 	}
 
-	return CMetaView::OnCreate(doc, flags);
+	return ibMetaView::OnCreate(doc, flags);
 }
 
-void CFormVisualEditView::OnUpdate(wxView* sender, wxObject* hint)
+void ibFormVisualEditView::OnUpdate(wxView* sender, wxObject* hint)
 {
 	if (m_visualHost != nullptr)
 		m_visualHost->UpdateForm();
 }
 
-bool CFormVisualEditView::OnClose(bool deleteWindow)
+bool ibFormVisualEditView::OnClose(bool deleteWindow)
 {
 	if (!deleteWindow) {
 
-		CMetaDocument const* doc = GetDocument();
+		ibMetaDocument const* doc = GetDocument();
 		wxASSERT(doc);
 
-		std::set<CFormVisualDocument*>::iterator foundedVisualDoc =
+		std::set<ibFormVisualDocument*>::iterator foundedVisualDoc =
 
 			std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
-				[doc](const CFormVisualDocument* visualDoc) {
+				[doc](const ibFormVisualDocument* visualDoc) {
 					return doc != nullptr &&
 						doc == visualDoc;
 				}
 			);
 
 		if (foundedVisualDoc != s_createdDocFormArray.end()) {
-			CValueForm* const valueForm = (*foundedVisualDoc)->GetValueForm();
+			ibValueForm* const valueForm = (*foundedVisualDoc)->GetValueForm();
 			wxASSERT(valueForm);
 			if (valueForm != nullptr && !valueForm->CloseDocForm())
 				return false;
@@ -378,10 +378,10 @@ bool CFormVisualEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	return CMetaView::OnClose(deleteWindow);
+	return ibMetaView::OnClose(deleteWindow);
 }
 
-void CFormVisualEditView::OnClosingDocument()
+void ibFormVisualEditView::OnClosingDocument()
 {
 	if (m_visualHost != nullptr) {
 		wxTheApp->ScheduleForDestruction(m_visualHost);
@@ -391,7 +391,7 @@ void CFormVisualEditView::OnClosingDocument()
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-CFormVisualEditView::~CFormVisualEditView()
+ibFormVisualEditView::~ibFormVisualEditView()
 {
 	if (m_visualHost != nullptr && !wxTheApp->IsScheduledForDestruction(m_visualHost)) {
 		wxTheApp->ScheduleForDestruction(m_visualHost);

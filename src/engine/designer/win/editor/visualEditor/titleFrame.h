@@ -3,9 +3,9 @@
 
 #include <wx/wx.h>
 
-class CPanelTitle : public wxPanel {
+class ibPanelTitle : public wxPanel {
 public:
-	CPanelTitle(wxWindow *parent, const wxString &title = wxT("No title"));
+	ibPanelTitle(wxWindow *parent, const wxString &title = wxT("No title"));
 	static wxWindow* CreateTitle(wxWindow *inner, const wxString &title);
 };
 

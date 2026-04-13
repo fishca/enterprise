@@ -12,42 +12,42 @@
 //*                         metaData                                    * 
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectConstant, CValueMetaObjectAttribute)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectConstant, ibValueMetaObjectAttribute)
 
 //***********************************************************************
 //*                         Attributes                                  * 
 //***********************************************************************
 
-CValueMetaObjectConstant::CValueMetaObjectConstant() : CValueMetaObjectAttribute()
+ibValueMetaObjectConstant::ibValueMetaObjectConstant() : ibValueMetaObjectAttribute()
 {
 	//set default proc
-	m_propertyModule->GetMetaObject()->SetDefaultProcedure(wxT("BeforeWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
-	m_propertyModule->GetMetaObject()->SetDefaultProcedure(wxT("OnWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	m_propertyModule->GetMetaObject()->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	m_propertyModule->GetMetaObject()->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
 }
 
-CValueMetaObjectConstant::~CValueMetaObjectConstant()
+ibValueMetaObjectConstant::~ibValueMetaObjectConstant()
 {
 }
 
-bool CValueMetaObjectConstant::LoadData(CMemoryReader& dataReader)
+bool ibValueMetaObjectConstant::LoadData(ibReaderMemory& dataReader)
 {
 	//load object module
 	m_propertyModule->GetMetaObject()->LoadMeta(dataReader);
 
-	return CValueMetaObjectAttribute::LoadData(dataReader);
+	return ibValueMetaObjectAttribute::LoadData(dataReader);
 }
 
-bool CValueMetaObjectConstant::SaveData(CMemoryWriter& dataWritter)
+bool ibValueMetaObjectConstant::SaveData(ibWriterMemory& dataWritter)
 {
 	//save object module
 	m_propertyModule->GetMetaObject()->SaveMeta(dataWritter);
 
-	return CValueMetaObjectAttribute::SaveData(dataWritter);
+	return ibValueMetaObjectAttribute::SaveData(dataWritter);
 }
 
-bool CValueMetaObjectConstant::DeleteData()
+bool ibValueMetaObjectConstant::DeleteData()
 {
-	return CValueMetaObjectAttribute::DeleteData();
+	return ibValueMetaObjectAttribute::DeleteData();
 }
 
 //***********************************************************************
@@ -56,44 +56,44 @@ bool CValueMetaObjectConstant::DeleteData()
 
 #include "backend/appData.h"
 
-bool CValueMetaObjectConstant::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool ibValueMetaObjectConstant::OnCreateMetaObject(ibMetaData* metaData, int flags)
 {
-	if (!CValueMetaObjectAttribute::OnCreateMetaObject(metaData, flags))
+	if (!ibValueMetaObjectAttribute::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	return m_propertyModule->GetMetaObject()->OnCreateMetaObject(metaData, flags);
 }
 
-bool CValueMetaObjectConstant::OnLoadMetaObject(IMetaData* metaData)
+bool ibValueMetaObjectConstant::OnLoadMetaObject(ibMetaData* metaData)
 {
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!m_propertyModule->GetMetaObject()->OnLoadMetaObject(metaData))
 		return false;
 
-	return CValueMetaObjectAttribute::OnLoadMetaObject(metaData);
+	return ibValueMetaObjectAttribute::OnLoadMetaObject(metaData);
 }
 
-bool CValueMetaObjectConstant::OnSaveMetaObject(int flags)
+bool ibValueMetaObjectConstant::OnSaveMetaObject(int flags)
 {
 	if (!m_propertyModule->GetMetaObject()->OnSaveMetaObject(flags))
 		return false;
 
-	return CValueMetaObjectAttribute::OnSaveMetaObject(flags);
+	return ibValueMetaObjectAttribute::OnSaveMetaObject(flags);
 }
 
-bool CValueMetaObjectConstant::OnDeleteMetaObject()
+bool ibValueMetaObjectConstant::OnDeleteMetaObject()
 {
 	if (!m_propertyModule->GetMetaObject()->OnDeleteMetaObject())
 		return false;
 
-	return CValueMetaObjectAttribute::OnDeleteMetaObject();
+	return ibValueMetaObjectAttribute::OnDeleteMetaObject();
 }
 
 #include "backend/constantCtor.h"
 
-bool CValueMetaObjectConstant::OnBeforeRunMetaObject(int flags)
+bool ibValueMetaObjectConstant::OnBeforeRunMetaObject(int flags)
 {
 	if (!m_propertyModule->GetMetaObject()->OnBeforeRunMetaObject(flags))
 		return false;
@@ -101,48 +101,48 @@ bool CValueMetaObjectConstant::OnBeforeRunMetaObject(int flags)
 	registerConstObject();
 	registerConstManager();
 
-	return CValueMetaObjectAttribute::OnBeforeRunMetaObject(flags);
+	return ibValueMetaObjectAttribute::OnBeforeRunMetaObject(flags);
 }
 
-bool CValueMetaObjectConstant::OnAfterRunMetaObject(int flags)
+bool ibValueMetaObjectConstant::OnAfterRunMetaObject(int flags)
 {
 	if (!m_propertyModule->GetMetaObject()->OnAfterRunMetaObject(flags))
 		return false;
 
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
 
-		if (CValueMetaObjectAttribute::OnAfterRunMetaObject(flags))
+		if (ibValueMetaObjectAttribute::OnAfterRunMetaObject(flags))
 			return moduleManager->AddCompileModule(m_propertyModule->GetMetaObject(), CreateRecordDataObjectValue());
 
 		return false;
 	}
 
-	return CValueMetaObjectAttribute::OnAfterRunMetaObject(flags);
+	return ibValueMetaObjectAttribute::OnAfterRunMetaObject(flags);
 }
 
-bool CValueMetaObjectConstant::OnBeforeCloseMetaObject()
+bool ibValueMetaObjectConstant::OnBeforeCloseMetaObject()
 {
 	if (!m_propertyModule->GetMetaObject()->OnBeforeCloseMetaObject())
 		return false;
 
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
 
 		if (moduleManager->RemoveCompileModule(m_propertyModule->GetMetaObject()))
-			return CValueMetaObjectAttribute::OnAfterCloseMetaObject();
+			return ibValueMetaObjectAttribute::OnAfterCloseMetaObject();
 
 		return false;
 	}
 
-	return CValueMetaObjectAttribute::OnBeforeCloseMetaObject();
+	return ibValueMetaObjectAttribute::OnBeforeCloseMetaObject();
 }
 
-bool CValueMetaObjectConstant::OnAfterCloseMetaObject()
+bool ibValueMetaObjectConstant::OnAfterCloseMetaObject()
 {
 	if (!m_propertyModule->GetMetaObject()->OnAfterCloseMetaObject())
 		return false;
@@ -150,16 +150,16 @@ bool CValueMetaObjectConstant::OnAfterCloseMetaObject()
 	unregisterConstObject();
 	unregisterConstManager();
 
-	return CValueMetaObjectAttribute::OnAfterCloseMetaObject();
+	return ibValueMetaObjectAttribute::OnAfterCloseMetaObject();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-IBackendValueForm* CValueMetaObjectConstant::GetObjectForm()
+ibBackendValueForm* ibValueMetaObjectConstant::GetObjectForm()
 {
-	IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(nullptr, nullptr, m_metaGuid);
+	ibBackendValueForm* const foundedForm = ibBackendValueForm::FindFormByUniqueKey(nullptr, nullptr, m_metaGuid);
 	if (foundedForm == nullptr)
-		return IValueMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, CreateRecordDataObjectValue(), m_metaGuid);
+		return ibValueMetaObjectFormBase::CreateAndBuildForm(nullptr, nullptr, CreateRecordDataObjectValue(), m_metaGuid);
 	return foundedForm;
 }
 
@@ -167,4 +167,4 @@ IBackendValueForm* CValueMetaObjectConstant::GetObjectForm()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectConstant, "Constant", g_metaConstantCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectConstant, "Constant", g_metaConstantCLSID);

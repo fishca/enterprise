@@ -13,89 +13,89 @@
 //********************************************************************************************
 
 //COMMON TABLE & COLUMN
-const class_identifier_t g_controlTableBoxCLSID = string_to_clsid("CT_TABL");
-const class_identifier_t g_controlTableBoxColumnCLSID = string_to_clsid("CT_TBLC");
+const ibClassID g_controlTableBoxCLSID = string_to_clsid("CT_TABL");
+const ibClassID g_controlTableBoxColumnCLSID = string_to_clsid("CT_TBLC");
 
 //********************************************************************************************
 //*                                 Value TableBox                                           *
 //********************************************************************************************
 
-class CValueEnumTableBoxSelectionMode :
-	public IEnumeration<wxDataViewExtSelectionMode> {
+class ibValueEnumTableBoxSelectionMode :
+	public ibValueEnumeration<ibDataViewSelectionMode> {
 public:
-	CValueEnumTableBoxSelectionMode() : IEnumeration() {}
+	ibValueEnumTableBoxSelectionMode() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxDataViewExtSelectionMode::wxDataViewExtSelectCell, wxT("SelectCell"), _("Select cell"));
-		AddEnumeration(wxDataViewExtSelectionMode::wxDataViewExtSelectRow, wxT("SelectRow"), _("Select row"));
+		AddEnumeration(ibDataViewSelectionMode::ibDataViewSelectCell, wxT("SelectCell"), _("Select cell"));
+		AddEnumeration(ibDataViewSelectionMode::ibDataViewSelectRow, wxT("SelectRow"), _("Select row"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumTableBoxSelectionMode);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumTableBoxSelectionMode);
 };
 
-class CValueEnumTableBoxViewMode :
-	public IEnumeration<wxDataViewExtViewMode> {
+class ibValueEnumTableBoxViewMode :
+	public ibValueEnumeration<ibDataViewViewMode> {
 public:
-	CValueEnumTableBoxViewMode() : IEnumeration() {}
+	ibValueEnumTableBoxViewMode() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxDataViewExtViewMode::wxDataViewExtHierarchical, wxT("Hierarchical"), _("Hierarchical"));
-		AddEnumeration(wxDataViewExtViewMode::wxDataViewExtTree, wxT("Tree"), _("Tree"));
-		AddEnumeration(wxDataViewExtViewMode::wxDataViewExtList, wxT("List"), _("List"));
+		AddEnumeration(ibDataViewViewMode::ibDataViewHierarchical, wxT("Hierarchical"), _("Hierarchical"));
+		AddEnumeration(ibDataViewViewMode::ibDataViewTree, wxT("Tree"), _("Tree"));
+		AddEnumeration(ibDataViewViewMode::ibDataViewList, wxT("List"), _("List"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumTableBoxViewMode);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumTableBoxViewMode);
 };
 
-class CValueTableBox : public IValueWindow,
-	public ITypeControlFactory, public ISourceObject {
-	wxDECLARE_DYNAMIC_CLASS(CValueTableBox);
+class ibValueModelTableBox : public ibValueWindow,
+	public ibTypeControlFactory, public ibSourceObject {
+	wxDECLARE_DYNAMIC_CLASS(ibValueModelTableBox);
 public:
 
 	////////////////////////////////////////////////////////////////////////////////////////
-	void SetSource(const meta_identifier_t& id) { m_propertySource->SetValue(id); CValueTableBox::RefreshModel(true); }
-	meta_identifier_t GetSource() const { return m_propertySource->GetValueAsSource(); }
+	void SetSource(const ibMetaID& id) { m_propertySource->SetValue(id); ibValueModelTableBox::RefreshModel(true); }
+	ibMetaID GetSource() const { return m_propertySource->GetValueAsSource(); }
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	CValueTableBox();
-	virtual ~CValueTableBox() {}
+	ibValueModelTableBox();
+	virtual ~ibValueModelTableBox() {}
 
 	//Get source attribute  
-	virtual IValueMetaObjectAttribute* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
-	virtual eSelectorDataType GetFilterDataType() const { return eSelectorDataType::eSelectorDataType_table; }
-	virtual eSourceDataType GetFilterSourceDataType() const { return eSourceDataType::eSourceDataVariant_table; }
+	virtual ibValueMetaObjectAttributeBase* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
+	virtual ibSelectorDataType GetFilterDataType() const { return ibSelectorDataType::ibSelectorDataType_table; }
+	virtual ibSourceDataType GetFilterSourceDataType() const { return ibSourceDataType::ibSourceDataType_table; }
 
 	//Get source object 
-	virtual ISourceObject* GetSourceObject() const;
+	virtual ibSourceObject* GetSourceObject() const;
 
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const;
+	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const;
 	//get ref class 
-	virtual class_identifier_t GetSourceClassType() const;
+	virtual ibClassID GetSourceClassType() const;
 	//Get presentation 
 	virtual wxString GetSourceCaption() const { return GetString(); }
 
 #pragma endregion 
 
 	//get form owner 
-	virtual CValueForm* GetOwnerForm() const { return m_formOwner; }
+	virtual ibValueForm* GetOwnerForm() const { return m_formOwner; }
 
 	//get model 
-	IValueModel* GetModel() const { return m_tableModel; }
+	ibValueModel* GetModel() const { return m_tableModel; }
 
 	//get metaData
-	virtual IMetaData* GetMetaData() const;
+	virtual ibMetaData* GetMetaData() const;
 
 	//get type description 
-	virtual CTypeDescription& GetTypeDesc() const {
+	virtual ibTypeDescription& GetTypeDesc() const {
 		return m_propertySource->GetValueAsTypeDesc();
 	}
 
 	//methods & attributes
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 
 	// before/after run 
 	virtual bool InitializeControl() { CreateModel(); return true; }
@@ -104,7 +104,7 @@ public:
 	virtual wxString GetControlTitle() const {
 
 		if (!m_propertySource->IsEmptyProperty()) {
-			CValue pvarPropVal;
+			ibValue pvarPropVal;
 			if (m_propertySource->GetDataValue(pvarPropVal))
 				return _("TableBox") + wxT(": ") + stringUtils::GenerateSynonym(pvarPropVal.GetString());
 		}
@@ -113,11 +113,11 @@ public:
 	}
 
 	//control factory 
-	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool firstÑreated) override;
-	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
-	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstÐ¡reated) override;
+	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//get component type 
 	virtual int GetComponentType() const { return COMPONENT_TYPE_WINDOW; }
@@ -129,42 +129,42 @@ public:
 	/**
 	* Property events
 	*/
-	virtual void OnPropertyCreated(IProperty* property);
-	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
-	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual void OnPropertyCreated(ibProperty* property);
+	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue);
+	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 	/**
 	* Override actionData
 	*/
 
-	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);
-	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm);
+	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
+	virtual void ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm);
 
 	/**
 	* Support default menu
 	*/
 	virtual void PrepareDefaultMenu(wxMenu* m_menu);
-	virtual void ExecuteMenu(IVisualHost* visualHost, int id);
+	virtual void ExecuteMenu(ibVisualHost* visualHost, int id);
 
 	// filter data 
-	virtual bool FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const;
+	virtual bool FilterSource(const ibSourceExplorer& src, const ibMetaID& id) const;
 
 	//contol value
 	virtual bool HasValueInControl() const {
 		return m_propertySource->IsEmptyProperty();
 	}
 
-	virtual bool GetControlValue(CValue& pvarControlVal) const;
-	virtual bool SetControlValue(const CValue& varControlVal = CValue());
+	virtual bool GetControlValue(ibValue& pvarControlVal) const;
+	virtual bool SetControlValue(const ibValue& varControlVal = ibValue());
 
 	//other
 	void AddColumn();
-	void CreateColumnCollection(wxDataViewExtCtrl* tableCtrl = nullptr);
+	void CreateColumnCollection(ibDataViewCtrl* tableCtrl = nullptr);
 
 	void CreateTable(bool recreateModel = false);
 
@@ -172,48 +172,48 @@ public:
 	void RefreshModel(bool recreateModel = false);
 
 	// get current line if exist 
-	IValueModel::IValueModelReturnLine* GetCurrentLine() const { return m_tableCurrentLine; }
+	ibValueModel::ibValueModelReturnLine* GetCurrentLine() const { return m_tableCurrentLine; }
 
 	void SetCalculateColumnPos() { m_need_calculate_pos = true; }
 
 protected:
 
-	virtual void OnChangeChildPosition(IValueFrame* obj, unsigned int pos) { SetCalculateColumnPos(); }
+	virtual void OnChangeChildPosition(ibValueFrame* obj, unsigned int pos) { SetCalculateColumnPos(); }
 
 	void CalculateColumnPos();
 
 	//events 
-	void OnColumnClick(wxDataViewExtEvent& event);
-	void OnColumnReordered(wxDataViewExtEvent& event);
+	void OnColumnClick(ibDataViewEvent& event);
+	void OnColumnReordered(ibDataViewEvent& event);
 
-	void OnSelectionChanged(wxDataViewExtEvent& event);
+	void OnSelectionChanged(ibDataViewEvent& event);
 
-	void OnItemActivated(wxDataViewExtEvent& event);
-	void OnItemCollapsed(wxDataViewExtEvent& event);
-	void OnItemExpanded(wxDataViewExtEvent& event);
-	void OnItemCollapsing(wxDataViewExtEvent& event);
-	void OnItemExpanding(wxDataViewExtEvent& event);
-	void OnItemStartEditing(wxDataViewExtEvent& event);
-	void OnItemEditingStarted(wxDataViewExtEvent& event);
-	void OnItemEditingDone(wxDataViewExtEvent& event);
-	void OnItemValueChanged(wxDataViewExtEvent& event);
+	void OnItemActivated(ibDataViewEvent& event);
+	void OnItemCollapsed(ibDataViewEvent& event);
+	void OnItemExpanded(ibDataViewEvent& event);
+	void OnItemCollapsing(ibDataViewEvent& event);
+	void OnItemExpanding(ibDataViewEvent& event);
+	void OnItemStartEditing(ibDataViewEvent& event);
+	void OnItemEditingStarted(ibDataViewEvent& event);
+	void OnItemEditingDone(ibDataViewEvent& event);
+	void OnItemValueChanged(ibDataViewEvent& event);
 
-	void OnItemStartInserting(wxDataViewExtEvent& event);
-	void OnItemStartDeleting(wxDataViewExtEvent& event);
+	void OnItemStartInserting(ibDataViewEvent& event);
+	void OnItemStartDeleting(ibDataViewEvent& event);
 
-	void OnViewSet(wxDataViewExtEvent& event);
+	void OnViewSet(ibDataViewEvent& event);
 
-	void OnHeaderResizing(wxHeaderGenericCtrlEvent& event);
+	void OnHeaderResizing(ibHeaderGenericCtrlEvent& event);
 	void OnMainWindowClick(wxMouseEvent& event);
 
 #if wxUSE_DRAG_AND_DROP
-	void OnItemBeginDrag(wxDataViewExtEvent& event);
-	void OnItemDropPossible(wxDataViewExtEvent& event);
-	void OnItemDrop(wxDataViewExtEvent& event);
+	void OnItemBeginDrag(ibDataViewEvent& event);
+	void OnItemDropPossible(ibDataViewEvent& event);
+	void OnItemDrop(ibDataViewEvent& event);
 #endif // wxUSE_DRAG_AND_DROP
 
 	void OnCommandMenu(wxCommandEvent& event);
-	void OnContextMenu(wxDataViewExtEvent& event);
+	void OnContextMenu(ibDataViewEvent& event);
 
 	void OnSize(wxSizeEvent& event);
 	void OnIdle(wxIdleEvent& event);
@@ -225,22 +225,22 @@ private:
 
 #pragma region __property_define_h__
 
-	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));
-	CPropertyBoolean* m_propertyHeader = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Header"), _("Header"), wxT(""), true);
-	CPropertyUInteger* m_propertyHeaderHeight = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("HeaderHeight"), _("Header height"), wxT(""), 1);
-	CPropertyBoolean* m_propertyFooter = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Footer"), _("Footer"), wxT(""), false);
-	CPropertyUInteger* m_propertyFooterHeight = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FooterHeight"), _("Footer height"), wxT(""), 1);
-	CPropertyUInteger* m_propertyFreezeRow = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FrezeeRow"), _("Frezee row"), wxT(""), 0);
-	CPropertyUInteger* m_propertyFreezeCol = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FrezeeCol"), _("Frezee column"), wxT(""), 0);
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
-	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("Source"), _("Source"));
-	CPropertyEnum<CValueEnumTableBoxSelectionMode>* m_propertyRowSelectionMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTableBoxSelectionMode>>(m_categoryData, wxT("RowSelectionMode"), _("Row selection mode"), wxDataViewExtSelectionMode::wxDataViewExtSelectCell);
-	CPropertyEnum<CValueEnumTableBoxViewMode>* m_propertyViewMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTableBoxViewMode>>(m_categoryData, wxT("ViewMode"), _("View mode"), wxDataViewExtViewMode::wxDataViewExtHierarchical);
-	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
-	CEventControl* m_eventSelection = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("Selection"), _("Selection"), _("On double mouse click or pressing of Enter."), wxArrayString{ wxT("Control"), wxT("RowSelected"), wxT("StandardProcessing") });
-	CEventControl* m_eventOnActivateRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("OnActivateRow"), _("Activate row"), _("When row is activated"), wxArrayString{ {wxT("Control")} });
-	CEventControl* m_eventBeforeAddRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("BeforeAddRow"), _("Before add row"), _("When row addition mode is called"), wxArrayString{ wxT("Control"), wxT("Cancel"), wxT("Clone") });
-	CEventControl* m_eventBeforeDeleteRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("BeforeDeleteRow"), _("Before delete row"), _("When row deletion is called"), wxArrayString{ wxT("Control"), wxT("Cancel") });
+	ibPropertyCategory* m_categoryInfo = ibPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));
+	ibPropertyBoolean* m_propertyHeader = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryInfo, wxT("Header"), _("Header"), wxT(""), true);
+	ibPropertyUInteger* m_propertyHeaderHeight = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categoryInfo, wxT("HeaderHeight"), _("Header height"), wxT(""), 1);
+	ibPropertyBoolean* m_propertyFooter = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryInfo, wxT("Footer"), _("Footer"), wxT(""), false);
+	ibPropertyUInteger* m_propertyFooterHeight = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categoryInfo, wxT("FooterHeight"), _("Footer height"), wxT(""), 1);
+	ibPropertyUInteger* m_propertyFreezeRow = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categoryInfo, wxT("FrezeeRow"), _("Frezee row"), wxT(""), 0);
+	ibPropertyUInteger* m_propertyFreezeCol = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categoryInfo, wxT("FrezeeCol"), _("Frezee column"), wxT(""), 0);
+	ibPropertyCategory* m_categoryData = ibPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
+	ibPropertySource* m_propertySource = ibPropertyObject::CreateProperty<ibPropertySource>(m_categoryData, wxT("Source"), _("Source"));
+	ibPropertyEnum<ibValueEnumTableBoxSelectionMode>* m_propertyRowSelectionMode = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumTableBoxSelectionMode>>(m_categoryData, wxT("RowSelectionMode"), _("Row selection mode"), ibDataViewSelectionMode::ibDataViewSelectCell);
+	ibPropertyEnum<ibValueEnumTableBoxViewMode>* m_propertyViewMode = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumTableBoxViewMode>>(m_categoryData, wxT("ViewMode"), _("View mode"), ibDataViewViewMode::ibDataViewHierarchical);
+	ibPropertyCategory* m_categoryEvent = ibPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
+	ibEventControl* m_eventSelection = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("Selection"), _("Selection"), _("On double mouse click or pressing of Enter."), wxArrayString{ wxT("Control"), wxT("RowSelected"), wxT("StandardProcessing") });
+	ibEventControl* m_eventOnActivateRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("OnActivateRow"), _("Activate row"), _("When row is activated"), wxArrayString{ {wxT("Control")} });
+	ibEventControl* m_eventBeforeAddRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("BeforeAddRow"), _("Before add row"), _("When row addition mode is called"), wxArrayString{ wxT("Control"), wxT("Cancel"), wxT("Clone") });
+	ibEventControl* m_eventBeforeDeleteRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("BeforeDeleteRow"), _("Before delete row"), _("When row deletion is called"), wxArrayString{ wxT("Control"), wxT("Cancel") });
 
 #pragma endregion 
 
@@ -251,31 +251,31 @@ private:
 
 	wxSize m_dataViewSize;
 
-	CValuePtr<IValueModel> m_tableModel;
-	CValuePtr<IValueModel::IValueModelReturnLine> m_tableCurrentLine;
+	ibValuePtr<ibValueModel> m_tableModel;
+	ibValuePtr<ibValueModel::ibValueModelReturnLine> m_tableCurrentLine;
 };
 
-class CValueTableBoxColumn : public IValueControl,
-	public ITypeControlFactory {
-	wxDECLARE_DYNAMIC_CLASS(CValueTableBoxColumn);
+class ibValueModelTableBoxColumn : public ibValueControl,
+	public ibTypeControlFactory {
+	wxDECLARE_DYNAMIC_CLASS(ibValueModelTableBoxColumn);
 protected:
 
-	bool GetChoiceForm(CPropertyList* property);
+	bool GetChoiceForm(ibPropertyList* property);
 
 public:
 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	form_identifier_t GetModelColumn() const {
-		const form_identifier_t& id = m_model_id != wxNOT_FOUND ? m_model_id : GetSource();
+	ibFormID GetModelColumn() const {
+		const ibFormID& id = m_model_id != wxNOT_FOUND ? m_model_id : GetSource();
 		return id != wxNOT_FOUND ? id : m_controlId;
 	}
-	void SetModelColumn(const form_identifier_t& id) { m_model_id = id; }
+	void SetModelColumn(const ibFormID& id) { m_model_id = id; }
 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	void SetSource(const meta_identifier_t& id) { m_propertySource->SetValue(id); }
-	meta_identifier_t GetSource() const { return m_propertySource->GetValueAsSource(); }
+	void SetSource(const ibMetaID& id) { m_propertySource->SetValue(id); }
+	ibMetaID GetSource() const { return m_propertySource->GetValueAsSource(); }
 
 	////////////////////////////////////////////////////////////////////////////////////////
 
@@ -308,43 +308,43 @@ public:
 
 	///////////////////////////////////////////////////////////////////////
 
-	CValueTableBox* GetOwner() const { return m_parent->ConvertToType<CValueTableBox>(); }
+	ibValueModelTableBox* GetOwner() const { return m_parent->ConvertToType<ibValueModelTableBox>(); }
 
-	IValueTable::IValueModelReturnLine* GetCurrentLine() const {
-		const CValueTableBox* tableBox = GetOwner();
+	ibValueModelTableBase::ibValueModelReturnLine* GetCurrentLine() const {
+		const ibValueModelTableBox* tableBox = GetOwner();
 		return tableBox != nullptr ?
 			tableBox->GetCurrentLine() : nullptr;
 	}
 
 	///////////////////////////////////////////////////////////////////////
 
-	CValueTableBoxColumn();
+	ibValueModelTableBoxColumn();
 
 	//Get source object 
-	virtual ISourceObject* GetSourceObject() const { return GetOwner(); }
+	virtual ibSourceObject* GetSourceObject() const { return GetOwner(); }
 
 	//Get source attribute  
-	virtual IValueMetaObjectAttribute* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
-	virtual eSelectorDataType GetFilterDataType() const { return eSelectorDataType::eSelectorDataType_reference; }
-	virtual eSourceDataType GetFilterSourceDataType() const { return eSourceDataType::eSourceDataVariant_tableColumn; }
+	virtual ibValueMetaObjectAttributeBase* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
+	virtual ibSelectorDataType GetFilterDataType() const { return ibSelectorDataType::ibSelectorDataType_reference; }
+	virtual ibSourceDataType GetFilterSourceDataType() const { return ibSourceDataType::ibSourceDataType_tableColumn; }
 
 	//get form owner 
-	virtual CValueForm* GetOwnerForm() const { return m_formOwner; }
+	virtual ibValueForm* GetOwnerForm() const { return m_formOwner; }
 
 	//get metaData
-	virtual IMetaData* GetMetaData() const;
+	virtual ibMetaData* GetMetaData() const;
 
 	//get type description 
-	virtual CTypeDescription& GetTypeDesc() const { return m_propertySource->GetValueAsTypeDesc(); }
+	virtual ibTypeDescription& GetTypeDesc() const { return m_propertySource->GetValueAsTypeDesc(); }
 
 	//get title
 	virtual wxString GetControlTitle() const;
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool firstCreated) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
-	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	virtual bool CanDeleteControl() const;
 
@@ -358,25 +358,25 @@ public:
 	/**
 	* Property events
 	*/
-	virtual void OnPropertyCreated(IProperty* property);
-	virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IProperty* property);
-	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
+	virtual void OnPropertyCreated(ibProperty* property);
+	virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, ibProperty* property);
+	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue);
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 public:
 
 	//filter source
-	virtual bool FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const;
+	virtual bool FilterSource(const ibSourceExplorer& src, const ibMetaID& id) const;
 
 	//get control value
-	virtual bool SetControlValue(const CValue& varControlVal = CValue());
-	virtual bool GetControlValue(CValue& pvarControlVal) const;
+	virtual bool SetControlValue(const ibValue& varControlVal = ibValue());
+	virtual bool GetControlValue(ibValue& pvarControlVal) const;
 
 	//choice processing
-	virtual void ChoiceProcessing(CValue& vSelected);
+	virtual void ChoiceProcessing(ibValue& vSelected);
 
 private:
 
@@ -391,47 +391,47 @@ private:
 	// text processing
 	bool TextProcessing(wxTextCtrl* textCtrl, const wxString& strData);
 
-	form_identifier_t m_model_id;
+	ibFormID m_model_id;
 
-	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));
-	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("Title"), _("Title"), wxT(""));
-	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("PasswordMode"), _("Password mode"), _("Mode in which typed characters are replaced with a special character"), false);
-	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("MultilineMode"), _("Multiline mode"), _("Multiline mode"), false);
-	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("TexteditMode"), _("Textedit mode"), _("Whether or not text editing is enabled in the text box "), true);
+	ibPropertyCategory* m_categoryInfo = ibPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));
+	ibPropertyTString* m_propertyTitle = ibPropertyObject::CreateProperty<ibPropertyTString>(m_categoryInfo, wxT("Title"), _("Title"), wxT(""));
+	ibPropertyBoolean* m_propertyPasswordMode = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryInfo, wxT("PasswordMode"), _("Password mode"), _("Mode in which typed characters are replaced with a special character"), false);
+	ibPropertyBoolean* m_propertyMultilineMode = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryInfo, wxT("MultilineMode"), _("Multiline mode"), _("Multiline mode"), false);
+	ibPropertyBoolean* m_propertyTexteditMode = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryInfo, wxT("TexteditMode"), _("Textedit mode"), _("Whether or not text editing is enabled in the text box "), true);
 
-	CPropertyTString* m_propertyFooterText = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("FooterText"), _("Footer text"), wxT(""));
+	ibPropertyTString* m_propertyFooterText = ibPropertyObject::CreateProperty<ibPropertyTString>(m_categoryInfo, wxT("FooterText"), _("Footer text"), wxT(""));
 
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
-	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("Source"), _("Source"), eValueTypes::TYPE_STRING);
-	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("ChoiceForm"), _("Choice form"), &CValueTableBoxColumn::GetChoiceForm);
+	ibPropertyCategory* m_categoryData = ibPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
+	ibPropertySource* m_propertySource = ibPropertyObject::CreateProperty<ibPropertySource>(m_categoryData, wxT("Source"), _("Source"), ibValueTypes::TYPE_STRING);
+	ibPropertyList* m_propertyChoiceForm = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryData, wxT("ChoiceForm"), _("Choice form"), &ibValueModelTableBoxColumn::GetChoiceForm);
 
-	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("Button"), _("Button"));
-	CPropertyBoolean* m_propertySelectButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("ButtonSelect"), _("Select button"), true);
-	CPropertyBoolean* m_propertyClearButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("ButtonClear"), _("Clear button"), true);
-	CPropertyBoolean* m_propertyOpenButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("ButtonOpen"), _("Open button"), false);
+	ibPropertyCategory* m_categoryButton = ibPropertyObject::CreatePropertyCategory(wxT("Button"), _("Button"));
+	ibPropertyBoolean* m_propertySelectButton = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryButton, wxT("ButtonSelect"), _("Select button"), true);
+	ibPropertyBoolean* m_propertyClearButton = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryButton, wxT("ButtonClear"), _("Clear button"), true);
+	ibPropertyBoolean* m_propertyOpenButton = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryButton, wxT("ButtonOpen"), _("Open button"), false);
 
-	CPropertyCategory* m_categoryStyle = IPropertyObject::CreatePropertyCategory(wxT("Style"), _("Style"));
-	CPropertyUInteger* m_propertyWidth = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStyle, wxT("Width"), _("Width"), wxDVC_DEFAULT_WIDTH);
-	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyHeaderAlign = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("HeaderAlign"), _("Header align"), wxALIGN_LEFT);
-	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyFooterAlign = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("FooterAlign"), _("Footer align"), wxALIGN_LEFT);
-	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryStyle, wxT("Representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
-	CPropertyPicture* m_propertyHeaderPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("HeaderPicture"), _("Header picture"));
-	CPropertyPicture* m_propertyFooterPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("FooterPicture"), _("Footer picture"));
+	ibPropertyCategory* m_categoryStyle = ibPropertyObject::CreatePropertyCategory(wxT("Style"), _("Style"));
+	ibPropertyUInteger* m_propertyWidth = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categoryStyle, wxT("Width"), _("Width"), wxDVC_DEFAULT_WIDTH);
+	ibPropertyEnum<ibValueEnumHorizontalAlignment>* m_propertyHeaderAlign = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("HeaderAlign"), _("Header align"), wxALIGN_LEFT);
+	ibPropertyEnum<ibValueEnumHorizontalAlignment>* m_propertyFooterAlign = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("FooterAlign"), _("Footer align"), wxALIGN_LEFT);
+	ibPropertyEnum<ibValueEnumRepresentation>* m_propertyRepresentation = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumRepresentation>>(m_categoryStyle, wxT("Representation"), _("Representation"), ibRepresentation::ibRepresentation_Auto);
+	ibPropertyPicture* m_propertyHeaderPicture = ibPropertyObject::CreateProperty<ibPropertyPicture>(m_categoryStyle, wxT("HeaderPicture"), _("Header picture"));
+	ibPropertyPicture* m_propertyFooterPicture = ibPropertyObject::CreateProperty<ibPropertyPicture>(m_categoryStyle, wxT("FooterPicture"), _("Footer picture"));
 
-	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Visible"), _("Visible"), true);
-	CPropertyBoolean* m_propertyResizable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Resizable"), _("Resizable"), true);
-	//CPropertyBoolean* m_propertySortable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Sortable"), _("Sortable"), false);
-	CPropertyBoolean* m_propertyReorderable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Reorderable"), _("Reorderable"), true);
+	ibPropertyBoolean* m_propertyVisible = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryStyle, wxT("Visible"), _("Visible"), true);
+	ibPropertyBoolean* m_propertyResizable = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryStyle, wxT("Resizable"), _("Resizable"), true);
+	//ibPropertyBoolean* m_propertySortable = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryStyle, wxT("Sortable"), _("Sortable"), false);
+	ibPropertyBoolean* m_propertyReorderable = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryStyle, wxT("Reorderable"), _("Reorderable"), true);
 
-	CPropertyCategory* m_propertyEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
-	CEventControl* m_eventOnChange = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("OnChange"), _("Change"), wxArrayString{ wxT("Control") });
-	CEventControl* m_eventStartChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("StartChoice"), _("Start choice"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
-	CEventControl* m_eventStartListChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("StartListChoice"), _("Start list choice"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
-	CEventControl* m_eventClearing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("Clearing"), _("Clearing"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
-	CEventControl* m_eventOpening = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("Opening"), _("Opening"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
-	CEventControl* m_eventChoiceProcessing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("ChoiceProcessing"), _("Choice processing"), wxArrayString{ wxT("Control"), wxT("ValueSelected"), wxT("StandartProcessing") });
+	ibPropertyCategory* m_propertyEvent = ibPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
+	ibEventControl* m_eventOnChange = ibPropertyObject::CreateEvent<ibEventControl>(m_propertyEvent, wxT("OnChange"), _("Change"), wxArrayString{ wxT("Control") });
+	ibEventControl* m_eventStartChoice = ibPropertyObject::CreateEvent<ibEventControl>(m_propertyEvent, wxT("StartChoice"), _("Start choice"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
+	ibEventControl* m_eventStartListChoice = ibPropertyObject::CreateEvent<ibEventControl>(m_propertyEvent, wxT("StartListChoice"), _("Start list choice"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
+	ibEventControl* m_eventClearing = ibPropertyObject::CreateEvent<ibEventControl>(m_propertyEvent, wxT("Clearing"), _("Clearing"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
+	ibEventControl* m_eventOpening = ibPropertyObject::CreateEvent<ibEventControl>(m_propertyEvent, wxT("Opening"), _("Opening"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
+	ibEventControl* m_eventChoiceProcessing = ibPropertyObject::CreateEvent<ibEventControl>(m_propertyEvent, wxT("ChoiceProcessing"), _("Choice processing"), wxArrayString{ wxT("Control"), wxT("ValueSelected"), wxT("StandartProcessing") });
 
-	friend class CDataViewValueRenderer;
+	friend class ibDataViewValueRenderer;
 };
 
 #endif 

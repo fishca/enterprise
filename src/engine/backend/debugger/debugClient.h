@@ -3,47 +3,47 @@
 
 #include <wx/thread.h>
 
-#define debugClient           (CDebuggerClient::Get())
-#define debugClientInit()     (CDebuggerClient::Initialize())
-#define debugClientDestroy()  (CDebuggerClient::Destroy())
+#define debugClient           (ibDebuggerClient::Get())
+#define debugClientInit()     (ibDebuggerClient::Initialize())
+#define debugClientDestroy()  (ibDebuggerClient::Destroy())
 
 #include "debugClientBridge.h"
 
-class BACKEND_API CDebuggerClient {
+class BACKEND_API ibDebuggerClient {
 
-	class BACKEND_API CDebuggerClientAdapter : public wxEvtHandler {
+	class BACKEND_API ibDebuggerClientAdapter : public wxEvtHandler {
 	public:
 
-		CDebuggerClientAdapter() : m_debugBridge(nullptr) {}
-		void SetBridge(IDebuggerClientBridge* bridge) {
+		ibDebuggerClientAdapter() : m_debugBridge(nullptr) {}
+		void SetBridge(ibDebuggerClientBridge* bridge) {
 			if (m_debugBridge != nullptr)
 				wxDELETE(m_debugBridge);
 			m_debugBridge = bridge;
 		}
-		virtual ~CDebuggerClientAdapter() { wxDELETE(m_debugBridge); }
+		virtual ~ibDebuggerClientAdapter() { wxDELETE(m_debugBridge); }
 
 		//commands 
 		void OnSessionStart(wxSocketClient* sock);
 		void OnSessionEnd(wxSocketClient* sock);
 
-		void OnEnterLoop(wxSocketClient* sock, const CDebugLineData& data);
-		void OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data);
+		void OnEnterLoop(wxSocketClient* sock, const ibDebugLineData& data);
+		void OnLeaveLoop(wxSocketClient* sock, const ibDebugLineData& data);
 
-		void OnAutoComplete(const CDebugAutoCompleteData& data);
-		void OnMessageFromServer(const CDebugLineData& data, const wxString& message);
-		void OnSetToolTip(const CDebugExpressionData& data, const wxString& resultStr);
-		void OnSetStack(const CStackData& data);
+		void OnAutoComplete(const ibDebugAutoCompleteData& data);
+		void OnMessageFromServer(const ibDebugLineData& data, const wxString& message);
+		void OnSetToolTip(const ibDebugExpressionData& data, const wxString& resultStr);
+		void OnSetStack(const ibStackData& data);
 
-		void OnSetLocalVariable(const CLocalWindowData& data);
+		void OnSetLocalVariable(const ibLocalWindowData& data);
 
-		void OnSetVariable(const CWatchWindowData& data);
-		void OnSetExpanded(const CWatchWindowData& data);
+		void OnSetVariable(const ibWatchWindowData& data);
+		void OnSetExpanded(const ibWatchWindowData& data);
 
 	private:
-		IDebuggerClientBridge* m_debugBridge;
+		ibDebuggerClientBridge* m_debugBridge;
 	};
 
-	class BACKEND_API CDebuggerClientConnection : public wxThread {
+	class BACKEND_API ibDebuggerClientConnection : public wxThread {
 	public:
 
 		bool IsVerifiedConnection() const {
@@ -73,14 +73,14 @@ class BACKEND_API CDebuggerClient {
 		void AttachConnection();
 		void DetachConnection(bool kill = false);
 
-		CDebuggerClient::CDebuggerClientConnection::CDebuggerClientConnection(CDebuggerClient* client, const wxString& hostName, unsigned short port) :
+		ibDebuggerClientConnection(ibDebuggerClient* client, const wxString& hostName, unsigned short port) :
 			wxThread(wxTHREAD_DETACHED),
+			m_verifiedConnection(false),
 			m_hostName(hostName),
 			m_port(port),
-			m_verifiedConnection(false), 
-			m_connectionType(ConnectionType::ConnectionType_Scanner),
+			m_socketClient(nullptr),
 			m_number_connection_attempts(-1),
-			m_socketClient(nullptr) {
+			m_connectionType(ConnectionType::ConnectionType_Scanner) {
 
 			if (debugClient != nullptr)
 				debugClient->AppendConnection(this);
@@ -88,7 +88,7 @@ class BACKEND_API CDebuggerClient {
 			wxThread::SetPriority(wxPRIORITY_MIN);
 		}
 
-		CDebuggerClient::CDebuggerClientConnection::~CDebuggerClientConnection() {
+		~ibDebuggerClientConnection() {
 
 			if (debugClient != nullptr)
 				debugClient->DeleteConnection(this);
@@ -99,7 +99,7 @@ class BACKEND_API CDebuggerClient {
 
 		// entry point for the thread - called by Run() and executes in the context
 		// of this thread.
-		virtual ExitCode Entry();
+		virtual ExitCode Entry() override;
 
 		// This one is called by Kill() before killing the thread and is executed
 		// in the context of the thread that called Kill().
@@ -137,28 +137,28 @@ class BACKEND_API CDebuggerClient {
 		std::atomic<short> m_number_connection_attempts;
 
 		ConnectionType	m_connectionType;
-		friend class CDebuggerClient;
+		friend class ibDebuggerClient;
 	};
 
-	CDebuggerClient() :
+	ibDebuggerClient() :
 		m_activeSocket(nullptr),
-		m_adapter(new CDebuggerClientAdapter),
+		m_adapter(new ibDebuggerClientAdapter),
 		m_enterLoop(false), m_connectionSuccess(false)
 	{
 	}
 
 public:
 
-	void SetBridge(IDebuggerClientBridge* bridge) { m_adapter->SetBridge(bridge); }
+	void SetBridge(ibDebuggerClientBridge* bridge) { m_adapter->SetBridge(bridge); }
 
-	virtual ~CDebuggerClient() {
+	virtual ~ibDebuggerClient() {
 		while (m_listConnection.size()) {
 			m_listConnection[m_listConnection.size() - 1]->Delete();
 		}
 		wxDELETE(m_adapter);
 	}
 
-	static CDebuggerClient* Get() { return ms_debugClient; }
+	static ibDebuggerClient* Get() { return ms_debugClient; }
 
 	// Force the static appData instance to Init()
 	static bool Initialize();
@@ -176,12 +176,12 @@ public:
 		for (unsigned short port = startPort; port < endPort; port++) {
 
 			auto iterator = std::find_if(m_listConnection.begin(), m_listConnection.end(),
-				[hostName, port](CDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
+				[hostName, port](ibDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
 			);
 
 			if (iterator == m_listConnection.end()) {
 
-				CDebuggerClientConnection* createdConnection = new CDebuggerClientConnection(this, hostName, port);
+				ibDebuggerClientConnection* createdConnection = new ibDebuggerClientConnection(this, hostName, port);
 				if (createdConnection->Run() == wxTHREAD_NO_ERROR) {
 					//if (run_debug_server)
 					//	break;
@@ -193,7 +193,7 @@ public:
 
 				bool create_new_connection = !(*iterator)->ResetConnectionCounter();
 				if (create_new_connection) {
-					CDebuggerClientConnection* createdConnection = new CDebuggerClientConnection(this, hostName, port);
+					ibDebuggerClientConnection* createdConnection = new ibDebuggerClientConnection(this, hostName, port);
 					if (createdConnection->Run() == wxTHREAD_NO_ERROR) {
 						//if (run_debug_server)
 						//	break;
@@ -208,7 +208,7 @@ public:
 	void AttachConnection(const wxString& hostName, unsigned short port) const {
 
 		auto iterator = std::find_if(m_listConnection.begin(), m_listConnection.end(),
-			[hostName, port](CDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
+			[hostName, port](ibDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
 		);
 
 		if (iterator != m_listConnection.end()) (*iterator)->AttachConnection();
@@ -217,13 +217,13 @@ public:
 	void DetachConnection(const wxString& hostName, unsigned short port, bool kill = false) {
 
 		auto iterator = std::find_if(m_listConnection.begin(), m_listConnection.end(),
-			[hostName, port](CDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
+			[hostName, port](ibDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
 		);
 
 		if (iterator != m_listConnection.end()) (*iterator)->DetachConnection(kill);
 	}
 
-	const std::vector<CDebuggerClientConnection*>& GetListConnection() {
+	const std::vector<ibDebuggerClientConnection*>& GetListConnection() {
 		wxCriticalSectionLocker enter(ms_criticalSectionConnection1);
 		return m_listConnection;
 	}
@@ -342,12 +342,12 @@ protected:
 	bool RemoveAllBreakpointInDB();
 
 	//commands:
-	void AppendConnection(CDebuggerClientConnection* client) {
+	void AppendConnection(ibDebuggerClientConnection* client) {
 		wxCriticalSectionLocker enter(ms_criticalSectionConnection1);
 		m_listConnection.push_back(client);
 	}
 
-	void DeleteConnection(CDebuggerClientConnection* client) {
+	void DeleteConnection(ibDebuggerClientConnection* client) {
 		wxCriticalSectionLocker enter(ms_criticalSectionConnection1);
 		if (m_activeSocket == client) m_activeSocket = nullptr;
 		m_listConnection.erase(
@@ -392,16 +392,16 @@ private:
 		return current_line;
 	}
 
-	static CDebuggerClient* ms_debugClient;
+	static ibDebuggerClient* ms_debugClient;
 
-	CDebuggerClientConnection* m_activeSocket = nullptr;
-	CDebuggerClientAdapter* m_adapter = nullptr;
+	ibDebuggerClientConnection* m_activeSocket = nullptr;
+	ibDebuggerClientAdapter* m_adapter = nullptr;
 
 	static wxCriticalSection ms_criticalSectionConnection1;
 	static wxCriticalSection ms_criticalSectionConnection2;
 	static wxCriticalSection ms_criticalSectionConnection3;
 
-	std::vector<CDebuggerClientConnection*>	m_listConnection;
+	std::vector<ibDebuggerClientConnection*>	m_listConnection;
 
 	std::map <wxString, std::map<unsigned int, int>> m_listBreakpoint; //list of points 
 	std::map <wxString, std::map<unsigned int, int>> m_listOffsetBreakpoint; //list of changed transitions

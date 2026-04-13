@@ -4,13 +4,13 @@
 #include <wx/print.h>
 #include "frontend/visualView/visualHost.h"
 
-class CFormPrintout : public wxPrintout
+class ibFormPrintout : public wxPrintout
 {
 	wxMemoryDC m_formMemoryDC;
-	IVisualHost* m_visualHost;
+	ibVisualHost* m_visualHost;
 
 public:
-	CFormPrintout(IVisualHost* visualHost, const wxString& title) : wxPrintout(title),
+	ibFormPrintout(ibVisualHost* visualHost, const wxString& title) : wxPrintout(title),
 		m_visualHost(visualHost)
 	{
 		// save the display before it is clobbered by the print preview

@@ -19,15 +19,15 @@
 
 #include "engine/libpq-fe.h"
 
-class CPostgresResultSet : public IDatabaseResultSet
+class ibDatabaseResultSetPostgres : public ibDatabaseResultSet
 {
 public:
 	// ctor
-	CPostgresResultSet(CPostgresInterface* pInterface);
-	CPostgresResultSet(CPostgresInterface* pInterface, PGresult* pResult);
+	ibDatabaseResultSetPostgres(ibInterfacePostgres* pInterface);
+	ibDatabaseResultSetPostgres(ibInterfacePostgres* pInterface, PGresult* pResult);
 
 	// dtor
-	virtual ~CPostgresResultSet();
+	virtual ~ibDatabaseResultSetPostgres();
 
 	virtual bool Next();
 	virtual void Close();
@@ -42,14 +42,14 @@ public:
 	virtual wxDateTime GetResultDate(int nField);
 	virtual void* GetResultBlob(int nField, wxMemoryBuffer& buffer);
 	virtual double GetResultDouble(int nField);
-	virtual number_t GetResultNumber(int nField);
+	virtual ibNumber GetResultNumber(int nField);
 	virtual bool IsFieldNull(int nField);
 
 	// get MetaData
-	virtual IResultSetMetaData* GetMetaData();
+	virtual ibResultSetMetaData* GetMetaData();
 
 private:
-	CPostgresInterface* m_pInterface;
+	ibInterfacePostgres* m_pInterface;
 	PGresult* m_pResult;
 
 	StringToIntMap m_FieldLookupMap;

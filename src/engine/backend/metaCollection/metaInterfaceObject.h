@@ -3,8 +3,8 @@
 
 #include "metaObject.h"
 
-class BACKEND_API CValueMetaObjectInterface : public IValueMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectInterface);
+class BACKEND_API ibValueMetaObjectInterface : public ibValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectInterface);
 protected:
 
 	enum
@@ -21,10 +21,10 @@ public:
 	wxBitmap GetPictureAsBitmap() const {
 		if (!m_propertyPicture->IsEmptyProperty())
 			return m_propertyPicture->GetValueAsBitmap();
-		return CBackendPicture::CreatePicture(g_metaCommonMetadataCLSID);
+		return ibBackendPicture::CreatePicture(g_metaCommonMetadataCLSID);
 	}
 
-	virtual bool FilterChild(const class_identifier_t& clsid) const {
+	virtual bool FilterChild(const ibClassID& clsid) const {
 
 		if (
 			clsid == g_metaInterfaceCLSID
@@ -34,7 +34,7 @@ public:
 		return false;
 	}
 
-	CValueMetaObjectInterface(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	ibValueMetaObjectInterface(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -47,36 +47,41 @@ public:
 #pragma region __array_h__
 
 	//interface
-	std::vector<CValueMetaObjectInterface*> GetInterfaceArrayObject(
-		std::vector<CValueMetaObjectInterface*>& array = std::vector<CValueMetaObjectInterface*>()) const {
-		FillArrayObjectByFilter<CValueMetaObjectInterface>(array, { g_metaInterfaceCLSID });
+	std::vector<ibValueMetaObjectInterface*> GetInterfaceArrayObject() const {
+		std::vector<ibValueMetaObjectInterface*> array;
+		FillArrayObjectByFilter<ibValueMetaObjectInterface>(array, { g_metaInterfaceCLSID });
+		return array;
+	}
+	std::vector<ibValueMetaObjectInterface*> GetInterfaceArrayObject(
+		std::vector<ibValueMetaObjectInterface*>& array) const {
+		FillArrayObjectByFilter<ibValueMetaObjectInterface>(array, { g_metaInterfaceCLSID });
 		return array;
 	}
 
 #pragma endregion
 
-	bool GetInterfaceItemArrayObject(EInterfaceCommandSection page,
-		std::vector<IValueMetaObject*>& array) const;
+	bool GetInterfaceItemArrayObject(ibInterfaceCommandSection page,
+		std::vector<ibValueMetaObject*>& array) const;
 
 #pragma region __filter_h__
 
 	//interface
 	template <typename _T1>
-	CValueMetaObjectInterface* FindInterfaceObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<CValueMetaObjectInterface>(id, { g_metaInterfaceCLSID });
+	ibValueMetaObjectInterface* FindInterfaceObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<ibValueMetaObjectInterface>(id, { g_metaInterfaceCLSID });
 	}
 
 #pragma endregion 
 
 protected:
 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 
 private:
-	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryContext, wxT("Picture"), _("Picture"));
+	ibPropertyPicture* m_propertyPicture = ibPropertyObject::CreateProperty<ibPropertyPicture>(m_categoryContext, wxT("Picture"), _("Picture"));
 #pragma region role
-	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("Use"), _("Use"));
+	ibRole* m_roleUse = ibValueMetaObject::CreateRole(wxT("Use"), _("Use"));
 #pragma endregion
 };
 

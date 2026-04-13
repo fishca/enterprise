@@ -7,27 +7,27 @@
 
 #include "backend/appData.h"
 
-bool CCodeRunnerApp::OnInit()
+bool ibAppCodeRunner::OnInit()
 {
 	if (m_codeRunner)
 		return false; 
 
-	CApplicationData::CreateAppDataEnv(eRunMode::eENTERPRISE_MODE);
-	m_codeRunner = new CFrameCodeRunner(nullptr, wxID_ANY);
+	ibApplicationData::CreateAppDataEnv(ibRunMode::eENTERPRISE_MODE);
+	m_codeRunner = new ibFrameCodeRunner(nullptr, wxID_ANY);
 
 	return wxApp::OnInit() && m_codeRunner->Show();
 }
 
-int CCodeRunnerApp::OnExit()
+int ibAppCodeRunner::OnExit()
 {
-	CApplicationData::DestroyAppDataEnv();
+	ibApplicationData::DestroyAppDataEnv();
 	return wxApp::OnExit();
 }
 
-void CCodeRunnerApp::AppendOutput(const wxString& str)
+void ibAppCodeRunner::AppendOutput(const wxString& str)
 {
 	if (m_codeRunner)
 		m_codeRunner->AppendOutput(str);
 }
 
-wxIMPLEMENT_APP(CCodeRunnerApp);
+wxIMPLEMENT_APP(ibAppCodeRunner);

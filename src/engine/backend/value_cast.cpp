@@ -4,22 +4,22 @@
 #include "backend/appData.h"
 
 #if defined(_USE_CONTROL_VALUECAST)
-inline void ThrowErrorTypeOperation(const wxString& fromType, wxClassInfo* clsInfo)
+void ThrowErrorTypeOperation(const wxString& fromType, wxClassInfo* clsInfo)
 {
 	if (!appData->DesignerMode()) {
 		wxString className = wxEmptyString;
 		
 		if (clsInfo != nullptr) {
-			const class_identifier_t& clsid = CValue::GetTypeIDByRef(clsInfo);
-			if (IMetaDataConfiguration::Get()) {
-				className = IMetaDataConfiguration::Get()->GetNameObjectFromID(clsid);
+			const ibClassID& clsid = ibValue::GetTypeIDByRef(clsInfo);
+			if (ibMetaDataConfiguration::Get()) {
+				className = ibMetaDataConfiguration::Get()->GetNameObjectFromID(clsid);
 			}
 			else {
-				className = CValue::GetNameObjectFromID(clsid);
+				className = ibValue::GetNameObjectFromID(clsid);
 			}
 		}
 		
-		CBackendCoreException::Error(ERROR_TYPE_OPERATION, fromType, className);
+		ibBackendCoreException::Error(ERROR_TYPE_OPERATION, fromType, className);
 	}
 }
 #endif

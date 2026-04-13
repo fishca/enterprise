@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Author		: Maxim Kornienko, 2Ñ-team
+//	Author		: Maxim Kornienko, 2ï¿½-team
 //	Description : base value  
 ////////////////////////////////////////////////////////////////////////////
 
@@ -9,7 +9,7 @@
 #include <wx/datetime.h>
 #include <wx/longlong.h>
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValue, wxObject);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValue, wxObject);
 
 //**********************************************************************
 //*                       Value implementation                         *
@@ -28,60 +28,60 @@ static unsigned int s_nCreateCount = 0;
 #endif
 
 //**********************************************************************
-BACKEND_API const CValue wxEmptyValue;
+BACKEND_API const ibValue wxEmptyValue;
 //**********************************************************************
 
-CValue::CValue()
-	: m_typeClass(eValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
+ibValue::ibValue()
+	: m_typeClass(ibValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
 {
 	DEBUG_VALUE_CREATE();
 }
 
 //copy constructor:
-CValue::CValue(const CValue& varValue)
-	: m_typeClass(eValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
+ibValue::ibValue(const ibValue& varValue)
+	: m_typeClass(ibValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
 {
 	Copy(varValue);
 	DEBUG_VALUE_CREATE();
 }
 
-CValue::CValue(CValue&& varValue)
-	: m_typeClass(eValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
+ibValue::ibValue(ibValue&& varValue)
+	: m_typeClass(ibValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
 {
 	Move(std::move(varValue));
 	DEBUG_VALUE_CREATE();
 }
 
-CValue::CValue(CValue* pValue)
-	: m_typeClass(eValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(pValue), m_bReadOnly(false)
+ibValue::ibValue(ibValue* pValue)
+	: m_typeClass(ibValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(pValue), m_bReadOnly(false)
 {
 	if (m_pRef != nullptr) {
-		m_typeClass = eValueTypes::TYPE_REFFER;
+		m_typeClass = ibValueTypes::TYPE_REFFER;
 		m_pRef->IncrRef();
 	}
 	DEBUG_VALUE_CREATE();
 }
 
-CValue::CValue(IBackendValue* pParam)
-	: m_typeClass(eValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(pParam ? pParam->GetImplValueRef() : nullptr), m_bReadOnly(false)
+ibValue::ibValue(ibBackendValue* pParam)
+	: m_typeClass(ibValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(pParam ? pParam->GetImplValueRef() : nullptr), m_bReadOnly(false)
 {
 	if (m_pRef != nullptr) {
-		m_typeClass = eValueTypes::TYPE_REFFER;
+		m_typeClass = ibValueTypes::TYPE_REFFER;
 		m_pRef->IncrRef();
 	}
 	DEBUG_VALUE_CREATE();
 }
 
-CValue::CValue(const wxDateTime& cParam)
-	: m_typeClass(eValueTypes::TYPE_DATE), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
+ibValue::ibValue(const wxDateTime& cParam)
+	: m_typeClass(ibValueTypes::TYPE_DATE), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
 {
 	const wxLongLong& llData = cParam.GetValue();
 	m_dData = llData.GetValue();
 	DEBUG_VALUE_CREATE();
 }
 
-CValue::CValue(int nYear, int nMonth, int nDay, unsigned short nHour, unsigned short nMinute, unsigned short nSecond)
-	: m_typeClass(eValueTypes::TYPE_DATE), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
+ibValue::ibValue(int nYear, int nMonth, int nDay, unsigned short nHour, unsigned short nMinute, unsigned short nSecond)
+	: m_typeClass(ibValueTypes::TYPE_DATE), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
 {
 	wxDateTime dataVal(nDay, (wxDateTime::Month)(nMonth - 1), nYear, nHour, nMinute, nSecond);
 	if (dataVal.IsValid()) {
@@ -91,7 +91,7 @@ CValue::CValue(int nYear, int nMonth, int nDay, unsigned short nHour, unsigned s
 	DEBUG_VALUE_CREATE();
 }
 
-CValue::CValue(eValueTypes type, bool readOnly)
+ibValue::ibValue(ibValueTypes type, bool readOnly)
 	: m_typeClass(type), m_refCount(0), m_pRef(nullptr), m_bReadOnly(readOnly)
 {
 	switch (type)
@@ -118,52 +118,52 @@ CValue::CValue(eValueTypes type, bool readOnly)
 
 //Constructors by types:
 #define CVALUE_BYTYPE(v_parclass, v_type, v_value) \
-CValue::CValue (v_parclass cParam) \
+ibValue::ibValue (v_parclass cParam) \
     : m_typeClass(v_type), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false) \
 {\
 	v_value = cParam;\
 	DEBUG_VALUE_CREATE();\
 }
 
-CVALUE_BYTYPE(bool, eValueTypes::TYPE_BOOLEAN, m_bData);
+CVALUE_BYTYPE(bool, ibValueTypes::TYPE_BOOLEAN, m_bData);
 
-CVALUE_BYTYPE(signed int, eValueTypes::TYPE_NUMBER, m_fData);
-CVALUE_BYTYPE(unsigned int, eValueTypes::TYPE_NUMBER, m_fData);
-CVALUE_BYTYPE(double, eValueTypes::TYPE_NUMBER, m_fData);
-CVALUE_BYTYPE(const number_t&, eValueTypes::TYPE_NUMBER, m_fData);
+CVALUE_BYTYPE(signed int, ibValueTypes::TYPE_NUMBER, m_fData);
+CVALUE_BYTYPE(unsigned int, ibValueTypes::TYPE_NUMBER, m_fData);
+CVALUE_BYTYPE(double, ibValueTypes::TYPE_NUMBER, m_fData);
+CVALUE_BYTYPE(const ibNumber&, ibValueTypes::TYPE_NUMBER, m_fData);
 
-CVALUE_BYTYPE(wxLongLong_t, eValueTypes::TYPE_DATE, m_dData);
+CVALUE_BYTYPE(wxLongLong_t, ibValueTypes::TYPE_DATE, m_dData);
 
-CVALUE_BYTYPE(char*, eValueTypes::TYPE_STRING, m_sData);
-CVALUE_BYTYPE(wchar_t*, eValueTypes::TYPE_STRING, m_sData);
+CVALUE_BYTYPE(char*, ibValueTypes::TYPE_STRING, m_sData);
+CVALUE_BYTYPE(wchar_t*, ibValueTypes::TYPE_STRING, m_sData);
 
-CVALUE_BYTYPE(const wxString&, eValueTypes::TYPE_STRING, m_sData);
+CVALUE_BYTYPE(const wxString&, ibValueTypes::TYPE_STRING, m_sData);
 
 #undef CVALUE_BYTYPE
 #undef CVALUE_BYTYPE_MOVE
 
-CValue::~CValue()
+ibValue::~ibValue()
 {
-	if (m_typeClass == eValueTypes::TYPE_REFFER && m_pRef && m_pRef != this)
+	if (m_typeClass == ibValueTypes::TYPE_REFFER && m_pRef && m_pRef != this)
 		m_pRef->DecrRef();
 #ifdef DEBUG_VALUE
 	if (wxTheApp != NULL) wxLogDebug(wxT("Delete %d"), --s_nCreateCount);
 #endif
 }
 
-void CValue::Reset()
+void ibValue::Reset()
 {
-	if (m_typeClass != eValueTypes::TYPE_EMPTY && m_bReadOnly) CBackendCoreException::Error(_("Attempt to assign a value to a write-denied variable"));
+	if (m_typeClass != ibValueTypes::TYPE_EMPTY && m_bReadOnly) ibBackendCoreException::Error(_("Attempt to assign a value to a write-denied variable"));
 
-	if (m_typeClass == eValueTypes::TYPE_REFFER && m_pRef)
+	if (m_typeClass == ibValueTypes::TYPE_REFFER && m_pRef)
 		m_pRef->DecrRef();
 
-	m_typeClass = eValueTypes::TYPE_EMPTY;
+	m_typeClass = ibValueTypes::TYPE_EMPTY;
 	m_pRef = nullptr;
 }
 
 //methods:
-void CValue::Copy(const CValue& cOld)
+void ibValue::Copy(const ibValue& cOld)
 {
 	if (this == &cOld)
 		return;
@@ -173,38 +173,38 @@ void CValue::Copy(const CValue& cOld)
 	m_typeClass = cOld.m_typeClass;
 
 	switch (m_typeClass) {
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		break;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		m_bData = cOld.m_bData;
 		break;
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		m_fData = cOld.m_fData;
 		break;
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		m_sData = cOld.m_sData;
 		break;
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		m_dData = cOld.m_dData;
 		break;
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
-		m_typeClass = eValueTypes::TYPE_REFFER;
-		m_pRef = const_cast<CValue*>(&cOld);
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
+		m_typeClass = ibValueTypes::TYPE_REFFER;
+		m_pRef = const_cast<ibValue*>(&cOld);
 		m_pRef->IncrRef();
 		break;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		m_pRef = cOld.m_pRef;
 		m_pRef->IncrRef();
 		break;
 	default:
-		m_typeClass = eValueTypes::TYPE_EMPTY;
+		m_typeClass = ibValueTypes::TYPE_EMPTY;
 		break;
 	}
 }
 
-void CValue::Move(CValue&& cOld)
+void ibValue::Move(ibValue&& cOld)
 {
 	if (this == &cOld)
 		return;
@@ -214,144 +214,144 @@ void CValue::Move(CValue&& cOld)
 	m_typeClass = cOld.m_typeClass;
 
 	switch (m_typeClass) {
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		break;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		m_bData = std::move(cOld.m_bData);
 		break;
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		m_fData = std::move(cOld.m_fData);
 		break;
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		m_sData = std::move(cOld.m_sData);
 		break;
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		m_dData = std::move(cOld.m_dData);
 		break;
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
-		m_typeClass = eValueTypes::TYPE_REFFER;
-		m_pRef = const_cast<CValue*>(&cOld);
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
+		m_typeClass = ibValueTypes::TYPE_REFFER;
+		m_pRef = const_cast<ibValue*>(&cOld);
 		m_pRef->IncrRef();
 		break;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		m_pRef = cOld.m_pRef;
 		m_pRef->IncrRef();
 		break;
 	default:
-		m_typeClass = eValueTypes::TYPE_EMPTY;
+		m_typeClass = ibValueTypes::TYPE_EMPTY;
 		break;
 	}
 
 	cOld.Reset();
 }
 
-void CValue::operator = (bool cParam)
+void ibValue::operator = (bool cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	m_bData = cParam;
 }
 
-void CValue::operator = (short cParam)
+void ibValue::operator = (short cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_NUMBER;
+	m_typeClass = ibValueTypes::TYPE_NUMBER;
 	m_fData = cParam;
 }
 
-void CValue::operator = (unsigned short cParam)
+void ibValue::operator = (unsigned short cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_NUMBER;
+	m_typeClass = ibValueTypes::TYPE_NUMBER;
 	m_fData = cParam;
 }
 
-void CValue::operator = (int cParam)
+void ibValue::operator = (int cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_NUMBER;
+	m_typeClass = ibValueTypes::TYPE_NUMBER;
 	m_fData = cParam;
 }
 
-void CValue::operator = (unsigned int cParam)
+void ibValue::operator = (unsigned int cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_NUMBER;
+	m_typeClass = ibValueTypes::TYPE_NUMBER;
 	m_fData = cParam;
 }
 
-void CValue::operator = (float cParam)
+void ibValue::operator = (float cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_NUMBER;
+	m_typeClass = ibValueTypes::TYPE_NUMBER;
 	m_fData = cParam;
 }
 
-void CValue::operator = (double cParam)
+void ibValue::operator = (double cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_NUMBER;
+	m_typeClass = ibValueTypes::TYPE_NUMBER;
 	m_fData = cParam;
 }
 
-void CValue::operator = (const number_t& cParam)
+void ibValue::operator = (const ibNumber& cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_NUMBER;
+	m_typeClass = ibValueTypes::TYPE_NUMBER;
 	m_fData = cParam;
 }
 
-void CValue::operator = (const wxDateTime& cParam)
+void ibValue::operator = (const wxDateTime& cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_DATE;
+	m_typeClass = ibValueTypes::TYPE_DATE;
 	const wxLongLong& llData = cParam.GetValue();
 	m_dData = llData.GetValue();
 }
 
-void CValue::operator = (wxLongLong_t cParam)
+void ibValue::operator = (wxLongLong_t cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_DATE;
+	m_typeClass = ibValueTypes::TYPE_DATE;
 	m_dData = cParam;
 }
 
 
-void CValue::operator = (const wxString& cParam)
+void ibValue::operator = (const wxString& cParam)
 {
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_STRING;
+	m_typeClass = ibValueTypes::TYPE_STRING;
 	m_sData = cParam;
 }
 
-void CValue::operator = (const CValue& cParam)
+void ibValue::operator = (const ibValue& cParam)
 {
 	if (this != &cParam && !m_bReadOnly)
 		Copy(cParam);
 }
 
-void CValue::operator=(CValue&& cParam)
+void ibValue::operator=(ibValue&& cParam)
 {
 	if (this != &cParam && !m_bReadOnly)
 		Move(std::move(cParam));
 }
 
-void CValue::operator = (eValueTypes type)
+void ibValue::operator = (ibValueTypes type)
 {
-	eValueTypes typeClass = m_typeClass; CValue objValue(*this);
+	ibValueTypes typeClass = m_typeClass; ibValue objValue(*this);
 
 	switch (type)
 	{
@@ -377,77 +377,77 @@ void CValue::operator = (eValueTypes type)
 	SetData(objValue);
 }
 
-void CValue::operator=(IBackendValue* pValue)
+void ibValue::operator=(ibBackendValue* pValue)
 {
 	if (this != (pValue ? pValue->GetImplValueRef() : nullptr) && !m_bReadOnly) {
 		Reset();
 		if (pValue != nullptr) {
-			m_typeClass = eValueTypes::TYPE_REFFER;
+			m_typeClass = ibValueTypes::TYPE_REFFER;
 			m_pRef = pValue->GetImplValueRef();
 			m_pRef->IncrRef();
 		}
 	}
 }
 
-void CValue::operator = (CValue* pValue)
+void ibValue::operator = (ibValue* pValue)
 {
 	if (this != pValue && !m_bReadOnly) {
 		Reset();
 		if (pValue != nullptr) {
-			m_typeClass = eValueTypes::TYPE_REFFER;
+			m_typeClass = ibValueTypes::TYPE_REFFER;
 			m_pRef = pValue;
 			m_pRef->IncrRef();
 		}
 	}
 }
 
-void CValue::SetValue(const CValue& varValue)
+void ibValue::SetValue(const ibValue& varValue)
 {
 	if (this == &varValue)
 		return;
 
-	if (m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_typeClass == ibValueTypes::TYPE_REFFER)
 		m_pRef->SetValue(varValue);
 	else
 		Copy(varValue);
 }
 
-bool CValue::SetBoolean(const wxString& strBoolean)
+bool ibValue::SetBoolean(const wxString& strBoolean)
 {
-	if (m_bReadOnly && m_typeClass == eValueTypes::TYPE_REFFER) {
+	if (m_bReadOnly && m_typeClass == ibValueTypes::TYPE_REFFER) {
 		return m_pRef->SetBoolean(strBoolean);
 	}
 
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_BOOLEAN;
+	m_typeClass = ibValueTypes::TYPE_BOOLEAN;
 	m_bData = stringUtils::CompareString(strBoolean, wxT("True"));
 
 	return true;
 }
 
-bool CValue::SetNumber(const wxString& strNumber)
+bool ibValue::SetNumber(const wxString& strNumber)
 {
-	if (m_bReadOnly && m_typeClass == eValueTypes::TYPE_REFFER) {
+	if (m_bReadOnly && m_typeClass == ibValueTypes::TYPE_REFFER) {
 		return m_pRef->SetNumber(strNumber);
 	}
 
 	Reset();
 
-	number_t fData = 0;
+	ibNumber fData = 0;
 	unsigned int nSuccessful = fData.FromString(strNumber.ToStdWstring());
 	if (nSuccessful > 0)
 		return false;
 
-	m_typeClass = eValueTypes::TYPE_NUMBER;
+	m_typeClass = ibValueTypes::TYPE_NUMBER;
 	m_fData = fData;
 
 	return true;
 }
 
-bool CValue::SetDate(const wxString& strDate)
+bool ibValue::SetDate(const wxString& strDate)
 {
-	if (m_bReadOnly && m_typeClass == eValueTypes::TYPE_REFFER) {
+	if (m_bReadOnly && m_typeClass == ibValueTypes::TYPE_REFFER) {
 		return m_pRef->SetDate(strDate);
 	}
 
@@ -476,49 +476,49 @@ bool CValue::SetDate(const wxString& strDate)
 		}
 	}
 
-	m_typeClass = eValueTypes::TYPE_DATE;
+	m_typeClass = ibValueTypes::TYPE_DATE;
 	m_dData = dData;
 
 	return true;
 }
 
-bool CValue::SetString(const wxString& strString)
+bool ibValue::SetString(const wxString& strString)
 {
-	if (m_bReadOnly && m_typeClass == eValueTypes::TYPE_REFFER) {
+	if (m_bReadOnly && m_typeClass == ibValueTypes::TYPE_REFFER) {
 		return m_pRef->SetString(strString);
 	}
 
 	Reset();
 
-	m_typeClass = eValueTypes::TYPE_STRING;
+	m_typeClass = ibValueTypes::TYPE_STRING;
 	m_sData = strString;
 
 	return true;
 }
 
-bool CValue::FindValue(const wxString& findData, std::vector<CValue>& listValue) const
+bool ibValue::FindValue(const wxString& findData, std::vector<ibValue>& listValue) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->FindValue(findData, listValue);
 
 	try {
-		if (m_typeClass == eValueTypes::TYPE_BOOLEAN) {
-			CValue cFounded;
+		if (m_typeClass == ibValueTypes::TYPE_BOOLEAN) {
+			ibValue cFounded;
 			cFounded.SetBoolean(findData);
 			listValue.emplace_back(cFounded);
 			if (cFounded.GetBoolean()) listValue.emplace_back(false);
 			else listValue.emplace_back(true);
 			return true;
 		}
-		else if (m_typeClass == eValueTypes::TYPE_NUMBER) {
+		else if (m_typeClass == ibValueTypes::TYPE_NUMBER) {
 			listValue.emplace_back().SetNumber(findData);
 			return true;
 		}
-		else if (m_typeClass == eValueTypes::TYPE_DATE) {
+		else if (m_typeClass == ibValueTypes::TYPE_DATE) {
 			listValue.emplace_back().SetDate(findData);
 			return true;
 		}
-		else if (m_typeClass == eValueTypes::TYPE_STRING) {
+		else if (m_typeClass == ibValueTypes::TYPE_STRING) {
 			listValue.emplace_back().SetString(findData);
 			return true;
 		}
@@ -530,26 +530,26 @@ bool CValue::FindValue(const wxString& findData, std::vector<CValue>& listValue)
 	return false;
 }
 
-void CValue::SetData(const CValue& varValue)
+void ibValue::SetData(const ibValue& varValue)
 {
 	if (this == &varValue)
 		return;
 
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		SetBoolean(varValue.GetString());
 		return;
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		SetNumber(varValue.GetString());
 		return;
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		SetString(varValue.GetString());
 		return;
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		SetDate(varValue.GetString());
 		return;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		if (m_pRef != nullptr)
 			m_pRef->SetData(varValue);
 		return;
@@ -558,90 +558,90 @@ void CValue::SetData(const CValue& varValue)
 	SetValue(varValue);
 }
 
-bool CValue::GetBoolean() const
+bool ibValue::GetBoolean() const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return m_bData;
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		return !m_fData.IsZero();
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		return stringUtils::CompareString(wxT("True"), stringUtils::TrimAll(GetString()));
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		return false;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->GetBoolean();
 	}
 
 	return false;
 }
 
-number_t CValue::GetNumber() const
+ibNumber ibValue::GetNumber() const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return m_bData;
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		return m_fData;
-	case eValueTypes::TYPE_STRING: {
+	case ibValueTypes::TYPE_STRING: {
 		wxString strVal = GetString();
 		strVal.Trim(true);
 		strVal.Trim(false);
 		strVal.MakeUpper();
-		number_t number;
+		ibNumber number;
 		unsigned int nSuccessful = number.FromString(strVal.ToStdWstring());
-		if (nSuccessful > 0) CBackendCoreException::Error(_("Cannot convert string to number!"));
+		if (nSuccessful > 0) ibBackendCoreException::Error(_("Cannot convert string to number!"));
 		return number;
 	}
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		return m_dData / 1000;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->GetNumber();
 	}
 
 	return 0;
 }
 
-wxString CValue::GetString() const
+wxString ibValue::GetString() const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_EMPTY:
+	case ibValueTypes::TYPE_EMPTY:
 		return wxEmptyString;
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		return wxEmptyString;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return m_bData ? wxT("True") : wxT("False");
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		return m_fData.ToString();
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		return m_sData;
-	case eValueTypes::TYPE_DATE: {
+	case ibValueTypes::TYPE_DATE: {
 		const wxDateTime& dateTime = wxLongLong(m_dData);
 		return dateTime.Format("%d.%m.%Y %H:%M:%S");
 	}
-	case eValueTypes::TYPE_REFFER:
-		return m_pRef ? m_pRef->GetString() : wxEmptyString;
+	case ibValueTypes::TYPE_REFFER:
+		return m_pRef ? m_pRef->GetString() : wxString(wxEmptyString);
 	};
 
 	return GetClassName();
 }
 
-wxLongLong_t CValue::GetDate() const
+wxLongLong_t ibValue::GetDate() const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return emptyDate;
-	case eValueTypes::TYPE_NUMBER: {
+	case ibValueTypes::TYPE_NUMBER: {
 		wxLongLong_t dTemp = 0;
 		if (!m_fData.ToInt(dTemp))
 			return dTemp * 1000;
 		return emptyDate;
 	}
-	case eValueTypes::TYPE_STRING: {
+	case ibValueTypes::TYPE_STRING: {
 		wxDateTime dateTime;
 		if (dateTime.ParseFormat(m_sData, "%d.%m.%Y %H:%M:%S")) {
 			const wxLongLong& llData = dateTime.GetValue();
@@ -657,29 +657,29 @@ wxLongLong_t CValue::GetDate() const
 		}
 		return emptyDate;
 	}
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		return m_dData;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->GetDate();
 	};
 
 	return emptyDate;
 }
 
-CValue* CValue::GetRef() const
+ibValue* ibValue::GetRef() const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetRef();
-	return const_cast<CValue*>(this);
+	return const_cast<ibValue*>(this);
 }
 
-void CValue::ShowValue()
+void ibValue::ShowValue()
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->ShowValue();
 }
 
-void CValue::FromDate(int& nYear, int& nMonth, int& nDay) const
+void ibValue::FromDate(int& nYear, int& nMonth, int& nDay) const
 {
 	const wxLongLong& llData = wxLongLong(GetDate());
 	wxDateTime dateTime(llData);
@@ -689,7 +689,7 @@ void CValue::FromDate(int& nYear, int& nMonth, int& nDay) const
 	nDay = dateTime.GetDay();
 }
 
-void CValue::FromDate(int& nYear, int& nMonth, int& nDay, unsigned short& nHour, unsigned short& nMinute, unsigned short& nSecond) const
+void ibValue::FromDate(int& nYear, int& nMonth, int& nDay, unsigned short& nHour, unsigned short& nMinute, unsigned short& nSecond) const
 {
 	const wxLongLong& llData = wxLongLong(GetDate());
 	wxDateTime dateTime(llData);
@@ -702,7 +702,7 @@ void CValue::FromDate(int& nYear, int& nMonth, int& nDay, unsigned short& nHour,
 	nSecond = dateTime.GetSecond();
 }
 
-void CValue::FromDate(int& nYear, int& nMonth, int& nDay, int& DayOfWeek, int& DayOfYear, int& WeekOfYear) const
+void ibValue::FromDate(int& nYear, int& nMonth, int& nDay, int& DayOfWeek, int& DayOfYear, int& WeekOfYear) const
 {
 	const wxLongLong& llData = wxLongLong(GetDate());
 	wxDateTime dateTime(llData);
@@ -726,71 +726,71 @@ void CValue::FromDate(int& nYear, int& nMonth, int& nDay, int& DayOfWeek, int& D
 	if (nD > DayOfWeek) WeekOfYear++;
 }
 
-bool CValue::IsEmpty() const
+bool ibValue::IsEmpty() const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return m_bData == false;
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		return m_fData.IsZero();
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		return m_dData == emptyDate;
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		return m_sData.IsEmpty();
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
 		return false;
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef ? m_pRef->IsEmpty() : true;
 	};
 
 	return true;
 }
 
-void CValue::SetType(eValueTypes type)
+void ibValue::SetType(ibValueTypes type)
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		m_pRef->SetType(type);
 	else
 		m_typeClass = type;
 }
 
-eValueTypes CValue::GetType() const
+ibValueTypes ibValue::GetType() const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetType();
 	return m_typeClass;
 }
 
 //*************************************************************
 
-wxString CValue::GetClassName() const
+wxString ibValue::GetClassName() const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetClassName();
-	const class_identifier_t& clsid = GetClassType();
-	if (clsid == 0) CBackendCoreException::Error(_("Class not registered"));
-	return CValue::GetNameObjectFromID(clsid);
+	const ibClassID& clsid = GetClassType();
+	if (clsid == 0) ibBackendCoreException::Error(_("Class not registered"));
+	return ibValue::GetNameObjectFromID(clsid);
 }
 
-class_identifier_t CValue::GetClassType() const
+ibClassID ibValue::GetClassType() const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetClassType();
-	if (m_typeClass < eValueTypes::TYPE_REFFER)
-		return CValue::GetIDByVT(m_typeClass);
-	return CValue::GetTypeIDByRef(this);
+	if (m_typeClass < ibValueTypes::TYPE_REFFER)
+		return ibValue::GetIDByVT(m_typeClass);
+	return ibValue::GetTypeIDByRef(this);
 }
 
 //*************************************************************
 //*                        array support                      *
 //*************************************************************
 
-bool CValue::SetAt(const CValue& varKeyValue, const CValue& varValue)
+bool ibValue::SetAt(const ibValue& varKeyValue, const ibValue& varValue)
 {
-	if (m_pRef && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->SetAt(varKeyValue, varValue);
 	const long lPropNum = FindProp(varKeyValue.GetString());
 	if (lPropNum != wxNOT_FOUND)
@@ -798,9 +798,9 @@ bool CValue::SetAt(const CValue& varKeyValue, const CValue& varValue)
 	return false;
 }
 
-bool CValue::GetAt(const CValue& varKeyValue, CValue& pvarValue)
+bool ibValue::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {
-	if (m_pRef && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetAt(varKeyValue, pvarValue);
 	const long lPropNum = FindProp(varKeyValue.GetString());
 	if (lPropNum != wxNOT_FOUND)
@@ -812,30 +812,30 @@ bool CValue::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 //*                    iterator support                       *
 //*************************************************************
 
-CValue CValue::GetIteratorEmpty()
+ibValue ibValue::GetIteratorEmpty()
 {
-	if (m_pRef && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetIteratorEmpty();
-	return CValue();
+	return ibValue();
 }
 
-bool CValue::HasIterator() const
+bool ibValue::HasIterator() const
 {
-	if (m_pRef && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->HasIterator();
 	return false;
 }
 
-CValue CValue::GetIteratorAt(unsigned int idx)
+ibValue ibValue::GetIteratorAt(unsigned int idx)
 {
-	if (m_pRef && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetIteratorAt(idx);
-	return CValue();
+	return ibValue();
 }
 
-unsigned int CValue::GetIteratorCount() const
+unsigned int ibValue::GetIteratorCount() const
 {
-	if (m_pRef && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetIteratorCount();
 	return 0;
 }
@@ -845,27 +845,27 @@ unsigned int CValue::GetIteratorCount() const
 //*************************************************************
 
 // compare '>'
-bool CValue::CompareValueGT(const CValue& cParam) const
+bool ibValue::CompareValueGT(const ibValue& cParam) const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_EMPTY:
+	case ibValueTypes::TYPE_EMPTY:
 		return false;
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		return false;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return GetBoolean() > cParam.GetBoolean();
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		return GetNumber() > cParam.GetNumber();
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		return GetDate() > cParam.GetDate();
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		return GetString() > cParam.GetString();
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
 		return GetString() > cParam.GetString();
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueGT(cParam);
 	};
 
@@ -873,27 +873,27 @@ bool CValue::CompareValueGT(const CValue& cParam) const
 }
 
 // compare '>='
-bool CValue::CompareValueGE(const CValue& cParam) const
+bool ibValue::CompareValueGE(const ibValue& cParam) const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_EMPTY:
+	case ibValueTypes::TYPE_EMPTY:
 		return false;
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		return false;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return GetBoolean() >= cParam.GetBoolean();
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		return GetNumber() >= cParam.GetNumber();
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		return GetDate() >= cParam.GetDate();
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		return GetString() >= cParam.GetString();
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
 		return GetString() >= cParam.GetString();
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueGE(cParam);
 	};
 
@@ -901,27 +901,27 @@ bool CValue::CompareValueGE(const CValue& cParam) const
 }
 
 // compare '<'
-bool CValue::CompareValueLS(const CValue& cParam) const
+bool ibValue::CompareValueLS(const ibValue& cParam) const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_EMPTY:
+	case ibValueTypes::TYPE_EMPTY:
 		return false;
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		return false;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return GetBoolean() < cParam.GetBoolean();
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		return GetNumber() < cParam.GetNumber();
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		return GetDate() < cParam.GetDate();
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		return GetString() < cParam.GetString();
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
 		return GetString() < cParam.GetString();
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueLS(cParam);
 	};
 
@@ -929,27 +929,27 @@ bool CValue::CompareValueLS(const CValue& cParam) const
 }
 
 // compare '<='
-bool CValue::CompareValueLE(const CValue& cParam) const
+bool ibValue::CompareValueLE(const ibValue& cParam) const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_EMPTY:
+	case ibValueTypes::TYPE_EMPTY:
 		return false;
-	case eValueTypes::TYPE_NULL:
+	case ibValueTypes::TYPE_NULL:
 		return false;
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_BOOLEAN:
 		return GetBoolean() <= cParam.GetBoolean();
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		return GetNumber() <= cParam.GetNumber();
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		return GetDate() <= cParam.GetDate();
-	case eValueTypes::TYPE_STRING:
+	case ibValueTypes::TYPE_STRING:
 		return GetString() <= cParam.GetString();
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
 		return GetString() <= cParam.GetString();
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueLE(cParam);
 	};
 
@@ -957,32 +957,32 @@ bool CValue::CompareValueLE(const CValue& cParam) const
 }
 
 // compare '=='
-bool CValue::CompareValueEQ(const CValue& cParam) const
+bool ibValue::CompareValueEQ(const ibValue& cParam) const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_EMPTY:
-		return eValueTypes::TYPE_EMPTY == cParam.GetType();
-	case eValueTypes::TYPE_NULL:
-		return eValueTypes::TYPE_NULL == cParam.GetType();
-	case eValueTypes::TYPE_BOOLEAN:
+	case ibValueTypes::TYPE_EMPTY:
+		return ibValueTypes::TYPE_EMPTY == cParam.GetType();
+	case ibValueTypes::TYPE_NULL:
+		return ibValueTypes::TYPE_NULL == cParam.GetType();
+	case ibValueTypes::TYPE_BOOLEAN:
 		return GetBoolean() == cParam.GetBoolean() &&
-			eValueTypes::TYPE_BOOLEAN == cParam.GetType();
-	case eValueTypes::TYPE_NUMBER:
+			ibValueTypes::TYPE_BOOLEAN == cParam.GetType();
+	case ibValueTypes::TYPE_NUMBER:
 		return GetNumber() == cParam.GetNumber() &&
-			eValueTypes::TYPE_NUMBER == cParam.GetType();
-	case eValueTypes::TYPE_DATE:
+			ibValueTypes::TYPE_NUMBER == cParam.GetType();
+	case ibValueTypes::TYPE_DATE:
 		return GetDate() == cParam.GetDate() &&
-			eValueTypes::TYPE_DATE == cParam.GetType();
-	case eValueTypes::TYPE_STRING:
+			ibValueTypes::TYPE_DATE == cParam.GetType();
+	case ibValueTypes::TYPE_STRING:
 		return GetString() == cParam.GetString() &&
-			eValueTypes::TYPE_STRING == cParam.GetType();
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
+			ibValueTypes::TYPE_STRING == cParam.GetType();
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
 		return GetString() == cParam.GetString() &&
 			GetClassType() == cParam.GetClassType();
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueEQ(cParam);
 	};
 
@@ -990,46 +990,46 @@ bool CValue::CompareValueEQ(const CValue& cParam) const
 }
 
 // compare '!='
-bool CValue::CompareValueNE(const CValue& cParam) const
+bool ibValue::CompareValueNE(const ibValue& cParam) const
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_EMPTY:
-		return eValueTypes::TYPE_EMPTY != cParam.GetType();
-	case eValueTypes::TYPE_NULL:
-		return eValueTypes::TYPE_NULL != cParam.GetType();
-	case eValueTypes::TYPE_BOOLEAN:
-		return eValueTypes::TYPE_BOOLEAN != cParam.GetType() ||
+	case ibValueTypes::TYPE_EMPTY:
+		return ibValueTypes::TYPE_EMPTY != cParam.GetType();
+	case ibValueTypes::TYPE_NULL:
+		return ibValueTypes::TYPE_NULL != cParam.GetType();
+	case ibValueTypes::TYPE_BOOLEAN:
+		return ibValueTypes::TYPE_BOOLEAN != cParam.GetType() ||
 			GetBoolean() != cParam.GetBoolean();
-	case eValueTypes::TYPE_NUMBER:
-		return eValueTypes::TYPE_NUMBER != cParam.GetType() ||
+	case ibValueTypes::TYPE_NUMBER:
+		return ibValueTypes::TYPE_NUMBER != cParam.GetType() ||
 			GetNumber() != cParam.GetNumber();
-	case eValueTypes::TYPE_DATE:
-		return eValueTypes::TYPE_DATE != cParam.GetType() ||
+	case ibValueTypes::TYPE_DATE:
+		return ibValueTypes::TYPE_DATE != cParam.GetType() ||
 			GetDate() != cParam.GetDate();
-	case eValueTypes::TYPE_STRING:
-		return eValueTypes::TYPE_STRING != cParam.GetType() ||
+	case ibValueTypes::TYPE_STRING:
+		return ibValueTypes::TYPE_STRING != cParam.GetType() ||
 			GetString() != cParam.GetString();
-	case eValueTypes::TYPE_ENUM:
-	case eValueTypes::TYPE_OLE:
-	case eValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_VALUE:
 		return GetString() != cParam.GetString() ||
 			GetClassType() != cParam.GetClassType();
-	case eValueTypes::TYPE_REFFER:
+	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueNE(cParam);
 	};
 
 	return false;
 }
 
-const CValue& CValue::operator+(const CValue& cParam)
+const ibValue& ibValue::operator+(const ibValue& cParam)
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		m_fData = m_fData + cParam.GetNumber();
 		break;
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		m_dData = m_dData + cParam.GetDate();
 		break;
 	}
@@ -1037,14 +1037,14 @@ const CValue& CValue::operator+(const CValue& cParam)
 	return *this;
 }
 
-const CValue& CValue::operator-(const CValue& cParam)
+const ibValue& ibValue::operator-(const ibValue& cParam)
 {
 	switch (m_typeClass)
 	{
-	case eValueTypes::TYPE_NUMBER:
+	case ibValueTypes::TYPE_NUMBER:
 		m_fData = m_fData - cParam.GetNumber();
 		break;
-	case eValueTypes::TYPE_DATE:
+	case ibValueTypes::TYPE_DATE:
 		m_dData = m_dData - cParam.GetDate();
 		break;
 	}
@@ -1055,167 +1055,167 @@ const CValue& CValue::operator-(const CValue& cParam)
 //				WORK AS AN AGGREGATE OBJECT                   *
 //*************************************************************
 
-long CValue::GetNProps() const
+long ibValue::GetNProps() const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetNProps();
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->GetNProps();
 	return 0;
 }
 
-long CValue::FindProp(const wxString& strPropName) const
+long ibValue::FindProp(const wxString& strPropName) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->FindProp(strPropName);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->FindProp(strPropName);
 	return wxNOT_FOUND;
 }
 
-wxString CValue::GetPropName(const long lPropNum) const
+wxString ibValue::GetPropName(const long lPropNum) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetPropName(lPropNum);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->GetPropName(lPropNum);
 	return wxEmptyString;
 }
 
-bool CValue::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValue::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetPropVal(lPropNum, pvarPropVal);
 	return false;
 }
 
-bool CValue::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValue::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->SetPropVal(lPropNum, varPropVal);
 	return false;
 }
 
-bool CValue::IsPropReadable(const long lPropNum) const
+bool ibValue::IsPropReadable(const long lPropNum) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->IsPropReadable(lPropNum);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->IsPropReadable(lPropNum);
 	return true;
 }
 
-bool CValue::IsPropWritable(const long lPropNum) const
+bool ibValue::IsPropWritable(const long lPropNum) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->IsPropWritable(lPropNum);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->IsPropWritable(lPropNum);
 	return true;
 }
 
-long CValue::GetNMethods() const
+long ibValue::GetNMethods() const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetNMethods();
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->GetNMethods();
 	return 0;
 }
 
-long CValue::FindMethod(const wxString& strMethodName) const
+long ibValue::FindMethod(const wxString& strMethodName) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->FindMethod(strMethodName);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->FindMethod(strMethodName);
 	return wxNOT_FOUND;
 }
 
-wxString CValue::GetMethodName(const long lMethodNum) const
+wxString ibValue::GetMethodName(const long lMethodNum) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetMethodName(lMethodNum);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->GetMethodName(lMethodNum);
 	return wxEmptyString;
 }
 
-wxString CValue::GetMethodHelper(const long lMethodNum) const
+wxString ibValue::GetMethodHelper(const long lMethodNum) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetMethodHelper(lMethodNum);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->GetMethodHelper(lMethodNum);
 	return wxEmptyString;
 }
 
-long CValue::GetNParams(const long lMethodNum) const
+long ibValue::GetNParams(const long lMethodNum) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetNParams(lMethodNum);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->GetNParams(lMethodNum);
 	return 0;
 }
 
-bool CValue::GetParamDefValue(const long lMethodNum,
+bool ibValue::GetParamDefValue(const long lMethodNum,
 	const long lParamNum,
-	CValue& pvarParamDefValue) const
+	ibValue& pvarParamDefValue) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetParamDefValue(lMethodNum, lParamNum, pvarParamDefValue);
 	return false;
 }
 
-bool CValue::HasRetVal(const long lMethodNum) const
+bool ibValue::HasRetVal(const long lMethodNum) const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->HasRetVal(lMethodNum);
-	CMethodHelper* const methodHelper = GetPMethods();
+	ibValueMethodHelper* const methodHelper = GetPMethods();
 	if (methodHelper != nullptr)
 		return methodHelper->HasRetVal(lMethodNum);
 	return false;
 }
 
-bool CValue::CallAsProc(const long lMethodNum,
-	CValue** paParams, const long lSizeArray)
+bool ibValue::CallAsProc(const long lMethodNum,
+	ibValue** paParams, const long lSizeArray)
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->CallAsProc(lMethodNum, paParams, lSizeArray);
 	return false;
 }
 
-bool CValue::CallAsFunc(const long lMethodNum,
-	CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValue::CallAsFunc(const long lMethodNum,
+	ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	return false;
 }
 
-void CValue::PrepareNames() const
+void ibValue::PrepareNames() const
 {
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		m_pRef->PrepareNames();
 }
 
 //get the current value (relevant for aggregate objects or dialog objects)
-CValue CValue::GetValue(bool getThis)
+ibValue ibValue::GetValue(bool getThis)
 {
 	if (getThis)
 		return this;
-	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetValue(true); // true - a sign of creating a new variable - a reference to an aggregate object
 	return *this;
 }
@@ -1224,11 +1224,11 @@ CValue CValue::GetValue(bool getThis)
 //*                       Runtime register                             *
 //**********************************************************************
 
-PRIMITIVE_TYPE_REGISTER(CValue, "Undefined", eValueTypes::TYPE_EMPTY, g_valueUndefinedCLSID);
+PRIMITIVE_TYPE_REGISTER(ibValue, "Undefined", ibValueTypes::TYPE_EMPTY, g_valueUndefinedCLSID);
 
-PRIMITIVE_TYPE_REGISTER(CValue, "Boolean", eValueTypes::TYPE_BOOLEAN, g_valueBooleanCLSID);
-PRIMITIVE_TYPE_REGISTER(CValue, "Number", eValueTypes::TYPE_NUMBER, g_valueNumberCLSID);
-PRIMITIVE_TYPE_REGISTER(CValue, "Date", eValueTypes::TYPE_DATE, g_valueDateCLSID);
-PRIMITIVE_TYPE_REGISTER(CValue, "String", eValueTypes::TYPE_STRING, g_valueStringCLSID);
+PRIMITIVE_TYPE_REGISTER(ibValue, "Boolean", ibValueTypes::TYPE_BOOLEAN, g_valueBooleanCLSID);
+PRIMITIVE_TYPE_REGISTER(ibValue, "Number", ibValueTypes::TYPE_NUMBER, g_valueNumberCLSID);
+PRIMITIVE_TYPE_REGISTER(ibValue, "Date", ibValueTypes::TYPE_DATE, g_valueDateCLSID);
+PRIMITIVE_TYPE_REGISTER(ibValue, "String", ibValueTypes::TYPE_STRING, g_valueStringCLSID);
 
-PRIMITIVE_TYPE_REGISTER(CValue, "Null", eValueTypes::TYPE_NULL, g_valueNullCLSID);
+PRIMITIVE_TYPE_REGISTER(ibValue, "Null", ibValueTypes::TYPE_NULL, g_valueNullCLSID);

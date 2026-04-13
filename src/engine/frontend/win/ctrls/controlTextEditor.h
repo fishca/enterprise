@@ -24,19 +24,19 @@ wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_BUTTON_OPEN, wxCommandEvent
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_BUTTON_SELECT, wxCommandEvent);
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_BUTTON_CLEAR, wxCommandEvent);
 
-class FRONTEND_API wxControlTextEditor :
+class FRONTEND_API ibControlTextEditor :
 
 	public wxCompositeWindow<wxWindow>,
 	public wxTextCtrlIface,
 
-	public wxControlDynamicBorder {
+	public ibControlDynamicBorder {
 
-	class wxControlStaticText : public wxDynamicStaticText {
+	class ibControlStaticText : public ibDynamicStaticText {
 	public:
 
-		wxControlStaticText(wxWindow* parent,
+		ibControlStaticText(wxWindow* parent,
 			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr)) :
-			wxDynamicStaticText(parent, id, label, pos, size, style, name)
+			ibDynamicStaticText(parent, id, label, pos, size, style, name)
 		{
 			// Ensure that our best size is recomputed using our overridden
 			// DoGetBestSize().
@@ -45,13 +45,13 @@ class FRONTEND_API wxControlTextEditor :
 	};
 
 	// ----------------------------------------------------------------------------
-	// wxControlCustomTextEditor: text control used by editor control
+	// ibControlCustomTextEditor: text control used by editor control
 	// ----------------------------------------------------------------------------
 
-	class wxControlCustomTextEditor : public wxTextCtrl {
+	class ibControlCustomTextEditor : public wxTextCtrl {
 	public:
 
-		wxControlCustomTextEditor(wxControlTextEditor* editor, const wxString& value, long style = 0)
+		ibControlCustomTextEditor(ibControlTextEditor* editor, const wxString& value, long style = 0)
 			: m_editor(editor) {
 
 			Create(editor, wxID_ANY, value, wxDefaultPosition, wxDefaultSize,
@@ -119,7 +119,7 @@ class FRONTEND_API wxControlTextEditor :
 
 		virtual wxWindow* GetMainWindowOfCompositeControl() override { return m_editor; }
 
-		// provide access to the base class protected methods to wxControlCustomTextEditor which
+		// provide access to the base class protected methods to ibControlCustomTextEditor which
 		// needs to forward to them
 		void DoSetValue(const wxString& value, int flags) override
 		{
@@ -167,7 +167,7 @@ class FRONTEND_API wxControlTextEditor :
 
 		// We increase the text control height to be the same as for the controls
 		// with border as this is what we actually need here because even though
-		// this control itself is borderless, it's inside wxControlCustomTextEditor which does
+		// this control itself is borderless, it's inside ibControlCustomTextEditor which does
 		// have the border and so should have the same height as the normal text
 		// entries with border.
 		//
@@ -179,7 +179,7 @@ class FRONTEND_API wxControlTextEditor :
 		// at all.
 		virtual wxSize DoGetBestSize() const override {
 
-			wxSize size = DoGetSizeFromTextSize(FromDIP(m_defaultItemWidth));
+			wxSize size = DoGetSizeFromTextSize(FromDIP(m_defaultItemWidth), -1);
 
 			// The calculation for no external borders in wxTextCtrl::DoGetSizeFromTextSize also
 			// removes any padding around the value, which is wrong for this situation. So we
@@ -196,27 +196,27 @@ class FRONTEND_API wxControlTextEditor :
 
 		static const unsigned int m_defaultItemWidth = 125;
 
-		wxControlTextEditor* m_editor;
+		ibControlTextEditor* m_editor;
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	class wxControlCompositeEditor : public wxWindow {
+	class ibControlCompositeEditor : public wxWindow {
 
 		// ----------------------------------------------------------------------------
-		// wxControlEditorButtonCtrl: editor button used by editor control
+		// ibControlEditorButtonCtrl: editor button used by editor control
 		// ----------------------------------------------------------------------------
 
-		class wxControlEditorButtonCtrl : public wxButton
+		class ibControlEditorButtonCtrl : public wxButton
 		{
 		public:
-			wxControlEditorButtonCtrl(wxControlCompositeEditor* editor, int eventType, const wxString& val) :
+			ibControlEditorButtonCtrl(ibControlCompositeEditor* editor, int eventType, const wxString& val) :
 				m_editor(editor), m_eventType(eventType)
 			{
 				Create(editor, wxID_ANY, val, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_EXACTFIT);
 				SetBackgroundStyle(wxBG_STYLE_PAINT);
 			}
 
-			// The buttons in wxControlEditorButtonCtrl shouldn't accept focus from keyboard because
+			// The buttons in ibControlEditorButtonCtrl shouldn't accept focus from keyboard because
 			// this would interfere with the usual TAB processing: the user expects
 			// that pressing TAB in the search control should switch focus to the next
 			// control and not give it to the button inside the same control. Besides,
@@ -250,25 +250,25 @@ class FRONTEND_API wxControlTextEditor :
 
 		private:
 
-			wxControlCompositeEditor* m_editor;
+			ibControlCompositeEditor* m_editor;
 			wxEventType m_eventType;
 
 			wxDECLARE_EVENT_TABLE();
 		};
 
-		wxControlTextEditor* m_editor = nullptr;
+		ibControlTextEditor* m_editor = nullptr;
 
-		wxControlEditorButtonCtrl* m_selectButton = nullptr;
-		wxControlEditorButtonCtrl* m_clearButton = nullptr;
-		wxControlEditorButtonCtrl* m_openButton = nullptr;
+		ibControlEditorButtonCtrl* m_selectButton = nullptr;
+		ibControlEditorButtonCtrl* m_clearButton = nullptr;
+		ibControlEditorButtonCtrl* m_openButton = nullptr;
 
 		bool m_dvcMode = false;
 
-		friend class wxControlTextEditor;
+		friend class ibControlTextEditor;
 
 	public:
 
-		virtual ~wxControlCompositeEditor() {
+		virtual ~ibControlCompositeEditor() {
 
 			if (m_editor != nullptr)
 				m_editor->m_text = nullptr;
@@ -278,7 +278,7 @@ class FRONTEND_API wxControlTextEditor :
 			delete m_clearButton;
 		}
 
-		bool Create(wxControlTextEditor* editor,
+		bool Create(ibControlTextEditor* editor,
 			const wxPoint& pos = wxDefaultPosition,
 			const wxSize& size = wxDefaultSize)
 		{
@@ -295,7 +295,7 @@ class FRONTEND_API wxControlTextEditor :
 
 		void SetDVCMode(bool dvc) { m_dvcMode = dvc; }
 
-		wxControlCustomTextEditor* GetTextEditor() const { return m_editor->m_text; }
+		ibControlCustomTextEditor* GetTextEditor() const { return m_editor->m_text; }
 
 		virtual wxWindow* GetMainWindowOfCompositeControl() override { return m_editor->GetMainWindowOfCompositeControl(); }
 
@@ -313,7 +313,7 @@ class FRONTEND_API wxControlTextEditor :
 		void ShowSelectButton(bool select = true) {
 
 			if (select && m_selectButton == nullptr) {
-				m_selectButton = new wxControlEditorButtonCtrl(this,
+				m_selectButton = new ibControlEditorButtonCtrl(this,
 					wxEVT_CONTROL_BUTTON_SELECT, wxT("...")
 				);
 				m_selectButton->SetLabelMarkup("<b>" + m_selectButton->GetLabelText() + "</b>");
@@ -336,7 +336,7 @@ class FRONTEND_API wxControlTextEditor :
 		void ShowOpenButton(bool select = true) {
 
 			if (select && m_openButton == nullptr) {
-				m_openButton = new wxControlEditorButtonCtrl(this,
+				m_openButton = new ibControlEditorButtonCtrl(this,
 					wxEVT_CONTROL_BUTTON_OPEN, wxT("🔍")
 				);
 				m_openButton->SetLabelMarkup("<b>" + m_openButton->GetLabelText() + "</b>");
@@ -359,7 +359,7 @@ class FRONTEND_API wxControlTextEditor :
 		void ShowClearButton(bool select = true) {
 
 			if (select && m_clearButton == nullptr) {
-				m_clearButton = new wxControlEditorButtonCtrl(this,
+				m_clearButton = new ibControlEditorButtonCtrl(this,
 					wxEVT_CONTROL_BUTTON_CLEAR, wxT("×")
 				);
 				m_clearButton->SetLabelMarkup("<b>" + m_clearButton->GetLabelText() + "</b>");
@@ -492,10 +492,10 @@ class FRONTEND_API wxControlTextEditor :
 
 private:
 
-	wxControlStaticText* m_label = nullptr;
-	wxControlCustomTextEditor* m_text = nullptr;
+	ibControlStaticText* m_label = nullptr;
+	ibControlCustomTextEditor* m_text = nullptr;
 
-	wxControlCompositeEditor* m_winButton = nullptr;
+	ibControlCompositeEditor* m_winButton = nullptr;
 
 	bool m_dvcMode;
 
@@ -505,13 +505,13 @@ private:
 
 public:
 
-	wxControlTextEditor() :
+	ibControlTextEditor() :
 		m_passwordMode(false), m_multilineMode(false), m_textEditMode(true),
 		m_dvcMode(false)
 	{
 	}
 
-	wxControlTextEditor(wxWindow* parent,
+	ibControlTextEditor(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxString& val = wxEmptyString,
 		const wxPoint& pos = wxDefaultPosition,
@@ -522,7 +522,7 @@ public:
 		Create(parent, id, val, pos, size, style);
 	}
 
-	virtual ~wxControlTextEditor() {
+	virtual ~ibControlTextEditor() {
 
 		delete m_label;
 		delete m_text;
@@ -539,12 +539,12 @@ public:
 			return false;
 
 		if (!m_dvcMode) {	
-			m_label = new wxControlStaticText(this, wxID_ANY, wxEmptyString);
+			m_label = new ibControlStaticText(this, wxID_ANY, wxEmptyString);
 		}
 
-		m_text = new wxControlCustomTextEditor(this, val, style);
+		m_text = new ibControlCustomTextEditor(this, val, style);
 
-		m_winButton = new wxControlCompositeEditor;
+		m_winButton = new ibControlCompositeEditor;
 		m_winButton->SetDVCMode(m_dvcMode);
 		m_winButton->Create(this, wxDefaultPosition, wxDefaultSize);
 
@@ -610,7 +610,7 @@ public:
 		if (m_label != nullptr) m_label->SetLabel(label);
 	}
 
-	virtual wxString GetLabel() const { return m_label != nullptr ? m_label->GetLabel() : wxEmptyString; }
+	virtual wxString GetLabel() const { if (m_label != nullptr) return m_label->GetLabel(); return wxString(); }
 
 	virtual void SetValue(const wxString& label) { m_text->SetValue(label); }
 	virtual wxString GetValue() const { return m_text->GetValue(); }
@@ -821,7 +821,7 @@ public:
 	virtual bool ShouldInheritColours() const override;
 
 	//dynamic border 
-	virtual wxDynamicStaticText* GetStaticText() const { return m_label; }
+	virtual ibDynamicStaticText* GetStaticText() const { return m_label; }
 	virtual wxWindow* GetControl() const { return m_text; }
 	virtual wxSize GetControlSize() const {
 		return m_text->GetSize() +
@@ -871,17 +871,17 @@ private:
 	// Implement pure virtual function inherited from wxCompositeWindow.
 	virtual wxWindowList GetCompositeWindowParts() const override;
 
-	wxDECLARE_DYNAMIC_CLASS(wxControlTextEditor);
-	wxDECLARE_NO_COPY_CLASS(wxControlTextEditor);
+	wxDECLARE_DYNAMIC_CLASS(ibControlTextEditor);
+	wxDECLARE_NO_COPY_CLASS(ibControlTextEditor);
 	wxDECLARE_EVENT_TABLE();
 };
 
-class FRONTEND_API wxControlNavigationTextEditor :
-	public wxNavigationEnabled<wxControlTextEditor> {
+class FRONTEND_API ibControlNavigationTextEditor :
+	public wxNavigationEnabled<ibControlTextEditor> {
 public:
 
-	wxControlNavigationTextEditor() {}
-	wxControlNavigationTextEditor(wxWindow* parent,
+	ibControlNavigationTextEditor() {}
+	ibControlNavigationTextEditor(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxString& val = wxEmptyString,
 		const wxPoint& pos = wxDefaultPosition,

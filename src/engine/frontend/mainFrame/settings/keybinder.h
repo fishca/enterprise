@@ -17,7 +17,7 @@ class wxXmlNode;
 /**
  * Binds keys to commands.
  */
-class FRONTEND_API CKeyBinder
+class FRONTEND_API ibKeyBinder
 {
 
 public:
@@ -40,12 +40,12 @@ public:
     /**
      * Constructor.
      */
-    CKeyBinder();
+    ibKeyBinder();
 
     /**
      * Destructor.
      */
-    virtual ~CKeyBinder();
+    virtual ~ibKeyBinder();
 
     /**
      * Removes all of the commands from the key binder.

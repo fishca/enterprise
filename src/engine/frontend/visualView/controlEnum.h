@@ -1,110 +1,110 @@
 #ifndef __CONTROL_ENUM_H__
 #define __CONTROL_ENUM_H__
 
-enum enTitleLocation {
+enum ibTitleLocation {
 	eLeft = 1,
 	eRight
 };
 
-enum enRepresentation {
-	eRepresentation_Auto,
-	eRepresentation_Text,
-	eRepresentation_Picture,
-	eRepresentation_PictureAndText
+enum ibRepresentation {
+	ibRepresentation_Auto,
+	ibRepresentation_Text,
+	ibRepresentation_Picture,
+	ibRepresentation_PictureAndText
 };
 
 #include "frontend/frontend.h"
 
 #pragma region enumeration
 #include "backend/compiler/enumUnit.h"
-class FRONTEND_API CValueEnumOrient :
-	public IEnumeration<wxOrientation> {
+class FRONTEND_API ibValueEnumOrient :
+	public ibValueEnumeration<wxOrientation> {
 public:
-	CValueEnumOrient() : IEnumeration() {}
+	ibValueEnumOrient() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
 		AddEnumeration(wxHORIZONTAL, wxT("Horizontal"), _("Horizontal"));
 		AddEnumeration(wxVERTICAL, wxT("Vertical"), _("Vertical"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumOrient);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumOrient);
 };
 
-class FRONTEND_API CValueEnumStretch :
-	public IEnumeration<wxStretch> {
+class FRONTEND_API ibValueEnumStretch :
+	public ibValueEnumeration<wxStretch> {
 public:
-	CValueEnumStretch() : IEnumeration() {}
+	ibValueEnumStretch() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
 		AddEnumeration(wxStretch::wxSHRINK, wxT("Shrink"), _("Shrink"));
 		AddEnumeration(wxStretch::wxEXPAND, wxT("Expand"), _("Expand"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumStretch);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumStretch);
 };
 
 #include <wx/aui/auibook.h>
 
-class FRONTEND_API CValueEnumOrientNotebookPage :
-	public IEnumeration<wxAuiNotebookOption> {
+class FRONTEND_API ibValueEnumOrientNotebookPage :
+	public ibValueEnumeration<wxAuiNotebookOption> {
 public:
-	CValueEnumOrientNotebookPage() : IEnumeration() {}
+	ibValueEnumOrientNotebookPage() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
 		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_TOP, wxT("Top"), _("Top"));
 		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_BOTTOM, wxT("Bottom"), _("Bottom"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumOrientNotebookPage);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumOrientNotebookPage);
 };
 
-class FRONTEND_API CValueEnumHorizontalAlignment :
-	public IEnumeration<wxAlignment> {
+class FRONTEND_API ibValueEnumHorizontalAlignment :
+	public ibValueEnumeration<wxAlignment> {
 public:
-	CValueEnumHorizontalAlignment() : IEnumeration() {}
+	ibValueEnumHorizontalAlignment() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
 		AddEnumeration(wxAlignment::wxALIGN_LEFT, wxT("Left"), _("Left"));
 		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("Center"), _("Center"));
 		AddEnumeration(wxAlignment::wxALIGN_RIGHT, wxT("Right"), _("Right"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumHorizontalAlignment);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumHorizontalAlignment);
 };
 
-class FRONTEND_API CValueEnumVerticalAlignment :
-	public IEnumeration<wxAlignment> {
+class FRONTEND_API ibValueEnumVerticalAlignment :
+	public ibValueEnumeration<wxAlignment> {
 public:
-	CValueEnumVerticalAlignment() : IEnumeration() {}
+	ibValueEnumVerticalAlignment() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
 		AddEnumeration(wxAlignment::wxALIGN_TOP, wxT("Top"), _("Top"));
 		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("Center"), _("Center"));
 		AddEnumeration(wxAlignment::wxALIGN_BOTTOM, wxT("Bottom"), _("Bottom"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumVerticalAlignment);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumVerticalAlignment);
 };
 
-class FRONTEND_API CValueEnumTitleLocation :
-	public IEnumeration<enTitleLocation> {
+class FRONTEND_API ibValueEnumTitleLocation :
+	public ibValueEnumeration<ibTitleLocation> {
 public:
-	CValueEnumTitleLocation() : IEnumeration() {}
+	ibValueEnumTitleLocation() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(enTitleLocation::eLeft, wxT("Left"), _("Left"));
-		AddEnumeration(enTitleLocation::eRight, wxT("Right"), _("Right"));
+		AddEnumeration(ibTitleLocation::eLeft, wxT("Left"), _("Left"));
+		AddEnumeration(ibTitleLocation::eRight, wxT("Right"), _("Right"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumTitleLocation);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumTitleLocation);
 };
 
-class FRONTEND_API CValueEnumRepresentation :
-	public IEnumeration<enRepresentation> {
+class FRONTEND_API ibValueEnumRepresentation :
+	public ibValueEnumeration<ibRepresentation> {
 public:
-	CValueEnumRepresentation() : IEnumeration() {}
+	ibValueEnumRepresentation() : ibValueEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(enRepresentation::eRepresentation_Auto, wxT("Auto"), _("Auto"));
-		AddEnumeration(enRepresentation::eRepresentation_Text, wxT("Text"), _("Text"));
-		AddEnumeration(enRepresentation::eRepresentation_Picture, wxT("Picture"), _("Picture"));
-		AddEnumeration(enRepresentation::eRepresentation_PictureAndText, wxT("PictureAndText"), _("Picture and text"));
+		AddEnumeration(ibRepresentation::ibRepresentation_Auto, wxT("Auto"), _("Auto"));
+		AddEnumeration(ibRepresentation::ibRepresentation_Text, wxT("Text"), _("Text"));
+		AddEnumeration(ibRepresentation::ibRepresentation_Picture, wxT("Picture"), _("Picture"));
+		AddEnumeration(ibRepresentation::ibRepresentation_PictureAndText, wxT("PictureAndText"), _("Picture and text"));
 	}
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumRepresentation);
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumRepresentation);
 };
 
 #pragma endregion 

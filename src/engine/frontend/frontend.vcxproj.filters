@@ -824,6 +824,75 @@
     <ClCompile Include="visualView\ctrl\textBox.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>
+    <ClCompile Include="propertyManager\propertyEditor.cpp">
+      <Filter>propertyManager</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropEvent.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropEventTool.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropFont.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropGeneration.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropHyperLink.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropList.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropNumber.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropOwner.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropPicture.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropPoint.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropRecord.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropSize.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropSource.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropString.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropType.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropDate.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropEnum.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropColour.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropModule.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropForm.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropSpreadsheet.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropBoolean.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -1452,6 +1521,78 @@
     <ClInclude Include="visualView\ctrl\textBox.h">
       <Filter>visualView\ctrl</Filter>
     </ClInclude>
+    <ClInclude Include="propertyManager\propertyEditor.h">
+      <Filter>propertyManager</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\private\prop.h">
+      <Filter>propertyManager\property\private</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropEvent.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropEventTool.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropFont.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropGeneration.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropHyperLink.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropList.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropNumber.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropOwner.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropPicture.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropPoint.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropRecord.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropSize.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropSource.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropString.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropType.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropDate.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropEnum.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropColour.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropModule.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropForm.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropSpreadsheet.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropBoolean.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">
@@ -1519,6 +1660,18 @@
     </Filter>
     <Filter Include="win\ctrl\dataview">
       <UniqueIdentifier>{76d86bdf-ff11-4660-b36c-3720a56b1c57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="propertyManager">
+      <UniqueIdentifier>{49cc174b-5a16-4054-bf7f-d81541ee9e3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="propertyManager\property">
+      <UniqueIdentifier>{4ae69370-189d-43a9-9dd5-d1498de69e88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="propertyManager\property\private">
+      <UniqueIdentifier>{daab0e00-7408-4e6f-8e76-6bc58914773b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="propertyManager\property\advprop">
+      <UniqueIdentifier>{2df701b8-6f47-44ca-845b-4c98aac19203}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -1,43 +1,48 @@
 #include "propertyGeneration.h"
 #include "backend/propertyManager/property/variant/variantGen.h"
 
-wxVariantData* CPropertyGeneration::CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc) const
+// get property for grid
+wxObject* (*ibPropertyGeneration::ms_propertyGeneration)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
+
+/////////////////////////////////////////////////////////////////////
+
+wxVariantData* ibPropertyGeneration::CreateVariantData(ibPropertyObject* property, const ibMetaDescription& typeDesc) const
 {
-	const IValueMetaObjectGenericData* propFactory = dynamic_cast<const IValueMetaObjectGenericData*>(property);
+	const ibValueMetaObjectGenericData* propFactory = dynamic_cast<const ibValueMetaObjectGenericData*>(property);
 	if (propFactory == nullptr)
 		return nullptr;
-	return new wxVariantDataGeneration(propFactory, typeDesc);
+	return new ibVariantDataGeneration(propFactory, typeDesc);
 }
 
-CMetaDescription& CPropertyGeneration::GetValueAsMetaDesc() const {
-	return get_cell_variant<wxVariantDataGeneration>()->GetMetaDesc();
+ibMetaDescription& ibPropertyGeneration::GetValueAsMetaDesc() const {
+	return get_cell_variant<ibVariantDataGeneration>()->GetMetaDesc();
 }
 
-void CPropertyGeneration::SetValue(const CMetaDescription& val)
+void ibPropertyGeneration::SetValue(const ibMetaDescription& val)
 {
 	m_propValue = CreateVariantData(m_owner, val);
 }
 
 //base property for "generation"
-bool CPropertyGeneration::SetDataValue(const CValue& varPropVal)
+bool ibPropertyGeneration::SetDataValue(const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool CPropertyGeneration::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyGeneration::GetDataValue(ibValue& pvarPropVal) const
 {
-	const wxVariantDataGeneration* gen = get_cell_variant<wxVariantDataGeneration>();
+	const ibVariantDataGeneration* gen = get_cell_variant<ibVariantDataGeneration>();
 	wxASSERT(gen);
 	pvarPropVal = gen->GetDataValue();
 	return true;
 }
 
-bool CPropertyGeneration::LoadData(CMemoryReader& reader)
+bool ibPropertyGeneration::LoadData(ibReaderMemory& reader)
 {
-	return CMetaDescriptionMemory::LoadData(reader, GetValueAsMetaDesc());
+	return ibMetaDescriptionMemory::LoadData(reader, GetValueAsMetaDesc());
 }
 
-bool CPropertyGeneration::SaveData(CMemoryWriter& writer)
+bool ibPropertyGeneration::SaveData(ibWriterMemory& writer)
 {
-	return CMetaDescriptionMemory::SaveData(writer, GetValueAsMetaDesc());
+	return ibMetaDescriptionMemory::SaveData(writer, GetValueAsMetaDesc());
 }

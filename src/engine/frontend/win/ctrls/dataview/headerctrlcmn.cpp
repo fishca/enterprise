@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Name:        src/common/headerctrlcmn.cpp
-// Purpose:     implementation of wxHeaderGenericCtrlBase
+// Purpose:     implementation of ibHeaderGenericCtrlBase
 // Author:      Vadim Zeitlin
 // Created:     2008-12-02
 // Copyright:   (c) 2008 Vadim Zeitlin <vadim@wxwidgets.org>
@@ -68,19 +68,19 @@ public:
 } // anonymous namespace
 
 // ============================================================================
-// wxHeaderGenericCtrlBase implementation
+// ibHeaderGenericCtrlBase implementation
 // ============================================================================
 
-extern const char wxHeaderGenericCtrlNameStr[] = "wxHeaderGenericCtrl";
+extern const char ibHeaderGenericCtrlNameStr[] = "ibHeaderGenericCtrl";
 
-wxBEGIN_EVENT_TABLE(wxHeaderGenericCtrlBase, wxControl)
-    EVT_HEADER_SEPARATOR_DCLICK(wxID_ANY, wxHeaderGenericCtrlBase::OnSeparatorDClick)
+wxBEGIN_EVENT_TABLE(ibHeaderGenericCtrlBase, wxControl)
+    EVT_HEADER_SEPARATOR_DCLICK(wxID_ANY, ibHeaderGenericCtrlBase::OnSeparatorDClick)
 #if wxUSE_MENUS
-    EVT_HEADER_RIGHT_CLICK(wxID_ANY, wxHeaderGenericCtrlBase::OnRClick)
+    EVT_HEADER_RIGHT_CLICK(wxID_ANY, ibHeaderGenericCtrlBase::OnRClick)
 #endif // wxUSE_MENUS
 wxEND_EVENT_TABLE()
 
-void wxHeaderGenericCtrlBase::ScrollWindow(int dx,
+void ibHeaderGenericCtrlBase::ScrollWindow(int dx,
                                     int WXUNUSED_UNLESS_DEBUG(dy),
                                     const wxRect * WXUNUSED_UNLESS_DEBUG(rect))
 
@@ -95,7 +95,7 @@ void wxHeaderGenericCtrlBase::ScrollWindow(int dx,
     DoScrollHorz(dx);
 }
 
-void wxHeaderGenericCtrlBase::SetColumnCount(unsigned int count)
+void ibHeaderGenericCtrlBase::SetColumnCount(unsigned int count)
 {
     if ( count != GetColumnCount() )
         OnColumnCountChanging(count);
@@ -105,7 +105,7 @@ void wxHeaderGenericCtrlBase::SetColumnCount(unsigned int count)
     DoSetCount(count);
 }
 
-int wxHeaderGenericCtrlBase::GetColumnTitleWidth(const wxHeaderColumn& col)
+int ibHeaderGenericCtrlBase::GetColumnTitleWidth(const wxHeaderColumn& col)
 {
     int w = wxWindowBase::GetTextExtent(col.GetTitle()).x;
 
@@ -121,10 +121,10 @@ int wxHeaderGenericCtrlBase::GetColumnTitleWidth(const wxHeaderColumn& col)
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrlBase event handling
+// ibHeaderGenericCtrlBase event handling
 // ----------------------------------------------------------------------------
 
-void wxHeaderGenericCtrlBase::OnSeparatorDClick(wxHeaderGenericCtrlEvent& event)
+void ibHeaderGenericCtrlBase::OnSeparatorDClick(ibHeaderGenericCtrlEvent& event)
 {
     const unsigned col = event.GetColumn();
     const wxHeaderColumn& column = GetColumn(col);
@@ -145,7 +145,7 @@ void wxHeaderGenericCtrlBase::OnSeparatorDClick(wxHeaderGenericCtrlEvent& event)
 
 #if wxUSE_MENUS
 
-void wxHeaderGenericCtrlBase::OnRClick(wxHeaderGenericCtrlEvent& event)
+void ibHeaderGenericCtrlBase::OnRClick(ibHeaderGenericCtrlEvent& event)
 {
     if ( !HasFlag(wxHD_ALLOW_HIDE) )
     {
@@ -159,10 +159,10 @@ void wxHeaderGenericCtrlBase::OnRClick(wxHeaderGenericCtrlEvent& event)
 #endif // wxUSE_MENUS
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrlBase column reordering
+// ibHeaderGenericCtrlBase column reordering
 // ----------------------------------------------------------------------------
 
-void wxHeaderGenericCtrlBase::SetColumnsOrder(const wxArrayInt& order)
+void ibHeaderGenericCtrlBase::SetColumnsOrder(const wxArrayInt& order)
 {
     const unsigned count = GetColumnCount();
     wxCHECK_RET( order.size() == count, "wrong number of columns" );
@@ -183,7 +183,7 @@ void wxHeaderGenericCtrlBase::SetColumnsOrder(const wxArrayInt& order)
     // TODO-RTL: do we need to reverse the array?
 }
 
-void wxHeaderGenericCtrlBase::ResetColumnsOrder()
+void ibHeaderGenericCtrlBase::ResetColumnsOrder()
 {
     const unsigned count = GetColumnCount();
     wxArrayInt order(count);
@@ -193,7 +193,7 @@ void wxHeaderGenericCtrlBase::ResetColumnsOrder()
     DoSetColumnsOrder(order);
 }
 
-wxArrayInt wxHeaderGenericCtrlBase::GetColumnsOrder() const
+wxArrayInt ibHeaderGenericCtrlBase::GetColumnsOrder() const
 {
     const wxArrayInt order = DoGetColumnsOrder();
 
@@ -202,14 +202,14 @@ wxArrayInt wxHeaderGenericCtrlBase::GetColumnsOrder() const
     return order;
 }
 
-unsigned int wxHeaderGenericCtrlBase::GetColumnAt(unsigned int pos) const
+unsigned int ibHeaderGenericCtrlBase::GetColumnAt(unsigned int pos) const
 {
     wxCHECK_MSG( pos < GetColumnCount(), wxNO_COLUMN, "invalid position" );
 
     return GetColumnsOrder()[pos];
 }
 
-unsigned int wxHeaderGenericCtrlBase::GetColumnPos(unsigned int idx) const
+unsigned int ibHeaderGenericCtrlBase::GetColumnPos(unsigned int idx) const
 {
     const unsigned count = GetColumnCount();
 
@@ -223,7 +223,7 @@ unsigned int wxHeaderGenericCtrlBase::GetColumnPos(unsigned int idx) const
 }
 
 /* static */
-void wxHeaderGenericCtrlBase::MoveColumnInOrderArray(wxArrayInt& order,
+void ibHeaderGenericCtrlBase::MoveColumnInOrderArray(wxArrayInt& order,
                                               unsigned int idx,
                                               unsigned int pos)
 {
@@ -238,7 +238,7 @@ void wxHeaderGenericCtrlBase::MoveColumnInOrderArray(wxArrayInt& order,
 }
 
 void
-wxHeaderGenericCtrlBase::DoResizeColumnIndices(wxArrayInt& colIndices, unsigned int count)
+ibHeaderGenericCtrlBase::DoResizeColumnIndices(wxArrayInt& colIndices, unsigned int count)
 {
     // update the column indices array if necessary
     const unsigned countOld = colIndices.size();
@@ -269,12 +269,12 @@ wxHeaderGenericCtrlBase::DoResizeColumnIndices(wxArrayInt& colIndices, unsigned 
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl extra UI
+// ibHeaderGenericCtrl extra UI
 // ----------------------------------------------------------------------------
 
 #if wxUSE_MENUS
 
-void wxHeaderGenericCtrlBase::AddColumnsItems(wxMenu& menu, int idColumnsBase)
+void ibHeaderGenericCtrlBase::AddColumnsItems(wxMenu& menu, int idColumnsBase)
 {
     const unsigned count = GetColumnCount();
     for ( unsigned n = 0; n < count; n++ )
@@ -286,7 +286,7 @@ void wxHeaderGenericCtrlBase::AddColumnsItems(wxMenu& menu, int idColumnsBase)
     }
 }
 
-bool wxHeaderGenericCtrlBase::ShowColumnsMenu(const wxPoint& pt, const wxString& title)
+bool ibHeaderGenericCtrlBase::ShowColumnsMenu(const wxPoint& pt, const wxString& title)
 {
     // construct the menu with the entries for all columns
     wxMenu menu;
@@ -324,7 +324,7 @@ bool wxHeaderGenericCtrlBase::ShowColumnsMenu(const wxPoint& pt, const wxString&
 
 #endif // wxUSE_MENUS
 
-bool wxHeaderGenericCtrlBase::ShowCustomizeDialog()
+bool ibHeaderGenericCtrlBase::ShowCustomizeDialog()
 {
 #if wxUSE_REARRANGECTRL
     // prepare the data for showing the dialog
@@ -382,31 +382,31 @@ bool wxHeaderGenericCtrlBase::ShowCustomizeDialog()
 }
 
 // ============================================================================
-// wxHeaderGenericCtrlSimple implementation
+// ibHeaderGenericCtrlSimple implementation
 // ============================================================================
 
-wxBEGIN_EVENT_TABLE(wxHeaderGenericCtrlSimple, wxHeaderGenericCtrl)
-    EVT_HEADER_RESIZING(wxID_ANY, wxHeaderGenericCtrlSimple::OnHeaderResizing)
+wxBEGIN_EVENT_TABLE(ibHeaderGenericCtrlSimple, ibHeaderGenericCtrl)
+    EVT_HEADER_RESIZING(wxID_ANY, ibHeaderGenericCtrlSimple::OnHeaderResizing)
 wxEND_EVENT_TABLE()
 
-void wxHeaderGenericCtrlSimple::Init()
+void ibHeaderGenericCtrlSimple::Init()
 {
     m_sortKey = wxNO_COLUMN;
 }
 
-const wxHeaderColumn& wxHeaderGenericCtrlSimple::GetColumn(unsigned int idx) const
+const wxHeaderColumn& ibHeaderGenericCtrlSimple::GetColumn(unsigned int idx) const
 {
     return m_cols[idx];
 }
 
-void wxHeaderGenericCtrlSimple::DoInsert(const wxHeaderColumnSimple& col, unsigned int idx)
+void ibHeaderGenericCtrlSimple::DoInsert(const wxHeaderColumnSimple& col, unsigned int idx)
 {
     m_cols.insert(m_cols.begin() + idx, col);
 
     UpdateColumnCount();
 }
 
-void wxHeaderGenericCtrlSimple::DoDelete(unsigned int idx)
+void ibHeaderGenericCtrlSimple::DoDelete(unsigned int idx)
 {
     m_cols.erase(m_cols.begin() + idx);
     if ( idx == m_sortKey )
@@ -415,7 +415,7 @@ void wxHeaderGenericCtrlSimple::DoDelete(unsigned int idx)
     UpdateColumnCount();
 }
 
-void wxHeaderGenericCtrlSimple::DeleteAllColumns()
+void ibHeaderGenericCtrlSimple::DeleteAllColumns()
 {
     m_cols.clear();
     m_sortKey = wxNO_COLUMN;
@@ -424,7 +424,7 @@ void wxHeaderGenericCtrlSimple::DeleteAllColumns()
 }
 
 
-void wxHeaderGenericCtrlSimple::DoShowColumn(unsigned int idx, bool show)
+void ibHeaderGenericCtrlSimple::DoShowColumn(unsigned int idx, bool show)
 {
     if ( show != m_cols[idx].IsShown() )
     {
@@ -434,7 +434,7 @@ void wxHeaderGenericCtrlSimple::DoShowColumn(unsigned int idx, bool show)
     }
 }
 
-void wxHeaderGenericCtrlSimple::DoShowSortIndicator(unsigned int idx, bool ascending)
+void ibHeaderGenericCtrlSimple::DoShowSortIndicator(unsigned int idx, bool ascending)
 {
     RemoveSortIndicator();
 
@@ -444,7 +444,7 @@ void wxHeaderGenericCtrlSimple::DoShowSortIndicator(unsigned int idx, bool ascen
     UpdateColumn(idx);
 }
 
-void wxHeaderGenericCtrlSimple::RemoveSortIndicator()
+void ibHeaderGenericCtrlSimple::RemoveSortIndicator()
 {
     if ( m_sortKey != wxNO_COLUMN )
     {
@@ -458,7 +458,7 @@ void wxHeaderGenericCtrlSimple::RemoveSortIndicator()
 }
 
 bool
-wxHeaderGenericCtrlSimple::UpdateColumnWidthToFit(unsigned int idx, int widthTitle)
+ibHeaderGenericCtrlSimple::UpdateColumnWidthToFit(unsigned int idx, int widthTitle)
 {
     const int widthContents = GetBestFittingWidth(idx);
     if ( widthContents == -1 )
@@ -469,35 +469,35 @@ wxHeaderGenericCtrlSimple::UpdateColumnWidthToFit(unsigned int idx, int widthTit
     return true;
 }
 
-void wxHeaderGenericCtrlSimple::OnHeaderResizing(wxHeaderGenericCtrlEvent& evt)
+void ibHeaderGenericCtrlSimple::OnHeaderResizing(ibHeaderGenericCtrlEvent& evt)
 {
     m_cols[evt.GetColumn()].SetWidth(evt.GetWidth());
     Refresh();
 }
 
 // ============================================================================
-// wxHeaderGenericCtrlEvent implementation
+// ibHeaderGenericCtrlEvent implementation
 // ============================================================================
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxHeaderGenericCtrlEvent, wxNotifyEvent);
+wxIMPLEMENT_DYNAMIC_CLASS(ibHeaderGenericCtrlEvent, wxNotifyEvent);
 
-wxDEFINE_EVENT( wxEVT_HEADER_CLICK, wxHeaderGenericCtrlEvent);
-wxDEFINE_EVENT( wxEVT_HEADER_RIGHT_CLICK, wxHeaderGenericCtrlEvent);
-wxDEFINE_EVENT( wxEVT_HEADER_MIDDLE_CLICK, wxHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_CLICK, ibHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_RIGHT_CLICK, ibHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_MIDDLE_CLICK, ibHeaderGenericCtrlEvent);
 
-wxDEFINE_EVENT( wxEVT_HEADER_DCLICK, wxHeaderGenericCtrlEvent);
-wxDEFINE_EVENT( wxEVT_HEADER_RIGHT_DCLICK, wxHeaderGenericCtrlEvent);
-wxDEFINE_EVENT( wxEVT_HEADER_MIDDLE_DCLICK, wxHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_DCLICK, ibHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_RIGHT_DCLICK, ibHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_MIDDLE_DCLICK, ibHeaderGenericCtrlEvent);
 
-wxDEFINE_EVENT( wxEVT_HEADER_SEPARATOR_DCLICK, wxHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_SEPARATOR_DCLICK, ibHeaderGenericCtrlEvent);
 
-wxDEFINE_EVENT( wxEVT_HEADER_BEGIN_RESIZE, wxHeaderGenericCtrlEvent);
-wxDEFINE_EVENT( wxEVT_HEADER_RESIZING, wxHeaderGenericCtrlEvent);
-wxDEFINE_EVENT( wxEVT_HEADER_END_RESIZE, wxHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_BEGIN_RESIZE, ibHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_RESIZING, ibHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_END_RESIZE, ibHeaderGenericCtrlEvent);
 
-wxDEFINE_EVENT( wxEVT_HEADER_BEGIN_REORDER, wxHeaderGenericCtrlEvent);
-wxDEFINE_EVENT( wxEVT_HEADER_END_REORDER, wxHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_BEGIN_REORDER, ibHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_END_REORDER, ibHeaderGenericCtrlEvent);
 
-wxDEFINE_EVENT( wxEVT_HEADER_DRAGGING_CANCELLED, wxHeaderGenericCtrlEvent);
+wxDEFINE_EVENT( wxEVT_HEADER_DRAGGING_CANCELLED, ibHeaderGenericCtrlEvent);
 
 #endif // wxUSE_HEADERCTRL

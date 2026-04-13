@@ -4,11 +4,11 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 #include "backend/databaseLayer/databaseLayerException.h"
 
-CFirebirdResultSet::CFirebirdResultSet(CFirebirdInterface* pInterface)
-	: IDatabaseResultSet()
+ibDatabaseResultSetFirebird::ibDatabaseResultSetFirebird(ibInterfaceFirebird* pInterface)
+	: ibDatabaseResultSet()
 {
 	m_pInterface = pInterface;
-	m_pDatabase = NULL;
+	m_pDatabase = 0;
 	m_pTransaction = NULL;
 	m_pStatement = NULL;
 	m_pFields = NULL;
@@ -16,9 +16,9 @@ CFirebirdResultSet::CFirebirdResultSet(CFirebirdInterface* pInterface)
 	m_bManageTransaction = false;
 }
 
-//CFirebirdResultSet::CFirebirdResultSet(const IBPP::Statement& statement)
-CFirebirdResultSet::CFirebirdResultSet(CFirebirdInterface* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, isc_stmt_handle pStatement, XSQLDA* pFields, bool bManageStmt /*= false*/, bool bManageTrans /*= false*/)
-	: IDatabaseResultSet()
+//ibDatabaseResultSetFirebird::ibDatabaseResultSetFirebird(const IBPP::Statement& statement)
+ibDatabaseResultSetFirebird::ibDatabaseResultSetFirebird(ibInterfaceFirebird* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, isc_stmt_handle pStatement, XSQLDA* pFields, bool bManageStmt /*= false*/, bool bManageTrans /*= false*/)
+	: ibDatabaseResultSet()
 {
 	m_pInterface = pInterface;
 	m_pDatabase = pDatabase;
@@ -32,12 +32,12 @@ CFirebirdResultSet::CFirebirdResultSet(CFirebirdInterface* pInterface, isc_db_ha
 	PopulateFieldLookupMap();
 }
 
-CFirebirdResultSet::~CFirebirdResultSet()
+ibDatabaseResultSetFirebird::~ibDatabaseResultSetFirebird()
 {
 	Close();
 }
 
-bool CFirebirdResultSet::Next()
+bool ibDatabaseResultSetFirebird::Next()
 {
 	ResetErrorCodes();
 
@@ -59,7 +59,7 @@ bool CFirebirdResultSet::Next()
 	}
 }
 
-void CFirebirdResultSet::Close()
+void ibDatabaseResultSetFirebird::Close()
 {
 	CloseMetaData();
 
@@ -98,7 +98,7 @@ void CFirebirdResultSet::Close()
 
 
 // get field
-int CFirebirdResultSet::GetResultInt(int nField)
+int ibDatabaseResultSetFirebird::GetResultInt(int nField)
 {
 	ResetErrorCodes();
 
@@ -106,7 +106,7 @@ int CFirebirdResultSet::GetResultInt(int nField)
 	return GetResultLong(nField);
 }
 
-wxString CFirebirdResultSet::GetResultString(int nField)
+wxString ibDatabaseResultSetFirebird::GetResultString(int nField)
 {
 	ResetErrorCodes();
 
@@ -146,7 +146,7 @@ wxString CFirebirdResultSet::GetResultString(int nField)
 	return strReturn;
 }
 
-long long CFirebirdResultSet::GetResultLong(int nField)
+long long ibDatabaseResultSetFirebird::GetResultLong(int nField)
 {
 	ResetErrorCodes();
 
@@ -213,7 +213,7 @@ long long CFirebirdResultSet::GetResultLong(int nField)
 	return nReturn;
 }
 
-bool CFirebirdResultSet::GetResultBool(int nField)
+bool ibDatabaseResultSetFirebird::GetResultBool(int nField)
 {
 	ResetErrorCodes();
 
@@ -222,7 +222,7 @@ bool CFirebirdResultSet::GetResultBool(int nField)
 	return (nValue != 0);
 }
 
-wxDateTime CFirebirdResultSet::GetResultDate(int nField)
+wxDateTime ibDatabaseResultSetFirebird::GetResultDate(int nField)
 {
 	ResetErrorCodes();
 
@@ -270,12 +270,12 @@ wxDateTime CFirebirdResultSet::GetResultDate(int nField)
 	return dateReturn;
 }
 
-void CFirebirdResultSet::SetDateTimeFromTm(wxDateTime& dateReturn, struct tm& timeInTm)
+void ibDatabaseResultSetFirebird::SetDateTimeFromTm(wxDateTime& dateReturn, struct tm& timeInTm)
 {
 	dateReturn.Set(timeInTm.tm_mday, wxDateTime::Month(timeInTm.tm_mon), timeInTm.tm_year + 1900, timeInTm.tm_hour, timeInTm.tm_min, timeInTm.tm_sec);
 }
 
-double CFirebirdResultSet::GetResultDouble(int nField)
+double ibDatabaseResultSetFirebird::GetResultDouble(int nField)
 {
 	double dblReturn = 0.00;
 
@@ -298,7 +298,7 @@ double CFirebirdResultSet::GetResultDouble(int nField)
 		}
 		else if (nType == SQL_LONG)
 		{
-			dblReturn = *(long*)(pVar->sqldata);
+			dblReturn = static_cast<int>(*(long*)(pVar->sqldata));
 			for (int i = 0; i < -pVar->sqlscale; dblReturn /= 10, i++);
 		}
 		else if (nType == SQL_INT64)
@@ -327,9 +327,9 @@ double CFirebirdResultSet::GetResultDouble(int nField)
 	return dblReturn;
 }
 
-number_t CFirebirdResultSet::GetResultNumber(int nField)
+ibNumber ibDatabaseResultSetFirebird::GetResultNumber(int nField)
 {
-	number_t dblReturn = 0.00;
+	ibNumber dblReturn = 0.00;
 
 	XSQLVAR* pVar = &(m_pFields->sqlvar[nField - 1]);
 	if (IsNull(pVar))
@@ -350,7 +350,7 @@ number_t CFirebirdResultSet::GetResultNumber(int nField)
 		}
 		else if (nType == SQL_LONG)
 		{
-			dblReturn = *(long*)(pVar->sqldata);
+			dblReturn = static_cast<int>(*(long*)(pVar->sqldata));
 			for (int i = 0; i < -pVar->sqlscale; i++) dblReturn /= 10;
 		}
 		else if (nType == SQL_INT64)
@@ -390,7 +390,7 @@ number_t CFirebirdResultSet::GetResultNumber(int nField)
 	return dblReturn;
 }
 
-void* CFirebirdResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
+void* ibDatabaseResultSetFirebird::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 {
 	ResetErrorCodes();
 
@@ -462,18 +462,18 @@ void* CFirebirdResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 	return buffer.GetData();
 }
 
-bool CFirebirdResultSet::IsFieldNull(int nField)
+bool ibDatabaseResultSetFirebird::IsFieldNull(int nField)
 {
 	XSQLVAR* pVar = &(m_pFields->sqlvar[nField - 1]);
 	return IsNull(pVar);
 }
 
-bool CFirebirdResultSet::IsNull(XSQLVAR* pVar)
+bool ibDatabaseResultSetFirebird::IsNull(XSQLVAR* pVar)
 {
 	return ((pVar->sqltype & 1) && (*pVar->sqlind < 0));
 }
 
-void CFirebirdResultSet::AllocateFieldSpace()
+void ibDatabaseResultSetFirebird::AllocateFieldSpace()
 {
 	if (m_pFields == NULL)
 		return;
@@ -538,7 +538,7 @@ void CFirebirdResultSet::AllocateFieldSpace()
 	}
 }
 
-void CFirebirdResultSet::FreeFieldSpace()
+void ibDatabaseResultSetFirebird::FreeFieldSpace()
 {
 	if (m_pFields == NULL)
 		return;
@@ -598,7 +598,7 @@ void CFirebirdResultSet::FreeFieldSpace()
 	wxDELETEA(m_pFields);
 }
 
-void CFirebirdResultSet::PopulateFieldLookupMap()
+void ibDatabaseResultSetFirebird::PopulateFieldLookupMap()
 {
 	m_FieldLookupMap.clear();
 
@@ -611,7 +611,7 @@ void CFirebirdResultSet::PopulateFieldLookupMap()
 	}
 }
 
-int CFirebirdResultSet::LookupField(const wxString& strField)
+int ibDatabaseResultSetFirebird::LookupField(const wxString& strField)
 {
 	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
 		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
@@ -620,7 +620,7 @@ int CFirebirdResultSet::LookupField(const wxString& strField)
 	{
 		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
-		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
+		ibDatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;
 #else
 		wxLogError(msg);
@@ -633,18 +633,18 @@ int CFirebirdResultSet::LookupField(const wxString& strField)
 	}
 }
 
-void CFirebirdResultSet::InterpretErrorCodes()
+void ibDatabaseResultSetFirebird::InterpretErrorCodes()
 {
-	wxLogError(wxT("CFirebirdResultSet::InterpretErrorCodes()\n"));
+	wxLogError(wxT("ibDatabaseResultSetFirebird::InterpretErrorCodes()\n"));
 
 	long nSqlCode = m_pInterface->GetIscSqlcode()(m_Status);
-	SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(nSqlCode));
-	SetErrorMessage(CFirebirdDatabaseLayer::TranslateErrorCodeToString(m_pInterface, nSqlCode, m_Status));
+	SetErrorCode(ibDatabaseLayerFirebird::TranslateErrorCode(nSqlCode));
+	SetErrorMessage(ibDatabaseLayerFirebird::TranslateErrorCodeToString(m_pInterface, nSqlCode, m_Status));
 }
 
-IResultSetMetaData* CFirebirdResultSet::GetMetaData()
+ibResultSetMetaData* ibDatabaseResultSetFirebird::GetMetaData()
 {
-	IResultSetMetaData* pMetaData = new CFirebirdResultSetMetaData(m_pFields);
+	ibResultSetMetaData* pMetaData = new ibDatabaseResultSetMetaDataFirebird(m_pFields);
 	LogMetaDataForCleanup(pMetaData);
 	return pMetaData;
 }

@@ -1,13 +1,13 @@
 #include "firebirdParameterCollection.h"
 
-CFirebirdParameterCollection::CFirebirdParameterCollection(CFirebirdInterface* pInterface, XSQLDA* pParameters)
+ibDatatabaseParameterFirebirdCollection::ibDatatabaseParameterFirebirdCollection(ibInterfaceFirebird* pInterface, XSQLDA* pParameters)
 {
 	m_pInterface = pInterface;
 	m_FirebirdParameters = pParameters;
 	AllocateParameterSpace();
 }
 
-CFirebirdParameterCollection::~CFirebirdParameterCollection()
+ibDatatabaseParameterFirebirdCollection::~ibDatatabaseParameterFirebirdCollection()
 {
 	if (m_FirebirdParameters) FreeParameterSpace();
 
@@ -16,7 +16,7 @@ CFirebirdParameterCollection::~CFirebirdParameterCollection()
 
 	while (start != stop)
 	{
-		CFirebirdParameter* pParameter = (CFirebirdParameter*)(*start);
+		ibDatatabaseParameterFirebird* pParameter = (ibDatatabaseParameterFirebird*)(*start);
 		wxDELETE(pParameter);
 		(*start) = nullptr;
 		start++;
@@ -26,56 +26,56 @@ CFirebirdParameterCollection::~CFirebirdParameterCollection()
 }
 
 // set field
-void CFirebirdParameterCollection::SetParam(int nPosition, int nValue)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition, int nValue)
 {
-	CFirebirdParameter* pParameter = new CFirebirdParameter(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], nValue);
+	ibDatatabaseParameterFirebird* pParameter = new ibDatatabaseParameterFirebird(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], nValue);
 	SetParam(nPosition, pParameter);
 }
 
-void CFirebirdParameterCollection::SetParam(int nPosition, double dblValue)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition, double dblValue)
 {
-	CFirebirdParameter* pParameter = new CFirebirdParameter(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], dblValue);
+	ibDatatabaseParameterFirebird* pParameter = new ibDatatabaseParameterFirebird(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], dblValue);
 	SetParam(nPosition, pParameter);
 }
 
-void CFirebirdParameterCollection::SetParam(int nPosition, const number_t& dblValue)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition, const ibNumber& dblValue)
 {
-	CFirebirdParameter* pParameter = new CFirebirdParameter(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], dblValue);
+	ibDatatabaseParameterFirebird* pParameter = new ibDatatabaseParameterFirebird(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], dblValue);
 	SetParam(nPosition, pParameter);
 }
 
 
-void CFirebirdParameterCollection::SetParam(int nPosition, const wxString& strValue)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition, const wxString& strValue)
 {
-	CFirebirdParameter* pParameter = new CFirebirdParameter(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], strValue, GetEncoding());
+	ibDatatabaseParameterFirebird* pParameter = new ibDatatabaseParameterFirebird(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], strValue, GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CFirebirdParameterCollection::SetParam(int nPosition)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition)
 {
-	CFirebirdParameter* pParameter = new CFirebirdParameter(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1]);
+	ibDatatabaseParameterFirebird* pParameter = new ibDatatabaseParameterFirebird(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1]);
 	SetParam(nPosition, pParameter);
 }
 
-void CFirebirdParameterCollection::SetParam(int nPosition, const void* pData, long nDataLength)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition, const void* pData, long nDataLength)
 {
-	CFirebirdParameter* pParameter = new CFirebirdParameter(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], pData, nDataLength);
+	ibDatatabaseParameterFirebird* pParameter = new ibDatatabaseParameterFirebird(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], pData, nDataLength);
 	SetParam(nPosition, pParameter);
 }
 
-void CFirebirdParameterCollection::SetParam(int nPosition, const wxDateTime& dateValue)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition, const wxDateTime& dateValue)
 {
-	CFirebirdParameter* pParameter = new CFirebirdParameter(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], dateValue);
+	ibDatatabaseParameterFirebird* pParameter = new ibDatatabaseParameterFirebird(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], dateValue);
 	SetParam(nPosition, pParameter);
 }
 
-void CFirebirdParameterCollection::SetParam(int nPosition, bool bValue)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition, bool bValue)
 {
-	CFirebirdParameter* pParameter = new CFirebirdParameter(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], bValue);
+	ibDatatabaseParameterFirebird* pParameter = new ibDatatabaseParameterFirebird(m_pInterface, &m_FirebirdParameters->sqlvar[nPosition - 1], bValue);
 	SetParam(nPosition, pParameter);
 }
 
-void CFirebirdParameterCollection::SetParam(int nPosition, CFirebirdParameter* pParameter)
+void ibDatatabaseParameterFirebirdCollection::SetParam(int nPosition, ibDatatabaseParameterFirebird* pParameter)
 {
 	// First make sure that there are enough elements in the collection
 	while (m_Parameters.size() < (unsigned int)(nPosition))
@@ -91,7 +91,7 @@ void CFirebirdParameterCollection::SetParam(int nPosition, CFirebirdParameter* p
 	m_Parameters[nPosition - 1] = pParameter;
 }
 
-bool CFirebirdParameterCollection::ResetBlobParameters(isc_db_handle database, isc_tr_handle transaction)
+bool ibDatatabaseParameterFirebirdCollection::ResetBlobParameters(isc_db_handle database, isc_tr_handle transaction)
 {
 	if (m_FirebirdParameters == nullptr)
 		return false;
@@ -101,10 +101,10 @@ bool CFirebirdParameterCollection::ResetBlobParameters(isc_db_handle database, i
 
 	while (start != stop)
 	{
-		const XSQLVAR* pVar = ((CFirebirdParameter*)(*start))->GetFirebirdSqlVarPtr();
+		const XSQLVAR* pVar = ((ibDatatabaseParameterFirebird*)(*start))->GetFirebirdSqlVarPtr();
 		if ((pVar->sqltype & ~1) == SQL_BLOB)
 		{
-			bool result = ((CFirebirdParameter*)(*start))->ResetBlob(database, transaction);
+			bool result = ((ibDatatabaseParameterFirebird*)(*start))->ResetBlob(database, transaction);
 			if (!result)
 				return false;
 		}
@@ -114,7 +114,7 @@ bool CFirebirdParameterCollection::ResetBlobParameters(isc_db_handle database, i
 	return true;
 }
 
-void CFirebirdParameterCollection::AllocateParameterSpace()
+void ibDatatabaseParameterFirebirdCollection::AllocateParameterSpace()
 {
 	if (m_FirebirdParameters == nullptr)
 		return;
@@ -175,7 +175,7 @@ void CFirebirdParameterCollection::AllocateParameterSpace()
 	}
 }
 
-void CFirebirdParameterCollection::FreeParameterSpace()
+void ibDatatabaseParameterFirebirdCollection::FreeParameterSpace()
 {
 	if (m_FirebirdParameters)
 	{

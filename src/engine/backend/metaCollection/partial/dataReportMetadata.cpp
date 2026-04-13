@@ -6,22 +6,22 @@
 #include "dataReport.h"
 #include "backend/metaData.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectReport, IValueMetaObjectRecordDataExt)
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectExternalReport, CValueMetaObjectReport)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectReport, ibValueMetaObjectRecordDataExt)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectExternalReport, ibValueMetaObjectReport)
 
 //********************************************************************************************
 //*                                      metaData                                            *
 //********************************************************************************************
 
-CValueMetaObjectReport::CValueMetaObjectReport() : IValueMetaObjectRecordDataExt()
+ibValueMetaObjectReport::ibValueMetaObjectReport() : ibValueMetaObjectRecordDataExt()
 {
 }
 
-CValueMetaObjectReport::~CValueMetaObjectReport()
+ibValueMetaObjectReport::~ibValueMetaObjectReport()
 {
 }
 
-IValueMetaObjectForm* CValueMetaObjectReport::GetDefaultFormByID(const form_identifier_t& id) const
+ibValueMetaObjectFormBase* ibValueMetaObjectReport::GetDefaultFormByID(const ibFormID& id) const
 {
 	if (id == eFormReport && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());
@@ -32,22 +32,22 @@ IValueMetaObjectForm* CValueMetaObjectReport::GetDefaultFormByID(const form_iden
 
 #include "dataReportManager.h"
 
-IValueManagerDataObject* CValueMetaObjectReport::CreateManagerDataObjectValue()
+ibValueManagerDataObject* ibValueMetaObjectReport::CreateManagerDataObjectValue()
 {
-	return CValue::CreateAndPrepareValueRef<CValueManagerDataObjectReport>(this);
+	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectReport>(this);
 }
 
 #include "backend/appData.h"
 
-IValueRecordDataObjectExt* CValueMetaObjectReport::CreateObjectExtValue()
+ibValueRecordDataObjectExt* ibValueMetaObjectReport::CreateObjectExtValue()
 {
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
-	CValueRecordDataObjectReport* pDataRef = nullptr;
+	ibValueRecordDataObjectReport* pDataRef = nullptr;
 	if (appData->DesignerMode()) {
 		if (!IsExternalCreate()) {
 			if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
-				CValueRecordDataObjectReport* createdObj = CValue::CreateAndPrepareValueRef<CValueRecordDataObjectReport>(this);
+				ibValueRecordDataObjectReport* createdObj = ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectReport>(this);
 				if (!createdObj->InitializeObject()) {
 					wxDELETE(createdObj);
 					return nullptr;
@@ -56,26 +56,26 @@ IValueRecordDataObjectExt* CValueMetaObjectReport::CreateObjectExtValue()
 			}
 		}
 		else {
-			return dynamic_cast<IValueRecordDataObjectExt*>(moduleManager->GetObjectValue());
+			return dynamic_cast<ibValueRecordDataObjectExt*>(moduleManager->GetObjectValue());
 		}
 	}
 	else {
 		if (!IsExternalCreate()) {
-			pDataRef = CValue::CreateAndPrepareValueRef<CValueRecordDataObjectReport>(this);
+			pDataRef = ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectReport>(this);
 			if (!pDataRef->InitializeObject()) {
 				wxDELETE(pDataRef);
 				return nullptr;
 			}
 		}
 		else {
-			return dynamic_cast<IValueRecordDataObjectExt*>(moduleManager->GetObjectValue());
+			return dynamic_cast<ibValueRecordDataObjectExt*>(moduleManager->GetObjectValue());
 		}
 	}
 
 	return pDataRef;
 }
 
-ISourceDataObject* CValueMetaObjectReport::CreateSourceObject(IValueMetaObjectForm* metaObject)
+ibSourceDataObject* ibValueMetaObjectReport::CreateSourceObject(ibValueMetaObjectFormBase* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{
@@ -87,11 +87,11 @@ ISourceDataObject* CValueMetaObjectReport::CreateSourceObject(IValueMetaObjectFo
 }
 
 #pragma region _form_builder_h_
-IBackendValueForm* CValueMetaObjectReport::GetObjectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectReport::GetObjectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
 {
-	return IValueMetaObjectGenericData::CreateAndBuildForm(
+	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CValueMetaObjectReport::eFormReport,
+		ibValueMetaObjectReport::eFormReport,
 		ownerControl, CreateObjectValue(),
 		formGuid
 	);
@@ -102,7 +102,7 @@ IBackendValueForm* CValueMetaObjectReport::GetObjectForm(const wxString& strForm
 //*                       Save & load metaData                              *
 //***************************************************************************
 
-bool CValueMetaObjectReport::LoadData(CMemoryReader& dataReader)
+bool ibValueMetaObjectReport::LoadData(ibReaderMemory& dataReader)
 {
 	//Load object module
 	m_propertyModuleObject->LoadData(dataReader);
@@ -111,10 +111,10 @@ bool CValueMetaObjectReport::LoadData(CMemoryReader& dataReader)
 	//Load default form 
 	m_propertyDefFormObject->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 
-	return IValueMetaObjectRecordDataExt::LoadData(dataReader);
+	return ibValueMetaObjectRecordDataExt::LoadData(dataReader);
 }
 
-bool CValueMetaObjectReport::SaveData(CMemoryWriter& dataWritter)
+bool ibValueMetaObjectReport::SaveData(ibWriterMemory& dataWritter)
 {
 	//Save object module
 	m_propertyModuleObject->SaveData(dataWritter);
@@ -123,25 +123,25 @@ bool CValueMetaObjectReport::SaveData(CMemoryWriter& dataWritter)
 	//Save default form 
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormObject->GetValueAsInteger()));
 
-	return IValueMetaObjectRecordDataExt::SaveData(dataWritter);
+	return ibValueMetaObjectRecordDataExt::SaveData(dataWritter);
 }
 
 //***********************************************************************
 //*                           read & save events                        *
 //***********************************************************************
 
-bool CValueMetaObjectReport::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool ibValueMetaObjectReport::OnCreateMetaObject(ibMetaData* metaData, int flags)
 {
-	if (!IValueMetaObjectRecordDataExt::OnCreateMetaObject(metaData, flags))
+	if (!ibValueMetaObjectRecordDataExt::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	return (!IsExternalCreate() ? (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags) : true) &&
 		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags);
 }
 
-bool CValueMetaObjectReport::OnLoadMetaObject(IMetaData* metaData)
+bool ibValueMetaObjectReport::OnLoadMetaObject(ibMetaData* metaData)
 {
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!IsExternalCreate()) {
@@ -162,10 +162,10 @@ bool CValueMetaObjectReport::OnLoadMetaObject(IMetaData* metaData)
 			return false;
 	}
 
-	return IValueMetaObjectRecordDataExt::OnLoadMetaObject(metaData);
+	return ibValueMetaObjectRecordDataExt::OnLoadMetaObject(metaData);
 }
 
-bool CValueMetaObjectReport::OnSaveMetaObject(int flags)
+bool ibValueMetaObjectReport::OnSaveMetaObject(int flags)
 {
 	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
@@ -175,10 +175,10 @@ bool CValueMetaObjectReport::OnSaveMetaObject(int flags)
 	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
 		return false;
 
-	return IValueMetaObjectRecordDataExt::OnSaveMetaObject(flags);
+	return ibValueMetaObjectRecordDataExt::OnSaveMetaObject(flags);
 }
 
-bool CValueMetaObjectReport::OnDeleteMetaObject()
+bool ibValueMetaObjectReport::OnDeleteMetaObject()
 {
 	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
@@ -188,16 +188,16 @@ bool CValueMetaObjectReport::OnDeleteMetaObject()
 	if (!(*m_propertyModuleObject)->OnDeleteMetaObject())
 		return false;
 
-	return IValueMetaObjectRecordDataExt::OnDeleteMetaObject();
+	return ibValueMetaObjectRecordDataExt::OnDeleteMetaObject();
 }
 
-bool CValueMetaObjectReport::OnReloadMetaObject()
+bool ibValueMetaObjectReport::OnReloadMetaObject()
 {
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-		CValueRecordDataObjectReport* pDataRef = nullptr;
+		ibValueRecordDataObjectReport* pDataRef = nullptr;
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
 			return true;
 		}
@@ -207,7 +207,7 @@ bool CValueMetaObjectReport::OnReloadMetaObject()
 	return true;
 }
 
-bool CValueMetaObjectReport::OnBeforeRunMetaObject(int flags)
+bool ibValueMetaObjectReport::OnBeforeRunMetaObject(int flags)
 {
 	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags)) {
@@ -219,10 +219,10 @@ bool CValueMetaObjectReport::OnBeforeRunMetaObject(int flags)
 		return false;
 	}
 
-	return IValueMetaObjectRecordDataExt::OnBeforeRunMetaObject(flags);
+	return ibValueMetaObjectRecordDataExt::OnBeforeRunMetaObject(flags);
 }
 
-bool CValueMetaObjectReport::OnAfterRunMetaObject(int flags)
+bool ibValueMetaObjectReport::OnAfterRunMetaObject(int flags)
 {
 	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) {
@@ -234,19 +234,19 @@ bool CValueMetaObjectReport::OnAfterRunMetaObject(int flags)
 		return false;
 	}
 
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-		if (IValueMetaObjectRecordDataExt::OnAfterRunMetaObject(flags))
+		if (ibValueMetaObjectRecordDataExt::OnAfterRunMetaObject(flags))
 			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue());
 		return false;
 	}
 
-	return IValueMetaObjectRecordDataExt::OnAfterRunMetaObject(flags);
+	return ibValueMetaObjectRecordDataExt::OnAfterRunMetaObject(flags);
 }
 
-bool CValueMetaObjectReport::OnBeforeCloseMetaObject()
+bool ibValueMetaObjectReport::OnBeforeCloseMetaObject()
 {
 	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
@@ -257,19 +257,19 @@ bool CValueMetaObjectReport::OnBeforeCloseMetaObject()
 		return false;
 	}
 
-	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-		if (IValueMetaObjectRecordDataExt::OnBeforeCloseMetaObject())
+		if (ibValueMetaObjectRecordDataExt::OnBeforeCloseMetaObject())
 			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
 		return false;
 	}
 
-	return IValueMetaObjectRecordDataExt::OnBeforeCloseMetaObject();
+	return ibValueMetaObjectRecordDataExt::OnBeforeCloseMetaObject();
 }
 
-bool CValueMetaObjectReport::OnAfterCloseMetaObject()
+bool ibValueMetaObjectReport::OnAfterCloseMetaObject()
 {
 	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
@@ -280,25 +280,25 @@ bool CValueMetaObjectReport::OnAfterCloseMetaObject()
 		return false;
 	}
 
-	return IValueMetaObjectRecordDataExt::OnAfterCloseMetaObject();
+	return ibValueMetaObjectRecordDataExt::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                             form events                             *
 //***********************************************************************
 
-void CValueMetaObjectReport::OnCreateFormObject(IValueMetaObjectForm* metaForm)
+void ibValueMetaObjectReport::OnCreateFormObject(ibValueMetaObjectFormBase* metaForm)
 {
-	if (metaForm->GetTypeForm() == CValueMetaObjectReport::eFormReport
+	if (metaForm->GetTypeForm() == ibValueMetaObjectReport::eFormReport
 		&& m_propertyDefFormObject->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
 	}
 }
 
-void CValueMetaObjectReport::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
+void ibValueMetaObjectReport::OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm)
 {
-	if (metaForm->GetTypeForm() == CValueMetaObjectReport::eFormReport
+	if (metaForm->GetTypeForm() == ibValueMetaObjectReport::eFormReport
 		&& m_propertyDefFormObject->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
@@ -309,5 +309,5 @@ void CValueMetaObjectReport::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectReport, "Report", g_metaReportCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectExternalReport, "ExternalReport", g_metaExternalReportCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectReport, "Report", g_metaReportCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectExternalReport, "ExternalReport", g_metaExternalReportCLSID);

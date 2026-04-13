@@ -17,10 +17,10 @@
 #include "backend/databaseLayer/preparedStatement.h"
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-class CPostgresInterface;
+class ibInterfacePostgres;
 #endif
 
-class BACKEND_API CPostgresDatabaseLayer : public IDatabaseLayer
+class BACKEND_API ibDatabaseLayerPostgres : public ibDatabaseLayer
 {
 public:
 	// Information that can be specified for a PostgreSQL database
@@ -30,17 +30,17 @@ public:
 	//  user
 	//  password
 	// ctor
-	CPostgresDatabaseLayer();
-	CPostgresDatabaseLayer(const wxString& strDatabase);
-	CPostgresDatabaseLayer(const wxString& strServer, const wxString& strDatabase);
-	CPostgresDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CPostgresDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CPostgresDatabaseLayer(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CPostgresDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
-	CPostgresDatabaseLayer(const CPostgresDatabaseLayer& src);
+	ibDatabaseLayerPostgres();
+	ibDatabaseLayerPostgres(const wxString& strDatabase);
+	ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strDatabase);
+	ibDatabaseLayerPostgres(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerPostgres(void* pDatabase) { m_pDatabase = pDatabase; }
+	ibDatabaseLayerPostgres(const ibDatabaseLayerPostgres& src);
 
 	// dtor
-	virtual ~CPostgresDatabaseLayer();
+	virtual ~ibDatabaseLayerPostgres();
 
 	// open database
 	virtual bool Open();
@@ -57,7 +57,7 @@ public:
 	virtual bool IsOpen();
 
 	/// clone database  
-	virtual IDatabaseLayer* Clone() { return new CPostgresDatabaseLayer(*this); }
+	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerPostgres(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();
@@ -86,17 +86,17 @@ protected:
 
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
-	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
+	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
 
-	// IPreparedStatement support
-	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+	// ibPreparedStatement support
+	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
 
 private:
 
 	bool m_transaction_is_active; 
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	CPostgresInterface* m_pInterface;
+	ibInterfacePostgres* m_pInterface;
 #endif
 	wxString m_strServer;
 	wxString m_strDatabase;

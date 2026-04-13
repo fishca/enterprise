@@ -21,27 +21,27 @@
 #include "postgresPreparedStatementWrapper.h"
 #include "postgresInterface.h"
 
-WX_DECLARE_OBJARRAY(ibPreparedStatementPostgresWrapper, ArrayOfPostgresPreparedStatementWrappers);
+WX_DECLARE_OBJARRAY(CPostgresPreparedStatementWrapper, ArrayOfPostgresPreparedStatementWrappers);
 
-class ibPreparedStatementPostgres : public ibPreparedStatement
+class CPostgresPreparedStatement : public IPreparedStatement
 {
 public:
 	// ctor
-	ibPreparedStatementPostgres(ibInterfacePostgres* pInterface);
-	ibPreparedStatementPostgres(ibInterfacePostgres* pInterface, PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName);
+	CPostgresPreparedStatement(CPostgresInterface* pInterface);
+	CPostgresPreparedStatement(CPostgresInterface* pInterface, PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName);
 
 	// dtor
-	virtual ~ibPreparedStatementPostgres();
+	virtual ~CPostgresPreparedStatement();
 
 	virtual void Close();
 
 	void AddStatement(PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName);
-	static ibPreparedStatementPostgres* CreateStatement(ibInterfacePostgres* pInterface, PGconn* pDatabase, const wxString& strSQL);
+	static CPostgresPreparedStatement* CreateStatement(CPostgresInterface* pInterface, PGconn* pDatabase, const wxString& strSQL);
 
 	// set field
 	virtual void SetParamInt(int nPosition, int nValue);
 	virtual void SetParamDouble(int nPosition, double dblValue);
-	virtual void SetParamNumber(int nPosition, const ibNumber& dblValue);
+	virtual void SetParamNumber(int nPosition, const number_t& dblValue);
 	virtual void SetParamString(int nPosition, const wxString& strValue);
 	virtual void SetParamNull(int nPosition);
 	virtual void SetParamBlob(int nPosition, const void* pData, long nDataLength);
@@ -50,12 +50,12 @@ public:
 	virtual int GetParameterCount();
 
 	virtual int RunQuery();
-	virtual ibDatabaseResultSet* RunQueryWithResults();
+	virtual IDatabaseResultSet* RunQueryWithResults();
 
 	static wxString TranslateSQL(const wxString& strOriginalSQL);
 
 private:
-	ibInterfacePostgres* m_pInterface;
+	CPostgresInterface* m_pInterface;
 	int FindStatementAndAdjustPositionIndex(int* pPosition);
 	static wxString GenerateRandomStatementName();
 

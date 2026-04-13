@@ -14,35 +14,35 @@
 #include "metadataConfiguration.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-//								ibApplicationDataSessionArray
+//								CApplicationDataSessionArray
 ///////////////////////////////////////////////////////////////////////////////
 
-wxString ibApplicationDataSessionArray::GetUserName(unsigned int idx) const {
+wxString CApplicationDataSessionArray::GetUserName(unsigned int idx) const {
 	if (idx > m_listSession.size())
 		return wxEmptyString;
 	return m_listSession[idx].m_strUserName;
 }
 
-wxString ibApplicationDataSessionArray::GetComputerName(unsigned int idx) const {
+wxString CApplicationDataSessionArray::GetComputerName(unsigned int idx) const {
 	if (idx > m_listSession.size())
 		return wxEmptyString;
 	return m_listSession[idx].m_strComputerName;
 }
 
-wxString ibApplicationDataSessionArray::GetSession(unsigned int idx) const {
+wxString CApplicationDataSessionArray::GetSession(unsigned int idx) const {
 	if (idx > m_listSession.size())
 		return wxEmptyString;
 	return m_listSession[idx].m_strSession;
 }
 
-wxString ibApplicationDataSessionArray::GetStartedDate(unsigned int idx) const {
+wxString CApplicationDataSessionArray::GetStartedDate(unsigned int idx) const {
 	if (idx > m_listSession.size())
 		return wxEmptyString;
 	const wxDateTime& startedDate = m_listSession[idx].m_startedDate;
 	return startedDate.Format(wxT("%d.%m.%Y %H:%M:%S"));
 }
 
-wxString ibApplicationDataSessionArray::GetApplication(unsigned int idx) const {
+wxString CApplicationDataSessionArray::GetApplication(unsigned int idx) const {
 	if (idx > m_listSession.size())
 		return wxEmptyString;
 	return appData->GetRunModeDescr(m_listSession[idx].m_runMode);
@@ -50,28 +50,28 @@ wxString ibApplicationDataSessionArray::GetApplication(unsigned int idx) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ibRunMode ibApplicationDataSessionArray::GetSessionApplication(unsigned int idx) const
+eRunMode CApplicationDataSessionArray::GetSessionApplication(unsigned int idx) const
 {
 	if (idx > m_listSession.size())
-		return ibRunMode::eLAUNCHER_MODE;
+		return eRunMode::eLAUNCHER_MODE;
 	return m_listSession[idx].m_runMode;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//								ibApplicationData
+//								CApplicationData
 ///////////////////////////////////////////////////////////////////////////////
 
-ibApplicationData* ibApplicationData::s_instance = nullptr;
-
-///////////////////////////////////////////////////////////////////////////////
-
-bool ibApplicationData::m_forceExit = false;
-wxCriticalSection ibApplicationData::m_cs_force_exit;
+CApplicationData* CApplicationData::s_instance = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ibApplicationData::ibApplicationData(ibRunMode runMode) :
-	m_db(nullptr), m_runMode(runMode), m_dbMode(ibDatabaseMode::eNONE),
+bool CApplicationData::m_forceExit = false;
+wxCriticalSection CApplicationData::m_cs_force_exit;
+
+///////////////////////////////////////////////////////////////////////////////
+
+CApplicationData::CApplicationData(eRunMode runMode) :
+	m_db(nullptr), m_runMode(runMode), m_dbMode(eDatabaseMode::eNONE),
 	m_sessionGuid(wxNewUniqueGuid),
 	m_startedDate(wxDateTime::Now()),
 	m_strComputer(wxGetHostName()),
@@ -80,19 +80,19 @@ ibApplicationData::ibApplicationData(ibRunMode runMode) :
 {
 }
 
-ibApplicationData::~ibApplicationData()
+CApplicationData::~CApplicationData()
 {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool ibApplicationData::CreateAppDataEnv(ibRunMode runMode)
+bool CApplicationData::CreateAppDataEnv(eRunMode runMode)
 {
 	if (s_instance != nullptr) s_instance->DestroyAppDataEnv();
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try {
 #endif
-		s_instance = new ibApplicationData(runMode);
+		s_instance = new CApplicationData(runMode);
 		s_instance->ReadEngineConfig();
 
 		if (!SetLocaleAppDataEnv())
@@ -100,7 +100,7 @@ bool ibApplicationData::CreateAppDataEnv(ibRunMode runMode)
 		return true;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (const ibDatabaseLayerException* err) {
+	catch (const DatabaseLayerException* err) {
 		return false;
 	}
 #endif
@@ -109,32 +109,32 @@ bool ibApplicationData::CreateAppDataEnv(ibRunMode runMode)
 
 #define sys_db wxT("sys.fdb")
 
-bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale)
+bool CApplicationData::CreateFileAppDataEnv(eRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale)
 {
 	if (s_instance != nullptr) s_instance->DestroyAppDataEnv();
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try {
 #endif
-		std::shared_ptr<ibDatabaseLayerFirebird> db(new ibDatabaseLayerFirebird());
+		std::shared_ptr<CFirebirdDatabaseLayer> db(new CFirebirdDatabaseLayer());
 
 		if (db->Open(strDirDatabase + wxT("\\") + sys_db)) {
 
-			s_instance = new ibApplicationData(runMode);
+			s_instance = new CApplicationData(runMode);
 			s_instance->m_strFile = strDirDatabase;
 
 			s_instance->ReadEngineConfig();
 
 			s_instance->m_db = db;
-			s_instance->m_exclusiveMode = runMode == ibRunMode::eDESIGNER_MODE;
+			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
 
-			s_instance->m_dbMode = ibDatabaseMode::eFILE;
+			s_instance->m_dbMode = eDatabaseMode::eFILE;
 
-			if (runMode == ibRunMode::eDESIGNER_MODE && !ibApplicationData::TableAlreadyCreated()) {
-				ibApplicationData::CreateTableSession();
-				ibApplicationData::CreateTableUser();
-				ibApplicationData::CreateTableEvent();
+			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
+				CApplicationData::CreateTableSession();
+				CApplicationData::CreateTableUser();
+				CApplicationData::CreateTableEvent();
 			}
-			else if (!ibApplicationData::TableAlreadyCreated()) {
+			else if (!CApplicationData::TableAlreadyCreated()) {
 				DestroyAppDataEnv();
 				return false;
 			}
@@ -147,24 +147,24 @@ bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& 
 		return false;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (const ibDatabaseLayerException* err) {
+	catch (const DatabaseLayerException* err) {
 		return false;
 	}
 #endif
 	return false;
 }
 
-bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString& strServer, const wxString& strPort,
+bool CApplicationData::CreateServerAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
 	const wxString& strUser, const wxString& strPassword, const wxString& strDatabase, const wxString& strLocale)
 {
 	if (s_instance != nullptr) s_instance->DestroyAppDataEnv();
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try {
 #endif
-		std::shared_ptr<ibDatabaseLayerPostgres> db(new ibDatabaseLayerPostgres());
+		std::shared_ptr<CPostgresDatabaseLayer> db(new CPostgresDatabaseLayer());
 		if (db->Open(strServer, strPort, strDatabase, strUser, strPassword)) {
 
-			s_instance = new ibApplicationData(runMode);
+			s_instance = new CApplicationData(runMode);
 
 			s_instance->m_strServer = strServer;
 			s_instance->m_strPort = strPort;
@@ -175,19 +175,19 @@ bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString
 			s_instance->ReadEngineConfig();
 
 			s_instance->m_db = db;
-			s_instance->m_exclusiveMode = runMode == ibRunMode::eDESIGNER_MODE;
+			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
 
-			s_instance->m_dbMode = ibDatabaseMode::eSERVER;
+			s_instance->m_dbMode = eDatabaseMode::eSERVER;
 
 			if (!SetLocaleAppDataEnv(strLocale))
 				return false;
 
-			if (runMode == ibRunMode::eDESIGNER_MODE && !ibApplicationData::TableAlreadyCreated()) {
-				ibApplicationData::CreateTableSession();
-				ibApplicationData::CreateTableUser();
-				ibApplicationData::CreateTableEvent();
+			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
+				CApplicationData::CreateTableSession();
+				CApplicationData::CreateTableUser();
+				CApplicationData::CreateTableEvent();
 			}
-			else if (!ibApplicationData::TableAlreadyCreated()) {
+			else if (!CApplicationData::TableAlreadyCreated()) {
 				DestroyAppDataEnv();
 				return false;
 			}
@@ -197,14 +197,14 @@ bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString
 		return false;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (const ibDatabaseLayerException* err) {
+	catch (const DatabaseLayerException* err) {
 		return false;
 	}
 #endif
 	return false;
 }
 
-bool ibApplicationData::SetLocaleAppDataEnv(const wxString& strLocale)
+bool CApplicationData::SetLocaleAppDataEnv(const wxString& strLocale)
 {
 	if (s_instance == nullptr)
 		return false;
@@ -212,7 +212,7 @@ bool ibApplicationData::SetLocaleAppDataEnv(const wxString& strLocale)
 	return s_instance->InitLocale(strLocale);
 }
 
-bool ibApplicationData::DestroyAppDataEnv()
+bool CApplicationData::DestroyAppDataEnv()
 {
 	if (s_instance != nullptr && s_instance->m_db != nullptr) {
 
@@ -241,7 +241,7 @@ bool ibApplicationData::DestroyAppDataEnv()
 #include <wx/fileconf.h>
 #include <wx/stdpaths.h>
 
-bool ibApplicationData::InitLocale(const wxString& locale)
+bool CApplicationData::InitLocale(const wxString& locale)
 {
 	if (m_locale_lang == wxLanguage::wxLANGUAGE_UNKNOWN) {
 
@@ -287,7 +287,7 @@ bool ibApplicationData::InitLocale(const wxString& locale)
 		m_locale.AddCatalog(wxT("open_es"));
 
 		// Initialize localization engine 
-		ibBackendLocalization::SetUserLanguage(m_locale.GetName());
+		CBackendLocalization::SetUserLanguage(m_locale.GetName());
 
 		//Set default time 
 		wxDateTime::SetCountry(wxDateTime::Country::Country_Default);
@@ -297,7 +297,7 @@ bool ibApplicationData::InitLocale(const wxString& locale)
 	return false;
 }
 
-bool ibApplicationData::Connect(const wxString& strUserName, const wxString& strUserPassword, const int flags)
+bool CApplicationData::Connect(const wxString& strUserName, const wxString& strUserPassword, const int flags)
 {
 	if (m_created_metadata)
 		return false;
@@ -312,7 +312,7 @@ bool ibApplicationData::Connect(const wxString& strUserName, const wxString& str
 		m_run_metadata;
 }
 
-bool ibApplicationData::Disconnect()
+bool CApplicationData::Disconnect()
 {
 	if (m_created_metadata) {
 
@@ -323,6 +323,7 @@ bool ibApplicationData::Disconnect()
 			const bool isConfigOpen = activeMetaData->IsConfigOpen();
 			if (isConfigOpen && !activeMetaData->CloseDatabase(forceCloseFlag))
 				return false;
+			m_connected_to_db = false;
 		}
 
 		metaDataDestroy();
@@ -336,7 +337,7 @@ bool ibApplicationData::Disconnect()
 
 #define BACKEND_CONF wxT("backend.conf")
 
-void ibApplicationData::ReadEngineConfig()
+void CApplicationData::ReadEngineConfig()
 {
 	const wxString& workingDir = wxGetCwd(); wxString strConfigFile;
 	if (wxFileName::FileExists(workingDir + wxFILE_SEP_PATH + BACKEND_CONF)) {
@@ -359,7 +360,7 @@ void ibApplicationData::ReadEngineConfig()
 #include "backend/debugger/debugClient.h"
 
 #pragma region execute 
-long ibApplicationData::RunApplication(const wxString& strAppName, bool searchDebug) const
+long CApplicationData::RunApplication(const wxString& strAppName, bool searchDebug) const
 {
 	return RunApplication(strAppName,
 		m_userInfo.m_strUserName,
@@ -368,7 +369,7 @@ long ibApplicationData::RunApplication(const wxString& strAppName, bool searchDe
 	);
 }
 
-long ibApplicationData::RunApplication(const wxString& strAppName, const wxString& strUserName, const wxString& strUserPassword, bool searchDebug) const
+long CApplicationData::RunApplication(const wxString& strAppName, const wxString& strUserName, const wxString& strUserPassword, bool searchDebug) const
 {
 	wxString executeCmd = strAppName + wxT(' ');
 
@@ -427,12 +428,12 @@ long ibApplicationData::RunApplication(const wxString& strAppName, const wxStrin
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool ibApplicationData::AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword)
+bool CApplicationData::AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword)
 {
 	if (!strUserName.IsEmpty() || HasAllowedUser()) {
 		m_userInfo = ReadUserData(strUserName);
 		return m_userInfo.IsOk() &&
-			m_userInfo.m_strUserPassword == ibApplicationData::ComputeMd5(strUserPassword);
+			m_userInfo.m_strUserPassword == CApplicationData::ComputeMd5(strUserPassword);
 	}
 
 	return true;
@@ -445,7 +446,7 @@ bool ibApplicationData::AuthenticationAndSetUser(const wxString& strUserName, co
 #include <wx/mstream.h>
 #include <wx/filename.h>
 
-bool ibApplicationData::LoadDatabase(const wxString& strFullPath)
+bool CApplicationData::LoadDatabase(const wxString& strFullPath)
 {
 	wxFileInputStream fis(strFullPath);
 	if (!fis.IsOk()) {
@@ -533,7 +534,7 @@ bool ibApplicationData::LoadDatabase(const wxString& strFullPath)
 	return true;
 }
 
-bool ibApplicationData::SaveDatabase(const wxString& strFullPath)
+bool CApplicationData::SaveDatabase(const wxString& strFullPath)
 {
 	// 1. Create the physical file output stream
 	wxFFileOutputStream out(strFullPath);
@@ -583,7 +584,7 @@ bool ibApplicationData::SaveDatabase(const wxString& strFullPath)
 	return zip.Close();
 }
 
-bool ibApplicationData::ClearDatabase()
+bool CApplicationData::ClearDatabase()
 {
 	if (!m_created_metadata)
 		return false;
@@ -594,12 +595,12 @@ bool ibApplicationData::ClearDatabase()
 	return true;
 }
 
-wxString ibApplicationData::GetDatabaseDescription()
+wxString CApplicationData::GetDatabaseDescription()
 {
-	if (m_dbMode == ibDatabaseMode::eFILE)
+	if (m_dbMode == eDatabaseMode::eFILE)
 		return m_strFile;
 
-	if (m_dbMode == ibDatabaseMode::eSERVER)
+	if (m_dbMode == eDatabaseMode::eSERVER)
 		return m_strServer + wxT(":") + m_strPort + wxT("/") + m_strDatabase;
 
 	return wxT("");
@@ -607,9 +608,9 @@ wxString ibApplicationData::GetDatabaseDescription()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void ibApplicationData::ReadUserData_Password(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const
+void CApplicationData::ReadUserData_Password(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const
 {
-	ibReaderMemory reader(buffer);
+	CMemoryReader reader(buffer);
 
 	userInfo.m_strUserGuid = reader.r_stringZ();
 	userInfo.m_strUserName = reader.r_stringZ();
@@ -617,32 +618,32 @@ void ibApplicationData::ReadUserData_Password(const wxMemoryBuffer& buffer, ibAp
 	userInfo.m_strUserPassword = reader.r_stringZ();
 }
 
-void ibApplicationData::ReadUserData_Role(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const
+void CApplicationData::ReadUserData_Role(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const
 {
-	ibReaderMemory reader(buffer);
+	CMemoryReader reader(buffer);
 
 	unsigned int count = reader.r_u32();
 	userInfo.m_roleArray.reserve(count);
 	for (unsigned int idx = 0; idx < count; idx++) {
-		ibApplicationDataUserInfo::ibApplicationDataUserRole entry;
+		CApplicationDataUserInfo::CApplicationDataUserRole entry;
 		entry.m_strRoleGuid = reader.r_stringZ();
 		entry.m_miRoleId = reader.r_s32();
 		userInfo.m_roleArray.emplace_back(std::move(entry));
 	}
 }
 
-void ibApplicationData::ReadUserData_Language(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const
+void CApplicationData::ReadUserData_Language(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const
 {
-	ibReaderMemory reader(buffer);
+	CMemoryReader reader(buffer);
 	userInfo.m_strLanguageGuid = reader.r_stringZ();
 	userInfo.m_strLanguageCode = reader.r_stringZ();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-wxMemoryBuffer ibApplicationData::SaveUserData_Password(const ibApplicationDataUserInfo& userInfo) const
+wxMemoryBuffer CApplicationData::SaveUserData_Password(const CApplicationDataUserInfo& userInfo) const
 {
-	ibWriterMemory writer;
+	CMemoryWriter writer;
 	writer.w_stringZ(userInfo.m_strUserGuid);
 	writer.w_stringZ(userInfo.m_strUserName);
 	writer.w_stringZ(userInfo.m_strUserFullName);
@@ -650,9 +651,9 @@ wxMemoryBuffer ibApplicationData::SaveUserData_Password(const ibApplicationDataU
 	return writer.buffer();
 }
 
-wxMemoryBuffer ibApplicationData::SaveUserData_Role(const ibApplicationDataUserInfo& userInfo) const
+wxMemoryBuffer CApplicationData::SaveUserData_Role(const CApplicationDataUserInfo& userInfo) const
 {
-	ibWriterMemory writer;
+	CMemoryWriter writer;
 	writer.w_u32(userInfo.m_roleArray.size());
 	for (const auto role : userInfo.m_roleArray) {
 		writer.w_stringZ(role.m_strRoleGuid);
@@ -661,9 +662,9 @@ wxMemoryBuffer ibApplicationData::SaveUserData_Role(const ibApplicationDataUserI
 	return writer.buffer();
 }
 
-wxMemoryBuffer ibApplicationData::SaveUserData_Language(const ibApplicationDataUserInfo& userInfo) const
+wxMemoryBuffer CApplicationData::SaveUserData_Language(const CApplicationDataUserInfo& userInfo) const
 {
-	ibWriterMemory writer;
+	CMemoryWriter writer;
 	writer.w_stringZ(userInfo.m_strLanguageGuid);
 	writer.w_stringZ(userInfo.m_strLanguageCode);
 	return writer.buffer();
@@ -671,12 +672,12 @@ wxMemoryBuffer ibApplicationData::SaveUserData_Language(const ibApplicationDataU
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "backend/utils/md5.hpp"
+#include <backend/utils/wxmd5.hpp>
 
-wxString ibApplicationData::ComputeMd5(const wxString& userPassword) const
+wxString CApplicationData::ComputeMd5(const wxString& userPassword) const
 {
 	if (userPassword.Length() > 0)
-		return ibMD5::ComputeMd5(userPassword);
+		return wxMD5::ComputeMd5(userPassword);
 
 	return wxEmptyString;
 }

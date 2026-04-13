@@ -2,7 +2,7 @@
 
 #include <wx/xml/xml.h>
 
-ibDialogConnection::ibDialogConnection(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -77,13 +77,13 @@ ibDialogConnection::ibDialogConnection(wxWindow* parent, wxWindowID id, const wx
 	wxDialog::Centre(wxBOTH);
 
 	// Connect Events
-	m_buttonTestConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogConnection::TestConnectionOnButtonClick), NULL, this);
-	m_buttonSaveConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogConnection::SaveConnectionOnButtonClick), NULL, this);
+	m_buttonTestConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogConnection::TestConnectionOnButtonClick), NULL, this);
+	m_buttonSaveConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogConnection::SaveConnectionOnButtonClick), NULL, this);
 }
 
 #include "backend/appData.h"
 
-void ibDialogConnection::LoadConnectionData()
+void CDialogConnection::LoadConnectionData()
 {
 	//const wxString& strFileName = appData->GetApplicationPath() + wxT("\\") + wxT("connection.dat");
 	//wxXmlDocument document;
@@ -120,7 +120,7 @@ void ibDialogConnection::LoadConnectionData()
 	//}
 }
 
-void ibDialogConnection::SaveConnectionData()
+void CDialogConnection::SaveConnectionData()
 {
 	//wxXmlDocument document;
 	//wxXmlNode* root = new wxXmlNode(wxXML_ELEMENT_NODE, "connection");
@@ -148,9 +148,9 @@ void ibDialogConnection::SaveConnectionData()
 
 #include "backend/databaseLayer/postgres/postgresDatabaseLayer.h"
 
-void ibDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
+void CDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
 {
-	ibDatabaseLayerPostgres* postgresDatabaseLayer = new ibDatabaseLayerPostgres;
+	CPostgresDatabaseLayer* postgresDatabaseLayer = new CPostgresDatabaseLayer;
 	bool sucess = postgresDatabaseLayer->Open(
 		m_textCtrlServer->GetValue(),
 		m_textCtrlPort->GetValue(),
@@ -163,7 +163,7 @@ void ibDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibDialogConnection::SaveConnectionOnButtonClick(wxCommandEvent& event)
+void CDialogConnection::SaveConnectionOnButtonClick(wxCommandEvent& event)
 {
 	SaveConnectionData();
 	event.Skip();

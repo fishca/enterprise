@@ -7,25 +7,25 @@
 //*                                     Defines                                              *
 //********************************************************************************************
 
-class BACKEND_API ibAccessObject;
+class BACKEND_API IAccessObject;
 
 //********************************************************************************************
 //*										 Role												 *
 //********************************************************************************************
 
-class BACKEND_API ibRole {
+class BACKEND_API CRole {
 public:
 
 	wxString GetName() const { return m_roleName; }
 	wxString GetLabel() const { return m_roleLabel.IsEmpty() ? m_roleName : m_roleLabel; }
 
-	ibAccessObject* GetRoleObject() const { return m_owner; }
+	IAccessObject* GetRoleObject() const { return m_owner; }
 
 	bool GetDefValue() const { return m_defValue; }
 
 protected:
 
-	ibRole(ibAccessObject* metaObject, const wxString& roleName, const wxString& roleLabel,
+	CRole(IAccessObject* metaObject, const wxString& roleName, const wxString& roleLabel,
 		const bool& value = true) :
 		m_roleName(roleName),
 		m_roleLabel(roleLabel),
@@ -37,39 +37,39 @@ protected:
 
 private:
 
-	friend class ibAccessObject;
+	friend class IAccessObject;
 
-	void InitRole(ibAccessObject* obj, const bool& value = true);
+	void InitRole(IAccessObject* obj, const bool& value = true);
 
 	wxString m_roleName;
 	wxString m_roleLabel;
-	ibAccessObject* m_owner; // pointer to the owner object
+	IAccessObject* m_owner; // pointer to the owner object
 	bool m_defValue;  // handler function name
 };
 
-struct ibRoleUserInfo {
+struct CUserRoleInfo {
 
-	ibRoleUserInfo() {}
-	ibRoleUserInfo(const ibRoleID& id) : m_arrayRole({ id }) {}
-	ibRoleUserInfo(const std::vector<ibRoleID>& array) : m_arrayRole(array) {}
+	CUserRoleInfo() {}
+	CUserRoleInfo(const role_identifier_t& id) : m_arrayRole({ id }) {}
+	CUserRoleInfo(const std::vector<role_identifier_t>& array) : m_arrayRole(array) {}
 
 	bool IsSetRole() const { return m_arrayRole.size() > 0; }
 
-	std::vector<ibRoleID> m_arrayRole;
+	std::vector<role_identifier_t> m_arrayRole;
 };
 
 #include "backend/fileSystem/fs.h"
 
-class BACKEND_API ibAccessObject {
+class BACKEND_API IAccessObject {
 public:
 
-	virtual ~ibAccessObject();
+	virtual ~IAccessObject();
 
-	bool AccessRight(const ibRole* role) const { return AccessRight(role, GetUserRoleInfo()); }
+	bool AccessRight(const CRole* role) const { return AccessRight(role, GetUserRoleInfo()); }
 	bool AccessRight(const wxString& strRoleName) const { return AccessRight(strRoleName, GetUserRoleInfo()); }
 
-	bool AccessRight(const ibRole* role, const ibRoleUserInfo& roleInfo) const;
-	bool AccessRight(const wxString& strRoleName, const ibRoleUserInfo& roleInfo) const {
+	bool AccessRight(const CRole* role, const CUserRoleInfo& roleInfo) const;
+	bool AccessRight(const wxString& strRoleName, const CUserRoleInfo& roleInfo) const {
 		if (!strRoleName.IsEmpty()) {
 			auto iterator = std::find_if(m_roles.begin(), m_roles.end(),
 				[strRoleName](const auto& pair) { return stringUtils::CompareString(strRoleName, pair.first); });
@@ -78,8 +78,8 @@ public:
 		return false;
 	}
 
-	bool SetRight(const ibRole* role, const ibRoleID& id, const bool& val);
-	bool SetRight(const wxString& strRoleName, const ibRoleID& id, const bool& val) {
+	bool SetRight(const CRole* role, const role_identifier_t& id, const bool& val);
+	bool SetRight(const wxString& strRoleName, const role_identifier_t& id, const bool& val) {
 		if (!strRoleName.IsEmpty()) {
 			auto iterator = std::find_if(m_roles.begin(), m_roles.end(),
 				[strRoleName](const auto& pair) { return stringUtils::CompareString(strRoleName, pair.first); });
@@ -94,8 +94,8 @@ public:
 	* @note Notar que no existe el método SetProperty, ya que la modificación
 	*       se hace a través de la referencia.
 	*/
-	ibRole* GetRole(const wxString& nameParam) const;
-	ibRole* GetRole(unsigned int idx) const; // throws ...;
+	CRole* GetRole(const wxString& nameParam) const;
+	CRole* GetRole(unsigned int idx) const; // throws ...;
 
 	/**
 	* Obtiene el número de propiedades del objeto.
@@ -104,22 +104,22 @@ public:
 		return (unsigned int)m_roles.size();
 	}
 
-	friend class ibRole;
+	friend class CRole;
 
 protected:
 
-	virtual bool DoAccessRight(const ibRole* role) const { return true; }
-	virtual void DoSetRight(const ibRole* role, const bool& set) {}
+	virtual bool DoAccessRight(const CRole* role) const { return true; }
+	virtual void DoSetRight(const CRole* role, const bool& set) {}
 
 	//Check is full access 
 	virtual bool IsFullAccess() const { return false; }
 
 	//Create user info
-	virtual ibRoleUserInfo GetUserRoleInfo() const = 0;
+	virtual CUserRoleInfo GetUserRoleInfo() const = 0;
 
 	//load & save role in metaobject 
-	bool LoadRole(ibReaderMemory& reader);
-	bool SaveRole(ibWriterMemory& writer = ibWriterMemory()) const;
+	bool LoadRole(CMemoryReader& reader);
+	bool SaveRole(CMemoryWriter& writer = CMemoryWriter()) const;
 
 	/**
 	* Añade una propiedad al objeto.
@@ -128,18 +128,18 @@ protected:
 	* instancia del objeto.
 	* Los objetos siempre se crearán a través del registro de descriptores.
 	*/
-	void AddRole(ibRole* value);
+	void AddRole(CRole* value);
 
 	template <typename... Args>
-	inline ibRole* CreateRole(Args&&... args) {
-		return new ibRole(this, std::forward<Args>(args)...);
+	inline CRole* CreateRole(Args&&... args) {
+		return new CRole(this, std::forward<Args>(args)...);
 	}
 
-	std::map<ibRoleID,
+	std::map<role_identifier_t,
 		std::map<wxString, bool>
 	> m_valRoles;
 
-	std::vector<std::pair<wxString, ibRole*>> m_roles;
+	std::vector<std::pair<wxString, CRole*>> m_roles;
 };
 
 #endif

@@ -36,12 +36,12 @@ static char* s_page_xpm[] = {
 	"                "
 };
 
-wxIcon ibValueNotebookPage::GetIcon() const
+wxIcon CValueNotebookPage::GetIcon() const
 {
 	return wxIcon(s_page_xpm);
 }
 
-wxIcon ibValueNotebookPage::GetIconGroup()
+wxIcon CValueNotebookPage::GetIconGroup()
 {
 	return wxIcon(s_page_xpm);
 }

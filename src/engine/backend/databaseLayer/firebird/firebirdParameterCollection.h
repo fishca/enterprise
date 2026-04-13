@@ -22,27 +22,27 @@
 
 #include "engine/ibase.h"
 
-WX_DEFINE_ARRAY_PTR(ibDatatabaseParameterFirebird*, FirebirdParameterArray);
+WX_DEFINE_ARRAY_PTR(CFirebirdParameter*, FirebirdParameterArray);
 
-class ibDatatabaseParameterFirebirdCollection : public ibDatabaseStringConverter
+class CFirebirdParameterCollection : public CDatabaseStringConverter
 {
 public:
 	// ctor
-	ibDatatabaseParameterFirebirdCollection(ibInterfaceFirebird* pInterface, XSQLDA* pParameters);
+	CFirebirdParameterCollection(CFirebirdInterface* pInterface, XSQLDA* pParameters);
 
 	// dtor
-	virtual ~ibDatatabaseParameterFirebirdCollection();
+	virtual ~CFirebirdParameterCollection();
 
 	// set field
 	void SetParam(int nPosition, int nValue);
 	void SetParam(int nPosition, double dblValue);
-	void SetParam(int nPosition, const ibNumber &numValue);
+	void SetParam(int nPosition, const number_t &numValue);
 	void SetParam(int nPosition, const wxString& strValue);
 	void SetParam(int nPosition);
 	void SetParam(int nPosition, const void* pData, long nDataLength);
 	void SetParam(int nPosition, const wxDateTime& dateValue);
 	void SetParam(int nPosition, bool bValue);
-	void SetParam(int nPosition, ibDatatabaseParameterFirebird* pParameter);
+	void SetParam(int nPosition, CFirebirdParameter* pParameter);
 
 	bool ResetBlobParameters(isc_db_handle database, isc_tr_handle transaction);
 	void AllocateParameterSpace();
@@ -51,7 +51,7 @@ public:
 private:
 	FirebirdParameterArray m_Parameters;
 	XSQLDA* m_FirebirdParameters;
-	ibInterfaceFirebird* m_pInterface;
+	CFirebirdInterface* m_pInterface;
 };
 
 #endif // __FIREBIRD_PARAMETER_COLLECTION_H__

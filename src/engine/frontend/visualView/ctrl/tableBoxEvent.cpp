@@ -3,19 +3,19 @@
 
 #include "backend/appData.h"
 
-void ibValueModelTableBox::OnColumnClick(ibDataViewEvent& event)
+void CValueTableBox::OnColumnClick(wxDataViewExtEvent& event)
 {
-	ibDataViewColumnObject* dataViewColumn =
-		dynamic_cast<ibDataViewColumnObject*>(event.GetDataViewColumn());
+	CDataViewColumnObject* dataViewColumn =
+		dynamic_cast<CDataViewColumnObject*>(event.GetDataViewColumn());
 	wxASSERT(dataViewColumn);
 	if (g_visualHostContext != nullptr) {
-		ibValueModelTableBoxColumn* columnControl = dataViewColumn->GetControl();
+		CValueTableBoxColumn* columnControl = dataViewColumn->GetControl();
 		wxASSERT(columnControl);
 		g_visualHostContext->SelectControl(columnControl);
 	}
 
 	if (m_tableModel != nullptr) {
-		ibSortOrder::ibSortData* sort = m_tableModel->GetSortByID(event.GetColumn());
+		CSortOrder::CSortData* sort = m_tableModel->GetSortByID(event.GetColumn());
 		if (sort != nullptr && !sort->m_sortSystem) {
 
 			m_tableModel->ResetSort();
@@ -25,19 +25,19 @@ void ibValueModelTableBox::OnColumnClick(ibDataViewEvent& event)
 
 			if (!appData->DesignerMode()) {
 
-				ibDataViewCtrl* dataViewCtrl = dataViewColumn->GetOwner();
+				wxDataViewExtCtrl* dataViewCtrl = dataViewColumn->GetOwner();
 				wxASSERT(dataViewCtrl);
 
 				try {
 					m_tableModel->CallRefreshModel(dataViewCtrl->GetTopItem(), dataViewCtrl->GetCountPerPage());
 				}
-				catch (const ibBackendException* err) {
+				catch (const CBackendException* err) {
 					dataViewCtrl->AssociateModel(nullptr);
 					throw(err);
 				}
 
 				if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-					const ibDataViewItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
+					const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
 					if (currLine.IsOk())
 						m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 					else m_tableCurrentLine.Reset();
@@ -59,13 +59,13 @@ void ibValueModelTableBox::OnColumnClick(ibDataViewEvent& event)
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnColumnReordered(ibDataViewEvent& event)
+void CValueTableBox::OnColumnReordered(wxDataViewExtEvent& event)
 {
-	ibDataViewColumnObject* dataViewColumn =
-		dynamic_cast<ibDataViewColumnObject*>(event.GetDataViewColumn());
+	CDataViewColumnObject* dataViewColumn =
+		dynamic_cast<CDataViewColumnObject*>(event.GetDataViewColumn());
 	wxASSERT(dataViewColumn);
 
-	ibValueModelTableBoxColumn* columnObject = dataViewColumn->GetControl();
+	CValueTableBoxColumn* columnObject = dataViewColumn->GetControl();
 	wxASSERT(columnObject);
 	if (ChangeChildPosition(columnObject, event.GetColumn())) {
 		if (g_visualHostContext != nullptr) g_visualHostContext->RefreshEditor();
@@ -79,16 +79,16 @@ void ibValueModelTableBox::OnColumnReordered(ibDataViewEvent& event)
 //*                          System event                             *
 //*********************************************************************
 
-void ibValueModelTableBox::OnSelectionChanged(ibDataViewEvent& event)
+void CValueTableBox::OnSelectionChanged(wxDataViewExtEvent& event)
 {
-	// event is a ibDataViewEvent
-	const ibDataViewItem& item = event.GetItem();
+	// event is a wxDataViewExtEvent
+	const wxDataViewExtItem& item = event.GetItem();
 	if (!item.IsOk())
 		return;
-	ibValue standardProcessing = true;
+	CValue standardProcessing = true;
 	CallAsEvent(m_eventSelection,
 		GetValue(), // control
-		ibValue(m_tableModel->GetRowAt(item)), // rowSelected
+		CValue(m_tableModel->GetRowAt(item)), // rowSelected
 		standardProcessing //standardProcessing
 	);
 	if (standardProcessing.GetBoolean()) {
@@ -100,10 +100,10 @@ void ibValueModelTableBox::OnSelectionChanged(ibDataViewEvent& event)
 	}
 }
 
-void ibValueModelTableBox::OnItemActivated(ibDataViewEvent& event)
+void CValueTableBox::OnItemActivated(wxDataViewExtEvent& event)
 {
-	// event is a ibDataViewEvent
-	const ibDataViewItem& item = event.GetItem();
+	// event is a wxDataViewExtEvent
+	const wxDataViewExtItem& item = event.GetItem();
 	if (!item.IsOk())
 		return;
 	if (m_tableModel != nullptr) {
@@ -119,37 +119,37 @@ void ibValueModelTableBox::OnItemActivated(ibDataViewEvent& event)
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemCollapsed(ibDataViewEvent& event)
+void CValueTableBox::OnItemCollapsed(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemExpanded(ibDataViewEvent& event)
+void CValueTableBox::OnItemExpanded(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemCollapsing(ibDataViewEvent& event)
+void CValueTableBox::OnItemCollapsing(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemExpanding(ibDataViewEvent& event)
+void CValueTableBox::OnItemExpanding(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemStartEditing(ibDataViewEvent& event)
+void CValueTableBox::OnItemStartEditing(wxDataViewExtEvent& event)
 {
-	// event is a ibDataViewEvent
-	const ibDataViewItem& item = event.GetItem();
+	// event is a wxDataViewExtEvent
+	const wxDataViewExtItem& item = event.GetItem();
 	if (!item.IsOk())
 		return;
-	ibDataViewCtrl* dataViewCtrl = dynamic_cast<ibDataViewCtrl*>(event.GetEventObject());
+	wxDataViewExtCtrl* dataViewCtrl = dynamic_cast<wxDataViewExtCtrl*>(event.GetEventObject());
 	if (dataViewCtrl != nullptr) {
-		ibDataViewColumn* currentColumn = dataViewCtrl->GetCurrentColumn();
+		wxDataViewExtColumn* currentColumn = dataViewCtrl->GetCurrentColumn();
 		if (currentColumn != nullptr) {
-			ibDataViewRenderer* renderer = currentColumn->GetRenderer();
+			wxDataViewExtRenderer* renderer = currentColumn->GetRenderer();
 			if (renderer != nullptr) renderer->FinishEditing();
 		}
 	}
@@ -161,22 +161,22 @@ void ibValueModelTableBox::OnItemStartEditing(ibDataViewEvent& event)
 		event.Skip();
 }
 
-void ibValueModelTableBox::OnItemEditingStarted(ibDataViewEvent& event)
+void CValueTableBox::OnItemEditingStarted(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemEditingDone(ibDataViewEvent& event)
+void CValueTableBox::OnItemEditingDone(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemValueChanged(ibDataViewEvent& event)
+void CValueTableBox::OnItemValueChanged(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemStartInserting(ibDataViewEvent& event)
+void CValueTableBox::OnItemStartInserting(wxDataViewExtEvent& event)
 {
 	if (m_tableModel != nullptr && !m_tableModel->IsCallRefreshModel())
 		m_formOwner->RefreshForm();
@@ -186,13 +186,13 @@ void ibValueModelTableBox::OnItemStartInserting(ibDataViewEvent& event)
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnItemStartDeleting(ibDataViewEvent& event)
+void CValueTableBox::OnItemStartDeleting(wxDataViewExtEvent& event)
 {
-	// event is a ibDataViewEvent
-	const ibDataViewItem& item = event.GetItem();
+	// event is a wxDataViewExtEvent
+	const wxDataViewExtItem& item = event.GetItem();
 	if (!item.IsOk())
 		return;
-	ibValue cancel = false;
+	CValue cancel = false;
 	CallAsEvent(m_eventBeforeDeleteRow,
 		GetValue(), // control
 		cancel //cancel
@@ -207,7 +207,7 @@ void ibValueModelTableBox::OnItemStartDeleting(ibDataViewEvent& event)
 		event.Skip();
 }
 
-void ibValueModelTableBox::OnViewSet(ibDataViewEvent& event)
+void CValueTableBox::OnViewSet(wxDataViewExtEvent& event)
 {
 	if (m_dataViewCreated)
 		m_propertyViewMode->SetValue(event.GetViewMode());
@@ -215,13 +215,13 @@ void ibValueModelTableBox::OnViewSet(ibDataViewEvent& event)
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnHeaderResizing(ibHeaderGenericCtrlEvent& event)
+void CValueTableBox::OnHeaderResizing(wxHeaderGenericCtrlEvent& event)
 {
-	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(GetWxObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
-		ibDataViewColumnObject* dataViewColumn =
-			dynamic_cast<ibDataViewColumnObject*>(dataViewCtrl->GetColumn(event.GetColumn()));
-		ibValueModelTableBoxColumn* columnControl = dataViewColumn->GetControl();
+		CDataViewColumnObject* dataViewColumn =
+			dynamic_cast<CDataViewColumnObject*>(dataViewCtrl->GetColumn(event.GetColumn()));
+		CValueTableBoxColumn* columnControl = dataViewColumn->GetControl();
 		wxASSERT(columnControl);
 		columnControl->SetWidthColumn(event.GetWidth());
 		if (g_visualHostContext != nullptr)
@@ -230,7 +230,7 @@ void ibValueModelTableBox::OnHeaderResizing(ibHeaderGenericCtrlEvent& event)
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnMainWindowClick(wxMouseEvent& event)
+void CValueTableBox::OnMainWindowClick(wxMouseEvent& event)
 {
 	if (g_visualHostContext != nullptr)
 		g_visualHostContext->SelectControl(this);
@@ -239,11 +239,11 @@ void ibValueModelTableBox::OnMainWindowClick(wxMouseEvent& event)
 
 #if wxUSE_DRAG_AND_DROP
 
-void ibValueModelTableBox::OnItemBeginDrag(ibDataViewEvent& event)
+void CValueTableBox::OnItemBeginDrag(wxDataViewExtEvent& event)
 {
 }
 
-void ibValueModelTableBox::OnItemDropPossible(ibDataViewEvent& event)
+void CValueTableBox::OnItemDropPossible(wxDataViewExtEvent& event)
 {
 	if (event.GetDataFormat() != wxDF_UNICODETEXT)
 		event.Veto();
@@ -251,7 +251,7 @@ void ibValueModelTableBox::OnItemDropPossible(ibDataViewEvent& event)
 		event.SetDropEffect(wxDragMove);	// check 'move' drop effect
 }
 
-void ibValueModelTableBox::OnItemDrop(ibDataViewEvent& event)
+void CValueTableBox::OnItemDrop(wxDataViewExtEvent& event)
 {
 	if (event.GetDataFormat() != wxDF_UNICODETEXT) {
 		event.Veto();
@@ -261,36 +261,36 @@ void ibValueModelTableBox::OnItemDrop(ibDataViewEvent& event)
 
 #endif // wxUSE_DRAG_AND_DROP
 
-void ibValueModelTableBox::OnCommandMenu(wxCommandEvent& event)
+void CValueTableBox::OnCommandMenu(wxCommandEvent& event)
 {
-	ibValueModelTableBox::ExecuteAction(event.GetId(), m_formOwner);
+	CValueTableBox::ExecuteAction(event.GetId(), m_formOwner);
 }
 
-void ibValueModelTableBox::OnContextMenu(ibDataViewEvent& event)
+void CValueTableBox::OnContextMenu(wxDataViewExtEvent& event)
 {
-	const ibActionCollection& actionData =
-		ibValueModelTableBox::GetActionCollection(m_formOwner->GetTypeForm());
+	const CActionCollection& actionData =
+		CValueTableBox::GetActionCollection(m_formOwner->GetTypeForm());
 
 	wxMenu menu;
 	for (unsigned int idx = 0; idx < actionData.GetCount(); idx++) {
-		const ibActionID& id = actionData.GetID(idx);
+		const action_identifier_t& id = actionData.GetID(idx);
 		if (id != wxNOT_FOUND) {
 			wxMenuItem* menuItem = menu.Append(id, actionData.GetCaptionByID(id));
-			ibPictureDescription& pictureDesc = actionData.GetPictureByID(id);
+			CPictureDescription& pictureDesc = actionData.GetPictureByID(id);
 			if (!pictureDesc.IsEmptyPicture())
-				menuItem->SetBitmap(ibBackendPicture::CreatePicture(pictureDesc));
+				menuItem->SetBitmap(CBackendPicture::CreatePicture(pictureDesc));
 		}
 	}
-	ibDataViewCtrl* wnd = wxDynamicCast(
-		event.GetEventObject(), ibDataViewCtrl
+	wxDataViewExtCtrl* wnd = wxDynamicCast(
+		event.GetEventObject(), wxDataViewExtCtrl
 	);
 	wxASSERT(wnd);
 	wnd->PopupMenu(&menu, event.GetPosition());
 }
 
-void ibValueModelTableBox::OnSize(wxSizeEvent& event)
+void CValueTableBox::OnSize(wxSizeEvent& event)
 {
-	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(event.GetEventObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(event.GetEventObject());
 
 	if (m_dataViewCreated)
 		m_dataViewSizeChanged = m_dataViewUpdated || (m_dataViewSize != dataViewCtrl->GetSize()) && (m_dataViewSize != wxDefaultSize);
@@ -298,38 +298,38 @@ void ibValueModelTableBox::OnSize(wxSizeEvent& event)
 	event.Skip();
 }
 
-void ibValueModelTableBox::OnIdle(wxIdleEvent& event)
+void CValueTableBox::OnIdle(wxIdleEvent& event)
 {
-	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(event.GetEventObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(event.GetEventObject());
 
 	if (m_dataViewSizeChanged && m_tableModel != nullptr) {
 
 		try {
 			m_tableModel->CallRefreshModel(dataViewCtrl->GetTopItem(), dataViewCtrl->GetCountPerPage());
 		}
-		catch (const ibBackendException* err) {
+		catch (const CBackendException* err) {
 			dataViewCtrl->AssociateModel(nullptr);
 			throw(err);
 		}
 
-		const ibValue& createdValue = m_formOwner->GetCreatedValue();
+		const CValue& createdValue = m_formOwner->GetCreatedValue();
 		if (!createdValue.IsEmpty()) {
-			const ibDataViewItem& currLine = m_tableModel->FindRowValue(createdValue);
+			const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(createdValue);
 			if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 			else m_tableCurrentLine.Reset();
 		}
 		else if (!m_dataViewSelected) {
-			ibValueFrame* ownerControl = m_formOwner->GetOwnerControl();
+			IValueFrame* ownerControl = m_formOwner->GetOwnerControl();
 			if (ownerControl != nullptr && m_tableCurrentLine == nullptr) {
-				ibValue retValue; ownerControl->GetControlValue(retValue);
-				const ibDataViewItem& currLine = m_tableModel->FindRowValue(retValue);
+				CValue retValue; ownerControl->GetControlValue(retValue);
+				const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(retValue);
 				if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 				else m_tableCurrentLine.Reset();
 			}
 
 			if (m_tableCurrentLine != nullptr) {
 
-				const ibDataViewItem& item =
+				const wxDataViewExtItem& item =
 					m_tableModel->GetParent(m_tableCurrentLine->GetLineItem());
 
 				dataViewCtrl->SetTopParent(item);
@@ -340,14 +340,14 @@ void ibValueModelTableBox::OnIdle(wxIdleEvent& event)
 
 		if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
 
-			const ibDataViewItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
+			const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
 			if (currLine.IsOk()) {
 				m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 			}
 			else {
-				const ibValue& changedValue = m_formOwner->GetChangedValue();
+				const CValue& changedValue = m_formOwner->GetChangedValue();
 				if (!changedValue.IsEmpty()) {
-					const ibDataViewItem& currLine = m_tableModel->FindRowValue(changedValue);
+					const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(changedValue);
 					if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 					else m_tableCurrentLine.Reset();
 				}
@@ -371,9 +371,9 @@ void ibValueModelTableBox::OnIdle(wxIdleEvent& event)
 	event.Skip();
 }
 
-void ibValueModelTableBox::HandleOnScroll(wxScrollWinEvent& event)
+void CValueTableBox::HandleOnScroll(wxScrollWinEvent& event)
 {
-	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(event.GetEventObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(event.GetEventObject());
 
 	const short scroll = (event.GetEventType() == wxEVT_SCROLLWIN_TOP ||
 		event.GetEventType() == wxEVT_SCROLLWIN_LINEUP ||
@@ -384,14 +384,14 @@ void ibValueModelTableBox::HandleOnScroll(wxScrollWinEvent& event)
 		if (m_tableModel != nullptr) {
 
 			const int countPerPage = dataViewCtrl->GetCountPerPage();
-			const ibDataViewItem& top_item = dataViewCtrl->GetTopItem();
-			const ibDataViewItem& focused_item = m_tableCurrentLine != nullptr ?
-				m_tableCurrentLine->GetLineItem() : ibDataViewItem(nullptr);
+			const wxDataViewExtItem& top_item = dataViewCtrl->GetTopItem();
+			const wxDataViewExtItem& focused_item = m_tableCurrentLine != nullptr ?
+				m_tableCurrentLine->GetLineItem() : wxDataViewExtItem(nullptr);
 
 			m_tableModel->CallRefreshItemModel(top_item, focused_item, countPerPage, scroll);
 
 			if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-				const ibDataViewItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
+				const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
 				if (currLine.IsOk()) {
 					m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 					dataViewCtrl->Select(m_tableCurrentLine->GetLineItem());

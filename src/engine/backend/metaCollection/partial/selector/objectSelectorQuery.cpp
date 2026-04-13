@@ -7,13 +7,13 @@
 
 /////////////////////////////////////////////////////////////////////////
 
-void ibValueSelectorRecordDataObject::Reset()
+void CValueSelectorRecordDataObject::Reset()
 {
 	m_objGuid.reset(); m_newObject = false;
 	if (!appData->DesignerMode()) {
 		m_currentValues.clear();
-		ibPreparedStatement* statement = db_query->PrepareStatement("SELECT uuid FROM %s ORDER BY CAST(uuid AS VARCHAR(36)); ", m_metaObject->GetTableNameDB());
-		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+		IPreparedStatement* statement = db_query->PrepareStatement("SELECT uuid FROM %s ORDER BY CAST(uuid AS VARCHAR(36)); ", m_metaObject->GetTableNameDB());
+		IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 		while (resultSet->Next()) {
 			m_currentValues.push_back(
 				resultSet->GetResultString(guidName)
@@ -24,7 +24,7 @@ void ibValueSelectorRecordDataObject::Reset()
 	}
 	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
 		if (!appData->DesignerMode()) {
-			m_listObjectValue.insert_or_assign(object->GetMetaID(), ibValueTypes::TYPE_NULL);
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), eValueTypes::TYPE_NULL);
 		}
 		else {
 			m_listObjectValue.insert_or_assign(object->GetMetaID(), object->CreateValue());
@@ -32,22 +32,22 @@ void ibValueSelectorRecordDataObject::Reset()
 	}
 	for (const auto object : m_metaObject->GetTableArrayObject()) {
 		if (!appData->DesignerMode()) {
-			m_listObjectValue.insert_or_assign(object->GetMetaID(), ibValueTypes::TYPE_NULL);
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), eValueTypes::TYPE_NULL);
 		}
 		else {
-			m_listObjectValue.insert_or_assign(object->GetMetaID(), new ibValueTabularSectionDataObjectRef(this, object));
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), new CValueTabularSectionDataObjectRef(this, object));
 		}
 	}
 }
 
-bool ibValueSelectorRecordDataObject::Read()
+bool CValueSelectorRecordDataObject::Read()
 {
 	if (!m_objGuid.isValid())
 		return false;
 
 	m_listObjectValue.clear();
 
-	ibPreparedStatement* statement = nullptr;
+	IPreparedStatement* statement = nullptr;
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 		statement = db_query->PrepareStatement("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
 	else
@@ -56,20 +56,20 @@ bool ibValueSelectorRecordDataObject::Read()
 	if (statement == nullptr)
 		return false;
 	bool isLoaded = false;
-	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	if (resultSet->Next()) {
 
-		m_listObjectValue.insert_or_assign(m_metaObject->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, m_objGuid));
+		m_listObjectValue.insert_or_assign(m_metaObject->GetMetaID(), CValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, m_objGuid));
 
 		//load attributes 
 		for (const auto object : m_metaObject->GetAttributeArrayObject()) {
 			if (m_metaObject->IsDataReference(object->GetMetaID()))
 				continue;
-			ibValueMetaObjectAttributeBase::GetValueAttribute(
+			IValueMetaObjectAttribute::GetValueAttribute(
 				object, m_listObjectValue[object->GetMetaID()], resultSet);
 		}
 		for (const auto object : m_metaObject->GetTableArrayObject()) {
-			ibValueTabularSectionDataObjectRef* tabularSection = ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectRef>(this, object);
+			CValueTabularSectionDataObjectRef* tabularSection = CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectRef>(this, object);
 			if (!tabularSection->LoadData(m_objGuid))
 				isLoaded = false;
 			m_listObjectValue.insert_or_assign(object->GetMetaID(), tabularSection);
@@ -84,26 +84,26 @@ bool ibValueSelectorRecordDataObject::Read()
 
 /////////////////////////////////////////////////////////////////////////
 
-void ibValueSelectorRegisterDataObject::Reset()
+void CValueSelectorRegisterDataObject::Reset()
 {
 	m_keyValues.clear();
 	if (!appData->DesignerMode()) {
 		m_currentValues.clear();
-		ibPreparedStatement* statement = db_query->PrepareStatement("SELECT * FROM %s; ", m_metaObject->GetTableNameDB());
-		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+		IPreparedStatement* statement = db_query->PrepareStatement("SELECT * FROM %s; ", m_metaObject->GetTableNameDB());
+		IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 		while (resultSet->Next()) {
-			ibMetaValueArray keyRow;
+			valueArray_t keyRow;
 			if (m_metaObject->HasRecorder()) {
-				ibValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
+				CValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 				wxASSERT(attributeRecorder);
-				ibValueMetaObjectAttributeBase::GetValueAttribute(attributeRecorder, keyRow[attributeRecorder->GetMetaID()], resultSet);
-				ibValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+				IValueMetaObjectAttribute::GetValueAttribute(attributeRecorder, keyRow[attributeRecorder->GetMetaID()], resultSet);
+				CValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
 				wxASSERT(attributeNumberLine);
-				ibValueMetaObjectAttributeBase::GetValueAttribute(attributeNumberLine, keyRow[attributeNumberLine->GetMetaID()], resultSet);
+				IValueMetaObjectAttribute::GetValueAttribute(attributeNumberLine, keyRow[attributeNumberLine->GetMetaID()], resultSet);
 			}
 			else {
 				for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-					ibValueMetaObjectAttributeBase::GetValueAttribute(object, keyRow[object->GetMetaID()], resultSet);
+					IValueMetaObjectAttribute::GetValueAttribute(object, keyRow[object->GetMetaID()], resultSet);
 				}
 			}
 			m_currentValues.push_back(keyRow);
@@ -113,7 +113,7 @@ void ibValueSelectorRegisterDataObject::Reset()
 	}
 }
 
-bool ibValueSelectorRegisterDataObject::Read()
+bool CValueSelectorRegisterDataObject::Read()
 {
 	if (m_keyValues.empty())
 		return false;
@@ -131,7 +131,7 @@ bool ibValueSelectorRegisterDataObject::Read()
 				queryText = queryText + " WHERE ";
 			}
 			queryText = queryText +
-				(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
+				(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
 			if (firstWhere) {
 				firstWhere = false;
 			}
@@ -144,7 +144,7 @@ bool ibValueSelectorRegisterDataObject::Read()
 				queryText = queryText + " WHERE ";
 			}
 			queryText = queryText +
-				(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
+				(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
 			if (firstWhere) {
 				firstWhere = false;
 			}
@@ -152,13 +152,13 @@ bool ibValueSelectorRegisterDataObject::Read()
 		queryText += " LIMIT 1 ";
 	}
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
 
 	if (statement == nullptr)
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		ibValueMetaObjectAttributeBase::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
@@ -166,16 +166,16 @@ bool ibValueSelectorRegisterDataObject::Read()
 		);
 	}
 
-	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 
 	if (resultSet->Next()) {
 		isLoaded = true;
 		//load attributes 
-		ibMetaValueArray keyTable, rowTable;
+		valueArray_t keyTable, rowTable;
 		for (const auto object : m_metaObject->GetGenericDimentionArrayObject())
-			ibValueMetaObjectAttributeBase::GetValueAttribute(object, keyTable[object->GetMetaID()], resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(object, keyTable[object->GetMetaID()], resultSet);
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject())
-			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowTable[object->GetMetaID()], resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(object, rowTable[object->GetMetaID()], resultSet);
 		m_listObjectValue.insert_or_assign(keyTable, rowTable);
 	}
 	db_query->CloseResultSet(resultSet);

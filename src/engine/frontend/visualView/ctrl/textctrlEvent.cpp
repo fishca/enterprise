@@ -3,19 +3,19 @@
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/metaData.h"
 
-bool ibValueTextCtrl::TextProcessing(wxTextCtrl* textCtrl, const wxString& strData)
+bool CValueTextCtrl::TextProcessing(wxTextCtrl* textCtrl, const wxString& strData)
 {
-	const ibMetaData* metaData = GetMetaData();
+	const IMetaData* metaData = GetMetaData();
 	wxASSERT(metaData);
-	ibValue selValue; GetControlValue(selValue);
-	const ibValue& newValue = metaData->CreateObject(selValue.GetClassType());
-	if (newValue.GetType() == ibValueTypes::TYPE_EMPTY) {
+	CValue selValue; GetControlValue(selValue);
+	const CValue& newValue = metaData->CreateObject(selValue.GetClassType());
+	if (newValue.GetType() == eValueTypes::TYPE_EMPTY) {
 		textCtrl->SetValue(selValue.GetString());
 		textCtrl->SetInsertionPointEnd();
 		return false;
 	}
 	if (strData.Length() > 0) {
-		std::vector<ibValue> listValue;
+		std::vector<CValue> listValue;
 		if (newValue.FindValue(strData, listValue)) {
 			SetControlValue(listValue.at(0));
 		}
@@ -29,25 +29,25 @@ bool ibValueTextCtrl::TextProcessing(wxTextCtrl* textCtrl, const wxString& strDa
 		SetControlValue(newValue);
 	}
 
-	ibValueControl::CallAsEvent(m_eventOnChange, GetValue());
+	IValueControl::CallAsEvent(m_eventOnChange, GetValue());
 	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibValueTextCtrl::ChoiceProcessing(ibValue& vSelected)
+void CValueTextCtrl::ChoiceProcessing(CValue& vSelected)
 {
-	ibValue standartProcessing = true;
-	ibValueControl::CallAsEvent(m_eventChoiceProcessing, GetValue(), vSelected, standartProcessing);
+	CValue standartProcessing = true;
+	IValueControl::CallAsEvent(m_eventChoiceProcessing, GetValue(), vSelected, standartProcessing);
 	if (standartProcessing.GetBoolean()) {
 		SetControlValue(vSelected);
-		ibValueControl::CallAsEvent(m_eventOnChange, GetValue());
+		IValueControl::CallAsEvent(m_eventOnChange, GetValue());
 	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibValueTextCtrl::OnTextEnter(wxCommandEvent& event)
+void CValueTextCtrl::OnTextEnter(wxCommandEvent& event)
 {
 	wxTextCtrl* textCtrl = wxDynamicCast(
 		event.GetEventObject(), wxTextCtrl
@@ -60,10 +60,10 @@ void ibValueTextCtrl::OnTextEnter(wxCommandEvent& event)
 
 #include "frontend/visualView/ctrl/form.h"
 
-void ibValueTextCtrl::OnTextUpdated(wxCommandEvent& event)
+void CValueTextCtrl::OnTextUpdated(wxCommandEvent& event)
 {
 	if (m_formOwner != nullptr) {
-		ibSourceDataObject* sourceObject = m_formOwner->GetSourceObject();
+		ISourceDataObject* sourceObject = m_formOwner->GetSourceObject();
 		if (sourceObject != nullptr && sourceObject->ModifiesData()) {
 			sourceObject->Modify(true);
 		}
@@ -73,7 +73,7 @@ void ibValueTextCtrl::OnTextUpdated(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibValueTextCtrl::OnKillFocus(wxFocusEvent& event)
+void CValueTextCtrl::OnKillFocus(wxFocusEvent& event)
 {
 	if (m_textModified) {
 		wxTextCtrl* textCtrl = wxDynamicCast(
@@ -88,16 +88,16 @@ void ibValueTextCtrl::OnKillFocus(wxFocusEvent& event)
 
 #include "backend/objCtor.h"
 
-void ibValueTextCtrl::OnSelectButtonPressed(wxCommandEvent& event)
+void CValueTextCtrl::OnSelectButtonPressed(wxCommandEvent& event)
 {
-	ibValue standartProcessing = true;
-	ibValueControl::CallAsEvent(m_eventStartChoice, GetValue(), standartProcessing);
+	CValue standartProcessing = true;
+	IValueControl::CallAsEvent(m_eventStartChoice, GetValue(), standartProcessing);
 	if (standartProcessing.GetBoolean()) {
-		ibValue selValue; GetControlValue(selValue); bool setType = false;
-		if (selValue.GetType() == ibValueTypes::TYPE_EMPTY) {
-			const ibClassID& clsid = GetDataType();
+		CValue selValue; GetControlValue(selValue); bool setType = false;
+		if (selValue.GetType() == eValueTypes::TYPE_EMPTY) {
+			const class_identifier_t& clsid = GetDataType();
 			if (clsid != 0) {
-				ibMetaData* metaData = GetMetaData();
+				IMetaData* metaData = GetMetaData();
 				wxASSERT(metaData);
 				if (metaData->IsRegisterCtor(clsid)) {
 					SetControlValue(
@@ -108,19 +108,19 @@ void ibValueTextCtrl::OnSelectButtonPressed(wxCommandEvent& event)
 			setType = true;
 		}
 		if (!setType) {
-			const ibClassID& clsid = selValue.GetClassType();
+			const class_identifier_t& clsid = selValue.GetClassType();
 			wxWindow* textCtrl = wxDynamicCast(GetWxObject(), wxWindow);
-			if (!ibTypeControlFactory::QuickChoice(this, clsid, textCtrl)) {
-				const ibMetaData* metaData = GetMetaData();
+			if (!ITypeControlFactory::QuickChoice(this, clsid, textCtrl)) {
+				const IMetaData* metaData = GetMetaData();
 				wxASSERT(metaData);
-				const ibCtorMetaValueType* so = metaData->GetTypeCtor(clsid);
-				if (so != nullptr && so->GetMetaTypeCtor() == ibCtorObjectMetaType_Reference) {
-					ibValueMetaObject* metaObject = so->GetMetaObject();
+				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(clsid);
+				if (so != nullptr && so->GetMetaTypeCtor() == eCtorMetaType_Reference) {
+					IValueMetaObject* metaObject = so->GetMetaObject();
 					if (metaObject != nullptr) {
-						const ibMetaID& id = m_propertyChoiceForm->GetValueAsInteger();
+						const meta_identifier_t& id = m_propertyChoiceForm->GetValueAsInteger();
 						if (id != wxNOT_FOUND) {
-							const ibMetaData* metaData = GetMetaData();
-							const ibValueMetaObject* foundedObject = metaData != nullptr
+							const IMetaData* metaData = GetMetaData();
+							const IValueMetaObject* foundedObject = metaData != nullptr
 								? metaData->FindAnyObjectByFilter(id) : nullptr;
 							metaObject->ProcessChoice(this, foundedObject != nullptr ? foundedObject->GetName() : wxEmptyString, GetSelectMode());
 						}
@@ -134,21 +134,21 @@ void ibValueTextCtrl::OnSelectButtonPressed(wxCommandEvent& event)
 	}
 }
 
-void ibValueTextCtrl::OnOpenButtonPressed(wxCommandEvent& event)
+void CValueTextCtrl::OnOpenButtonPressed(wxCommandEvent& event)
 {
-	ibValue standartProcessing = true;
-	ibValueControl::CallAsEvent(m_eventOpening, GetValue(), standartProcessing);
+	CValue standartProcessing = true;
+	IValueControl::CallAsEvent(m_eventOpening, GetValue(), standartProcessing);
 	if (standartProcessing.GetBoolean()) {
-		ibValue selValue;
+		CValue selValue;
 		if (GetControlValue(selValue) && !selValue.IsEmpty())
 			selValue.ShowValue();
 	}
 }
 
-void ibValueTextCtrl::OnClearButtonPressed(wxCommandEvent& event)
+void CValueTextCtrl::OnClearButtonPressed(wxCommandEvent& event)
 {
-	ibValue standartProcessing = true;
-	ibValueControl::CallAsEvent(m_eventClearing, GetValue(), standartProcessing);
+	CValue standartProcessing = true;
+	IValueControl::CallAsEvent(m_eventClearing, GetValue(), standartProcessing);
 	if (standartProcessing.GetBoolean())
 		SetControlValue();
 }

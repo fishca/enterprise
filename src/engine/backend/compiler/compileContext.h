@@ -3,37 +3,15 @@
 
 #include "backend/compiler/byteCode.h"
 
-//function properties:
-enum {
-	RETURN_NONE = 0,//no return (module code)
-	RETURN_PROCEDURE,//return from procedure
-	RETURN_FUNCTION,//return from function
-	RETURN_BLOCK,//return from context
-};
-
-//variable flags (specified with a negative value in the nArray attribute of the bytecode)
-enum {
-	DEF_VAR_SKIP = -1,// missing parameter
-	DEF_VAR_DEFAULT = -2,//default parameter
-	DEF_VAR_TEMP = -3,//flag of a temporary local variable
-	DEF_VAR_NORET = -7,//function (procedure) does not return values
-	DEF_VAR_CONST = 1000,//loading constants
-};
-
-enum {
-	CODE_VBS = ibProgramSyntax::syntax_vbs,
-	CODE_CES = ibProgramSyntax::syntax_ces
-};
-
-struct ibCompileContext {
+struct CCompileContext {
 
 #pragma region __context_unit_h__
 
 	//variable definition
-	struct ibVariable
+	struct CVariable
 	{
-		ibVariable() : m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
-		ibVariable(const wxString& strVariableName) : m_strName(strVariableName), m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
+		CVariable() : m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
+		CVariable(const wxString& strVariableName) : m_strName(strVariableName), m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
 
 		bool m_bExport;
 		bool m_bContext;
@@ -46,11 +24,11 @@ struct ibCompileContext {
 	};
 
 	//function definition
-	struct ibFunction
+	struct CFunction
 	{
-		struct ibParamVariable
+		struct CParamVariable
 		{
-			ibParamVariable() : m_bByRef(false) {
+			CParamVariable() : m_bByRef(false) {
 				m_puValue.m_numArray = -1;
 				m_puValue.m_numIndex = -1;
 			}
@@ -58,10 +36,10 @@ struct ibCompileContext {
 			bool m_bByRef;
 			wxString m_strName; // Variable name
 			wxString m_strType; // Value type
-			ibParamUnit m_puValue; // Default value
+			CParamUnit m_puValue; // Default value
 		};
 
-		ibFunction(const wxString& strFuncName, ibCompileContext* compileContext = nullptr) :
+		CFunction(const wxString& strFuncName, CCompileContext* compileContext = nullptr) :
 			m_strName(strFuncName),
 			m_compileContext(compileContext),
 			m_bExport(false),
@@ -73,7 +51,7 @@ struct ibCompileContext {
 				m_compileContext->m_functionContext = this;
 		}
 
-		~ibFunction()
+		~CFunction()
 		{
 			//Delete the subordinate context (each function has its own list of labels and local variables)
 			if (m_compileContext)
@@ -87,7 +65,7 @@ struct ibCompileContext {
 		wxString m_strType; //type (in English notation), if it is a typed function
 		wxString m_strContext; //name of the context variable
 
-		ibCompileContext* m_compileContext;//compilation context
+		CCompileContext* m_compileContext;//compilation context
 
 		unsigned int m_lVarCount;// number of local variables
 		unsigned int m_nStart;// starting position in bytecode array
@@ -99,11 +77,11 @@ struct ibCompileContext {
 		wxString m_strShortDescription;//includes the entire line after the Function (Procedure) keyword
 		wxString m_strLongDescription;//includes the entire merged (i.e. without empty lines) comment block before the function (procedure) definition
 
-		std::vector<ibParamVariable> m_listParam;
+		std::vector<CParamVariable> m_listParam;
 	};
 
 	//label definition
-	struct ibLabel
+	struct CLabel
 	{
 		int		 m_numLine = 0;
 		int		 m_numError = 0;
@@ -112,22 +90,22 @@ struct ibCompileContext {
 
 #pragma endregion
 
-	ibCompileContext(ibCompileCode* compileCode) :
+	CCompileContext(CCompileCode* compileCode) :
 		m_parentContext(nullptr), m_functionContext(nullptr), m_compileModule(compileCode),
 		m_numDoNumber(0), m_numReturn(0), m_numTempVar(0), m_numFindLocalInParent(1) {
 	}
 
-	ibCompileContext(ibCompileContext* compileContext) :
+	CCompileContext(CCompileContext* compileContext) :
 		m_parentContext(compileContext), m_functionContext(nullptr), m_compileModule(nullptr),
 		m_numDoNumber(0), m_numReturn(0), m_numTempVar(0), m_numFindLocalInParent(1) {
 	}
 
-	~ibCompileContext() {}
+	~CCompileContext() {}
 
 	//Create new context 
-	ibCompileContext* CreateContext(short numReturn)
+	CCompileContext* CreateContext(short numReturn)
 	{
-		ibCompileContext* compileContext = new ibCompileContext(this);
+		CCompileContext* compileContext = new CCompileContext(this);
 
 		compileContext->m_numReturn = numReturn;
 		compileContext->m_compileModule = m_compileModule;
@@ -136,7 +114,7 @@ struct ibCompileContext {
 	}
 
 	//Setting jump addresses for Continue and Break commands
-	void StartLoopList() {
+	void StartDoList() {
 
 		//create lists for Continue and Break commands (they will store the addresses of byte codes where the corresponding commands were encountered)
 		m_numDoNumber++;
@@ -145,12 +123,12 @@ struct ibCompileContext {
 	}
 
 	//Setting jump addresses for Continue and Break commands
-	void FinishLoopList(ibByteCode& cByteCode, int gotoContinue, int gotoBreak) {
+	void FinishDoList(CByteCode& cByteCode, int gotoContinue, int gotoBreak) {
 		std::vector<int>* pListC = m_listContinue[m_numDoNumber];
 		std::vector<int>* pListB = m_listBreak[m_numDoNumber];
 		if (pListC == 0 || pListB == 0) {
 #ifdef DEBUG 
-			wxLogDebug(wxT("Error (FinishLoopList) gotoContinue=%d, gotoBreak=%d\n"), gotoContinue, gotoBreak);
+			wxLogDebug(wxT("Error (FinishDoList) gotoContinue=%d, gotoBreak=%d\n"), gotoContinue, gotoBreak);
 			wxLogDebug(wxT("m_numDoNumber=%d\n"), m_numDoNumber);
 #endif 
 			m_numDoNumber--;
@@ -169,19 +147,19 @@ struct ibCompileContext {
 		m_numDoNumber--;
 	}
 
-	void CreateLabels();
+	void DoLabels();
 
-	ibParamUnit CreateVariable(const wxString& strPrefix = wxT("@temp_"));
-	ibParamUnit AddVariable(const wxString& strVarName, const wxString& strType = wxEmptyString, bool bExport = false, bool bContext = false, bool bTempVar = false);
-	ibParamUnit GetVariable(const wxString& strVarName, bool bFindInParent = true, bool bCheckError = false, bool bContext = false, bool bTempVar = false);
+	CParamUnit CreateVariable(const wxString strPrefix = wxT("@temp_"));
+	CParamUnit AddVariable(const wxString& strVarName, const wxString& strType = wxEmptyString, bool bExport = false, bool bContext = false, bool bTempVar = false);
+	CParamUnit GetVariable(const wxString& strVarName, bool bFindInParent = true, bool bCheckError = false, bool bContext = false, bool bTempVar = false);
 
 	void PushVariable(const wxString& strVarName, const wxString& strContextVar, unsigned int numVariable,
 		const wxString& typeVar = wxEmptyString, bool exportVar = true, bool contextVar = true, bool tempVar = false);
 	void PushFunction(const wxString& strFuncName, const wxString& strContextVar, const wxString& strShortDescription, unsigned int numFunction,
 		bool hasRetVal = true, int argCount = 0);
 
-	bool FindVariable(const wxString& strVarName, std::shared_ptr<ibVariable>& foundedVar, bool context = false);
-	bool FindFunction(const wxString& strFuncName, std::shared_ptr<ibFunction>& foundedFunc, bool context = false);
+	bool FindVariable(const wxString& strVarName, std::shared_ptr<CVariable>& foundedVar, bool context = false);
+	bool FindFunction(const wxString& strFuncName, std::shared_ptr<CFunction>& foundedFunc, bool context = false);
 
 	//Reset compile context
 	void Reset() {
@@ -198,27 +176,30 @@ struct ibCompileContext {
 		m_listLabel.clear();
 		m_listLabelDef.clear();
 
+		m_strCurFuncName.clear();
+
 		// clear functions & variables 
 		m_listVariable.clear();
 		m_listFunction.clear();
 	}
 
-	ibCompileCode* m_compileModule;
-	ibCompileContext* m_parentContext; //parent context
+	CCompileCode* m_compileModule;
+	CCompileContext* m_parentContext; //parent context
 
 	//current context 
-	ibFunction* m_functionContext;
+	CFunction* m_functionContext;
 
 	//VARIABLES
-	std::map<wxString, std::shared_ptr<ibVariable>> m_listVariable;
+	std::map<wxString, std::shared_ptr<CVariable>> m_listVariable;
 
 	int m_numTempVar;//current temporary variable number
 	int m_numFindLocalInParent;//flag for searching variables in the parent (one level up), in other cases only export variables are searched in parents)
 
 	//FUNCTIONS AND PROCEDURES
-	std::map<wxString, std::shared_ptr<ibFunction>> m_listFunction; //list of encountered function definitions
+	std::map<wxString, std::shared_ptr<CFunction>> m_listFunction; //list of encountered function definitions
 
 	short m_numReturn;//RETURN operator processing mode: RETURN_NONE,RETURN_PROCEDURE,RETURN_FUNCTION
+	wxString m_strCurFuncName;//name of the current compiled function (for processing the recursive function call option)
 
 	//LOOPS
 	//Service attributes
@@ -229,7 +210,7 @@ struct ibCompileContext {
 
 	//LABELS
 	std::map<wxString, unsigned int> m_listLabelDef; //declarations
-	std::vector<std::shared_ptr<ibLabel>> m_listLabel; //list of encountered transitions to labels
+	std::vector<std::shared_ptr<CLabel>> m_listLabel; //list of encountered transitions to labels
 };
 
 #endif

@@ -27,50 +27,50 @@ enum
 };
 
 // ----------------------------------------------------------------------------
-// ibSpreadsheetEditView implementation
+// CSpreadsheetEditView implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetEditView, ibMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(CSpreadsheetEditView, CMetaView);
 
-wxBEGIN_EVENT_TABLE(ibSpreadsheetEditView, ibMetaView)
+wxBEGIN_EVENT_TABLE(CSpreadsheetEditView, CMetaView)
 
-EVT_MENU(wxID_COPY, ibSpreadsheetEditView::OnCopy)
-EVT_MENU(wxID_PASTE, ibSpreadsheetEditView::OnPaste)
-EVT_MENU(wxID_SELECTALL, ibSpreadsheetEditView::OnSelectAll)
-EVT_MENU(wxID_MERGE_CELL, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_AREA_ADD, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_AREA_DELETE, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_FREEZE_ROW, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_FREEZE_COL, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_PRINT_BRAKE_ROW_ADD, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_PRINT_BRAKE_ROW_DELETE, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_PRINT_BRAKE_COL_ADD, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_PRINT_BRAKE_COL_DELETE, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_SHOW_CELL, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_SHOW_HEADER, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_SHOW_AREA, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_DOCK_TABLE, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_BORDER_LEFT, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_BORDER_TOP, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_BORDER_RIGHT, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_BORDER_BOTTOM, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_BORDER_ALL, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_BORDER_AROUND, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_BORDER_NONE, ibSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_EDITABLE, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_COPY, CSpreadsheetEditView::OnCopy)
+EVT_MENU(wxID_PASTE, CSpreadsheetEditView::OnPaste)
+EVT_MENU(wxID_SELECTALL, CSpreadsheetEditView::OnSelectAll)
+EVT_MENU(wxID_MERGE_CELL, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_AREA_ADD, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_AREA_DELETE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_FREEZE_ROW, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_FREEZE_COL, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_PRINT_BRAKE_ROW_ADD, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_PRINT_BRAKE_ROW_DELETE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_PRINT_BRAKE_COL_ADD, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_PRINT_BRAKE_COL_DELETE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_CELL, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_HEADER, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_AREA, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_DOCK_TABLE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_LEFT, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_TOP, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_RIGHT, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_BOTTOM, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_ALL, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_AROUND, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_NONE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_EDITABLE, CSpreadsheetEditView::OnMenuEvent)
 wxEND_EVENT_TABLE()
 
-bool ibSpreadsheetEditView::OnCreate(ibMetaDocument* doc, long flags)
+bool CSpreadsheetEditView::OnCreate(CMetaDocument* doc, long flags)
 {
-	m_gridEditor = new ibGridEditor(doc, m_viewFrame, wxID_ANY);
+	m_gridEditor = new CGridEditor(doc, m_viewFrame, wxID_ANY);
 	m_gridEditor->EnableEditing(flags != wxDOC_READONLY);
-	m_gridEditor->EnableGridArea(doc->ConvertMetaObjectToType<ibValueMetaObjectSpreadsheetBase>());
+	m_gridEditor->EnableGridArea(doc->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>());
 
-	return ibMetaView::OnCreate(doc, flags);
+	return CMetaView::OnCreate(doc, flags);
 }
 
 #if wxUSE_MENUS	
-wxMenuBar* ibSpreadsheetEditView::CreateMenuBar() const
+wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
 {
 	wxMenuBar* mb = new wxMenuBar;
 	wxMenu* menu = new wxMenu;
@@ -133,8 +133,8 @@ wxMenuBar* ibSpreadsheetEditView::CreateMenuBar() const
 		menuItem = menu->AppendCheckItem(wxID_SHOW_AREA, _("Show area"));
 		menuItem->Check(m_gridEditor->GridAreaEnabled());
 
-		const ibValueMetaObjectSpreadsheetBase* doc = 
-			GetDocument()->ConvertMetaObjectToType<ibValueMetaObjectSpreadsheetBase>();
+		const IValueMetaObjectSpreadsheet* doc = 
+			GetDocument()->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
 
 		menuItem = menu->AppendCheckItem(wxID_EDITABLE, _("Editable"));
 		menuItem->Enable(doc ? doc->IsEditable() : true);
@@ -150,26 +150,26 @@ wxMenuBar* ibSpreadsheetEditView::CreateMenuBar() const
 }
 #endif 
 
-void ibSpreadsheetEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+void CSpreadsheetEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
 	if (activate) m_gridEditor->ActivateEditor();
 }
 
-void ibSpreadsheetEditView::OnDraw(wxDC* WXUNUSED(dc))
+void CSpreadsheetEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxGrid draws itself
 }
 
 #include "frontend/win/editor/gridEditor/gridPrintout.h"
 
-wxPrintout* ibSpreadsheetEditView::OnCreatePrintout()
+wxPrintout* CSpreadsheetEditView::OnCreatePrintout()
 {
 	return m_gridEditor->CreatePrintout();
 }
 
 #include "frontend/artProvider/artProvider.h"
 
-void ibSpreadsheetEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
+void CSpreadsheetEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 {
 	toolbar->AddTool(wxID_MERGE_CELL, _("Merge cells"), wxArtProvider::GetBitmap(wxART_MERGE_CELL, wxART_DOC_TEMPLATE), _("Merge cells"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_MERGE_CELL, m_gridEditor->IsEditable());
@@ -187,7 +187,7 @@ void ibSpreadsheetEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 	toolbar->EnableTool(wxID_DOCK_TABLE, m_gridEditor->IsEditable());
 }
 
-bool ibSpreadsheetEditView::OnClose(bool deleteWindow)
+bool CSpreadsheetEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
 
@@ -196,7 +196,7 @@ bool ibSpreadsheetEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (ibMetaView::OnClose(deleteWindow)) {
+	if (CMetaView::OnClose(deleteWindow)) {
 
 		m_gridEditor->Freeze();
 
@@ -209,7 +209,7 @@ bool ibSpreadsheetEditView::OnClose(bool deleteWindow)
 	return false;
 }
 
-void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
+void CSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 {
 	wxArrayInt arrRows = m_gridEditor->GetSelectedRows();
 	const int selected_row = arrRows.Count() > 0 ? arrRows[0] : -1;
@@ -217,7 +217,7 @@ void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 	wxArrayInt arrCols = m_gridEditor->GetSelectedCols();
 	const int selected_col = arrCols.Count() > 0 ? arrCols[0] : -1;
 
-	ibGridBlockCoords coords = m_gridEditor->GetSelectedCellRange();
+	wxGridExtBlockCoords coords = m_gridEditor->GetSelectedCellRange();
 
 	switch (event.GetId())
 	{
@@ -321,40 +321,40 @@ void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-// ibSpreadsheetDocument: wxDocument and wxGrid married
+// ISpreadsheetDocument: wxDocument and wxGrid married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibSpreadsheetDocument, ibMetaDocument);
+wxIMPLEMENT_ABSTRACT_CLASS(ISpreadsheetDocument, CMetaDocument);
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetFilibDocument, ibSpreadsheetDocument);
-wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetEditDocument, ibSpreadsheetDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(CSpreadsheetFileDocument, ISpreadsheetDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(CSpreadsheetEditDocument, ISpreadsheetDocument);
 
-wxCommandProcessor* ibSpreadsheetDocument::OnCreateCommandProcessor()
+wxCommandProcessor* ISpreadsheetDocument::OnCreateCommandProcessor()
 {
-	return new ibGridCommandProcessor(GetGridCtrl());
+	return new wxGridExtCommandProcessor(GetGridCtrl());
 }
 
-ibGridEditor* ibSpreadsheetDocument::GetGridCtrl() const
+CGridEditor* ISpreadsheetDocument::GetGridCtrl() const
 {
 	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, ibSpreadsheetEditView)->GetGridCtrl() : nullptr;
+	return view ? wxDynamicCast(view, CSpreadsheetEditView)->GetGridCtrl() : nullptr;
 }
 
 // ----------------------------------------------------------------------------
-// ibSpreadsheetFilibDocument: wxDocument and wxGrid married
+// CSpreadsheetFileDocument: wxDocument and wxGrid married
 // ----------------------------------------------------------------------------
 
-bool ibSpreadsheetFilibDocument::OnCreate(const wxString& path, long flags)
+bool CSpreadsheetFileDocument::OnCreate(const wxString& path, long flags)
 {
-	if (!ibMetaDocument::OnCreate(path, flags))
+	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
 
-	return GetGridCtrl()->AssociatibDocument(m_spreadSheetDocument);
+	return GetGridCtrl()->AssociateDocument(m_spreadSheetDocument);
 }
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool ibSpreadsheetFilibDocument::DoOpenDocument(const wxString& filename)
+bool CSpreadsheetFileDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_spreadSheetDocument->LoadFromFile(filename))
 		return false;
@@ -362,7 +362,7 @@ bool ibSpreadsheetFilibDocument::DoOpenDocument(const wxString& filename)
 	return GetGridCtrl()->LoadDocument(m_spreadSheetDocument->GetSpreadsheetDesc());
 }
 
-bool ibSpreadsheetFilibDocument::DoSaveDocument(const wxString& filename)
+bool CSpreadsheetFileDocument::DoSaveDocument(const wxString& filename)
 {
 	if (!GetGridCtrl()->SaveDocument(m_spreadSheetDocument->GetSpreadsheetDesc()))
 		return false;
@@ -371,28 +371,28 @@ bool ibSpreadsheetFilibDocument::DoSaveDocument(const wxString& filename)
 }
 
 // ----------------------------------------------------------------------------
-// ibSpreadsheetEditDocument: wxDocument and wxGrid married
+// CSpreadsheetEditDocument: wxDocument and wxGrid married
 // ----------------------------------------------------------------------------
 
-bool ibSpreadsheetEditDocument::OnCreate(const wxString& path, long flags)
+bool CSpreadsheetEditDocument::OnCreate(const wxString& path, long flags)
 {
-	if (!ibMetaDocument::OnCreate(path, flags))
+	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
 
-	const ibValueMetaObjectSpreadsheetBase* creator = m_metaObject->ConvertToType<ibValueMetaObjectSpreadsheetBase>();
+	const IValueMetaObjectSpreadsheet* creator = m_metaObject->ConvertToType<IValueMetaObjectSpreadsheet>();
 	if (creator != nullptr)
 		return GetGridCtrl()->LoadDocument(creator->GetSpreadsheetDesc());
 
 	return false;
 }
 
-bool ibSpreadsheetEditDocument::SaveAs()
+bool CSpreadsheetEditDocument::SaveAs()
 {
 	wxDocTemplate* docTemplate = GetDocumentTemplate();
 	if (!docTemplate)
 		return false;
 
-	const ibValueMetaObjectSpreadsheetBase* creator = m_metaObject->ConvertToType<ibValueMetaObjectSpreadsheetBase>();
+	const IValueMetaObjectSpreadsheet* creator = m_metaObject->ConvertToType<IValueMetaObjectSpreadsheet>();
 	if (creator == nullptr)
 		return false;
 
@@ -466,10 +466,10 @@ bool ibSpreadsheetEditDocument::SaveAs()
 	return true;
 }
 
-bool ibSpreadsheetEditDocument::DoSaveDocument(const wxString& filename)
+bool CSpreadsheetEditDocument::DoSaveDocument(const wxString& filename)
 {
-	wxObjectDataPtr<ibBackendSpreadsheetObject>spreadSheetDocument;
-	if (!GetGridCtrl()->GetActivibDocument(spreadSheetDocument))
+	wxObjectDataPtr<CBackendSpreadsheetObject>spreadSheetDocument;
+	if (!GetGridCtrl()->GetActiveDocument(spreadSheetDocument))
 		return false;
 	return spreadSheetDocument->SaveToFile(filename);
 }

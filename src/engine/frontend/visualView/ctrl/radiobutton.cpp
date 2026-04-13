@@ -2,17 +2,17 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueRadioButton, ibValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueRadioButton, IValueWindow)
 
 //****************************************************************************
 //*                             Radiobutton                                  *
 //****************************************************************************
 
-ibValueRadioButton::ibValueRadioButton() : ibValueWindow()
+CValueRadioButton::CValueRadioButton() : IValueWindow()
 {
 }
 
-wxObject* ibValueRadioButton::Create(wxWindow* wxparent, ibVisualHost *visualHost) 
+wxObject* CValueRadioButton::Create(wxWindow* wxparent, IVisualHost *visualHost) 
 {
 	wxRadioButton *radioButton = new wxRadioButton(wxparent, wxID_ANY,
 		m_propertyTitle->GetValueAsTranslateString(),
@@ -22,11 +22,11 @@ wxObject* ibValueRadioButton::Create(wxWindow* wxparent, ibVisualHost *visualHos
 	return radioButton;
 }
 
-void ibValueRadioButton::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost *visualHost, bool first—reated)
+void CValueRadioButton::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost *visualHost, bool first—reated)
 {
 }
 
-void ibValueRadioButton::Update(wxObject* wxobject, ibVisualHost *visualHost)
+void CValueRadioButton::Update(wxObject* wxobject, IVisualHost *visualHost)
 {
 	wxRadioButton *radioButton = dynamic_cast<wxRadioButton *>(wxobject);
 
@@ -38,7 +38,7 @@ void ibValueRadioButton::Update(wxObject* wxobject, ibVisualHost *visualHost)
 	UpdateWindow(radioButton);
 }
 
-void ibValueRadioButton::Cleanup(wxObject* obj, ibVisualHost *visualHost)
+void CValueRadioButton::Cleanup(wxObject* obj, IVisualHost *visualHost)
 {
 }
 
@@ -46,18 +46,18 @@ void ibValueRadioButton::Cleanup(wxObject* obj, ibVisualHost *visualHost)
 //*                             Property                            *
 //*******************************************************************
 
-bool ibValueRadioButton::LoadData(ibReaderMemory &reader)
+bool CValueRadioButton::LoadData(CMemoryReader &reader)
 {
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueRadioButton::SaveData(ibWriterMemory &writer)
+bool CValueRadioButton::SaveData(CMemoryWriter &writer)
 {
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueRadioButton, "Radiobutton", "Widget", string_to_clsid("CT_RDBT"));
+CONTROL_TYPE_REGISTER(CValueRadioButton, "Radiobutton", "Widget", string_to_clsid("CT_RDBT"));

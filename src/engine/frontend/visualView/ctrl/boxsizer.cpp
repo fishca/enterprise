@@ -1,25 +1,25 @@
 #include "sizer.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueBoxSizer, ibValueSizer)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueBoxSizer, IValueSizer)
 
 //*******************************************************************
 //*                             BoxSizer                            *
 //*******************************************************************
 
-ibValueBoxSizer::ibValueBoxSizer() : ibValueSizer()
+CValueBoxSizer::CValueBoxSizer() : IValueSizer()
 {
 }
 
-wxObject* ibValueBoxSizer::Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/)
+wxObject* CValueBoxSizer::Create(wxWindow* /*parent*/, IVisualHost* /*visualHost*/)
 {
 	return new wxBoxSizer(m_propertyOrient->GetValueAsInteger());
 }
 
-void ibValueBoxSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost *visualHost, bool first—reated)
+void CValueBoxSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost *visualHost, bool first—reated)
 {
 }
 
-void ibValueBoxSizer::Update(wxObject* wxobject, ibVisualHost *visualHost)
+void CValueBoxSizer::Update(wxObject* wxobject, IVisualHost *visualHost)
 {
 	wxBoxSizer *boxSizer = dynamic_cast<wxBoxSizer *>(wxobject);
 
@@ -31,7 +31,7 @@ void ibValueBoxSizer::Update(wxObject* wxobject, ibVisualHost *visualHost)
 	UpdateSizer(boxSizer);
 }
 
-void ibValueBoxSizer::Cleanup(wxObject* obj, ibVisualHost *visualHost)
+void CValueBoxSizer::Cleanup(wxObject* obj, IVisualHost *visualHost)
 {
 }
 
@@ -39,20 +39,20 @@ void ibValueBoxSizer::Cleanup(wxObject* obj, ibVisualHost *visualHost)
 //*                            Data									*
 //*******************************************************************
 
-bool ibValueBoxSizer::LoadData(ibReaderMemory &reader)
+bool CValueBoxSizer::LoadData(CMemoryReader &reader)
 {
 	m_propertyOrient->SetValue(reader.r_u16());
-	return ibValueSizer::LoadData(reader);
+	return IValueSizer::LoadData(reader);
 }
 
-bool ibValueBoxSizer::SaveData(ibWriterMemory &writer)
+bool CValueBoxSizer::SaveData(CMemoryWriter &writer)
 {
 	writer.w_u16(m_propertyOrient->GetValueAsInteger());
-	return ibValueSizer::SaveData(writer);
+	return IValueSizer::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueBoxSizer, "Boxsizer", "Sizer", string_to_clsid("CT_BSZR"));
+CONTROL_TYPE_REGISTER(CValueBoxSizer, "Boxsizer", "Sizer", string_to_clsid("CT_BSZR"));

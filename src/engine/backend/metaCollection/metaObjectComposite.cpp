@@ -1,13 +1,13 @@
 #include "metaObjectComposite.h"
 #include "backend/metadata.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueMetaObjectCompositeData, ibValueMetaObject);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueMetaObjectCompositeData, IValueMetaObject);
 
 //***********************************************************************
-//*							ibValueMetaObjectCompositeData				        *
+//*							IValueMetaObjectCompositeData				        *
 //***********************************************************************
 
-const ibCtorMetaValueType* ibValueMetaObjectCompositeData::GetTypeCtor(const ibCtorObjectMetaType& refType) const
+const IMetaValueTypeCtor* IValueMetaObjectCompositeData::GetTypeCtor(const eCtorMetaType& refType) const
 {
 	return m_metaData->GetTypeCtor(this, refType);
 }

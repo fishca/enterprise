@@ -5,31 +5,31 @@
 #include "backend/metadataDataProcessor.h"
 
 // The view using a standard wxTextCtrl to show its contents
-class ibDataProcessorEditView : public ibMetaView
+class CDataProcessorEditView : public CMetaView
 {
 public:
 
-	ibDataProcessorEditView() : ibMetaView() {}
+	CDataProcessorEditView() : CMetaView() {}
 
-	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
 protected:
 
-	wxDECLARE_DYNAMIC_CLASS(ibDataProcessorEditView);
+	wxDECLARE_DYNAMIC_CLASS(CDataProcessorEditView);
 };
 
-class ibDataProcessorFilibDocument : public ibMetaDataDocument {
-	ibMetaDataDataProcessor* m_metaData;
+class CDataProcessorFileDocument : public IMetaDataDocument {
+	CMetaDataDataProcessor* m_metaData;
 public:
 
-	ibDataProcessorFilibDocument() : ibMetaDataDocument() {}
-	virtual ~ibDataProcessorFilibDocument() { 
+	CDataProcessorFileDocument() : IMetaDataDocument() {}
+	virtual ~CDataProcessorFileDocument() { 
 		/*wxDELETE(m_metaData);*/
 	}
 
-	virtual ibMetaDataDataProcessor* GetMetaData() const { 
+	virtual CMetaDataDataProcessor* GetMetaData() const { 
 		return m_metaData;
 	}
 
@@ -51,7 +51,7 @@ public:
 		SetTitle(name);
 		SetFilename(name, true);
 
-		ibValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
+		IValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
 		wxASSERT(commonObject);
 		commonObject->SetName(name);
 
@@ -71,8 +71,8 @@ protected:
 	virtual bool DoOpenDocument(const wxString& filename) override;
 	virtual bool DoSaveDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(ibDataProcessorFilibDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibDataProcessorFilibDocument);
+	wxDECLARE_NO_COPY_CLASS(CDataProcessorFileDocument);
+	wxDECLARE_DYNAMIC_CLASS(CDataProcessorFileDocument);
 };
 
 #endif 

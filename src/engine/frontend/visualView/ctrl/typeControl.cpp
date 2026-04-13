@@ -12,21 +12,21 @@
 #include "frontend/win/ctrls/dynamicBorder.h"
 #include "frontend/visualView/ctrl/frame.h"
 
-bool ibTypeControlFactory::SimpleChoice(ibControlFrame* ownerValue, const ibClassID& clsid, wxWindow* parent) {
+bool ITypeControlFactory::SimpleChoice(IControlFrame* ownerValue, const class_identifier_t& clsid, wxWindow* parent) {
 
-	ibValueTypes valType = ibValue::GetVTByID(clsid);
+	eValueTypes valType = CValue::GetVTByID(clsid);
 
-	if (valType == ibValueTypes::TYPE_NUMBER) {
+	if (valType == eValueTypes::TYPE_NUMBER) {
 		return true;
 	}
-	else if (valType == ibValueTypes::TYPE_DATE) {
+	else if (valType == eValueTypes::TYPE_DATE) {
 		class wxPopupDateTimeWindow : public wxPopupTransientWindow {
 			wxCalendarCtrl* m_calendar = nullptr;
 			wxTimePickerCtrl* m_timePicker = nullptr;
-			ibControlFrame* m_ownerValue = nullptr;
+			IControlFrame* m_ownerValue = nullptr;
 		public:
 
-			wxPopupDateTimeWindow(ibControlFrame* ownerValue, wxWindow* parent, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS | wxWANTS_CHARS) :
+			wxPopupDateTimeWindow(IControlFrame* ownerValue, wxWindow* parent, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS | wxWANTS_CHARS) :
 				wxPopupTransientWindow(parent, style), m_ownerValue(ownerValue) {
 
 				SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
@@ -75,7 +75,7 @@ bool ibTypeControlFactory::SimpleChoice(ibControlFrame* ownerValue, const ibClas
 			}
 
 			virtual void Popup(wxWindow* focus = nullptr) override {
-				ibValue vSelected; m_ownerValue->GetControlValue(vSelected);
+				CValue vSelected; m_ownerValue->GetControlValue(vSelected);
 				wxPoint pos = m_parent->GetScreenPosition();
 				pos.x += (m_parent->GetSize().x - GetSize().x + 2);
 				pos.y += (m_parent->GetSize().y);
@@ -107,7 +107,7 @@ bool ibTypeControlFactory::SimpleChoice(ibControlFrame* ownerValue, const ibClas
 			}
 
 			void OnOKButtonClicked(wxCommandEvent&) {
-				ibValue cDateTime = GetDateTime();
+				CValue cDateTime = GetDateTime();
 				if (m_ownerValue != nullptr)
 					m_ownerValue->ChoiceProcessing(cDateTime);
 				Dismiss();
@@ -121,19 +121,19 @@ bool ibTypeControlFactory::SimpleChoice(ibControlFrame* ownerValue, const ibClas
 		}
 		return true;
 	}
-	else if (valType == ibValueTypes::TYPE_STRING) {
+	else if (valType == eValueTypes::TYPE_STRING) {
 		return true;
 	}
 
 	return false;
 }
 
-bool ibTypeControlFactory::QuickChoice(ibControlFrame* ownerValue, const ibClassID& clsid, wxWindow* parent)
+bool ITypeControlFactory::QuickChoice(IControlFrame* ownerValue, const class_identifier_t& clsid, wxWindow* parent)
 {
 	if (!ownerValue->HasQuickChoice())
 		return false;
 
-	if (ibTypeControlFactory::SimpleChoice(ownerValue, clsid, parent))
+	if (ITypeControlFactory::SimpleChoice(ownerValue, clsid, parent))
 		return true;
 
 	class wxPopupQuickSelectWindow : public wxPopupTransientWindow {
@@ -155,13 +155,13 @@ bool ibTypeControlFactory::QuickChoice(ibControlFrame* ownerValue, const ibClass
 			}
 		};
 
-		std::map<int, ibValue> m_values;
+		std::map<int, CValue> m_values;
 
-		ibControlFrame* m_ownerValue = nullptr;
+		IControlFrame* m_ownerValue = nullptr;
 		wxQuickListBox* m_selListBox = nullptr;
 
 	public:
-		wxPopupQuickSelectWindow(ibControlFrame* ownerValue, wxWindow* parent, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS | wxWANTS_CHARS) :
+		wxPopupQuickSelectWindow(IControlFrame* ownerValue, wxWindow* parent, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS | wxWANTS_CHARS) :
 			wxPopupTransientWindow(parent, style), m_ownerValue(ownerValue) {
 
 			SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
@@ -169,7 +169,7 @@ bool ibTypeControlFactory::QuickChoice(ibControlFrame* ownerValue, const ibClass
 
 			m_selListBox = new wxQuickListBox(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
-			ibControlDynamicBorder* dynamicBorder = dynamic_cast<ibControlDynamicBorder*>(parent);
+			wxControlDynamicBorder* dynamicBorder = dynamic_cast<wxControlDynamicBorder*>(parent);
 			if (dynamicBorder != nullptr) {
 				wxWindow* innerControl = dynamicBorder->GetControl();
 				wxASSERT(innerControl);
@@ -214,7 +214,7 @@ bool ibTypeControlFactory::QuickChoice(ibControlFrame* ownerValue, const ibClass
 		}
 
 		virtual void Popup(wxWindow* focus = nullptr) override {
-			ibControlDynamicBorder* innerBorder = dynamic_cast<ibControlDynamicBorder*>(m_parent);
+			wxControlDynamicBorder* innerBorder = dynamic_cast<wxControlDynamicBorder*>(m_parent);
 			const wxSize& controlSize = (innerBorder != nullptr) ?
 				innerBorder->GetControlSize() : m_parent->GetSize();
 			if (m_selListBox->GetCount() > 5)
@@ -231,7 +231,7 @@ bool ibTypeControlFactory::QuickChoice(ibControlFrame* ownerValue, const ibClass
 			m_selListBox->SetFocus();
 		}
 
-		void AppendItem(const ibValue& item, bool select = false) {
+		void AppendItem(const CValue& item, bool select = false) {
 			int sel = m_selListBox->Append(item.GetString());
 			if (select)
 				m_selListBox->Select(sel);
@@ -266,8 +266,8 @@ bool ibTypeControlFactory::QuickChoice(ibControlFrame* ownerValue, const ibClass
 	};
 
 	if (ownerValue != nullptr) {
-		ibValue cValue; ownerValue->GetControlValue(cValue);
-		std::vector<ibValue> listValue;
+		CValue cValue; ownerValue->GetControlValue(cValue);
+		std::vector<CValue> listValue;
 		if (cValue.FindValue(wxEmptyString, listValue)) {
 			wxPopupQuickSelectWindow* popup =
 				new wxPopupQuickSelectWindow(ownerValue, parent);
@@ -280,7 +280,7 @@ bool ibTypeControlFactory::QuickChoice(ibControlFrame* ownerValue, const ibClass
 	return false;
 }
 
-void ibTypeControlFactory::QuickChoice(ibControlFrame* controlValue, ibValue& newValue, wxWindow* parent, const wxString& strData)
+void ITypeControlFactory::QuickChoice(IControlFrame* controlValue, CValue& newValue, wxWindow* parent, const wxString& strData)
 {
 	class wxPopupQuickSelectWindow : public wxPopupTransientWindow {
 
@@ -301,16 +301,16 @@ void ibTypeControlFactory::QuickChoice(ibControlFrame* controlValue, ibValue& ne
 			}
 		};
 
-		std::map<int, ibValue> m_values;
+		std::map<int, CValue> m_values;
 
-		ibControlFrame* m_controlValue = nullptr;
+		IControlFrame* m_controlValue = nullptr;
 		wxQuickListBox* m_selListBox = nullptr;
 
 		bool m_selected;
 
 	public:
 
-		wxPopupQuickSelectWindow(ibControlFrame* controlValue, wxWindow* parent, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS | wxWANTS_CHARS) :
+		wxPopupQuickSelectWindow(IControlFrame* controlValue, wxWindow* parent, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS | wxWANTS_CHARS) :
 			wxPopupTransientWindow(parent, style), m_controlValue(controlValue), m_selected(false) {
 
 			SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
@@ -318,7 +318,7 @@ void ibTypeControlFactory::QuickChoice(ibControlFrame* controlValue, ibValue& ne
 
 			m_selListBox = new wxQuickListBox(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
-			ibControlDynamicBorder* dynamicBorder = dynamic_cast<ibControlDynamicBorder*>(parent);
+			wxControlDynamicBorder* dynamicBorder = dynamic_cast<wxControlDynamicBorder*>(parent);
 			if (dynamicBorder != nullptr) {
 				wxWindow* innerControl = dynamicBorder->GetControl();
 				wxASSERT(innerControl);
@@ -348,7 +348,7 @@ void ibTypeControlFactory::QuickChoice(ibControlFrame* controlValue, ibValue& ne
 					wxYES_NO | wxCENTRE | wxICON_QUESTION, m_parent
 				);
 				if (m_controlValue != nullptr && answer == wxYES) {
-					ibValue retValue;
+					CValue retValue;
 					if (m_controlValue->GetControlValue(retValue))
 						m_controlValue->ChoiceProcessing(retValue);
 				}
@@ -382,7 +382,7 @@ void ibTypeControlFactory::QuickChoice(ibControlFrame* controlValue, ibValue& ne
 		}
 
 		virtual void Popup(wxWindow* focus = nullptr) override {
-			ibControlDynamicBorder* innerBorder = dynamic_cast<ibControlDynamicBorder*>(m_parent);
+			wxControlDynamicBorder* innerBorder = dynamic_cast<wxControlDynamicBorder*>(m_parent);
 			const wxSize& controlSize = (innerBorder != nullptr) ?
 				innerBorder->GetControlSize() : m_parent->GetSize();
 			if (m_selListBox->GetCount() > 5)
@@ -399,7 +399,7 @@ void ibTypeControlFactory::QuickChoice(ibControlFrame* controlValue, ibValue& ne
 			m_selListBox->SetFocus();
 		}
 
-		void AppendItem(const ibValue& item, bool select = false) {
+		void AppendItem(const CValue& item, bool select = false) {
 			int sel = m_selListBox->Append(item.GetString());
 			if (select)
 				m_selListBox->Select(sel);
@@ -437,7 +437,7 @@ void ibTypeControlFactory::QuickChoice(ibControlFrame* controlValue, ibValue& ne
 
 	if (controlValue != nullptr) {
 		if (strData.Length() > 0) {
-			std::vector<ibValue> listValue;
+			std::vector<CValue> listValue;
 			if (newValue.FindValue(strData, listValue)) {
 				size_t count = listValue.size();
 				if (count > 1) {
@@ -460,41 +460,41 @@ void ibTypeControlFactory::QuickChoice(ibControlFrame* controlValue, ibValue& ne
 
 /////////////////////////////////////////////////////////////////////
 
-ibSelectMode ibTypeControlFactory::GetSelectMode() const
+eSelectMode ITypeControlFactory::GetSelectMode() const
 {
-	ibValueMetaObjectAttributeBase* sourceObject = GetSourceAttributeObject();
+	IValueMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
 	if (sourceObject != nullptr) return sourceObject->GetSelectMode();
-	return ibSelectMode::ibSelectMode_Items;
+	return eSelectMode::eSelectMode_Items;
 }
 
-ibValue ibTypeControlFactory::CreateValue() const
+CValue ITypeControlFactory::CreateValue() const
 {
-	return ibTypeControlFactory::CreateValueRef();
+	return ITypeControlFactory::CreateValueRef();
 }
 
-ibValue* ibTypeControlFactory::CreateValueRef() const
+CValue* ITypeControlFactory::CreateValueRef() const
 {
-	ibValueMetaObjectAttributeBase* sourceObject = GetSourceAttributeObject();
+	IValueMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
 	if (sourceObject != nullptr) return sourceObject->CreateValueRef();
-	return ibBackendTypeSourceFactory::CreateValueRef();
+	return IBackendTypeSourceFactory::CreateValueRef();
 }
 
-ibClassID ibTypeControlFactory::GetDataType() const
+class_identifier_t ITypeControlFactory::GetDataType() const
 {
-	ibValueMetaObjectAttributeBase* sourceObject = GetSourceAttributeObject();
+	IValueMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
 	if (sourceObject != nullptr) return ShowSelectType(sourceObject->GetMetaData(), sourceObject->GetTypeDesc());
 	return ShowSelectType(GetMetaData(), GetTypeDesc());
 }
 
 #include "frontend/win/dlgs/selectData.h"
 
-ibClassID ibTypeControlFactory::ShowSelectType(ibMetaData* metaData, const ibTypeDescription& typeDescription)
+class_identifier_t ITypeControlFactory::ShowSelectType(IMetaData* metaData, const CTypeDescription& typeDescription)
 {
 	if (typeDescription.GetClsidCount() < 2) return typeDescription.GetFirstClsid();
 	
-	ibDialogSelectDataType *selectDataType = new ibDialogSelectDataType(metaData, typeDescription.GetClsidList());
+	CDialogSelectDataType *selectDataType = new CDialogSelectDataType(metaData, typeDescription.GetClsidList());
 
-	ibClassID clsid = 0;	
+	class_identifier_t clsid = 0;	
 	if (selectDataType->ShowModal(clsid)) {
 		selectDataType->Destroy();
 		return clsid;

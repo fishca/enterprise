@@ -3,20 +3,20 @@
 
 #include "backend/metaData.h"
 
-class BACKEND_API ibVariantDataGeneration : public wxVariantData {
+class BACKEND_API wxVariantDataGeneration : public wxVariantData {
 	wxString MakeString() const;
 public:
 
-	ibMetaDescription& GetMetaDesc() { return m_metaDesc; }
-	const ibMetaDescription& GetMetaDesc() const { return m_metaDesc; }
+	CMetaDescription& GetMetaDesc() { return m_metaDesc; }
+	const CMetaDescription& GetMetaDesc() const { return m_metaDesc; }
 
-	ibValue GetDataValue() const;
+	CValue GetDataValue() const;
 
-	ibVariantDataGeneration(const ibValueMetaObjectGenericData* prop, const ibMetaDescription& typeDesc) : wxVariantData(), m_ownerProperty(prop), m_metaDesc(typeDesc) {}
-	ibVariantDataGeneration(const ibVariantDataGeneration& src) : wxVariantData(), m_ownerProperty(src.m_ownerProperty), m_metaDesc(src.m_metaDesc) {}
+	wxVariantDataGeneration(const IValueMetaObjectGenericData* prop, const CMetaDescription& typeDesc) : wxVariantData(), m_ownerProperty(prop), m_metaDesc(typeDesc) {}
+	wxVariantDataGeneration(const wxVariantDataGeneration& src) : wxVariantData(), m_ownerProperty(src.m_ownerProperty), m_metaDesc(src.m_metaDesc) {}
 
-	virtual ibVariantDataGeneration* Clone() const {
-		return new ibVariantDataGeneration(*this);
+	virtual wxVariantDataGeneration* Clone() const {
+		return new wxVariantDataGeneration(*this);
 	}
 
 	bool Eq(wxVariantData& data) const { return true; }
@@ -32,11 +32,11 @@ public:
 		return true;
 	}
 
-	virtual wxString GetType() const { return wxT("ibVariantDataGeneration"); }
+	virtual wxString GetType() const { return wxT("wxVariantDataGeneration"); }
 
 protected:
-	const ibValueMetaObjectGenericData* m_ownerProperty;
-	ibMetaDescription m_metaDesc;
+	const IValueMetaObjectGenericData* m_ownerProperty;
+	CMetaDescription m_metaDesc;
 };
 
 #endif

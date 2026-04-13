@@ -9,7 +9,7 @@ inline wxColour GetInverse(const wxColour& color)
 	return wxColour(r ^ 0xFF, g ^ 0xFF, b ^ 0xFF);
 }
 
-ibTextEditor::ibTextEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+CTextEditor::CTextEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
 	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document)
 {
 	//Set margin cursor
@@ -21,13 +21,13 @@ ibTextEditor::ibTextEditor(ibMetaDocument* document, wxWindow* parent, wxWindowI
 	wxStyledTextCtrl::Connect
 	(
 		wxEVT_STC_CHANGE,
-		wxCommandEventHandler(ibTextEditor::OnTextChange),
+		wxCommandEventHandler(CTextEditor::OnTextChange),
 		nullptr,
 		this
 	);
 }
 
-void ibTextEditor::SetEditorSettings(const ibEditorSettings& settings)
+void CTextEditor::SetEditorSettings(const CEditorSettings& settings)
 {
 	unsigned int m_bIndentationSize = settings.GetIndentSize();
 
@@ -43,7 +43,7 @@ void ibTextEditor::SetEditorSettings(const ibEditorSettings& settings)
 	wxStyledTextCtrl::SetViewWhiteSpace(showWhiteSpace);
 }
 
-void ibTextEditor::SetFontColorSettings(const ibFontColorSettings& settings)
+void CTextEditor::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -52,78 +52,78 @@ void ibTextEditor::SetFontColorSettings(const ibFontColorSettings& settings)
 	wxStyledTextCtrl::StyleClearAll();
 	wxStyledTextCtrl::StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	wxStyledTextCtrl::SetSelForeground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).foreColor);
-	wxStyledTextCtrl::SetSelBackground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).backColor);
+	wxStyledTextCtrl::SetSelForeground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).foreColor);
+	wxStyledTextCtrl::SetSelBackground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Default);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Default);
 
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_DEFAULT, font);
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_IDENTIFIER, font);
 
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_IDENTIFIER, settings.GetColors(ibFontColorSettings::DisplayItem_Default).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_IDENTIFIER, settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_IDENTIFIER, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_IDENTIFIER, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Comment);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Comment);
 
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_COMMENT, font);
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_COMMENTLINE, font);
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_COMMENTDOC, font);
 
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_COMMENT, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_COMMENT, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_COMMENT, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_COMMENT, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_COMMENTLINE, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_COMMENTLINE, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_COMMENTLINE, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_COMMENTLINE, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Keyword);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Keyword);
 
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_WORD, font);
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_WORD, settings.GetColors(ibFontColorSettings::DisplayItem_Keyword).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_WORD, settings.GetColors(ibFontColorSettings::DisplayItem_Keyword).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_WORD, settings.GetColors(CFontColorSettings::DisplayItem_Keyword).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_WORD, settings.GetColors(CFontColorSettings::DisplayItem_Keyword).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Operator);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Operator);
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_OPERATOR, font);
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_OPERATOR, settings.GetColors(ibFontColorSettings::DisplayItem_Operator).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_OPERATOR, settings.GetColors(ibFontColorSettings::DisplayItem_Operator).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_OPERATOR, settings.GetColors(CFontColorSettings::DisplayItem_Operator).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_OPERATOR, settings.GetColors(CFontColorSettings::DisplayItem_Operator).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_String);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_String);
 
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_STRING, font);
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_STRING, settings.GetColors(ibFontColorSettings::DisplayItem_String).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_STRING, settings.GetColors(ibFontColorSettings::DisplayItem_String).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_STRING, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_STRING, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_STRINGEOL, font);
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_STRINGEOL, settings.GetColors(ibFontColorSettings::DisplayItem_String).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_STRINGEOL, settings.GetColors(ibFontColorSettings::DisplayItem_String).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_STRINGEOL, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_STRINGEOL, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_CHARACTER, font);
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(ibFontColorSettings::DisplayItem_String).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(ibFontColorSettings::DisplayItem_String).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Number);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Number);
 
 	wxStyledTextCtrl::StyleSetFont(wxSTC_C_NUMBER, font);
-	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).foreColor);
-	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).backColor);
+	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(CFontColorSettings::DisplayItem_Number).foreColor);
+	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(CFontColorSettings::DisplayItem_Number).backColor);
 
 	wxStyledTextCtrl::StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
 
 	// Set the caret color as the inverse of the background color so it's always visible.
-	wxStyledTextCtrl::SetCaretForeground(GetInverse(settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor));
+	wxStyledTextCtrl::SetCaretForeground(GetInverse(settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor));
 }
 
 #include "frontend/docView/docView.h"
 
-void ibTextEditor::OnTextChange(wxCommandEvent& event)
+void CTextEditor::OnTextChange(wxCommandEvent& event)
 {
 	if (m_document != nullptr)
 		m_document->Modify(true);

@@ -8,17 +8,17 @@
 #include "backend/system/systemManager.h"
 #include "backend/appData.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModuleManager::ibValueModuleUnit, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueModuleManager::CValueModuleUnit, CValue);
 
-ibValueModuleManager::ibValueModuleUnit::ibValueModuleUnit(ibValueModuleManager *moduleManager, ibValueMetaObjectModuleBase *moduleObject, bool managerModule) :
-	ibValue(ibValueTypes::TYPE_VALUE, true), ibModuleDataObject(new ibCompileCommonModule(moduleObject)),
-	m_methodHelper(new ibValueMethodHelper()),
+IValueModuleManager::CValueModuleUnit::CValueModuleUnit(IValueModuleManager *moduleManager, IValueMetaObjectModule *moduleObject, bool managerModule) :
+	CValue(eValueTypes::TYPE_VALUE, true), IModuleDataObject(new CCompileCommonModule(moduleObject)),
+	m_methodHelper(new CMethodHelper()),
 	m_moduleManager(moduleManager),
 	m_moduleObject(moduleObject)
 {
 }
 
-ibValueModuleManager::ibValueModuleUnit::~ibValueModuleUnit()
+IValueModuleManager::CValueModuleUnit::~CValueModuleUnit()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -26,7 +26,7 @@ ibValueModuleManager::ibValueModuleUnit::~ibValueModuleUnit()
 #define objectManager wxT("Manager")
 
 //common module 
-bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
+bool IValueModuleManager::CValueModuleUnit::CreateCommonModule()
 {
 	wxASSERT(m_moduleManager != nullptr);
 
@@ -40,22 +40,22 @@ bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
 		try {
 			m_compileModule->Compile();
 			// у глобального модуля код исполняется в главном модуле! 
-			if (!ibValueModuleUnit::IsGlobalModule()) {
-				m_procUnit = new ibProcUnit();
+			if (!CValueModuleUnit::IsGlobalModule()) {
+				m_procUnit = new CProcUnit();
 				m_procUnit->SetParent(m_moduleManager->GetProcUnit());
 				m_procUnit->Execute(m_compileModule->m_cByteCode, false);
 			}
 		}
-		catch (const ibBackendException *){
+		catch (const CBackendException *){
 			return false;
 		};
 	}
 
-	ibValueModuleUnit::PrepareNames();
+	CValueModuleUnit::PrepareNames();
 	return true;
 }
 
-bool ibValueModuleManager::ibValueModuleUnit::DestroyCommonModule()
+bool IValueModuleManager::CValueModuleUnit::DestroyCommonModule()
 {
 	wxASSERT(m_moduleManager != nullptr);
 
@@ -66,12 +66,12 @@ bool ibValueModuleManager::ibValueModuleUnit::DestroyCommonModule()
 	return true;
 }
 
-void ibValueModuleManager::ibValueModuleUnit::PrepareNames() const
+void IValueModuleManager::CValueModuleUnit::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
 	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
+		CByteCode* byteCode = m_procUnit->GetByteCode();
 		if (byteCode != nullptr) {
 			for (auto exportFunction : byteCode->m_listExportFunc) {
 				m_methodHelper->AppendMethod(
@@ -86,16 +86,16 @@ void ibValueModuleManager::ibValueModuleUnit::PrepareNames() const
 	}
 }
 
-bool ibValueModuleManager::ibValueModuleUnit::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
+bool IValueModuleManager::CValueModuleUnit::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
 {
-	return ibModuleDataObject::ExecuteProc(
+	return IModuleDataObject::ExecuteProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
-bool ibValueModuleManager::ibValueModuleUnit::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool IValueModuleManager::CValueModuleUnit::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	return ibModuleDataObject::ExecuteFunc(
+	return IModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

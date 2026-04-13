@@ -2,7 +2,7 @@
 #include "backend/metaData.h"
 #include "frontend/mainFrame/mainFrame.h"
 
-bool ibDialogGeneration::ShowModal(ibMetaID& id)
+bool CDialogGeneration::ShowModal(meta_identifier_t& id)
 {
 	const int res = wxDialog::ShowModal();
 	if (res == wxID_OK) {
@@ -20,8 +20,8 @@ bool ibDialogGeneration::ShowModal(ibMetaID& id)
 
 #define ICON_SIZE 16
 
-ibDialogGeneration::ibDialogGeneration(ibMetaData* metaData, const ibMetaDescription& metaDesc) :
-	wxDialog(ibFrontendDocMDIFrame::GetFrame(), wxID_ANY, _("Select generation"), wxDefaultPosition, wxSize(315, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), m_metaDesc(metaDesc)
+CDialogGeneration::CDialogGeneration(IMetaData* metaData, const CMetaDescription& metaDesc) :
+	wxDialog(CFrontendDocMDIFrame::GetFrame(), wxID_ANY, _("Select generation"), wxDefaultPosition, wxSize(315, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), m_metaDesc(metaDesc)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -37,7 +37,7 @@ ibDialogGeneration::ibDialogGeneration(ibMetaData* metaData, const ibMetaDescrip
 	);
 
 	for (unsigned int idx = 0; idx < m_metaDesc.GetTypeCount(); idx++) {
-		const ibValueMetaObject* typeCtor = metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx));
+		const IValueMetaObject* typeCtor = metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx));
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_listData->GetImageList(wxIMAGE_LIST_SMALL);
 		long lSelectedItem = m_listData->InsertItem(m_listData->GetItemCount(), typeCtor->GetSynonym(), imageList->Add(typeCtor->GetIcon()));
@@ -45,7 +45,7 @@ ibDialogGeneration::ibDialogGeneration(ibMetaData* metaData, const ibMetaDescrip
 	}
 
 	// Connect Events
-	m_listData->Connect(wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler(ibDialogGeneration::OnListItemSelected), nullptr, this);
+	m_listData->Connect(wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler(CDialogGeneration::OnListItemSelected), nullptr, this);
 
 	m_listData->SetDoubleBuffered(true);
 
@@ -58,7 +58,7 @@ ibDialogGeneration::ibDialogGeneration(ibMetaData* metaData, const ibMetaDescrip
 	mainSizer->Add(buttonsSizer, 0, wxEXPAND, 5);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picGenerateCLSID));
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picGenerateCLSID));
 
 	wxDialog::SetSizer(mainSizer);
 	wxDialog::Layout();
@@ -67,11 +67,11 @@ ibDialogGeneration::ibDialogGeneration(ibMetaData* metaData, const ibMetaDescrip
 	wxDialog::Centre(wxBOTH);
 }
 
-ibDialogGeneration::~ibDialogGeneration()
+CDialogGeneration::~CDialogGeneration()
 {
 }
 
-void ibDialogGeneration::OnListItemSelected(wxListEvent& event)
+void CDialogGeneration::OnListItemSelected(wxListEvent& event)
 {
 	EndModal(wxID_OK);
 }

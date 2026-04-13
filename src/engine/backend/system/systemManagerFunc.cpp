@@ -19,30 +19,30 @@
 #include "systemManagerEnum.h"
 
 //--- Базовые:
-bool ibValueSystemFunction::Boolean(const ibValue& cValue)
+bool CSystemFunction::Boolean(const CValue& cValue)
 {
 	return cValue.GetBoolean();
 }
 
-ibNumber ibValueSystemFunction::Number(const ibValue& cValue)
+number_t CSystemFunction::Number(const CValue& cValue)
 {
 	return cValue.GetNumber();
 }
 
-wxLongLong_t ibValueSystemFunction::Date(const ibValue& cValue)
+wxLongLong_t CSystemFunction::Date(const CValue& cValue)
 {
 	return cValue.GetDate();
 }
 
-wxString ibValueSystemFunction::String(const ibValue& cValue)
+wxString CSystemFunction::String(const CValue& cValue)
 {
 	return cValue.GetString();
 }
 
 //---Математические:
-ibNumber ibValueSystemFunction::Round(const ibValue& cValue, int precision, ibRoundMode mode)
+number_t CSystemFunction::Round(const CValue& cValue, int precision, eRoundMode mode)
 {
-	ibNumber fNumber = cValue.GetNumber();
+	number_t fNumber = cValue.GetNumber();
 
 	if (precision > MAX_PRECISION_NUMBER) {
 		precision = MAX_PRECISION_NUMBER;
@@ -53,7 +53,7 @@ ibNumber ibValueSystemFunction::Round(const ibValue& cValue, int precision, ibRo
 		fNumber = fNumber - nDelta;
 	}
 
-	ibNumber fTemp = 10;
+	number_t fTemp = 10;
 	fTemp.Pow(precision + 1);
 	fTemp = fTemp * fNumber;
 
@@ -61,7 +61,7 @@ ibNumber ibValueSystemFunction::Round(const ibValue& cValue, int precision, ibRo
 	fTemp.ToInt(N);
 
 	//округление - в зависимости от метода
-	if (mode == ibRoundMode::ibRoundMode_Round15as20) {
+	if (mode == eRoundMode::eRoundMode_Round15as20) {
 		if (N % 10 >= 5) N = N / 10 + 1;
 		else N = N / 10;
 	}
@@ -71,7 +71,7 @@ ibNumber ibValueSystemFunction::Round(const ibValue& cValue, int precision, ibRo
 		else N = N / 10;
 	}
 
-	ibNumber G = 10; G.Pow(precision);
+	number_t G = 10; G.Pow(precision);
 
 	if (!fTemp.FromInt(N))
 	{
@@ -84,29 +84,29 @@ ibNumber ibValueSystemFunction::Round(const ibValue& cValue, int precision, ibRo
 	return 0;
 }
 
-ibValue ibValueSystemFunction::Int(const ibValue& cValue)
+CValue CSystemFunction::Int(const CValue& cValue)
 {
 	ttmath::Int<TTMATH_BITS(128)> int128;
-	ibNumber fNumber = cValue.GetNumber();
+	number_t fNumber = cValue.GetNumber();
 	if (!fNumber.ToInt(int128)) return int128;
 	else return 0;
 }
 
-ibNumber ibValueSystemFunction::Log10(const ibValue& cValue)
+number_t CSystemFunction::Log10(const CValue& cValue)
 {
-	ibNumber fNumber = cValue.GetNumber();
+	number_t fNumber = cValue.GetNumber();
 	return 	fNumber.Log(fNumber, 10);
 }
 
-ibNumber ibValueSystemFunction::Ln(const ibValue& cValue)
+number_t CSystemFunction::Ln(const CValue& cValue)
 {
-	ibNumber fNumber = cValue.GetNumber();
+	number_t fNumber = cValue.GetNumber();
 	return std::log(fNumber.ToDouble());
 }
 
-ibValue ibValueSystemFunction::Max(ibValue** paParams, const long lSizeArray)
+CValue CSystemFunction::Max(CValue** paParams, const long lSizeArray)
 {
-	ibValue* maxValue = paParams[0]; int i = 1;
+	CValue* maxValue = paParams[0]; int i = 1;
 	while (i < lSizeArray) {
 		if (paParams[i]->GetNumber() > maxValue->GetNumber())
 			maxValue = paParams[i++];
@@ -115,9 +115,9 @@ ibValue ibValueSystemFunction::Max(ibValue** paParams, const long lSizeArray)
 	return maxValue;
 }
 
-ibValue ibValueSystemFunction::Min(ibValue** paParams, const long lSizeArray)
+CValue CSystemFunction::Min(CValue** paParams, const long lSizeArray)
 {
-	ibValue* minValue = paParams[0]; int i = 1;
+	CValue* minValue = paParams[0]; int i = 1;
 	while (i < lSizeArray) {
 		if (paParams[i]->GetNumber() < minValue->GetNumber())
 			minValue = paParams[i++];
@@ -125,24 +125,24 @@ ibValue ibValueSystemFunction::Min(ibValue** paParams, const long lSizeArray)
 	return minValue;
 }
 
-ibValue ibValueSystemFunction::Sqrt(const ibValue& cValue)
+CValue CSystemFunction::Sqrt(const CValue& cValue)
 {
-	ibNumber fNumber = cValue.GetNumber();
+	number_t fNumber = cValue.GetNumber();
 	if (fNumber.Sqrt() == 0)
 		return fNumber;
 
-	ibBackendCoreException::Error(_("Incorrect argument value for built-in function (Sqrt)"));
-	return ibValue();
+	CBackendCoreException::Error(_("Incorrect argument value for built-in function (Sqrt)"));
+	return CValue();
 }
 
 //---Строковые:
-int ibValueSystemFunction::StrLen(const ibValue& cValue)
+int CSystemFunction::StrLen(const CValue& cValue)
 {
 	wxString stringValue = cValue.GetString();
 	return stringValue.Length();
 }
 
-bool ibValueSystemFunction::IsBlankString(const ibValue& cValue)
+bool CSystemFunction::IsBlankString(const CValue& cValue)
 {
 	wxString stringValue = cValue.GetString();
 	stringValue.Trim(true);
@@ -150,21 +150,21 @@ bool ibValueSystemFunction::IsBlankString(const ibValue& cValue)
 	return stringValue.IsEmpty();
 }
 
-wxString ibValueSystemFunction::TrimL(const ibValue& cValue)
+wxString CSystemFunction::TrimL(const CValue& cValue)
 {
 	wxString stringValue = cValue.GetString();
 	stringValue.Trim(false);
 	return stringValue;
 }
 
-wxString ibValueSystemFunction::TrimR(const ibValue& cValue)
+wxString CSystemFunction::TrimR(const CValue& cValue)
 {
 	wxString stringValue = cValue.GetString();
 	stringValue.Trim(true);
 	return stringValue;
 }
 
-wxString ibValueSystemFunction::TrimAll(const ibValue& cValue)
+wxString CSystemFunction::TrimAll(const CValue& cValue)
 {
 	wxString stringValue = cValue.GetString();
 	stringValue.Trim(true);
@@ -172,51 +172,51 @@ wxString ibValueSystemFunction::TrimAll(const ibValue& cValue)
 	return stringValue;
 }
 
-wxString ibValueSystemFunction::Left(const ibValue& cValue, unsigned int nCount)
+wxString CSystemFunction::Left(const CValue& cValue, unsigned int nCount)
 {
 	wxString stringValue = cValue.GetString();
 	return stringValue.Left(nCount);
 }
 
-wxString ibValueSystemFunction::Right(const ibValue& cValue, unsigned int nCount)
+wxString CSystemFunction::Right(const CValue& cValue, unsigned int nCount)
 {
 	wxString stringValue = cValue.GetString();
 	return stringValue.Right(nCount);
 }
 
-wxString ibValueSystemFunction::Mid(const ibValue& cValue, unsigned int nFirst, unsigned int nCount)
+wxString CSystemFunction::Mid(const CValue& cValue, unsigned int nFirst, unsigned int nCount)
 {
 	wxString stringValue = cValue.GetString();
 	return stringValue.Mid(nFirst, nCount);
 }
 
-unsigned int ibValueSystemFunction::Find(const ibValue& cValue, const ibValue& cValue2, unsigned int nStart)
+unsigned int CSystemFunction::Find(const CValue& cValue, const CValue& cValue2, unsigned int nStart)
 {
 	if (nStart < 1) nStart = 1;
 	wxString stringValue = cValue.GetString();
 	return stringValue.find(cValue2.GetString(), nStart - 1) + 1;
 }
 
-wxString ibValueSystemFunction::StrReplace(const ibValue& cSource, const ibValue& cValue1, const ibValue& cValue2)
+wxString CSystemFunction::StrReplace(const CValue& cSource, const CValue& cValue1, const CValue& cValue2)
 {
 	wxString stringValue = cSource.GetString();
 	stringValue.Replace(cValue1.GetString(), cValue2.GetString());
 	return stringValue;
 }
 
-int ibValueSystemFunction::StrCountOccur(const ibValue& cSource, const ibValue& cValue1)
+int CSystemFunction::StrCountOccur(const CValue& cSource, const CValue& cValue1)
 {
 	wxString stringValue = cSource.GetString();
 	return stringValue.find(cValue1.GetString());
 }
 
-int ibValueSystemFunction::StrLineCount(const ibValue& cSource)
+int CSystemFunction::StrLineCount(const CValue& cSource)
 {
 	wxString stringValue = cSource.GetString();
 	return stringValue.find('\n') + 1;
 }
 
-wxString ibValueSystemFunction::StrGetLine(const ibValue& cValue, unsigned int nLine)
+wxString CSystemFunction::StrGetLine(const CValue& cValue, unsigned int nLine)
 {
 	wxString stringValue = cValue.GetString() + wxT("\r\n");
 
@@ -260,57 +260,57 @@ wxString ibValueSystemFunction::StrGetLine(const ibValue& cValue, unsigned int n
 	return wxEmptyString;
 }
 
-wxString ibValueSystemFunction::Upper(const ibValue& cSource)
+wxString CSystemFunction::Upper(const CValue& cSource)
 {
 	wxString stringValue = cSource.GetString();
 	stringValue.MakeUpper();
 	return stringValue;
 }
 
-wxString ibValueSystemFunction::Lower(const ibValue& cSource)
+wxString CSystemFunction::Lower(const CValue& cSource)
 {
 	wxString stringValue = cSource.GetString();
 	stringValue.MakeLower();
 	return stringValue;
 }
 
-wxString ibValueSystemFunction::Chr(short nCode)
+wxString CSystemFunction::Chr(short nCode)
 {
 	return wxString(static_cast<wchar_t>(nCode));
 }
 
-short ibValueSystemFunction::Asc(const ibValue& cSource)
+short CSystemFunction::Asc(const CValue& cSource)
 {
 	wxString stringValue = cSource.GetString();
 	if (!stringValue.Length()) return 0;
 	return static_cast<wchar_t>(stringValue[0]);
 }
 
-wxString ibValueSystemFunction::TStr(const ibValue& cSource, const ibValue& cLanguage)
+wxString CSystemFunction::TStr(const CValue& cSource, const CValue& cLanguage)
 {
-	return ibBackendLocalization::GetTranslateGetRawLocText(
+	return CBackendLocalization::GetTranslateGetRawLocText(
 		cLanguage.GetString(), cSource.GetString());
 }
 
 //---Работа с датой и временем
-ibValue ibValueSystemFunction::CurrentDate()
+CValue CSystemFunction::CurrentDate()
 {
 	wxDateTime timeNow = wxDateTime::Now();
 	wxLongLong m_llValue = timeNow.GetValue();
 
-	ibValue valueNow = ibValueTypes::TYPE_DATE;
+	CValue valueNow = eValueTypes::TYPE_DATE;
 	valueNow.m_dData = m_llValue.GetValue();
 	return valueNow;
 }
 
-ibValue ibValueSystemFunction::WorkingDate() {
+CValue CSystemFunction::WorkingDate() {
 	ms_workDate.SetHour(0);
 	ms_workDate.SetMinute(0);
 	ms_workDate.SetSecond(0);
 	return ms_workDate;
 }
 
-ibValue ibValueSystemFunction::AddMonth(const ibValue& cData, int nMonthAdd)
+CValue CSystemFunction::AddMonth(const CValue& cData, int nMonthAdd)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
@@ -318,144 +318,144 @@ ibValue ibValueSystemFunction::AddMonth(const ibValue& cData, int nMonthAdd)
 	SummaMonth += nMonthAdd;
 	nYear = SummaMonth / 12;
 	nMonth = SummaMonth % 12 + 1;
-	return ibValue(nYear, nMonth, nDay);
+	return CValue(nYear, nMonth, nDay);
 }
 
-ibValue ibValueSystemFunction::BegOfMonth(const ibValue& cData)
+CValue CSystemFunction::BegOfMonth(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
-	return ibValue(nYear, nMonth, 1);
+	return CValue(nYear, nMonth, 1);
 }
 
-ibValue ibValueSystemFunction::EndOfMonth(const ibValue& cData)
+CValue CSystemFunction::EndOfMonth(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
 
-	ibValue m_date = ibValue(nYear, nMonth, 1, 23, 59, 59);
+	CValue m_date = CValue(nYear, nMonth, 1, 23, 59, 59);
 	return AddMonth(m_date, 1) - 1;
 }
 
-ibValue ibValueSystemFunction::BegOfQuart(const ibValue& cData)
+CValue CSystemFunction::BegOfQuart(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
-	return ibValue(nYear, 1 + ((nMonth - 1) / 3) * 3, 1);
+	return CValue(nYear, 1 + ((nMonth - 1) / 3) * 3, 1);
 }
 
-ibValue ibValueSystemFunction::EndOfQuart(const ibValue& cData)
+CValue CSystemFunction::EndOfQuart(const CValue& cData)
 {
 	return AddMonth(BegOfQuart(cData), 3) - 1;
 }
 
-ibValue ibValueSystemFunction::BegOfYear(const ibValue& cData)
+CValue CSystemFunction::BegOfYear(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
-	return ibValue(nYear, 1, 1);
+	return CValue(nYear, 1, 1);
 }
 
-ibValue ibValueSystemFunction::EndOfYear(const ibValue& cData)
+CValue CSystemFunction::EndOfYear(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
-	return ibValue(nYear, 12, 31, 23, 59, 59);
+	return CValue(nYear, 12, 31, 23, 59, 59);
 }
 
-ibValue ibValueSystemFunction::BegOfWeek(const ibValue& cData)
+CValue CSystemFunction::BegOfWeek(const CValue& cData)
 {
 	int nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear;
 	cData.FromDate(nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear);
-	ibValue Date1 = ibValue(nYear, nMonth, nDay) - (DayOfWeek + 1);
+	CValue Date1 = CValue(nYear, nMonth, nDay) - (DayOfWeek + 1);
 	return Date1;
 }
 
-ibValue ibValueSystemFunction::EndOfWeek(const ibValue& cData)
+CValue CSystemFunction::EndOfWeek(const CValue& cData)
 {
 	int nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear;
 	cData.FromDate(nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear);
-	return ibValue(nYear, nMonth, nDay) + (7 - DayOfWeek);
+	return CValue(nYear, nMonth, nDay) + (7 - DayOfWeek);
 }
 
-ibValue ibValueSystemFunction::BegOfDay(const ibValue& cData)
+CValue CSystemFunction::BegOfDay(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
-	return ibValue(nYear, nMonth, nDay, 0, 0, 0);
+	return CValue(nYear, nMonth, nDay, 0, 0, 0);
 }
 
-ibValue ibValueSystemFunction::EndOfDay(const ibValue& cData)
+CValue CSystemFunction::EndOfDay(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
-	return ibValue(nYear, nMonth, nDay, 23, 59, 59);
+	return CValue(nYear, nMonth, nDay, 23, 59, 59);
 }
 
-int ibValueSystemFunction::GetYear(const ibValue& cData)
+int CSystemFunction::GetYear(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
 	return nYear;
 }
 
-int ibValueSystemFunction::GetMonth(const ibValue& cData)
+int CSystemFunction::GetMonth(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
 	return nMonth;
 }
 
-int ibValueSystemFunction::GetDay(const ibValue& cData)
+int CSystemFunction::GetDay(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
 	return nDay;
 }
 
-int ibValueSystemFunction::GetHour(const ibValue& cData)
+int CSystemFunction::GetHour(const CValue& cData)
 {
 	int nYear, nMonth, nDay; unsigned short nHour, nMinutes, nSeconds;
 	cData.FromDate(nYear, nMonth, nDay, nHour, nMinutes, nSeconds);
 	return nHour;
 }
 
-int ibValueSystemFunction::GetMinute(const ibValue& cData)
+int CSystemFunction::GetMinute(const CValue& cData)
 {
 	int nYear, nMonth, nDay; unsigned short nHour, nMinutes, nSeconds;
 	cData.FromDate(nYear, nMonth, nDay, nHour, nMinutes, nSeconds);
 	return nMinutes;
 }
 
-int ibValueSystemFunction::GetSecond(const ibValue& cData)
+int CSystemFunction::GetSecond(const CValue& cData)
 {
 	int nYear, nMonth, nDay; unsigned short nHour, nMinutes, nSeconds;
 	cData.FromDate(nYear, nMonth, nDay, nHour, nMinutes, nSeconds);
 	return nSeconds;
 }
 
-int ibValueSystemFunction::GetWeekOfYear(const ibValue& cData)
+int CSystemFunction::GetWeekOfYear(const CValue& cData)
 {
 	int nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear;
 	cData.FromDate(nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear);
 	return WeekOfYear;
 }
 
-int ibValueSystemFunction::GetDayOfYear(const ibValue& cData)
+int CSystemFunction::GetDayOfYear(const CValue& cData)
 {
 	int nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear;
 	cData.FromDate(nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear);
 	return DayOfYear;
 }
 
-int ibValueSystemFunction::GetDayOfWeek(const ibValue& cData)
+int CSystemFunction::GetDayOfWeek(const CValue& cData)
 {
 	int nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear;
 	cData.FromDate(nYear, nMonth, nDay, DayOfWeek, DayOfYear, WeekOfYear);
 	return DayOfWeek;
 }
 
-int ibValueSystemFunction::GetQuartOfYear(const ibValue& cData)
+int CSystemFunction::GetQuartOfYear(const CValue& cData)
 {
 	int nYear, nMonth, nDay;
 	cData.FromDate(nYear, nMonth, nDay);
@@ -466,22 +466,22 @@ int ibValueSystemFunction::GetQuartOfYear(const ibValue& cData)
 
 #include <wx/filename.h>
 
-bool ibValueSystemFunction::CopyFile(const wxString& src, const wxString& dst)
+bool CSystemFunction::CopyFile(const wxString& src, const wxString& dst)
 {
 	return wxCopyFile(src, dst);
 }
 
-bool ibValueSystemFunction::DeleteFile(const wxString& file)
+bool CSystemFunction::DeleteFile(const wxString& file)
 {
 	return wxRemoveFile(file);
 }
 
-wxString ibValueSystemFunction::GetTempDir()
+wxString CSystemFunction::GetTempDir()
 {
 	return wxFileName::GetTempDir();
 }
 
-wxString ibValueSystemFunction::GetTempFileName()
+wxString CSystemFunction::GetTempFileName()
 {
 	return wxFileName::CreateTempFileName(
 		wxEmptyString
@@ -489,16 +489,16 @@ wxString ibValueSystemFunction::GetTempFileName()
 }
 
 //--- Работа с окнами: 
-ibBackendValueForm* ibValueSystemFunction::ActiveWindow()
+IBackendValueForm* CSystemFunction::ActiveWindow()
 {
 	return backend_mainFrame ?
 		backend_mainFrame->ActiveWindow() : nullptr;
 }
 
 //--- Специальные:
-void ibValueSystemFunction::Message(const wxString& strMessage, ibStatusMessage status)
+void CSystemFunction::Message(const wxString& strMessage, eStatusMessage status)
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	if (!wxIsMainThread())
@@ -508,9 +508,9 @@ void ibValueSystemFunction::Message(const wxString& strMessage, ibStatusMessage 
 		backend_mainFrame->Message(strMessage, status);
 }
 
-void ibValueSystemFunction::Alert(const wxString& strMessage) //Alert
+void CSystemFunction::Alert(const wxString& strMessage) //Alert
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	if (!wxIsMainThread())
@@ -521,52 +521,52 @@ void ibValueSystemFunction::Alert(const wxString& strMessage) //Alert
 	}
 }
 
-ibValue ibValueSystemFunction::Question(const wxString& strMessage, ibQuestionMode mode)//Question
+CValue CSystemFunction::Question(const wxString& strMessage, eQuestionMode mode)//Question
 {
-	if (ibBackendException::IsEvalMode()) {
-		return ibValue::CreateAndPrepareValueRef<ibValuibQuestionReturnCode>();
+	if (CBackendException::IsEvalMode()) {
+		return CValue::CreateAndPrepareValueRef<CValueQuestionReturnCode>();
 	}
 
 	int wndStyle = 0;
 
-	if (mode == ibQuestionMode::ibQuestionMode_OK)
+	if (mode == eQuestionMode::eQuestionMode_OK)
 		wndStyle = wxOK;
-	else if (mode == ibQuestionMode::ibQuestionMode_OKCancel)
+	else if (mode == eQuestionMode::eQuestionMode_OKCancel)
 		wndStyle = wxOK | wxCANCEL;
-	else if (mode == ibQuestionMode::ibQuestionMode_YesNo)
+	else if (mode == eQuestionMode::eQuestionMode_YesNo)
 		wndStyle = wxYES | wxNO;
-	else if (mode == ibQuestionMode::ibQuestionMode_YesNoCancel)
+	else if (mode == eQuestionMode::eQuestionMode_YesNoCancel)
 		wndStyle = wxYES | wxNO | wxCANCEL;
 
 	int retCode = wxMessageBox(strMessage, _("Question"), wndStyle | wxICON_QUESTION,
 		backend_mainFrame ? backend_mainFrame->GetFrameHandler() : nullptr
 	);
 
-	ibValuibQuestionReturnCode* retValue = ibValue::CreateAndPrepareValueRef<ibValuibQuestionReturnCode>();
+	CValueQuestionReturnCode* retValue = CValue::CreateAndPrepareValueRef<CValueQuestionReturnCode>();
 	switch (retCode) {
 	case wxOK:
-		retValue->InitializeEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_OK);
+		retValue->InitializeEnumeration(eQuestionReturnCode::eQuestionReturnCode_OK);
 		break;
 	case wxCANCEL:
-		retValue->InitializeEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_Cancel);
+		retValue->InitializeEnumeration(eQuestionReturnCode::eQuestionReturnCode_Cancel);
 		break;
 	case wxYES:
-		retValue->InitializeEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_Yes);
+		retValue->InitializeEnumeration(eQuestionReturnCode::eQuestionReturnCode_Yes);
 		break;
 	case wxNO:
-		retValue->InitializeEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_No);
+		retValue->InitializeEnumeration(eQuestionReturnCode::eQuestionReturnCode_No);
 		break;
 	default:
-		retValue->InitializeEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_Yes);
+		retValue->InitializeEnumeration(eQuestionReturnCode::eQuestionReturnCode_Yes);
 		break;
 	}
 
 	return retValue;
 }
 
-void ibValueSystemFunction::SetStatus(const wxString& sStatus)
+void CSystemFunction::SetStatus(const wxString& sStatus)
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	if (!wxIsMainThread())
@@ -577,9 +577,9 @@ void ibValueSystemFunction::SetStatus(const wxString& sStatus)
 	}
 }
 
-void ibValueSystemFunction::ClearMessage()
+void CSystemFunction::ClearMessage()
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	if (!wxIsMainThread())
@@ -589,55 +589,55 @@ void ibValueSystemFunction::ClearMessage()
 		backend_mainFrame->ClearMessage();
 }
 
-void ibValueSystemFunction::SetError(const wxString& strError)
+void CSystemFunction::SetError(const wxString& strError)
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	if (!wxIsMainThread())
 		return;
 
-	ibBackendCoreException::Error(strError);
+	CBackendCoreException::Error(strError);
 }
 
-void ibValueSystemFunction::Raise(const wxString& strError)
+void CSystemFunction::Raise(const wxString& strError)
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	if (!wxIsMainThread())
 		return;
 
-	ibProcUnit::Raise();
-	ibBackendCoreException::Error(strError);
+	CProcUnit::Raise();
+	CBackendCoreException::Error(strError);
 }
 
-wxString ibValueSystemFunction::ErrorDescription()
+wxString CSystemFunction::ErrorDescription()
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return wxEmptyString;
 
-	return ibBackendException::GetLastError();
+	return CBackendException::GetLastError();
 }
 
-bool ibValueSystemFunction::IsEmptyValue(const ibValue& cData)
+bool CSystemFunction::IsEmptyValue(const CValue& cData)
 {
 	return cData.IsEmpty();
 }
 
-ibValue ibValueSystemFunction::Evaluate(const wxString& strExpression)
+CValue CSystemFunction::Evaluate(const wxString& strExpression)
 {
-	ibValue retValue;
-	ibProcUnit::Evaluate(strExpression, ibProcUnit::GetCurrentRunContext(), retValue, false);
+	CValue retValue;
+	CProcUnit::Evaluate(strExpression, CProcUnit::GetCurrentRunContext(), retValue, false);
 	return retValue;
 }
 
-void ibValueSystemFunction::Execute(const wxString& strExpression)
+void CSystemFunction::Execute(const wxString& strExpression)
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
-	ibValue retValue;
-	ibProcUnit::Evaluate(strExpression, ibProcUnit::GetCurrentRunContext(), retValue, true);
+	CValue retValue;
+	CProcUnit::Evaluate(strExpression, CProcUnit::GetCurrentRunContext(), retValue, true);
 }
 
 //boolean 
@@ -658,7 +658,7 @@ void ibValueSystemFunction::Execute(const wxString& strExpression)
 #define DF wxT("DF")
 #define DE wxT("DE")
 
-wxString ibValueSystemFunction::Format(ibValue& cData, const wxString& fmt)
+wxString CSystemFunction::Format(CValue& cData, const wxString& fmt)
 {
 	wxString leftParam, rightParam;
 	std::map<wxString, wxString> paParams;
@@ -694,7 +694,7 @@ wxString ibValueSystemFunction::Format(ibValue& cData, const wxString& fmt)
 	}
 
 	switch (cData.GetType()) {
-	case ibValueTypes::TYPE_BOOLEAN: {
+	case eValueTypes::TYPE_BOOLEAN: {
 		if (cData.GetBoolean()) {
 			auto foundedBT = paParams.find(BT);
 			if (foundedBT != paParams.end()) {
@@ -709,7 +709,7 @@ wxString ibValueSystemFunction::Format(ibValue& cData, const wxString& fmt)
 		}
 		return cData.GetString();
 	}
-	case ibValueTypes::TYPE_NUMBER:
+	case eValueTypes::TYPE_NUMBER:
 	{
 		ttmath::Conv conv;
 
@@ -766,7 +766,7 @@ wxString ibValueSystemFunction::Format(ibValue& cData, const wxString& fmt)
 			conv.leading_zero = true;
 		}
 
-		ibNumber number = cData.GetNumber();
+		number_t number = cData.GetNumber();
 
 		if (number.IsZero()) {
 			auto foundedNZ = paParams.find(NZ);
@@ -778,7 +778,7 @@ wxString ibValueSystemFunction::Format(ibValue& cData, const wxString& fmt)
 
 		return number.ToString(conv);
 	}
-	case ibValueTypes::TYPE_DATE:
+	case eValueTypes::TYPE_DATE:
 
 		if (cData.IsEmpty()) {
 			auto foundedDE = paParams.find(DE);
@@ -838,114 +838,114 @@ wxString ibValueSystemFunction::Format(ibValue& cData, const wxString& fmt)
 
 #include "backend/system/value/valueType.h"
 
-ibValue ibValueSystemFunction::Type(const ibValue& cTypeName)
+CValue CSystemFunction::Type(const CValue& cTypeName)
 {
-	if (cTypeName.GetType() != ibValueTypes::TYPE_STRING) {
-		ibBackendCoreException::Error(_("Cannot convert value"));
-		return ibValue();
+	if (cTypeName.GetType() != eValueTypes::TYPE_STRING) {
+		CBackendCoreException::Error(_("Cannot convert value"));
+		return CValue();
 	}
 
 	const wxString& strTypeName = cTypeName.GetString();
 	if (!activeMetaData->IsRegisterCtor(strTypeName))
-		ibBackendCoreException::Error(_("Type not found '%s'"), strTypeName);
+		CBackendCoreException::Error(_("Type not found '%s'"), strTypeName);
 
-	return ibValue::CreateAndPrepareValueRef<ibValueType>(strTypeName);
+	return CValue::CreateAndPrepareValueRef<CValueType>(strTypeName);
 }
 
-ibValue ibValueSystemFunction::TypeOf(const ibValue& cData)
+CValue CSystemFunction::TypeOf(const CValue& cData)
 {
-	return ibValue::CreateAndPrepareValueRef<ibValueType>(cData);
+	return CValue::CreateAndPrepareValueRef<CValueType>(cData);
 }
 
-int ibValueSystemFunction::Rand()
+int CSystemFunction::Rand()
 {
 	return rand();
 }
 
-int ibValueSystemFunction::ArgCount()//ArgCount
+int CSystemFunction::ArgCount()//ArgCount
 {
 	return __argc;
 }
 
-wxString ibValueSystemFunction::ArgValue(int n)//ArgValue
+wxString CSystemFunction::ArgValue(int n)//ArgValue
 {
 	if (n<0 || n> __argc)
-		ibBackendCoreException::Error(_("Invalid argument index"));
+		CBackendCoreException::Error(_("Invalid argument index"));
 	return __wargv[n];
 }
 
-wxString ibValueSystemFunction::ComputerName()//ComputerName
+wxString CSystemFunction::ComputerName()//ComputerName
 {
 	return wxGetHostName();
 }
 
-void ibValueSystemFunction::RunApp(const wxString& sCommand)//RunApp
+void CSystemFunction::RunApp(const wxString& sCommand)//RunApp
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 	wxExecute(sCommand);
 }
 
-void ibValueSystemFunction::SetAppTitle(const wxString& sTitle)//SetAppTitle
+void CSystemFunction::SetAppTitle(const wxString& sTitle)//SetAppTitle
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 	if (backend_mainFrame != nullptr) {
 		backend_mainFrame->SetTitle(sTitle);
 	}
 }
 
-wxString ibValueSystemFunction::UserDir() {
+wxString CSystemFunction::UserDir() {
 	return wxEmptyString;
 }
 
-wxString ibValueSystemFunction::UserName() {
+wxString CSystemFunction::UserName() {
 	return appData->GetUserName();
 }
 
-wxString ibValueSystemFunction::UserPassword() {
+wxString CSystemFunction::UserPassword() {
 	return appData->GetUserPassword();
 }
 
-bool ibValueSystemFunction::ExclusiveMode() {
+bool CSystemFunction::ExclusiveMode() {
 	return appData->ExclusiveMode();
 }
 
-wxString ibValueSystemFunction::GeneralLanguage() {
+wxString CSystemFunction::GeneralLanguage() {
 	return appData->GetUserLanguageCode();
 }
 
 #include "backend/metaData.h"
 
-void ibValueSystemFunction::EndJob(bool force) //EndJob
+void CSystemFunction::EndJob(bool force) //EndJob
 {
 	if (force) {
-		ibApplicationData::ForceExit();
+		CApplicationData::ForceExit();
 	}
 	else if (activeMetaData != nullptr) {
-		ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+		IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 		if (moduleManager->DestroyMainModule()) {
-			ibApplicationData::ForceExit();
+			CApplicationData::ForceExit();
 		}
 	}
 }
 
-void ibValueSystemFunction::UserInterruptProcessing()
+void CSystemFunction::UserInterruptProcessing()
 {
 	if (wxGetKeyState(WXK_CONTROL) && wxGetKeyState(WXK_CANCEL))
-		ibBackendInterruptException::Error();
+		CBackendInterruptException::Error();
 }
 
-bool ibValueSystemFunction::AccessRight(const wxString& strRoleName, const ibValue& cData)
+bool CSystemFunction::AccessRight(const wxString& strRoleName, const CValue& cData)
 {
-	const ibValueMetaObject* creator = cData.ConvertToType<ibValueMetaObject>();
+	const IValueMetaObject* creator = cData.ConvertToType<IValueMetaObject>();
 	return creator != nullptr ?
 		creator->AccessRight(strRoleName) : false;
 }
 
-bool ibValueSystemFunction::IsInRole(const ibValue& cData)
+bool CSystemFunction::IsInRole(const CValue& cData)
 {
-	const ibValueMetaObject* creator = activeMetaData->FindAnyObjectByFilter(cData.GetString(), g_metaRoleCLSID);
+	const IValueMetaObject* creator = activeMetaData->FindAnyObjectByFilter(cData.GetString(), g_metaRoleCLSID);
 	if (creator == nullptr) return false;
 
 	if (creator != nullptr) {
@@ -958,68 +958,68 @@ bool ibValueSystemFunction::IsInRole(const ibValue& cData)
 	return false;
 }
 
-ibValue ibValueSystemFunction::GetCommonForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, ibValueGuid* unique)
+CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendControlFrame* ownerControl, CValueGuid* unique)
 {
 	if (!strFormName.IsEmpty()) {
 
-		const ibValueMetaObjectCommonForm* creator =
-			activeMetaData->FindAnyObjectByFilter<ibValueMetaObjectCommonForm>(strFormName, g_metaCommonFormCLSID);
+		const CValueMetaObjectCommonForm* creator =
+			activeMetaData->FindAnyObjectByFilter<CValueMetaObjectCommonForm>(strFormName, g_metaCommonFormCLSID);
 
 		if (creator != nullptr)
-			return creator->GetObjectForm(ownerControl, unique ? ((ibGuid)*unique) : ibGuid());
+			return creator->GetObjectForm(ownerControl, unique ? ((CGuid)*unique) : CGuid());
 	}
 
-	ibBackendCoreException::Error(_("Common form not found '%s'"), strFormName);
+	CBackendCoreException::Error(_("Common form not found '%s'"), strFormName);
 	return wxEmptyValue;
 }
 
-void ibValueSystemFunction::ShowCommonForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, ibValueGuid* unique)
+void CSystemFunction::ShowCommonForm(const wxString& strFormName, IBackendControlFrame* ownerControl, CValueGuid* unique)
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
-	const ibValue& cValue = GetCommonForm(strFormName, ownerControl, unique);
+	const CValue& cValue = GetCommonForm(strFormName, ownerControl, unique);
 
-	ibBackendValueForm* valueForm = dynamic_cast<ibBackendValueForm*>(cValue.GetRef());
+	IBackendValueForm* valueForm = dynamic_cast<IBackendValueForm*>(cValue.GetRef());
 	if (valueForm != nullptr) valueForm->ShowForm();
 }
 
 #include "backend/system/value/valueSpreadsheet.h"
 
-ibValue ibValueSystemFunction::GetCommonTemplate(const wxString& strTemplateName)
+CValue CSystemFunction::GetCommonTemplate(const wxString& strTemplateName)
 {
 	if (!strTemplateName.IsEmpty()) {
 
-		const ibValueMetaObjectCommonSpreadsheet* creator =
-			activeMetaData->FindAnyObjectByFilter<ibValueMetaObjectCommonSpreadsheet>(strTemplateName, g_metaCommonTemplateCLSID);
+		const CValueMetaObjectCommonSpreadsheet* creator =
+			activeMetaData->FindAnyObjectByFilter<CValueMetaObjectCommonSpreadsheet>(strTemplateName, g_metaCommonTemplateCLSID);
 
 		if (creator != nullptr)
-			return ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocument>(creator->GetSpreadsheetDesc());
+			return CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>(creator->GetSpreadsheetDesc());
 	}
 
-	ibBackendCoreException::Error(_("Common template not found '%s'"), strTemplateName);
+	CBackendCoreException::Error(_("Common template not found '%s'"), strTemplateName);
 	return wxEmptyValue;
 }
 
-void ibValueSystemFunction::BeginTransaction()
+void CSystemFunction::BeginTransaction()
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	db_query->BeginTransaction();
 }
 
-void ibValueSystemFunction::CommitTransaction()
+void CSystemFunction::CommitTransaction()
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	db_query->Commit();
 }
 
-void ibValueSystemFunction::RollBackTransaction()
+void CSystemFunction::RollBackTransaction()
 {
-	if (ibBackendException::IsEvalMode())
+	if (CBackendException::IsEvalMode())
 		return;
 
 	db_query->RollBack();

@@ -2,17 +2,17 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueChoice, ibValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueChoice, IValueWindow)
 
 //****************************************************************************
 //*                             Choice                                       *
 //****************************************************************************
 
-ibValueChoice::ibValueChoice() : ibValueWindow()
+CValueChoice::CValueChoice() : IValueWindow()
 {
 }
 
-wxObject* ibValueChoice::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueChoice::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxChoice* choice = new wxChoice(wxparent, wxID_ANY,
 		wxDefaultPosition,
@@ -21,11 +21,11 @@ wxObject* ibValueChoice::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 	return choice;
 }
 
-void ibValueChoice::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueChoice::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 }
 
-void ibValueChoice::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueChoice::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxChoice* choice = dynamic_cast<wxChoice*>(wxobject);
 
@@ -35,7 +35,7 @@ void ibValueChoice::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(choice);
 }
 
-void ibValueChoice::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueChoice::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 }
 
@@ -43,12 +43,12 @@ void ibValueChoice::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 //*								Data	                            *
 //*******************************************************************
 
-bool ibValueChoice::LoadData(ibReaderMemory& reader)
+bool CValueChoice::LoadData(CMemoryReader& reader)
 {
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueChoice::SaveData(ibWriterMemory& writer)
+bool CValueChoice::SaveData(CMemoryWriter& writer)
 {
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }

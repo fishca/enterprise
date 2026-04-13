@@ -7,13 +7,13 @@
 #include "backend/metaData.h"
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectDataProcessor, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectDataProcessor, CValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectDataProcessor::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+CValueMetaObjectCommonModule* CValueManagerDataObjectDataProcessor::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectExternalDataProcessor, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectExternalDataProcessor, CValue);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -23,16 +23,16 @@ enum Func {
 	eGetTemplate,
 };
 
-void ibValueManagerDataObjectDataProcessor::PrepareNames() const
+void CValueManagerDataObjectDataProcessor::PrepareNames() const
 {
-	ibValueManagerDataObject::PrepareNames();
+	IValueManagerDataObject::PrepareNames();
 
 	m_methodHelper->AppendFunc(wxT("Create"), wxT("Create()"));
 	m_methodHelper->AppendFunc(wxT("GetForm"), wxT("GetForm(name : string, owner : any, id : guid)"));
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 }
 
-bool ibValueManagerDataObjectDataProcessor::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectDataProcessor::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -41,10 +41,10 @@ bool ibValueManagerDataObjectDataProcessor::CallAsFunc(const long lMethodNum, ib
 		return true;
 	case eGetForm:
 	{
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetGenericForm(paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetTemplate:
@@ -52,12 +52,12 @@ bool ibValueManagerDataObjectDataProcessor::CallAsFunc(const long lMethodNum, ib
 		return true;
 	}
 
-	return ibValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+	return IValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }
 
-ibValue::ibValueMethodHelper ibValueManagerDataObjectExternalDataProcessor::m_methodHelper;
+CValue::CMethodHelper CValueManagerDataObjectExternalDataProcessor::m_methodHelper;
 
-void ibValueManagerDataObjectExternalDataProcessor::PrepareNames() const
+void CValueManagerDataObjectExternalDataProcessor::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 	m_methodHelper.AppendFunc(wxT("Create"), 1, wxT("Create(fullPath : string)"));
@@ -66,20 +66,20 @@ void ibValueManagerDataObjectExternalDataProcessor::PrepareNames() const
 #include "backend/system/systemManager.h"
 #include "backend/metadataDataProcessor.h"
 
-bool ibValueManagerDataObjectExternalDataProcessor::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectExternalDataProcessor::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
 	case eCreate:
 	{
-		ibMetaDataDataProcessor* metaDataProcessor = new ibMetaDataDataProcessor();
+		CMetaDataDataProcessor* metaDataProcessor = new CMetaDataDataProcessor();
 		if (metaDataProcessor->LoadFromFile(paParams[0]->GetString())) {
-			ibValueModuleManagerExternalDataProcessor* moduleManager = metaDataProcessor->GetModuleManager();
+			CValueModuleManagerExternalDataProcessor* moduleManager = metaDataProcessor->GetModuleManager();
 			pvarRetValue = moduleManager->GetObjectValue();
 			return true;
 		}
 		wxDELETE(metaDataProcessor);
-		ibBackendCoreException::Error(_("Failed to load data processor '%s'"), paParams[0]->GetString());
+		CBackendCoreException::Error(_("Failed to load data processor '%s'"), paParams[0]->GetString());
 		return false;
 	}
 	}
@@ -91,4 +91,4 @@ bool ibValueManagerDataObjectExternalDataProcessor::CallAsFunc(const long lMetho
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(ibValueManagerDataObjectExternalDataProcessor, "externalManagerDataProcessor", string_to_clsid("MG_EXTD"));
+SYSTEM_TYPE_REGISTER(CValueManagerDataObjectExternalDataProcessor, "externalManagerDataProcessor", string_to_clsid("MG_EXTD"));

@@ -20,23 +20,23 @@
 #include "mysqlPreparedStatementParameterCollection.h"
 #include "mysqlInterface.h"
 
-class ibDatabaseResultSet;
+class IDatabaseResultSet;
 
-class ibPreparedStatementMySQLWrapper : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
+class CMysqlPreparedStatementWrapper : public CDatabaseErrorReporter, public CDatabaseStringConverter
 {
 public:
 	// ctor
-	ibPreparedStatementMySQLWrapper(ibInterfaceMySQL* pInterface, MYSQL_STMT* pStatement);
+	CMysqlPreparedStatementWrapper(CMysqlInterface* pInterface, MYSQL_STMT* pStatement);
 
 	// dtor
-	virtual ~ibPreparedStatementMySQLWrapper();
+	virtual ~CMysqlPreparedStatementWrapper();
 
 	void Close();
 
 	// set field
 	void SetParam(int nPosition, int nValue);
 	void SetParam(int nPosition, double dblValue);
-	void SetParam(int nPosition, const ibNumber& numValue);
+	void SetParam(int nPosition, const number_t& numValue);
 	void SetParam(int nPosition, const wxString& strValue);
 	void SetParam(int nPosition);
 	void SetParam(int nPosition, const void* pData, long nDataLength);
@@ -45,13 +45,13 @@ public:
 	int GetParameterCount();
 
 	int DoRunQuery();
-	ibDatabaseResultSet* DoRunQueryWithResults();
+	IDatabaseResultSet* DoRunQueryWithResults();
 
 private:
-	ibInterfaceMySQL* m_pInterface;
+	CMysqlInterface* m_pInterface;
 	MYSQL_STMT* m_pStatement;
 
-	ibPreparedStatementMySQLParameterCollection m_Parameters;
+	CMysqlPreparedStatementParameterCollection m_Parameters;
 };
 
 #endif // __MYSQL_PREPARED_STATEMENT_WRAPPER_H__

@@ -1,6 +1,6 @@
 #include "mysqlInterface.h"
 
-bool ibInterfaceMySQL::Init()
+bool CMysqlInterface::Init()
 {
 #ifdef __WIN32__
   bool bLoaded = m_MysqlDLL.Load(wxT("libmySQL.dll"), wxDL_VERBATIM);

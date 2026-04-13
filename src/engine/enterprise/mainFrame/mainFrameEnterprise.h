@@ -20,19 +20,19 @@ enum {
 	wxID_ENTERPRISE_END
 };
 
-#define mainFrame	(ibFrontendDocMDIFrameEnterprise::GetFrame())
+#define mainFrame	(CFrontendDocMDIFrameEnterprise::GetFrame())
 
-class ibFrontendDocMDIFrameEnterprise : public ibFrontendDocMDIFrame {
+class CFrontendDocMDIFrameEnterprise : public CFrontendDocMDIFrame {
 public:
 
-	static ibFrontendDocMDIFrameEnterprise* GetFrame();
+	static CFrontendDocMDIFrameEnterprise* GetFrame();
 
-	ibFrontendDocMDIFrameEnterprise(const wxString& title = _("Enterprise"),
+	CFrontendDocMDIFrameEnterprise(const wxString& title = _("Enterprise"),
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
-	virtual ~ibFrontendDocMDIFrameEnterprise();
+	virtual ~CFrontendDocMDIFrameEnterprise();
 
-	virtual void Message(const wxString& strMessage, ibStatusMessage status) { m_outputWindow->SharedOutput(strMessage, status); }
+	virtual void Message(const wxString& strMessage, eStatusMessage status) { m_outputWindow->SharedOutput(strMessage, status); }
 	virtual void ClearMessage() { m_outputWindow->ClearAll(); }
 
 	virtual void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const override;
@@ -40,7 +40,7 @@ public:
 	virtual void CreateGUI();
 	virtual bool Show(bool show = true) override;
 
-	ibOutputWindow* GetOutputWindow() const { return m_outputWindow; }
+	COutputWindow* GetOutputWindow() const { return m_outputWindow; }
 
 protected:
 
@@ -73,7 +73,7 @@ private:
 	wxMenu* m_menuAdministration;
 	wxMenu* m_menuHelp;
 
-	ibOutputWindow* m_outputWindow;
+	COutputWindow* m_outputWindow;
 };
 
 #endif 

@@ -10,16 +10,16 @@ inline void ThrowErrorTypeOperation(const wxString& fromType, wxClassInfo* clsIn
 		wxString className = wxEmptyString;
 		
 		if (clsInfo != nullptr) {
-			const ibClassID& clsid = ibValue::GetTypeIDByRef(clsInfo);
-			if (ibMetaDataConfiguration::Get()) {
-				className = ibMetaDataConfiguration::Get()->GetNameObjectFromID(clsid);
+			const class_identifier_t& clsid = CValue::GetTypeIDByRef(clsInfo);
+			if (IMetaDataConfiguration::Get()) {
+				className = IMetaDataConfiguration::Get()->GetNameObjectFromID(clsid);
 			}
 			else {
-				className = ibValue::GetNameObjectFromID(clsid);
+				className = CValue::GetNameObjectFromID(clsid);
 			}
 		}
 		
-		ibBackendCoreException::Error(ERROR_TYPE_OPERATION, fromType, className);
+		CBackendCoreException::Error(ERROR_TYPE_OPERATION, fromType, className);
 	}
 }
 #endif

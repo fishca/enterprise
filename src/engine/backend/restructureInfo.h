@@ -5,7 +5,7 @@
 //*                             Structure changes                               *
 //*******************************************************************************
 
-enum ibRestructure {
+enum ERestructure {
 
 	restructure_info,
 	restructure_warning,
@@ -14,16 +14,16 @@ enum ibRestructure {
 
 #include "backend.h"
 
-class ibRestructureInfo {
+class CRestructureInfo {
 
-	struct ibRestructureData {
+	struct CRestructureData {
 
-		ibRestructureData(ibRestructure t, const wxString& str) :
+		CRestructureData(ERestructure t, const wxString& str) :
 			m_type(t), m_strDescr(str)
 		{
 		}
 
-		ibRestructure m_type;
+		ERestructure m_type;
 		wxString m_strDescr;
 	};
 
@@ -33,29 +33,29 @@ public:
 
 	void AppendInfo(const wxString& str) {
 		m_listRestructure.emplace_back(
-			ibRestructure::restructure_info, str);
+			ERestructure::restructure_info, str);
 	}
 
 	void AppendWarning(const wxString& str) {
 		m_listRestructure.emplace_back(
-			ibRestructure::restructure_warning, str);
+			ERestructure::restructure_warning, str);
 	}
 
 	void AppendError(const wxString& str) {
 		m_listRestructure.emplace_back(
-			ibRestructure::restructure_error, str);
+			ERestructure::restructure_error, str);
 	}
 
 	void ResetRestructureInfo() { return m_listRestructure.clear(); }
 
 	wxString GetDescription(unsigned int idx) const { return m_listRestructure.at(idx).m_strDescr; }
-	ibRestructure GetType(unsigned int idx) const { return m_listRestructure.at(idx).m_type; }
+	ERestructure GetType(unsigned int idx) const { return m_listRestructure.at(idx).m_type; }
 
 	unsigned int GetCount() const { return m_listRestructure.size(); }
 
 private:
 
-	std::vector<ibRestructureData> m_listRestructure;
+	std::vector<CRestructureData> m_listRestructure;
 };
 
 

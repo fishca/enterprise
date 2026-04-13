@@ -8,12 +8,12 @@
 // Forward declarations.
 //
 
-class ibWatchWindow;
+class CWatchWindow;
 
 /**
  * This class handles dragging and dropping items onto the watch window.
  */
-class ibWatchDropTarget : public wxTextDropTarget
+class CWatchDropTarget : public wxTextDropTarget
 {
 
 public:
@@ -22,7 +22,7 @@ public:
      * Constructor. The watch window that will be added to as a result of drag
      * and drop is specified.
      */
-    explicit ibWatchDropTarget(ibWatchWindow* watch);
+    explicit CWatchDropTarget(CWatchWindow* watch);
 
     /**
      * From wxTextDropTarget.
@@ -31,7 +31,7 @@ public:
 
 private:
 
-	ibWatchWindow* m_watch;
+	CWatchWindow* m_watch;
 
 };
 

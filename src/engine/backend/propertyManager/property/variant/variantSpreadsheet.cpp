@@ -1,6 +1,6 @@
 #include "variantSpreadsheet.h"
 
-wxString ibVariantDataSpreadsheet::MakeString() const
+wxString wxVariantDataSpreadsheet::MakeString() const
 {
 	return _("Template");
 }

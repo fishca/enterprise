@@ -3,53 +3,53 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
 
-ibValueSelectorDataObject::ibValueSelectorDataObject() : ibValue(ibValueTypes::TYPE_VALUE, true),
-m_methodHelper(new ibValueMethodHelper())
+IValueSelectorDataObject::IValueSelectorDataObject() : CValue(eValueTypes::TYPE_VALUE, true),
+m_methodHelper(new CMethodHelper())
 {
 }
 
-ibValueSelectorDataObject::~ibValueSelectorDataObject()
+IValueSelectorDataObject::~IValueSelectorDataObject()
 {
 	wxDELETE(m_methodHelper);
 }
 
 #include "backend/objCtor.h"
 
-ibClassID ibValueSelectorDataObject::GetClassType() const
+class_identifier_t IValueSelectorDataObject::GetClassType() const
 {
-	const ibCtorMetaValueType* clsFactory =
-		GetMetaObject()->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_Selection);
+	const IMetaValueTypeCtor* clsFactory =
+		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
-wxString ibValueSelectorDataObject::GetClassName() const
+wxString IValueSelectorDataObject::GetClassName() const
 {
-	const ibCtorMetaValueType* clsFactory =
-		GetMetaObject()->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_Selection);
+	const IMetaValueTypeCtor* clsFactory =
+		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
-wxString ibValueSelectorDataObject::GetString() const
+wxString IValueSelectorDataObject::GetString() const
 {
-	const ibCtorMetaValueType* clsFactory =
-		GetMetaObject()->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_Selection);
+	const IMetaValueTypeCtor* clsFactory =
+		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
 /////////////////////////////////////////////////////////////////////////
 
-ibValueSelectorRecordDataObject::ibValueSelectorRecordDataObject(ibValueMetaObjectRecordDataMutableRef* metaObject) :
-	ibValueSelectorDataObject(),
-	ibValueDataObject(ibGuid(), false),
+CValueSelectorRecordDataObject::CValueSelectorRecordDataObject(IValueMetaObjectRecordDataMutableRef* metaObject) :
+	IValueSelectorDataObject(),
+	IValueDataObject(CGuid(), false),
 	m_metaObject(metaObject)
 {
 	Reset();
 }
 
-bool ibValueSelectorRecordDataObject::Next()
+bool CValueSelectorRecordDataObject::Next()
 {
 	if (appData->DesignerMode()) {
 		return false;
@@ -77,7 +77,7 @@ bool ibValueSelectorRecordDataObject::Next()
 	return false;
 }
 
-ibValueRecordDataObjectRef* ibValueSelectorRecordDataObject::GetObject(const ibGuid& guid) const
+IValueRecordDataObjectRef* CValueSelectorRecordDataObject::GetObject(const CGuid& guid) const
 {
 	if (appData->DesignerMode()) {
 		return m_metaObject->CreateObjectValue();
@@ -92,14 +92,14 @@ ibValueRecordDataObjectRef* ibValueSelectorRecordDataObject::GetObject(const ibG
 
 //////////////////////////////////////////////////////////////////////////
 
-ibValueSelectorRegisterDataObject::ibValueSelectorRegisterDataObject(ibValueMetaObjectRegisterData* metaObject) :
-	ibValueSelectorDataObject(),
+CValueSelectorRegisterDataObject::CValueSelectorRegisterDataObject(IValueMetaObjectRegisterData* metaObject) :
+	IValueSelectorDataObject(),
 	m_metaObject(metaObject)
 {
 	Reset();
 }
 
-bool ibValueSelectorRegisterDataObject::Next()
+bool CValueSelectorRegisterDataObject::Next()
 {
 	if (appData->DesignerMode()) {
 		return false;
@@ -127,7 +127,7 @@ bool ibValueSelectorRegisterDataObject::Next()
 	return false;
 }
 
-ibValueRecordManagerObject* ibValueSelectorRegisterDataObject::GetRecordManager(const ibMetaValueArray& keyValues) const
+IValueRecordManagerObject* CValueSelectorRegisterDataObject::GetRecordManager(const valueArray_t& keyValues) const
 {
 	if (appData->DesignerMode()) {
 		return m_metaObject->CreateRecordManagerObjectValue();
@@ -138,7 +138,7 @@ ibValueRecordManagerObject* ibValueSelectorRegisterDataObject::GetRecordManager(
 	}
 
 	return m_metaObject->CreateRecordManagerObjectValue(
-		ibUniqueKeyPair(m_metaObject, keyValues)
+		CUniquePairKey(m_metaObject, keyValues)
 	);
 }
 
@@ -148,7 +148,7 @@ enum Func {
 	enGetObjectRecord
 };
 
-void ibValueSelectorRecordDataObject::PrepareNames() const
+void CValueSelectorRecordDataObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -188,7 +188,7 @@ void ibValueSelectorRecordDataObject::PrepareNames() const
 	m_methodHelper->AppendProp(wxT("Reference"), m_metaObject->GetMetaID());
 }
 
-bool ibValueSelectorRecordDataObject::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueSelectorRecordDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -206,17 +206,17 @@ bool ibValueSelectorRecordDataObject::CallAsFunc(const long lMethodNum, ibValue&
 	return false;
 }
 
-bool ibValueSelectorRecordDataObject::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueSelectorRecordDataObject::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool ibValueSelectorRecordDataObject::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueSelectorRecordDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
-	const ibMetaID& id = m_methodHelper->GetPropData(lPropNum);
+	const meta_identifier_t& id = m_methodHelper->GetPropData(lPropNum);
 	if (!m_objGuid.isValid()) {
 		if (!appData->DesignerMode()) {
-			pvarPropVal = ibValue(ibValueTypes::TYPE_NULL);
+			pvarPropVal = CValue(eValueTypes::TYPE_NULL);
 			return true;
 		}
 	}
@@ -224,11 +224,11 @@ bool ibValueSelectorRecordDataObject::GetPropVal(const long lPropNum, ibValue& p
 		pvarPropVal = m_listObjectValue.at(id);
 		return true;
 	}
-	pvarPropVal = ibValueReferenceDataObject::Create(m_metaObject, m_objGuid);
+	pvarPropVal = CValueReferenceDataObject::Create(m_metaObject, m_objGuid);
 	return true;
 }
 
-void ibValueSelectorRegisterDataObject::PrepareNames() const
+void CValueSelectorRegisterDataObject::PrepareNames() const
 {
 	m_methodHelper->AppendFunc(wxT("Next"), wxT("Next()"));
 	m_methodHelper->AppendFunc(wxT("Reset"), wxT("Reset()"));
@@ -254,7 +254,7 @@ void ibValueSelectorRegisterDataObject::PrepareNames() const
 	}
 }
 
-bool ibValueSelectorRegisterDataObject::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueSelectorRegisterDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -272,17 +272,17 @@ bool ibValueSelectorRegisterDataObject::CallAsFunc(const long lMethodNum, ibValu
 	return false;
 }
 
-bool ibValueSelectorRegisterDataObject::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueSelectorRegisterDataObject::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool ibValueSelectorRegisterDataObject::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueSelectorRegisterDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
-	const ibMetaID& id = m_methodHelper->GetPropData(lPropNum);
+	const meta_identifier_t& id = m_methodHelper->GetPropData(lPropNum);
 	if (m_keyValues.empty()) {
 		if (!appData->DesignerMode()) {
-			pvarPropVal = ibValue(ibValueTypes::TYPE_NULL);
+			pvarPropVal = CValue(eValueTypes::TYPE_NULL);
 			return true;
 		}
 	}

@@ -1,9 +1,9 @@
 #include "widgets.h"
 
-void ibValueTextCtrl::OnPropertyCreated(ibProperty* property)
+void CValueTextCtrl::OnPropertyCreated(IProperty* property)
 {
 	//if (m_propertySource == property) {
-	//	ibValueTextCtrl::SaveToVariant(m_propertySource->GetValue(), GetMetaData());
+	//	CValueTextCtrl::SaveToVariant(m_propertySource->GetValue(), GetMetaData());
 	//}
 }
 
@@ -12,16 +12,16 @@ void ibValueTextCtrl::OnPropertyCreated(ibProperty* property)
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-void ibValueTextCtrl::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
+void CValueTextCtrl::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
 {
 	if (m_propertyChoiceForm == property) {
 		if (GetClsidCount() > 1) {
 			pg->HideProperty(pgProperty, true);
 		}
 		else {
-			const ibCtorMetaValueType* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
+			const IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
-				if (so->GetMetaTypeCtor() != ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)
+				if (so->GetMetaTypeCtor() != eCtorMetaType::eCtorMetaType_Reference)
 					pg->HideProperty(pgProperty, true);
 				else
 					pg->HideProperty(pgProperty, false);
@@ -33,9 +33,9 @@ void ibValueTextCtrl::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty*
 	}
 }
 
-bool ibValueTextCtrl::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
+bool CValueTextCtrl::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
 {
-	//if (m_propertySource == property && !ibValueTextCtrl::LoadFromVariant(newValue))
+	//if (m_propertySource == property && !CValueTextCtrl::LoadFromVariant(newValue))
 	//	return true;
-	return ibValueControl::OnPropertyChanging(property, newValue);
+	return IValueControl::OnPropertyChanging(property, newValue);
 }

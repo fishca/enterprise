@@ -29,12 +29,12 @@ static char* s_notebook_xpm[] = {
 	"XXXXXXXXXXXXXXXX"
 };
 
-wxIcon ibValueNotebook::GetIcon() const
+wxIcon CValueNotebook::GetIcon() const
 {
 	return wxIcon(s_notebook_xpm);
 }
 
-wxIcon ibValueNotebook::GetIconGroup()
+wxIcon CValueNotebook::GetIconGroup()
 {
 	return wxIcon(s_notebook_xpm);
 }

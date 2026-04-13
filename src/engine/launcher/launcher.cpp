@@ -6,7 +6,7 @@
 #include <wx/stdpaths.h>
 #include <wx/xml/xml.h>
 
-void ibFrameLauncher::LoadListIB() {
+void CFrameLauncher::LoadListIB() {
 
 	wxLogNull logNo;
 
@@ -55,7 +55,7 @@ void ibFrameLauncher::LoadListIB() {
 	}
 }
 
-void ibFrameLauncher::SaveListIB() {
+void CFrameLauncher::SaveListIB() {
 
 	wxXmlDocument document;
 	wxXmlNode* root = new wxXmlNode(wxXML_ELEMENT_NODE, "ib");
@@ -94,7 +94,7 @@ void ibFrameLauncher::SaveListIB() {
 	document.Save(strFileName.GetFullPath());
 }
 
-ibFrameLauncher::ibFrameLauncher(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(parent, id, title, pos, size, style)
+CFrameLauncher::CFrameLauncher(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 	this->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
@@ -105,8 +105,8 @@ ibFrameLauncher::ibFrameLauncher(wxWindow* parent, wxWindowID id, const wxString
 	m_listIBwnd = new wxListBox(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE);
 	m_listIBwnd->SetFont(wxFont(10, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Arial")));
 
-	m_listIBwnd->Bind(wxEVT_LISTBOX, &ibFrameLauncher::OnSelectedList, this);
-	m_listIBwnd->Bind(wxEVT_LISTBOX_DCLICK, &ibFrameLauncher::OnSelectedDClickList, this);
+	m_listIBwnd->Bind(wxEVT_LISTBOX, &CFrameLauncher::OnSelectedList, this);
+	m_listIBwnd->Bind(wxEVT_LISTBOX_DCLICK, &CFrameLauncher::OnSelectedDClickList, this);
 
 	sizerLeft->Add(m_listIBwnd, 1, wxALL | wxEXPAND, 5);
 
@@ -120,13 +120,13 @@ ibFrameLauncher::ibFrameLauncher(wxWindow* parent, wxWindowID id, const wxString
 
 	m_buttonEnterprise = new wxButton(this, wxID_ANY, _("Enterprise"), wxDefaultPosition, wxDefaultSize, 0);
 	m_buttonEnterprise->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_BUTTON));
-	m_buttonEnterprise->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonEnterprise, this);
+	m_buttonEnterprise->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonEnterprise, this);
 
 	sizerRight->Add(m_buttonEnterprise, 0, wxALL | wxEXPAND, 5);
 
 	m_buttonDesigner = new wxButton(this, wxID_ANY, _("Designer"), wxDefaultPosition, wxDefaultSize, 0);
 	m_buttonDesigner->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_BUTTON));
-	m_buttonDesigner->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonDesigner, this);
+	m_buttonDesigner->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonDesigner, this);
 
 	sizerRight->Add(m_buttonDesigner, 0, wxALL | wxEXPAND, 5);
 	sizerRight->Add(0, 0, 1, wxEXPAND, 5);
@@ -135,21 +135,21 @@ ibFrameLauncher::ibFrameLauncher(wxWindow* parent, wxWindowID id, const wxString
 	m_buttonAdd->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW, wxART_BUTTON));
 	sizerRight->Add(m_buttonAdd, 0, wxALL | wxEXPAND, 5);
 
-	m_buttonAdd->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonAdd, this);
+	m_buttonAdd->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonAdd, this);
 
 	m_buttonEdit = new wxButton(this, wxID_ANY, _("Edit"), wxDefaultPosition, wxDefaultSize, 0);
 
 	m_buttonEdit->SetBitmap(wxArtProvider::GetBitmap(wxART_PASTE, wxART_BUTTON));
 	sizerRight->Add(m_buttonEdit, 0, wxALL | wxEXPAND, 5);
 
-	m_buttonEdit->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonEdit, this);
+	m_buttonEdit->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonEdit, this);
 
 	m_buttonDelete = new wxButton(this, wxID_ANY, _("Delete"), wxDefaultPosition, wxDefaultSize, 0);
 
 	m_buttonDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_BUTTON));
 	sizerRight->Add(m_buttonDelete, 0, wxALL | wxEXPAND, 5);
 
-	m_buttonDelete->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonDelete, this);
+	m_buttonDelete->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonDelete, this);
 
 	sizerRight->Add(0, 0, 1, wxEXPAND, 5);
 
@@ -158,7 +158,7 @@ ibFrameLauncher::ibFrameLauncher(wxWindow* parent, wxWindowID id, const wxString
 	m_buttonExit->SetBitmap(wxArtProvider::GetBitmap(wxART_QUIT, wxART_BUTTON));
 	sizerRight->Add(m_buttonExit, 0, wxALL | wxEXPAND, 5);
 
-	m_buttonExit->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonClose, this);
+	m_buttonExit->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonClose, this);
 
 	mainSizer->Add(sizerRight, 0, wxEXPAND, 5);
 
@@ -170,19 +170,19 @@ ibFrameLauncher::ibFrameLauncher(wxWindow* parent, wxWindowID id, const wxString
 	LoadListIB();
 }
 
-ibFrameLauncher::~ibFrameLauncher()
+CFrameLauncher::~CFrameLauncher()
 {
 	SaveListIB();
 }
 
-void ibFrameLauncher::OnSelectedList(wxCommandEvent& event) {
+void CFrameLauncher::OnSelectedList(wxCommandEvent& event) {
 	int selection = m_listIBwnd->GetSelection();
 	if (selection == wxNOT_FOUND) return;
 	auto itSelection = m_listInfoBase.begin() + selection;
 	m_staticDBName->SetLabel("srv: " + itSelection->second.m_strServer + "; db: " + itSelection->second.m_strDatabase);
 }
 
-void ibFrameLauncher::OnSelectedDClickList(wxCommandEvent& event) {
+void CFrameLauncher::OnSelectedDClickList(wxCommandEvent& event) {
 	int selection = m_listIBwnd->GetSelection();
 	if (selection == wxNOT_FOUND) return;
 	auto itSelection = m_listInfoBase.begin() + selection;
@@ -201,7 +201,7 @@ void ibFrameLauncher::OnSelectedDClickList(wxCommandEvent& event) {
 	Close(true);
 }
 
-void ibFrameLauncher::OnButtonEnterprise(wxCommandEvent& event) {
+void CFrameLauncher::OnButtonEnterprise(wxCommandEvent& event) {
 	int selection = m_listIBwnd->GetSelection();
 	if (selection == wxNOT_FOUND) return;
 	auto itSelection = m_listInfoBase.begin() + selection;
@@ -220,7 +220,7 @@ void ibFrameLauncher::OnButtonEnterprise(wxCommandEvent& event) {
 	Close(true);
 }
 
-void ibFrameLauncher::OnButtonDesigner(wxCommandEvent& event) {
+void CFrameLauncher::OnButtonDesigner(wxCommandEvent& event) {
 	int selection = m_listIBwnd->GetSelection();
 	if (selection == wxNOT_FOUND) return;
 	auto itSelection = m_listInfoBase.begin() + selection;
@@ -241,8 +241,8 @@ void ibFrameLauncher::OnButtonDesigner(wxCommandEvent& event) {
 
 #include "connectionDB.h"
 
-void ibFrameLauncher::OnButtonAdd(wxCommandEvent& event) {
-	ibDialogConnection* connection_db = new ibDialogConnection(this, wxID_ANY);
+void CFrameLauncher::OnButtonAdd(wxCommandEvent& event) {
+	CDialogConnection* connection_db = new CDialogConnection(this, wxID_ANY);
 	const int res = connection_db->ShowModal();
 	if (res == wxID_OK) {
 
@@ -266,13 +266,13 @@ void ibFrameLauncher::OnButtonAdd(wxCommandEvent& event) {
 	event.Skip();
 }
 
-void ibFrameLauncher::OnButtonEdit(wxCommandEvent& event) {
+void CFrameLauncher::OnButtonEdit(wxCommandEvent& event) {
 
 	int selection = m_listIBwnd->GetSelection();
 	if (selection == wxNOT_FOUND) return;
 	auto itSelection = m_listInfoBase.begin() + selection;
 
-	ibDialogConnection* connection_db = new ibDialogConnection(this, wxID_ANY);
+	CDialogConnection* connection_db = new CDialogConnection(this, wxID_ANY);
 	connection_db->InitConnection(itSelection->first, 
 		itSelection->second.m_strServer, itSelection->second.m_strPort,
 		itSelection->second.m_strDatabase,
@@ -300,7 +300,7 @@ void ibFrameLauncher::OnButtonEdit(wxCommandEvent& event) {
 	event.Skip();
 }
 
-void ibFrameLauncher::OnButtonDelete(wxCommandEvent& event) {
+void CFrameLauncher::OnButtonDelete(wxCommandEvent& event) {
 	int selection = m_listIBwnd->GetSelection();
 	if (selection == wxNOT_FOUND) return;
 	auto itSelection = m_listInfoBase.begin() + selection;
@@ -309,6 +309,6 @@ void ibFrameLauncher::OnButtonDelete(wxCommandEvent& event) {
 	event.Skip();
 }
 
-void ibFrameLauncher::OnButtonClose(wxCommandEvent& event) {
+void CFrameLauncher::OnButtonClose(wxCommandEvent& event) {
 	Close(true);
 }

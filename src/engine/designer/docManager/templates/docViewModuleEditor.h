@@ -7,12 +7,12 @@
 #include <wx/fdrepdlg.h>
 
 // The view using a standard wxTextCtrl to show its contents
-class ibModuleEditView : public ibMetaView {
+class CModuleEditView : public CMetaView {
 public:
 
-	ibModuleEditView() : ibMetaView(), m_codeEditor(nullptr) {}
+	CModuleEditView() : CMetaView(), m_codeEditor(nullptr) {}
 
-	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint = nullptr) override;
@@ -21,7 +21,7 @@ public:
 	virtual wxPrintout* OnCreatePrintout() override;
 	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) override;
 
-	ibCodeEditor* GetCodeEditor() const { return m_codeEditor; }
+	CCodeEditor* GetCodeEditor() const { return m_codeEditor; }
 
 private:
 
@@ -34,20 +34,20 @@ private:
 
 protected:
 
-	ibCodeEditor* m_codeEditor;
+	CCodeEditor* m_codeEditor;
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(ibModuleEditView);
+	wxDECLARE_DYNAMIC_CLASS(CModuleEditView);
 };
 
 // ----------------------------------------------------------------------------
 // ITextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-class ibModulibDocument : public ibValueModulibDocument {
+class CModuleDocument : public IValueModuleDocument {
 public:
 
-	ibModulibDocument() : ibValueModulibDocument() {}
+	CModuleDocument() : IValueModuleDocument() {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnOpenDocument(const wxString& filename) override;
@@ -56,7 +56,7 @@ public:
 	virtual bool OnCloseDocument() override;
 	virtual wxCommandProcessor* OnCreateCommandProcessor() override;
 	
-	virtual ibCodeEditor* GetCodeEditor() const = 0;
+	virtual CCodeEditor* GetCodeEditor() const = 0;
 
 	virtual bool IsModified() const override;
 	virtual void Modify(bool mod) override;
@@ -68,26 +68,26 @@ protected:
 	virtual bool DoSaveDocument(const wxString& filename) override;
 	virtual bool DoOpenDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(ibModulibDocument);
-	wxDECLARE_ABSTRACT_CLASS(ibModulibDocument);
+	wxDECLARE_NO_COPY_CLASS(CModuleDocument);
+	wxDECLARE_ABSTRACT_CLASS(CModuleDocument);
 };
 
 // ----------------------------------------------------------------------------
 // A very simple text document class
 // ----------------------------------------------------------------------------
 
-class ibModuleEditDocument : public ibModulibDocument {
+class CModuleEditDocument : public CModuleDocument {
 public:
-	ibModuleEditDocument() : ibModulibDocument() {}
+	CModuleEditDocument() : CModuleDocument() {}
 
-	virtual ibCodeEditor* GetCodeEditor() const override;
+	virtual CCodeEditor* GetCodeEditor() const override;
 
 	virtual void SetCurrentLine(int lineBreakpoint, bool setBreakpoint) override;
 	virtual void SetToolTip(const wxString& resultStr) override;
-	virtual void ShowAutoComplete(const struct ibDebugAutoCompleteData& debugData) override;
+	virtual void ShowAutoComplete(const struct CDebugAutoCompleteData& debugData) override;
 
-	wxDECLARE_NO_COPY_CLASS(ibModuleEditDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibModuleEditDocument);
+	wxDECLARE_NO_COPY_CLASS(CModuleEditDocument);
+	wxDECLARE_DYNAMIC_CLASS(CModuleEditDocument);
 };
 
 #endif

@@ -1,29 +1,26 @@
 #include "propertyDate.h"
 
-// get property for grid	
-wxObject* (*ibPropertyDate::ms_propertyDate)(const wxString&, const wxString&, const wxDateTime&) = nullptr;
-
 //base property for "date"
-bool ibPropertyDate::SetDataValue(const ibValue& varPropVal)
+bool CPropertyDate::SetDataValue(const CValue& varPropVal)
 {
-	ibPropertyDate::SetValue(varPropVal.GetDate());
+	CPropertyDate::SetValue(varPropVal.GetDate());
 	return true;
 }
 
-bool ibPropertyDate::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyDate::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibPropertyDate::GetValueAsDateTime();
+	pvarPropVal = CPropertyDate::GetValueAsDateTime();
 	return true;
 }
 
-bool ibPropertyDate::LoadData(ibReaderMemory& reader)
+bool CPropertyDate::LoadData(CMemoryReader& reader)
 {
-	ibPropertyDate::SetValue((wxLongLong_t)reader.r_u64());
+	CPropertyDate::SetValue((wxLongLong_t)reader.r_u64());
 	return true;
 }
 
-bool ibPropertyDate::SaveData(ibWriterMemory& writer)
+bool CPropertyDate::SaveData(CMemoryWriter& writer)
 {
-	writer.w_u64(ibPropertyDate::GetValueAsDateTime());
+	writer.w_u64(CPropertyDate::GetValueAsDateTime());
 	return true;
 }

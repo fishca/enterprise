@@ -17,7 +17,7 @@
 #include <wx/button.h>
 #include <wx/dialog.h>
 
-class ibDialogLineInput : public wxDialog
+class CDialogLineInput : public wxDialog
 {
 	wxStaticText* m_staticTextLine;
 	wxTextCtrl* m_lineNumber;
@@ -26,8 +26,8 @@ class ibDialogLineInput : public wxDialog
 
 public:
 
-	ibDialogLineInput(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Go to line"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
-	~ibDialogLineInput();
+	CDialogLineInput(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Go to line"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
+	~CDialogLineInput();
 
 protected:
 

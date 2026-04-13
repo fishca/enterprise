@@ -7,12 +7,12 @@
 
 //----------------------------------------------------------------------------
 //! EditPrint
-class ibCodeEditorPrintout : public wxPrintout {
+class CCodeEditorPrintout : public wxPrintout {
 
 public:
 
 	//! constructor
-	ibCodeEditorPrintout(wxStyledTextCtrl *edit, const wxString& title = "");
+	CCodeEditorPrintout(wxStyledTextCtrl *edit, const wxString& title = "");
 
 	//! event handlers
 	bool OnPrintPage(int page) wxOVERRIDE;

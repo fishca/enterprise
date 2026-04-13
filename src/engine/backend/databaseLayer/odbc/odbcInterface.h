@@ -56,9 +56,9 @@ typedef SQLRETURN(SQL_API *SQLDescribeColType)(SQLHSTMT, SQLUSMALLINT, SQLTCHAR*
 	SQLSMALLINT*, SQLSMALLINT*, SQLULEN*, SQLSMALLINT*, SQLSMALLINT*);
 
 
-class ibInterfaceODBC {
+class COdbcInterface {
 public:
-	ibInterfaceODBC() { }
+	COdbcInterface() { }
 	bool Init();
 
 	SQLAllocHandleType GetSQLAllocHandle() { return m_pSQLAllocHandle; }
@@ -90,7 +90,7 @@ public:
 
 
 private:
-	wxDynamicLibrary m_ODBCDLL;
+	wxDynamicLibrary m_OdbcDLL;
 
 	SQLAllocHandleType m_pSQLAllocHandle;
 	SQLSetEnvAttrType m_pSQLSetEnvAttr;

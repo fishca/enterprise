@@ -43,12 +43,12 @@ static char* s_checkbox_xpm[] = {
 	"                "
 };
 
-wxIcon ibValueCheckbox::GetIcon() const
+wxIcon CValueCheckbox::GetIcon() const
 {
 	return wxIcon(s_checkbox_xpm);
 }
 
-wxIcon ibValueCheckbox::GetIconGroup()
+wxIcon CValueCheckbox::GetIconGroup()
 {
 	return wxIcon(s_checkbox_xpm);
 }

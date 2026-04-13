@@ -17,12 +17,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ibCodeEditor::ibCodeEditor()
+CCodeEditor::CCodeEditor()
 	: wxStyledTextCtrl(), m_document(nullptr), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false), m_lineBreakpoint(wxNOT_FOUND)
 {
 }
 
-ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+CCodeEditor::CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
 	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false), m_lineBreakpoint(wxNOT_FOUND)
 {
 	// initialize styles
@@ -36,12 +36,12 @@ ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowI
 		SetMarginCursor(margin, wxSTC_CURSORARROW);
 
 	//register event
-	Connect(wxEVT_STC_MARGINCLICK, wxStyledTextEventHandler(ibCodeEditor::OnMarginClick), nullptr, this);
-	Connect(wxEVT_STC_STYLENEEDED, wxStyledTextEventHandler(ibCodeEditor::OnStyleNeeded), nullptr, this);
-	Connect(wxEVT_STC_MODIFIED, wxStyledTextEventHandler(ibCodeEditor::OnTextChange), nullptr, this);
+	Connect(wxEVT_STC_MARGINCLICK, wxStyledTextEventHandler(CCodeEditor::OnMarginClick), nullptr, this);
+	Connect(wxEVT_STC_STYLENEEDED, wxStyledTextEventHandler(CCodeEditor::OnStyleNeeded), nullptr, this);
+	Connect(wxEVT_STC_MODIFIED, wxStyledTextEventHandler(CCodeEditor::OnTextChange), nullptr, this);
 
-	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(ibCodeEditor::OnKeyDown), nullptr, this);
-	Connect(wxEVT_MOTION, wxMouseEventHandler(ibCodeEditor::OnMouseMove), nullptr, this);
+	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(CCodeEditor::OnKeyDown), nullptr, this);
+	Connect(wxEVT_MOTION, wxMouseEventHandler(CCodeEditor::OnMouseMove), nullptr, this);
 
 	//set edge mode
 	SetEdgeMode(wxSTC_EDGE_MULTILINE);
@@ -84,18 +84,18 @@ ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowI
 	MarkerEnableHighlight(true);
 }
 
-ibCodeEditor::~ibCodeEditor()
+CCodeEditor::~CCodeEditor()
 {
-	const ibValueMetaObject* metaObject = m_document->GetMetaObject();
+	const IValueMetaObject* metaObject = m_document->GetMetaObject();
 	wxASSERT(metaObject);
-	const ibMetaData* metaData = metaObject->GetMetaData();
+	const IMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	ibModuleDataObject* dataRef = nullptr;
+	IModuleDataObject* dataRef = nullptr;
 	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
-		ibCompileModule* compileModule = dataRef->GetCompileModule();
+		CCompileModule* compileModule = dataRef->GetCompileModule();
 		if (compileModule != nullptr) compileModule->ClearLexem();
 	}
 
@@ -104,11 +104,11 @@ ibCodeEditor::~ibCodeEditor()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibCodeEditor::EditDebugPoint(int line_to_edit)
+void CCodeEditor::EditDebugPoint(int line_to_edit)
 {
 	//Update the list of breakpoints
 	const int dwFlags = MarkerGet(line_to_edit);
-	if ((dwFlags & (1 << ibCodeEditor::Breakpoint))) {
+	if ((dwFlags & (1 << CCodeEditor::Breakpoint))) {
 		debugClient->RemoveBreakpoint(m_document->GetFilename(), line_to_edit);
 	}
 	else {
@@ -116,31 +116,31 @@ void ibCodeEditor::EditDebugPoint(int line_to_edit)
 	}
 }
 
-void ibCodeEditor::RefreshBreakpoint(bool deleteCurrentBreakline)
+void CCodeEditor::RefreshBreakpoint(bool deleteCurrentBreakline)
 {
-	MarkerDeleteAll(ibCodeEditor::Breakpoint);
+	MarkerDeleteAll(CCodeEditor::Breakpoint);
 
 	//Update the list of breakpoints
 	for (auto& line_to_edit : debugClient->GetDebugList(m_document->GetFilename())) {
 		const int dwFlags = MarkerGet(line_to_edit);
-		if (!(dwFlags & (1 << ibCodeEditor::Breakpoint))) {
-			MarkerAdd(line_to_edit, ibCodeEditor::Breakpoint);
+		if (!(dwFlags & (1 << CCodeEditor::Breakpoint))) {
+			MarkerAdd(line_to_edit, CCodeEditor::Breakpoint);
 		}
 	}
 }
 
-void ibCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
+void CCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
 {
 	const int firstVisibleLine = GetFirstVisibleLine(),
 		linesOnScreen = LinesOnScreen();
 
 	//Incorrect position when editing button title
-	//if (!ibCodeEditor::GetSTCFocus()) 
+	//if (!CCodeEditor::GetSTCFocus()) 
 	// CodeEditor::SetSTCFocus(true);
 
-	MarkerDeleteAll(ibCodeEditor::BreakLine);
+	MarkerDeleteAll(CCodeEditor::BreakLine);
 
-	if (setBreakLine) MarkerAdd(lineBreakpoint - 1, ibCodeEditor::BreakLine);
+	if (setBreakLine) MarkerAdd(lineBreakpoint - 1, CCodeEditor::BreakLine);
 
 	if (lineBreakpoint > 0) {
 
@@ -156,12 +156,12 @@ void ibCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
 		m_lineBreakpoint = wxNOT_FOUND;
 
 	//Set standart focus
-	if (lineBreakpoint > 0) ibCodeEditor::SetFocus();
+	if (lineBreakpoint > 0) CCodeEditor::SetFocus();
 
 	//if (!setBreakLine) GotoLine(lineBreakpoint - 1);
 }
 
-void ibCodeEditor::SetEditorSettings(const ibEditorSettings& settings)
+void CCodeEditor::SetEditorSettings(const CEditorSettings& settings)
 {
 	m_bIndentationSize = settings.GetIndentSize();
 
@@ -224,7 +224,7 @@ inline wxColour GetInverse(const wxColour& color)
 	return wxColour(r ^ 0xFF, g ^ 0xFF, b ^ 0xFF);
 }
 
-void ibCodeEditor::SetFontColorSettings(const ibFontColorSettings& settings)
+void CCodeEditor::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -233,94 +233,94 @@ void ibCodeEditor::SetFontColorSettings(const ibFontColorSettings& settings)
 	StyleClearAll();
 	StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	SetSelForeground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).foreColor);
-	SetSelBackground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).backColor);
+	SetSelForeground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).foreColor);
+	SetSelBackground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Default);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Default);
 
 	StyleSetFont(wxSTC_C_DEFAULT, font);
 	StyleSetFont(wxSTC_C_IDENTIFIER, font);
 
-	StyleSetForeground(wxSTC_C_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).foreColor);
-	StyleSetBackground(wxSTC_C_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor);
+	StyleSetForeground(wxSTC_C_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	StyleSetBackground(wxSTC_C_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).foreColor);
-	StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor);
+	StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	StyleSetForeground(wxSTC_C_IDENTIFIER, settings.GetColors(ibFontColorSettings::DisplayItem_Default).foreColor);
-	StyleSetBackground(wxSTC_C_IDENTIFIER, settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor);
+	StyleSetForeground(wxSTC_C_IDENTIFIER, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	StyleSetBackground(wxSTC_C_IDENTIFIER, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Comment);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Comment);
 
 	StyleSetFont(wxSTC_C_COMMENT, font);
 	StyleSetFont(wxSTC_C_COMMENTLINE, font);
 	StyleSetFont(wxSTC_C_COMMENTDOC, font);
 
-	StyleSetForeground(wxSTC_C_COMMENT, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).foreColor);
-	StyleSetBackground(wxSTC_C_COMMENT, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).backColor);
+	StyleSetForeground(wxSTC_C_COMMENT, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	StyleSetBackground(wxSTC_C_COMMENT, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	StyleSetForeground(wxSTC_C_COMMENTLINE, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).foreColor);
-	StyleSetBackground(wxSTC_C_COMMENTLINE, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).backColor);
+	StyleSetForeground(wxSTC_C_COMMENTLINE, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	StyleSetBackground(wxSTC_C_COMMENTLINE, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).foreColor);
-	StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(ibFontColorSettings::DisplayItem_Comment).backColor);
+	StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Preprocessor);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Preprocessor);
 
 	StyleSetFont(wxSTC_C_PREPROCESSOR, font);
-	StyleSetForeground(wxSTC_C_PREPROCESSOR, settings.GetColors(ibFontColorSettings::DisplayItem_Preprocessor).foreColor);
-	StyleSetBackground(wxSTC_C_PREPROCESSOR, settings.GetColors(ibFontColorSettings::DisplayItem_Preprocessor).backColor);
+	StyleSetForeground(wxSTC_C_PREPROCESSOR, settings.GetColors(CFontColorSettings::DisplayItem_Preprocessor).foreColor);
+	StyleSetBackground(wxSTC_C_PREPROCESSOR, settings.GetColors(CFontColorSettings::DisplayItem_Preprocessor).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Keyword);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Keyword);
 
 	StyleSetFont(wxSTC_C_WORD, font);
-	StyleSetForeground(wxSTC_C_WORD, settings.GetColors(ibFontColorSettings::DisplayItem_Keyword).foreColor);
-	StyleSetBackground(wxSTC_C_WORD, settings.GetColors(ibFontColorSettings::DisplayItem_Keyword).backColor);
+	StyleSetForeground(wxSTC_C_WORD, settings.GetColors(CFontColorSettings::DisplayItem_Keyword).foreColor);
+	StyleSetBackground(wxSTC_C_WORD, settings.GetColors(CFontColorSettings::DisplayItem_Keyword).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Operator);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Operator);
 	StyleSetFont(wxSTC_C_OPERATOR, font);
-	StyleSetForeground(wxSTC_C_OPERATOR, settings.GetColors(ibFontColorSettings::DisplayItem_Operator).foreColor);
-	StyleSetBackground(wxSTC_C_OPERATOR, settings.GetColors(ibFontColorSettings::DisplayItem_Operator).backColor);
+	StyleSetForeground(wxSTC_C_OPERATOR, settings.GetColors(CFontColorSettings::DisplayItem_Operator).foreColor);
+	StyleSetBackground(wxSTC_C_OPERATOR, settings.GetColors(CFontColorSettings::DisplayItem_Operator).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_String);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_String);
 
 	StyleSetFont(wxSTC_C_STRING, font);
-	StyleSetForeground(wxSTC_C_STRING, settings.GetColors(ibFontColorSettings::DisplayItem_String).foreColor);
-	StyleSetBackground(wxSTC_C_STRING, settings.GetColors(ibFontColorSettings::DisplayItem_String).backColor);
+	StyleSetForeground(wxSTC_C_STRING, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	StyleSetBackground(wxSTC_C_STRING, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
 	StyleSetFont(wxSTC_C_STRINGEOL, font);
-	StyleSetForeground(wxSTC_C_STRINGEOL, settings.GetColors(ibFontColorSettings::DisplayItem_String).foreColor);
-	StyleSetBackground(wxSTC_C_STRINGEOL, settings.GetColors(ibFontColorSettings::DisplayItem_String).backColor);
+	StyleSetForeground(wxSTC_C_STRINGEOL, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	StyleSetBackground(wxSTC_C_STRINGEOL, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
 	StyleSetFont(wxSTC_C_CHARACTER, font);
-	StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(ibFontColorSettings::DisplayItem_String).foreColor);
-	StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(ibFontColorSettings::DisplayItem_String).backColor);
+	StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
 	StyleSetFont(wxSTC_C_CHARACTER, font);
-	StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).foreColor);
-	StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).backColor);
+	StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(CFontColorSettings::DisplayItem_Selection).foreColor);
+	StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(CFontColorSettings::DisplayItem_Selection).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Number);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Number);
 
 	StyleSetFont(wxSTC_C_NUMBER, font);
-	StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).foreColor);
-	StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).backColor);
+	StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(CFontColorSettings::DisplayItem_Number).foreColor);
+	StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(CFontColorSettings::DisplayItem_Number).backColor);
 
 	StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
 
 	// Set the caret color as the inverse of the background color so it's always visible.
-	SetCaretForeground(GetInverse(settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor));
+	SetCaretForeground(GetInverse(settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor));
 }
 
-bool ibCodeEditor::LoadModule()
+bool CCodeEditor::LoadModule()
 {
 	ClearAll();
 	wxDELETE(m_precompileModule);
 
 	if (m_document != nullptr) {
-		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
+		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
 		if (moduleObject != nullptr) {
-			m_precompileModule = new ibPrecompileCode(moduleObject);
+			m_precompileModule = new CPrecompileCode(moduleObject);
 
 			if (IsEditable()) {
 				SetText(moduleObject->GetModuleText()); m_bInitialized = true;
@@ -350,11 +350,11 @@ bool ibCodeEditor::LoadModule()
 	return m_document != nullptr;
 }
 
-bool ibCodeEditor::SaveModule()
+bool CCodeEditor::SaveModule()
 {
 	if (m_document != nullptr) {
 
-		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
+		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
 
 		if (moduleObject != nullptr) {
 			moduleObject->SetModuleText(GetText());
@@ -365,13 +365,13 @@ bool ibCodeEditor::SaveModule()
 	return m_document != nullptr;
 }
 
-int ibCodeEditor::GetRealPosition()
+int CCodeEditor::GetRealPosition()
 {
 	const wxString& codeText = GetTextRange(0, GetCurrentPos());
 	return codeText.Length();
 }
 
-int ibCodeEditor::GetRealPositionFromPoint(const wxPoint& pt)
+int CCodeEditor::GetRealPositionFromPoint(const wxPoint& pt)
 {
 	const wxString& codeText = GetTextRange(0, PositionFromPoint(pt));
 	return codeText.Length();
@@ -380,32 +380,32 @@ int ibCodeEditor::GetRealPositionFromPoint(const wxPoint& pt)
 #include "win/dlg/lineInput/lineInput.h"
 #include "win/dlg/functionSearcher/functionSearcher.h"
 
-void ibCodeEditor::RefreshEditor()
+void CCodeEditor::RefreshEditor()
 {
-	ibCodeEditor::SetEditorSettings(mainFrame->GetEditorSettings());
-	ibCodeEditor::SetFontColorSettings(mainFrame->GetFontColorSettings());
+	CCodeEditor::SetEditorSettings(mainFrame->GetEditorSettings());
+	CCodeEditor::SetFontColorSettings(mainFrame->GetFontColorSettings());
 
-	ibCodeEditor::RefreshBreakpoint();
+	CCodeEditor::RefreshBreakpoint();
 }
 
-void ibCodeEditor::ActivateEditor()
+void CCodeEditor::ActivateEditor()
 {
 	if (m_document != nullptr) {
 	
-		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();	
+		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();	
 		if (moduleObject != nullptr && (moduleObject->GetClassType() == g_metaModuleCLSID || moduleObject->GetClassType() == g_metaManagerCLSID))
 			objectInspector->SelectObject(moduleObject->GetParent());
 		else
 			objectInspector->SelectObject(moduleObject);
 	}
 	
-	ibCodeEditor::SetSTCFocus(true);
-	ibCodeEditor::SetFocus();
+	CCodeEditor::SetSTCFocus(true);
+	CCodeEditor::SetFocus();
 }
 
 #include <wx/fdrepdlg.h>
 
-void ibCodeEditor::FindText(const wxString& findString, int wxflags)
+void CCodeEditor::FindText(const wxString& findString, int wxflags)
 {
 	int sciflags = 0;
 	if ((wxflags & wxFR_WHOLEWORD) != 0) {
@@ -416,39 +416,39 @@ void ibCodeEditor::FindText(const wxString& findString, int wxflags)
 	}
 	int result = 0;
 	if ((wxflags & wxFR_DOWN) != 0) {
-		ibCodeEditor::SetSelectionStart(GetSelectionEnd());
-		ibCodeEditor::SearchAnchor();
-		result = ibCodeEditor::SearchNext(sciflags, findString);
+		CCodeEditor::SetSelectionStart(GetSelectionEnd());
+		CCodeEditor::SearchAnchor();
+		result = CCodeEditor::SearchNext(sciflags, findString);
 	}
 	else {
-		ibCodeEditor::SetSelectionEnd(GetSelectionStart());
-		ibCodeEditor::SearchAnchor();
-		result = ibCodeEditor::SearchPrev(sciflags, findString);
+		CCodeEditor::SetSelectionEnd(GetSelectionStart());
+		CCodeEditor::SearchAnchor();
+		result = CCodeEditor::SearchPrev(sciflags, findString);
 	}
 	if (wxSTC_INVALID_POSITION == result) {
 		wxMessageBox(wxString::Format(_("\"%s\" not found!"), findString.c_str()),
 			_("Not Found!"), wxICON_ERROR, (wxWindow*)this);
 	}
 	else {
-		ibCodeEditor::EnsureCaretVisible();
-		ibCodeEditor::SetSTCFocus(true);
+		CCodeEditor::EnsureCaretVisible();
+		CCodeEditor::SetSTCFocus(true);
 	}
 }
 
 #include "frontend/window_ptr.h"
 
-void ibCodeEditor::ShowGotoLine()
+void CCodeEditor::ShowGotoLine()
 {
-	ibDialogLineInput dlg(this);
+	CDialogLineInput dlg(this);
 	const int ret = dlg.ShowModal();
 
 	if (ret != wxNOT_FOUND) {
-		ibCodeEditor::SetFocus();
-		ibCodeEditor::GotoLine(ret - 1);
+		CCodeEditor::SetFocus();
+		CCodeEditor::GotoLine(ret - 1);
 	}
 }
 
-void ibCodeEditor::ShowMethods()
+void CCodeEditor::ShowMethods()
 {
 	CFunctionList dlg(m_document, this);
 	dlg.ShowModal();
@@ -456,25 +456,25 @@ void ibCodeEditor::ShowMethods()
 
 #include "backend/system/systemManager.h"
 
-bool ibCodeEditor::SyntaxControl(bool throwMessage) const
+bool CCodeEditor::SyntaxControl(bool throwMessage) const
 {
-	const ibValueMetaObject* metaObject = m_document->GetMetaObject();
+	const IValueMetaObject* metaObject = m_document->GetMetaObject();
 	wxASSERT(metaObject);
-	const ibMetaData* metaData = metaObject->GetMetaData();
+	const IMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	ibModuleDataObject* dataRef = nullptr;
+	IModuleDataObject* dataRef = nullptr;
 	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
-		ibCompileModule* compileModule = dataRef->GetCompileModule();
+		CCompileModule* compileModule = dataRef->GetCompileModule();
 		try {
 			if (compileModule->Compile()) {
 				if (throwMessage)
-					ibValueSystemFunction::Message(_("No syntax errors detected!"));
+					CSystemFunction::Message(_("No syntax errors detected!"));
 				return true;
 			}
-			wxASSERT("ibCompileCode::Compile return false");
+			wxASSERT("CCompileCode::Compile return false");
 			return false;
 
 		}
@@ -498,25 +498,25 @@ bool ibCodeEditor::SyntaxControl(bool throwMessage) const
 
 #ifdef UTF8_LEXEM_TRANSLATE
 #define appendStyle(style) \
-ibCodeEditor::StartStyling(currPos); \
-ibCodeEditor::SetStyling(fromPos + m_tc.GetCurrentUtf8Pos() - currPos, style);
+CCodeEditor::StartStyling(currPos); \
+CCodeEditor::SetStyling(fromPos + m_tc.GetCurrentUtf8Pos() - currPos, style);
 #else
 #define appendStyle(style) \
-ibCodeEditor::StartStyling(currPos); \
-ibCodeEditor::SetStyling(fromPos + m_tc.GetCurrentPos() - currPos, style);
+CCodeEditor::StartStyling(currPos); \
+CCodeEditor::SetStyling(fromPos + m_tc.GetCurrentPos() - currPos, style);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                          Styling                                                                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const int toPos)
+void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const int toPos)
 {
-	m_tc.Load(ibCodeEditor::GetTextRange(fromPos, toPos));
+	m_tc.Load(CCodeEditor::GetTextRange(fromPos, toPos));
 
 	//remove old styling
-	ibCodeEditor::StartStyling(fromPos); //from here
-	ibCodeEditor::SetStyling(toPos - fromPos, wxSTC_C_COMMENT); //with that length and style -> cleared
+	CCodeEditor::StartStyling(fromPos); //from here
+	CCodeEditor::SetStyling(toPos - fromPos, wxSTC_C_COMMENT); //with that length and style -> cleared
 
 	wxString strWord;
 	unsigned int currPos = fromPos;
@@ -529,7 +529,7 @@ void ibCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const
 #endif 
 		if (m_tc.IsWord()) {
 			(void)m_tc.GetWord(strWord, false, true);
-			const short keyWord = ibTranslateCode::IsKeyWord(strWord);
+			const short keyWord = CTranslateCode::IsKeyWord(strWord);
 			if (keyWord != wxNOT_FOUND) {
 				if (strWord.Left(1) == '#') {
 					appendStyle(wxSTC_C_PREPROCESSOR);
@@ -569,15 +569,15 @@ void ibCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const
 //                                                          EVENT                                                                         //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
+void CCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
 {
 	/*this is called every time the styler detects a line that needs style, so we style that range.
 	This will save a lot of performance since we only style text when needed instead of parsing the whole file every time.*/
-	int line_start = ibCodeEditor::LineFromPosition(ibCodeEditor::GetEndStyled());
-	int line_end = ibCodeEditor::GetFirstVisibleLine() + ibCodeEditor::LinesOnScreen();
+	int line_start = CCodeEditor::LineFromPosition(CCodeEditor::GetEndStyled());
+	int line_end = CCodeEditor::GetFirstVisibleLine() + CCodeEditor::LinesOnScreen();
 
-	if (line_end > ibCodeEditor::GetLineCount()) {
-		line_end = ibCodeEditor::GetLineCount() - 1;
+	if (line_end > CCodeEditor::GetLineCount()) {
+		line_end = CCodeEditor::GetLineCount() - 1;
 	}
 
 	/*fold level: May need to include the two lines in front because of the fold level these lines have- the line above
@@ -590,9 +590,9 @@ void ibCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
 	}
 
 	//if it is so small that all lines are visible, style the whole document
-	if (ibCodeEditor::GetLineCount() == ibCodeEditor::LinesOnScreen()) {
+	if (CCodeEditor::GetLineCount() == CCodeEditor::LinesOnScreen()) {
 		line_start = 0;
-		line_end = ibCodeEditor::GetLineCount() - 1;
+		line_end = CCodeEditor::GetLineCount() - 1;
 	}
 
 	if (line_end < line_start) {
@@ -601,37 +601,37 @@ void ibCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
 	}
 
 	//style the line following the style area too (if present) in case fold level decreases in that one
-	if (line_end < ibCodeEditor::GetLineCount() - 1) {
+	if (line_end < CCodeEditor::GetLineCount() - 1) {
 		line_end++;
 	}
 
 	//get exact start positions
 	HighlightSyntaxAndCalculateFoldLevel(
-		ibCodeEditor::PositionFromLine(line_start),
-		ibCodeEditor::GetLineEndPosition(line_end)
+		CCodeEditor::PositionFromLine(line_start),
+		CCodeEditor::GetLineEndPosition(line_end)
 	);
 
 	event.Skip();
 }
 
-void ibCodeEditor::OnMarginClick(wxStyledTextEvent& event)
+void CCodeEditor::OnMarginClick(wxStyledTextEvent& event)
 {
 	const int line_from_pos = LineFromPosition(event.GetPosition());
 
 	switch (event.GetMargin())
 	{
 	case DEF_BREAKPOINT_ID: {
-		const int dwFlags = ibCodeEditor::MarkerGet(line_from_pos);
+		const int dwFlags = CCodeEditor::MarkerGet(line_from_pos);
 		if (IsEditable()) {
 			//Update the list of breakpoints
 			const wxString& strModuleName = m_document->GetFilename();
-			if ((dwFlags & (1 << ibCodeEditor::Breakpoint))) {
+			if ((dwFlags & (1 << CCodeEditor::Breakpoint))) {
 				if (debugClient->RemoveBreakpoint(strModuleName, line_from_pos)) {
-					MarkerDelete(line_from_pos, ibCodeEditor::Breakpoint);
+					MarkerDelete(line_from_pos, CCodeEditor::Breakpoint);
 				}
 			}
 			else if (debugClient->ToggleBreakpoint(strModuleName, line_from_pos)) {
-				MarkerAdd(line_from_pos, ibCodeEditor::Breakpoint);
+				MarkerAdd(line_from_pos, CCodeEditor::Breakpoint);
 			}
 		}
 		break;
@@ -644,7 +644,7 @@ void ibCodeEditor::OnMarginClick(wxStyledTextEvent& event)
 	event.Skip();
 }
 
-void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
+void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 {
 	const int modFlags = event.GetModificationType();
 
@@ -654,7 +654,7 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 
 	if (m_bInitialized) {
 
-		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
+		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
 
 		if (moduleObject != nullptr) {
 
@@ -670,10 +670,10 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 						moduleObject->GetDocPath(), line, event.m_linesAdded);
 
 					if (m_lineBreakpoint != wxNOT_FOUND) {
-						MarkerDeleteAll(ibCodeEditor::BreakLine);
+						MarkerDeleteAll(CCodeEditor::BreakLine);
 						if (line < m_lineBreakpoint)
 							m_lineBreakpoint += event.m_linesAdded;
-						MarkerAdd(m_lineBreakpoint, ibCodeEditor::BreakLine);
+						MarkerAdd(m_lineBreakpoint, CCodeEditor::BreakLine);
 					}
 
 					RefreshBreakpoint();
@@ -708,14 +708,14 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 				{
 				}
 
-				ibMetaData* metaData = moduleObject->GetMetaData();
+				IMetaData* metaData = moduleObject->GetMetaData();
 				wxASSERT(metaData);
 
-				ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+				IValueModuleManager* moduleManager = metaData->GetModuleManager();
 				wxASSERT(moduleManager);
-				ibModuleDataObject* pRefData = nullptr;
+				IModuleDataObject* pRefData = nullptr;
 				if (moduleManager->FindCompileModule(m_document->GetMetaObject(), pRefData)) {
-					ibCompileCode* compileModule = pRefData->GetCompileModule();
+					CCompileCode* compileModule = pRefData->GetCompileModule();
 					wxASSERT(compileModule);
 					if (!compileModule->m_changedCode) compileModule->m_changedCode = true;
 				}
@@ -729,7 +729,7 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 	}
 }
 
-void ibCodeEditor::OnKeyDown(wxKeyEvent& event)
+void CCodeEditor::OnKeyDown(wxKeyEvent& event)
 {
 	if (!IsEditable()) {
 		event.Skip(); return;
@@ -811,13 +811,13 @@ void ibCodeEditor::OnKeyDown(wxKeyEvent& event)
 		if (IsEditable()) {
 			//Update the list of breakpoints
 			const wxString& strModuleName = m_document->GetFilename();
-			if ((ibCodeEditor::MarkerGet(line_from_pos) & (1 << ibCodeEditor::Breakpoint))) {
+			if ((CCodeEditor::MarkerGet(line_from_pos) & (1 << CCodeEditor::Breakpoint))) {
 				if (debugClient->RemoveBreakpoint(strModuleName, line_from_pos)) {
-					MarkerDelete(line_from_pos, ibCodeEditor::Breakpoint);
+					MarkerDelete(line_from_pos, CCodeEditor::Breakpoint);
 				}
 			}
 			else if (debugClient->ToggleBreakpoint(strModuleName, line_from_pos)) {
-				MarkerAdd(line_from_pos, ibCodeEditor::Breakpoint);
+				MarkerAdd(line_from_pos, CCodeEditor::Breakpoint);
 			}
 		}
 	}

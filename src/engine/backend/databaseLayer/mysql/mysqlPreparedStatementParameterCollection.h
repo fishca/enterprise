@@ -19,29 +19,29 @@
 #include "backend/databaseLayer/databaseStringConverter.h"
 #include "mysqlParameter.h"
 
-WX_DEFINE_ARRAY_PTR(ibDatabaseParameterMySQL*, MysqlParameterArray);
+WX_DEFINE_ARRAY_PTR(CMysqlParameter*, MysqlParameterArray);
 
-class ibPreparedStatementMySQLParameterCollection : public ibDatabaseStringConverter
+class CMysqlPreparedStatementParameterCollection : public CDatabaseStringConverter
 {
 public:
 	// ctor
-	ibPreparedStatementMySQLParameterCollection();
+	CMysqlPreparedStatementParameterCollection();
 
 	// dtor
-	virtual ~ibPreparedStatementMySQLParameterCollection();
+	virtual ~CMysqlPreparedStatementParameterCollection();
 
 	int GetSize();
 	MYSQL_BIND* GetMysqlParameterBindings();
 
 	void SetParam(int nPosition, int nValue);
 	void SetParam(int nPosition, double dblValue);
-	void SetParam(int nPosition, const ibNumber &numValue);
+	void SetParam(int nPosition, const number_t &numValue);
 	void SetParam(int nPosition, const wxString& strValue);
 	void SetParam(int nPosition);
 	void SetParam(int nPosition, const void* pData, long nDataLength);
 	void SetParam(int nPosition, const wxDateTime& dateValue);
 	void SetParam(int nPosition, bool bValue);
-	void SetParam(int nPosition, ibDatabaseParameterMySQL* pParameter);
+	void SetParam(int nPosition, CMysqlParameter* pParameter);
 
 private:
 	MysqlParameterArray m_Parameters;

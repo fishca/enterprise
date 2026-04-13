@@ -5,20 +5,20 @@
 #include "backend/metaCollection/partial/dataProcessor.h"
 #include "backend/metaCollection/partial/dataReport.h"
 
-class BACKEND_API ibValueModuleManagerExternalDataProcessor : public ibValueModuleManager {
+class BACKEND_API CValueModuleManagerExternalDataProcessor : public IValueModuleManager {
 public:
 
-	virtual ibCompileModule* GetCompileModule() const;
-	virtual ibProcUnit* GetProcUnit() const;
+	virtual CCompileModule* GetCompileModule() const;
+	virtual CProcUnit* GetProcUnit() const;
 
-	virtual std::map<wxString, ibValue*>& GetContextVariables();
+	virtual std::map<wxString, CValue*>& GetContextVariables();
 
 	//metaData and external variant
-	ibValueModuleManagerExternalDataProcessor(ibMetaData* metaData = nullptr, ibValueMetaObjectDataProcessor* metaObject = nullptr);
-	virtual ~ibValueModuleManagerExternalDataProcessor();
+	CValueModuleManagerExternalDataProcessor(IMetaData* metaData = nullptr, CValueMetaObjectDataProcessor* metaObject = nullptr);
+	virtual ~CValueModuleManagerExternalDataProcessor();
 
 	//return external module
-	virtual ibValueRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
+	virtual IValueRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
 
 	//Create common module
 	virtual bool CreateMainModule();
@@ -36,31 +36,31 @@ public:
 	virtual void PrepareNames() const;
 	
 	//method call
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
 	virtual long FindProp(const wxString& strName) const;
 
 private:
-	ibValueRecordDataObjectDataProcessor* m_objectValue;
+	CValueRecordDataObjectDataProcessor* m_objectValue;
 };
 
-class BACKEND_API ibValueModuleManagerExternalReport : public ibValueModuleManager {
+class BACKEND_API CValueModuleManagerExternalReport : public IValueModuleManager {
 public:
 
-	virtual ibCompileModule* GetCompileModule() const;
-	virtual ibProcUnit* GetProcUnit() const;
+	virtual CCompileModule* GetCompileModule() const;
+	virtual CProcUnit* GetProcUnit() const;
 
-	virtual std::map<wxString, ibValue*>& GetContextVariables();
+	virtual std::map<wxString, CValue*>& GetContextVariables();
 
 	//metaData and external variant
-	ibValueModuleManagerExternalReport(ibMetaData* metaData = nullptr, ibValueMetaObjectReport* metaObject = nullptr);
-	virtual ~ibValueModuleManagerExternalReport();
+	CValueModuleManagerExternalReport(IMetaData* metaData = nullptr, CValueMetaObjectReport* metaObject = nullptr);
+	virtual ~CValueModuleManagerExternalReport();
 
 	//return external module
-	virtual ibValueRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
+	virtual IValueRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
 
 	//Create common module
 	virtual bool CreateMainModule();
@@ -78,14 +78,14 @@ public:
 	virtual void PrepareNames() const;
 	
 	//method call
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 	virtual long FindProp(const wxString& strName) const;
 
 private:
-	ibValueRecordDataObjectReport* m_objectValue;
+	CValueRecordDataObjectReport* m_objectValue;
 };
 
 #endif

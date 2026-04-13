@@ -2,19 +2,19 @@
 #include "engine/mysql_com.h"
 
 // ctor
-ibResultSetMetaDataMySQL::ibResultSetMetaDataMySQL(ibInterfaceMySQL* pInterface, MYSQL_RES* pMetaData)
+CMysqlResultSetMetaData::CMysqlResultSetMetaData(CMysqlInterface* pInterface, MYSQL_RES* pMetaData)
 {
 	m_pInterface = pInterface;
 	m_pMetaData = pMetaData;
 }
 
 // dtor
-ibResultSetMetaDataMySQL::~ibResultSetMetaDataMySQL()
+CMysqlResultSetMetaData::~CMysqlResultSetMetaData()
 {
 	m_pInterface->GetMysqlFreeResult()(m_pMetaData);
 }
 
-int ibResultSetMetaDataMySQL::GetColumnType(int i)
+int CMysqlResultSetMetaData::GetColumnType(int i)
 {
 	int returnType = COLUMN_UNKNOWN;
 	MYSQL_FIELD* pField = GetColumn(i);
@@ -59,7 +59,7 @@ int ibResultSetMetaDataMySQL::GetColumnType(int i)
 	return returnType;
 }
 
-int ibResultSetMetaDataMySQL::GetColumnSize(int i)
+int CMysqlResultSetMetaData::GetColumnSize(int i)
 {
 	MYSQL_FIELD* pField = GetColumn(i);
 	if (pField)
@@ -69,7 +69,7 @@ int ibResultSetMetaDataMySQL::GetColumnSize(int i)
 	return -1;
 }
 
-wxString ibResultSetMetaDataMySQL::GetColumnName(int i)
+wxString CMysqlResultSetMetaData::GetColumnName(int i)
 {
 	MYSQL_FIELD* pField = GetColumn(i);
 	if (pField)
@@ -80,12 +80,12 @@ wxString ibResultSetMetaDataMySQL::GetColumnName(int i)
 	return wxEmptyString;
 }
 
-int ibResultSetMetaDataMySQL::GetColumnCount()
+int CMysqlResultSetMetaData::GetColumnCount()
 {
 	return m_pInterface->GetMysqlNumFields()(m_pMetaData);
 }
 
-MYSQL_FIELD* ibResultSetMetaDataMySQL::GetColumn(int nField)
+MYSQL_FIELD* CMysqlResultSetMetaData::GetColumn(int nField)
 {
 	MYSQL_FIELD* pFields = m_pMetaData->fields;
 	return &(pFields[nField - 1]);

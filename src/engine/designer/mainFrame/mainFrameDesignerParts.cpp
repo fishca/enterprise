@@ -8,7 +8,7 @@
 
 #include "frontend/artProvider/artProvider.h"
 
-void ibFrontendDocMDIFrameDesigner::CreateWideGui()
+void CFrontendDocMDIFrameDesigner::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
 	m_mainFrameToolbar->SetToolBitmapSize(wxSize(16, 16));
@@ -58,7 +58,7 @@ void ibFrontendDocMDIFrameDesigner::CreateWideGui()
 
 	InitializeDefaultMenu();
 
-	SetStatusBar(new ibDocBottomStatusBar(this));
+	SetStatusBar(new CDocBottomStatusBar(this));
 	SetStatusText(_("Ready"));
 	GetNotebook()->GetAuiManager().GetArtProvider()->SetColour(wxAUI_DOCKART_BACKGROUND_COLOUR, wxAUI_DEFAULT_COLOUR);
 	SetMinSize(wxSize(400, 380));
@@ -70,7 +70,7 @@ void ibFrontendDocMDIFrameDesigner::CreateWideGui()
 #include "frontend/win/ctrls/floatingNotebook.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-void ibFrontendDocMDIFrameDesigner::CreateBottomPane()
+void CFrontendDocMDIFrameDesigner::CreateBottomPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_BOTTOM).IsOk())
 		return;
@@ -84,7 +84,7 @@ void ibFrontendDocMDIFrameDesigner::CreateBottomPane()
 	paneInfo.Movable(false);
 	paneInfo.MinSize(-1, 30);
 
-	ibFloatingNotebook* auiNotebook = new ibFloatingNotebook(&m_mgr, paneInfo.name,
+	wxFloatingNotebook* auiNotebook = new wxFloatingNotebook(&m_mgr, paneInfo.name,
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
@@ -105,12 +105,12 @@ void ibFrontendDocMDIFrameDesigner::CreateBottomPane()
 	m_mgr.AddPane(auiNotebook, paneInfo);
 }
 
-void ibFrontendDocMDIFrameDesigner::CreateMetadataPane()
+void CFrontendDocMDIFrameDesigner::CreateMetadataPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_METADATA).IsOk())
 		return;
 
-	m_metaWindow = new ibMetadataTree(this, wxID_ANY);
+	m_metaWindow = new CMetadataTree(this, wxID_ANY);
 
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxAUI_PANE_METADATA);
@@ -123,7 +123,7 @@ void ibFrontendDocMDIFrameDesigner::CreateMetadataPane()
 	m_mgr.AddPane(m_metaWindow, paneInfo);
 }
 
-void ibFrontendDocMDIFrameDesigner::UpdateEditorOptions()
+void CFrontendDocMDIFrameDesigner::UpdateEditorOptions()
 {
 	for (auto& doc : m_docManager->GetDocumentsVector())
 		doc->UpdateAllViews();

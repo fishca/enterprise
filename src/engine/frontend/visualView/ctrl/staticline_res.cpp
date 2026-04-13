@@ -26,12 +26,12 @@ static char* s_static_line_xpm[] = {
 	"                "
 };
 
-wxIcon ibValueStaticLine::GetIcon() const
+wxIcon CValueStaticLine::GetIcon() const
 {
 	return wxIcon(s_static_line_xpm);
 }
 
-wxIcon ibValueStaticLine::GetIconGroup()
+wxIcon CValueStaticLine::GetIconGroup()
 {
 	return wxIcon(s_static_line_xpm);
 }

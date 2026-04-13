@@ -2,16 +2,16 @@
 #include "form.h"
 #include "backend/appData.h"
 
-void ibValueNotebook::OnPageChanged(wxAuiNotebookEvent& event)
+void CValueNotebook::OnPageChanged(wxAuiNotebookEvent& event)
 {
-	ibValueNotebookPage* activePage = nullptr;
+	CValueNotebookPage* activePage = nullptr;
 	if (event.GetOldSelection() != wxNOT_FOUND) {
 		wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(GetWxObject());
 		wxASSERT(notebook);
 		wxWindow* page = notebook->GetPage(event.GetSelection());
 		wxASSERT(page);
 		for (unsigned int i = 0; i < GetChildCount(); i++) {
-			ibValueNotebookPage* child = dynamic_cast<ibValueNotebookPage*>(GetChild(i));
+			CValueNotebookPage* child = dynamic_cast<CValueNotebookPage*>(GetChild(i));
 			wxASSERT(child);
 			if (page == child->GetWxObject())
 				activePage = child;
@@ -30,7 +30,7 @@ void ibValueNotebook::OnPageChanged(wxAuiNotebookEvent& event)
 	else if (m_activePage != nullptr) {
 		event.Skip(
 			CallAsEvent(
-				m_eventOnPageChanged, ibValue(m_activePage)
+				m_eventOnPageChanged, CValue(m_activePage)
 			)
 		);
 	}
@@ -38,7 +38,7 @@ void ibValueNotebook::OnPageChanged(wxAuiNotebookEvent& event)
 	m_formOwner->RefreshForm();
 }
 
-void ibValueNotebook::OnBGDClick(wxAuiNotebookEvent& event)
+void CValueNotebook::OnBGDClick(wxAuiNotebookEvent& event)
 {
 	if (g_visualHostContext != nullptr) {
 		g_visualHostContext->SelectControl(this);
@@ -46,7 +46,7 @@ void ibValueNotebook::OnBGDClick(wxAuiNotebookEvent& event)
 	event.Skip();
 }
 
-void ibValueNotebook::OnEndDrag(wxAuiNotebookEvent& event)
+void CValueNotebook::OnEndDrag(wxAuiNotebookEvent& event)
 {
 	wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(GetWxObject());
 	wxASSERT(notebook);

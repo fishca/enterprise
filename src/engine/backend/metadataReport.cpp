@@ -6,7 +6,7 @@
 #include "metadataReport.h"
 #include "backend/appData.h"
 
-ibMetaDataReport::ibMetaDataReport() : ibMetaData(),
+CMetaDataReport::CMetaDataReport() : IMetaData(),
 m_commonObject(nullptr),
 m_moduleManager(nullptr),
 m_ownerMeta(nullptr),
@@ -14,13 +14,13 @@ m_configOpened(false),
 m_version(version_oes_last)
 {
 	//create main metaObject
-	m_commonObject = new ibValueMetaObjectExternalReport();
+	m_commonObject = new CValueMetaObjectExternalReport();
 	m_commonObject->SetName(
-		ibMetaData::GetNewName(g_metaExternalDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
+		IMetaData::GetNewName(g_metaExternalDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
 	);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
-		m_moduleManager = new ibValueModuleManagerExternalReport(this, m_commonObject);
+		m_moduleManager = new CValueModuleManagerExternalReport(this, m_commonObject);
 		m_moduleManager->IncrRef();
 		if (!m_commonObject->OnLoadMetaObject(this)) {
 			wxASSERT_MSG(false, "m_commonObject->OnLoadMetaObject() == false");
@@ -35,7 +35,7 @@ m_version(version_oes_last)
 	m_ownerMeta = this;
 }
 
-ibMetaDataReport::ibMetaDataReport(ibMetaData* metaData, ibValueMetaObjectReport* srcReport) : ibMetaData(),
+CMetaDataReport::CMetaDataReport(IMetaData* metaData, CValueMetaObjectReport* srcReport) : IMetaData(),
 m_commonObject(srcReport),
 m_ownerMeta(nullptr),
 m_moduleManager(nullptr),
@@ -43,12 +43,12 @@ m_configOpened(false),
 m_version(version_oes_last)
 {
 	if (srcReport == nullptr) {
-		ibValueMetaObject* commonMetaObject = metaData->GetCommonMetaObject();
+		IValueMetaObject* commonMetaObject = metaData->GetCommonMetaObject();
 		wxASSERT(commonMetaObject);
 		//create main metaObject
-		m_commonObject = new ibValueMetaObjectReport();
+		m_commonObject = new CValueMetaObjectReport();
 		m_commonObject->SetName(
-			ibMetaData::GetNewName(g_metaDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
+			IMetaData::GetNewName(g_metaDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
 		);
 		if (commonMetaObject != nullptr) {
 			m_commonObject->SetParent(commonMetaObject);
@@ -62,7 +62,7 @@ m_version(version_oes_last)
 	m_ownerMeta = metaData;
 }
 
-ibMetaDataReport::~ibMetaDataReport()
+CMetaDataReport::~CMetaDataReport()
 {
 	if (m_commonObject->IsExternalCreate()) {
 
@@ -85,17 +85,17 @@ ibMetaDataReport::~ibMetaDataReport()
 	}
 }
 
-bool ibMetaDataReport::LoadDatabase()
+bool CMetaDataReport::LoadDatabase()
 {
 	return RunDatabase();
 }
 
-bool ibMetaDataReport::SaveDatabase()
+bool CMetaDataReport::SaveDatabase()
 {
 	return true;
 }
 
-bool ibMetaDataReport::ClearDatabase()
+bool CMetaDataReport::ClearDatabase()
 {
 	if (!ClearChildMetadata(m_commonObject))
 		return false;
@@ -105,14 +105,14 @@ bool ibMetaDataReport::ClearDatabase()
 
 ////////////////////////////////////////////////////////////////////
 
-wxString ibMetaDataReport::GetLangCode() const
+wxString CMetaDataReport::GetLangCode() const
 {
 	return activeMetaData->GetLangCode();
 }
 
 ////////////////////////////////////////////////////////////////////
 
-bool ibMetaDataReport::ClearChildMetadata(ibValueMetaObject* object)
+bool CMetaDataReport::ClearChildMetadata(IValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -136,7 +136,7 @@ bool ibMetaDataReport::ClearChildMetadata(ibValueMetaObject* object)
 	return true;
 }
 
-bool ibMetaDataReport::RunDatabase(int flags)
+bool CMetaDataReport::RunDatabase(int flags)
 {
 	if (m_commonObject->IsExternalCreate()) {
 
@@ -192,7 +192,7 @@ bool ibMetaDataReport::RunDatabase(int flags)
 	return false;
 }
 
-bool ibMetaDataReport::RunChildMetadata(ibValueMetaObject* object, int flags, bool before)
+bool CMetaDataReport::RunChildMetadata(IValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		auto child = object->GetChild(idx);
@@ -210,7 +210,7 @@ bool ibMetaDataReport::RunChildMetadata(ibValueMetaObject* object, int flags, bo
 	return true;
 }
 
-bool ibMetaDataReport::CloseDatabase(int flags)
+bool CMetaDataReport::CloseDatabase(int flags)
 {
 	wxASSERT(m_configOpened);
 
@@ -230,7 +230,7 @@ bool ibMetaDataReport::CloseDatabase(int flags)
 	return true;
 }
 
-bool ibMetaDataReport::CloseChildMetadata(ibValueMetaObject* object, int flags, bool before)
+bool CMetaDataReport::CloseChildMetadata(IValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		auto child = object->GetChild(idx);
@@ -251,7 +251,7 @@ bool ibMetaDataReport::CloseChildMetadata(ibValueMetaObject* object, int flags, 
 
 #include <fstream>
 
-bool ibMetaDataReport::LoadFromFile(const wxString& strFileName)
+bool CMetaDataReport::LoadFromFile(const wxString& strFileName)
 {
 	if (!m_commonObject->IsExternalCreate()) {
 		if (!m_commonObject->OnCreateMetaObject(m_ownerMeta, newObjectFlag))
@@ -286,7 +286,7 @@ bool ibMetaDataReport::LoadFromFile(const wxString& strFileName)
 	wxMemoryBuffer tempBuffer(fsize);
 	in.read((char*)tempBuffer.GetWriteBuf(fsize), fsize);
 
-	ibReaderMemory readerData(tempBuffer.GetData(), tempBuffer.GetBufSize());
+	CMemoryReader readerData(tempBuffer.GetData(), tempBuffer.GetBufSize());
 
 	if (readerData.eof())
 		return false;
@@ -317,10 +317,10 @@ bool ibMetaDataReport::LoadFromFile(const wxString& strFileName)
 	return LoadDatabase();
 }
 
-bool ibMetaDataReport::SaveToFile(const wxString& strFileName)
+bool CMetaDataReport::SaveToFile(const wxString& strFileName)
 {
 	//common data
-	ibWriterMemory writerData;
+	CMemoryWriter writerData;
 
 	//Save header info 
 	if (!SaveHeader(writerData))
@@ -344,9 +344,9 @@ bool ibMetaDataReport::SaveToFile(const wxString& strFileName)
 	return true;
 }
 
-bool ibMetaDataReport::LoadHeader(ibReaderMemory& readerData)
+bool CMetaDataReport::LoadHeader(CMemoryReader& readerData)
 {
-	ibReaderMemory* readerMemory = readerData.open_chunk(eHeaderBlock);
+	CMemoryReader* readerMemory = readerData.open_chunk(eHeaderBlock);
 
 	if (!readerMemory)
 		return false;
@@ -365,26 +365,26 @@ bool ibMetaDataReport::LoadHeader(ibReaderMemory& readerData)
 	return true;
 }
 
-bool ibMetaDataReport::LoadCommonMetadata(const ibClassID& clsid, ibReaderMemory& readerData)
+bool CMetaDataReport::LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData)
 {
-	ibReaderMemory* readerMemory = readerData.open_chunk(clsid);
+	CMemoryReader* readerMemory = readerData.open_chunk(clsid);
 
 	if (!readerMemory)
 		return false;
 
 	u64 meta_id = 0;
-	ibReaderMemory* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id);
+	CMemoryReader* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id);
 
 	if (!readerMetaMemory)
 		return true;
 
-	std::shared_ptr <ibReaderMemory> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
+	std::shared_ptr <CMemoryReader> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
 	if (readerChildMemory) {
 		if (!LoadChildMetadata(clsid, *readerChildMemory, m_commonObject))
 			return false;
 	}
 
-	std::shared_ptr <ibReaderMemory>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
+	std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 	if (!m_commonObject->LoadMetaObject(m_ownerMeta, *readerDataMemory))
 		return false;
@@ -396,47 +396,47 @@ bool ibMetaDataReport::LoadCommonMetadata(const ibClassID& clsid, ibReaderMemory
 	return true;
 }
 
-bool ibMetaDataReport::LoadChildMetadata(const ibClassID&, ibReaderMemory& readerData, ibValueMetaObject* object)
+bool CMetaDataReport::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IValueMetaObject* object)
 {
-	ibClassID clsid = 0;
-	ibReaderMemory* prevReaderMemory = nullptr;
+	class_identifier_t clsid = 0;
+	CMemoryReader* prevReaderMemory = nullptr;
 
 	while (!readerData.eof())
 	{
-		ibReaderMemory* readerMemory = readerData.open_chunk_iterator(clsid, &*prevReaderMemory);
+		CMemoryReader* readerMemory = readerData.open_chunk_iterator(clsid, &*prevReaderMemory);
 
 		if (!readerMemory)
 			break;
 
 		u64 meta_id = 0;
-		ibReaderMemory* prevReaderMetaMemory = nullptr;
+		CMemoryReader* prevReaderMetaMemory = nullptr;
 
 		while (!readerData.eof())
 		{
-			ibReaderMemory* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id, &*prevReaderMetaMemory);
+			CMemoryReader* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id, &*prevReaderMetaMemory);
 
 			if (!readerMetaMemory)
 				break;
 
 			wxASSERT(clsid != 0);
 
-			ibValueMetaObject* newMetaObject = nullptr;
-			ibValue* ppParams[] = { object };
+			IValueMetaObject* newMetaObject = nullptr;
+			CValue* ppParams[] = { object };
 			try {
-				newMetaObject = ibValue::CreateAndConvertObjectRef<ibValueMetaObject>(clsid, ppParams, 1);
+				newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
 			}
 			catch (...) {
 				return false;
 			}
 
-			std::shared_ptr <ibReaderMemory> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
+			std::shared_ptr <CMemoryReader> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
 			if (readerChildMemory) {
 				if (!LoadChildMetadata(clsid, *readerChildMemory, newMetaObject))
 					return false;
 			}
 
-			std::shared_ptr <ibReaderMemory>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
+			std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 			if (!newMetaObject->LoadMetaObject(m_ownerMeta, *readerDataMemory))
 				return false;
 
@@ -453,9 +453,9 @@ bool ibMetaDataReport::LoadChildMetadata(const ibClassID&, ibReaderMemory& reade
 	return true;
 }
 
-bool ibMetaDataReport::SaveHeader(ibWriterMemory& writerData)
+bool CMetaDataReport::SaveHeader(CMemoryWriter& writerData)
 {
-	ibWriterMemory writerMemory;
+	CMemoryWriter writerMemory;
 	writerMemory.w_u64(sign_dataReport); //sign 
 	writerMemory.w_u32(m_version); // version 1 - DEFAULT
 	writerMemory.w_stringZ(m_commonObject->GetDocPath()); //guid conf 
@@ -464,13 +464,13 @@ bool ibMetaDataReport::SaveHeader(ibWriterMemory& writerData)
 	return true;
 }
 
-bool ibMetaDataReport::SaveCommonMetadata(const ibClassID& clsid, ibWriterMemory& writerData, int flags)
+bool CMetaDataReport::SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags)
 {
 	//Save common object
-	ibWriterMemory writerMemory;
+	CMemoryWriter writerMemory;
 
-	ibWriterMemory writerMetaMemory;
-	ibWriterMemory writerDataMemory;
+	CMemoryWriter writerMetaMemory;
+	CMemoryWriter writerDataMemory;
 
 	if (!m_commonObject->SaveMetaObject(m_ownerMeta, writerDataMemory, flags)) {
 		return false;
@@ -478,7 +478,7 @@ bool ibMetaDataReport::SaveCommonMetadata(const ibClassID& clsid, ibWriterMemory
 
 	writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
 
-	ibWriterMemory writerChildMemory;
+	CMemoryWriter writerChildMemory;
 
 	if (!SaveChildMetadata(clsid, writerChildMemory, m_commonObject, flags))
 		return false;
@@ -490,25 +490,25 @@ bool ibMetaDataReport::SaveCommonMetadata(const ibClassID& clsid, ibWriterMemory
 	return true;
 }
 
-bool ibMetaDataReport::SaveChildMetadata(const ibClassID&, ibWriterMemory& writerData, ibValueMetaObject* object, int flags)
+bool CMetaDataReport::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writerData, IValueMetaObject* object, int flags)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
 		auto child = object->GetChild(idx);
 		if (!object->FilterChild(child->GetClassType()))
 			continue;
-		ibWriterMemory writerMemory;
+		CMemoryWriter writerMemory;
 		if (child->IsDeleted())
 			continue;
-		ibWriterMemory writerMetaMemory;
-		ibWriterMemory writerDataMemory;
+		CMemoryWriter writerMetaMemory;
+		CMemoryWriter writerDataMemory;
 		if (!child->SaveMetaObject(m_ownerMeta, writerDataMemory, flags)) {
 			return false;
 		}
 
 		writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
 
-		ibWriterMemory writerChildMemory;
+		CMemoryWriter writerChildMemory;
 
 		if (!SaveChildMetadata(child->GetClassType(), writerChildMemory, child, flags)) {
 			return false;
@@ -523,12 +523,12 @@ bool ibMetaDataReport::SaveChildMetadata(const ibClassID&, ibWriterMemory& write
 	return true;
 }
 
-bool ibMetaDataReport::DeleteCommonMetadata(const ibClassID& clsid)
+bool CMetaDataReport::DeleteCommonMetadata(const class_identifier_t& clsid)
 {
 	return DeleteChildMetadata(clsid, m_commonObject);
 }
 
-bool ibMetaDataReport::DeleteChildMetadata(const ibClassID& clsid, ibValueMetaObject* object)
+bool CMetaDataReport::DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		auto child = object->GetChild(idx);

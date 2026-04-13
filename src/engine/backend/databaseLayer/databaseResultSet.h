@@ -22,20 +22,20 @@
 #include "resultSetMetaData.h"
 
 WX_DECLARE_STRING_HASH_MAP(int, StringToIntMap);
-WX_DECLARE_HASH_SET(ibResultSetMetaData*, wxPointerHash, wxPointerEqual, MetaDataHashSet);
+WX_DECLARE_HASH_SET(IResultSetMetaData*, wxPointerHash, wxPointerEqual, MetaDataHashSet);
 
-class BACKEND_API ibDatabaseResultSet : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
+class BACKEND_API IDatabaseResultSet : public CDatabaseErrorReporter, public CDatabaseStringConverter
 {
 public:
 	/// Constructor
-	ibDatabaseResultSet();
+	IDatabaseResultSet();
 
 	/// Destructor
-	virtual ~ibDatabaseResultSet();
+	virtual ~IDatabaseResultSet();
 
 	/// Move to the next record in the result set
 	virtual bool Next() = 0;
-	/// Close the result set (call ibDatabaseLayer::CloseResultSet() instead on the result set)
+	/// Close the result set (call IDatabaseLayer::CloseResultSet() instead on the result set)
 	virtual void Close() = 0;
 
 	virtual int LookupField(const wxString& strField) = 0;
@@ -56,7 +56,7 @@ public:
 	/// Retrieve a double from the result set by the 1-based field index
 	virtual double GetResultDouble(int nField) = 0;
 	/// Retrieve a number from the result set by the 1-based field index
-	virtual ibNumber GetResultNumber(int nField) = 0;
+	virtual number_t GetResultNumber(int nField) = 0;
 	/// Check if a field in the current result set record is nullptr
 	virtual bool IsFieldNull(int nField) = 0;
 
@@ -75,21 +75,21 @@ public:
 	/// Retrieve a double from the result set by the result set column name
 	virtual double GetResultDouble(const wxString& strField);
 	/// Retrieve a number from the result set by the result set column name
-	virtual ibNumber GetResultNumber(const wxString& strField);
+	virtual number_t GetResultNumber(const wxString& strField);
 	/// Check if a field in the current result set record is nullptr
 	virtual bool IsFieldNull(const wxString& strField);
 
 	// get MetaData
 	/// Retrieve the MetaData associated with this result set
-	virtual ibResultSetMetaData* GetMetaData() = 0;
+	virtual IResultSetMetaData* GetMetaData() = 0;
 	/// Close MetaData previously returned by the result set
-	virtual bool CloseMetaData(ibResultSetMetaData* pMetaData);
+	virtual bool CloseMetaData(IResultSetMetaData* pMetaData);
 
 protected:
 	/// Close all meta data objects that have been generated but not yet closed
 	void CloseMetaData();
 	/// Add meta data object pointer to the list for "garbage collection"
-	void LogMetaDataForCleanup(ibResultSetMetaData* pMetaData) { m_MetaData.insert(pMetaData); }
+	void LogMetaDataForCleanup(IResultSetMetaData* pMetaData) { m_MetaData.insert(pMetaData); }
 
 private:
 	MetaDataHashSet m_MetaData;

@@ -1,86 +1,82 @@
 #include "propertySource.h"
 #include "backend/propertyManager/property/variant/variantSource.h"
 
-wxObject* (*ibPropertySource::ms_propertySource)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
-
-////////////////////////////////////////////////////////////////////////
-
-wxVariantData* ibPropertySource::CreateVariantData(const ibPropertyObject* property, const ibValueTypes& type) const
+wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* property, const eValueTypes& type) const
 {
-	return CreateVariantData(property, ibTypeDescription(ibValue::GetIDByVT(type)));
+    return CreateVariantData(property, CTypeDescription(CValue::GetIDByVT(type)));
 }
 
-wxVariantData* ibPropertySource::CreateVariantData(const ibPropertyObject* property, const ibClassID& clsid) const
+wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* property, const class_identifier_t& clsid) const
 {
-	return CreateVariantData(property, ibTypeDescription(clsid));
+    return CreateVariantData(property, CTypeDescription(clsid));
 }
 
-wxVariantData* ibPropertySource::CreateVariantData(const ibPropertyObject* property, const ibTypeDescription& typeDesc) const
+wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* property, const CTypeDescription& typeDesc) const
 {
-	const ibBackendTypeSourceFactory* propFactory = dynamic_cast<const ibBackendTypeSourceFactory*>(property);
-	if (propFactory == nullptr)
-		return nullptr;
-	return new ibVariantDataSource(propFactory, typeDesc);
+    const IBackendTypeSourceFactory* propFactory = dynamic_cast<const IBackendTypeSourceFactory*>(property);
+    if (propFactory == nullptr)
+        return nullptr;
+    return new wxVariantDataSource(propFactory, typeDesc);
 }
 
-wxVariantData* ibPropertySource::CreateVariantData(const ibPropertyObject* property, const ibMetaID& id) const
+wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* property, const meta_identifier_t& id) const
 {
-	const ibBackendTypeSourceFactory* propFactory = dynamic_cast<const ibBackendTypeSourceFactory*>(property);
-	if (propFactory == nullptr)
-		return nullptr;
-	return new ibVariantDataSource(propFactory, id);
+    const IBackendTypeSourceFactory* propFactory = dynamic_cast<const IBackendTypeSourceFactory*>(property);
+    if (propFactory == nullptr)
+        return nullptr;
+    return new wxVariantDataSource(propFactory, id);
 }
 
-wxVariantData* ibPropertySource::CreateVariantData(const ibPropertyObject* property, const ibGuid& id, bool fillTypeDesc) const
+wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* property, const CGuid& id, bool fillTypeDesc) const
 {
-	const ibBackendTypeSourceFactory* propFactory = dynamic_cast<const ibBackendTypeSourceFactory*>(property);
-	if (propFactory == nullptr)
-		return nullptr;
-	return new ibVariantDataSource(propFactory, id, fillTypeDesc);
+    const IBackendTypeSourceFactory* propFactory = dynamic_cast<const IBackendTypeSourceFactory*>(property);
+    if (propFactory == nullptr)
+        return nullptr;
+    return new wxVariantDataSource(propFactory, id, fillTypeDesc);
 }
 
 ////////////////////////////////////////////////////////////////////////
-ibMetaID ibPropertySource::GetValueAsSource() const { return get_cell_variant<ibVariantDataSource>()->GetSource(); }
-ibGuid ibPropertySource::GetValueAsSourceGuid() const { return get_cell_variant<ibVariantDataSource>()->GetSourceGuid(); }
-ibTypeDescription& ibPropertySource::GetValueAsTypeDesc(bool fillTypeDesc) const { return get_cell_variant<ibVariantDataSource>()->GetSourceTypeDesc(fillTypeDesc); }
-void ibPropertySource::SetValue(const ibMetaID& val) { m_propValue = CreateVariantData(m_owner, val); }
-void ibPropertySource::SetValue(const ibGuid& val, bool fillTypeDesc) { m_propValue = CreateVariantData(m_owner, val, fillTypeDesc); }
-void ibPropertySource::SetValue(const ibTypeDescription& val) { m_propValue = CreateVariantData(m_owner, val); }
+meta_identifier_t CPropertySource::GetValueAsSource() const { return get_cell_variant<wxVariantDataSource>()->GetSource(); }
+CGuid CPropertySource::GetValueAsSourceGuid() const { return get_cell_variant<wxVariantDataSource>()->GetSourceGuid(); }
+CTypeDescription& CPropertySource::GetValueAsTypeDesc(bool fillTypeDesc) const { return get_cell_variant<wxVariantDataSource>()->GetSourceTypeDesc(fillTypeDesc); }
+void CPropertySource::SetValue(const meta_identifier_t& val) { m_propValue = CreateVariantData(m_owner, val); }
+void CPropertySource::SetValue(const CGuid& val, bool fillTypeDesc) { m_propValue = CreateVariantData(m_owner, val, fillTypeDesc); }
+void CPropertySource::SetValue(const CTypeDescription& val) { m_propValue = CreateVariantData(m_owner, val); }
 ////////////////////////////////////////////////////////////////////////
 
-ibValueMetaObjectAttributeBase* ibPropertySource::GetSourceAttributeObject() const {
-	return get_cell_variant<ibVariantDataSource>()->GetSourceAttributeObject();
+IValueMetaObjectAttribute* CPropertySource::GetSourceAttributeObject() const { 
+    return get_cell_variant<wxVariantDataSource>()->GetSourceAttributeObject(); 
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-bool ibPropertySource::IsEmptyProperty() const {
-	return get_cell_variant<ibVariantDataSource>()->IsEmptySource();
+bool CPropertySource::IsEmptyProperty() const { 
+    return get_cell_variant<wxVariantDataSource>()->IsEmptySource(); 
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 //base property for "source"
-bool ibPropertySource::SetDataValue(const ibValue& varPropVal)
+bool CPropertySource::SetDataValue(const CValue& varPropVal)
 {
-	//varPropVal.GetString();
-	return false;
+    //varPropVal.GetString();
+    return false;
 }
 
-bool ibPropertySource::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertySource::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = m_propValue.GetString();
-	return true;
+    pvarPropVal = m_propValue.GetString();
+    return true;
 }
 
-bool ibPropertySource::LoadData(ibReaderMemory& reader)
+bool CPropertySource::LoadData(CMemoryReader& reader)
 {
-	ibPropertySource::SetValue(reader.r_stringZ(), false);
-	return ibTypeDescriptionMemory::LoadData(reader, GetValueAsTypeDesc(false));
+    CPropertySource::SetValue(reader.r_stringZ(), false); 
+    return CTypeDescriptionMemory::LoadData(reader, GetValueAsTypeDesc(false));
 }
 
-bool ibPropertySource::SaveData(ibWriterMemory& writer)
+bool CPropertySource::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(ibPropertySource::GetValueAsSourceGuid());
-	return ibTypeDescriptionMemory::SaveData(writer, GetValueAsTypeDesc());
+    writer.w_stringZ(CPropertySource::GetValueAsSourceGuid());
+    return CTypeDescriptionMemory::SaveData(writer, GetValueAsTypeDesc());
 }

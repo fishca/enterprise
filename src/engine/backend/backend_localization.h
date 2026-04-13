@@ -3,37 +3,37 @@
 
 #include "backend_core.h"
 
-struct ibBackendLocalizationEntry {
+struct CBackendLocalizationEntry {
 	wxString m_code;
 	wxString m_data;
 };
 
-typedef std::vector<ibBackendLocalizationEntry> ibBackendLocalizationEntryArray;
+typedef std::vector<CBackendLocalizationEntry> CBackendLocalizationEntryArray;
 
-class BACKEND_API ibBackendLocalization {
-	ibBackendLocalization() = delete;
+class BACKEND_API CBackendLocalization {
+	CBackendLocalization() = delete;
 public:
 
 	static void SetUserLanguage(const wxString& strUserLanguage);
 	static wxString GetUserLanguage();
 	
 	static bool CreateLocalizationArray(const wxString& strRawTranslate,
-		ibBackendLocalizationEntryArray& array);
+		CBackendLocalizationEntryArray& array);
 
 	static wxString CreateLocalizationRawLocText(const wxString& strLocale);
 	static bool IsLocalizationString(const wxString& strRawLocale);
-	static wxString GetRawLocText(const ibBackendLocalizationEntryArray& array);
-	static bool GetRawLocText(const ibBackendLocalizationEntryArray& array, wxString& strResult);
+	static wxString GetRawLocText(const CBackendLocalizationEntryArray& array);
+	static bool GetRawLocText(const CBackendLocalizationEntryArray& array, wxString& strResult);
 
 	static bool IsEmptyLocalizationString(const wxString& strRawLocale);
 
-	static void SetArrayTranslate(ibBackendLocalizationEntryArray& array, const wxString &strResult);
-	static void SetArrayTranslate(const wxString& strLangCode, ibBackendLocalizationEntryArray& array, const wxString& strResult);
+	static void SetArrayTranslate(CBackendLocalizationEntryArray& array, const wxString &strResult);
+	static void SetArrayTranslate(const wxString& strLangCode, CBackendLocalizationEntryArray& array, const wxString& strResult);
 
 	static bool GetTranslateFromArray(const wxString& strLangCode,
-		const ibBackendLocalizationEntryArray& array, wxString& strResult);
+		const CBackendLocalizationEntryArray& array, wxString& strResult);
 	static wxString GetTranslateFromArray(const wxString& strLangCode,
-		const ibBackendLocalizationEntryArray& array);
+		const CBackendLocalizationEntryArray& array);
 	
 	static bool GetTranslateGetRawLocText(
 		const wxString& strRawLocale, wxString& strResult);

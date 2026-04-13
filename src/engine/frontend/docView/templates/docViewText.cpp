@@ -2,35 +2,35 @@
 #include "frontend/mainFrame/mainFrame.h"
 
 // ----------------------------------------------------------------------------
-// ibTextEditView implementation
+// CTextEditView implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibTextEditView, ibMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(CTextEditView, CMetaView);
 
-wxBEGIN_EVENT_TABLE(ibTextEditView, ibMetaView)
-EVT_MENU(wxID_COPY, ibTextEditView::OnCopy)
-EVT_MENU(wxID_PASTE, ibTextEditView::OnPaste)
-EVT_MENU(wxID_SELECTALL, ibTextEditView::OnSelectAll)
+wxBEGIN_EVENT_TABLE(CTextEditView, CMetaView)
+EVT_MENU(wxID_COPY, CTextEditView::OnCopy)
+EVT_MENU(wxID_PASTE, CTextEditView::OnPaste)
+EVT_MENU(wxID_SELECTALL, CTextEditView::OnSelectAll)
 wxEND_EVENT_TABLE()
 
-bool ibTextEditView::OnCreate(ibMetaDocument* doc, long flags)
+bool CTextEditView::OnCreate(CMetaDocument* doc, long flags)
 {
-	m_textEditor = new ibTextEditor(doc, m_viewFrame, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
+	m_textEditor = new CTextEditor(doc, m_viewFrame, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 
 	m_textEditor->SetEditorSettings(mainFrame->GetEditorSettings());
 	m_textEditor->SetFontColorSettings(mainFrame->GetFontColorSettings());
 
 	m_textEditor->SetReadOnly(flags == wxDOC_READONLY);
 
-	return ibMetaView::OnCreate(doc, flags);
+	return CMetaView::OnCreate(doc, flags);
 }
 
-void ibTextEditView::OnDraw(wxDC* WXUNUSED(dc))
+void CTextEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-bool ibTextEditView::OnClose(bool deleteWindow)
+bool CTextEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
 
@@ -39,7 +39,7 @@ bool ibTextEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (ibMetaView::OnClose(deleteWindow)) {
+	if (CMetaView::OnClose(deleteWindow)) {
 
 		m_textEditor->Freeze();
 
@@ -54,12 +54,12 @@ bool ibTextEditView::OnClose(bool deleteWindow)
 
 #include "frontend/win/editor/textEditor/textEditorPrintOut.h"
 
-wxPrintout* ibTextEditView::OnCreatePrintout()
+wxPrintout* CTextEditView::OnCreatePrintout()
 {
-	return new ibTextEditorPrintout(m_textEditor, m_viewDocument->GetTitle());
+	return new CTextEditorPrintout(m_textEditor, m_viewDocument->GetTitle());
 }
 
-void ibTextEditView::OnFind(wxFindDialogEvent& event)
+void CTextEditView::OnFind(wxFindDialogEvent& event)
 {
 	int wxflags = event.GetFlags();
 	int sciflags = 0;
@@ -98,31 +98,31 @@ void ibTextEditView::OnFind(wxFindDialogEvent& event)
 // ITextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_CLASS(ITextDocument, ibMetaDocument);
+wxIMPLEMENT_CLASS(ITextDocument, CMetaDocument);
 
 wxCommandProcessor* ITextDocument::OnCreateCommandProcessor()
 {
-	ibTextCommandProcessor* commandProcessor = new ibTextCommandProcessor(GetTextCtrl());
+	CTextCommandProcessor* commandProcessor = new CTextCommandProcessor(GetTextCtrl());
 	commandProcessor->SetEditMenu(mainFrame->GetDefaultMenu(wxID_EDIT));
 	commandProcessor->Initialize();
 	return commandProcessor;
 }
 
-ibTextEditor* ITextDocument::GetTextCtrl() const
+CTextEditor* ITextDocument::GetTextCtrl() const
 {
 	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, ibTextEditView)->GetText() : nullptr;
+	return view ? wxDynamicCast(view, CTextEditView)->GetText() : nullptr;
 }
 
 // ----------------------------------------------------------------------------
-// ibTextFilibDocument implementation
+// CTextFileDocument implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibTextFilibDocument, ITextDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(CTextFileDocument, ITextDocument);
 
-bool ibTextFilibDocument::OnCreate(const wxString& path, long flags)
+bool CTextFileDocument::OnCreate(const wxString& path, long flags)
 {
-	if (!ibMetaDocument::OnCreate(path, flags))
+	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
 
 	return true;
@@ -130,12 +130,12 @@ bool ibTextFilibDocument::OnCreate(const wxString& path, long flags)
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool ibTextFilibDocument::DoSaveDocument(const wxString& filename)
+bool CTextFileDocument::DoSaveDocument(const wxString& filename)
 {
 	return GetTextCtrl()->SaveFile(filename);
 }
 
-bool ibTextFilibDocument::DoOpenDocument(const wxString& filename)
+bool CTextFileDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!GetTextCtrl()->LoadFile(filename))
 		return false;

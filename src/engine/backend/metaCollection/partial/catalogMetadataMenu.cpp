@@ -6,7 +6,7 @@
 #include "catalog.h"
 #include "backend/metaData.h"
 
-bool ibValueMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
+bool CValueMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = nullptr;
 	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open object module"));
@@ -15,14 +15,14 @@ bool ibValueMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
 	menuItem->SetBitmap((*m_propertyModuleManager)->GetIcon());
 	defaultMenu->AppendSeparator();
 	menuItem = defaultMenu->Append(ID_METATREE_EDIT_PREDEFINED, _("Open predefined values"));
-	menuItem->SetBitmap(ibBackendPicture::GetPicture(g_metaAttributeCLSID));
+	menuItem->SetBitmap(CBackendPicture::GetPicture(g_metaAttributeCLSID));
 	defaultMenu->AppendSeparator();
 	return false;
 }
 
-void ibValueMetaObjectCatalog::ProcessCommand(unsigned int id)
+void CValueMetaObjectCatalog::ProcessCommand(unsigned int id)
 {
-	ibBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
+	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_MODULE)

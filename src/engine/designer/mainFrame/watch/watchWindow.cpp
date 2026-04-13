@@ -9,26 +9,26 @@
 #include "backend/debugger/debugClient.h"
 #include "backend/fileSystem/fs.h"
 
-BEGIN_EVENT_TABLE(ibWatchWindow, ibWatchCtrl)
-EVT_TREE_BEGIN_LABEL_EDIT(wxID_ANY, ibWatchWindow::OnBeginLabelEdit)
-EVT_TREE_END_LABEL_EDIT(wxID_ANY, ibWatchWindow::OnEndLabelEdit)
-EVT_TREE_ITEM_ACTIVATED(wxID_ANY, ibWatchWindow::OnItemSelected)
-EVT_TREE_DELETE_ITEM(wxID_ANY, ibWatchWindow::OnItemDeleted)
-EVT_TREE_KEY_DOWN(wxID_ANY, ibWatchWindow::OnKeyDown)
-EVT_TREE_ITEM_EXPANDING(wxID_ANY, ibWatchWindow::OnItemExpanding)
+BEGIN_EVENT_TABLE(CWatchWindow, CWatchCtrl)
+EVT_TREE_BEGIN_LABEL_EDIT(wxID_ANY, CWatchWindow::OnBeginLabelEdit)
+EVT_TREE_END_LABEL_EDIT(wxID_ANY, CWatchWindow::OnEndLabelEdit)
+EVT_TREE_ITEM_ACTIVATED(wxID_ANY, CWatchWindow::OnItemSelected)
+EVT_TREE_DELETE_ITEM(wxID_ANY, CWatchWindow::OnItemDeleted)
+EVT_TREE_KEY_DOWN(wxID_ANY, CWatchWindow::OnKeyDown)
+EVT_TREE_ITEM_EXPANDING(wxID_ANY, CWatchWindow::OnItemExpanding)
 END_EVENT_TABLE()
 
 //
 // Constructor
 //
 
-ibWatchWindow::ibWatchWindow(wxWindow* parent, wxWindowID winid)
-	: ibWatchCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
+CWatchWindow::CWatchWindow(wxWindow* parent, wxWindowID winid)
+	: CWatchCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
 {
 	m_root = AddRoot(_T("Root"));
 	SetItemText(m_root, 1, _T("Root"));
 
-	SetDropTarget(new ibWatchDropTarget(this));
+	SetDropTarget(new CWatchDropTarget(this));
 
 	CreateEmptySlotIfNeeded();
 
@@ -38,14 +38,14 @@ ibWatchWindow::ibWatchWindow(wxWindow* parent, wxWindowID winid)
 
 #include "mainFrame/mainFrameDesigner.h"
 
-ibWatchWindow* ibWatchWindow::GetWatchWindow()
+CWatchWindow* CWatchWindow::GetWatchWindow()
 {
-	if (ibFrontendDocMDIFrameDesigner::GetFrame())
+	if (CFrontendDocMDIFrameDesigner::GetFrame())
 		return mainFrame->GetWatchWindow();
 	return nullptr;
 }
 
-void ibWatchWindow::SetVariable(const ibWatchWindowData& watchData)
+void CWatchWindow::SetVariable(const CWatchWindowData& watchData)
 {
 	m_updating = true;
 
@@ -73,7 +73,7 @@ void ibWatchWindow::SetVariable(const ibWatchWindowData& watchData)
 	mainFrame->Update();
 }
 
-void ibWatchWindow::SetExpanded(const ibWatchWindowData& watchData)
+void CWatchWindow::SetExpanded(const CWatchWindowData& watchData)
 {
 	const wxTreeItemId& item = watchData.GetItem();
 
@@ -98,7 +98,7 @@ void ibWatchWindow::SetExpanded(const ibWatchWindowData& watchData)
 	m_updating = false;
 }
 
-void ibWatchWindow::UpdateItem(const wxTreeItemId& item)
+void CWatchWindow::UpdateItem(const wxTreeItemId& item)
 {
 	const wxString& expression = GetItemText(item);
 
@@ -118,7 +118,7 @@ void ibWatchWindow::UpdateItem(const wxTreeItemId& item)
 	SetItemText(item, 2, wxEmptyString);
 }
 
-void ibWatchWindow::UpdateItems()
+void CWatchWindow::UpdateItems()
 {
 	wxTreeItemIdValue cookie;
 	wxTreeItemId item = GetFirstChild(m_root, cookie);
@@ -129,7 +129,7 @@ void ibWatchWindow::UpdateItems()
 	}
 }
 
-void ibWatchWindow::AddWatch(const wxString& expression)
+void CWatchWindow::AddWatch(const wxString& expression)
 {
 	wxString temp = expression;
 	temp.Trim().Trim(false);
@@ -156,7 +156,7 @@ void ibWatchWindow::AddWatch(const wxString& expression)
 	}
 }
 
-void ibWatchWindow::OnKeyDown(wxTreeEvent& event)
+void CWatchWindow::OnKeyDown(wxTreeEvent& event)
 {
 	if (event.GetKeyCode() == WXK_DELETE ||
 		event.GetKeyCode() == WXK_BACK)
@@ -212,7 +212,7 @@ void ibWatchWindow::OnKeyDown(wxTreeEvent& event)
 	}
 }
 
-void ibWatchWindow::OnBeginLabelEdit(wxTreeEvent& event)
+void CWatchWindow::OnBeginLabelEdit(wxTreeEvent& event)
 {
 	if (GetItemParent(event.GetItem()) == m_root)
 	{
@@ -224,7 +224,7 @@ void ibWatchWindow::OnBeginLabelEdit(wxTreeEvent& event)
 	}
 }
 
-void ibWatchWindow::OnEndLabelEdit(wxTreeEvent& event)
+void CWatchWindow::OnEndLabelEdit(wxTreeEvent& event)
 {
 	if (!event.IsEditCancelled())
 	{
@@ -260,14 +260,14 @@ void ibWatchWindow::OnEndLabelEdit(wxTreeEvent& event)
 	m_editing = false;
 }
 
-void ibWatchWindow::OnItemSelected(wxTreeEvent& event)
+void CWatchWindow::OnItemSelected(wxTreeEvent& event)
 {
 	// Initiate the label editing.
 	EditLabel(event.GetItem());
 	event.Skip();
 }
 
-void ibWatchWindow::OnItemDeleted(wxTreeEvent& event)
+void CWatchWindow::OnItemDeleted(wxTreeEvent& event)
 {
 	wxTreeItemId item = event.GetItem();
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
@@ -282,7 +282,7 @@ void ibWatchWindow::OnItemDeleted(wxTreeEvent& event)
 	event.Skip();
 }
 
-void ibWatchWindow::OnItemExpanding(wxTreeEvent& event)
+void CWatchWindow::OnItemExpanding(wxTreeEvent& event)
 {
 	wxTreeItemId item = event.GetItem();
 	wxString expression = GetItemText(item);
@@ -311,7 +311,7 @@ void ibWatchWindow::OnItemExpanding(wxTreeEvent& event)
 	else event.Skip();
 }
 
-void ibWatchWindow::CreateEmptySlotIfNeeded()
+void CWatchWindow::CreateEmptySlotIfNeeded()
 {
 	unsigned int numItems = GetChildrenCount(m_root, false); bool needsEmptySlot = true;
 

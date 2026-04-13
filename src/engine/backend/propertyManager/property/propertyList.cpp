@@ -1,16 +1,13 @@
 #include "propertyList.h"
 
-//get property for grid  	
-wxObject* (*ibPropertyList::ms_propertyList)(const wxString&, const wxString&, const wxPGChoices&, const int&) = nullptr;
-
 //base property for "list"
-bool ibPropertyList::SetDataValue(const ibValue& varPropVal)
+bool CPropertyList::SetDataValue(const CValue& varPropVal) 
 {
 	if (!m_functor->Invoke(this))
 		return false;
 
 	for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
-		const ibValue* selValue = m_listPropValue.GetItemValue(idx);
+		const CValue *selValue = m_listPropValue.GetItemValue(idx); 
 		if ((selValue != nullptr && *selValue == varPropVal) || (selValue == nullptr && varPropVal == wxEmptyValue)) {
 			SetValue(stringUtils::IntToStr(m_listPropValue.GetItemId(idx)));
 			return true;
@@ -19,9 +16,9 @@ bool ibPropertyList::SetDataValue(const ibValue& varPropVal)
 	return false;
 };
 
-bool ibPropertyList::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyList::GetDataValue(CValue& pvarPropVal) const 
 {
-	if (!m_functor->Invoke(const_cast<ibPropertyList*>(this)))
+	if (!m_functor->Invoke(const_cast<CPropertyList*>(this)))
 		return false;
 
 	for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
@@ -33,13 +30,13 @@ bool ibPropertyList::GetDataValue(ibValue& pvarPropVal) const
 	return false;
 };
 
-bool ibPropertyList::LoadData(ibReaderMemory& reader)
+bool CPropertyList::LoadData(CMemoryReader& reader)
 {
 	SetValue((long)reader.r_s32());
 	return true;
 };
 
-bool ibPropertyList::SaveData(ibWriterMemory& writer)
+bool CPropertyList::SaveData(CMemoryWriter& writer) 
 {
 	writer.w_s32(GetValueAsInteger());
 	return true;

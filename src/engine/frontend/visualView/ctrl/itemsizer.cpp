@@ -2,30 +2,30 @@
 #include "frontend/visualView/pageWindow.h"
 #include "form.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueSizerItem, ibValueSizer)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueSizerItem, IValueSizer)
 
 //************************************************************************************
 //*                            Support item                                          *
 //************************************************************************************
 
-inline wxObject* GetParentFormVisualEditor(ibVisualHost* visualEdit, ibValueFrame* object)
+inline wxObject* GetParentFormVisualEditor(IVisualHost* visualEdit, IValueFrame* object)
 {
-	ibValueFrame* parent = object->GetParent();
+	IValueFrame* parent = object->GetParent();
 	wxASSERT(parent);
 
 	wxObject* wxparent_object = visualEdit->GetWxObject(parent);
 	if (parent->GetClassName() == wxT("NotebookPage")) {
-		ibPanelPage* objPage =
-			dynamic_cast<ibPanelPage*>(wxparent_object);
+		CPanelPage* objPage =
+			dynamic_cast<CPanelPage*>(wxparent_object);
 		return objPage != nullptr ? objPage->GetSizer() : nullptr;
 	}
 
 	return wxparent_object;
 }
 
-inline wxObject* GetChildFormVisualEditor(ibVisualHost* visualEdit, wxObject* wxobject, unsigned int childIndex)
+inline wxObject* GetChildFormVisualEditor(IVisualHost* visualEdit, wxObject* wxobject, unsigned int childIndex)
 {
-	ibValueFrame* obj = visualEdit->GetObjectBase(wxobject);
+	IValueFrame* obj = visualEdit->GetObjectBase(wxobject);
 	if (childIndex >= obj->GetChildCount())
 		return nullptr;
 	return visualEdit->GetWxObject(obj->GetChild(childIndex));
@@ -35,13 +35,13 @@ inline wxObject* GetChildFormVisualEditor(ibVisualHost* visualEdit, wxObject* wx
 //*                            ValueSizerItem                                        *
 //************************************************************************************
 
-ibValueSizerItem::ibValueSizerItem() : ibValueFrame()
+CValueSizerItem::CValueSizerItem() : IValueFrame()
 {
 }
 
-void ibValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstÑreated)
+void CValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool firstÑreated)
 {
-	ibValueFrame* object = visualHost->GetObjectBase(wxobject);
+	IValueFrame* object = visualHost->GetObjectBase(wxobject);
 
 	// Get parent sizer
 	wxSizer* sizer = wxDynamicCast(GetParentFormVisualEditor(visualHost, object), wxSizer);
@@ -54,7 +54,7 @@ void ibValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisua
 	}
 
 	// Get IObject for property access
-	ibValueSizerItem* obj = wxDynamicCast(object, ibValueSizerItem);
+	CValueSizerItem* obj = wxDynamicCast(object, CValueSizerItem);
 
 	// Add the child ( window or sizer ) to the sizer
 	wxWindow* windowChild = wxDynamicCast(child, wxWindow);
@@ -80,9 +80,9 @@ void ibValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisua
 	}
 }
 
-void ibValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ibValueFrame* object = visualHost->GetObjectBase(wxobject);
+	IValueFrame* object = visualHost->GetObjectBase(wxobject);
 
 	// Get parent sizer
 	wxSizer* sizer = wxDynamicCast(GetParentFormVisualEditor(visualHost, object), wxSizer);
@@ -95,16 +95,16 @@ void ibValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisua
 	}
 
 	// Get IObject for property access
-	ibValueSizerItem* obj = wxDynamicCast(object, ibValueSizerItem);
+	CValueSizerItem* obj = wxDynamicCast(object, CValueSizerItem);
 
 	// Add the child ( window or sizer ) to the sizer
 	wxWindow* windowChild = wxDynamicCast(child, wxWindow);
 	wxSizer* sizerChild = wxDynamicCast(child, wxSizer);
 
-	ibValueFrame* parentControl = GetParent(); int idx = wxNOT_FOUND;
+	IValueFrame* parentControl = GetParent(); int idx = wxNOT_FOUND;
 
 	for (unsigned int i = 0; i < parentControl->GetChildCount(); i++) {
-		ibValueFrame* child = parentControl->GetChild(i);
+		IValueFrame* child = parentControl->GetChild(i);
 		if (m_controlId == child->GetControlID()) {
 			idx = i;
 			break;
@@ -147,30 +147,30 @@ void ibValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisua
 		}
 	}
 
-	const ibValueFrame* parent = object->GetParent();
+	const IValueFrame* parent = object->GetParent();
 	if (parent->GetClassName() == wxT("NotebookPage")) {
 		wxObject* wxparent_object = visualHost->GetWxObject(parent);
-		ibPanelPage* objPage =
-			dynamic_cast<ibPanelPage*>(wxparent_object);
+		CPanelPage* objPage =
+			dynamic_cast<CPanelPage*>(wxparent_object);
 		objPage->Layout();
 	}
 }
 
 #include "backend/metaData.h"
 
-ibMetaData* ibValueSizerItem::GetMetaData() const
+IMetaData* CValueSizerItem::GetMetaData() const
 {
-	const ibValueMetaObjectFormBase* metaFormObject = m_formOwner ?
+	const IValueMetaObjectForm* metaFormObject = m_formOwner ?
 		m_formOwner->GetFormMetaObject() :
 		nullptr;
 
 	//for form buider
 	if (metaFormObject == nullptr) {
-		ibSourceDataObject* srcValue = m_formOwner ?
+		ISourceDataObject* srcValue = m_formOwner ?
 			m_formOwner->GetSourceObject() :
 			nullptr;
 		if (srcValue != nullptr) {
-			ibValueMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
+			IValueMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
 			wxASSERT(metaValue);
 			return metaValue->GetMetaData();
 		}
@@ -183,21 +183,21 @@ ibMetaData* ibValueSizerItem::GetMetaData() const
 
 #include "backend/metaCollection/metaFormObject.h"
 
-ibFormID ibValueSizerItem::GetTypeForm() const
+form_identifier_t CValueSizerItem::GetTypeForm() const
 {
 	if (!m_formOwner) {
 		wxASSERT(m_formOwner);
 		return 0;
 	}
 
-	const ibValueMetaObjectFormBase* metaFormObj =
+	const IValueMetaObjectForm* metaFormObj =
 		m_formOwner->GetFormMetaObject();
 	wxASSERT(metaFormObj);
 
 	return metaFormObj->GetTypeForm();
 }
 
-ibProcUnit* ibValueSizerItem::GetFormProcUnit() const
+CProcUnit* CValueSizerItem::GetFormProcUnit() const
 {
 	if (!m_formOwner) {
 		wxASSERT(m_formOwner);
@@ -211,7 +211,7 @@ ibProcUnit* ibValueSizerItem::GetFormProcUnit() const
 //*                                    Data										   *
 //**********************************************************************************
 
-bool ibValueSizerItem::LoadData(ibReaderMemory& reader)
+bool CValueSizerItem::LoadData(CMemoryReader& reader)
 {
 	//m_propertyProportion->SetValue(reader.r_s32());
 	//m_propertyFlagBorder->SetValue(reader.r_s64());
@@ -229,10 +229,10 @@ bool ibValueSizerItem::LoadData(ibReaderMemory& reader)
 	m_propertyFlagState->LoadData(reader);
 	m_propertyBorder->LoadData(reader);
 
-	return ibValueFrame::LoadData(reader);
+	return IValueFrame::LoadData(reader);
 }
 
-bool ibValueSizerItem::SaveData(ibWriterMemory& writer)
+bool CValueSizerItem::SaveData(CMemoryWriter& writer)
 {
 	//writer.w_s32(m_propertyProportion->GetValueAsInteger());
 	//writer.w_s64(m_propertyFlagBorder->GetValueAsInteger());
@@ -250,11 +250,11 @@ bool ibValueSizerItem::SaveData(ibWriterMemory& writer)
 	m_propertyFlagState->SaveData(writer);
 	m_propertyBorder->SaveData(writer);
 
-	return ibValueFrame::SaveData(writer);
+	return IValueFrame::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(ibValueSizerItem, "SizerItem", "Sizer", string_to_clsid("CT_SIZR"));
+S_CONTROL_TYPE_REGISTER(CValueSizerItem, "SizerItem", "Sizer", string_to_clsid("CT_SIZR"));

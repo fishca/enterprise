@@ -10,8 +10,8 @@
 #include "mainFrame/metaTree/treeConfiguration.h"
 #include "backend/metadataReport.h"
 
-class ibDataReportTree : public ibMetaDataTree {
-	wxDECLARE_DYNAMIC_CLASS(ibDataReportTree);
+class CDataReportTree : public IMetaDataTree {
+	wxDECLARE_DYNAMIC_CLASS(CDataReportTree);
 private:
 
 	wxTreeItemId m_treeREPORTS;
@@ -32,7 +32,7 @@ private:
 		while (parentItem != nullptr) {
 			wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 			if (item != nullptr) {
-				ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
+				CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 				if (item_clsid != nullptr) return parentItem;
 			}
 			parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
@@ -40,25 +40,25 @@ private:
 		return wxTreeItemId(nullptr);
 	}
 
-	ibClassID GetClassIdentifier() const {
+	class_identifier_t GetClassIdentifier() const {
 		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(GetSelectionIdentifier());
 		if (item != nullptr) {
-			ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
+			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) return item_clsid->m_clsid;
 		}
 		return 0;
 	}
 
-	ibValueMetaObject* GetMetaIdentifier() const {
+	IValueMetaObject* GetMetaIdentifier() const {
 		wxTreeItemId parentItem = GetSelectionIdentifier();
 		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 		if (item != nullptr) {
-			ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
+			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) {
 				while (parentItem != nullptr) {
 					wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 					if (item != nullptr) {
-						ibValueMetaObject* parent = GetMetaObject(parentItem);
+						IValueMetaObject* parent = GetMetaObject(parentItem);
 						if (parent != nullptr) return parent;
 					}
 					parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
@@ -91,11 +91,11 @@ protected:
 
 	wxButton* m_buttonModule;
 
-	class ibDataReportTreeCtrl : public wxTreeCtrl {
-		wxDECLARE_DYNAMIC_CLASS(ibMetadataTree);
+	class CDataReportTreeCtrl : public wxTreeCtrl {
+		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
 	private:
-		ibDataReportTree* m_ownerTree;
-		ibMetaView* m_metaView;
+		CDataReportTree* m_ownerTree;
+		CMetaView* m_metaView;
 	public:
 
 		void RefreshSelectedItem(bool scroll = true) {
@@ -109,9 +109,9 @@ protected:
 			wxTreeCtrl::Update();
 		}
 
-		ibDataReportTreeCtrl();
-		ibDataReportTreeCtrl(wxWindow* parentWnd, ibDataReportTree* ownerWnd);
-		virtual ~ibDataReportTreeCtrl();
+		CDataReportTreeCtrl();
+		CDataReportTreeCtrl(wxWindow* parentWnd, CDataReportTree* ownerWnd);
+		virtual ~CDataReportTreeCtrl();
 
 		// this function is called to compare 2 items and should return -1, 0
 		// or +1 if the first item is less than, equal to or greater than the
@@ -120,12 +120,12 @@ protected:
 		virtual int OnCompareItems(const wxTreeItemId& item1,
 			const wxTreeItemId& item2) {
 			int ret = wxStrcmp(GetItemText(item1), GetItemText(item2));
-			ibTreeDataMetaItem* data1 = dynamic_cast<ibTreeDataMetaItem*>(GetItemData(item1));
-			ibTreeDataMetaItem* data2 = dynamic_cast<ibTreeDataMetaItem*>(GetItemData(item2));
+			CTreeDataMetaItem* data1 = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item1));
+			CTreeDataMetaItem* data2 = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item2));
 			if (data1 != nullptr && data2 != nullptr && ret > 0) {
-				ibValueMetaObject* metaObject1 = data1->m_metaObject;
-				ibValueMetaObject* metaObject2 = data2->m_metaObject;
-				ibValueMetaObject* parent = metaObject1->GetParent();
+				IValueMetaObject* metaObject1 = data1->m_metaObject;
+				IValueMetaObject* metaObject2 = data2->m_metaObject;
+				IValueMetaObject* parent = metaObject1->GetParent();
 				wxASSERT(parent);
 				return parent->ChangeChildPosition(metaObject2,
 					parent->GetChildPosition(metaObject1)
@@ -173,13 +173,13 @@ protected:
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	ibDataReportTreeCtrl* m_metaTreeCtrl;
-	ibMetaDataReport* m_metaData;
+	CDataReportTreeCtrl* m_metaTreeCtrl;
+	CMetaDataReport* m_metaData;
 
 private:
 
-	wxTreeItemId AppendRootItem(const ibClassID& clsid, const wxString& name = wxEmptyString) const {
-		const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
+	wxTreeItemId AppendRootItem(const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
@@ -192,8 +192,8 @@ private:
 	}
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const ibClassID& clsid, const wxString& name = wxEmptyString) const {
-		const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
+		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
@@ -206,7 +206,7 @@ private:
 	}
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const ibClassID& clsid, ibValueMetaObject* metaObject) const {
+		const class_identifier_t& clsid, IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -218,7 +218,7 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		ibValueMetaObject* metaObject) const {
+		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -231,10 +231,10 @@ private:
 
 	void ActivateItem(const wxTreeItemId& item);
 
-	ibValueMetaObject* NewItem(const ibClassID& clsid, ibValueMetaObject* parent, bool rubObject = true);
-	ibValueMetaObject* CreateItem(bool showValue = true);
+	IValueMetaObject* NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool rubObject = true);
+	IValueMetaObject* CreateItem(bool showValue = true);
 
-	wxTreeItemId FillItem(ibValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
+	wxTreeItemId FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
 
 	void EditItem();
 	void RemoveItem();
@@ -255,18 +255,18 @@ private:
 
 	void FillData();
 
-	ibValueMetaObject* GetMetaObject(const wxTreeItemId& item) const
+	IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const
 	{
 		if (!item.IsOk())
 			return nullptr;
-		ibTreeDataMetaItem* data =
-			dynamic_cast<ibTreeDataMetaItem*>(m_metaTreeCtrl->GetItemData(item));
+		CTreeDataMetaItem* data =
+			dynamic_cast<CTreeDataMetaItem*>(m_metaTreeCtrl->GetItemData(item));
 		if (data == nullptr)
 			return nullptr;
 		return data->m_metaObject;
 	}
 
-	void UpdateToolbar(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& item);
 
 public:
 
@@ -274,18 +274,18 @@ public:
 
 public:
 
-	bool RenameMetaObject(ibValueMetaObject* obj, const wxString& sNewName);
+	bool RenameMetaObject(IValueMetaObject* obj, const wxString& sNewName);
 
 public:
 
-	virtual ibMetaData* GetMetaData() const { return m_metaData; }
+	virtual IMetaData* GetMetaData() const { return m_metaData; }
 
-	ibDataReportTree() { }
-	ibDataReportTree(ibMetaDocument* docParent, wxWindow* parent, wxWindowID id = wxID_ANY);
-	virtual ~ibDataReportTree();
+	CDataReportTree() { }
+	CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxWindowID id = wxID_ANY);
+	virtual ~CDataReportTree();
 
 	void InitTree();
-	bool Load(ibMetaDataReport* metaData);
+	bool Load(CMetaDataReport* metaData);
 	bool Save();
 
 	void ActivateTree();

@@ -59,12 +59,12 @@ static char* s_button_xpm[] = {
 	"                "
 };
 
-wxIcon ibValueButton::GetIcon() const
+wxIcon CValueButton::GetIcon() const
 {
 	return wxIcon(s_button_xpm);
 }
 
-wxIcon ibValueButton::GetIconGroup()
+wxIcon CValueButton::GetIconGroup()
 {
 	return wxIcon(s_button_xpm);
 }

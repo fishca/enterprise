@@ -10,33 +10,33 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-void ibFrameCodeRunner::SyntaxCheckOnButtonClick(wxCommandEvent& event)
+void CFrameCodeRunner::SyntaxCheckOnButtonClick(wxCommandEvent& event)
 {
 	try {
 		m_compileCode->Compile(m_codeEditor->GetText());;
-		ibFrameCodeRunner::AppendOutput(_("No syntax errors detected!"));
+		CFrameCodeRunner::AppendOutput(_("No syntax errors detected!"));
 	}
-	catch (const ibBackendException* err) {
-		ibFrameCodeRunner::AppendOutput(err->GetErrorDescription());
+	catch (const CBackendException* err) {
+		CFrameCodeRunner::AppendOutput(err->GetErrorDescription());
 	}
 
 	event.Skip();
 }
 
-void ibFrameCodeRunner::RunCodeOnButtonClick(wxCommandEvent& event)
+void CFrameCodeRunner::RunCodeOnButtonClick(wxCommandEvent& event)
 {
 	try {
 		m_compileCode->Compile(m_codeEditor->GetText());
 		m_procUnit->Execute(m_compileCode->m_cByteCode);
 	}
-	catch (const ibBackendException* err) {
-		ibFrameCodeRunner::AppendOutput(err->GetErrorDescription());
+	catch (const CBackendException* err) {
+		CFrameCodeRunner::AppendOutput(err->GetErrorDescription());
 	}
 	
 	event.Skip();
 }
 
-void ibFrameCodeRunner::ClearOutputOnButtonClick(wxCommandEvent& event)
+void CFrameCodeRunner::ClearOutputOnButtonClick(wxCommandEvent& event)
 {
 	m_output->SetReadOnly(false);
 	m_output->ClearAll();
@@ -44,7 +44,7 @@ void ibFrameCodeRunner::ClearOutputOnButtonClick(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibFrameCodeRunner::OnKeyDown(wxKeyEvent& event)
+void CFrameCodeRunner::OnKeyDown(wxKeyEvent& event)
 {
 	if (!m_codeEditor->IsEditable()) {
 		event.Skip(); return;
@@ -59,7 +59,7 @@ void ibFrameCodeRunner::OnKeyDown(wxKeyEvent& event)
 	};
 }
 
-void ibFrameCodeRunner::OnStyleNeeded(wxStyledTextEvent& event)
+void CFrameCodeRunner::OnStyleNeeded(wxStyledTextEvent& event)
 {
 	/*this is called every time the styler detects a line that needs style, so we style that range.
 	This will save a lot of performance since we only style text when needed instead of parsing the whole file every time.*/
@@ -172,7 +172,7 @@ void ibFrameCodeRunner::OnStyleNeeded(wxStyledTextEvent& event)
 	event.Skip();
 }
 
-void ibFrameCodeRunner::OnChagedText(wxStyledTextEvent& event)
+void CFrameCodeRunner::OnChagedText(wxStyledTextEvent& event)
 {
 	int modFlags = event.GetModificationType();
 	if ((modFlags & (wxSTC_MOD_BEFOREINSERT)) == 0 &&
@@ -184,12 +184,12 @@ void ibFrameCodeRunner::OnChagedText(wxStyledTextEvent& event)
 	event.Skip();
 }
 
-void ibFrameCodeRunner::OnNeedShow(wxStyledTextEvent& event)
+void CFrameCodeRunner::OnNeedShow(wxStyledTextEvent& event)
 {
 	event.Skip();
 }
 
-void ibFrameCodeRunner::OnMarginClick(wxStyledTextEvent& event)
+void CFrameCodeRunner::OnMarginClick(wxStyledTextEvent& event)
 {
 	const int currentLine =
 		m_codeEditor->LineFromPosition(event.GetPosition());
@@ -217,16 +217,16 @@ m_codeEditor->SetStyling(fromPos + translate.GetCurrentPos() - currPos, style);
 
 ///////////////////////////////////////////////////////////////////////////
 
-void ibFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
+void CFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
 	const int fromLine, const int toLine,
 	const int fromPos, const int toPos,
 	const wxString& strCode
 )
 {
-	class ibFoldParser {
+	class CFoldParser {
 		wxStyledTextCtrl* m_stc;
 	public:
-		ibFoldParser(wxStyledTextCtrl* stc, const int fromLine, const int toLine) :
+		CFoldParser(wxStyledTextCtrl* stc, const int fromLine, const int toLine) :
 			m_stc(stc), m_fromLine(fromLine), m_toLine(toLine), m_foldLevel(0) {
 			m_foldLevel = m_stc->GetFoldLevel(fromLine);
 		}
@@ -296,9 +296,9 @@ void ibFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
 		int m_foldLevel;
 	};
 
-	ibFoldParser foldParser(m_codeEditor, fromLine, toLine);
+	CFoldParser foldParser(m_codeEditor, fromLine, toLine);
 
-	ibTranslateCode translate;
+	CTranslateCode translate;
 	translate.Load(strCode);
 
 	//вдруг строка начинается с комментария:
@@ -314,7 +314,7 @@ void ibFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
 		currPos = fromPos + translate.GetCurrentPos();
 		if (translate.IsWord()) {
 			(void)translate.GetWord(strWord);
-			const short keyWord = ibTranslateCode::IsKeyWord(strWord);
+			const short keyWord = CTranslateCode::IsKeyWord(strWord);
 			if (keyWord != wxNOT_FOUND && wasLeftPoint != translate.GetCurrentLine()) {
 
 				if (keyWord == KEY_PROCEDURE
@@ -380,7 +380,7 @@ void ibFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
 	foldParser.PatchFold();
 }
 
-void ibFrameCodeRunner::PrepareTABs()
+void CFrameCodeRunner::PrepareTABs()
 {
 	const int curr_position = m_codeEditor->GetCurrentPos();
 	const int curr_line =
@@ -473,7 +473,7 @@ void ibFrameCodeRunner::PrepareTABs()
 	m_codeEditor->SetEmptySelection(curr_position + strTabs.length());
 }
 
-void ibFrameCodeRunner::SetFontColorSettings()
+void CFrameCodeRunner::SetFontColorSettings()
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -564,8 +564,8 @@ void ibFrameCodeRunner::SetFontColorSettings()
 
 ///////////////////////////////////////////////////////////////////////////
 
-ibFrameCodeRunner::ibFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
-	wxFrame(parent, id, title, pos, size, style), m_compileCode(new ibCompileCode), m_procUnit(new ibProcUnit)
+CFrameCodeRunner::CFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+	wxFrame(parent, id, title, pos, size, style), m_compileCode(new CCompileCode), m_procUnit(new CProcUnit)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -698,25 +698,25 @@ ibFrameCodeRunner::ibFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxSt
 
 	this->Centre(wxBOTH);
 
-	for (auto ctor : ibValue::GetListCtorsByType(ibCtorObjectType_object_context)) {
+	for (auto ctor : CValue::GetListCtorsByType(eCtorObjectType_object_context)) {
 		m_compileCode->AddContextVariable(ctor->GetClassName(), ctor->CreateObject());
 	}
 
 	// Connect Events
-	m_buttonSyntaxCheck->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::SyntaxCheckOnButtonClick), nullptr, this);
-	m_buttonRunCode->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::RunCodeOnButtonClick), nullptr, this);
-	m_buttonClearOutput->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::ClearOutputOnButtonClick), nullptr, this);
+	m_buttonSyntaxCheck->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CFrameCodeRunner::SyntaxCheckOnButtonClick), nullptr, this);
+	m_buttonRunCode->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CFrameCodeRunner::RunCodeOnButtonClick), nullptr, this);
+	m_buttonClearOutput->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CFrameCodeRunner::ClearOutputOnButtonClick), nullptr, this);
 
-	m_codeEditor->Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(ibFrameCodeRunner::OnKeyDown), nullptr, this);
-	m_codeEditor->Connect(wxEVT_STC_STYLENEEDED, wxStyledTextEventHandler(ibFrameCodeRunner::OnStyleNeeded), nullptr, this);
-	m_codeEditor->Connect(wxEVT_STC_MARGINCLICK, wxStyledTextEventHandler(ibFrameCodeRunner::OnMarginClick), nullptr, this);
-	m_codeEditor->Connect(wxEVT_STC_MODIFIED, wxStyledTextEventHandler(ibFrameCodeRunner::OnChagedText), nullptr, this);
-	m_codeEditor->Connect(wxEVT_STC_NEEDSHOWN, wxStyledTextEventHandler(ibFrameCodeRunner::OnNeedShow), nullptr, this);
+	m_codeEditor->Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(CFrameCodeRunner::OnKeyDown), nullptr, this);
+	m_codeEditor->Connect(wxEVT_STC_STYLENEEDED, wxStyledTextEventHandler(CFrameCodeRunner::OnStyleNeeded), nullptr, this);
+	m_codeEditor->Connect(wxEVT_STC_MARGINCLICK, wxStyledTextEventHandler(CFrameCodeRunner::OnMarginClick), nullptr, this);
+	m_codeEditor->Connect(wxEVT_STC_MODIFIED, wxStyledTextEventHandler(CFrameCodeRunner::OnChagedText), nullptr, this);
+	m_codeEditor->Connect(wxEVT_STC_NEEDSHOWN, wxStyledTextEventHandler(CFrameCodeRunner::OnNeedShow), nullptr, this);
 
 	m_codeEditor->SetText("Message(\"Hello world!\");");
 }
 
-ibFrameCodeRunner::~ibFrameCodeRunner()
+CFrameCodeRunner::~CFrameCodeRunner()
 {
 	wxDELETE(m_compileCode);
 	wxDELETE(m_procUnit);

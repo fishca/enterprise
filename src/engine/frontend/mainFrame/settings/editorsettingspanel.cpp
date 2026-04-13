@@ -1,7 +1,7 @@
 
 #include "editorsettingspanel.h"
 
-BEGIN_EVENT_TABLE(ibPanelEditorSettings, wxPanel)
+BEGIN_EVENT_TABLE(CEditorSettingsPanel, wxPanel)
 
     EVT_RADIOBUTTON(    ID_InsertSpaces,                    OnInsertSpaces )
     EVT_RADIOBUTTON(    ID_KeepTabs,                        OnKeepTabs )
@@ -14,7 +14,7 @@ BEGIN_EVENT_TABLE(ibPanelEditorSettings, wxPanel)
 
 END_EVENT_TABLE()
 
-ibPanelEditorSettings::ibPanelEditorSettings( wxWindow* parent, int id, wxPoint pos, wxSize size, int style ) : wxPanel( parent, id, pos, size, style )
+CEditorSettingsPanel::CEditorSettingsPanel( wxWindow* parent, int id, wxPoint pos, wxSize size, int style ) : wxPanel( parent, id, pos, size, style )
 {
 	wxFlexGridSizer* fgSizer2 = new wxFlexGridSizer( 2, 2, 0, 0 );
 	fgSizer2->AddGrowableCol( 0 );
@@ -74,7 +74,7 @@ ibPanelEditorSettings::ibPanelEditorSettings( wxWindow* parent, int id, wxPoint 
 
 }
 
-void ibPanelEditorSettings::Initialize()
+void CEditorSettingsPanel::Initialize()
 {   
     m_indentSizeCtrl->SetValue(wxString::Format(wxT("%d"), m_settings.GetIndentSize()));
 
@@ -99,34 +99,34 @@ void ibPanelEditorSettings::Initialize()
     m_mostRecentlyUsedTabSwitching->SetValue(m_settings.GetMostRecentlyUsedTabSwitching());
 }
 
-void ibPanelEditorSettings::SetSettings(const ibEditorSettings& settings)
+void CEditorSettingsPanel::SetSettings(const CEditorSettings& settings)
 {
     m_settings = settings;
 }
 
-const ibEditorSettings& ibPanelEditorSettings::GetSettings() const
+const CEditorSettings& CEditorSettingsPanel::GetSettings() const
 {
     return m_settings;
 }
 
-void ibPanelEditorSettings::OnInsertSpaces(wxCommandEvent& event)
+void CEditorSettingsPanel::OnInsertSpaces(wxCommandEvent& event)
 {
     m_settings.SetUseTabs(false);
     m_removeTabsOnLoad->Enable(!m_settings.GetUseTabs());
 }
 
-void ibPanelEditorSettings::OnKeepTabs(wxCommandEvent& event)
+void CEditorSettingsPanel::OnKeepTabs(wxCommandEvent& event)
 {
     m_settings.SetUseTabs(true);
     m_removeTabsOnLoad->Enable(!m_settings.GetUseTabs());
 }
 
-void ibPanelEditorSettings::OnRemoveTabsOnLoad(wxCommandEvent& event)
+void CEditorSettingsPanel::OnRemoveTabsOnLoad(wxCommandEvent& event)
 {
     m_settings.SetRemoveTabsOnLoad(m_removeTabsOnLoad->GetValue());
 }
 
-void ibPanelEditorSettings::OnIndentSizeChanged(wxCommandEvent& event)
+void CEditorSettingsPanel::OnIndentSizeChanged(wxCommandEvent& event)
 {
 
     long indentSize;
@@ -138,22 +138,22 @@ void ibPanelEditorSettings::OnIndentSizeChanged(wxCommandEvent& event)
 
 }
 
-void ibPanelEditorSettings::OnShowLineNumbersChanged(wxCommandEvent& event)
+void CEditorSettingsPanel::OnShowLineNumbersChanged(wxCommandEvent& event)
 {
     m_settings.SetShowLineNumbers(m_showLineNumbers->GetValue());
 }
 
-void ibPanelEditorSettings::OnMostRecentlyUsedTabSwitching(wxCommandEvent& event)
+void CEditorSettingsPanel::OnMostRecentlyUsedTabSwitching(wxCommandEvent& event)
 {
     m_settings.SetMostRecentlyUsedTabSwitching(m_mostRecentlyUsedTabSwitching->GetValue());
 }
 
-void ibPanelEditorSettings::OnEnableAutoComplete(wxCommandEvent& event)
+void CEditorSettingsPanel::OnEnableAutoComplete(wxCommandEvent& event)
 {
     m_settings.SetEnableAutoComplete(m_enableAutoComplete->GetValue());
 }
 
-void ibPanelEditorSettings::OnShowWhiteSpace(wxCommandEvent& event)
+void CEditorSettingsPanel::OnShowWhiteSpace(wxCommandEvent& event)
 {
     m_settings.SetShowWhiteSpace(m_showWhiteSpace->GetValue());
 }

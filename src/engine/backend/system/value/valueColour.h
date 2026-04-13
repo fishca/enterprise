@@ -4,9 +4,9 @@
 #include "backend/compiler/value.h"
 
 //Array support
-class BACKEND_API ibValueColour : public ibValue
+class BACKEND_API CValueColour : public CValue
 {
-	wxDECLARE_DYNAMIC_CLASS(ibValueColour);
+	wxDECLARE_DYNAMIC_CLASS(CValueColour);
 
 public:
 
@@ -14,11 +14,11 @@ public:
 
 public:
 
-	ibValueColour();
-	ibValueColour(const wxColour& colour);
-	virtual ~ibValueColour() {}
+	CValueColour();
+	CValueColour(const wxColour& colour);
+	virtual ~CValueColour() {}
 
-	virtual bool Init(ibValue** paParams, const long lSizeArray);
+	virtual bool Init(CValue** paParams, const long lSizeArray);
 	virtual wxString GetString() const {
 		return typeConv::ColourToString(m_colour);
 	}
@@ -28,12 +28,12 @@ public:
 		return !m_colour.IsOk();
 	}
 
-	static ibValueMethodHelper m_methodHelper;
+	static CMethodHelper m_methodHelper;
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
-	virtual ibValueMethodHelper* GetPMethods() const {
+	virtual CMethodHelper* GetPMethods() const {
 		//PrepareNames();
 		return &m_methodHelper;
 	}

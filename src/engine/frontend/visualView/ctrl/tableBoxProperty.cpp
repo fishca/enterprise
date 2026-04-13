@@ -5,23 +5,23 @@
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-void ibValueModelTableBox::OnPropertyCreated(ibProperty* property)
+void CValueTableBox::OnPropertyCreated(IProperty* property)
 {
 	//if (m_propertySource == property) {
-	//	ibValueModelTableBox::SaveToVariant(m_propertySource->GetValue(), GetMetaData());
+	//	CValueTableBox::SaveToVariant(m_propertySource->GetValue(), GetMetaData());
 	//}
 }
 
-bool ibValueModelTableBox::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
+bool CValueTableBox::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
 {
-	return ibValueWindow::OnPropertyChanging(property, newValue);
+	return IValueWindow::OnPropertyChanging(property, newValue);
 }
 
-void ibValueModelTableBox::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CValueTableBox::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_propertySource == property) {
 
-		ibValueModelTableBox::RefreshModel(true);
+		CValueTableBox::RefreshModel(true);
 
 		const int answer = wxMessageBox(
 			_("The data source has been changed. Refill columns?"),
@@ -30,23 +30,23 @@ void ibValueModelTableBox::OnPropertyChanged(ibProperty* property, const wxVaria
 
 		if (answer == wxYES) {
 
-			const ibMetaData* metaData = GetMetaData();
+			const IMetaData* metaData = GetMetaData();
 
 			while (GetChildCount() != 0) {
 				g_visualHostContext->CutControl(GetChild(0), true);
 			}
 
-			const ibClassID& clsid = ibValueModelTableBox::GetFirstClsid();
-			const ibCtorMetaValueType* typeCtor =
+			const class_identifier_t& clsid = CValueTableBox::GetFirstClsid();
+			const IMetaValueTypeCtor* typeCtor =
 				metaData->GetTypeCtor(clsid);
 			if (typeCtor != nullptr) {
-				ibValueMetaObjectCompositeData* metaObject =
-					dynamic_cast<ibValueMetaObjectCompositeData*>(typeCtor->GetMetaObject());
+				IValueMetaObjectCompositeData* metaObject =
+					dynamic_cast<IValueMetaObjectCompositeData*>(typeCtor->GetMetaObject());
 				if (metaObject != nullptr) {
 					for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
-						ibValueModelTableBoxColumn* tableBoxColumn =
+						CValueTableBoxColumn* tableBoxColumn =
 							wxDynamicCast(
-								m_formOwner->CreateControl(wxT("TableboxColumn"), this), ibValueModelTableBoxColumn
+								m_formOwner->CreateControl(wxT("TableboxColumn"), this), CValueTableBoxColumn
 							);
 						wxASSERT(tableBoxColumn);
 						tableBoxColumn->SetControlName(GetControlName() + object->GetName());
@@ -59,12 +59,12 @@ void ibValueModelTableBox::OnPropertyChanged(ibProperty* property, const wxVaria
 			}
 
 			if (GetChildCount() == 0) {
-				ibValueModelTableBox::AddColumn();
+				CValueTableBox::AddColumn();
 			}
 
 			g_visualHostContext->RefreshEditor();
 		}
 	}
 
-	ibValueWindow::OnPropertyChanged(property, oldValue, newValue);
+	IValueWindow::OnPropertyChanged(property, oldValue, newValue);
 }

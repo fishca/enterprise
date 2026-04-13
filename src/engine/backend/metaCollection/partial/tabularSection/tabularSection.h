@@ -5,8 +5,8 @@
 
 #include "backend/metaCollection/table/metaTableObject.h"
 
-class BACKEND_API ibValueTabularSectionDataObjectBase : public ibValueModelTableBase {
-	wxDECLARE_ABSTRACT_CLASS(ibValueTabularSectionDataObjectBase);
+class BACKEND_API IValueTabularSectionDataObject : public IValueTable {
+	wxDECLARE_ABSTRACT_CLASS(IValueTabularSectionDataObject);
 private:
 
 	enum Func {
@@ -24,72 +24,72 @@ private:
 		eTabularSection,
 	};
 
-	class ibVariantDataValueNumberLine :
-		public ibVariantDataValueImpl<ibValue> {
+	class wxVariantDataValueNumberLine :
+		public wxVariantDataValueImpl<CValue> {
 	public:
-		ibVariantDataValueNumberLine(const long& cValue)
-			: ibVariantDataValueImpl(cValue)
+		wxVariantDataValueNumberLine(const long& cValue)
+			: wxVariantDataValueImpl(cValue)
 		{
 		}
 	};
 
 public:
 
-	virtual ibValueModelColumnCollection* GetColumnCollection() const override { return m_recordColumnCollection; }
-	virtual ibValueModelReturnLine* GetRowAt(const ibDataViewItem& line) {
+	virtual IValueModelColumnCollection* GetColumnCollection() const override { return m_recordColumnCollection; }
+	virtual IValueModelReturnLine* GetRowAt(const wxDataViewExtItem& line) {
 		if (!line.IsOk())
 			return nullptr;
-		return ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, line);
+		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, line);
 	}
 
 	virtual bool HasDefaultCompare() const override { return false; }
 
-	virtual ibDataViewItem FindRowValue(const ibValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const;
+	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
+	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal);
-	virtual bool GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& pvarMetaVal) const;
+	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal);
+	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const;
 
-	virtual ibValue GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id) const {
-		ibValue retValue;
+	virtual CValue GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id) const {
+		CValue retValue;
 		if (GetValueByMetaID(item, id, retValue))
 			return retValue;
-		return ibValue();
+		return CValue();
 	}
 
-	class ibValueTabularSectionDataObjectColumnCollection : public ibValueModelTableBase::ibValueModelColumnCollection {
-		wxDECLARE_DYNAMIC_CLASS(ibValueTabularSectionDataObjectColumnCollection);
+	class CValueTabularSectionDataObjectColumnCollection : public IValueTable::IValueModelColumnCollection {
+		wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObjectColumnCollection);
 	public:
-		class ibValueTabularSectionColumnInfo : public ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo {
-			wxDECLARE_DYNAMIC_CLASS(ibValueTabularSectionColumnInfo);
+		class CValueTabularSectionColumnInfo : public IValueTable::IValueModelColumnCollection::IValueModelColumnInfo {
+			wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionColumnInfo);
 		public:
 
 			virtual unsigned int GetColumnID() const { return m_metaAttribute->GetMetaID(); }
 			virtual wxString GetColumnName() const { return m_metaAttribute->GetName(); }
 			virtual wxString GetColumnCaption() const { return m_metaAttribute->GetSynonym(); }
-			virtual const ibTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
+			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
-			ibValueTabularSectionColumnInfo();
-			ibValueTabularSectionColumnInfo(ibValueMetaObjectAttributeBase* attribute);
-			virtual ~ibValueTabularSectionColumnInfo();
+			CValueTabularSectionColumnInfo();
+			CValueTabularSectionColumnInfo(IValueMetaObjectAttribute* attribute);
+			virtual ~CValueTabularSectionColumnInfo();
 
 		private:
-			ibValueMetaObjectAttributeBase* m_metaAttribute;
-			friend ibValueTabularSectionDataObjectColumnCollection;
+			IValueMetaObjectAttribute* m_metaAttribute;
+			friend CValueTabularSectionDataObjectColumnCollection;
 		};
 
 	public:
 
-		ibValueTabularSectionDataObjectColumnCollection();
-		ibValueTabularSectionDataObjectColumnCollection(ibValueTabularSectionDataObjectBase* ownerTable);
-		virtual ~ibValueTabularSectionDataObjectColumnCollection();
+		CValueTabularSectionDataObjectColumnCollection();
+		CValueTabularSectionDataObjectColumnCollection(IValueTabularSectionDataObject* ownerTable);
+		virtual ~CValueTabularSectionDataObjectColumnCollection();
 
-		virtual const ibTypeDescription GetColumnType(unsigned int col) const {
+		virtual const CTypeDescription GetColumnType(unsigned int col) const {
 			return m_listColumnInfo.at(col)->GetColumnType();
 		}
 
-		virtual ibValueModelColumnInfo* GetColumnInfo(unsigned int idx) const {
+		virtual IValueModelColumnInfo* GetColumnInfo(unsigned int idx) const {
 			if (m_listColumnInfo.size() < idx)
 				return nullptr;
 			auto& it = m_listColumnInfo.begin();
@@ -100,77 +100,77 @@ public:
 		virtual unsigned int GetColumnCount() const { return m_listColumnInfo.size(); }
 
 		//array support 
-		virtual bool SetAt(const ibValue& varKeyValue, const ibValue& varValue);
-		virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
+		virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
+		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
 
-		friend class ibValueTabularSectionDataObjectBase;
+		friend class IValueTabularSectionDataObject;
 
 	protected:
 
-		ibValueTabularSectionDataObjectBase* m_ownerTable;
-		std::map<ibMetaID, ibValuePtr<ibValueTabularSectionColumnInfo>> m_listColumnInfo;
-		ibValueMethodHelper* m_methodHelper;
+		IValueTabularSectionDataObject* m_ownerTable;
+		std::map<meta_identifier_t, CValuePtr<CValueTabularSectionColumnInfo>> m_listColumnInfo;
+		CMethodHelper* m_methodHelper;
 	};
 
-	class ibValueTabularSectionDataObjectReturnLine : public ibValueModelReturnLine {
-		wxDECLARE_DYNAMIC_CLASS(ibValueTabularSectionDataObjectReturnLine);
+	class CValueTabularSectionDataObjectReturnLine : public IValueModelReturnLine {
+		wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObjectReturnLine);
 	public:
 
-		ibValueTabularSectionDataObjectReturnLine(ibValueTabularSectionDataObjectBase* ownerTable = nullptr, const ibDataViewItem& line = ibDataViewItem(nullptr));
-		virtual ~ibValueTabularSectionDataObjectReturnLine();
+		CValueTabularSectionDataObjectReturnLine(IValueTabularSectionDataObject* ownerTable = nullptr, const wxDataViewExtItem& line = wxDataViewExtItem(nullptr));
+		virtual ~CValueTabularSectionDataObjectReturnLine();
 
-		virtual ibValueModelTableBase* GetOwnerModel() const { return m_ownerTable; }
-		virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+		virtual IValueTable* GetOwnerModel() const { return m_ownerTable; }
+		virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
 
 		virtual void PrepareNames() const;
 
-		virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal); //setting attribute
-		virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal); //attribute value
+		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal); //setting attribute
+		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
 
 		//Get ref class 
-		virtual ibClassID GetClassType() const;
+		virtual class_identifier_t GetClassType() const;
 
 		virtual wxString GetClassName() const;
 		virtual wxString GetString() const;
 
-		friend class ibValueTabularSectionDataObjectBase;
+		friend class IValueTabularSectionDataObject;
 	private:
-		ibValueTabularSectionDataObjectBase* m_ownerTable;
-		ibValueMethodHelper* m_methodHelper;
+		IValueTabularSectionDataObject* m_ownerTable;
+		CMethodHelper* m_methodHelper;
 	};
 
-	ibValueMetaObjectTableData* GetMetaObject() const { return m_metaTable; }
-	ibMetaID GetMetaID() const { return m_metaTable ? m_metaTable->GetMetaID() : wxNOT_FOUND; }
+	CValueMetaObjectTableData* GetMetaObject() const { return m_metaTable; }
+	meta_identifier_t GetMetaID() const { return m_metaTable ? m_metaTable->GetMetaID() : wxNOT_FOUND; }
 
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
+	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
 
 	//Get ref class 
-	virtual ibClassID GetSourceClassType() const { return GetClassType(); }
+	virtual class_identifier_t GetSourceClassType() const { return GetClassType(); }
 
 #pragma endregion 
 
-	ibValueTabularSectionDataObjectBase() :
+	IValueTabularSectionDataObject() :
 		m_objectValue(nullptr), m_metaTable(nullptr),
 		m_recordColumnCollection(nullptr),
 		m_methodHelper(nullptr), m_readOnly(false) {
 	}
 
-	ibValueTabularSectionDataObjectBase(ibValueDataObject* objectValue, ibValueMetaObjectTableData* tableObject, bool readOnly = false) :
+	IValueTabularSectionDataObject(IValueDataObject* objectValue, CValueMetaObjectTableData* tableObject, bool readOnly = false) :
 		m_objectValue(objectValue), m_metaTable(tableObject),
-		m_recordColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectColumnCollection>(this)),
-		m_methodHelper(new ibValueMethodHelper()), m_readOnly(readOnly) {
+		m_recordColumnCollection(CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectColumnCollection>(this)),
+		m_methodHelper(new CMethodHelper()), m_readOnly(readOnly) {
 		for (const auto object : tableObject->GetGenericAttributeArrayObject()) {
 			m_filterRow.AppendFilter(
 				object->GetMetaID(),
 				object->GetName(),
 				object->GetSynonym(),
-				ibComparisonType_Equal,
+				eComparisonType_Equal,
 				object->GetTypeDesc(),
 				object->CreateValue(),
 				false
@@ -178,21 +178,21 @@ public:
 		}
 	}
 
-	virtual ~ibValueTabularSectionDataObjectBase() { wxDELETE(m_methodHelper); }
+	virtual ~IValueTabularSectionDataObject() { wxDELETE(m_methodHelper); }
 
 	virtual void GetValueByRow(wxVariant& variant,
-		const ibDataViewItem& row, unsigned int col) const override;
+		const wxDataViewExtItem& row, unsigned int col) const override;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const ibDataViewItem& row, unsigned int col) override;
+		const wxDataViewExtItem& row, unsigned int col) override;
 
 	virtual bool AutoCreateColumn() const { return false; }
-	virtual bool EditableLine(const ibDataViewItem& item, unsigned int col) const {
+	virtual bool EditableLine(const wxDataViewExtItem& item, unsigned int col) const {
 		return !m_metaTable->IsNumberLine(col);
 	}
 
-	virtual void ActivateItem(ibBackendValueForm* formOwner,
-		const ibDataViewItem& item, unsigned int col) {
-		ibValueModelTableBase::RowValueStartEdit(item, col);
+	virtual void ActivateItem(IBackendValueForm* formOwner,
+		const wxDataViewExtItem& item, unsigned int col) {
+		IValueTable::RowValueStartEdit(item, col);
 	}
 
 	virtual void AddValue(unsigned int before = 0);
@@ -203,30 +203,30 @@ public:
 	//append new row
 	virtual long AppendRow(unsigned int before = 0);
 
-	virtual bool LoadData(const ibGuid& srcGuid, bool createData = true) { return true; }
+	virtual bool LoadData(const CGuid& srcGuid, bool createData = true) { return true; }
 	virtual bool SaveData() { return true; }
 	virtual bool DeleteData() { return true; }
 
-	virtual bool LoadDataFromTable(ibValueModelTableBase* srcTable);
-	virtual ibValueModelTableBase* SaveDataToTable() const;
+	virtual bool LoadDataFromTable(IValueTable* srcTable);
+	virtual IValueTable* SaveDataToTable() const;
 
 	//****************************************************************************
 	//*                              Support methods                             *
 	//****************************************************************************
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
 
 	virtual void PrepareNames() const;                             // this method is automatically called to initialize attribute and method names
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);       // method call
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);       // method call
 
 	//array
-	virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
+	virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
 
 	//Get ref class 
-	virtual ibClassID GetClassType() const;
+	virtual class_identifier_t GetClassType() const;
 
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
@@ -234,14 +234,14 @@ public:
 	//Working with iterators
 	virtual bool HasIterator() const override { return true; }
 
-	virtual ibValue GetIteratorEmpty() override {
-		return ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, ibDataViewItem(nullptr));
+	virtual CValue GetIteratorEmpty() override {
+		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, wxDataViewExtItem(nullptr));
 	}
 
-	virtual ibValue GetIteratorAt(unsigned int idx) override {
+	virtual CValue GetIteratorAt(unsigned int idx) override {
 		if (idx > (unsigned int)GetRowCount())
 			return wxEmptyValue;
-		return ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, GetItem(idx));
+		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, GetItem(idx));
 	}
 
 	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
@@ -250,7 +250,7 @@ protected:
 
 	void RefreshTabularSection();
 
-	virtual void RefreshModel(const ibDataViewItem& topItem = ibDataViewItem(nullptr),
+	virtual void RefreshModel(const wxDataViewExtItem& topItem = wxDataViewExtItem(nullptr),
 		const int countPerPage = defaultCountPerPage)
 	{
 		RefreshTabularSection();
@@ -258,34 +258,34 @@ protected:
 
 	bool m_readOnly;
 
-	ibValueMetaObjectTableData* m_metaTable;
+	CValueMetaObjectTableData* m_metaTable;
 
-	ibValueDataObject* m_objectValue;
-	ibValuePtr<ibValueTabularSectionDataObjectColumnCollection> m_recordColumnCollection;
-	ibValueMethodHelper* m_methodHelper;
+	IValueDataObject* m_objectValue;
+	CValuePtr<CValueTabularSectionDataObjectColumnCollection> m_recordColumnCollection;
+	CMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API ibValueTabularSectionDataObject : public ibValueTabularSectionDataObjectBase {
-	wxDECLARE_DYNAMIC_CLASS(ibValueTabularSectionDataObject);
+class BACKEND_API CValueTabularSectionDataObject : public IValueTabularSectionDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObject);
 public:
 
-	ibValueTabularSectionDataObject();
-	ibValueTabularSectionDataObject(class ibValueRecordDataObject* recordObject, ibValueMetaObjectTableData* tableObject);
-	virtual ~ibValueTabularSectionDataObject() {}
+	CValueTabularSectionDataObject();
+	CValueTabularSectionDataObject(class IValueRecordDataObject* recordObject, CValueMetaObjectTableData* tableObject);
+	virtual ~CValueTabularSectionDataObject() {}
 };
 
-class BACKEND_API ibValueTabularSectionDataObjectRef : public ibValueTabularSectionDataObjectBase {
-	wxDECLARE_DYNAMIC_CLASS(ibValueTabularSectionDataObjectRef);
+class BACKEND_API CValueTabularSectionDataObjectRef : public IValueTabularSectionDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObjectRef);
 public:
 
 	bool IsReadAfter() const { return m_readAfter; }
 
-	ibValueTabularSectionDataObjectRef();
-	ibValueTabularSectionDataObjectRef(class ibValueReferenceDataObject* reference, ibValueMetaObjectTableData* tableObject, bool readAfter = false);
-	ibValueTabularSectionDataObjectRef(class ibValueRecordDataObjectRef* recordObject, ibValueMetaObjectTableData* tableObject);
-	ibValueTabularSectionDataObjectRef(class ibValueSelectorRecordDataObject* selectorObject, ibValueMetaObjectTableData* tableObject);
+	CValueTabularSectionDataObjectRef();
+	CValueTabularSectionDataObjectRef(class CValueReferenceDataObject* reference, CValueMetaObjectTableData* tableObject, bool readAfter = false);
+	CValueTabularSectionDataObjectRef(class IValueRecordDataObjectRef* recordObject, CValueMetaObjectTableData* tableObject);
+	CValueTabularSectionDataObjectRef(class CValueSelectorRecordDataObject* selectorObject, CValueMetaObjectTableData* tableObject);
 
-	virtual ~ibValueTabularSectionDataObjectRef() {}
+	virtual ~CValueTabularSectionDataObjectRef() {}
 
 	virtual void CopyValue();
 	virtual void DeleteValue();
@@ -294,13 +294,13 @@ public:
 	virtual long AppendRow(unsigned int before = 0);
 
 	//load/save/delete data
-	virtual bool LoadData(const ibGuid& srcGuid, bool createData = true);
+	virtual bool LoadData(const CGuid& srcGuid, bool createData = true);
 	virtual bool SaveData();
 	virtual bool DeleteData();
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal);
-	virtual bool GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& pvarMetaVal) const;
+	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal);
+	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const;
 
 protected:
 	bool m_readAfter;

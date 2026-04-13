@@ -16,17 +16,17 @@
 #include "frontend/visualView/controlCtor.h"
 #include "frontend/visualView/visualHost.h"
 
-class BACKEND_API ibSourceExplorer;
-class BACKEND_API ibProcUnit;
+class BACKEND_API CSourceExplorer;
+class BACKEND_API CProcUnit;
 
-class BACKEND_API ibValueMetaObjectFormBase;
+class BACKEND_API IValueMetaObjectForm;
 
-class BACKEND_API ibSourceDataObject;
-class BACKEND_API ibValueListDataObject;
-class BACKEND_API ibValueRecordDataObject;
+class BACKEND_API ISourceDataObject;
+class BACKEND_API IValueListDataObject;
+class BACKEND_API IValueRecordDataObject;
 
-class FRONTEND_API ibValueForm;
-class FRONTEND_API ibVisualHostClient;
+class FRONTEND_API CValueForm;
+class FRONTEND_API CVisualClientHost;
 
 #include "backend/actionInfo.h"
 #include "backend/moduleInfo.h"
@@ -36,35 +36,35 @@ class FRONTEND_API ibVisualHostClient;
 
 #include "backend/fileSystem/fs.h"
 
-class FRONTEND_API ibFormVisualDocument;
+class FRONTEND_API CFormVisualDocument;
 
 #include "frontend/visualView/controlEnum.h"
 
-class FRONTEND_API ibControlFrame : public ibBackendControlFrame {
+class FRONTEND_API IControlFrame : public IBackendControlFrame {
 public:
 
 	//get value control and guid 
-	virtual bool GetControlValue(ibValue& pvarControlVal) const { return false; }
-	virtual ibGuid GetControlGuid() const { return ibGuid::newGuid(); }
+	virtual bool GetControlValue(CValue& pvarControlVal) const { return false; }
+	virtual CGuid GetControlGuid() const { return CGuid::newGuid(); }
 
 	//get owner form 
-	virtual ibValueForm* GetOwnerForm() const { return nullptr; }
+	virtual CValueForm* GetOwnerForm() const { return nullptr; }
 
 	//get ref class 
-	virtual ibClassID GetClassType() const { return 0; }
+	virtual class_identifier_t GetClassType() const { return 0; }
 
 	//get visual document
-	virtual ibFormVisualDocument* GetVisualDocument() const { return nullptr; }
+	virtual CFormVisualDocument* GetVisualDocument() const { return nullptr; }
 
 	virtual bool HasQuickChoice() const = 0;
-	virtual void ChoiceProcessing(ibValue& vSelected) = 0;
+	virtual void ChoiceProcessing(CValue& vSelected) = 0;
 };
 
-class FRONTEND_API ibValueFrame : public ibValue,
-	public ibPropertyObjectHelper<ibValueFrame>,
-	public ibControlFrame,
-	public ibActionDataObject {
-	wxDECLARE_ABSTRACT_CLASS(ibValueFrame);
+class FRONTEND_API IValueFrame : public CValue,
+	public IPropertyObjectHelper<IValueFrame>,
+	public IControlFrame,
+	public IActionDataObject {
+	wxDECLARE_ABSTRACT_CLASS(IValueFrame);
 protected:
 
 	enum {
@@ -76,9 +76,9 @@ protected:
 
 private:
 
-	ibValueFrame* DoFindControlByID(const ibFormID& id, ibValueFrame* control) const;
-	ibValueFrame* DoFindControlByName(const wxString& controlName, ibValueFrame* control) const;
-	void DoGenerateNewID(ibFormID& id, ibValueFrame* top) const;
+	IValueFrame* DoFindControlByID(const form_identifier_t& id, IValueFrame* control) const;
+	IValueFrame* DoFindControlByName(const wxString& controlName, IValueFrame* control) const;
+	void DoGenerateNewID(form_identifier_t& id, IValueFrame* top) const;
 
 public:
 
@@ -89,8 +89,8 @@ public:
 		return result;
 	}
 
-	ibValueFrame();
-	virtual ~ibValueFrame();
+	IValueFrame();
+	virtual ~IValueFrame();
 
 	//system override 
 	virtual wxString GetClassName() const final;
@@ -99,14 +99,14 @@ public:
 	/**
 	* Support generate id
 	*/
-	virtual ibFormID GenerateNewID();
+	virtual form_identifier_t GenerateNewID();
 
 	/**
 	* Support get/set object id
 	*/
-	virtual bool SetControlID(const ibFormID& id) {
+	virtual bool SetControlID(const form_identifier_t& id) {
 		if (id > 0) {
-			ibValueFrame* foundedControl =
+			IValueFrame* foundedControl =
 				FindControlByID(id);
 			wxASSERT(foundedControl == nullptr);
 			if (foundedControl == nullptr) {
@@ -121,7 +121,7 @@ public:
 		return false;
 	}
 
-	virtual ibFormID GetControlID() const { return m_controlId; }
+	virtual form_identifier_t GetControlID() const { return m_controlId; }
 
 	/**
 	* Support control name
@@ -141,25 +141,25 @@ public:
 		return wxGetTranslation(stringUtils::GenerateSynonym(GetClassName()));
 	}
 
-	virtual ibGuid GetControlGuid() const { return m_controlGuid; }
+	virtual CGuid GetControlGuid() const { return m_controlGuid; }
 
 	/**
 	* Find by control id
 	*/
-	virtual ibValueFrame* FindControlByName(const wxString& controlName) const;
-	virtual ibValueFrame* FindControlByID(const ibFormID& id) const;
+	virtual IValueFrame* FindControlByName(const wxString& controlName) const;
+	virtual IValueFrame* FindControlByID(const form_identifier_t& id) const;
 
 	/**
 	* Support form
 	*/
-	virtual ibValueForm* GetOwnerForm() const = 0;
-	virtual void SetOwnerForm(ibValueForm* ownerForm) {};
+	virtual CValueForm* GetOwnerForm() const = 0;
+	virtual void SetOwnerForm(CValueForm* ownerForm) {};
 
 	/**
 	* Support default menu
 	*/
 	virtual void PrepareDefaultMenu(wxMenu* menu) {}
-	virtual void ExecuteMenu(ibVisualHost* visualHost, int id) {}
+	virtual void ExecuteMenu(IVisualHost* visualHost, int id) {}
 
 	/**
 	* Get wxObject from visual view (if exist)
@@ -177,7 +177,7 @@ public:
 	bool GetExpanded() const { return m_expanded; }
 
 	//get metaData
-	virtual ibMetaData* GetMetaData() const = 0;
+	virtual IMetaData* GetMetaData() const = 0;
 
 	/**
 	* Can delete object
@@ -194,8 +194,8 @@ public:
 	/**
 	* Create an instance of the wxObject and return a pointer
 	*/
-	virtual wxObject* Create(wxWindow* wndParent, ibVisualHost* visualHost) {
-		return new ibNoObject;
+	virtual wxObject* Create(wxWindow* wndParent, IVisualHost* visualHost) {
+		return new wxNoObject;
 	}
 
 	/**
@@ -206,7 +206,7 @@ public:
 	* @param wxobject The object which was just created.
 	* @param wxparent The wxWidgets parent - the wxObject that the created object was added to.
 	*/
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) {};
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool firstСreated) {};
 
 	/**
 	* Allows components to respond when selected in object tree.
@@ -217,7 +217,7 @@ public:
 	/**
 	* Allows components to do something after they have been updated.
 	*/
-	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) {};
+	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) {};
 
 	/**
 	* Allows components to do something after they have been updated.
@@ -227,24 +227,24 @@ public:
 	* @param wxobject The object which was just updated.
 	* @param wxparent The wxWidgets parent - the wxObject that the updated object was added to.
 	*/
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) {};
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) {};
 
 	/**
 	 * Cleanup (do the reverse of Create)
 	 */
-	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) {};
+	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) {};
 
 public:
 
 	// call current event
 	template <typename ...Types>
-	bool CallAsEvent(const ibEvent* event, Types&&... args) {
+	bool CallAsEvent(const IEvent* event, Types&&... args) {
 		if (event == nullptr)
 			return false;
 		const wxString& eventValue = event->GetValue();
-		ibProcUnit* formProcUnit = GetFormProcUnit();
+		CProcUnit* formProcUnit = GetFormProcUnit();
 		if (formProcUnit != nullptr && !eventValue.IsEmpty()) {
-			ibValue eventCancel = false;
+			CValue eventCancel = false;
 			try {
 				formProcUnit->CallAsProc(
 					eventValue, //event name
@@ -264,7 +264,7 @@ public:
 	//call current form
 	template <typename ...Types>
 	bool CallAsEvent(const wxString& functionName, Types&&... args) {
-		ibProcUnit* formProcUnit = GetFormProcUnit();
+		CProcUnit* formProcUnit = GetFormProcUnit();
 		if (formProcUnit != nullptr && !functionName.IsEmpty()) {
 			try {
 				formProcUnit->CallAsProc(
@@ -283,15 +283,15 @@ public:
 
 public:
 
-	virtual ibBackendValueForm* GetBackendForm() const;
+	virtual IBackendValueForm* GetBackendForm() const;
 
 	//get visual doc
-	virtual ibFormVisualDocument* GetVisualDocument() const;
+	virtual CFormVisualDocument* GetVisualDocument() const;
 
 	virtual bool HasQuickChoice() const;
-	virtual void ChoiceProcessing(ibValue& vSelected) {}
+	virtual void ChoiceProcessing(CValue& vSelected) {}
 
-	ibFrontendVisualEditorNotebook* FindVisualEditor() const;
+	IVisualEditorNotebook* FindVisualEditor() const;
 
 	//support printing 
 	virtual wxPrintout* CreatePrintout() const { return nullptr; }
@@ -299,86 +299,86 @@ public:
 public:
 
 	//support actionData 
-	virtual ibActionCollection GetActionCollection(const ibFormID& formType) override { return ibActionCollection(); }
-	virtual void ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm) override {}
+	virtual CActionCollection GetActionCollection(const form_identifier_t& formType) override { return CActionCollection(); }
+	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm) override {}
 
-	class ibValueEventContainer : public ibValue {
-		wxDECLARE_DYNAMIC_CLASS(ibValueEventContainer);
+	class CValueEventContainer : public CValue {
+		wxDECLARE_DYNAMIC_CLASS(CValueEventContainer);
 	public:
 
-		ibValueEventContainer();
-		ibValueEventContainer(ibValueFrame* ownerEvent);
-		virtual ~ibValueEventContainer();
+		CValueEventContainer();
+		CValueEventContainer(IValueFrame* ownerEvent);
+		virtual ~CValueEventContainer();
 
-		virtual ibValueMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
+		virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
 
 		virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-		virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
+		virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
-		virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);
-		virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal); //attribute value
+		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
+		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
 
-		virtual bool SetAt(const ibValue& varKeyValue, const ibValue& varValue);
-		virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
+		virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
+		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
 
 		//Расширенные методы:
-		bool Property(const ibValue& varKeyValue, ibValue& cValueFound);
+		bool Property(const CValue& varKeyValue, CValue& cValueFound);
 		unsigned int Count() const { return m_controlEvent->GetEventCount(); }
 
 		//Работа с итераторами:
 		virtual bool HasIterator() const { return true; }
-		virtual ibValue GetIteratorEmpty();
-		virtual ibValue GetIteratorAt(unsigned int idx);
+		virtual CValue GetIteratorEmpty();
+		virtual CValue GetIteratorAt(unsigned int idx);
 		virtual unsigned int GetIteratorCount() const { return Count(); }
 
 	private:
-		ibValueFrame* m_controlEvent;
-		ibValueMethodHelper* m_methodHelper;
+		IValueFrame* m_controlEvent;
+		CMethodHelper* m_methodHelper;
 	};
 
-	virtual bool GetControlValue(ibValue& pvarControlVal) const { return false; }
+	virtual bool GetControlValue(CValue& pvarControlVal) const { return false; }
 
 	// memory reader form clpboard 
-	static ibValueFrame* CreatePasteObject(const ibReaderMemory& reader,
-		ibValueForm* dstForm, ibValueFrame* dstParent);
+	static IValueFrame* CreatePasteObject(const CMemoryReader& reader,
+		CValueForm* dstForm, IValueFrame* dstParent);
 
 	/**
 	* Property events
 	*/
-	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue);
-	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
+	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
-	virtual bool OnEventChanging(ibEvent* event, const wxString& newValue);
-	virtual void OnEventChanged(ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual bool OnEventChanging(IEvent* event, const wxString& newValue);
+	virtual void OnEventChanged(IEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
 
 	/**
 	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
 	*/
-	bool ChangeChildPosition(ibValueFrame* obj, unsigned int pos);
+	bool ChangeChildPosition(IValueFrame* obj, unsigned int pos);
 
 	//copy & paste object 
-	virtual bool CopyObject(ibWriterMemory& writer) const;
-	virtual bool PasteObject(ibReaderMemory& reader);
+	virtual bool CopyObject(CMemoryWriter& writer) const;
+	virtual bool PasteObject(CMemoryReader& reader);
 
 public:
 
 	/**
 	* Get type form
 	*/
-	virtual ibFormID GetTypeForm() const = 0;
+	virtual form_identifier_t GetTypeForm() const = 0;
 
 	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const = 0;
+	virtual CProcUnit* GetFormProcUnit() const = 0;
 
 	//counter
-	virtual void ControlIncrRef() { ibValue::IncrRef(); }
-	virtual void ControlDecrRef() { ibValue::DecrRef(); }
+	virtual void ControlIncrRef() { CValue::IncrRef(); }
+	virtual void ControlDecrRef() { CValue::DecrRef(); }
 
 	//methods 
-	virtual ibValueMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
@@ -386,18 +386,18 @@ public:
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
 	//attributes 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
 
 	//check is empty
 	virtual bool IsEmpty() const { return false; }
 
 	virtual bool Init() final override;
-	virtual bool Init(ibValue** paParams, const long lSizeArray) final override;
+	virtual bool Init(CValue** paParams, const long lSizeArray) final override;
 
 	//Get ref class 
-	virtual ibClassID GetClassType() const {
-		return ibValue::GetClassType();
+	virtual class_identifier_t GetClassType() const {
+		return CValue::GetClassType();
 	}
 
 	virtual bool IsEditable() const;
@@ -425,29 +425,29 @@ public:
 	}
 
 	//load & save object in metaObject 
-	bool LoadControl(const ibValueMetaObjectFormBase* metaForm, ibReaderMemory& dataReader);
-	bool SaveControl(const ibValueMetaObjectFormBase* metaForm, ibWriterMemory& dataWritter = ibWriterMemory(), bool copy_form = false);
+	bool LoadControl(const IValueMetaObjectForm* metaForm, CMemoryReader& dataReader);
+	bool SaveControl(const IValueMetaObjectForm* metaForm, CMemoryWriter& dataWritter = CMemoryWriter(), bool copy_form = false);
 
 protected:
 
-	virtual void OnChangeChildPosition(ibValueFrame* obj, unsigned int pos) {}
-	virtual void OnChoiceProcessing(ibValue& vSelected) {}
+	virtual void OnChangeChildPosition(IValueFrame* obj, unsigned int pos) {}
+	virtual void OnChoiceProcessing(CValue& vSelected) {}
 
 	//load & save object in control 
-	virtual bool LoadData(ibReaderMemory& reader) { return true; }
-	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory()) { return true; }
+	virtual bool LoadData(CMemoryReader& reader) { return true; }
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) { return true; }
 
 protected:
 
 	bool m_expanded = true; // is expanded in the object tree, allows for saving to file
 
-	ibFormID	 m_controlId;
-	ibGuid				 m_controlGuid;
+	form_identifier_t	 m_controlId;
+	CGuid				 m_controlGuid;
 
-	ibValuePtr<ibValueEventContainer> m_valEventContainer;
+	CValuePtr<CValueEventContainer> m_valEventContainer;
 
 	//object of methods 
-	ibValueMethodHelper* m_methodHelper;
+	CMethodHelper* m_methodHelper;
 };
 
 #endif // !_BASE_H_

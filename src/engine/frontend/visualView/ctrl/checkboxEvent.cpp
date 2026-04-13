@@ -7,7 +7,7 @@
 //*                             Events                              *
 //*******************************************************************
 
-void ibValueCheckbox::OnClickedCheckbox(wxCommandEvent& event)
+void CValueCheckbox::OnClickedCheckbox(wxCommandEvent& event)
 {
 	wxCheckBox* checkbox =
 		wxDynamicCast(event.GetEventObject(), wxCheckBox);
@@ -15,7 +15,7 @@ void ibValueCheckbox::OnClickedCheckbox(wxCommandEvent& event)
 	m_selValue = checkbox->GetValue();
 
 	if (!m_propertySource->IsEmptyProperty()) {
-		ibSourceDataObject* srcData = m_formOwner->GetSourceObject();
+		ISourceDataObject* srcData = m_formOwner->GetSourceObject();
 		wxASSERT(srcData);
 		srcData->SetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
 	}

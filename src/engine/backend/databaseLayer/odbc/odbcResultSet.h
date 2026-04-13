@@ -22,22 +22,22 @@
 
 #include <sql.h>
 
-class ibPreparedStatementODBC;
-class ibDatabaseLayerODBC;
+class COdbcPreparedStatement;
+class COdbcDatabaseLayer;
 
 WX_DECLARE_OBJARRAY(wxVariant, ValuesArray);
 WX_DECLARE_HASH_SET(int, wxIntegerHash, wxIntegerEqual, IntegerSet);
 WX_DECLARE_HASH_MAP(int, wxMemoryBuffer, wxIntegerHash, wxIntegerEqual, BlobMap);
 
-class ibDatabaseResultSetODBC : public ibDatabaseResultSet
+class COdbcResultSet : public IDatabaseResultSet
 {
 public:
 	// ctor
-	ibDatabaseResultSetODBC(ibInterfaceODBC* pInterface);
-	ibDatabaseResultSetODBC(ibInterfaceODBC* pInterface, ibPreparedStatementODBC* pStatement, bool bManageStatement = false, int nCol = 0);
+	COdbcResultSet(COdbcInterface* pInterface);
+	COdbcResultSet(COdbcInterface* pInterface, COdbcPreparedStatement* pStatement, bool bManageStatement = false, int nCol = 0);
 
 	// dtor
-	virtual ~ibDatabaseResultSetODBC();
+	virtual ~COdbcResultSet();
 
 	virtual bool Next();
 	virtual void Close();
@@ -50,14 +50,14 @@ public:
 	virtual wxDateTime GetResultDate(int nField);
 	virtual void* GetResultBlob(int nField, wxMemoryBuffer& buffer);
 	virtual double GetResultDouble(int nField);
-	virtual ibNumber GetResultNumber(int nField);
+	virtual number_t GetResultNumber(int nField);
 	virtual bool IsFieldNull(int nField);
 	virtual int GetFieldLength(int nField);
 
 	virtual int GetFieldLength(const wxString& strField);
 
 	// get MetaData
-	virtual ibResultSetMetaData* GetMetaData();
+	virtual IResultSetMetaData* GetMetaData();
 
 private:
 	void RetrieveFieldData(int nField);
@@ -65,8 +65,8 @@ private:
 	virtual int LookupField(const wxString& strField);
 	bool IsBlob(int nField);
 
-	ibPreparedStatementODBC* m_pStatement;
-	SQLHSTMT m_pODBCStatement;
+	COdbcPreparedStatement* m_pStatement;
+	SQLHSTMT m_pOdbcStatement;
 
 	StringToIntMap m_FieldLookupMap;
 	ValuesArray m_fieldValues;
@@ -77,7 +77,7 @@ private:
 
 	bool m_bManageStatement;
 	SQLHSTMT m_pHStmt;
-	ibInterfaceODBC* m_pInterface;
+	COdbcInterface* m_pInterface;
 
 	BlobMap m_BlobMap;
 };

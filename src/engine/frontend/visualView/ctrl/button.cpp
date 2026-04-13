@@ -1,47 +1,47 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueButton, ibValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueButton, IValueWindow)
 
 //****************************************************************************
 //*                              Button                                      *
 //****************************************************************************
 
-ibValueButton::ibValueButton() : ibValueWindow()
+CValueButton::CValueButton() : IValueWindow()
 {
 }
 
-wxObject* ibValueButton::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueButton::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxButton* wxbutton = new wxButton(wxparent, wxID_ANY, m_propertyTitle->GetValueAsTranslateString());
 	//setup event 
-	wxbutton->Bind(wxEVT_BUTTON, &ibValueButton::OnButtonPressed, this);
+	wxbutton->Bind(wxEVT_BUTTON, &CValueButton::OnButtonPressed, this);
 	return wxbutton;
 }
 
-void ibValueButton::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueButton::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 }
 
-void ibValueButton::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueButton::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxButton* button = dynamic_cast<wxButton*>(wxobject);
 
 	if (button != nullptr) {
 
-		if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Auto) {
+		if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
 			button->SetLabel(m_propertyTitle->GetValueAsTranslateString());
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
-		else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_PictureAndText) {
+		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
 			button->SetLabel(m_propertyTitle->GetValueAsTranslateString());
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
-		else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Picture) {
+		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
 			button->SetLabel(wxEmptyString);
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
-		else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Text) {
+		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
 			button->SetLabel(m_propertyTitle->GetValueAsTranslateString());
 			button->SetBitmap(wxNullBitmap);
 		}
@@ -50,7 +50,7 @@ void ibValueButton::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(button);
 }
 
-void ibValueButton::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueButton::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 }
 
@@ -58,7 +58,7 @@ void ibValueButton::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 //*                           Data									*
 //*******************************************************************
 
-bool ibValueButton::LoadData(ibReaderMemory& reader)
+bool CValueButton::LoadData(CMemoryReader& reader)
 {
 	m_propertyTitle->LoadData(reader);
 	m_propertyRepresentation->LoadData(reader);
@@ -67,10 +67,10 @@ bool ibValueButton::LoadData(ibReaderMemory& reader)
 	//events
 	m_onButtonPressed->LoadData(reader);
 
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueButton::SaveData(ibWriterMemory& writer)
+bool CValueButton::SaveData(CMemoryWriter& writer)
 {
 	m_propertyTitle->SaveData(writer);
 	m_propertyRepresentation->SaveData(writer);
@@ -79,11 +79,11 @@ bool ibValueButton::SaveData(ibWriterMemory& writer)
 	//events
 	m_onButtonPressed->SaveData(writer);
 
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueButton, "Button", "Widget", string_to_clsid("CT_BUTN"));
+CONTROL_TYPE_REGISTER(CValueButton, "Button", "Widget", string_to_clsid("CT_BUTN"));

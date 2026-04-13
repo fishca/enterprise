@@ -3,15 +3,15 @@
 /* PNG */
 static const wxString s_attribute_16_png = wxT("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAACVBMVEUAAAF0lsTb8v+YmrAhAAAAAXRSTlMAQObYZgAAABlJREFUGJVjYKAFYEQDDIxMKIA8AXRDaQEAUdAAmeJBSsoAAAAASUVORK5CYII=");
 
-wxIcon ibValueMetaObjectAttribute::GetIcon() const
+wxIcon CValueMetaObjectAttribute::GetIcon() const
 {
 	return GetIconGroup();
 }
 
-wxIcon ibValueMetaObjectAttribute::GetIconGroup()
+wxIcon CValueMetaObjectAttribute::GetIconGroup()
 {
 	static wxIcon icon =
-		ibBackendPicture::GetIconFromBase64(s_attribute_16_png, wxSize(16, 16));
+		CBackendPicture::GetIconFromBase64(s_attribute_16_png, wxSize(16, 16));
 
 	return icon;
 }

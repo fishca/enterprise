@@ -9,21 +9,21 @@
 // ----------------------------------------------------------------------------
 
 // The view using a standard wxTextCtrl to show its contents
-class FRONTEND_API ibSpreadsheetEditView : public ibMetaView
+class FRONTEND_API CSpreadsheetEditView : public CMetaView
 {
 public:
-	ibSpreadsheetEditView() : ibMetaView(), m_gridEditor(nullptr) {}
+	CSpreadsheetEditView() : CMetaView(), m_gridEditor(nullptr) {}
 
 #if wxUSE_MENUS	
-	wxMenuBar* ibSpreadsheetEditView::CreateMenuBar() const;
+	wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const;
 #endif 
 
-	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
-	ibGridEditor* GetGridCtrl() const { return m_gridEditor; }
+	CGridEditor* GetGridCtrl() const { return m_gridEditor; }
 
 private:
 
@@ -36,10 +36,10 @@ private:
 
 	void OnMenuEvent(wxCommandEvent& event);
 
-	ibGridEditor* m_gridEditor;
+	CGridEditor* m_gridEditor;
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetEditView);
+	wxDECLARE_DYNAMIC_CLASS(CSpreadsheetEditView);
 };
 
 // ----------------------------------------------------------------------------
@@ -48,31 +48,31 @@ private:
 
 #include "backend/metaCollection/metaSpreadsheetObject.h"
 
-class FRONTEND_API ibSpreadsheetDocument : public ibMetaDocument {
+class FRONTEND_API ISpreadsheetDocument : public CMetaDocument {
 public:
 
 	virtual wxIcon GetIcon() const {
-		return ibBackendPicture::GetPictureAsIcon(g_metaCommonTemplateCLSID);
+		return CBackendPicture::GetPictureAsIcon(g_metaCommonTemplateCLSID);
 	}
 
-	ibSpreadsheetDocument() : ibMetaDocument() {}
+	ISpreadsheetDocument() : CMetaDocument() {}
 	virtual wxCommandProcessor* OnCreateCommandProcessor() override;
 	
-	virtual ibGridEditor* GetGridCtrl() const;
+	virtual CGridEditor* GetGridCtrl() const;
 
 private:
-	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetDocument);
-	wxDECLARE_ABSTRACT_CLASS(ibSpreadsheetDocument);
+	wxDECLARE_NO_COPY_CLASS(ISpreadsheetDocument);
+	wxDECLARE_ABSTRACT_CLASS(ISpreadsheetDocument);
 };
 
 // ----------------------------------------------------------------------------
 // A very simple text document class
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API ibSpreadsheetFilibDocument : public ibSpreadsheetDocument {
+class FRONTEND_API CSpreadsheetFileDocument : public ISpreadsheetDocument {
 public:
 
-	ibSpreadsheetFilibDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument = wxObjectDataPtr<ibBackendSpreadsheetObject>(new ibBackendSpreadsheetObject)) : ibSpreadsheetDocument(), m_spreadSheetDocument(spreadSheetDocument) { m_childDoc = false; }
+	CSpreadsheetFileDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument = wxObjectDataPtr<CBackendSpreadsheetObject>(new CBackendSpreadsheetObject)) : ISpreadsheetDocument(), m_spreadSheetDocument(spreadSheetDocument) { m_childDoc = false; }
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnNewDocument() override {
@@ -100,18 +100,18 @@ protected:
 	virtual bool DoSaveDocument(const wxString& filename) override;
 	virtual bool DoOpenDocument(const wxString& filename) override;
 
-	wxObjectDataPtr<ibBackendSpreadsheetObject> m_spreadSheetDocument;
+	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadSheetDocument;
 
 private:
 
-	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetFilibDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetFilibDocument);
+	wxDECLARE_NO_COPY_CLASS(CSpreadsheetFileDocument);
+	wxDECLARE_DYNAMIC_CLASS(CSpreadsheetFileDocument);
 };
 
-class FRONTEND_API ibSpreadsheetEditDocument : public ibSpreadsheetDocument {
+class FRONTEND_API CSpreadsheetEditDocument : public ISpreadsheetDocument {
 public:
 
-	ibSpreadsheetEditDocument() : ibSpreadsheetDocument() {}
+	CSpreadsheetEditDocument() : ISpreadsheetDocument() {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool SaveAs() override;
@@ -122,8 +122,8 @@ protected:
 
 private:
 
-	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetEditDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetEditDocument);
+	wxDECLARE_NO_COPY_CLASS(CSpreadsheetEditDocument);
+	wxDECLARE_DYNAMIC_CLASS(CSpreadsheetEditDocument);
 };
 
 #endif

@@ -8,7 +8,7 @@
 
 #include "frontend/artProvider/artProvider.h"
 
-void ibFrontendDocMDIFrameEnterprise::CreateWideGui()
+void CFrontendDocMDIFrameEnterprise::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
 	m_mainFrameToolbar->SetToolBitmapSize(wxSize(16, 16));
@@ -59,7 +59,7 @@ void ibFrontendDocMDIFrameEnterprise::CreateWideGui()
 
 	InitializeDefaultMenu();
 
-	SetStatusBar(new ibDocBottomStatusBar(this));
+	SetStatusBar(new CDocBottomStatusBar(this));
 	SetStatusText(_("Ready"));
 	GetNotebook()->GetAuiManager().GetArtProvider()->SetColour(wxAUI_DOCKART_BACKGROUND_COLOUR, wxAUI_DEFAULT_COLOUR);
 
@@ -72,7 +72,7 @@ void ibFrontendDocMDIFrameEnterprise::CreateWideGui()
 #include "frontend/win/ctrls/floatingNotebook.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-void ibFrontendDocMDIFrameEnterprise::CreateBottomPane()
+void CFrontendDocMDIFrameEnterprise::CreateBottomPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_BOTTOM).IsOk())
 		return;
@@ -86,7 +86,7 @@ void ibFrontendDocMDIFrameEnterprise::CreateBottomPane()
 	paneInfo.Movable(false);
 	paneInfo.MinSize(-1, 30);
 
-	ibFloatingNotebook* auiNotebook = new ibFloatingNotebook(&m_mgr, paneInfo.name,
+	wxFloatingNotebook* auiNotebook = new wxFloatingNotebook(&m_mgr, paneInfo.name,
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,

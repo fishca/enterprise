@@ -3,13 +3,13 @@
 
 #include "metaObject.h"
 
-class BACKEND_API ibValueMetaObjectPicture : public ibValueMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectPicture);
+class BACKEND_API CValueMetaObjectPicture : public IValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectPicture);
 public:
 
 	wxBitmap GetValueAsBitmap() const { return m_propertyPicture->GetValueAsBitmap(); }
 
-	ibValueMetaObjectPicture(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	CValueMetaObjectPicture(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -17,11 +17,11 @@ public:
 
 protected:
 
-	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 private:
-	ibPropertyExternalPicture* m_propertyPicture = ibPropertyObject::CreateProperty<ibPropertyExternalPicture>(m_categoryContext, wxT("Picture"), _("Picture"));
+	CPropertyExternalPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyExternalPicture>(m_categoryContext, wxT("Picture"), _("Picture"));
 };
 
 #endif 

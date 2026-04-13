@@ -8,14 +8,14 @@
 
 #include <wx/imaglist.h>
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::RebuildTree()
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RebuildTree()
 {
 	wxWindow::Freeze();
 
-	Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
-	Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
+	Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+	Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
-	ibValueFrame* valueForm =
+	IValueFrame* valueForm =
 		m_formHandler->GetValueForm();
 
 	// Clear the old tree and map
@@ -29,8 +29,8 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::RebuildTr
 		RestoreItemStatus(valueForm);
 	}
 
-	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
-	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
+	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
 	wxWindow::Thaw();
 
@@ -38,7 +38,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::RebuildTr
 	wxWindow::Update();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddChildren(ibValueFrame* obj, const wxTreeItemId& parent, bool is_root)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::AddChildren(IValueFrame* obj, const wxTreeItemId& parent, bool is_root)
 {
 	if (obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 		if (obj->GetChildCount() > 0) {
@@ -48,7 +48,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddChildr
 			// Si hemos llegado aquí ha sido porque el arbol no está bien formado
 			// y habrá que revisar cómo se ha creado.
 			wxString msg;
-			ibValueFrame* itemParent = obj->GetParent();
+			IValueFrame* itemParent = obj->GetParent();
 			assert(parent);
 
 			msg = wxString::Format(wxT("Item without object as child of \'%s:%s\'"),
@@ -60,14 +60,14 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddChildr
 	}
 	else {
 		wxTreeItemId new_parent;
-		ibVisualEditorObjectTreeItemData* item_data = new ibVisualEditorObjectTreeItemData(obj);
+		CVisualEditorObjectTreeItemData* item_data = new CVisualEditorObjectTreeItemData(obj);
 		if (is_root) {
 			new_parent = m_tcObjects->AddRoot(wxT(""), wxNOT_FOUND, wxNOT_FOUND, item_data);
 		}
 		else {
 			unsigned int pos = 0;
 
-			ibValueFrame* parent_obj = obj->GetParent();
+			IValueFrame* parent_obj = obj->GetParent();
 
 			// find a proper position where the added object should be displayed at
 			if (parent_obj && parent_obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
@@ -91,7 +91,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddChildr
 
 		// Add the item to the map
 		m_listItem.insert(
-			std::map< ibValueFrame*, wxTreeItemId>::value_type(obj, new_parent)
+			std::map< IValueFrame*, wxTreeItemId>::value_type(obj, new_parent)
 		);
 
 		// Set the image
@@ -108,7 +108,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddChildr
 		unsigned int count = obj->GetChildCount();
 
 		for (unsigned int i = 0; i < count; i++) {
-			ibValueFrame* child = obj->GetChild(i);
+			IValueFrame* child = obj->GetChild(i);
 			AddChildren(child, new_parent);
 		}
 	}
@@ -116,14 +116,14 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddChildr
 
 #define ICON_SIZE 16
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::CreateTree()
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::CreateTree()
 {
 	if (m_iconList != nullptr)
 		delete m_iconList;
 
 	m_iconList = new wxImageList(ICON_SIZE, ICON_SIZE);
 	
-	for (auto objClass : ibValue::GetListCtorsByType(ibCtorObjectType::ibCtorObjectType_object_control)) {
+	for (auto objClass : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
 		const wxIcon& controlIcon = objClass->GetClassIcon();
 		if (controlIcon.IsOk()) {
 			const int retIndex = m_iconList->Add(controlIcon);
@@ -138,9 +138,9 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::CreateTre
 	m_tcObjects->AssignImageList(m_iconList);
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::RestoreItemStatus(ibValueFrame* obj)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RestoreItemStatus(IValueFrame* obj)
 {
-	std::map< ibValueFrame*, wxTreeItemId>::iterator item_it = m_listItem.find(obj);
+	std::map< IValueFrame*, wxTreeItemId>::iterator item_it = m_listItem.find(obj);
 	if (item_it != m_listItem.end()) {
 		wxTreeItemId id = item_it->second;
 
@@ -156,7 +156,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::RestoreIt
 	}
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddItem(ibValueFrame* item, ibValueFrame* parent)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::AddItem(IValueFrame* item, IValueFrame* parent)
 {
 	if (item && parent) {
 		// find parent item displayed in the object tree
@@ -165,7 +165,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddItem(i
 		}
 
 		// add new item to the object tree
-		std::map< ibValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(parent);
+		std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(parent);
 		if ((it != m_listItem.end()) && it->second.IsOk()) {
 			AddChildren(item, it->second, false);
 		}
@@ -173,42 +173,42 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddItem(i
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Enterprise ibEvent Handlers
+// Enterprise IEvent Handlers
 /////////////////////////////////////////////////////////////////////////////
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnEditorLoaded()
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEditorLoaded()
 {
 	RebuildTree();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnEditorRefresh()
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEditorRefresh()
 {
 	RebuildTree();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnObjectCreated(ibValueFrame* obj)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectCreated(IValueFrame* obj)
 {
 	RebuildTree();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnObjectSelected(ibValueFrame* obj)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectSelected(IValueFrame* obj)
 {
 	// Find the tree item associated with the object and select it
-	std::map< ibValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
+	std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
 	if (it != m_listItem.end()) {
 
 		m_notifySelecting = true;
 
 		// Ignore expand/collapse events	
-		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
-		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
+		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
 		m_tcObjects->EnsureVisible(it->second);
 		m_tcObjects->SelectItem(it->second);
 
 		// Restore event handling
-		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
-		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
+		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
 		m_notifySelecting = false;
 	}
@@ -217,9 +217,9 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnObjectS
 	}
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnObjectExpanded(ibValueFrame* obj)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectExpanded(IValueFrame* obj)
 {
-	std::map< ibValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
+	std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
 	if (it != m_listItem.end())
 	{
 		if (m_tcObjects->IsExpanded(it->second) != obj->GetExpanded())
@@ -234,29 +234,29 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnObjectE
 	}
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnObjectRemoved(ibValueFrame* obj)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectRemoved(IValueFrame* obj)
 {
 	RemoveItem(obj);
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnPropertyModified(ibProperty* prop)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnPropertyModified(IProperty* prop)
 {
-	std::map< ibValueFrame*, wxTreeItemId>::iterator it =
-		m_listItem.find((ibValueFrame*)prop->GetPropertyObject());
+	std::map< IValueFrame*, wxTreeItemId>::iterator it =
+		m_listItem.find((IValueFrame*)prop->GetPropertyObject());
 	if (it != m_listItem.end()) {
 		UpdateItem(it->second, it->first);
 	}
 }
 
-wxBEGIN_EVENT_TABLE(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree, wxPanel)
-EVT_TREE_SEL_CHANGED(wxID_ANY, ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnSelChanged)
-EVT_TREE_ITEM_RIGHT_CLICK(wxID_ANY, ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnRightClick)
-EVT_TREE_BEGIN_DRAG(wxID_ANY, ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnBeginDrag)
-EVT_TREE_END_DRAG(wxID_ANY, ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnEndDrag)
-EVT_TREE_KEY_DOWN(wxID_ANY, ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnKeyDown)
+wxBEGIN_EVENT_TABLE(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree, wxPanel)
+EVT_TREE_SEL_CHANGED(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnSelChanged)
+EVT_TREE_ITEM_RIGHT_CLICK(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnRightClick)
+EVT_TREE_BEGIN_DRAG(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnBeginDrag)
+EVT_TREE_END_DRAG(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEndDrag)
+EVT_TREE_KEY_DOWN(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnKeyDown)
 wxEND_EVENT_TABLE()
 
-ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::ibVisualEditorObjectTree(ibVisualEditor* handler, wxWindow* parent, int id) :
+CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::CVisualEditorObjectTree(CVisualEditor* handler, wxWindow* parent, int id) :
 	wxPanel(parent, id),
 	m_formHandler(handler)
 {
@@ -271,8 +271,8 @@ ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::ibVisualEditor
 
 	m_tcObjects->SetDoubleBuffered(true);
 
-	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
-	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
+	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
 	m_tcObjects->Bind(wxEVT_LEFT_DOWN,
 		[&](wxMouseEvent& event) {
@@ -280,7 +280,7 @@ ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::ibVisualEditor
 			if (id.IsOk() && id == m_tcObjects->GetSelection()) {
 				wxTreeItemData* item_data = m_tcObjects->GetItemData(id);
 				if (item_data != nullptr) {
-					ibValueFrame* obj(((ibVisualEditorObjectTreeItemData*)item_data)->GetObject());
+					IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
 					assert(obj);
 					m_formHandler->SelectObject(obj);
 					m_formHandler->ScrollToObject(obj);
@@ -296,7 +296,7 @@ ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::ibVisualEditor
 			if (id.IsOk() && id == m_tcObjects->GetSelection()) {
 				wxTreeItemData* item_data = m_tcObjects->GetItemData(id);
 				if (item_data != nullptr) {
-					ibValueFrame* obj(((ibVisualEditorObjectTreeItemData*)item_data)->GetObject());
+					IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
 					assert(obj);
 					m_formHandler->SelectObject(obj);
 					m_formHandler->ScrollToObject(obj);
@@ -312,7 +312,7 @@ ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::ibVisualEditor
 	CreateTree();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnKeyDown(wxTreeEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnKeyDown(wxTreeEvent& event)
 {
 	if (event.GetKeyEvent().AltDown() && event.GetKeyCode() != WXK_ALT)
 	{
@@ -341,7 +341,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnKeyDown
 	}
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnSelChanged(wxTreeEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnSelChanged(wxTreeEvent& event)
 {
 	// Make selected items bold
 	wxTreeItemId oldId = event.GetOldItem();
@@ -358,7 +358,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnSelChan
 		return;
 
 	if (item_data != nullptr) {
-		ibValueFrame* obj(((ibVisualEditorObjectTreeItemData*)item_data)->GetObject());
+		IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
 		assert(obj);
 		m_formHandler->SelectObject(obj);
 		m_formHandler->ScrollToObject(obj);
@@ -367,21 +367,21 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnSelChan
 
 #include "frontend/mainFrame/objinspect/objinspect.h"
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnRightClick(wxTreeEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnRightClick(wxTreeEvent& event)
 {
 	wxTreeItemId id = event.GetItem();
 	wxTreeItemData* item_data = m_tcObjects->GetItemData(id);
 	if (item_data != nullptr) {
-		ibValueFrame* obj(((ibVisualEditorObjectTreeItemData*)item_data)->GetObject());
+		IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
 		assert(obj);
 		m_formHandler->SelectObject(obj);
-		wxMenu* menu = new ibVisualEditorItemPopupMenu(m_formHandler, this, obj);
+		wxMenu* menu = new CVisualEditorItemPopupMenu(m_formHandler, this, obj);
 		wxPoint pos = event.GetPoint();
 		menu->UpdateUI(menu); PopupMenu(menu, pos.x, pos.y);
 	}
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnBeginDrag(wxTreeEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnBeginDrag(wxTreeEvent& event)
 {
 	// need to explicitly allow drag
 	if (event.GetItem() == m_tcObjects->GetRootItem())
@@ -391,7 +391,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnBeginDr
 	event.Allow();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnEndDrag(wxTreeEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEndDrag(wxTreeEvent& event)
 {
 	bool copy = ::wxGetKeyState(WXK_CONTROL);
 	wxTreeItemId itemSrc = m_draggedItem, itemDst = event.GetItem();
@@ -405,12 +405,12 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnEndDrag
 		item = m_tcObjects->GetItemParent(item);
 	}
 
-	ibValueFrame* objSrc =
+	IValueFrame* objSrc =
 		GetObjectFromTreeItem(itemSrc);
 	if (!objSrc)
 		return;
 
-	ibValueFrame* objDst =
+	IValueFrame* objDst =
 		GetObjectFromTreeItem(itemDst);
 
 	if (!objDst)
@@ -429,17 +429,17 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnEndDrag
 	}
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange(wxTreeEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange(wxTreeEvent& event)
 {
 	wxTreeItemId id = event.GetItem();
 	wxTreeItemData* item_data = m_tcObjects->GetItemData(id);
 
 	if (item_data != nullptr) {
-		ibValueFrame* obj(((ibVisualEditorObjectTreeItemData*)item_data)->GetObject());
+		IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
 		assert(obj);
-		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
+		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 		m_formHandler->ExpandObject(obj, m_tcObjects->IsExpanded(id));
-		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnExpansionChange));
+		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 	}
 }
 
@@ -457,18 +457,18 @@ enum {
 	MENU_PROPERTIES,
 };
 
-wxBEGIN_EVENT_TABLE(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu, wxMenu)
-EVT_MENU(wxID_ANY, ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::OnMenuEvent)
-EVT_UPDATE_UI(wxID_ANY, ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::OnUpdateEvent)
+wxBEGIN_EVENT_TABLE(CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu, wxMenu)
+EVT_MENU(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::OnMenuEvent)
+EVT_UPDATE_UI(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::OnUpdateEvent)
 wxEND_EVENT_TABLE()
 
 #include "frontend/artProvider/artProvider.h"
 
-bool ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::HasDeleteObject() {
+bool CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::HasDeleteObject() {
 	return m_selID == MENU_DELETE;
 }
 
-ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::ibVisualEditorItemPopupMenu(ibVisualEditor* handler, wxWindow* parent, ibValueFrame* obj)
+CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::CVisualEditorItemPopupMenu(CVisualEditor* handler, wxWindow* parent, IValueFrame* obj)
 	: wxMenu(), m_object(obj), m_formHandler(handler)
 {
 	obj->PrepareDefaultMenu(this);
@@ -494,7 +494,7 @@ ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::ibVisualEdi
 	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::OnMenuEvent(wxCommandEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::OnMenuEvent(wxCommandEvent& event)
 {
 	m_selID = event.GetId();
 
@@ -516,9 +516,9 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::OnMenu
 	}
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::OnUpdateEvent(wxUpdateUIEvent& e)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::OnUpdateEvent(wxUpdateUIEvent& e)
 {
-	ibValueFrame* currentControl = m_formHandler->GetSelectedObject();
+	IValueFrame* currentControl = m_formHandler->GetSelectedObject();
 
 	switch (e.GetId())
 	{

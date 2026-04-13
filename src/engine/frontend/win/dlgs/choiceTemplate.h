@@ -11,9 +11,9 @@ struct CChoiceTemplateItem
 	wxIcon m_icon;
 };
 
-class ibDialogChoiceTemplate : public wxDialog {
+class CDialogChoiceTemplate : public wxDialog {
 
-	struct ibDialogChoiceTemplateItem {
+	struct CDialogChoiceTemplateItem {
 
 		long m_index;
 
@@ -30,7 +30,7 @@ public:
 		if (selected != -1) {
 
 			auto iterator = std::find_if(m_choiceData.begin(), m_choiceData.end(),
-				[selected](const ibDialogChoiceTemplateItem& i) { return i.m_index == selected; });
+				[selected](const CDialogChoiceTemplateItem& i) { return i.m_index == selected; });
 
 			if (iterator != m_choiceData.end())
 				return iterator->m_template;
@@ -39,7 +39,7 @@ public:
 		return nullptr;
 	}
 
-	ibDialogChoiceTemplate(const wxVector<CChoiceTemplateItem>& choices) :
+	CDialogChoiceTemplate(const wxVector<CChoiceTemplateItem>& choices) :
 		wxDialog(NULL, wxID_ANY, _("Select document type"), wxDefaultPosition, wxSize(250, 225), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 	{
 		wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -52,8 +52,8 @@ public:
 		m_listChoice->AppendColumn(wxT("template"), wxLIST_FORMAT_LEFT, 250);
 		m_listChoice->SetImageList(m_imageList, wxIMAGE_LIST_SMALL);
 
-		m_listChoice->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &ibDialogChoiceTemplate::OnitemActivated, this);
-		m_listChoice->Bind(wxEVT_SIZE, &ibDialogChoiceTemplate::OnSize, this);
+		m_listChoice->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &CDialogChoiceTemplate::OnitemActivated, this);
+		m_listChoice->Bind(wxEVT_SIZE, &CDialogChoiceTemplate::OnSize, this);
 
 		for (const auto& choice : choices)
 			AppendTemplate(choice.m_template, choice.m_description, choice.m_icon);
@@ -79,7 +79,7 @@ public:
 		m_listChoice->SetFocus();
 	}
 
-	virtual ~ibDialogChoiceTemplate() { wxDELETE(m_imageList); }
+	virtual ~CDialogChoiceTemplate() { wxDELETE(m_imageList); }
 
 private:
 
@@ -97,7 +97,7 @@ private:
 
 		const int index = m_listChoice->InsertItem(m_listChoice->GetItemCount(), description, m_imageList->Add(icon));
 
-		ibDialogChoiceTemplateItem entry;
+		CDialogChoiceTemplateItem entry;
 		entry.m_index = index;
 		entry.m_template = docTemplate;
 		entry.m_description = description;
@@ -117,7 +117,7 @@ private:
 	wxButton* m_sdbSizerOK;
 	wxButton* m_sdbSizerCancel;
 
-	wxVector<ibDialogChoiceTemplateItem> m_choiceData;
+	wxVector<CDialogChoiceTemplateItem> m_choiceData;
 };
 
 #endif 

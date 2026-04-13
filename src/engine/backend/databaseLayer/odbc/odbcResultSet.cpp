@@ -15,21 +15,21 @@ WX_DEFINE_OBJARRAY(ValuesArray);
 #define ODBC_FIELD_NAME_LEN 71
 
 // ctor
-ibDatabaseResultSetODBC::ibDatabaseResultSetODBC(ibInterfaceODBC* pInterface)
-	: ibDatabaseResultSet()
+COdbcResultSet::COdbcResultSet(COdbcInterface* pInterface)
+	: IDatabaseResultSet()
 {
 	m_pInterface = pInterface;
 	m_pStatement = nullptr;
-	m_pODBCStatement = nullptr;
+	m_pOdbcStatement = nullptr;
 	m_bManageStatement = false;
 }
 
-ibDatabaseResultSetODBC::ibDatabaseResultSetODBC(ibInterfaceODBC* pInterface, ibPreparedStatementODBC* pStatement, bool bManageStatement, int nCol)
-	: ibDatabaseResultSet()
+COdbcResultSet::COdbcResultSet(COdbcInterface* pInterface, COdbcPreparedStatement* pStatement, bool bManageStatement, int nCol)
+	: IDatabaseResultSet()
 {
 	m_pInterface = pInterface;
 	m_pStatement = pStatement;
-	m_pODBCStatement = m_pStatement->GetLastStatement();
+	m_pOdbcStatement = m_pStatement->GetLastStatement();
 	m_bManageStatement = bManageStatement;
 
 	// Populate field lookup map
@@ -39,12 +39,12 @@ ibDatabaseResultSetODBC::ibDatabaseResultSetODBC(ibInterfaceODBC* pInterface, ib
 	for (int i = 0; i < nCol; i++)
 	{
 		UWORD col = i + 1;
-		long nReturn = m_pInterface->GetSQLColAttributes()(m_pODBCStatement, col, SQL_COLUMN_NAME,
+		long nReturn = m_pInterface->GetSQLColAttributes()(m_pOdbcStatement, col, SQL_COLUMN_NAME,
 			field_name,
 			ODBC_FIELD_NAME_LEN, &colnamelen, 0);
 		if (nReturn != SQL_SUCCESS && nReturn != SQL_SUCCESS_WITH_INFO)
 		{
-			InterpretErrorCodes(nReturn, m_pODBCStatement);
+			InterpretErrorCodes(nReturn, m_pOdbcStatement);
 			ThrowDatabaseException();
 			return;
 		}
@@ -59,7 +59,7 @@ ibDatabaseResultSetODBC::ibDatabaseResultSetODBC(ibInterfaceODBC* pInterface, ib
 }
 
 // dtor
-ibDatabaseResultSetODBC::~ibDatabaseResultSetODBC()
+COdbcResultSet::~COdbcResultSet()
 {
 	Close();
 
@@ -73,7 +73,7 @@ ibDatabaseResultSetODBC::~ibDatabaseResultSetODBC()
 }
 
 
-void ibDatabaseResultSetODBC::Close()
+void COdbcResultSet::Close()
 {
 	CloseMetaData();
 
@@ -88,24 +88,24 @@ void ibDatabaseResultSetODBC::Close()
 }
 
 
-bool ibDatabaseResultSetODBC::Next()
+bool COdbcResultSet::Next()
 {
 	m_RetrievedValues.clear();
 	m_NullValues.clear();
 
 	m_BlobMap.clear();
 
-	if (m_pODBCStatement == nullptr)
-		m_pODBCStatement = m_pStatement->GetLastStatement();
+	if (m_pOdbcStatement == nullptr)
+		m_pOdbcStatement = m_pStatement->GetLastStatement();
 
-	long nReturn = m_pInterface->GetSQLFetch()(m_pODBCStatement);
+	long nReturn = m_pInterface->GetSQLFetch()(m_pOdbcStatement);
 
 	if (nReturn != SQL_SUCCESS && nReturn != SQL_SUCCESS_WITH_INFO)
 	{
 		if (nReturn == SQL_NO_DATA)
 			return false;
 
-		InterpretErrorCodes(nReturn, m_pODBCStatement);
+		InterpretErrorCodes(nReturn, m_pOdbcStatement);
 		ThrowDatabaseException();
 		return false;
 	}
@@ -119,7 +119,7 @@ bool ibDatabaseResultSetODBC::Next()
 
 
 // get field
-bool ibDatabaseResultSetODBC::IsFieldNull(int nField)
+bool COdbcResultSet::IsFieldNull(int nField)
 {
 	// Some ODBC drivers (i.e. MS SQL SERVER) need the fields to be retrieved in order
 	for (int ctr = 1; ctr < nField; ctr++)
@@ -156,7 +156,7 @@ bool ibDatabaseResultSetODBC::IsFieldNull(int nField)
 	return (m_NullValues.find(nField) != m_NullValues.end());
 }
 
-int ibDatabaseResultSetODBC::GetFieldLength(int nField)
+int COdbcResultSet::GetFieldLength(int nField)
 {
 	// Some ODBC drivers (i.e. MS SQL SERVER) need the fields to be retrieved in order
 	for (int ctr = 1; ctr <= nField; ctr++)
@@ -187,14 +187,14 @@ int ibDatabaseResultSetODBC::GetFieldLength(int nField)
 	return real_size;
 }
 
-void ibDatabaseResultSetODBC::RetrieveFieldData(int nField)
+void COdbcResultSet::RetrieveFieldData(int nField)
 {
 	if (nField != -1)
 	{
 		SQLRETURN rc;
 		SQLSMALLINT buflen;
 		unsigned long int colType;
-		rc = m_pInterface->GetSQLColAttribute()(m_pODBCStatement, nField, SQL_DESC_TYPE, nullptr, 0,
+		rc = m_pInterface->GetSQLColAttribute()(m_pOdbcStatement, nField, SQL_DESC_TYPE, nullptr, 0,
 			&buflen, &colType);
 
 		if (SQL_FLOAT == colType || SQL_DOUBLE == colType)
@@ -205,10 +205,10 @@ void ibDatabaseResultSetODBC::RetrieveFieldData(int nField)
 #else
 			SQLINTEGER sqlPtr;
 #endif // _WIN64
-			rc = m_pInterface->GetSQLGetData()(m_pODBCStatement, nField, SQL_C_DOUBLE, &ret, 0, &sqlPtr);
+			rc = m_pInterface->GetSQLGetData()(m_pOdbcStatement, nField, SQL_C_DOUBLE, &ret, 0, &sqlPtr);
 			if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO)
 			{
-				InterpretErrorCodes(rc, m_pODBCStatement);
+				InterpretErrorCodes(rc, m_pOdbcStatement);
 				ThrowDatabaseException();
 				return;
 			}
@@ -234,12 +234,12 @@ void ibDatabaseResultSetODBC::RetrieveFieldData(int nField)
 #else
 			SQLINTEGER   sqlPtr;
 #endif // _WIN64
-			rc = m_pInterface->GetSQLGetData()(m_pODBCStatement, nField, SQL_C_TIMESTAMP, &ret, sizeof(ret),
+			rc = m_pInterface->GetSQLGetData()(m_pOdbcStatement, nField, SQL_C_TIMESTAMP, &ret, sizeof(ret),
 				&sqlPtr);
 
 			if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO)
 			{
-				InterpretErrorCodes(rc, m_pODBCStatement);
+				InterpretErrorCodes(rc, m_pOdbcStatement);
 				ThrowDatabaseException();
 				return;
 			}
@@ -275,14 +275,14 @@ void ibDatabaseResultSetODBC::RetrieveFieldData(int nField)
 			SQLINTEGER  col_size = 8192;
 			SQLINTEGER  real_size = 0;
 #endif 
-			if (m_pODBCStatement == nullptr)
-				m_pODBCStatement = m_pStatement->GetLastStatement();
+			if (m_pOdbcStatement == nullptr)
+				m_pOdbcStatement = m_pStatement->GetLastStatement();
 
-			SQLRETURN nRet = m_pInterface->GetSQLGetData()(m_pODBCStatement, nField, SQL_C_CHAR, buff,
+			SQLRETURN nRet = m_pInterface->GetSQLGetData()(m_pOdbcStatement, nField, SQL_C_CHAR, buff,
 				col_size, &real_size);
 			if (nRet != SQL_SUCCESS && nRet != SQL_SUCCESS_WITH_INFO)
 			{
-				InterpretErrorCodes(nRet, m_pODBCStatement);
+				InterpretErrorCodes(nRet, m_pOdbcStatement);
 				ThrowDatabaseException();
 				return;
 			}
@@ -298,11 +298,11 @@ void ibDatabaseResultSetODBC::RetrieveFieldData(int nField)
 			{
 				while (nRet != SQL_NO_DATA)
 				{
-					nRet = m_pInterface->GetSQLGetData()(m_pODBCStatement, nField, SQL_C_CHAR, buff,
+					nRet = m_pInterface->GetSQLGetData()(m_pOdbcStatement, nField, SQL_C_CHAR, buff,
 						col_size, &real_size);
 					if (nRet != SQL_SUCCESS && nRet != SQL_SUCCESS_WITH_INFO && nRet != SQL_NO_DATA)
 					{
-						InterpretErrorCodes(nRet, m_pODBCStatement);
+						InterpretErrorCodes(nRet, m_pOdbcStatement);
 						ThrowDatabaseException();
 						return;
 					}
@@ -315,7 +315,7 @@ void ibDatabaseResultSetODBC::RetrieveFieldData(int nField)
 	}
 }
 
-int ibDatabaseResultSetODBC::GetFieldLength(const wxString& strField)
+int COdbcResultSet::GetFieldLength(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex == -1)
@@ -324,7 +324,7 @@ int ibDatabaseResultSetODBC::GetFieldLength(const wxString& strField)
 	return GetFieldLength(nIndex);
 }
 
-int ibDatabaseResultSetODBC::GetResultInt(int nField)
+int COdbcResultSet::GetResultInt(int nField)
 {
 	if (m_fieldValues[nField - 1].IsNull())
 	{
@@ -335,7 +335,7 @@ int ibDatabaseResultSetODBC::GetResultInt(int nField)
 	return m_fieldValues[nField - 1].GetLong();
 }
 
-wxString ibDatabaseResultSetODBC::GetResultString(int nField)
+wxString COdbcResultSet::GetResultString(int nField)
 {
 	if (m_fieldValues[nField - 1].IsNull())
 	{
@@ -346,7 +346,7 @@ wxString ibDatabaseResultSetODBC::GetResultString(int nField)
 	return m_fieldValues[nField - 1].GetString();
 }
 
-long long ibDatabaseResultSetODBC::GetResultLong(int nField)
+long long COdbcResultSet::GetResultLong(int nField)
 {
 	if (m_fieldValues[nField - 1].IsNull())
 	{
@@ -357,7 +357,7 @@ long long ibDatabaseResultSetODBC::GetResultLong(int nField)
 	return m_fieldValues[nField - 1].GetLong();
 }
 
-bool ibDatabaseResultSetODBC::GetResultBool(int nField)
+bool COdbcResultSet::GetResultBool(int nField)
 {
 	if (m_fieldValues[nField - 1].IsNull())
 	{
@@ -368,7 +368,7 @@ bool ibDatabaseResultSetODBC::GetResultBool(int nField)
 	return m_fieldValues[nField - 1].GetBool();
 }
 
-wxDateTime ibDatabaseResultSetODBC::GetResultDate(int nField)
+wxDateTime COdbcResultSet::GetResultDate(int nField)
 {
 	if (m_fieldValues[nField - 1].IsNull())
 	{
@@ -379,7 +379,7 @@ wxDateTime ibDatabaseResultSetODBC::GetResultDate(int nField)
 	return m_fieldValues[nField - 1].GetDateTime();
 }
 
-double ibDatabaseResultSetODBC::GetResultDouble(int nField)
+double COdbcResultSet::GetResultDouble(int nField)
 {
 	if (m_fieldValues[nField - 1].IsNull())
 	{
@@ -390,7 +390,7 @@ double ibDatabaseResultSetODBC::GetResultDouble(int nField)
 	return m_fieldValues[nField - 1].GetDouble();
 }
 
-ibNumber ibDatabaseResultSetODBC::GetResultNumber(int nField)
+number_t COdbcResultSet::GetResultNumber(int nField)
 {
 	if (m_fieldValues[nField - 1].IsNull())
 	{
@@ -401,12 +401,12 @@ ibNumber ibDatabaseResultSetODBC::GetResultNumber(int nField)
 	return m_fieldValues[nField - 1].GetDouble();
 }
 
-void* ibDatabaseResultSetODBC::GetResultBlob(int nField, wxMemoryBuffer& buffer)
+void* COdbcResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 {
 	if (m_BlobMap.find(nField) == m_BlobMap.end())
 	{
-		if (m_pODBCStatement == nullptr)
-			m_pODBCStatement = m_pStatement->GetLastStatement();
+		if (m_pOdbcStatement == nullptr)
+			m_pOdbcStatement = m_pStatement->GetLastStatement();
 
 		if (m_NullValues.find(nField) != m_NullValues.end())
 			return nullptr;
@@ -421,7 +421,7 @@ void* ibDatabaseResultSetODBC::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 
 		memset(buff, 0, 8193 * sizeof(unsigned char));
 
-		long nReturn = m_pInterface->GetSQLBindParameter()(m_pODBCStatement, nField, SQL_PARAM_OUTPUT,
+		long nReturn = m_pInterface->GetSQLBindParameter()(m_pOdbcStatement, nField, SQL_PARAM_OUTPUT,
 			SQL_C_BINARY, SQL_BINARY, iLength, 0, &buff, iLength, &iSize);
 
 		// Mark this field as retrieved
@@ -433,11 +433,11 @@ void* ibDatabaseResultSetODBC::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 			return nullptr;
 		}
 
-		nReturn = m_pInterface->GetSQLGetData()(m_pODBCStatement, nField, SQL_C_BINARY, &buff, iLength, &iSize);
+		nReturn = m_pInterface->GetSQLGetData()(m_pOdbcStatement, nField, SQL_C_BINARY, &buff, iLength, &iSize);
 		if (nReturn != SQL_SUCCESS && nReturn != SQL_SUCCESS_WITH_INFO)
 		{
 			wxLogError(wxT("Error with RunQueryWithResults - 1\n"));
-			InterpretErrorCodes(nReturn, m_pODBCStatement);
+			InterpretErrorCodes(nReturn, m_pOdbcStatement);
 			ThrowDatabaseException();
 		}
 
@@ -462,11 +462,11 @@ void* ibDatabaseResultSetODBC::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 
 		while (iSize > iLength)
 		{
-			nReturn = m_pInterface->GetSQLGetData()(m_pODBCStatement, nField, SQL_C_BINARY, &buff, iLength, &iSize);
+			nReturn = m_pInterface->GetSQLGetData()(m_pOdbcStatement, nField, SQL_C_BINARY, &buff, iLength, &iSize);
 			if (nReturn != SQL_SUCCESS && nReturn != SQL_SUCCESS_WITH_INFO)
 			{
 				wxLogError(wxT("Error with RunQueryWithResults - 2\n"));
-				InterpretErrorCodes(nReturn, m_pODBCStatement);
+				InterpretErrorCodes(nReturn, m_pOdbcStatement);
 				ThrowDatabaseException();
 			}
 
@@ -507,7 +507,7 @@ void* ibDatabaseResultSetODBC::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 	}
 }
 
-int ibDatabaseResultSetODBC::LookupField(const wxString& strField)
+int COdbcResultSet::LookupField(const wxString& strField)
 {
 	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
 		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
@@ -516,7 +516,7 @@ int ibDatabaseResultSetODBC::LookupField(const wxString& strField)
 	{
 		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
-		ibDatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
+		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;
 #else
 		wxLogError(msg);
@@ -529,14 +529,14 @@ int ibDatabaseResultSetODBC::LookupField(const wxString& strField)
 	}
 }
 
-ibResultSetMetaData* ibDatabaseResultSetODBC::GetMetaData()
+IResultSetMetaData* COdbcResultSet::GetMetaData()
 {
-	ibResultSetMetaData* pMetaData = new ibDatabaseResultSetMetaDataODBC(m_pInterface, m_pODBCStatement);
+	IResultSetMetaData* pMetaData = new COdbcResultSetMetaData(m_pInterface, m_pOdbcStatement);
 	LogMetaDataForCleanup(pMetaData);
 	return pMetaData;
 }
 
-void ibDatabaseResultSetODBC::InterpretErrorCodes(long nCode, SQLHSTMT stmth_ptr)
+void COdbcResultSet::InterpretErrorCodes(long nCode, SQLHSTMT stmth_ptr)
 {
 	//if ((nCode != SQL_SUCCESS) ) // && (nCode != SQL_SUCCESS_WITH_INFO))
 	{
@@ -557,7 +557,7 @@ void ibDatabaseResultSetODBC::InterpretErrorCodes(long nCode, SQLHSTMT stmth_ptr
 	}
 }
 
-bool ibDatabaseResultSetODBC::IsBlob(int nField)
+bool COdbcResultSet::IsBlob(int nField)
 {
 	SQLTCHAR      col_name[8192];
 	SQLSMALLINT   col_name_length;
@@ -572,7 +572,7 @@ bool ibDatabaseResultSetODBC::IsBlob(int nField)
 
 	memset(col_name, 0, 8192);
 
-	SQLRETURN nRet = m_pInterface->GetSQLDescribeCol()(m_pODBCStatement, nField, col_name,
+	SQLRETURN nRet = m_pInterface->GetSQLDescribeCol()(m_pOdbcStatement, nField, col_name,
 		8192, &col_name_length, &col_data_type, &col_size, &col_decimal_digits, &col_nullable);
 
 	return (col_data_type == SQL_BIT || col_data_type == SQL_BINARY ||

@@ -7,7 +7,7 @@
 #include "backend/metaData.h"
 #include "list/objectList.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectEnumeration, ibValueMetaObjectRecordDataEnumRef)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectEnumeration, IValueMetaObjectRecordDataEnumRef)
 
 //********************************************************************************************
 
@@ -18,16 +18,16 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectEnumeration, ibValueMetaObjectRecordD
 //*                                      metaData                                            *
 //********************************************************************************************
 
-ibValueMetaObjectEnumeration::ibValueMetaObjectEnumeration() : ibValueMetaObjectRecordDataEnumRef()
+CValueMetaObjectEnumeration::CValueMetaObjectEnumeration() : IValueMetaObjectRecordDataEnumRef()
 {
 	m_propertyQuickChoice->SetValue(true);
 }
 
-ibValueMetaObjectEnumeration::~ibValueMetaObjectEnumeration()
+CValueMetaObjectEnumeration::~CValueMetaObjectEnumeration()
 {
 }
 
-ibValueMetaObjectFormBase* ibValueMetaObjectEnumeration::GetDefaultFormByID(const ibFormID& id) const
+IValueMetaObjectForm* CValueMetaObjectEnumeration::GetDefaultFormByID(const form_identifier_t& id) const
 {
 	if (id == eFormList && m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormList->GetValueAsInteger());
@@ -41,47 +41,47 @@ ibValueMetaObjectFormBase* ibValueMetaObjectEnumeration::GetDefaultFormByID(cons
 
 #include "enumerationManager.h"
 
-ibValueManagerDataObject* ibValueMetaObjectEnumeration::CreateManagerDataObjectValue()
+IValueManagerDataObject* CValueMetaObjectEnumeration::CreateManagerDataObjectValue()
 {
-	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectEnumeration>(this);
+	return CValue::CreateAndPrepareValueRef<CValueManagerDataObjectEnumeration>(this);
 }
 
-ibSourceDataObject* ibValueMetaObjectEnumeration::CreateSourceObject(ibValueMetaObjectFormBase* metaObject)
+ISourceDataObject* CValueMetaObjectEnumeration::CreateSourceObject(IValueMetaObjectForm* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{
 	case eFormList: 
-		return ibValue::CreateAndPrepareValueRef<ibValueListDataObjectEnumRef>(this, metaObject->GetTypeForm());
+		return CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(this, metaObject->GetTypeForm());
 	case eFormSelect: 
-		return ibValue::CreateAndPrepareValueRef<ibValueListDataObjectEnumRef>(this, metaObject->GetTypeForm(), true);
+		return CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(this, metaObject->GetTypeForm(), true);
 	}
 
 	return nullptr;
 }
 
 #pragma region _form_builder_h_
-ibBackendValueForm* ibValueMetaObjectEnumeration::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectEnumeration::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return ibValueMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		ibValueMetaObjectEnumeration::eFormList,
-		ownerControl, ibValue::CreateAndPrepareValueRef<ibValueListDataObjectEnumRef>(this, ibValueMetaObjectEnumeration::eFormList),
+		CValueMetaObjectEnumeration::eFormList,
+		ownerControl, CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(this, CValueMetaObjectEnumeration::eFormList),
 		formGuid
 	);
 }
 
-ibBackendValueForm* ibValueMetaObjectEnumeration::GetSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectEnumeration::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return ibValueMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		ibValueMetaObjectEnumeration::eFormSelect,
-		ownerControl, ibValue::CreateAndPrepareValueRef<ibValueListDataObjectEnumRef>(this, ibValueMetaObjectEnumeration::eFormSelect, true),
+		CValueMetaObjectEnumeration::eFormSelect,
+		ownerControl, CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(this, CValueMetaObjectEnumeration::eFormSelect, true),
 		formGuid
 	);
 }
 #pragma endregion
 
-wxString ibValueMetaObjectEnumeration::GetDataPresentation(const ibValueDataObject* objValue) const
+wxString CValueMetaObjectEnumeration::GetDataPresentation(const IValueDataObject* objValue) const
 {
 	for (auto obj : GetEnumObjectArray()) {
 		if (objValue->GetGuid() == obj->GetGuid()) {
@@ -95,7 +95,7 @@ wxString ibValueMetaObjectEnumeration::GetDataPresentation(const ibValueDataObje
 //*                       Save & load metaData                              *
 //***************************************************************************
 
-bool ibValueMetaObjectEnumeration::LoadData(ibReaderMemory& dataReader)
+bool CValueMetaObjectEnumeration::LoadData(CMemoryReader& dataReader)
 {
 	//Load object module
 	(*m_propertyModuleManager)->LoadMeta(dataReader);
@@ -104,10 +104,10 @@ bool ibValueMetaObjectEnumeration::LoadData(ibReaderMemory& dataReader)
 	m_propertyDefFormList->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormSelect->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 
-	return ibValueMetaObjectRecordDataEnumRef::LoadData(dataReader);
+	return IValueMetaObjectRecordDataEnumRef::LoadData(dataReader);
 }
 
-bool ibValueMetaObjectEnumeration::SaveData(ibWriterMemory& dataWritter)
+bool CValueMetaObjectEnumeration::SaveData(CMemoryWriter& dataWritter)
 {
 	//Save object module
 	(*m_propertyModuleManager)->SaveMeta(dataWritter);
@@ -117,30 +117,30 @@ bool ibValueMetaObjectEnumeration::SaveData(ibWriterMemory& dataWritter)
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormSelect->GetValueAsInteger()));
 
 	//create or update table:
-	return ibValueMetaObjectRecordDataEnumRef::SaveData(dataWritter);
+	return IValueMetaObjectRecordDataEnumRef::SaveData(dataWritter);
 }
 
 //***********************************************************************
 //*                           read & save events                        *
 //***********************************************************************
 
-bool ibValueMetaObjectEnumeration::OnCreateMetaObject(ibMetaData* metaData, int flags)
+bool CValueMetaObjectEnumeration::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!ibValueMetaObjectRecordDataEnumRef::OnCreateMetaObject(metaData, flags))
+	if (!IValueMetaObjectRecordDataEnumRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	return (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
 }
 
-bool ibValueMetaObjectEnumeration::OnLoadMetaObject(ibMetaData* metaData)
+bool CValueMetaObjectEnumeration::OnLoadMetaObject(IMetaData* metaData)
 {
 	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
-	return ibValueMetaObjectRecordDataEnumRef::OnLoadMetaObject(metaData);
+	return IValueMetaObjectRecordDataEnumRef::OnLoadMetaObject(metaData);
 }
 
-bool ibValueMetaObjectEnumeration::OnSaveMetaObject(int flags)
+bool CValueMetaObjectEnumeration::OnSaveMetaObject(int flags)
 {
 	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
@@ -152,80 +152,80 @@ bool ibValueMetaObjectEnumeration::OnSaveMetaObject(int flags)
 	}
 #endif 
 
-	return ibValueMetaObjectRecordDataEnumRef::OnSaveMetaObject(flags);
+	return IValueMetaObjectRecordDataEnumRef::OnSaveMetaObject(flags);
 }
 
-bool ibValueMetaObjectEnumeration::OnDeleteMetaObject()
+bool CValueMetaObjectEnumeration::OnDeleteMetaObject()
 {
 	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
-	return ibValueMetaObjectRecordDataEnumRef::OnDeleteMetaObject();
+	return IValueMetaObjectRecordDataEnumRef::OnDeleteMetaObject();
 }
 
-bool ibValueMetaObjectEnumeration::OnReloadMetaObject()
+bool CValueMetaObjectEnumeration::OnReloadMetaObject()
 {
 	return true;
 }
 
-bool ibValueMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
 {
 	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	return ibValueMetaObjectRecordDataEnumRef::OnBeforeRunMetaObject(flags);
+	return IValueMetaObjectRecordDataEnumRef::OnBeforeRunMetaObject(flags);
 }
 
-bool ibValueMetaObjectEnumeration::OnAfterRunMetaObject(int flags)
+bool CValueMetaObjectEnumeration::OnAfterRunMetaObject(int flags)
 {
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
 		return false;
 
-	return ibValueMetaObjectRecordDataEnumRef::OnAfterRunMetaObject(flags);
+	return IValueMetaObjectRecordDataEnumRef::OnAfterRunMetaObject(flags);
 }
 
-bool ibValueMetaObjectEnumeration::OnBeforeCloseMetaObject()
+bool CValueMetaObjectEnumeration::OnBeforeCloseMetaObject()
 {
 	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
 		return false;
 
-	return ibValueMetaObjectRecordDataEnumRef::OnBeforeCloseMetaObject();
+	return IValueMetaObjectRecordDataEnumRef::OnBeforeCloseMetaObject();
 }
 
-bool ibValueMetaObjectEnumeration::OnAfterCloseMetaObject()
+bool CValueMetaObjectEnumeration::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 		return false;
 
-	return ibValueMetaObjectRecordDataEnumRef::OnAfterCloseMetaObject();
+	return IValueMetaObjectRecordDataEnumRef::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                             form events                             *
 //***********************************************************************
 
-void ibValueMetaObjectEnumeration::OnCreateFormObject(ibValueMetaObjectFormBase* metaForm)
+void CValueMetaObjectEnumeration::OnCreateFormObject(IValueMetaObjectForm* metaForm)
 {
-	if (metaForm->GetTypeForm() == ibValueMetaObjectEnumeration::eFormList
+	if (metaForm->GetTypeForm() == CValueMetaObjectEnumeration::eFormList
 		&& m_propertyDefFormList->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == ibValueMetaObjectEnumeration::eFormSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectEnumeration::eFormSelect
 		&& m_propertyDefFormSelect->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
 	}
 }
 
-void ibValueMetaObjectEnumeration::OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm)
+void CValueMetaObjectEnumeration::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
 {
-	if (metaForm->GetTypeForm() == ibValueMetaObjectEnumeration::eFormList
+	if (metaForm->GetTypeForm() == CValueMetaObjectEnumeration::eFormList
 		&& m_propertyDefFormList->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == ibValueMetaObjectEnumeration::eFormSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectEnumeration::eFormSelect
 		&& m_propertyDefFormSelect->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
@@ -236,4 +236,4 @@ void ibValueMetaObjectEnumeration::OnRemoveMetaForm(ibValueMetaObjectFormBase* m
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(ibValueMetaObjectEnumeration, "Enumeration", g_metaEnumerationCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectEnumeration, "Enumeration", g_metaEnumerationCLSID);

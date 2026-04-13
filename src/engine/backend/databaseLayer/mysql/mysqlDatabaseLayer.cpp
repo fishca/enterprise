@@ -12,11 +12,11 @@
 #include <wx/tokenzr.h>
 
 // ctor
-ibDatabaseLayerMySQL::ibDatabaseLayerMySQL()
-	: ibDatabaseLayer()
+CMysqlDatabaseLayer::CMysqlDatabaseLayer()
+	: IDatabaseLayer()
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceMySQL();
+	m_pInterface = new CMysqlInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -33,11 +33,11 @@ ibDatabaseLayerMySQL::ibDatabaseLayerMySQL()
 	m_strPassword = wxEmptyString;
 }
 
-ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const wxString& strDatabase)
-	: ibDatabaseLayer()
+CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strDatabase)
+	: IDatabaseLayer()
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceMySQL();
+	m_pInterface = new CMysqlInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -54,11 +54,11 @@ ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const wxString& strDatabase)
 	Open(strDatabase);
 }
 
-ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const wxString& strServer, const wxString& strDatabase)
-	: ibDatabaseLayer()
+CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strServer, const wxString& strDatabase)
+	: IDatabaseLayer()
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceMySQL();
+	m_pInterface = new CMysqlInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -74,11 +74,11 @@ ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const wxString& strServer, const wxSt
 	Open(strDatabase);
 }
 
-ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer()
+CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: IDatabaseLayer()
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceMySQL();
+	m_pInterface = new CMysqlInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -95,11 +95,11 @@ ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const wxString& strDatabase, const wx
 	Open(strDatabase);
 }
 
-ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer()
+CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: IDatabaseLayer()
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceMySQL();
+	m_pInterface = new CMysqlInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -115,10 +115,10 @@ ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const wxString& strServer, const wxSt
 	Open(strDatabase);
 }
 
-ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const ibDatabaseLayerMySQL& src)
+CMysqlDatabaseLayer::CMysqlDatabaseLayer(const CMysqlDatabaseLayer& src)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceMySQL();
+	m_pInterface = new CMysqlInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -136,7 +136,7 @@ ibDatabaseLayerMySQL::ibDatabaseLayerMySQL(const ibDatabaseLayerMySQL& src)
 }
 
 // dtor
-ibDatabaseLayerMySQL::~ibDatabaseLayerMySQL()
+CMysqlDatabaseLayer::~CMysqlDatabaseLayer()
 {
 	Close();
 	//m_pInterface->GetMysqlClose()(m_pDatabase);
@@ -147,7 +147,7 @@ ibDatabaseLayerMySQL::~ibDatabaseLayerMySQL()
 }
 
 // open database
-void ibDatabaseLayerMySQL::InitDatabase()
+void CMysqlDatabaseLayer::InitDatabase()
 {
 	//char *server_options[] = { "mysql_test", "--defaults-file=my.cnf" };
 	//int num_elements = sizeof(server_options)/ sizeof(char *);
@@ -162,20 +162,20 @@ void ibDatabaseLayerMySQL::InitDatabase()
 }
 
 // open database
-bool ibDatabaseLayerMySQL::Open(const wxString& strServer, const wxString& strDatabase)
+bool CMysqlDatabaseLayer::Open(const wxString& strServer, const wxString& strDatabase)
 {
 	ParseServerAndPort(strServer);
 	return Open(strDatabase);
 }
 
-bool ibDatabaseLayerMySQL::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool CMysqlDatabaseLayer::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_strUser = strUser;
 	m_strPassword = strPassword;
 	return Open(strDatabase);
 }
 
-bool ibDatabaseLayerMySQL::Open(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool CMysqlDatabaseLayer::Open(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	ParseServerAndPort(strServer);
 	m_strUser = strUser;
@@ -183,7 +183,7 @@ bool ibDatabaseLayerMySQL::Open(const wxString& strServer, const wxString& strDa
 	return Open(strDatabase);
 }
 
-bool ibDatabaseLayerMySQL::Open(const wxString& strDatabase)
+bool CMysqlDatabaseLayer::Open(const wxString& strDatabase)
 {
 	if (m_pInterface == nullptr)
 		return false;
@@ -218,14 +218,14 @@ bool ibDatabaseLayerMySQL::Open(const wxString& strDatabase)
 	}
 	else
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 		return false;
 	}
 }
 
-void ibDatabaseLayerMySQL::ParseServerAndPort(const wxString& strServer)
+void CMysqlDatabaseLayer::ParseServerAndPort(const wxString& strServer)
 {
 	int portIndicator = strServer.Find(wxT(":"));
 	if (portIndicator > -1)
@@ -241,7 +241,7 @@ void ibDatabaseLayerMySQL::ParseServerAndPort(const wxString& strServer)
 }
 
 // close database
-bool ibDatabaseLayerMySQL::Close()
+bool CMysqlDatabaseLayer::Close()
 {
 	CloseResultSets();
 	CloseStatements();
@@ -259,72 +259,72 @@ bool ibDatabaseLayerMySQL::Close()
 }
 
 
-bool ibDatabaseLayerMySQL::IsOpen()
+bool CMysqlDatabaseLayer::IsOpen()
 {
 	return (m_pDatabase != nullptr);
 }
 
 // transaction support
-void ibDatabaseLayerMySQL::BeginTransaction()
+void CMysqlDatabaseLayer::BeginTransaction()
 {
 	ResetErrorCodes();
 
 	int nReturn = m_pInterface->GetMysqlAutoCommit()((MYSQL*)m_pDatabase, 0);
 	if (nReturn != 0)
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
 }
 
-void ibDatabaseLayerMySQL::Commit()
+void CMysqlDatabaseLayer::Commit()
 {
 	ResetErrorCodes();
 
 	int nReturn = m_pInterface->GetMysqlCommit()((MYSQL*)m_pDatabase);
 	if (nReturn != 0)
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
 	nReturn = m_pInterface->GetMysqlAutoCommit()((MYSQL*)m_pDatabase, 1);
 	if (nReturn != 0)
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
 }
 
-void ibDatabaseLayerMySQL::RollBack()
+void CMysqlDatabaseLayer::RollBack()
 {
 	ResetErrorCodes();
 
 	int nReturn = m_pInterface->GetMysqlRollback()((MYSQL*)m_pDatabase);
 	if (nReturn != 0)
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
 	nReturn = m_pInterface->GetMysqlAutoCommit()((MYSQL*)m_pDatabase, 1);
 	if (nReturn != 0)
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
 }
 
-bool ibDatabaseLayerMySQL::IsActiveTransaction()
+bool CMysqlDatabaseLayer::IsActiveTransaction()
 {
 	return false;
 }
 
 // query database
-int ibDatabaseLayerMySQL::DoRunQuery(const wxString& strQuery, bool bParseQuery)
+int CMysqlDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 {
 	ResetErrorCodes();
 
@@ -344,7 +344,7 @@ int ibDatabaseLayerMySQL::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 		int nReturn = m_pInterface->GetMysqlQuery()((MYSQL*)m_pDatabase, sqlBuffer);
 		if (nReturn != 0)
 		{
-			SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+			SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 			SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 			ThrowDatabaseException();
 			return DATABASE_LAYER_QUERY_RESULT_ERROR;
@@ -354,14 +354,14 @@ int ibDatabaseLayerMySQL::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 	return m_pInterface->GetMysqlAffectedRows()((MYSQL*)m_pDatabase);
 }
 
-ibDatabaseResultSet* ibDatabaseLayerMySQL::DoRunQueryWithResults(const wxString& strQuery)
+IDatabaseResultSet* CMysqlDatabaseLayer::DoRunQueryWithResults(const wxString& strQuery)
 {
 	ResetErrorCodes();
 
 	wxArrayString QueryArray = ParseQueries(strQuery);
 
 	int nArraySize = QueryArray.size();
-	ibDatabaseResultSetMySQL* pResultSet = nullptr;
+	CMysqlPreparedStatementResultSet* pResultSet = nullptr;
 	for (int i = 0; i < nArraySize; i++)
 	{
 		wxString strCurrentQuery = QueryArray[i];
@@ -376,7 +376,7 @@ ibDatabaseResultSet* ibDatabaseLayerMySQL::DoRunQueryWithResults(const wxString&
 				int nReturn = m_pInterface->GetMysqlStmtExecute()(pMysqlStatement);
 				if (nReturn != 0)
 				{
-					SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlStmtErrno()(pMysqlStatement)));
+					SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlStmtErrno()(pMysqlStatement)));
 					SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlStmtError()(pMysqlStatement)));
 
 					// Clean up after ourselves
@@ -389,13 +389,13 @@ ibDatabaseResultSet* ibDatabaseLayerMySQL::DoRunQueryWithResults(const wxString&
 			}
 			else
 			{
-				SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+				SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 				SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 				ThrowDatabaseException();
 			}
 			if (i == nArraySize - 1)
 			{
-				pResultSet = new ibDatabaseResultSetMySQL(m_pInterface, pMysqlStatement, true);
+				pResultSet = new CMysqlPreparedStatementResultSet(m_pInterface, pMysqlStatement, true);
 				if (pResultSet)
 					pResultSet->SetEncoding(GetEncoding());
 #if wxUSE_UNICODE
@@ -411,7 +411,7 @@ ibDatabaseResultSet* ibDatabaseLayerMySQL::DoRunQueryWithResults(const wxString&
 		}
 		else
 		{
-			SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+			SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 			SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 			ThrowDatabaseException();
 			return nullptr;
@@ -421,8 +421,8 @@ ibDatabaseResultSet* ibDatabaseLayerMySQL::DoRunQueryWithResults(const wxString&
 	return pResultSet;
 }
 
-// ibPreparedStatement support
-ibPreparedStatement* ibDatabaseLayerMySQL::DoPrepareStatement(const wxString& strQuery)
+// IPreparedStatement support
+IPreparedStatement* CMysqlDatabaseLayer::DoPrepareStatement(const wxString& strQuery)
 {
 	ResetErrorCodes();
 
@@ -431,7 +431,7 @@ ibPreparedStatement* ibDatabaseLayerMySQL::DoPrepareStatement(const wxString& st
 	wxArrayString::iterator start = QueryArray.begin();
 	wxArrayString::iterator stop = QueryArray.end();
 
-	ibPreparedStatementMySQL* pStatement = new ibPreparedStatementMySQL(m_pInterface);
+	CMysqlPreparedStatement* pStatement = new CMysqlPreparedStatement(m_pInterface);
 	if (pStatement)
 		pStatement->SetEncoding(GetEncoding());
 	while (start != stop)
@@ -447,14 +447,14 @@ ibPreparedStatement* ibDatabaseLayerMySQL::DoPrepareStatement(const wxString& st
 			}
 			else
 			{
-				SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+				SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 				SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 				ThrowDatabaseException();
 			}
 		}
 		else
 		{
-			SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
+			SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlErrno()((MYSQL*)m_pDatabase)));
 			SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 			ThrowDatabaseException();
 			return nullptr;
@@ -465,7 +465,7 @@ ibPreparedStatement* ibDatabaseLayerMySQL::DoPrepareStatement(const wxString& st
 	return pStatement;
 }
 
-bool ibDatabaseLayerMySQL::TableExists(const wxString& table)
+bool CMysqlDatabaseLayer::TableExists(const wxString& table)
 {
 	bool bReturn = false;
 	/*
@@ -488,8 +488,8 @@ bool ibDatabaseLayerMySQL::TableExists(const wxString& table)
 	*/
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = nullptr;
-	ibDatabaseResultSet* pResult = nullptr;
+	IPreparedStatement* pStatement = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -513,7 +513,7 @@ bool ibDatabaseLayerMySQL::TableExists(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -546,7 +546,7 @@ bool ibDatabaseLayerMySQL::TableExists(const wxString& table)
 	return bReturn;
 }
 
-bool ibDatabaseLayerMySQL::ViewExists(const wxString& view)
+bool CMysqlDatabaseLayer::ViewExists(const wxString& view)
 {
 	bool bReturn = false;
 	/*
@@ -569,8 +569,8 @@ bool ibDatabaseLayerMySQL::ViewExists(const wxString& view)
 	*/
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = nullptr;
-	ibDatabaseResultSet* pResult = nullptr;
+	IPreparedStatement* pStatement = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -594,7 +594,7 @@ bool ibDatabaseLayerMySQL::ViewExists(const wxString& view)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -627,13 +627,13 @@ bool ibDatabaseLayerMySQL::ViewExists(const wxString& view)
 	return bReturn;
 }
 
-wxArrayString ibDatabaseLayerMySQL::GetTables()
+wxArrayString CMysqlDatabaseLayer::GetTables()
 {
 	wxArrayString returnArray;
 
 	if (m_pInterface->GetMysqlGetServerVersion()((MYSQL*)m_pDatabase) >= 50010)
 	{
-		ibDatabaseResultSet* pResult = nullptr;
+		IDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		try
 		{
@@ -649,7 +649,7 @@ wxArrayString ibDatabaseLayerMySQL::GetTables()
 			}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		}
-		catch (ibDatabaseLayerException& e)
+		catch (DatabaseLayerException& e)
 		{
 			if (pResult != nullptr)
 			{
@@ -688,13 +688,13 @@ wxArrayString ibDatabaseLayerMySQL::GetTables()
 	return returnArray;
 }
 
-wxArrayString ibDatabaseLayerMySQL::GetViews()
+wxArrayString CMysqlDatabaseLayer::GetViews()
 {
 	wxArrayString returnArray;
 
 	if (m_pInterface->GetMysqlGetServerVersion()((MYSQL*)m_pDatabase) >= 50010)
 	{
-		ibDatabaseResultSet* pResult = nullptr;
+		IDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		try
 		{
@@ -708,7 +708,7 @@ wxArrayString ibDatabaseLayerMySQL::GetViews()
 			}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		}
-		catch (ibDatabaseLayerException& e)
+		catch (DatabaseLayerException& e)
 		{
 			if (pResult != nullptr)
 			{
@@ -730,12 +730,12 @@ wxArrayString ibDatabaseLayerMySQL::GetViews()
 	return returnArray;
 }
 
-wxArrayString ibDatabaseLayerMySQL::GetColumns(const wxString& table)
+wxArrayString CMysqlDatabaseLayer::GetColumns(const wxString& table)
 {
 	wxArrayString returnArray;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibDatabaseResultSet* pResult = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -749,7 +749,7 @@ wxArrayString ibDatabaseLayerMySQL::GetColumns(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -771,18 +771,18 @@ wxArrayString ibDatabaseLayerMySQL::GetColumns(const wxString& table)
 	return returnArray;
 }
 
-int ibDatabaseLayerMySQL::TranslateErrorCode(int nCode)
+int CMysqlDatabaseLayer::TranslateErrorCode(int nCode)
 {
-	// Ultimately, this will probably be a map of Mysql database error code values to ibDatabaseLayer values
+	// Ultimately, this will probably be a map of Mysql database error code values to IDatabaseLayer values
 	// For now though, we'll just return error
 	return nCode;
 	//return DATABASE_LAYER_ERROR;
 }
 
-bool ibDatabaseLayerMySQL::IsAvailable()
+bool CMysqlDatabaseLayer::IsAvailable()
 {
 	bool bAvailable = false;
-	ibInterfaceMySQL* pInterface = new ibInterfaceMySQL();
+	CMysqlInterface* pInterface = new CMysqlInterface();
 	bAvailable = pInterface && pInterface->Init();
 	wxDELETE(pInterface);
 	return bAvailable;

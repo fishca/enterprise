@@ -24,7 +24,8 @@ THE SOFTWARE.
 #include <array>
 #include <wx/wx.h>
 
-struct ibGuidImpl { // UUID = GUID = CLSID = LIBID = IID
+struct guid_t  // UUID = GUID = CLSID = LIBID = IID
+{
 	unsigned long   m_data1;
 	unsigned short  m_data2;
 	unsigned short  m_data3;
@@ -51,37 +52,37 @@ struct ibGuidImpl { // UUID = GUID = CLSID = LIBID = IID
 // 16 byte value that can be passed around by value. It also supports
 // conversion to string (via the stream operator <<) and conversion from a
 // string via constructor.
-class BACKEND_API ibGuid
+class BACKEND_API CGuid
 {
 public:
 
-	explicit ibGuid(const std::array<unsigned char, 16>& bytes);
-	explicit ibGuid(const std::array<unsigned char, 16>&& bytes);
-	explicit ibGuid(const std::string_view& fromString);
+	explicit CGuid(const std::array<unsigned char, 16>& bytes);
+	explicit CGuid(const std::array<unsigned char, 16>&& bytes);
+	explicit CGuid(const std::string_view& fromString);
 
-	ibGuid();
-	ibGuid(const ibGuidImpl& bytes);
+	CGuid();
+	CGuid(const guid_t& bytes);
 #if __WXWINDOWS__
-	ibGuid(const wxString& fromString);
+	CGuid(const wxString& fromString);
 #endif
 
-	ibGuid(const ibGuid& other) = default;
-	ibGuid& operator=(const ibGuid& other) = default;
-	ibGuid(ibGuid&& other) = default;
-	ibGuid& operator=(ibGuid&& other) = default;
+	CGuid(const CGuid& other) = default;
+	CGuid& operator=(const CGuid& other) = default;
+	CGuid(CGuid&& other) = default;
+	CGuid& operator=(CGuid&& other) = default;
 
-	static ibGuid newGuid(short version = GUID_RANDOM);
+	static CGuid newGuid(short version = GUID_RANDOM);
 
-	bool operator > (const ibGuid& other) const;
-	bool operator >= (const ibGuid& other) const;
-	bool operator < (const ibGuid& other) const;
-	bool operator <= (const ibGuid& other) const;
+	bool operator > (const CGuid& other) const;
+	bool operator >= (const CGuid& other) const;
+	bool operator < (const CGuid& other) const;
+	bool operator <= (const CGuid& other) const;
 
 	// overload equality and inequality operator
-	bool operator==(const ibGuid& other) const;
-	bool operator!=(const ibGuid& other) const;
+	bool operator==(const CGuid& other) const;
+	bool operator!=(const CGuid& other) const;
 
-	operator ibGuidImpl() const;
+	operator guid_t() const;
 
 	// convert to string using std::snprintf() and std::string
 	std::string str() const;
@@ -90,7 +91,7 @@ public:
 	operator std::string() const { return str(); }
 
 	const std::array<unsigned char, 16>& bytes() const;
-	void swap(ibGuid& other);
+	void swap(CGuid& other);
 	bool isValid() const;
 
 	void reset() { zeroify(); }
@@ -103,10 +104,10 @@ private:
 	std::array<unsigned char, 16> _bytes;
 
 	// make the << operator a friend so it can access _bytes
-	friend std::ostream& operator<<(std::ostream& s, const ibGuid& guid);
+	friend std::ostream& operator<<(std::ostream& s, const CGuid& guid);
 };
 
-#define wxNullGuid	ibGuid()
-#define wxNewUniqueGuid	ibGuid::newGuid(GUID_RANDOM)
+#define wxNullGuid	CGuid()
+#define wxNewUniqueGuid	CGuid::newGuid(GUID_RANDOM)
 
 #endif

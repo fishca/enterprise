@@ -5,7 +5,7 @@
 
 #include "lineInput.h"
 
-ibDialogLineInput::ibDialogLineInput(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
+CDialogLineInput::CDialogLineInput(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -39,23 +39,23 @@ ibDialogLineInput::ibDialogLineInput(wxWindow* parent, wxWindowID id, const wxSt
 	this->Centre(wxBOTH);
 
 	// Connect Events
-	m_buttonGoTo->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogLineInput::OnButtonGoToClick), nullptr, this);
-	m_buttonCancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogLineInput::OnButtonCancelClick), nullptr, this);
+	m_buttonGoTo->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogLineInput::OnButtonGoToClick), nullptr, this);
+	m_buttonCancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogLineInput::OnButtonCancelClick), nullptr, this);
 }
 
-ibDialogLineInput::~ibDialogLineInput()
+CDialogLineInput::~CDialogLineInput()
 {
 	// Disconnect Events
-	m_buttonGoTo->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogLineInput::OnButtonGoToClick), nullptr, this);
-	m_buttonCancel->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogLineInput::OnButtonCancelClick), nullptr, this);
+	m_buttonGoTo->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogLineInput::OnButtonGoToClick), nullptr, this);
+	m_buttonCancel->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogLineInput::OnButtonCancelClick), nullptr, this);
 }
 
-void ibDialogLineInput::OnButtonGoToClick(wxCommandEvent& event) 
+void CDialogLineInput::OnButtonGoToClick(wxCommandEvent& event) 
 {
 	EndModal(wxAtoi(m_lineNumber->GetValue()));
 }
 
-void ibDialogLineInput::OnButtonCancelClick(wxCommandEvent& event) 
+void CDialogLineInput::OnButtonCancelClick(wxCommandEvent& event) 
 {
 	EndModal(wxNOT_FOUND);
 }

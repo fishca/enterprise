@@ -4,7 +4,6 @@
 #include <wx/app.h>
 #include <wx/cmdproc.h>
 #include <wx/docview.h>
-#include <wx/dlist.h>
 #include <wx/msgdlg.h>
 
 #include <vector>
@@ -13,16 +12,16 @@
 #include "backend/backend_form.h"
 #include "frontend/frontend.h"
 
-class BACKEND_API ibValue;
+class BACKEND_API CValue;
 
-class BACKEND_API ibValueMetaObject;
-class BACKEND_API ibValueMetaObjectRecordData;
+class BACKEND_API IValueMetaObject;
+class BACKEND_API IValueMetaObjectRecordData;
 
-class BACKEND_API ibValueMetaObjectModule;
-class BACKEND_API ibValueMetaObjectForm;
-class BACKEND_API ibValueMetaObjectGrid;
+class BACKEND_API CValueMetaObjectModule;
+class BACKEND_API CValueMetaObjectForm;
+class BACKEND_API CValueMetaObjectGrid;
 
-class ibMetaView;
+class CMetaView;
 
 // Document template flags
 enum
@@ -30,15 +29,15 @@ enum
 	wxDOC_READONLY = wxDOC_SILENT + 1,
 };
 
-class FRONTEND_API ibMetaDocument : public ibBackendMetaDocument, public wxDocument {
-	wxDECLARE_ABSTRACT_CLASS(ibMetaDocument);
+class FRONTEND_API CMetaDocument : public IBackendMetaDocument, public wxDocument {
+	wxDECLARE_ABSTRACT_CLASS(CMetaDocument);
 public:
 
 	virtual void SetIcon(const wxIcon& icon) { m_docIcon = icon; }
 	virtual wxIcon GetIcon() const { return m_docIcon; }
 
-	virtual void SetMetaObject(ibValueMetaObject* metaObject) { m_metaObject = metaObject; }
-	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual void SetMetaObject(IValueMetaObject* metaObject) { m_metaObject = metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 
 	template <class T>
 	inline T* ConvertMetaObjectToType() {
@@ -46,13 +45,13 @@ public:
 	}
 
 protected:
-	virtual ibMetaView* DoCreateView();
+	virtual CMetaView* DoCreateView();
 public:
 
 	wxString GetModuleName() const;
 
-	ibMetaDocument(ibMetaDocument* docParent = nullptr);
-	virtual ~ibMetaDocument();
+	CMetaDocument(CMetaDocument* docParent = nullptr);
+	virtual ~CMetaDocument();
 
 	// Called after a view is added or removed. The default implementation
 	// deletes the document if this is there are no more views.
@@ -72,14 +71,14 @@ public:
 
 	virtual bool IsChildDocument() const { return m_childDoc; }
 
-	virtual void SetDocParent(ibMetaDocument* docParent) {
+	virtual void SetDocParent(CMetaDocument* docParent) {
 		if (docParent != nullptr) {
 			docParent->m_childDocs.Append(this);
 			m_documentParent = docParent;
 		}
 		else {
 			auto it = m_documentParent->m_childDocs.Find(this);
-			//wxASSERT(it != m_documentParent->m_childDocs.end());
+			wxASSERT(it != nullptr);
 			if (it->GetData() != nullptr) {
 				m_documentParent->m_childDocs.Erase(it);
 				m_documentParent = nullptr;
@@ -89,7 +88,7 @@ public:
 
 	virtual bool IsCloseOnOwnerClose() const { return true; }
 
-	virtual wxDList<ibMetaDocument> GetChild() const { return m_childDocs; }
+	virtual wxDList<CMetaDocument> GetChild() const { return m_childDocs; }
 	virtual wxDocManager* GetDocumentManager() const override {
 		// For child documents we use the same document manager as the parent, even
 		// though we don't have our own template (as children are not opened/saved
@@ -109,39 +108,39 @@ public:
 
 protected:
 
-	ibMetaDocument* m_documentParent;
-	ibValueMetaObject* m_metaObject;	// current metadata object
+	CMetaDocument* m_documentParent;
+	IValueMetaObject* m_metaObject;	// current metadata object
 
-	wxDList<ibMetaDocument> m_childDocs;
+	wxDList<CMetaDocument> m_childDocs;
 	bool m_childDoc;
 
 private:
 	wxIcon m_docIcon;
 };
 
-class FRONTEND_API ibMetaDataDocument : public ibMetaDocument {
-	wxDECLARE_ABSTRACT_CLASS(ibMetaDataDocument);
+class FRONTEND_API IMetaDataDocument : public CMetaDocument {
+	wxDECLARE_ABSTRACT_CLASS(IMetaDataDocument);
 public:
-	virtual class ibMetaData* GetMetaData() const = 0;
+	virtual class IMetaData* GetMetaData() const = 0;
 };
 
-class FRONTEND_API ibValueModulibDocument : public ibMetaDocument {
-	wxDECLARE_ABSTRACT_CLASS(ibValueModulibDocument);
+class FRONTEND_API IValueModuleDocument : public CMetaDocument {
+	wxDECLARE_ABSTRACT_CLASS(IValueModuleDocument);
 public:
 
 	virtual void SetCurrentLine(int lineBreakpoint, bool setBreakpoint) = 0;
 	virtual void SetToolTip(const wxString& resultStr) = 0;
-	virtual void ShowAutoComplete(const struct ibDebugAutoCompleteData& debugData) = 0;
+	virtual void ShowAutoComplete(const struct CDebugAutoCompleteData& debugData) = 0;
 };
 
 #include <wx/aui/auibar.h>
 
-class FRONTEND_API ibMetaView : public wxView {
-	wxDECLARE_ABSTRACT_CLASS(ibMetaView);
+class FRONTEND_API CMetaView : public wxView {
+	wxDECLARE_ABSTRACT_CLASS(CMetaView);
 public:
 
-	ibMetaDocument* GetDocument() const {
-		return dynamic_cast<ibMetaDocument*>(m_viewDocument);
+	CMetaDocument* GetDocument() const {
+		return dynamic_cast<CMetaDocument*>(m_viewDocument);
 	}
 
 	bool ShowFrame(bool show = true) {
@@ -160,7 +159,7 @@ public:
 
 	// Called by valueFramework if created automatically by the default document
 	// manager class: gives view a chance to initialise
-	virtual bool OnCreate(ibMetaDocument* WXUNUSED(doc), long WXUNUSED(flags)) { return true; }
+	virtual bool OnCreate(CMetaDocument* WXUNUSED(doc), long WXUNUSED(flags)) { return true; }
 	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) {}
 
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;

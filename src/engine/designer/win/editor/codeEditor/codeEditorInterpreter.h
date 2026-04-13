@@ -4,13 +4,13 @@
 #include "backend/moduleInfo.h"
 #include "backend/compiler/compileCode.h"
 
-struct ibParamValue {
+struct CParamValue {
 	wxString m_paramName;//variable name 
 	wxString m_paramType;//variable type in English notation (in case of explicit typing)
-	ibValue m_paramObject;
+	CValue m_paramObject;
 };
 
-class ibPrecompileCode;
+class CPrecompileCode;
 struct CPrecompileFunction;
 
 struct CPrecompileVariable
@@ -25,8 +25,8 @@ struct CPrecompileVariable
 	wxString strType;//тип значения
 	wxString strRealName;
 
-	ibValue m_valContext;
-	ibValue m_valObject;
+	CValue m_valContext;
+	CValue m_valObject;
 
 	CPrecompileVariable() : bExport(false), bContext(false), bTempVar(false), nNumber(0) {};
 	CPrecompileVariable(wxString csVarName) : strName(csVarName), bExport(false), bContext(false), bTempVar(false), nNumber(0) {};
@@ -34,8 +34,8 @@ struct CPrecompileVariable
 
 struct CPrecompileContext
 {
-	ibPrecompileCode* pModule;
-	void SetModule(ibPrecompileCode* pSetModule) { pModule = pSetModule; }
+	CPrecompileCode* pModule;
+	void SetModule(CPrecompileCode* pSetModule) { pModule = pSetModule; }
 
 	CPrecompileContext* pParent;//родительский контекст
 	CPrecompileContext* pStopParent;//начало запрещенной области прародителя
@@ -45,12 +45,12 @@ struct CPrecompileContext
 	//ПЕРЕМЕННЫЕ
 	std::map <wxString, CPrecompileVariable> cVariables;
 
-	ibParamValue GetVariable(const wxString& strVarName, bool bFindInParent = true, bool bCheckError = false, const ibValue& valVar = ibValue());
-	ibParamValue AddVariable(const wxString& strVarName, const wxString& varType = wxEmptyString, bool bExport = false, bool bTempVar = false, const ibValue& valVar = ibValue());
-	void SetVariable(const wxString& strVarName, const ibValue& valVar);
+	CParamValue GetVariable(const wxString& strVarName, bool bFindInParent = true, bool bCheckError = false, const CValue& valVar = CValue());
+	CParamValue AddVariable(const wxString& strVarName, const wxString& varType = wxEmptyString, bool bExport = false, bool bTempVar = false, const CValue& valVar = CValue());
+	void SetVariable(const wxString& strVarName, const CValue& valVar);
 
-	bool FindVariable(const wxString& strName, ibValue& valContext = ibValue(), bool bContext = false);
-	bool FindFunction(const wxString& strName, ibValue& valContext = ibValue(), bool bContext = false);
+	bool FindVariable(const wxString& strName, CValue& valContext = CValue(), bool bContext = false);
+	bool FindFunction(const wxString& strName, CValue& valContext = CValue(), bool bContext = false);
 
 	void RemoveVariable(const wxString& strName);
 
@@ -90,7 +90,7 @@ struct CPrecompileFunction
 {
 	wxString strRealName;//Имя функции
 	wxString strName;//Имя функции в верхнем регистре
-	std::vector<ibParamValue> aParamList;
+	std::vector<CParamValue> aParamList;
 	bool bExport;
 	bool bContext;
 	CPrecompileContext* m_pContext;//конекст компиляции
@@ -98,9 +98,9 @@ struct CPrecompileFunction
 	int nStart;// starting position в массиве байт-кодов
 	int nFinish;//конечная позиция в массиве байт-кодов
 
-	ibValue m_valContext;
+	CValue m_valContext;
 
-	ibParamValue RealRetValue;//для хранения переменной при реальном вызове
+	CParamValue RealRetValue;//для хранения переменной при реальном вызове
 	bool bSysFunction;
 	wxString strType;		//тип (в англ. нотации), если это типизированная функция
 
@@ -132,11 +132,11 @@ struct CPrecompileFunction
 //*******************************************************************
 //*                         Класс: пре-компилятор                   *
 //*******************************************************************
-class ibPrecompileCode : public ibTranslateCode
+class CPrecompileCode : public CTranslateCode
 {
 	int m_numCurrentCompile;		//текущее положение в массиве лексем
 
-	ibValueMetaObjectModuleBase* m_moduleObject;
+	IValueMetaObjectModule* m_moduleObject;
 
 	std::map<wxString, unsigned int> m_aHashConstList;
 
@@ -144,7 +144,7 @@ class ibPrecompileCode : public ibTranslateCode
 	CPrecompileContext* m_pContext;
 	CPrecompileContext* m_pCurrentContext;
 
-	ibValue m_valObject;
+	CValue m_valObject;
 
 	unsigned int nLastPosition;
 
@@ -156,7 +156,7 @@ class ibPrecompileCode : public ibTranslateCode
 
 	unsigned int m_nCurrentPos;
 
-	friend class ibCodeEditor;
+	friend class CCodeEditor;
 
 public:
 
@@ -164,10 +164,10 @@ public:
 	virtual void Clear();//Сброс данных для повторного использования объекта
 	void PrepareModuleData();
 
-	ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject);
-	virtual ~ibPrecompileCode();
+	CPrecompileCode(IValueMetaObjectModule* moduleObject);
+	virtual ~CPrecompileCode();
 
-	ibValue GetComputeValue() const { return m_valObject; }
+	CValue GetComputeValue() const { return m_valObject; }
 	CPrecompileContext* GetContext() {
 		m_cContext.SetModule(this);
 		return &m_cContext;
@@ -202,34 +202,34 @@ protected:
 
 	bool CompileModule();
 
-	ibLexem PreviewGetLexem();
-	ibLexem GetLexem();
-	ibLexem GETLexem();
+	CLexem PreviewGetLexem();
+	CLexem GetLexem();
+	CLexem GETLexem();
 	void GETDelimeter(const wxUniChar& c);
 
 	bool IsNextDelimeter(const wxUniChar& c);
 	bool IsNextKeyWord(int nKey);
 	void GETKeyWord(int nKey);
 	wxString GETIdentifier(bool strRealName = false);
-	ibValue GETConstant();
+	CValue GETConstant();
 	int GetConstString(const wxString& sMethod);
 
 	int IsTypeVar(const wxString& strType = wxEmptyString);
 	wxString GetTypeVar(const wxString& strType = wxEmptyString);
 
-	ibParamValue GetExpression(int nPriority = 0);
+	CParamValue GetExpression(int nPriority = 0);
 
-	ibParamValue GetCurrentIdentifier(int& nIsSet);
-	ibParamValue GetCallFunction(const wxString& strName);
+	CParamValue GetCurrentIdentifier(int& nIsSet);
+	CParamValue GetCallFunction(const wxString& strName);
 
-	void AddVariable(const wxString& strVarName, const ibValue& varVal);
+	void AddVariable(const wxString& strVarName, const CValue& varVal);
 
-	ibParamValue GetVariable(const wxString& strVarName, bool bCheckError = false);
-	ibParamValue GetVariable();
+	CParamValue GetVariable(const wxString& strVarName, bool bCheckError = false);
+	CParamValue GetVariable();
 
-	void SetVariable(const wxString& strVarName, const ibValue& varVal);
+	void SetVariable(const wxString& strVarName, const CValue& varVal);
 
-	ibParamValue FindConst(ibValue& vData);
+	CParamValue FindConst(CValue& vData);
 };
 
 #endif 

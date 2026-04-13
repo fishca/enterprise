@@ -8,8 +8,8 @@
 //*                                  Factory & metaData                                      *
 //********************************************************************************************
 
-class ibValueMetaObjectCatalog : public ibValueMetaObjectRecordDataHierarchyMutableRef {
-	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectCatalog);
+class CValueMetaObjectCatalog : public IValueMetaObjectRecordDataHierarchyMutableRef {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCatalog);
 private:
 	enum
 	{
@@ -27,8 +27,8 @@ private:
 		eFormFolderSelect
 	};
 
-	virtual ibFormTypeList GetFormType() const override {
-		ibFormTypeList formList;
+	virtual CFormTypeList GetFormType() const override {
+		CFormTypeList formList;
 		formList.AppendItem(wxT("FormObject"), _("Form object"), eFormObject);
 		formList.AppendItem(wxT("FormFolder"), _("Form group"), eFormFolder);
 		formList.AppendItem(wxT("FormList"), _("Form list"), eFormList);
@@ -39,19 +39,19 @@ private:
 
 public:
 
-	ibValueMetaObjectAttributePredefined* GetCatalogOwner() const { return m_propertyAttributeOwner->GetMetaObject(); }
+	CValueMetaObjectAttributePredefined* GetCatalogOwner() const { return m_propertyAttributeOwner->GetMetaObject(); }
 
 	//default constructor 
-	ibValueMetaObjectCatalog();
-	virtual ~ibValueMetaObjectCatalog();
+	CValueMetaObjectCatalog();
+	virtual ~CValueMetaObjectCatalog();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//events: 
-	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
-	virtual bool OnLoadMetaObject(ibMetaData* metaData);
+	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
+	virtual bool OnLoadMetaObject(IMetaData* metaData);
 	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
@@ -66,46 +66,46 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 
-	virtual void OnCreateFormObject(ibValueMetaObjectFormBase* metaForm);
-	virtual void OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm);
+	virtual void OnCreateFormObject(IValueMetaObjectForm* metaForm);
+	virtual void OnRemoveMetaForm(IValueMetaObjectForm* metaForm);
 
 	//get attribute code 
-	virtual ibValueMetaObjectAttributeBase* GetAttributeForCode() const {
+	virtual IValueMetaObjectAttribute* GetAttributeForCode() const {
 		return m_propertyAttributeCode->GetMetaObject();
 	}
 
 	//create associate value 
-	virtual ibValueMetaObjectFormBase* GetDefaultFormByID(const ibFormID& id) const;
+	virtual IValueMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
+	virtual IBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	virtual IBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	virtual IBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	virtual IBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	virtual IBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
 #pragma endregion
 
 	//descriptions...
-	wxString GetDataPresentation(const ibValueDataObject* objValue) const;
+	wxString GetDataPresentation(const IValueDataObject* objValue) const;
 
 	//get module object in compose object 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	/**
 	* Property events
 	*/
-	virtual void OnPropertyCreated(ibProperty* property);
-	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue);
-	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual void OnPropertyCreated(IProperty* property);
+	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
+	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
 protected:
 
 	//predefined array 
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefined(std::vector<IValueMetaObjectAttribute*>& array) const {
 
-		const ibValueMetaObjectAttributePredefined* metaObjectAttributeOwner = GetCatalogOwner();
+		const CValueMetaObjectAttributePredefined* metaObjectAttributeOwner = GetCatalogOwner();
 		if (metaObjectAttributeOwner != nullptr && metaObjectAttributeOwner->GetClsidCount() > 0) {
 			array = {
 				m_propertyAttributePredefined->GetMetaObject(),
@@ -134,7 +134,7 @@ protected:
 	}
 
 	//searched array 
-	virtual bool FillArrayObjectBySearched(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectBySearched(std::vector<IValueMetaObjectAttribute*>& array) const {
 
 		array = {
 			m_propertyAttributeCode->GetMetaObject(),
@@ -145,17 +145,17 @@ protected:
 	}
 
 	//create manager
-	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
+	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create empty object
-	virtual ibValueRecordDataObjectHierarchyRef* CreateObjectRefValue(ibObjectMode mode, const ibGuid& guid = wxNullGuid);
+	virtual IValueRecordDataObjectHierarchyRef* CreateObjectRefValue(eObjectMode mode, const CGuid& guid = wxNullGuid);
 
 	//create object data with meta form
-	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
+	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
 
 	//load & save metaData from DB 
-	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 	//prepare menu for item
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
@@ -163,7 +163,7 @@ protected:
 
 private:
 
-	bool FillFormObject(ibPropertyList* prop) {
+	bool FillFormObject(CPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormObject == object->GetTypeForm()) {
@@ -177,7 +177,7 @@ private:
 		return true;
 	}
 
-	bool FillFormFolder(ibPropertyList* prop) {
+	bool FillFormFolder(CPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormFolder == object->GetTypeForm()) {
@@ -191,7 +191,7 @@ private:
 		return true;
 	}
 
-	bool FillFormList(ibPropertyList* prop) {
+	bool FillFormList(CPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormList == object->GetTypeForm()) {
@@ -205,7 +205,7 @@ private:
 		return true;
 	}
 
-	bool FillFormSelect(ibPropertyList* prop) {
+	bool FillFormSelect(CPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormSelect == object->GetTypeForm()) {
@@ -219,7 +219,7 @@ private:
 		return true;
 	}
 
-	bool FillFormFolderSelect(ibPropertyList* prop) {
+	bool FillFormFolderSelect(CPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormFolderSelect == object->GetTypeForm()) {
@@ -233,34 +233,34 @@ private:
 		return true;
 	}
 
-	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModuleObject = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
-	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyModuleManager = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
 
-	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
 
-	ibPropertyList* m_propertyDefFormObject = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormObject"), _("Default Object Form"), &ibValueMetaObjectCatalog::FillFormObject);
-	ibPropertyList* m_propertyDefFormFolder = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormFolder"), _("Default Folder Form"), &ibValueMetaObjectCatalog::FillFormFolder);
-	ibPropertyList* m_propertyDefFormList = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &ibValueMetaObjectCatalog::FillFormList);
-	ibPropertyList* m_propertyDefFormSelect = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormSelect"), _("Default Select Form"), &ibValueMetaObjectCatalog::FillFormSelect);
-	ibPropertyList* m_propertyDefFormFolderSelect = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormFolderSelect"), _("Default Folder Select Form"), &ibValueMetaObjectCatalog::FillFormFolderSelect);
+	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormObject"), _("Default Object Form"), &CValueMetaObjectCatalog::FillFormObject);
+	CPropertyList* m_propertyDefFormFolder = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormFolder"), _("Default Folder Form"), &CValueMetaObjectCatalog::FillFormFolder);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &CValueMetaObjectCatalog::FillFormList);
+	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormSelect"), _("Default Select Form"), &CValueMetaObjectCatalog::FillFormSelect);
+	CPropertyList* m_propertyDefFormFolderSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormFolderSelect"), _("Default Folder Select Form"), &CValueMetaObjectCatalog::FillFormFolderSelect);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	ibPropertyOwner* m_propertyOwner = ibPropertyObject::CreateProperty<ibPropertyOwner>(m_categoryData, wxT("ListOwner"), _("List owner"));
+	CPropertyOwner* m_propertyOwner = IPropertyObject::CreateProperty<CPropertyOwner>(m_categoryData, wxT("ListOwner"), _("List owner"));
 
 	//default array 
-	ibPropertyInnerAttribute<>* m_propertyAttributeOwner = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryCommon, ibValueMetaObjectCompositeData::CreateEmptyType(wxT("Owner"), _("Owner"), wxEmptyString, true, ibItemMode::ibItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateEmptyType(wxT("Owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
 
-	friend class ibValueRecordDataObjectCatalog;
-	friend class ibMetaData;
+	friend class CValueRecordDataObjectCatalog;
+	friend class IMetaData;
 };
 
 //********************************************************************************************
 //*                                      Object                                              *
 //********************************************************************************************
 
-class ibValueRecordDataObjectCatalog : public ibValueRecordDataObjectHierarchyRef {
-	ibValueRecordDataObjectCatalog(ibValueMetaObjectCatalog* metaObject, const ibGuid& objGuid = wxNullGuid, ibObjectMode objMode = ibObjectMode::OBJECT_ITEM);
-	ibValueRecordDataObjectCatalog(const ibValueRecordDataObjectCatalog& source);
+class CValueRecordDataObjectCatalog : public IValueRecordDataObjectHierarchyRef {
+	CValueRecordDataObjectCatalog(CValueMetaObjectCatalog* metaObject, const CGuid& objGuid = wxNullGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
+	CValueRecordDataObjectCatalog(const CValueRecordDataObjectCatalog& source);
 public:
 
 	//****************************************************************************
@@ -271,9 +271,9 @@ public:
 	virtual bool SaveModify() { return WriteObject(); }
 
 	//default methods
-	virtual bool FillObject(ibValue& vFillObject) const { return Filling(vFillObject); }
-	virtual ibValueRecordDataObjectRef* CopyObject(bool showValue = false) {
-		ibValueRecordDataObjectRef* objectRef = CopyObjectValue();
+	virtual bool FillObject(CValue& vFillObject) const { return Filling(vFillObject); }
+	virtual IValueRecordDataObjectRef* CopyObject(bool showValue = false) {
+		IValueRecordDataObjectRef* objectRef = CopyObjectValue();
 		if (objectRef != nullptr && showValue)
 			objectRef->ShowFormValue();
 		return objectRef;
@@ -291,27 +291,27 @@ public:
 	//*                              Override attribute                          *
 	//****************************************************************************
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
 
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
 	//support source data 
-	virtual ibSourceExplorer GetSourceExplorer() const;
+	virtual CSourceExplorer GetSourceExplorer() const;
 
 #pragma region _form_builder_h_
 	//support show 
-	virtual void ShowFormValue(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* owner = nullptr);
-	virtual ibBackendValueForm* GetFormValue(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* owner = nullptr);
+	virtual void ShowFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* owner = nullptr);
+	virtual IBackendValueForm* GetFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* owner = nullptr);
 #pragma endregion
 
 	//support actionData
-	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
-	virtual void ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm);
+	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);
+	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm);
 
 protected:
-	friend class ibValue;
-	friend class ibValueMetaObjectCatalog;
+	friend class CValue;
+	friend class CValueMetaObjectCatalog;
 };
 
 #endif

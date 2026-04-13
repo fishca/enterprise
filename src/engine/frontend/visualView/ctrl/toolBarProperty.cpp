@@ -1,17 +1,17 @@
 #include "toolBar.h"
 #include "frontend/visualView/visualHostClient.h"
 
-void ibValueToolbar::OnPropertyCreated(ibProperty* property)
+void CValueToolbar::OnPropertyCreated(IProperty* property)
 {
-	ibValueWindow::OnPropertyCreated(property);
+	IValueWindow::OnPropertyCreated(property);
 }
 
-void ibValueToolbar::OnPropertySelected(ibProperty* property)
+void CValueToolbar::OnPropertySelected(IProperty* property)
 {
-	ibValueWindow::OnPropertySelected(property);
+	IValueWindow::OnPropertySelected(property);
 }
 
-void ibValueToolbar::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CValueToolbar::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_actSource == property) {
 
@@ -26,11 +26,11 @@ void ibValueToolbar::OnPropertyChanged(ibProperty* property, const wxVariant& ol
 				g_visualHostContext->CutControl(GetChild(0), true);
 			}
 
-			const ibActionCollection& actionData = GetActionArray();
+			const CActionCollection& actionData = GetActionArray();
 			for (unsigned int i = 0; i < actionData.GetCount(); i++) {
-				const ibActionID& id = actionData.GetID(i);
+				const action_identifier_t& id = actionData.GetID(i);
 				if (id != wxNOT_FOUND) {
-					ibValueToolBarItem* toolItem = dynamic_cast<ibValueToolBarItem*>(
+					CValueToolBarItem* toolItem = dynamic_cast<CValueToolBarItem*>(
 						m_formOwner->CreateControl(wxT("tool"), this)
 						);
 					wxASSERT(toolItem);
@@ -41,7 +41,7 @@ void ibValueToolbar::OnPropertyChanged(ibProperty* property, const wxVariant& ol
 					g_visualHostContext->InsertControl(toolItem, this);
 				}
 				else {
-					ibValueToolBarSeparator* toolItemSeparator = dynamic_cast<ibValueToolBarSeparator*>(
+					CValueToolBarSeparator* toolItemSeparator = dynamic_cast<CValueToolBarSeparator*>(
 						m_formOwner->CreateControl(wxT("toolSeparator"), this)
 						);
 					g_visualHostContext->InsertControl(toolItemSeparator, this);
@@ -49,12 +49,12 @@ void ibValueToolbar::OnPropertyChanged(ibProperty* property, const wxVariant& ol
 			}
 
 			if (GetChildCount() == 0) {
-				ibValueToolbar::AddToolItem();
+				CValueToolbar::AddToolItem();
 			}
 
 			g_visualHostContext->RefreshEditor();
 		}
 	}
 
-	ibValueWindow::OnPropertyChanged(property, oldValue, newValue);
+	IValueWindow::OnPropertyChanged(property, oldValue, newValue);
 }

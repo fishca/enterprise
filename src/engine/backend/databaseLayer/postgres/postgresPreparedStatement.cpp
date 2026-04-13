@@ -7,56 +7,56 @@
 
 WX_DEFINE_OBJARRAY(ArrayOfPostgresPreparedStatementWrappers);
 
-ibPreparedStatementPostgres::ibPreparedStatementPostgres(ibInterfacePostgres* pInterface)
-	: ibPreparedStatement()
+CPostgresPreparedStatement::CPostgresPreparedStatement(CPostgresInterface* pInterface)
+	: IPreparedStatement()
 {
 	m_pInterface = pInterface;
 }
 
-ibPreparedStatementPostgres::ibPreparedStatementPostgres(ibInterfacePostgres* pInterface, PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName)
-	: ibPreparedStatement()
+CPostgresPreparedStatement::CPostgresPreparedStatement(CPostgresInterface* pInterface, PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName)
+	: IPreparedStatement()
 {
 	m_pInterface = pInterface;
 	AddStatement(pDatabase, strSQL, strStatementName);
 }
 
 
-ibPreparedStatementPostgres::~ibPreparedStatementPostgres()
+CPostgresPreparedStatement::~CPostgresPreparedStatement()
 {
 	Close();
 }
 
 
-void ibPreparedStatementPostgres::Close()
+void CPostgresPreparedStatement::Close()
 {
 	CloseResultSets();
 	m_Statements.Clear();
 }
 
-void ibPreparedStatementPostgres::AddStatement(PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName)
+void CPostgresPreparedStatement::AddStatement(PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName)
 {
-	ibPreparedStatementPostgresWrapper Statement(m_pInterface, pDatabase, strSQL, strStatementName);
+	CPostgresPreparedStatementWrapper Statement(m_pInterface, pDatabase, strSQL, strStatementName);
 	Statement.SetEncoding(GetEncoding());
 	m_Statements.push_back(Statement);
 }
 
-ibPreparedStatementPostgres* ibPreparedStatementPostgres::CreateStatement(ibInterfacePostgres* pInterface, PGconn* pDatabase, const wxString& strSQL)
+CPostgresPreparedStatement* CPostgresPreparedStatement::CreateStatement(CPostgresInterface* pInterface, PGconn* pDatabase, const wxString& strSQL)
 {
 	wxArrayString Queries = ParseQueries(strSQL);
 
 	wxArrayString::iterator start = Queries.begin();
 	wxArrayString::iterator stop = Queries.end();
 
-	ibPreparedStatementPostgres* pStatement = new ibPreparedStatementPostgres(pInterface);
+	CPostgresPreparedStatement* pStatement = new CPostgresPreparedStatement(pInterface);
 	const char* strEncoding = pInterface->GetPQencodingToChar()(pInterface->GetPQclientEncoding()(pDatabase));
 	wxCSConv conv((const char*)strEncoding);
 	pStatement->SetEncoding(&conv);
 	while (start != stop)
 	{
-		wxString strName = ibPreparedStatementPostgres::GenerateRandomStatementName();
+		wxString strName = CPostgresPreparedStatement::GenerateRandomStatementName();
 		pStatement->AddStatement(pDatabase, (*start), strName);
-		wxCharBuffer nameBuffer = ibDatabaseStringConverter::ConvertToUnicodeStream(strName, strEncoding);
-		wxCharBuffer sqlBuffer = ibDatabaseStringConverter::ConvertToUnicodeStream(TranslateSQL((*start)), strEncoding);
+		wxCharBuffer nameBuffer = CDatabaseStringConverter::ConvertToUnicodeStream(strName, strEncoding);
+		wxCharBuffer sqlBuffer = CDatabaseStringConverter::ConvertToUnicodeStream(TranslateSQL((*start)), strEncoding);
 		PGresult* pResult = pInterface->GetPQprepare()(pDatabase, nameBuffer, sqlBuffer, 0, nullptr);
 		if (pResult == nullptr)
 		{
@@ -66,8 +66,8 @@ ibPreparedStatementPostgres* ibPreparedStatementPostgres::CreateStatement(ibInte
 
 		if (pInterface->GetPQresultStatus()(pResult) != PGRES_COMMAND_OK)
 		{
-			pStatement->SetErrorCode(ibDatabaseLayerPostgres::TranslateErrorCode(pInterface->GetPQresultStatus()(pResult)));
-			pStatement->SetErrorMessage(ibDatabaseStringConverter::ConvertFromUnicodeStream(
+			pStatement->SetErrorCode(CPostgresDatabaseLayer::TranslateErrorCode(pInterface->GetPQresultStatus()(pResult)));
+			pStatement->SetErrorMessage(CDatabaseStringConverter::ConvertFromUnicodeStream(
 				pInterface->GetPQresultErrorMessage()(pResult), strEncoding));
 			pInterface->GetPQclear()(pResult);
 			pStatement->ThrowDatabaseException();
@@ -83,7 +83,7 @@ ibPreparedStatementPostgres* ibPreparedStatementPostgres::CreateStatement(ibInte
 }
 
 // set field
-void ibPreparedStatementPostgres::SetParamInt(int nPosition, int nValue)
+void CPostgresPreparedStatement::SetParamInt(int nPosition, int nValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -92,7 +92,7 @@ void ibPreparedStatementPostgres::SetParamInt(int nPosition, int nValue)
 	}
 }
 
-void ibPreparedStatementPostgres::SetParamDouble(int nPosition, double dblValue)
+void CPostgresPreparedStatement::SetParamDouble(int nPosition, double dblValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -101,7 +101,7 @@ void ibPreparedStatementPostgres::SetParamDouble(int nPosition, double dblValue)
 	}
 }
 
-void ibPreparedStatementPostgres::SetParamNumber(int nPosition, const ibNumber& dblValue)
+void CPostgresPreparedStatement::SetParamNumber(int nPosition, const number_t& dblValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -110,7 +110,7 @@ void ibPreparedStatementPostgres::SetParamNumber(int nPosition, const ibNumber& 
 	}
 }
 
-void ibPreparedStatementPostgres::SetParamString(int nPosition, const wxString& strValue)
+void CPostgresPreparedStatement::SetParamString(int nPosition, const wxString& strValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -119,7 +119,7 @@ void ibPreparedStatementPostgres::SetParamString(int nPosition, const wxString& 
 	}
 }
 
-void ibPreparedStatementPostgres::SetParamNull(int nPosition)
+void CPostgresPreparedStatement::SetParamNull(int nPosition)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -128,7 +128,7 @@ void ibPreparedStatementPostgres::SetParamNull(int nPosition)
 	}
 }
 
-void ibPreparedStatementPostgres::SetParamBlob(int nPosition, const void* pData, long nDataLength)
+void CPostgresPreparedStatement::SetParamBlob(int nPosition, const void* pData, long nDataLength)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -137,7 +137,7 @@ void ibPreparedStatementPostgres::SetParamBlob(int nPosition, const void* pData,
 	}
 }
 
-void ibPreparedStatementPostgres::SetParamDate(int nPosition, const wxDateTime& dateValue)
+void CPostgresPreparedStatement::SetParamDate(int nPosition, const wxDateTime& dateValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -146,7 +146,7 @@ void ibPreparedStatementPostgres::SetParamDate(int nPosition, const wxDateTime& 
 	}
 }
 
-void ibPreparedStatementPostgres::SetParamBool(int nPosition, bool bValue)
+void CPostgresPreparedStatement::SetParamBool(int nPosition, bool bValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -155,7 +155,7 @@ void ibPreparedStatementPostgres::SetParamBool(int nPosition, bool bValue)
 	}
 }
 
-int ibPreparedStatementPostgres::GetParameterCount()
+int CPostgresPreparedStatement::GetParameterCount()
 {
 	int nParameters = 0;
 
@@ -167,7 +167,7 @@ int ibPreparedStatementPostgres::GetParameterCount()
 }
 
 
-int ibPreparedStatementPostgres::RunQuery()
+int CPostgresPreparedStatement::RunQuery()
 {
 	// Iterate through the statements and have them run their queries
 	long rows = -1;
@@ -183,7 +183,7 @@ int ibPreparedStatementPostgres::RunQuery()
 	return rows;
 }
 
-ibDatabaseResultSet* ibPreparedStatementPostgres::RunQueryWithResults()
+IDatabaseResultSet* CPostgresPreparedStatement::RunQueryWithResults()
 {
 	for (unsigned int i = 0; i < (m_Statements.size() - 1); i++) {
 		m_Statements[i].DoRunQuery();
@@ -194,8 +194,8 @@ ibDatabaseResultSet* ibPreparedStatementPostgres::RunQueryWithResults()
 			return nullptr;
 		}
 	}
-	ibPreparedStatementPostgresWrapper* pLastStatement = &(m_Statements[m_Statements.size() - 1]);
-	ibDatabaseResultSet* pResultSet = pLastStatement->DoRunQueryWithResults();
+	CPostgresPreparedStatementWrapper* pLastStatement = &(m_Statements[m_Statements.size() - 1]);
+	IDatabaseResultSet* pResultSet = pLastStatement->DoRunQueryWithResults();
 	if (pLastStatement->GetErrorCode() != DATABASE_LAYER_OK) {
 		SetErrorCode(pLastStatement->GetErrorCode());
 		SetErrorMessage(pLastStatement->GetErrorMessage());
@@ -206,7 +206,7 @@ ibDatabaseResultSet* ibPreparedStatementPostgres::RunQueryWithResults()
 	return pResultSet;
 }
 
-wxString ibPreparedStatementPostgres::GenerateRandomStatementName()
+wxString CPostgresPreparedStatement::GenerateRandomStatementName()
 {
 	// Just come up with a string prefixed with "databaselayer_" and 10 random characters
 	wxString strReturn = wxT("databaselayer_");
@@ -217,7 +217,7 @@ wxString ibPreparedStatementPostgres::GenerateRandomStatementName()
 	return strReturn;
 }
 
-int ibPreparedStatementPostgres::FindStatementAndAdjustPositionIndex(int* pPosition)
+int CPostgresPreparedStatement::FindStatementAndAdjustPositionIndex(int* pPosition)
 {
 	if (m_Statements.size() == 0)
 		return 0;
@@ -242,7 +242,7 @@ int ibPreparedStatementPostgres::FindStatementAndAdjustPositionIndex(int* pPosit
 	return -1;
 }
 
-wxString ibPreparedStatementPostgres::TranslateSQL(const wxString& strOriginalSQL)
+wxString CPostgresPreparedStatement::TranslateSQL(const wxString& strOriginalSQL)
 {
 	int nParameterIndex = 1;
 	wxString strReturn = wxEmptyString;//strOriginalSQL;

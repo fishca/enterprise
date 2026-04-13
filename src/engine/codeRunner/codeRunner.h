@@ -22,10 +22,10 @@
 #include "backend/backend_mainFrame.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Class ibFrameCodeRunner
+/// Class CFrameCodeRunner
 ///////////////////////////////////////////////////////////////////////////////
 
-class ibFrameCodeRunner : public ibBackendDocMDIFrame, public wxFrame {
+class CFrameCodeRunner : public IBackendDocMDIFrame, public wxFrame {
 	void PrepareTABs();
 	void HighlightSyntaxAndCalculateFoldLevel(
 		const int fromLine, const int toLine,
@@ -35,8 +35,8 @@ class ibFrameCodeRunner : public ibBackendDocMDIFrame, public wxFrame {
 	void SetFontColorSettings();
 protected:
 
-	class ibCompileCode* m_compileCode;
-	class ibProcUnit* m_procUnit;
+	class CCompileCode* m_compileCode;
+	class CProcUnit* m_procUnit;
 
 	wxStyledTextCtrl* m_codeEditor;
 	wxButton* m_buttonSyntaxCheck;
@@ -58,8 +58,8 @@ protected:
 
 public:
 
-	virtual wxFrame* GetFrameHandler() const { return const_cast<ibFrameCodeRunner*>(this); }
-	virtual class ibMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
+	virtual wxFrame* GetFrameHandler() const { return const_cast<CFrameCodeRunner*>(this); }
+	virtual class IMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
 
 	virtual void SetTitle(const wxString& title) {
 		wxFrame::SetTitle(title);
@@ -69,7 +69,7 @@ public:
 		wxFrame::SetStatusText(text, number);
 	};
 
-	virtual void Message(const wxString& strMessage, ibStatusMessage status) {
+	virtual void Message(const wxString& strMessage, eStatusMessage status) {
 		AppendOutput(strMessage);
 	};
 
@@ -88,7 +88,7 @@ public:
 		m_output->SetReadOnly(true);
 	}
 
-	ibFrameCodeRunner(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Code runner"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(638, 338), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
-	virtual ~ibFrameCodeRunner();
+	CFrameCodeRunner(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Code runner"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(638, 338), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
+	virtual ~CFrameCodeRunner();
 };
 

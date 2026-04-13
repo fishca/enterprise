@@ -1,9 +1,9 @@
-#ifndef _AUTOCOMPLETE_PARSER_H__ibModuleElementInfo
+#ifndef _AUTOCOMPLETE_PARSER_H__CModuleElementInfo
 #define _AUTOCOMPLETE_PARSER_H__
 
 #include "codeEditor.h"
 
-enum ibContentType
+enum eContentType
 {
 	eVariable = 0,
 	eExportVariable,
@@ -15,9 +15,9 @@ enum ibContentType
 	eEmpty
 };
 
-struct ibModuleElement
+struct moduleElement_t
 {
-	ibModuleElement() : 
+	moduleElement_t() : 
 		eType(eEmpty), nImage(0), nLineStart(-1), nLineEnd(-1) {};
 
 	wxString strName;//имя элемента
@@ -28,34 +28,34 @@ struct ibModuleElement
 	int nLineEnd;//номер строки кода, где находится элемент
 
 	wxString sModuleName;//Имя модуля
-	ibContentType eType;
+	eContentType eType;
 };
 
-class ibParserModule : public ibTranslateCode
+class CParserModule : public CTranslateCode
 {
 	int m_numCurrentCompile;//текущее положение в массиве лексем
-	std::vector<ibModuleElement> m_aContentModule;
+	std::vector<moduleElement_t> m_aContentModule;
 
 protected:
 
-	ibLexem PreviewGetLexem();
-	ibLexem GetLexem();
-	ibLexem GETLexem();
+	CLexem PreviewGetLexem();
+	CLexem GetLexem();
+	CLexem GETLexem();
 	void GETDelimeter(const wxUniChar &c);
 
 	bool IsNextDelimeter(const wxUniChar &c);
 	bool IsNextKeyWord(int nKey);
 	void GETKeyWord(int nKey);
 	wxString GETIdentifier(bool strRealName = false);
-	ibValue GETConstant();
+	CValue GETConstant();
 
 public:
 
-	ibParserModule();
+	CParserModule();
 	bool ParseModule(const wxString &sModule);
 
 	//all data
-	std::vector<ibModuleElement> &GetAllContent() { return m_aContentModule; }
+	std::vector<moduleElement_t> &GetAllContent() { return m_aContentModule; }
 	//variables
 	wxArrayString GetVariables(bool bOnlyExport = true);
 	//functions & procedures 

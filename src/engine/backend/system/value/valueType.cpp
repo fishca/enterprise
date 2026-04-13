@@ -8,41 +8,41 @@
 
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueType, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueQualifierNumber, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueQualifierDate, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueQualifierString, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueTypeDescription, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueType, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueQualifierNumber, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueQualifierDate, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueQualifierString, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueTypeDescription, CValue);
 
 //////////////////////////////////////////////////////////////////////
 
-ibValueType::ibValueType(const ibClassID& clsid) :
-	ibValue(ibValueTypes::TYPE_VALUE, true)
+CValueType::CValueType(const class_identifier_t& clsid) :
+	CValue(eValueTypes::TYPE_VALUE, true)
 {
 	m_clsid = clsid;
 }
 
 #include "backend/metadataConfiguration.h"
 
-ibValueType::ibValueType(const wxString& typeName) :
-	ibValue(ibValueTypes::TYPE_VALUE, true)
+CValueType::CValueType(const wxString& typeName) :
+	CValue(eValueTypes::TYPE_VALUE, true)
 {
 	m_clsid = activeMetaData->GetIDObjectFromString(typeName);
 }
 
-ibValueType::ibValueType(const ibValue& cObject) :
-	ibValue(ibValueTypes::TYPE_VALUE, true)
+CValueType::CValueType(const CValue& cObject) :
+	CValue(eValueTypes::TYPE_VALUE, true)
 {
 	m_clsid = cObject.GetClassType();
 }
 
-ibValueType::ibValueType(const ibValueType& cType) :
-	ibValue(ibValueTypes::TYPE_VALUE, true)
+CValueType::CValueType(const CValueType& cType) :
+	CValue(eValueTypes::TYPE_VALUE, true)
 {
 	m_clsid = cType.m_clsid;
 }
 
-wxString ibValueType::GetString() const
+wxString CValueType::GetString() const
 {
 	return activeMetaData->GetNameObjectFromID(m_clsid);
 }
@@ -51,8 +51,8 @@ wxString ibValueType::GetString() const
 
 #include "backend/system/systemManager.h"
 
-ibValue ibValueTypeDescription::AdjustValue(const ibTypeDescription& typeDescription,
-	ibMetaData* metaData)
+CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescription,
+	IMetaData* metaData)
 {
 	if (!typeDescription.IsOk())
 		return wxEmptyValue;
@@ -73,28 +73,28 @@ ibValue ibValueTypeDescription::AdjustValue(const ibTypeDescription& typeDescrip
 	return wxEmptyValue;
 }
 
-ibValue ibValueTypeDescription::AdjustValue(const ibTypeDescription& typeDescription, const ibValue& varValue,
-	ibMetaData* metaData)
+CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescription, const CValue& varValue,
+	IMetaData* metaData)
 {
 	if (!typeDescription.IsOk())
 		return varValue;
 
 	auto iterator = std::find(typeDescription.m_listTypeClass.begin(), typeDescription.m_listTypeClass.end(), varValue.GetClassType());
 	if (iterator != typeDescription.m_listTypeClass.end()) {
-		ibValueTypes vt = ibValue::GetVTByID(varValue.GetClassType());
-		if (vt < ibValueTypes::TYPE_REFFER) {
-			if (vt == ibValueTypes::TYPE_NUMBER) {
-				return ibValueSystemFunction::Round(varValue, typeDescription.m_typeData.m_number.m_scale);
+		eValueTypes vt = CValue::GetVTByID(varValue.GetClassType());
+		if (vt < eValueTypes::TYPE_REFFER) {
+			if (vt == eValueTypes::TYPE_NUMBER) {
+				return CSystemFunction::Round(varValue, typeDescription.m_typeData.m_number.m_scale);
 			}
-			else if (vt == ibValueTypes::TYPE_DATE) {
-				if (typeDescription.m_typeData.m_date.m_dateTime == ibDateFractions::ibDateFractions_Date)
-					return ibValueSystemFunction::BegOfDay(varValue);
-				else if (typeDescription.m_typeData.m_date.m_dateTime == ibDateFractions::ibDateFractions_Time)
+			else if (vt == eValueTypes::TYPE_DATE) {
+				if (typeDescription.m_typeData.m_date.m_dateTime == eDateFractions::eDateFractions_Date)
+					return CSystemFunction::BegOfDay(varValue);
+				else if (typeDescription.m_typeData.m_date.m_dateTime == eDateFractions::eDateFractions_Time)
 					return varValue;
 				return varValue;
 			}
-			else if (vt == ibValueTypes::TYPE_STRING) {
-				return ibValueSystemFunction::Left(varValue, typeDescription.m_typeData.m_string.m_length);
+			else if (vt == eValueTypes::TYPE_STRING) {
+				return CSystemFunction::Left(varValue, typeDescription.m_typeData.m_string.m_length);
 			}
 		}
 		return varValue;
@@ -104,20 +104,20 @@ ibValue ibValueTypeDescription::AdjustValue(const ibTypeDescription& typeDescrip
 
 		if (metaData != nullptr ? metaData->IsRegisterCtor(typeDescription.GetFirstClsid()) : activeMetaData->IsRegisterCtor(typeDescription.GetFirstClsid())) {
 
-			ibValueTypes vt = ibValue::GetVTByID(typeDescription.GetFirstClsid());
-			if (vt < ibValueTypes::TYPE_REFFER) {
-				if (vt == ibValueTypes::TYPE_NUMBER) {
-					return ibValueSystemFunction::Round(varValue, typeDescription.m_typeData.m_number.m_scale);
+			eValueTypes vt = CValue::GetVTByID(typeDescription.GetFirstClsid());
+			if (vt < eValueTypes::TYPE_REFFER) {
+				if (vt == eValueTypes::TYPE_NUMBER) {
+					return CSystemFunction::Round(varValue, typeDescription.m_typeData.m_number.m_scale);
 				}
-				else if (vt == ibValueTypes::TYPE_DATE) {
-					if (typeDescription.m_typeData.m_date.m_dateTime == ibDateFractions::ibDateFractions_Date)
-						return ibValueSystemFunction::BegOfDay(varValue);
-					else if (typeDescription.m_typeData.m_date.m_dateTime == ibDateFractions::ibDateFractions_Time)
+				else if (vt == eValueTypes::TYPE_DATE) {
+					if (typeDescription.m_typeData.m_date.m_dateTime == eDateFractions::eDateFractions_Date)
+						return CSystemFunction::BegOfDay(varValue);
+					else if (typeDescription.m_typeData.m_date.m_dateTime == eDateFractions::eDateFractions_Time)
 						return varValue;
 					return varValue.GetDate();
 				}
-				else if (vt == ibValueTypes::TYPE_STRING) {
-					return ibValueSystemFunction::Left(varValue, typeDescription.m_typeData.m_string.m_length);
+				else if (vt == eValueTypes::TYPE_STRING) {
+					return CSystemFunction::Left(varValue, typeDescription.m_typeData.m_string.m_length);
 				}
 			}
 
@@ -138,56 +138,56 @@ ibValue ibValueTypeDescription::AdjustValue(const ibTypeDescription& typeDescrip
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-ibValueTypeDescription::ibValueTypeDescription() :
-	ibValue(ibValueTypes::TYPE_VALUE, true), m_methodHelper(new ibValueMethodHelper())
+CValueTypeDescription::CValueTypeDescription() :
+	CValue(eValueTypes::TYPE_VALUE, true), m_methodHelper(new CMethodHelper())
 {
 }
 
-ibValueTypeDescription::ibValueTypeDescription(ibValueType* valueType) :
-	ibValue(ibValueTypes::TYPE_VALUE, true), m_typeDesc({ valueType ? valueType->GetOwnerTypeClass() : 0 }), m_methodHelper(new ibValueMethodHelper())
+CValueTypeDescription::CValueTypeDescription(CValueType* valueType) :
+	CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc({ valueType ? valueType->GetOwnerTypeClass() : 0 }), m_methodHelper(new CMethodHelper())
 {
 }
 
-ibValueTypeDescription::ibValueTypeDescription(ibValueType* valueType, ibValueQualifierNumber* qNumber, ibValueQualifierDate* qDate, ibValueQualifierString* qString) :
-	ibValue(ibValueTypes::TYPE_VALUE, true), m_typeDesc({ valueType ? valueType->GetOwnerTypeClass() : 0 }, (qNumber ? *qNumber : ibQualifierNumber()), (qDate ? *qDate : ibQualifierDate()), (qString ? *qString : ibQualifierString())), m_methodHelper(new ibValueMethodHelper())
+CValueTypeDescription::CValueTypeDescription(CValueType* valueType, CValueQualifierNumber* qNumber, CValueQualifierDate* qDate, CValueQualifierString* qString) :
+	CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc({ valueType ? valueType->GetOwnerTypeClass() : 0 }, (qNumber ? *qNumber : CQualifierNumber()), (qDate ? *qDate : CQualifierDate()), (qString ? *qString : CQualifierString())), m_methodHelper(new CMethodHelper())
 {
 }
 
-ibValueTypeDescription::ibValueTypeDescription(const ibTypeDescription& typeDescription)
-	: ibValue(ibValueTypes::TYPE_VALUE, true), m_typeDesc(typeDescription), m_methodHelper(new ibValueMethodHelper())
+CValueTypeDescription::CValueTypeDescription(const CTypeDescription& typeDescription)
+	: CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc(typeDescription), m_methodHelper(new CMethodHelper())
 {
 }
 
-ibValueTypeDescription::ibValueTypeDescription(const std::vector<ibClassID>& array) :
-	ibValue(ibValueTypes::TYPE_VALUE, true), m_typeDesc(array), m_methodHelper(new ibValueMethodHelper())
+CValueTypeDescription::CValueTypeDescription(const std::vector<class_identifier_t>& array) :
+	CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc(array), m_methodHelper(new CMethodHelper())
 {
 }
 
-ibValueTypeDescription::ibValueTypeDescription(const std::vector<ibClassID>& array, ibValueQualifierNumber* qNumber, ibValueQualifierDate* qDate, ibValueQualifierString* qString) :
-	ibValue(ibValueTypes::TYPE_VALUE, true), m_typeDesc(array, (qNumber ? *qNumber : ibQualifierNumber()), (qDate ? *qDate : ibQualifierDate()), (qString ? *qString : ibQualifierString())), m_methodHelper(new ibValueMethodHelper())
+CValueTypeDescription::CValueTypeDescription(const std::vector<class_identifier_t>& array, CValueQualifierNumber* qNumber, CValueQualifierDate* qDate, CValueQualifierString* qString) :
+	CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc(array, (qNumber ? *qNumber : CQualifierNumber()), (qDate ? *qDate : CQualifierDate()), (qString ? *qString : CQualifierString())), m_methodHelper(new CMethodHelper())
 {
 }
 
-ibValueTypeDescription::~ibValueTypeDescription()
+CValueTypeDescription::~CValueTypeDescription()
 {
 	wxDELETE(m_methodHelper);
 }
 
-bool ibValueTypeDescription::Init(ibValue** paParams, const long lSizeArray)
+bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 {
 	if (lSizeArray < 1)
 		return false;
 
-	if (paParams[0]->GetType() == ibValueTypes::TYPE_STRING) {
+	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		wxString classType = paParams[0]->GetString();
 		if (activeMetaData->IsRegisterCtor(classType)) {
-			ibValueQualifierNumber* qNumber = nullptr;
+			CValueQualifierNumber* qNumber = nullptr;
 			if (lSizeArray > 1 && paParams[1]->ConvertToValue(qNumber))
 				m_typeDesc.m_typeData.m_number = *qNumber;
-			ibValueQualifierDate* qDate = nullptr;
+			CValueQualifierDate* qDate = nullptr;
 			if (lSizeArray > 2 && paParams[2]->ConvertToValue(qDate))
 				m_typeDesc.m_typeData.m_date = *qDate;
-			ibValueQualifierString* qString = nullptr;
+			CValueQualifierString* qString = nullptr;
 			if (lSizeArray > 3 && paParams[3]->ConvertToValue(qString))
 				m_typeDesc.m_typeData.m_string = *qString;
 			m_typeDesc.m_listTypeClass.emplace_back(
@@ -197,40 +197,40 @@ bool ibValueTypeDescription::Init(ibValue** paParams, const long lSizeArray)
 		}
 	}
 
-	ibValueArray* valArray = nullptr;
+	CValueArray* valArray = nullptr;
 	if (paParams[0]->ConvertToValue(valArray)) {
-		ibValueQualifierNumber* qNumber = nullptr;
+		CValueQualifierNumber* qNumber = nullptr;
 		if (lSizeArray > 1 && paParams[1]->ConvertToValue(qNumber))
 			m_typeDesc.m_typeData.m_number = *qNumber;
-		ibValueQualifierDate* qDate = nullptr;
+		CValueQualifierDate* qDate = nullptr;
 		if (lSizeArray > 2 && paParams[2]->ConvertToValue(qDate))
 			m_typeDesc.m_typeData.m_date = *qDate;
-		ibValueQualifierString* qString = nullptr;
+		CValueQualifierString* qString = nullptr;
 		if (lSizeArray > 3 && paParams[3]->ConvertToValue(qString))
 			m_typeDesc.m_typeData.m_string = *qString;
 		for (unsigned int i = 0; i < valArray->Count(); i++) {
-			ibValue retValue; valArray->GetAt(i, retValue);
-			ibValueType* valType = CastValue<ibValueType>(retValue);
+			CValue retValue; valArray->GetAt(i, retValue);
+			CValueType* valType = CastValue<CValueType>(retValue);
 			wxASSERT(valType);
 			m_typeDesc.m_listTypeClass.emplace_back(
 				valType->GetOwnerTypeClass()
 			);
 		}
-		/*std::sort(m_listTypeClass.begin(), m_listTypeClass.end(), [](const ibClassID& a, const ibClassID& b) {
+		/*std::sort(m_listTypeClass.begin(), m_listTypeClass.end(), [](const class_identifier_t& a, const class_identifier_t& b) {
 			return a < b; }
 		);*/
 		return true;
 	}
 
-	ibValueType* valType = nullptr;
+	CValueType* valType = nullptr;
 	if (paParams[0]->ConvertToValue(valType)) {
-		ibValueQualifierNumber* qNumber = nullptr;
+		CValueQualifierNumber* qNumber = nullptr;
 		if (lSizeArray > 1 && paParams[1]->ConvertToValue(qNumber))
 			m_typeDesc.m_typeData.m_number = *qNumber;
-		ibValueQualifierDate* qDate = nullptr;
+		CValueQualifierDate* qDate = nullptr;
 		if (lSizeArray > 2 && paParams[2]->ConvertToValue(qDate))
 			m_typeDesc.m_typeData.m_date = *qDate;
-		ibValueQualifierString* qString = nullptr;
+		CValueQualifierString* qString = nullptr;
 		if (lSizeArray > 3 && paParams[3]->ConvertToValue(qString))
 			m_typeDesc.m_typeData.m_string = *qString;
 		m_typeDesc.m_listTypeClass.emplace_back(
@@ -242,29 +242,29 @@ bool ibValueTypeDescription::Init(ibValue** paParams, const long lSizeArray)
 	return false;
 }
 
-bool ibValueTypeDescription::ContainType(const ibValue& cType) const
+bool CValueTypeDescription::ContainType(const CValue& cType) const
 {
-	ibValueType* valueType = CastValue<ibValueType>(cType);
+	CValueType* valueType = CastValue<CValueType>(cType);
 	wxASSERT(valueType);
 	auto it = std::find(m_typeDesc.m_listTypeClass.begin(), m_typeDesc.m_listTypeClass.begin(), valueType->GetOwnerTypeClass());
 	return it != m_typeDesc.m_listTypeClass.end();
 }
 
-ibValue ibValueTypeDescription::AdjustValue() const
+CValue CValueTypeDescription::AdjustValue() const
 {
 	return AdjustValue(m_typeDesc);
 }
 
-ibValue ibValueTypeDescription::AdjustValue(const ibValue& varValue) const
+CValue CValueTypeDescription::AdjustValue(const CValue& varValue) const
 {
 	return AdjustValue(m_typeDesc, varValue);
 }
 
-ibValue ibValueTypeDescription::Types() const
+CValue CValueTypeDescription::Types() const
 {
-	ibValueArray* arr = ibValue::CreateAndPrepareValueRef<ibValueArray>();
+	CValueArray* arr = CValue::CreateAndPrepareValueRef<CValueArray>();
 	for (auto clsid : m_typeDesc.m_listTypeClass)
-		arr->Add(ibValue::CreateAndPrepareValueRef<ibValueType>(clsid));
+		arr->Add(CValue::CreateAndPrepareValueRef<CValueType>(clsid));
 	return arr;
 }
 
@@ -274,7 +274,7 @@ enum Func {
 	enTypes
 };
 
-void ibValueTypeDescription::PrepareNames() const
+void CValueTypeDescription::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -285,7 +285,7 @@ void ibValueTypeDescription::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("Types"), wxT("Types()"));
 }
 
-bool ibValueTypeDescription::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueTypeDescription::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -310,9 +310,9 @@ bool ibValueTypeDescription::CallAsFunc(const long lMethodNum, ibValue& pvarRetV
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(ibValueType, "Type", string_to_clsid("VL_TYPE"));
-VALUE_TYPE_REGISTER(ibValueTypeDescription, "TypeDescription", string_to_clsid("VL_TYPED"));
+VALUE_TYPE_REGISTER(CValueType, "Type", string_to_clsid("VL_TYPE"));
+VALUE_TYPE_REGISTER(CValueTypeDescription, "TypeDescription", string_to_clsid("VL_TYPED"));
 
-VALUE_TYPE_REGISTER(ibValueQualifierNumber, "QualifierNumber", string_to_clsid("VL_QNUM"));
-VALUE_TYPE_REGISTER(ibValueQualifierDate, "QualifierDate", string_to_clsid("VL_QDAT"));
-VALUE_TYPE_REGISTER(ibValueQualifierString, "QualifierString", string_to_clsid("VL_QSTR"));
+VALUE_TYPE_REGISTER(CValueQualifierNumber, "QualifierNumber", string_to_clsid("VL_QNUM"));
+VALUE_TYPE_REGISTER(CValueQualifierDate, "QualifierDate", string_to_clsid("VL_QDAT"));
+VALUE_TYPE_REGISTER(CValueQualifierString, "QualifierString", string_to_clsid("VL_QSTR"));

@@ -25,7 +25,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-class FRONTEND_API ibDialogApplyChange : public wxDialog
+class FRONTEND_API CDialogApplyChange : public wxDialog
 {
 	wxStaticText* m_staticInformation;
 	wxListBox* m_resultBox;
@@ -33,15 +33,15 @@ class FRONTEND_API ibDialogApplyChange : public wxDialog
 	wxButton* m_buttonCancel;
 
 private:
-	ibDialogApplyChange(const ibRestructureInfo& info, wxWindow* parent);
+	CDialogApplyChange(const CRestructureInfo& info, wxWindow* parent);
 public:
 
-	static bool ShowApplyChange(const ibRestructureInfo& info, wxWindow* parent) {
+	static bool ShowApplyChange(const CRestructureInfo& info, wxWindow* parent) {
 
 		if (!info.HasRestructureInfo())
 			return true;
 
-		ibDialogApplyChange dlg(info, parent);
+		CDialogApplyChange dlg(info, parent);
 		return dlg.ShowModal() == wxID_OK;
 	}
 };

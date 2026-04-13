@@ -7,11 +7,11 @@
 
 #pragma warning(disable : 4018)
 
-ibParserModule::ibParserModule() : ibTranslateCode(), m_numCurrentCompile(wxNOT_FOUND)
+CParserModule::CParserModule() : CTranslateCode(), m_numCurrentCompile(wxNOT_FOUND)
 {
 }
 
-bool ibParserModule::ParseModule(const wxString& sModule)
+bool CParserModule::ParseModule(const wxString& sModule)
 {
 	m_aContentModule.clear();
 
@@ -21,12 +21,12 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 	try {
 		PrepareLexem();
 	}
-	catch (const ibBackendException*)
+	catch (const CBackendException*)
 	{
 		return false;
 	};
 
-	ibLexem lex;
+	CLexem lex;
 
 	while ((lex = GETLexem()).m_lexType != ERRORTYPE)
 	{
@@ -73,8 +73,8 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 					nArrayCount = 0;
 					GETDelimeter('[');
 					if (!IsNextDelimeter(']')) {
-						ibValue vConst = GETConstant();
-						if (vConst.GetType() != ibValueTypes::TYPE_NUMBER || vConst.GetNumber() < 0)
+						CValue vConst = GETConstant();
+						if (vConst.GetType() != eValueTypes::TYPE_NUMBER || vConst.GetNumber() < 0)
 							continue;
 						nArrayCount = vConst.GetInteger();
 					}
@@ -95,15 +95,15 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 					GETDelimeter('=');
 				}
 
-				ibModuleElement data;
+				moduleElement_t data;
 				data.strName = strName;
 				data.nLineStart = lex.m_numLine;
 				data.nLineEnd = lex.m_numLine;
 				data.nImage = 358;
 
 				if (bExport)
-					data.eType = ibContentType::eExportVariable;
-				else data.eType = ibContentType::eVariable;
+					data.eType = eContentType::eExportVariable;
+				else data.eType = eContentType::eVariable;
 
 				m_aContentModule.push_back(data);
 
@@ -159,7 +159,7 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 					else if (IsNextDelimeter('='))
 					{
 						GETDelimeter('=');
-						ibValue vConstant = GETConstant();
+						CValue vConstant = GETConstant();
 					}
 
 					if (IsNextDelimeter(')')) break;
@@ -177,7 +177,7 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 				GETKeyWord(KEY_EXPORT); bExport = true;
 			}
 
-			ibModuleElement data;
+			moduleElement_t data;
 			data.strName = strFuncName;
 			data.strShortDescription = strShortDescription;
 			data.nLineStart = lex.m_numLine;
@@ -186,16 +186,16 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 			if (isFunction) {
 				data.nImage = 353;
 				if (bExport) {
-					data.eType = ibContentType::eExportFunction;
+					data.eType = eContentType::eExportFunction;
 				}
 				else {
-					data.eType = ibContentType::eFunction;
+					data.eType = eContentType::eFunction;
 				}
 			}
 			else {
 				data.nImage = 352;
-				if (bExport) { data.eType = ibContentType::eExportProcedure; }
-				else { data.eType = ibContentType::eProcedure; }
+				if (bExport) { data.eType = eContentType::eExportProcedure; }
+				else { data.eType = eContentType::eProcedure; }
 			}
 
 			while (m_numCurrentCompile < (m_listLexem.size() - 1)) {
@@ -222,15 +222,15 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 }
 
 //variables
-wxArrayString ibParserModule::GetVariables(bool bOnlyExport)
+wxArrayString CParserModule::GetVariables(bool bOnlyExport)
 {
 	wxArrayString aVariables;
 	for (auto code : m_aContentModule) {
-		if (bOnlyExport && code.eType == ibContentType::eExportVariable) {
+		if (bOnlyExport && code.eType == eContentType::eExportVariable) {
 			aVariables.push_back(code.strName);
 		}
-		else if (!bOnlyExport && (code.eType == ibContentType::eExportVariable ||
-			code.eType == ibContentType::eVariable)) {
+		else if (!bOnlyExport && (code.eType == eContentType::eExportVariable ||
+			code.eType == eContentType::eVariable)) {
 			aVariables.push_back(code.strName);
 		}
 	}
@@ -238,31 +238,31 @@ wxArrayString ibParserModule::GetVariables(bool bOnlyExport)
 }
 
 //functions & procedures 
-wxArrayString ibParserModule::GetFunctions(bool bOnlyExport)
+wxArrayString CParserModule::GetFunctions(bool bOnlyExport)
 {
 	wxArrayString aFunctions;
 	for (auto code : m_aContentModule) {
-		if (bOnlyExport && code.eType == ibContentType::eExportFunction) {
+		if (bOnlyExport && code.eType == eContentType::eExportFunction) {
 			aFunctions.push_back(code.strName);
 		}
-		else if (!bOnlyExport && (code.eType == ibContentType::eExportFunction ||
-			code.eType == ibContentType::eFunction)) {
+		else if (!bOnlyExport && (code.eType == eContentType::eExportFunction ||
+			code.eType == eContentType::eFunction)) {
 			aFunctions.push_back(code.strName);
 		}
 	}
 	return aFunctions;
 }
 
-wxArrayString ibParserModule::GetProcedures(bool bOnlyExport)
+wxArrayString CParserModule::GetProcedures(bool bOnlyExport)
 {
 	wxArrayString aProcedures;
 
 	for (auto code : m_aContentModule) {
-		if (bOnlyExport && code.eType == ibContentType::eExportProcedure) {
+		if (bOnlyExport && code.eType == eContentType::eExportProcedure) {
 			aProcedures.push_back(code.strName);
 		}
-		else if (!bOnlyExport && (code.eType == ibContentType::eExportProcedure ||
-			code.eType == ibContentType::eProcedure)) {
+		else if (!bOnlyExport && (code.eType == eContentType::eExportProcedure ||
+			code.eType == eContentType::eProcedure)) {
 			aProcedures.push_back(code.strName);
 		}
 	}
@@ -277,9 +277,9 @@ wxArrayString ibParserModule::GetProcedures(bool bOnlyExport)
  * Возвращаемое значение:
  * 0 или указатель на лексему
  */
-ibLexem ibParserModule::GetLexem()
+CLexem CParserModule::GetLexem()
 {
-	ibLexem lex;
+	CLexem lex;
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
 		lex = m_listLexem[++m_numCurrentCompile];
 	}
@@ -287,9 +287,9 @@ ibLexem ibParserModule::GetLexem()
 }
 
 //Получить следующую лексему из списка байт кода без увеличения счетчика текущей позиции
-ibLexem ibParserModule::PreviewGetLexem()
+CLexem CParserModule::PreviewGetLexem()
 {
-	ibLexem lex;
+	CLexem lex;
 	while (true) {
 		lex = GetLexem();
 		if (!(lex.m_lexType == DELIMITER && (lex.m_numData == ';' || lex.m_numData == '\n')))
@@ -306,9 +306,9 @@ ibLexem ibParserModule::PreviewGetLexem()
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-ibLexem ibParserModule::GETLexem()
+CLexem CParserModule::GETLexem()
 {
-	const ibLexem& lex = GetLexem();
+	const CLexem& lex = GetLexem();
 	if (lex.m_lexType == ERRORTYPE) {}
 	return lex;
 }
@@ -319,9 +319,9 @@ ibLexem ibParserModule::GETLexem()
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-void ibParserModule::GETDelimeter(const wxUniChar& c)
+void CParserModule::GETDelimeter(const wxUniChar& c)
 {
-	ibLexem lex = GETLexem();
+	CLexem lex = GETLexem();
 	while (!(lex.m_lexType == DELIMITER && c == lex.m_numData)) {
 		if (m_numCurrentCompile + 1 >= m_listLexem.size())
 			break;
@@ -335,10 +335,10 @@ void ibParserModule::GETDelimeter(const wxUniChar& c)
  * Возвращаемое значение:
  * true,false
  */
-bool ibParserModule::IsNextDelimeter(const wxUniChar& c)
+bool CParserModule::IsNextDelimeter(const wxUniChar& c)
 {
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		const ibLexem& lex = m_listLexem[m_numCurrentCompile + 1];
+		const CLexem& lex = m_listLexem[m_numCurrentCompile + 1];
 		if (lex.m_lexType == DELIMITER && c == lex.m_numData)
 			return true;
 	}
@@ -352,10 +352,10 @@ bool ibParserModule::IsNextDelimeter(const wxUniChar& c)
  * Возвращаемое значение:
  * true,false
  */
-bool ibParserModule::IsNextKeyWord(int nKey)
+bool CParserModule::IsNextKeyWord(int nKey)
 {
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		const ibLexem& lex = m_listLexem[m_numCurrentCompile + 1];
+		const CLexem& lex = m_listLexem[m_numCurrentCompile + 1];
 		if (lex.m_lexType == KEYWORD && lex.m_numData == nKey)
 			return true;
 	}
@@ -368,9 +368,9 @@ bool ibParserModule::IsNextKeyWord(int nKey)
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-void ibParserModule::GETKeyWord(int nKey)
+void CParserModule::GETKeyWord(int nKey)
 {
-	ibLexem lex = GETLexem();
+	CLexem lex = GETLexem();
 	while (!(lex.m_lexType == KEYWORD && lex.m_numData == nKey)) {
 		if (m_numCurrentCompile + 1 >= m_listLexem.size())
 			break;
@@ -384,9 +384,9 @@ void ibParserModule::GETKeyWord(int nKey)
  * Возвращаемое значение:
  * строка-идентификатор
  */
-wxString ibParserModule::GETIdentifier(bool strRealName)
+wxString CParserModule::GETIdentifier(bool strRealName)
 {
-	const ibLexem& lex = GETLexem();
+	const CLexem& lex = GETLexem();
 
 	if (lex.m_lexType != IDENTIFIER) {
 		if (strRealName && lex.m_lexType == KEYWORD)
@@ -406,9 +406,9 @@ wxString ibParserModule::GETIdentifier(bool strRealName)
  * Возвращаемое значение:
  * константа
  */
-ibValue ibParserModule::GETConstant()
+CValue CParserModule::GETConstant()
 {
-	ibLexem lex;
+	CLexem lex;
 	int iNumRequire = 0;
 	if (IsNextDelimeter('-') || IsNextDelimeter('+')) {
 		iNumRequire = 1;
@@ -424,7 +424,7 @@ ibValue ibParserModule::GETConstant()
 
 	if (iNumRequire) {
 		// check that the constant is of numeric type	
-		if (lex.m_valData.GetType() != ibValueTypes::TYPE_NUMBER)
+		if (lex.m_valData.GetType() != eValueTypes::TYPE_NUMBER)
 			return lex.m_valData;
 		// change sign for minus
 		if (iNumRequire == -1)

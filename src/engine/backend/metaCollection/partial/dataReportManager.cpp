@@ -7,13 +7,13 @@
 #include "backend/metaData.h"
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectReport, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectReport, CValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectReport::GetModuleManager()  const { return m_metaObject->GetModuleManager(); }
+CValueMetaObjectCommonModule* CValueManagerDataObjectReport::GetModuleManager()  const { return m_metaObject->GetModuleManager(); }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectExternalReport, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectExternalReport, CValue);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -23,18 +23,18 @@ enum Func {
 	eGetTemplate,
 };
 
-void ibValueManagerDataObjectReport::PrepareNames() const
+void CValueManagerDataObjectReport::PrepareNames() const
 {
-	ibValueManagerDataObject::PrepareNames();
+	IValueManagerDataObject::PrepareNames();
 
 	m_methodHelper->AppendFunc(wxT("Create"), wxT("Create()"));
 	m_methodHelper->AppendFunc(wxT("GetForm"), wxT("GetForm(name : string, owner : any, id : guid)"));
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 }
 
-bool ibValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	ibMetaData* metaData = m_metaObject->GetMetaData();
+	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 
 	switch (lMethodNum)
@@ -43,10 +43,10 @@ bool ibValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, ibValue& 
 		pvarRetValue = m_metaObject->CreateObjectValue();
 		return true;
 	case eGetForm: {
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetGenericForm(paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetTemplate:
@@ -54,12 +54,12 @@ bool ibValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, ibValue& 
 		return true;
 	}
 
-	return ibValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+	return IValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }
 
-ibValue::ibValueMethodHelper ibValueManagerDataObjectExternalReport::m_methodHelper;
+CValue::CMethodHelper CValueManagerDataObjectExternalReport::m_methodHelper;
 
-void ibValueManagerDataObjectExternalReport::PrepareNames() const
+void CValueManagerDataObjectExternalReport::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 	m_methodHelper.AppendFunc(wxT("Create"), 1, wxT("Create(fullPath : string)"));
@@ -68,21 +68,21 @@ void ibValueManagerDataObjectExternalReport::PrepareNames() const
 #include "backend/system/systemManager.h"
 #include "backend/metadataReport.h"
 
-bool ibValueManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	ibValue ret;
+	CValue ret;
 	switch (lMethodNum)
 	{
 	case eCreate:
 	{
-		ibMetaDataReport* metaReport = new ibMetaDataReport();
+		CMetaDataReport* metaReport = new CMetaDataReport();
 		if (metaReport->LoadFromFile(paParams[0]->GetString())) {
-			ibValueModuleManagerExternalReport* moduleManager = metaReport->GetModuleManager();
+			CValueModuleManagerExternalReport* moduleManager = metaReport->GetModuleManager();
 			pvarRetValue = moduleManager->GetObjectValue();
 			return true;
 		}
 		wxDELETE(metaReport);
-		ibBackendCoreException::Error(_("Failed to load report '%s'"), paParams[0]->GetString());
+		CBackendCoreException::Error(_("Failed to load report '%s'"), paParams[0]->GetString());
 	}
 	}
 	return false;
@@ -92,4 +92,4 @@ bool ibValueManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, i
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(ibValueManagerDataObjectExternalReport, "ExternalManagerReport", string_to_clsid("MG_EXTR"));
+SYSTEM_TYPE_REGISTER(CValueManagerDataObjectExternalReport, "ExternalManagerReport", string_to_clsid("MG_EXTR"));

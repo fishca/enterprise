@@ -4,18 +4,18 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueHTMLBox, ibValueWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueHTMLBox, IValueWindow);
 
 //***********************************************************************************
 //*                                 Value Notebook                                  *
 //***********************************************************************************
 
-ibValueHTMLBox::ibValueHTMLBox() : ibValueWindow()
+CValueHTMLBox::CValueHTMLBox() : IValueWindow()
 {
 	m_propertyMinSize->SetValue(wxSize(250, 150));
 }
 
-wxObject* ibValueHTMLBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueHTMLBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxHtmlWindow* htmlBox = new wxHtmlWindow(wxparent, wxID_ANY,
 		wxDefaultPosition,
@@ -30,16 +30,16 @@ wxObject* ibValueHTMLBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 	return htmlBox;
 }
 
-void ibValueHTMLBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueHTMLBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 	wxHtmlWindow* htmlBox = dynamic_cast<wxHtmlWindow*>(wxobject);
 }
 
-void ibValueHTMLBox::OnSelected(wxObject* wxobject)
+void CValueHTMLBox::OnSelected(wxObject* wxobject)
 {
 }
 
-void ibValueHTMLBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueHTMLBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxHtmlWindow* htmlBox = dynamic_cast<wxHtmlWindow*>(wxobject);
 
@@ -50,7 +50,7 @@ void ibValueHTMLBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(htmlBox);
 }
 
-void ibValueHTMLBox::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueHTMLBox::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 }
 
@@ -58,14 +58,14 @@ void ibValueHTMLBox::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 //*                                   Data										   *
 //**********************************************************************************
 
-bool ibValueHTMLBox::LoadData(ibReaderMemory& reader)
+bool CValueHTMLBox::LoadData(CMemoryReader& reader)
 {
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueHTMLBox::SaveData(ibWriterMemory& writer)
+bool CValueHTMLBox::SaveData(CMemoryWriter& writer)
 {
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }
 
 //**********************************************************************************
@@ -74,14 +74,14 @@ enum Func {
 	enSetPage = 0,
 };
 
-void ibValueHTMLBox::PrepareNames() const // this method is automatically called to initialize attribute and method names.
+void CValueHTMLBox::PrepareNames() const // this method is automatically called to initialize attribute and method names.
 {
-	ibValueFrame::PrepareNames();
+	IValueFrame::PrepareNames();
 
 	m_methodHelper->AppendFunc(wxT("SetPage"), 1, wxT("SetPage(p: page)"), enSetPage, wxNOT_FOUND);
 }
 
-bool ibValueHTMLBox::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)       //method call
+bool CValueHTMLBox::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)       //method call
 {
 	wxHtmlWindow* htmlBox = dynamic_cast<wxHtmlWindow*>(GetWxObject());
 	switch (m_methodHelper->GetMethodData(lMethodNum))
@@ -92,11 +92,11 @@ bool ibValueHTMLBox::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ib
 		return true;
 	}
 
-	return ibValueFrame::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+	return IValueFrame::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueHTMLBox, "Htmlbox", "Container", string_to_clsid("CT_HTML"));
+CONTROL_TYPE_REGISTER(CValueHTMLBox, "Htmlbox", "Container", string_to_clsid("CT_HTML"));

@@ -18,14 +18,14 @@
 
 #include <sql.h>
 
-class ibDatabaseResultSetMetaDataODBC : public ibResultSetMetaData
+class COdbcResultSetMetaData : public IResultSetMetaData
 {
 public:
 	// ctor
-	ibDatabaseResultSetMetaDataODBC(ibInterfaceODBC* pInterface, SQLHSTMT sqlODBCStatement);
+	COdbcResultSetMetaData(COdbcInterface* pInterface, SQLHSTMT sqlOdbcStatement);
 
 	// dtor
-	virtual ~ibDatabaseResultSetMetaDataODBC() {}
+	virtual ~COdbcResultSetMetaData() {}
 
 	virtual int GetColumnType(int i);
 	virtual int GetColumnSize(int i);
@@ -33,8 +33,8 @@ public:
 	virtual int GetColumnCount();
 
 private:
-	ibInterfaceODBC* m_pInterface;
-	SQLHSTMT m_pODBCStatement;
+	COdbcInterface* m_pInterface;
+	SQLHSTMT m_pOdbcStatement;
 };
 
 #endif // __ODBC_RESULT_SET_METADATA_H__

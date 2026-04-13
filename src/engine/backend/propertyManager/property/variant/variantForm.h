@@ -3,7 +3,7 @@
 
 #include "variantModule.h"
 
-class BACKEND_API ibVariantDataForm : public ibVariantDataModule {
+class BACKEND_API wxVariantDataForm : public wxVariantDataModule {
 	wxString MakeString() const;
 public:
 
@@ -11,14 +11,14 @@ public:
 	void SetFormData(const wxMemoryBuffer& formData) { m_formData = formData; }
 	wxMemoryBuffer& GetFormData() { return m_formData; }
 
-	ibVariantDataForm(
+	wxVariantDataForm(
 		const wxMemoryBuffer& memory = wxMemoryBuffer(),
 		const wxString& moduleData = wxEmptyString
-	) : ibVariantDataModule(moduleData), m_formData(memory) {
+	) : wxVariantDataModule(moduleData), m_formData(memory) {
 	}
 
 	virtual bool Eq(wxVariantData& data) const {
-		ibVariantDataForm* srcData = dynamic_cast<ibVariantDataForm*>(&data);
+		wxVariantDataForm* srcData = dynamic_cast<wxVariantDataForm*>(&data);
 		if (srcData != nullptr) {
 			return m_moduleData == srcData->m_moduleData &&
 				std::memcmp(m_formData.GetData(), srcData->m_formData.GetData(), m_formData.GetDataLen()) == 0 && 
@@ -39,7 +39,7 @@ public:
 		return true;
 	}
 
-	virtual wxString GetType() const { return wxT("ibVariantDataForm"); }
+	virtual wxString GetType() const { return wxT("wxVariantDataForm"); }
 
 private:
 	wxMemoryBuffer m_formData;

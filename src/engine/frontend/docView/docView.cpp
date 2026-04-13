@@ -10,32 +10,32 @@
 
 #include "frontend/mainFrame/mainFrame.h"
 
-wxIMPLEMENT_CLASS(ibMetaDocument, wxDocument);
+wxIMPLEMENT_CLASS(CMetaDocument, wxDocument);
 
-wxIMPLEMENT_CLASS(ibMetaDataDocument, ibMetaDocument);
-wxIMPLEMENT_CLASS(ibValueModulibDocument, ibMetaDocument);
+wxIMPLEMENT_CLASS(IMetaDataDocument, CMetaDocument);
+wxIMPLEMENT_CLASS(IValueModuleDocument, CMetaDocument);
 
-wxIMPLEMENT_CLASS(ibMetaView, wxView);
+wxIMPLEMENT_CLASS(CMetaView, wxView);
 
 //******************************************************************************
 //*                            Document implementation                         *
 //******************************************************************************
 
-ibMetaView* ibMetaDocument::DoCreateView()
+CMetaView* CMetaDocument::DoCreateView()
 {
 	wxClassInfo* viewClassInfo = m_documentTemplate->GetViewClassInfo();
 	if (viewClassInfo == nullptr)
 		return nullptr;
-	return static_cast<ibMetaView*>(viewClassInfo->CreateObject());
+	return static_cast<CMetaView*>(viewClassInfo->CreateObject());
 }
 
-wxString ibMetaDocument::GetModuleName() const
+wxString CMetaDocument::GetModuleName() const
 {
 	return m_metaObject ?
 		m_metaObject->GetFullName() : wxEmptyString;
 }
 
-ibMetaDocument::ibMetaDocument(ibMetaDocument* docParent) :
+CMetaDocument::CMetaDocument(CMetaDocument* docParent) :
 	wxDocument(), m_metaObject(nullptr), m_childDoc(true)
 {
 	m_documentParent = docParent;
@@ -46,20 +46,18 @@ ibMetaDocument::ibMetaDocument(ibMetaDocument* docParent) :
 	m_documentModified = false;
 }
 
-ibMetaDocument::~ibMetaDocument()
+CMetaDocument::~CMetaDocument()
 {
 	if (m_documentParent != nullptr)
 		m_documentParent->m_childDocs.remove(this);
 }
 
-#include <wx/scopedptr.h>
-
-bool ibMetaDocument::OnCreate(const wxString& path, long flags)
+bool CMetaDocument::OnCreate(const wxString& path, long flags)
 {
-	if (ibApplicationData::IsForceExit())
+	if (CApplicationData::IsForceExit())
 		return false;
 
-	wxScopedPtr<ibMetaView> view(DoCreateView());
+	wxScopedPtr<CMetaView> view(DoCreateView());
 	if (!view)
 		return false;
 
@@ -77,7 +75,7 @@ bool ibMetaDocument::OnCreate(const wxString& path, long flags)
 
 	view->SetDocument(this);
 
-	ibFrontendDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, style);
+	CFrontendDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, style);
 
 	if (!view->OnCreate(this, flags))
 		return false;
@@ -86,9 +84,9 @@ bool ibMetaDocument::OnCreate(const wxString& path, long flags)
 	return view.release() != nullptr;
 }
 
-bool ibMetaDocument::OnSaveModified()
+bool CMetaDocument::OnSaveModified()
 {
-	if (ibApplicationData::IsForceExit())
+	if (CApplicationData::IsForceExit())
 		return true;
 
 	if (m_metaObject != nullptr)
@@ -97,9 +95,9 @@ bool ibMetaDocument::OnSaveModified()
 	return wxDocument::OnSaveModified();
 }
 
-bool ibMetaDocument::OnSaveDocument(const wxString& filename)
+bool CMetaDocument::OnSaveDocument(const wxString& filename)
 {
-	if (ibApplicationData::IsForceExit())
+	if (CApplicationData::IsForceExit())
 		return false;
 
 	if (m_metaObject != nullptr)
@@ -111,13 +109,13 @@ bool ibMetaDocument::OnSaveDocument(const wxString& filename)
 #include "docManager.h"
 #include "backend/metadataConfiguration.h"
 
-bool ibMetaDocument::OnCloseDocument()
+bool CMetaDocument::OnCloseDocument()
 {
 	if (m_documentParent != nullptr) {
 		docManager->RemoveDocument(this);
 	}
 
-	ibBackendMetadataTree* metaTree =
+	IBackendMetadataTree* metaTree =
 		m_metaObject != nullptr ? m_metaObject->GetMetaDataTree() : nullptr;
 
 	if (metaTree == nullptr)
@@ -131,19 +129,19 @@ bool ibMetaDocument::OnCloseDocument()
 	return true;
 }
 
-bool ibMetaDocument::IsModified() const
+bool CMetaDocument::IsModified() const
 {
 	if (m_metaObject != nullptr)
 		return false;
 	return wxDocument::IsModified();
 }
 
-void ibMetaDocument::Modify(bool modify)
+void CMetaDocument::Modify(bool modify)
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!CApplicationData::IsForceExit()) {
 		
 		if (m_metaObject != nullptr) {
-			ibMetaData* metaData = m_metaObject->GetMetaData();
+			IMetaData* metaData = m_metaObject->GetMetaData();
 			if (metaData != nullptr) {
 				metaData->Modify(modify);
 			}
@@ -159,9 +157,9 @@ void ibMetaDocument::Modify(bool modify)
 	}
 }
 
-bool ibMetaDocument::Save()
+bool CMetaDocument::Save()
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!CApplicationData::IsForceExit()) {
 
 		if (AlreadySaved())
 			return true;
@@ -186,9 +184,9 @@ bool ibMetaDocument::Save()
 	return false; 
 }
 
-bool ibMetaDocument::SaveAs()
+bool CMetaDocument::SaveAs()
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!CApplicationData::IsForceExit()) {
 	
 		if (m_metaObject != nullptr)
 			return true;
@@ -199,20 +197,18 @@ bool ibMetaDocument::SaveAs()
 	return false;
 }
 
-#include <wx/dlist.h>
-
-bool ibMetaDocument::Close()
+bool CMetaDocument::Close()
 {
 	if (!OnSaveModified())
 		return false;
 
 	// When the parent document closes, its children must be closed as well as
 	// they can't exist without the parent.
-	ibMetaDocument const* documentParent = m_documentParent;
+	CMetaDocument const* documentParent = m_documentParent;
 
 	// As usual, first check if all children can be closed.
-	wxDList<ibMetaDocument>::const_iterator it = m_childDocs.begin();
-	for (wxDList<ibMetaDocument>::const_iterator end = m_childDocs.end(); it != end; ++it) {
+	wxDList<CMetaDocument>::const_iterator it = m_childDocs.begin();
+	for (wxDList<CMetaDocument>::const_iterator end = m_childDocs.end(); it != end; ++it) {
 		if ((*it)->IsCloseOnOwnerClose()) {
 			if (!(*it)->OnSaveModified()) {
 				// Leave the parent document opened if a child can't close.
@@ -226,7 +222,7 @@ bool ibMetaDocument::Close()
 	// Now that they all did, do close them: as m_childDocs is modified as
 	// we iterate over it, don't use the usual for-style iteration here.
 	while (!m_childDocs.empty()) {
-		ibMetaDocument* const childDoc = m_childDocs.front();
+		CMetaDocument* const childDoc = m_childDocs.front();
 		if (childDoc->IsCloseOnOwnerClose()) {
 
 			// This will call OnSaveModified() once again but it shouldn't do
@@ -250,7 +246,7 @@ bool ibMetaDocument::Close()
 	return OnCloseDocument();
 }
 
-void ibMetaDocument::UpdateAllViews(wxView* sender, wxObject* hint)
+void CMetaDocument::UpdateAllViews(wxView* sender, wxObject* hint)
 {
 	wxList::compatibility_iterator node = m_documentViews.GetFirst();
 	while (node) {
@@ -265,7 +261,7 @@ void ibMetaDocument::UpdateAllViews(wxView* sender, wxObject* hint)
 	}
 }
 
-bool ibMetaDocument::DeleteAllViews()
+bool CMetaDocument::DeleteAllViews()
 {
 	wxDocManager* manager = GetDocumentManager();
 

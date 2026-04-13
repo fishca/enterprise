@@ -1,6 +1,6 @@
 #include "postgresInterface.h"
 
-bool ibInterfacePostgres::Init()
+bool CPostgresInterface::Init()
 {
 #ifdef __WIN32__
 	bool bLoaded = m_PostgresDLL.Load(wxDynamicLibrary::CanonicalizeName(wxT("libpq")));

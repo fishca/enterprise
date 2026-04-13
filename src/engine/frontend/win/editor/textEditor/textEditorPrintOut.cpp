@@ -8,16 +8,16 @@
 #if wxUSE_PRINTING_ARCHITECTURE
 
 //----------------------------------------------------------------------------
-// ibTextEditorPrintout
+// CTextEditorPrintout
 //----------------------------------------------------------------------------
 
-ibTextEditorPrintout::ibTextEditorPrintout(wxStyledTextCtrl*edit, const wxString& title)
+CTextEditorPrintout::CTextEditorPrintout(wxStyledTextCtrl*edit, const wxString& title)
 	: wxPrintout(title)
 	, m_edit(edit)
 {
 }
 
-bool ibTextEditorPrintout::OnPrintPage(int page) {
+bool CTextEditorPrintout::OnPrintPage(int page) {
 
 	wxDC *dc = GetDC();
 	if (!dc) 
@@ -32,7 +32,7 @@ bool ibTextEditorPrintout::OnPrintPage(int page) {
 	return true;
 }
 
-bool ibTextEditorPrintout::OnBeginDocument(int startPage, int endPage) {
+bool CTextEditorPrintout::OnBeginDocument(int startPage, int endPage) {
 
 	if (!wxPrintout::OnBeginDocument(startPage, endPage)) {
 		return false;
@@ -43,7 +43,7 @@ bool ibTextEditorPrintout::OnBeginDocument(int startPage, int endPage) {
 
 #include "frontend/docView/docManager.h"
 
-void ibTextEditorPrintout::GetPageInfo(int *minPage, int *maxPage, int *selPageFrom, int *selPageTo) {
+void CTextEditorPrintout::GetPageInfo(int *minPage, int *maxPage, int *selPageFrom, int *selPageTo) {
 
 	// initialize values
 	*minPage = 0;
@@ -107,12 +107,12 @@ void ibTextEditorPrintout::GetPageInfo(int *minPage, int *maxPage, int *selPageF
 	*selPageTo = *maxPage;
 }
 
-bool ibTextEditorPrintout::HasPage(int page)
+bool CTextEditorPrintout::HasPage(int page)
 {
 	return page <= (int)m_pageEnds.Count();
 }
 
-bool ibTextEditorPrintout::PrintScaling(wxDC *dc) {
+bool CTextEditorPrintout::PrintScaling(wxDC *dc) {
 
 	// check for dc, return if none
 	if (!dc) return false;

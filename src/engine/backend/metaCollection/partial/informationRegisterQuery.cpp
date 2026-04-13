@@ -3,7 +3,7 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 #include "backend/appData.h"
 
-bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
+bool CValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
 	wxString tableName = GetTableNameDB();
 	wxString viewName = GetTableNameDB() + wxT("SF");
@@ -12,23 +12,23 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 
 	if ((flags & createMetaTable) != 0) {
 
-		ibValueMetaObjectAttributeBase::ibSQLField sqlCol =
-			ibValueMetaObjectAttributeBase::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
+		IValueMetaObjectAttribute::sqlField_t sqlCol =
+			IValueMetaObjectAttribute::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
 
 		wxString sqlViewColumn =
-			ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
+			IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlViewColumn += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlViewColumn += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlViewColumn += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlViewColumn += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 
 		wxString sqlQuery = "CREATE VIEW %s (" + sqlViewColumn + ") AS";
 		sqlQuery += " SELECT T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -38,10 +38,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 		}
 
 		for (const auto object : GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -52,10 +52,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 		}
 
 		for (const auto object : GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -66,31 +66,31 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MIN");
+		sqlQuery += IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MIN");
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + tableName;
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + tableName + " AS T2 "
 			" ON ";
 		sqlQuery += " T1." + sqlCol.m_fieldTypeName + " = T2." + sqlCol.m_fieldTypeName;
 		for (const auto object : GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -101,10 +101,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 		}
 
 		for (const auto object : GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -118,23 +118,23 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 	}
 	else if ((flags & updateMetaTable) != 0) {
 
-		ibValueMetaObjectAttributeBase::ibSQLField sqlCol =
-			ibValueMetaObjectAttributeBase::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
+		IValueMetaObjectAttribute::sqlField_t sqlCol =
+			IValueMetaObjectAttribute::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
 
 		wxString sqlViewColumn =
-			ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
+			IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlViewColumn += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlViewColumn += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlViewColumn += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlViewColumn += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 
 		wxString sqlQuery = "CREATE OR ALTER VIEW %s (" + sqlViewColumn + ") AS";
 		sqlQuery += " SELECT T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -144,10 +144,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 		}
 
 		for (const auto object : GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -158,10 +158,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 		}
 
 		for (const auto object : GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -172,31 +172,31 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
+		sqlQuery += IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + tableName;
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + tableName + " AS T2 "
 			" ON ";
 		sqlQuery += " T1." + sqlCol.m_fieldTypeName + " = T2." + sqlCol.m_fieldTypeName;
 		for (const auto object : GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -207,10 +207,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 		}
 
 		for (const auto object : GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -232,7 +232,7 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(ibMe
 	return true;
 }
 
-bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
+bool CValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
 	wxString tableName = GetTableNameDB();
 	wxString viewName = GetTableNameDB() + wxT("SL");
@@ -241,23 +241,23 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 
 	if ((flags & createMetaTable) != 0) {
 
-		ibValueMetaObjectAttributeBase::ibSQLField sqlCol =
-			ibValueMetaObjectAttributeBase::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
+		IValueMetaObjectAttribute::sqlField_t sqlCol =
+			IValueMetaObjectAttribute::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
 
 		wxString sqlViewColumn =
-			ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
+			IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlViewColumn += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlViewColumn += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlViewColumn += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlViewColumn += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 
 		wxString sqlQuery = "CREATE VIEW %s (" + sqlViewColumn + ") AS";
 		sqlQuery += " SELECT T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -267,10 +267,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 		}
 
 		for (const auto object : GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -281,10 +281,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 		}
 
 		for (const auto object : GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -295,31 +295,31 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
+		sqlQuery += IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + tableName;
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + tableName + " AS T2 "
 			" ON ";
 		sqlQuery += " T1." + sqlCol.m_fieldTypeName + " = T2." + sqlCol.m_fieldTypeName;
 		for (const auto object : GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -330,10 +330,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 		}
 
 		for (const auto object : GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -347,23 +347,23 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 	}
 	else if ((flags & updateMetaTable) != 0) {
 
-		ibValueMetaObjectAttributeBase::ibSQLField sqlCol =
-			ibValueMetaObjectAttributeBase::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
+		IValueMetaObjectAttribute::sqlField_t sqlCol =
+			IValueMetaObjectAttribute::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
 
 		wxString sqlViewColumn =
-			ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
+			IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlViewColumn += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlViewColumn += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlViewColumn += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlViewColumn += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 
 		wxString sqlQuery = "CREATE OR ALTER VIEW %s (" + sqlViewColumn + ") AS";
 		sqlQuery += " SELECT T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -373,10 +373,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 		}
 
 		for (const auto object : GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -387,10 +387,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 		}
 
 		for (const auto object : GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -401,31 +401,31 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
+		sqlQuery += IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + tableName;
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
 		for (const auto object : GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + tableName + " AS T2 "
 			" ON ";
 		sqlQuery += " T1." + sqlCol.m_fieldTypeName + " = T2." + sqlCol.m_fieldTypeName;
 		for (const auto object : GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -436,10 +436,10 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 		}
 
 		for (const auto object : GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -461,15 +461,15 @@ bool ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(ibMet
 	return true;
 }
 
-bool ibValueMetaObjectInformationRegister::CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
+bool CValueMetaObjectInformationRegister::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
-	//if (!ibValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(srcMetaData, srcMetaObject, flags))
+	//if (!CValueMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(srcMetaData, srcMetaObject, flags))
 	//	return false;
 
-	//if (!ibValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(srcMetaData, srcMetaObject, flags))
+	//if (!CValueMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(srcMetaData, srcMetaObject, flags))
 	//	return false;
 
-	return ibValueMetaObjectRegisterData::CreateAndUpdateTableDB(
+	return IValueMetaObjectRegisterData::CreateAndUpdateTableDB(
 		srcMetaData,
 		srcMetaObject,
 		flags

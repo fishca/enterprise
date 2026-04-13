@@ -1,7 +1,7 @@
 #include "resultSetMetaData.h"
 
 
-int ibResultSetMetaData::FindColumnByName(const wxString &colName)
+int IResultSetMetaData::FindColumnByName(const wxString &colName)
 {
 	for (int i = 1; i <= GetColumnCount(); i++)
 	{

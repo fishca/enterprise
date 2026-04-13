@@ -2,9 +2,9 @@
 #define __PROPERTY_STRING_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/backend_localization.h"
+#include "backend/propertyManager/property/advprop/advpropString.h"
 
-class BACKEND_API ibPropertyStringBase : public ibProperty {
+class BACKEND_API IPropertyString : public IProperty {
 public:
 
 	wxString GetValueAsString() const {
@@ -21,123 +21,111 @@ public:
 
 	void SetValue(const wxString& strValue) { m_propValue = strValue; }
 
-	ibPropertyStringBase(ibPropertyCategory* cat, const wxString& name,
-		const wxString& value) : ibProperty(cat, name, value)
+	IPropertyString(CPropertyCategory* cat, const wxString& name,
+		const wxString& value) : IProperty(cat, name, value)
 	{
 	}
 
-	ibPropertyStringBase(ibPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : ibProperty(cat, name, label, value)
+	IPropertyString(CPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : IProperty(cat, name, label, value)
 	{
 	}
 
-	ibPropertyStringBase(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : ibProperty(cat, name, label, helpString, value)
+	IPropertyString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : IProperty(cat, name, label, helpString, value)
 	{
 	}
 
 	virtual bool IsEmptyProperty() const { return GetValueAsString().IsEmpty(); }
 
 	// set/get property data
-	virtual bool SetDataValue(const ibValue& varPropVal);
-	virtual bool GetDataValue(ibValue& pvarPropVal) const;
+	virtual bool SetDataValue(const CValue& varPropVal);
+	virtual bool GetDataValue(CValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer);
-
-public:
-
-	static wxObject* (*ms_propertyString)(const wxString&, const wxString&, const wxString&);
-	static wxObject* (*ms_propertyUString)(const wxString&, const wxString&, const wxString&);
-	static wxObject* (*ms_propertyUEString)(const wxString&, const wxString&, const wxString&);
-	static wxObject* (*ms_propertyTString)(const ibPropertyObject*, const wxString&, const wxString&, const wxString&);
-	static wxObject* (*ms_propertyMString)(const wxString&, const wxString&, const wxString&);
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer);
 };
 
 //base property for "string"
-class BACKEND_API ibPropertyString : public ibPropertyStringBase {
+class BACKEND_API CPropertyString : public IPropertyString {
 public:
 
-	ibPropertyString(ibPropertyCategory* cat, const wxString& name,
-		const wxString& value) : ibPropertyStringBase(cat, name, value)
+	CPropertyString(CPropertyCategory* cat, const wxString& name,
+		const wxString& value) : IPropertyString(cat, name, value)
 	{
 	}
 
-	ibPropertyString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : ibPropertyStringBase(cat, name, label, value)
+	CPropertyString(CPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : IPropertyString(cat, name, label, value)
 	{
 	}
 
-	ibPropertyString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : ibPropertyStringBase(cat, name, label, helpString, value)
+	CPropertyString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
 	{
 	}
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const {
-		if (ms_propertyString != nullptr)
-			return ms_propertyString(m_propLabel, m_propName, GetValueAsString());
-		return nullptr;
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxStringProperty(m_propLabel, m_propName, GetValueAsString());
 	}
 };
 
 //base property for "general" - unique name 
-class BACKEND_API ibPropertyUString : public ibPropertyStringBase {
+class BACKEND_API CPropertyUString : public IPropertyString {
 public:
 
-	ibPropertyUString(ibPropertyCategory* cat, const wxString& name,
-		const wxString& value) : ibPropertyStringBase(cat, name, value)
+	CPropertyUString(CPropertyCategory* cat, const wxString& name,
+		const wxString& value) : IPropertyString(cat, name, value)
 	{
 	}
 
-	ibPropertyUString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : ibPropertyStringBase(cat, name, label, value)
+	CPropertyUString(CPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : IPropertyString(cat, name, label, value)
 	{
 	}
 
-	ibPropertyUString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : ibPropertyStringBase(cat, name, label, helpString, value)
+	CPropertyUString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
 	{
 	}
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const {
-		if (ms_propertyUString != nullptr)
-			return ms_propertyUString(m_propLabel, m_propName, GetValueAsString());
-		return nullptr;
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxGeneralStringProperty(m_propLabel, m_propName, GetValueAsString());
 	}
 };
 
 //base property for "general" - unique name or empty value 
-class BACKEND_API ibPropertyUEString : public ibPropertyUString {
+class BACKEND_API CPropertyUEString : public CPropertyUString {
 public:
 
-	ibPropertyUEString(ibPropertyCategory* cat, const wxString& name,
-		const wxString& value) : ibPropertyUString(cat, name, value)
+	CPropertyUEString(CPropertyCategory* cat, const wxString& name,
+		const wxString& value) : CPropertyUString(cat, name, value)
 	{
 	}
 
-	ibPropertyUEString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : ibPropertyUString(cat, name, label, value)
+	CPropertyUEString(CPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : CPropertyUString(cat, name, label, value)
 	{
 	}
 
-	ibPropertyUEString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : ibPropertyUString(cat, name, label, helpString, value)
+	CPropertyUEString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : CPropertyUString(cat, name, label, helpString, value)
 	{
 	}
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const {
-		if (ms_propertyUEString != nullptr)
-			return ms_propertyUEString(m_propLabel, m_propName, GetValueAsString());
-		return nullptr;
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxGeneralStringProperty(m_propLabel, m_propName, GetValueAsString(),
+			wxGeneralStringProperty::allow_empty);
 	}
 };
 
+
 //base property for "caption" - for translate 
-class BACKEND_API ibPropertyTString : public ibPropertyStringBase {
+class BACKEND_API CPropertyTString : public IPropertyString {
 public:
 
 	wxString GetValueAsTranslateString() const {
@@ -146,65 +134,61 @@ public:
 		return std::move(result);
 	}
 
-	bool ibPropertyTString::GetValueAsTranslateString(wxString& result) const {
+	bool CPropertyTString::GetValueAsTranslateString(wxString& result) const {
 		if (GetValueAsString(result))
-			return ibBackendLocalization::GetTranslateGetRawLocText(result, result);
+			return CBackendLocalization::GetTranslateGetRawLocText(result, result);
 		return false;
 	}
 
-	ibPropertyTString(ibPropertyCategory* cat, const wxString& name,
-		const wxString& value) : ibPropertyStringBase(cat, name, ibBackendLocalization::CreateLocalizationRawLocText(value))
+	CPropertyTString(CPropertyCategory* cat, const wxString& name,
+		const wxString& value) : IPropertyString(cat, name, CBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
 
-	ibPropertyTString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : ibPropertyStringBase(cat, name, label, ibBackendLocalization::CreateLocalizationRawLocText(value))
+	CPropertyTString(CPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : IPropertyString(cat, name, label, CBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
 
-	ibPropertyTString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : ibPropertyStringBase(cat, name, label, helpString, ibBackendLocalization::CreateLocalizationRawLocText(value))
+	CPropertyTString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : IPropertyString(cat, name, label, helpString, CBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
 
 	virtual bool IsEmptyProperty() const { return GetValueAsTranslateString().IsEmpty(); }
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const {
-		if (ms_propertyTString != nullptr)
-			return ms_propertyTString(m_owner, m_propLabel, m_propName, GetValueAsString());
-		return nullptr;
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxTranslateStringProperty(m_owner, m_propLabel, m_propName, GetValueAsString());
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const ibValue& varPropVal);
-	virtual bool GetDataValue(ibValue& pvarPropVal) const;
+	virtual bool SetDataValue(const CValue& varPropVal);
+	virtual bool GetDataValue(CValue& pvarPropVal) const;
 };
 
 //base property for "text"
-class BACKEND_API ibPropertyMString : public ibPropertyStringBase {
+class BACKEND_API CPropertyMString : public IPropertyString {
 public:
 
-	ibPropertyMString(ibPropertyCategory* cat, const wxString& name,
-		const wxString& value) : ibPropertyStringBase(cat, name, value)
+	CPropertyMString(CPropertyCategory* cat, const wxString& name,
+		const wxString& value) : IPropertyString(cat, name, value)
 	{
 	}
 
-	ibPropertyMString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : ibPropertyStringBase(cat, name, label, value)
+	CPropertyMString(CPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : IPropertyString(cat, name, label, value)
 	{
 	}
 
-	ibPropertyMString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : ibPropertyStringBase(cat, name, label, helpString, value)
+	CPropertyMString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
 	{
 	}
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const {
-		if (ms_propertyMString != nullptr)
-			return ms_propertyMString(m_propLabel, m_propName, GetValueAsString());
-		return nullptr;
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxMultilineStringProperty(m_propLabel, m_propName, GetValueAsString());
 	}
 };
 

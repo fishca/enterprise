@@ -4,18 +4,18 @@
 #include "backend/compiler/value.h"
 
 //Array support
-class BACKEND_API ibValueFont : public ibValue
+class BACKEND_API CValueFont : public CValue
 {
-	wxDECLARE_DYNAMIC_CLASS(ibValueFont);
+	wxDECLARE_DYNAMIC_CLASS(CValueFont);
 public:
 	wxFont m_font;
 public:
 
-	ibValueFont();
-	ibValueFont(const wxFont& font);
-	virtual ~ibValueFont() {}
+	CValueFont();
+	CValueFont(const wxFont& font);
+	virtual ~CValueFont() {}
 
-	virtual bool Init(ibValue** paParams, const long lSizeArray);
+	virtual bool Init(CValue** paParams, const long lSizeArray);
 
 	virtual wxString GetString() const {
 		return typeConv::FontToString(m_font);
@@ -26,12 +26,12 @@ public:
 		return !m_font.IsOk();
 	}
 
-	static ibValueMethodHelper m_methodHelper;
+	static CMethodHelper m_methodHelper;
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
-	virtual ibValueMethodHelper* GetPMethods() const {
+	virtual CMethodHelper* GetPMethods() const {
 		//PrepareNames();
 		return &m_methodHelper;
 	}

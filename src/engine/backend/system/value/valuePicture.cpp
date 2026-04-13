@@ -6,20 +6,20 @@
 #include "valuePicture.h"
 
 //////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(ibValuePicture, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValuePicture, CValue);
 
-ibValuePicture::ibValuePicture(const ibPictureDescription& pictureDesc) :
-	ibValue(ibValueTypes::TYPE_VALUE), m_pictureDesc(pictureDesc)
+CValuePicture::CValuePicture(const CPictureDescription& pictureDesc) :
+	CValue(eValueTypes::TYPE_VALUE), m_pictureDesc(pictureDesc)
 {
 }
 
-bool ibValuePicture::Init(ibValue** paParams, const long lSizeArray)
+bool CValuePicture::Init(CValue** paParams, const long lSizeArray)
 {
 	if (lSizeArray < 1)
 		return false;
 
 	// Get from FS
-	return ibBackendPicture::LoadFromFile(
+	return CBackendPicture::LoadFromFile(
 		paParams[0]->GetString(), m_pictureDesc);
 }
 
@@ -27,4 +27,4 @@ bool ibValuePicture::Init(ibValue** paParams, const long lSizeArray)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(ibValuePicture, "StoragePicture", string_to_clsid("SY_PICTR"));
+VALUE_TYPE_REGISTER(CValuePicture, "StoragePicture", string_to_clsid("SY_PICTR"));

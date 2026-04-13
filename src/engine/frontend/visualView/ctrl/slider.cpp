@@ -2,17 +2,17 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueSlider, ibValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueSlider, IValueWindow)
 
 //****************************************************************************
 //*                             Slider                                       *
 //****************************************************************************
 
-ibValueSlider::ibValueSlider() : ibValueWindow()
+CValueSlider::CValueSlider() : IValueWindow()
 {
 }
 
-wxObject* ibValueSlider::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueSlider::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxSlider* slider = new wxSlider(wxparent, wxID_ANY,
 		m_propertyValue->GetValueAsInteger(),
@@ -26,11 +26,11 @@ wxObject* ibValueSlider::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 	return slider;
 }
 
-void ibValueSlider::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueSlider::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 }
 
-void ibValueSlider::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueSlider::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxSlider* slider = dynamic_cast<wxSlider*>(wxobject);
 
@@ -55,11 +55,11 @@ void ibValueSlider::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(slider);
 }
 
-void ibValueSlider::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void CValueSlider::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
 }
 
-void ibValueSlider::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueSlider::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 }
 
@@ -67,26 +67,26 @@ void ibValueSlider::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 //*                           Property                              *
 //*******************************************************************
 
-bool ibValueSlider::LoadData(ibReaderMemory& reader)
+bool CValueSlider::LoadData(CMemoryReader& reader)
 {
 	m_propertyMinValue->SetValue(reader.r_s32());
 	m_propertyMaxValue->SetValue(reader.r_s32());
 	m_propertyValue->SetValue(reader.r_s32());
 	m_propertyOrient->SetValue(reader.r_s32());
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueSlider::SaveData(ibWriterMemory& writer)
+bool CValueSlider::SaveData(CMemoryWriter& writer)
 {
 	writer.w_s32(m_propertyMinValue->GetValueAsInteger());
 	writer.w_s32(m_propertyMaxValue->GetValueAsInteger());
 	writer.w_s32(m_propertyValue->GetValueAsInteger());
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueSlider, "Slider", "Widget", string_to_clsid("CT_SLID"));
+CONTROL_TYPE_REGISTER(CValueSlider, "Slider", "Widget", string_to_clsid("CT_SLID"));

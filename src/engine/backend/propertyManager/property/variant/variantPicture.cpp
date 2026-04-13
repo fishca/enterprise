@@ -1,6 +1,6 @@
 #include "variantPicture.h"
 
-wxString ibVariantDataExternalPicture::MakeString() const
+wxString wxVariantDataExternalPicture::MakeString() const
 {
 	if (IsEmptyPicture())
 		return wxEmptyString;
@@ -9,31 +9,31 @@ wxString ibVariantDataExternalPicture::MakeString() const
 	return fn.GetFullName();
 }
 
-wxString ibVariantDataExternalPicture::GetPictureFileName() const
+wxString wxVariantDataExternalPicture::GetPictureFileName() const
 {
 	return m_pictureExternalFile.m_img_name;
 }
 
-wxBitmap ibVariantDataExternalPicture::GetPictureBitmap(const wxSize& size) const
+wxBitmap wxVariantDataExternalPicture::GetPictureBitmap(const wxSize& size) const
 {
-	return ibBackendPicture::CreatePicture(m_pictureExternalFile, size);
+	return CBackendPicture::CreatePicture(m_pictureExternalFile, size);
 }
 
-wxString ibVariantDataPicture::MakeString() const
+wxString wxVariantDataPicture::MakeString() const
 {
-	if (m_pictureDesc.m_type == ibPictureType::eFromBackend)
+	if (m_pictureDesc.m_type == EPictureType::eFromBackend)
 		return _("Backend picture");
-	else if (m_pictureDesc.m_type == ibPictureType::eFromConfiguration)
+	else if (m_pictureDesc.m_type == EPictureType::eFromConfiguration)
 		return _("Configuration picture");
-	else if (m_pictureDesc.m_type == ibPictureType::eFromFile)
+	else if (m_pictureDesc.m_type == EPictureType::eFromFile)
 		return _("External picture");
 
 	return wxEmptyString;
 }
 
-wxBitmap ibVariantDataPicture::GetPictureBitmap(const wxSize& size) const
+wxBitmap wxVariantDataPicture::GetPictureBitmap(const wxSize& size) const
 {
-	return ibBackendPicture::CreatePicture(m_pictureDesc,
+	return CBackendPicture::CreatePicture(m_pictureDesc,
 		m_ownerProperty != nullptr ? m_ownerProperty->GetMetaData() : nullptr, size);
 }
 

@@ -3,18 +3,18 @@
 
 #include "backend/metaData.h"
 
-class ibValueGlobalContextManager : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueGlobalContextManager);
+class CValueGlobalContextManager : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueGlobalContextManager);
 public:
 
-	ibValueGlobalContextManager(ibMetaData* metaData = nullptr) : ibValue(ibValueTypes::TYPE_VALUE, true),
-		m_methodHelper(new ibValueMethodHelper()), m_metaData(metaData)
+	CValueGlobalContextManager(IMetaData* metaData = nullptr) : CValue(eValueTypes::TYPE_VALUE, true),
+		m_methodHelper(new CMethodHelper()), m_metaData(metaData)
 	{
 	}
 
-	virtual ~ibValueGlobalContextManager() { wxDELETE(m_methodHelper); }
+	virtual ~CValueGlobalContextManager() { wxDELETE(m_methodHelper); }
 
-	virtual ibValueMethodHelper* GetPMethods() const {
+	virtual CMethodHelper* GetPMethods() const {
 		//PrepareNames();  
 		return m_methodHelper;
 	}
@@ -22,15 +22,15 @@ public:
 	virtual void PrepareNames() const;
 
 	//attributes
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
 
 protected:
 
 	//metaData 
-	ibMetaData* m_metaData;
+	IMetaData* m_metaData;
 
 	//methods 
-	ibValueMethodHelper* m_methodHelper;
+	CMethodHelper* m_methodHelper;
 };
 
 #endif 

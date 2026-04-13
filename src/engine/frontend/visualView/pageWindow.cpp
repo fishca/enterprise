@@ -5,21 +5,21 @@
 
 #include "pageWindow.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibPanelPage, wxPanel);
+wxIMPLEMENT_DYNAMIC_CLASS(CPanelPage, wxPanel);
 
-ibPanelPage::ibPanelPage() :
+CPanelPage::CPanelPage() :
 	wxPanel(), m_boxSizer(nullptr)
 {
 }
 
-ibPanelPage::ibPanelPage(wxWindow* parent, wxWindowID winid, const wxPoint& pos, const wxSize& size, long style, const wxString& name) :
+CPanelPage::CPanelPage(wxWindow* parent, wxWindowID winid, const wxPoint& pos, const wxSize& size, long style, const wxString& name) :
 	wxPanel(parent, winid, pos, size, style, name), m_boxSizer(nullptr)
 {
 	m_boxSizer = new wxBoxSizer(wxHORIZONTAL);	
 	SetSizer(m_boxSizer);
 }
 
-ibPanelPage::~ibPanelPage()
+CPanelPage::~CPanelPage()
 {
 	SetSizer(nullptr);
 }

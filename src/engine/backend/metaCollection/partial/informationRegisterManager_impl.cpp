@@ -11,25 +11,25 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
 
-ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cFilter)
+CValue CValueManagerDataObjectInformationRegister::Get(const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
-	ibValueModelTable::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
+	CValueTableMemory* retTable = CValue::CreateAndPrepareValueRef<CValueTableMemory>();
+	CValueTableMemory::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = colCollection->AddColumn(object->GetName(), object->GetTypeDesc(), object->GetSynonym());
+		CValueTableMemory::IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colCollection->AddColumn(object->GetName(), object->GetTypeDesc(), object->GetSynonym());
 		colInfo->SetColumnID(object->GetMetaID());
 	}
 
-	ibValueStructure* valFilter = nullptr; std::map<ibValueMetaObjectAttributeBase*, ibValue> selFilter;
+	CValueStructure* valFilter = nullptr; std::map<IValueMetaObjectAttribute*, CValue> selFilter;
 	if (cFilter.ConvertToValue(valFilter)) {
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValue vSelValue;
+			CValue vSelValue;
 			if (valFilter->Property(object->GetName(), vSelValue)) {
 				selFilter.insert_or_assign(
 					object, vSelValue
@@ -45,33 +45,33 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cFilter)
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(filter.first);
+			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(filter.first);
 		if (firstWhere) {
 			firstWhere = false;
 		}
 	}
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText, m_metaObject->GetTableNameDB());
+	IPreparedStatement* statement = db_query->PrepareStatement(queryText, m_metaObject->GetTableNameDB());
 
 	if (statement == nullptr)
 		return retTable;
 
 	int position = 1;
 	for (auto filter : selFilter) {
-		ibValueMetaObjectAttributeBase::SetValueAttribute(filter.first, filter.second, statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(filter.first, filter.second, statement, position);
 	}
 
-	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 
 	if (resultSet == nullptr)
 		return retTable;
 
 	while (resultSet->Next()) {
-		ibValueModelTable::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
+		CValueTableMemory::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 		wxASSERT(retLine);
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-			ibValue retValue;
-			if (ibValueMetaObjectAttributeBase::GetValueAttribute(object, retValue, resultSet))
+			CValue retValue;
+			if (IValueMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
 				retLine->SetValueByMetaID(object->GetMetaID(), retValue);
 		}
 		wxDELETE(retLine);
@@ -83,18 +83,18 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cFilter)
 	return retTable;
 }
 
-ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cPeriod, const ibValue& cFilter)
+CValue CValueManagerDataObjectInformationRegister::Get(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
-	ibValueModelTable::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
+	CValueTableMemory* retTable = CValue::CreateAndPrepareValueRef<CValueTableMemory>();
+	CValueTableMemory::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo =
+		CValueTableMemory::IValueModelColumnCollection::IValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
 				object->GetName(),
 				object->GetTypeDesc(),
@@ -103,12 +103,12 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cPeriod,
 		colInfo->SetColumnID(object->GetMetaID());
 	}
 
-	if (m_metaObject->GetPeriodicity() != ibPeriodicity::eNonPeriodic ||
-		m_metaObject->GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
-		ibValueStructure* valFilter = nullptr; std::map<ibValueMetaObjectAttributeBase*, ibValue> selFilter;
+	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
+		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+		CValueStructure* valFilter = nullptr; std::map<IValueMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
 			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-				ibValue vSelValue;
+				CValue vSelValue;
 				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
 						object, vSelValue
@@ -117,37 +117,37 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cPeriod,
 			}
 		}
 
-		wxString queryText = "SELECT * FROM %s WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod());
+		wxString queryText = "SELECT * FROM %s WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod());
 
 		for (auto filter : selFilter) {
 			queryText = queryText +
-				" AND " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(filter.first);
+				" AND " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(filter.first);
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(queryText, m_metaObject->GetTableNameDB());
+		IPreparedStatement* statement = db_query->PrepareStatement(queryText, m_metaObject->GetTableNameDB());
 
 		if (statement == nullptr)
 			return retTable;
 
 		int position = 1;
 
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
 
 		for (auto filter : selFilter) {
-			ibValueMetaObjectAttributeBase::SetValueAttribute(filter.first, filter.second, statement, position);
+			IValueMetaObjectAttribute::SetValueAttribute(filter.first, filter.second, statement, position);
 		}
 
-		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+		IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 
 		if (resultSet == nullptr)
 			return retTable;
 
 		while (resultSet->Next()) {
-			ibValueModelTable::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
+			CValueTableMemory::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 			wxASSERT(retLine);
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-				ibValue retValue;
-				if (ibValueMetaObjectAttributeBase::GetValueAttribute(object, retValue, resultSet))
+				CValue retValue;
+				if (IValueMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
 					retLine->SetValueByMetaID(object->GetMetaID(), retValue);
 			}
 			wxDELETE(retLine);
@@ -160,24 +160,24 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cPeriod,
 	return retTable;
 }
 
-ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPeriod, const ibValue& cFilter)
+CValue CValueManagerDataObjectInformationRegister::GetFirst(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueStructure* retTable = ibValue::CreateAndPrepareValueRef<ibValueStructure>();
+	CValueStructure* retTable = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		retTable->SetAt(object->GetName(), ibValue());
+		retTable->SetAt(object->GetName(), CValue());
 	}
 
-	if (m_metaObject->GetPeriodicity() != ibPeriodicity::eNonPeriodic ||
-		m_metaObject->GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
-		ibValueStructure* valFilter = nullptr; std::map<ibValueMetaObjectAttributeBase*, ibValue> selFilter;
+	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
+		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+		CValueStructure* valFilter = nullptr; std::map<IValueMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
 			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-				ibValue vSelValue;
+				CValue vSelValue;
 				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
 						object, vSelValue
@@ -186,13 +186,13 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 			}
 		}
 
-		ibValueMetaObjectAttributeBase::ibSQLField sqlCol =
-			ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
+		IValueMetaObjectAttribute::sqlField_t sqlCol =
+			IValueMetaObjectAttribute::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
 
 		wxString sqlQuery = " SELECT * FROM ( SELECT T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -202,10 +202,10 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 		}
 
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -216,10 +216,10 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 		}
 
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -230,23 +230,23 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += ibValueMetaObjectAttributeBase::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MIN");
+		sqlQuery += IValueMetaObjectAttribute::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MIN");
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + m_metaObject->GetTableNameDB();
-		sqlQuery += " WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
-		sqlQuery += " AND " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), ">=");
+		sqlQuery += " WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
+		sqlQuery += " AND " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), ">=");
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + m_metaObject->GetTableNameDB() + " AS T2 "
@@ -255,7 +255,7 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 		sqlQuery += " T1." + sqlCol.m_fieldTypeName + " = T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -265,10 +265,10 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 		}
 
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -279,10 +279,10 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 		}
 
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -299,35 +299,35 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 				sqlQuery = sqlQuery + " WHERE ";
 			}
 			sqlQuery = sqlQuery +
-				(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(filter.first);
+				(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(filter.first);
 			if (firstWhere) {
 				firstWhere = false;
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		IPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
 
 		int position = 1;
 
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
 
 		for (auto filter : selFilter) {
-			ibValueMetaObjectAttributeBase::SetValueAttribute(filter.first, filter.second, statement, position);
+			IValueMetaObjectAttribute::SetValueAttribute(filter.first, filter.second, statement, position);
 		}
 
-		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+		IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 
 		if (resultSet == nullptr)
 			return retTable;
 
 		if (resultSet->Next()) {
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-				ibValue retValue; 
-				if(ibValueMetaObjectAttributeBase::GetValueAttribute(object, retValue, resultSet))
+				CValue retValue; 
+				if(IValueMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
 					retTable->SetAt(object->GetName(), retValue);
 			}
 		}
@@ -339,24 +339,24 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 	return retTable;
 }
 
-ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPeriod, const ibValue& cFilter)
+CValue CValueManagerDataObjectInformationRegister::GetLast(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueStructure* retTable = ibValue::CreateAndPrepareValueRef<ibValueStructure>();
+	CValueStructure* retTable = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		retTable->SetAt(object->GetName(), ibValue());
+		retTable->SetAt(object->GetName(), CValue());
 	}
 
-	if (m_metaObject->GetPeriodicity() != ibPeriodicity::eNonPeriodic ||
-		m_metaObject->GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
-		ibValueStructure* valFilter = nullptr; std::map<ibValueMetaObjectAttributeBase*, ibValue> selFilter;
+	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
+		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+		CValueStructure* valFilter = nullptr; std::map<IValueMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
 			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-				ibValue vSelValue;
+				CValue vSelValue;
 				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
 						object, vSelValue
@@ -365,13 +365,13 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 			}
 		}
 
-		ibValueMetaObjectAttributeBase::ibSQLField sqlCol =
-			ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
+		IValueMetaObjectAttribute::sqlField_t sqlCol =
+			IValueMetaObjectAttribute::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
 
 		wxString sqlQuery = " SELECT * FROM ( SELECT T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -381,10 +381,10 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 		}
 
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -395,10 +395,10 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 		}
 
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -409,23 +409,23 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += ibValueMetaObjectAttributeBase::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MAX");
+		sqlQuery += IValueMetaObjectAttribute::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MAX");
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + m_metaObject->GetTableNameDB();
-		sqlQuery += " WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
-		sqlQuery += " AND " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), "<=");
+		sqlQuery += " WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
+		sqlQuery += " AND " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), "<=");
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + m_metaObject->GetTableNameDB() + " AS T2 "
@@ -434,7 +434,7 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 		sqlQuery += " T1." + sqlCol.m_fieldTypeName + " = T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -444,10 +444,10 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 		}
 
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -458,10 +458,10 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 		}
 
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -478,35 +478,35 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 				sqlQuery = sqlQuery + " WHERE ";
 			}
 			sqlQuery = sqlQuery +
-				(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(filter.first);
+				(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(filter.first);
 			if (firstWhere) {
 				firstWhere = false;
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		IPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
 
 		int position = 1;
 
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
 
 		for (auto filter : selFilter) {
-			ibValueMetaObjectAttributeBase::SetValueAttribute(filter.first, filter.second, statement, position);
+			IValueMetaObjectAttribute::SetValueAttribute(filter.first, filter.second, statement, position);
 		}
 
-		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+		IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 
 		if (resultSet == nullptr)
 			return retTable;
 
 		if (resultSet->Next()) {
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-				ibValue retValue;
-				if (ibValueMetaObjectAttributeBase::GetValueAttribute(object, retValue, resultSet))
+				CValue retValue;
+				if (IValueMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
 					retTable->SetAt(object->GetName(), retValue);
 			}
 		}
@@ -518,18 +518,18 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 	return retTable;
 }
 
-ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& cPeriod, const ibValue& cFilter)
+CValue CValueManagerDataObjectInformationRegister::SliceFirst(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
-	ibValueModelTable::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
+	CValueTableMemory* retTable = CValue::CreateAndPrepareValueRef<CValueTableMemory>();
+	CValueTableMemory::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo =
+		CValueTableMemory::IValueModelColumnCollection::IValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
 				object->GetName(),
 				object->GetTypeDesc(),
@@ -538,12 +538,12 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 		colInfo->SetColumnID(object->GetMetaID());
 	}
 
-	if (m_metaObject->GetPeriodicity() != ibPeriodicity::eNonPeriodic ||
-		m_metaObject->GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
-		ibValueStructure* valFilter = nullptr; std::map<ibValueMetaObjectAttributeBase*, ibValue> selFilter;
+	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
+		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+		CValueStructure* valFilter = nullptr; std::map<IValueMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
 			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-				ibValue vSelValue;
+				CValue vSelValue;
 				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
 						object, vSelValue
@@ -552,13 +552,13 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 			}
 		}
 
-		ibValueMetaObjectAttributeBase::ibSQLField sqlCol =
-			ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
+		IValueMetaObjectAttribute::sqlField_t sqlCol =
+			IValueMetaObjectAttribute::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
 
 		wxString sqlQuery = " SELECT * FROM ( SELECT T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -568,10 +568,10 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 		}
 
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -582,10 +582,10 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 		}
 
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -596,23 +596,23 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += ibValueMetaObjectAttributeBase::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MIN");
+		sqlQuery += IValueMetaObjectAttribute::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MIN");
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + m_metaObject->GetTableNameDB();
-		sqlQuery += " WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
-		sqlQuery += " AND " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), ">=");
+		sqlQuery += " WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
+		sqlQuery += " AND " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), ">=");
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + m_metaObject->GetTableNameDB() + " AS T2 "
@@ -621,7 +621,7 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 		sqlQuery += " T1." + sqlCol.m_fieldTypeName + " = T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -631,10 +631,10 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 		}
 
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -645,10 +645,10 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 		}
 
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -665,37 +665,37 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 				sqlQuery = sqlQuery + " WHERE ";
 			}
 			sqlQuery = sqlQuery +
-				(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(filter.first);
+				(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(filter.first);
 			if (firstWhere) {
 				firstWhere = false;
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		IPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
 
 		int position = 1;
 
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
 
 		for (auto filter : selFilter) {
-			ibValueMetaObjectAttributeBase::SetValueAttribute(filter.first, filter.second, statement, position);
+			IValueMetaObjectAttribute::SetValueAttribute(filter.first, filter.second, statement, position);
 		}
 
-		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+		IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 
 		if (resultSet == nullptr)
 			return retTable;
 
 		while (resultSet->Next()) {
-			ibValueModelTable::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
+			CValueTableMemory::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 			wxASSERT(retLine);
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-				ibValue retValue;
-				if (ibValueMetaObjectAttributeBase::GetValueAttribute(object, retValue, resultSet))
+				CValue retValue;
+				if (IValueMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
 					retLine->SetValueByMetaID(object->GetMetaID(), retValue);
 			}
 			wxDELETE(retLine);
@@ -708,18 +708,18 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 	return retTable;
 }
 
-ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cPeriod, const ibValue& cFilter)
+CValue CValueManagerDataObjectInformationRegister::SliceLast(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
-	ibValueModelTable::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
+	CValueTableMemory* retTable = CValue::CreateAndPrepareValueRef<CValueTableMemory>();
+	CValueTableMemory::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo =
+		CValueTableMemory::IValueModelColumnCollection::IValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
 				object->GetName(),
 				object->GetTypeDesc(),
@@ -728,12 +728,12 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 		colInfo->SetColumnID(object->GetMetaID());
 	}
 
-	if (m_metaObject->GetPeriodicity() != ibPeriodicity::eNonPeriodic ||
-		m_metaObject->GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
-		ibValueStructure* valFilter = nullptr; std::map<ibValueMetaObjectAttributeBase*, ibValue> selFilter;
+	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
+		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+		CValueStructure* valFilter = nullptr; std::map<IValueMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
 			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-				ibValue vSelValue;
+				CValue vSelValue;
 				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
 						object, vSelValue
@@ -742,13 +742,13 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 			}
 		}
 
-		ibValueMetaObjectAttributeBase::ibSQLField sqlCol =
-			ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
+		IValueMetaObjectAttribute::sqlField_t sqlCol =
+			IValueMetaObjectAttribute::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
 
 		wxString sqlQuery = " SELECT * FROM ( SELECT T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -758,10 +758,10 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 		}
 
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -772,10 +772,10 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 		}
 
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += ", T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -786,23 +786,23 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += ibValueMetaObjectAttributeBase::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MAX");
+		sqlQuery += IValueMetaObjectAttribute::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MAX");
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + m_metaObject->GetTableNameDB();
-		sqlQuery += " WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
-		sqlQuery += " AND " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), "<=");
+		sqlQuery += " WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
+		sqlQuery += " AND " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), "<=");
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			sqlQuery += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+			sqlQuery += "," + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + m_metaObject->GetTableNameDB() + " AS T2 "
@@ -811,7 +811,7 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 		sqlQuery += " T1." + sqlCol.m_fieldTypeName + " = T2." + sqlCol.m_fieldTypeName;
 
 		for (auto dataType : sqlCol.m_types) {
-			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+			if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 				sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 			}
 			else {
@@ -821,10 +821,10 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 		}
 
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlDim = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -835,10 +835,10 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 		}
 
 		for (const auto object : m_metaObject->GetResourceArrayObject()) {
-			ibValueMetaObjectAttributeBase::ibSQLField sqlRes = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+			IValueMetaObjectAttribute::sqlField_t sqlRes = IValueMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
-				if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				if (dataType.m_type != IValueMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
 					sqlQuery += " AND T1." + dataType.m_field.m_fieldName + " = T2." + dataType.m_field.m_fieldName;
 				}
 				else {
@@ -855,37 +855,37 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 				sqlQuery = sqlQuery + " WHERE ";
 			}
 			sqlQuery = sqlQuery +
-				(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(filter.first);
+				(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(filter.first);
 			if (firstWhere) {
 				firstWhere = false;
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		IPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
 
 		int position = 1;
 
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
-		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
+		IValueMetaObjectAttribute::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cPeriod.GetDate(), statement, position);
 
 		for (auto filter : selFilter) {
-			ibValueMetaObjectAttributeBase::SetValueAttribute(filter.first, filter.second, statement, position);
+			IValueMetaObjectAttribute::SetValueAttribute(filter.first, filter.second, statement, position);
 		}
 
-		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+		IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 
 		if (resultSet == nullptr)
 			return retTable;
 
 		while (resultSet->Next()) {
-			ibValueModelTable::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
+			CValueTableMemory::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 			wxASSERT(retLine);
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-				ibValue retValue;
-				if (ibValueMetaObjectAttributeBase::GetValueAttribute(object, retValue, resultSet))
+				CValue retValue;
+				if (IValueMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
 					retTable->SetAt(object->GetName(), retValue);
 			}
 			wxDELETE(retLine);

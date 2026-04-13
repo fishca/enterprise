@@ -83,34 +83,34 @@ enum ConnectionType {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-struct ibDebugData {
+struct CDebugData {
 	wxString m_fileName;
 	wxString m_moduleName;
 };
 
-struct ibDebugLineData : public ibDebugData {
+struct CDebugLineData : public CDebugData {
 	unsigned int m_line;
 };
 
-struct ibDebugExpressionData : public ibDebugData {
+struct CDebugExpressionData : public CDebugData {
 	wxString m_expression;
 };
 
-struct ibDebugAutoCompleteData : public ibDebugExpressionData {
+struct CDebugAutoCompleteData : public CDebugExpressionData {
 
-	struct ibDebugVariableData {
+	struct CDebugVariableData {
 		wxString m_variableName;
 	};
 
-	std::vector<ibDebugVariableData> m_arrVar;
+	std::vector<CDebugVariableData> m_arrVar;
 
-	struct ibDebugMethodData {
+	struct CDebugMethodData {
 		wxString m_methodName;
 		wxString m_methodHelper;
 		bool m_methodRet;
 	};
 
-	std::vector<ibDebugMethodData> m_arrMeth;
+	std::vector<CDebugMethodData> m_arrMeth;
 
 public:
 
@@ -120,18 +120,18 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////////////////// 
 
-struct ibStackData {
+struct CStackData {
 
-	struct ibStackRow {
+	struct CStackRow {
 		wxString m_moduleName;
 		unsigned int m_moduleLine;
 	public:
-		ibStackRow(const wxString& strModuleName, unsigned int moduleLine) :
+		CStackRow(const wxString& strModuleName, unsigned int moduleLine) :
 			m_moduleName(strModuleName), m_moduleLine(moduleLine) {
 		}
 	};
 
-	std::vector<ibStackRow> m_stackData;
+	std::vector<CStackRow> m_stackData;
 
 public:
 
@@ -160,25 +160,25 @@ public:
 
 #include <wx/treectrl.h>
 
-struct ibLocalWindowData {
+struct CLocalWindowData {
 
-	struct ibLocalWindowItem {
+	struct CLocalWindowItem {
 
 		wxString	 m_name;
 		wxString	 m_value;
 		wxString	 m_type;
 		bool		 m_hasAttributes;
 
-		ibLocalWindowItem(const wxString& n, const wxString& v, const wxString& t, bool a) :
+		CLocalWindowItem(const wxString& n, const wxString& v, const wxString& t, bool a) :
 			m_name(n), m_value(v), m_type(t), m_hasAttributes(a) {
 		}
 	};
 
-	std::vector<ibLocalWindowItem> m_listExpression;
+	std::vector<CLocalWindowItem> m_listExpression;
 
 public:
 
-	ibLocalWindowData() {}
+	CLocalWindowData() {}
 
 	void AddLocalVar(const wxString& name, const wxString& value, const wxString& type, bool hasAttributes) {
 		m_listExpression.emplace_back(name, value, type, hasAttributes);
@@ -204,11 +204,11 @@ public:
 	}
 };
 
-struct ibWatchWindowData {
+struct CWatchWindowData {
 
 	wxTreeItemId m_item;
 
-	struct ibWatchWindowItem {
+	struct CWatchWindowItem {
 
 		wxTreeItemId m_item;
 		wxString	 m_name;
@@ -216,16 +216,16 @@ struct ibWatchWindowData {
 		wxString	 m_type;
 		bool		 m_hasAttributes;
 
-		ibWatchWindowItem(const wxString& n, const wxString& v, const wxString& t, bool a, const wxTreeItemId& i) :
+		CWatchWindowItem(const wxString& n, const wxString& v, const wxString& t, bool a, const wxTreeItemId& i) :
 			m_name(n), m_value(v), m_type(t), m_hasAttributes(a), m_item(i) {
 		}
 	};
 
-	std::vector<ibWatchWindowItem> m_listExpression;
+	std::vector<CWatchWindowItem> m_listExpression;
 
 public:
 
-	ibWatchWindowData(const wxTreeItemId& item = nullptr) : m_item(item) {}
+	CWatchWindowData(const wxTreeItemId& item = nullptr) : m_item(item) {}
 
 	wxTreeItemId GetItem() const {
 		return m_item;

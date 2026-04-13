@@ -7,15 +7,15 @@ enum
 };
 
 
-ibValueRecordDataObjectConstant::ibActionCollection ibValueRecordDataObjectConstant::GetActionCollection(const ibFormID& formType)
+CValueRecordDataObjectConstant::CActionCollection CValueRecordDataObjectConstant::GetActionCollection(const form_identifier_t& formType)
 {
-	ibActionCollection catalogActions(this);
+	CActionCollection catalogActions(this);
 	catalogActions.AddAction(wxT("SaveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
 	catalogActions.AddAction(wxT("Save"), _("Save"), g_picSaveCLSID, true, eSave);
 	return catalogActions;
 }
 
-void ibValueRecordDataObjectConstant::ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm)
+void CValueRecordDataObjectConstant::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
 {
 	switch (lNumAction)
 	{

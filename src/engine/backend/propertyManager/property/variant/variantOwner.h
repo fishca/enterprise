@@ -3,20 +3,20 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-class BACKEND_API ibVariantDataOwner : public wxVariantData {
+class BACKEND_API wxVariantDataOwner : public wxVariantData {
 	wxString MakeString() const;
 public:
 
-	ibMetaDescription& GetMetaDesc() { return m_metaDesc; }
-	const ibMetaDescription& GetMetaDesc() const { return m_metaDesc; }
+	CMetaDescription& GetMetaDesc() { return m_metaDesc; }
+	const CMetaDescription& GetMetaDesc() const { return m_metaDesc; }
 
-	ibValue GetDataValue() const;
+	CValue GetDataValue() const;
 
-	ibVariantDataOwner(const ibValueMetaObjectGenericData* prop, const ibMetaDescription& typeDesc) : wxVariantData(), m_ownerProperty(prop), m_metaDesc(typeDesc) {}
-	ibVariantDataOwner(const ibVariantDataOwner& src) : wxVariantData(), m_ownerProperty(src.m_ownerProperty), m_metaDesc(src.m_metaDesc) {}
+	wxVariantDataOwner(const IValueMetaObjectGenericData* prop, const CMetaDescription& typeDesc) : wxVariantData(), m_ownerProperty(prop), m_metaDesc(typeDesc) {}
+	wxVariantDataOwner(const wxVariantDataOwner& src) : wxVariantData(), m_ownerProperty(src.m_ownerProperty), m_metaDesc(src.m_metaDesc) {}
 
-	virtual ibVariantDataOwner* Clone() const {
-		return new ibVariantDataOwner(*this);
+	virtual wxVariantDataOwner* Clone() const {
+		return new wxVariantDataOwner(*this);
 	}
 
 	bool Eq(wxVariantData& data) const { return true; }
@@ -32,11 +32,11 @@ public:
 		return true;
 	}
 
-	virtual wxString GetType() const { return wxT("ibVariantDataOwner"); }
+	virtual wxString GetType() const { return wxT("wxVariantDataOwner"); }
 
 protected:
-	const ibValueMetaObjectGenericData* m_ownerProperty;
-	ibMetaDescription m_metaDesc;
+	const IValueMetaObjectGenericData* m_ownerProperty;
+	CMetaDescription m_metaDesc;
 };
 
 #endif

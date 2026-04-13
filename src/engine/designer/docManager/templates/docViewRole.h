@@ -8,12 +8,12 @@
 // ----------------------------------------------------------------------------
 
 // The view using a standard wxTextCtrl to show its contents
-class ibRoleEditView : public ibMetaView {
-	class ibRoleEditor* m_roleEditor;
+class CRoleEditView : public CMetaView {
+	class CRoleEditor* m_roleEditor;
 public:
-	ibRoleEditView() : ibMetaView() {}
+	CRoleEditView() : CMetaView() {}
 
-	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
@@ -21,17 +21,17 @@ public:
 private:
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(ibRoleEditView);
+	wxDECLARE_DYNAMIC_CLASS(CRoleEditView);
 };
 
 // ----------------------------------------------------------------------------
 // ITextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-class ibRolibDocument : public ibMetaDocument
+class CRoleDocument : public CMetaDocument
 {
 public:
-	ibRolibDocument() : ibMetaDocument() { /*m_childDoc = false;*/ }
+	CRoleDocument() : CMetaDocument() { /*m_childDoc = false;*/ }
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 
@@ -43,21 +43,21 @@ protected:
 	virtual bool DoSaveDocument(const wxString& filename) override;
 	virtual bool DoOpenDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(ibRolibDocument);
-	wxDECLARE_ABSTRACT_CLASS(ibRolibDocument);
+	wxDECLARE_NO_COPY_CLASS(CRoleDocument);
+	wxDECLARE_ABSTRACT_CLASS(CRoleDocument);
 };
 
 // ----------------------------------------------------------------------------
 // A very simple text document class
 // ----------------------------------------------------------------------------
 
-class ibRoleEditDocument : public ibRolibDocument
+class CRoleEditDocument : public CRoleDocument
 {
 public:
-	ibRoleEditDocument() : ibRolibDocument() { }
+	CRoleEditDocument() : CRoleDocument() { }
 
-	wxDECLARE_NO_COPY_CLASS(ibRoleEditDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibRoleEditDocument);
+	wxDECLARE_NO_COPY_CLASS(CRoleEditDocument);
+	wxDECLARE_DYNAMIC_CLASS(CRoleEditDocument);
 };
 
 #endif

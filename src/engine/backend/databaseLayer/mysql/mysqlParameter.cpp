@@ -2,14 +2,14 @@
 #include "backend/databaseLayer/databaseLayer.h"
 
 // ctor
-ibDatabaseParameterMySQL::ibDatabaseParameterMySQL()
+CMysqlParameter::CMysqlParameter()
 {
-	m_nParameterType = ibDatabaseParameterMySQL::PARAM_NULL;
+	m_nParameterType = CMysqlParameter::PARAM_NULL;
 }
 
-ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(const wxString& strValue)
+CMysqlParameter::CMysqlParameter(const wxString& strValue)
 {
-	m_nParameterType = ibDatabaseParameterMySQL::PARAM_STRING;
+	m_nParameterType = CMysqlParameter::PARAM_STRING;
 	m_strValue = strValue;
 	m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 	if (wxEmptyString == strValue)
@@ -22,35 +22,35 @@ ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(const wxString& strValue)
 	}
 }
 
-ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(int nValue)
+CMysqlParameter::CMysqlParameter(int nValue)
 {
-	m_nParameterType = ibDatabaseParameterMySQL::PARAM_INT;
+	m_nParameterType = CMysqlParameter::PARAM_INT;
 	m_nValue = nValue;
 	//m_strValue = wxString::Format(_("%d"), nValue);
 }
 
-ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(double dblValue)
+CMysqlParameter::CMysqlParameter(double dblValue)
 {
-	m_nParameterType = ibDatabaseParameterMySQL::PARAM_DOUBLE;
+	m_nParameterType = CMysqlParameter::PARAM_DOUBLE;
 	m_dblValue = dblValue;
 	//m_strValue = wxString::Format(_("%f"), dblValue);
 }
 
-ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(const ibNumber &numValue)
+CMysqlParameter::CMysqlParameter(const number_t &numValue)
 {
-	m_nParameterType = ibDatabaseParameterMySQL::PARAM_DOUBLE;
+	m_nParameterType = CMysqlParameter::PARAM_DOUBLE;
 	m_dblValue = numValue.ToDouble();
 }
 
-ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(bool bValue)
+CMysqlParameter::CMysqlParameter(bool bValue)
 {
-	m_nParameterType = ibDatabaseParameterMySQL::PARAM_BOOL;
+	m_nParameterType = CMysqlParameter::PARAM_BOOL;
 	m_bValue = bValue;
 }
 
-ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(const wxDateTime& dateValue)
+CMysqlParameter::CMysqlParameter(const wxDateTime& dateValue)
 {
-	m_nParameterType = ibDatabaseParameterMySQL::PARAM_DATETIME;
+	m_nParameterType = CMysqlParameter::PARAM_DATETIME;
 
 	m_pDate = new MYSQL_TIME();
 
@@ -67,58 +67,58 @@ ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(const wxDateTime& dateValue)
 	m_nBufferLength = sizeof(MYSQL_TIME);
 }
 
-ibDatabaseParameterMySQL::ibDatabaseParameterMySQL(const void* pData, long nDataLength)
+CMysqlParameter::CMysqlParameter(const void* pData, long nDataLength)
 {
-	m_nParameterType = ibDatabaseParameterMySQL::PARAM_BLOB;
+	m_nParameterType = CMysqlParameter::PARAM_BLOB;
 	void* pBuffer = m_BufferValue.GetWriteBuf(nDataLength);
 	memcpy(pBuffer, pData, nDataLength);
 	m_nBufferLength = nDataLength;
 }
 
-ibDatabaseParameterMySQL::~ibDatabaseParameterMySQL()
+CMysqlParameter::~CMysqlParameter()
 {
-	if ((m_nParameterType == ibDatabaseParameterMySQL::PARAM_DATETIME) && (m_pDate != nullptr))
+	if ((m_nParameterType == CMysqlParameter::PARAM_DATETIME) && (m_pDate != nullptr))
 	{
 		delete m_pDate;
 		m_pDate = nullptr;
 	}
 }
 
-long unsigned int ibDatabaseParameterMySQL::GetDataLength()
+long unsigned int CMysqlParameter::GetDataLength()
 {
 	return m_nBufferLength;
 }
 
-long unsigned int* ibDatabaseParameterMySQL::GetDataLengthPtr()
+long unsigned int* CMysqlParameter::GetDataLengthPtr()
 {
 	return &m_nBufferLength;
 }
 
-const void* ibDatabaseParameterMySQL::GetDataPtr()
+const void* CMysqlParameter::GetDataPtr()
 {
 	const void *pReturn = nullptr;
 
 	switch (m_nParameterType)
 	{
-	case ibDatabaseParameterMySQL::PARAM_STRING:
+	case CMysqlParameter::PARAM_STRING:
 		pReturn = m_CharBufferValue;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_INT:
+	case CMysqlParameter::PARAM_INT:
 		pReturn = &m_nValue;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_DOUBLE:
+	case CMysqlParameter::PARAM_DOUBLE:
 		pReturn = &m_dblValue;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_DATETIME:
+	case CMysqlParameter::PARAM_DATETIME:
 		pReturn = m_pDate;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_BOOL:
+	case CMysqlParameter::PARAM_BOOL:
 		pReturn = &m_bValue;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_BLOB:
+	case CMysqlParameter::PARAM_BLOB:
 		pReturn = m_BufferValue.GetData();
 		break;
-	case ibDatabaseParameterMySQL::PARAM_NULL:
+	case CMysqlParameter::PARAM_NULL:
 		pReturn = nullptr;
 		break;
 	default:
@@ -128,36 +128,36 @@ const void* ibDatabaseParameterMySQL::GetDataPtr()
 	return pReturn;
 }
 
-int ibDatabaseParameterMySQL::GetParameterType()
+int CMysqlParameter::GetParameterType()
 {
 	return m_nParameterType;
 }
 
-enum_field_types ibDatabaseParameterMySQL::GetBufferType()
+enum_field_types CMysqlParameter::GetBufferType()
 {
 	enum_field_types returnType = MYSQL_TYPE_NULL;
 
 	switch (m_nParameterType)
 	{
-	case ibDatabaseParameterMySQL::PARAM_STRING:
+	case CMysqlParameter::PARAM_STRING:
 		returnType = MYSQL_TYPE_VAR_STRING;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_INT:
+	case CMysqlParameter::PARAM_INT:
 		returnType = MYSQL_TYPE_LONG;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_DOUBLE:
+	case CMysqlParameter::PARAM_DOUBLE:
 		returnType = MYSQL_TYPE_DOUBLE;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_DATETIME:
+	case CMysqlParameter::PARAM_DATETIME:
 		returnType = MYSQL_TYPE_TIMESTAMP;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_BOOL:
+	case CMysqlParameter::PARAM_BOOL:
 		returnType = MYSQL_TYPE_TINY;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_BLOB:
+	case CMysqlParameter::PARAM_BLOB:
 		returnType = MYSQL_TYPE_LONG_BLOB;
 		break;
-	case ibDatabaseParameterMySQL::PARAM_NULL:
+	case CMysqlParameter::PARAM_NULL:
 		returnType = MYSQL_TYPE_NULL;
 		break;
 	default:

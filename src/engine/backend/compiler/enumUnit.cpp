@@ -5,20 +5,20 @@
 
 #include "enumUnit.h"
 
-ibValueEnumerationWrapper::ibValueEnumerationWrapper(bool createInstance) :
-	ibValue(ibValueTypes::TYPE_VALUE, true), m_methodHelper(nullptr)
+IEnumerationWrapper::IEnumerationWrapper(bool createInstance) :
+	CValue(eValueTypes::TYPE_VALUE, true), m_methodHelper(nullptr)
 {
 	if (createInstance) {
-		m_methodHelper = new ibValueMethodHelper();
+		m_methodHelper = new CMethodHelper();
 	}
 }
 
-ibValueEnumerationWrapper::~ibValueEnumerationWrapper()
+IEnumerationWrapper::~IEnumerationWrapper()
 {
 	wxDELETE(m_methodHelper);
 }
 
-void ibValueEnumerationWrapper::PrepareNames() const
+void IEnumerationWrapper::PrepareNames() const
 {
 	if (m_methodHelper != nullptr) {
 		m_methodHelper->ClearHelper();

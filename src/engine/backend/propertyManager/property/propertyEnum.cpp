@@ -1,19 +1,16 @@
 #include "propertyEnum.h"
 
-//get property for grid 	
-wxObject* (*ibPropertyEnumBase::ms_propertyEnum)(const wxString&, const wxString&, const wxPGChoices&, const int&) = nullptr;
-
 //load & save object in control 
-bool ibPropertyEnumBase::LoadData(ibReaderMemory& reader)
+bool IPropertyEnum::LoadData(CMemoryReader& reader)
 {
 	const s32& enumVariant = reader.r_s32();
-	ibPropertyEnumBase::SetValue(enumVariant);
+	IPropertyEnum::SetValue(enumVariant);
 	return true;
 }
 
-bool ibPropertyEnumBase::SaveData(ibWriterMemory& writer)
+bool IPropertyEnum::SaveData(CMemoryWriter& writer)
 {
-	const s32& enumVariant = ibPropertyEnumBase::GetValueAsInteger();
+	const s32& enumVariant = IPropertyEnum::GetValueAsInteger();
 	writer.w_s32(enumVariant);
 	return true;
 }

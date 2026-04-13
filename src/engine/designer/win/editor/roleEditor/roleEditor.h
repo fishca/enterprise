@@ -11,7 +11,7 @@
 #include "frontend/win/theme/luna_toolbarart.h"
 #include "frontend/win/ctrls/checktree.h"
 
-class ibRoleEditor : public wxSplitterWindow {
+class CRoleEditor : public wxSplitterWindow {
 
 	wxTreeItemId m_treeMETADATA;
 	wxTreeItemId m_treeCOMMON; //special tree
@@ -28,24 +28,24 @@ class ibRoleEditor : public wxSplitterWindow {
 	wxTreeItemId m_treeINFORMATION_REGISTERS;
 	wxTreeItemId m_treeACCUMULATION_REGISTERS;
 
-	ibValueMetaObject* m_metaRole;
+	IValueMetaObject* m_metaRole;
 
 	class wxTreeItemMetaData : public wxTreeItemData {
-		ibAccessObject* m_metaObject; //тип элемента
+		IAccessObject* m_metaObject; //тип элемента
 	public:
-		wxTreeItemMetaData(ibAccessObject* metaObject) : m_metaObject(metaObject) {}
-		ibAccessObject* GetMetaObject() const { return m_metaObject; }
+		wxTreeItemMetaData(IAccessObject* metaObject) : m_metaObject(metaObject) {}
+		IAccessObject* GetMetaObject() const { return m_metaObject; }
 	};
 
 	class wxTreeItemRoleData : public wxTreeItemMetaData {
-		ibRole* m_role; //тип элемента
+		CRole* m_role; //тип элемента
 	public:
-		wxTreeItemRoleData(ibRole* role) : wxTreeItemMetaData(role->GetRoleObject()), m_role(role) {}
-		ibRole* GetRole() const { return m_role; }
+		wxTreeItemRoleData(CRole* role) : wxTreeItemMetaData(role->GetRoleObject()), m_role(role) {}
+		CRole* GetRole() const { return m_role; }
 	};
 
 	wxTreeCtrl* m_roleCtrl;
-	ibCheckTree* m_checkCtrl;
+	wxCheckTree* m_checkCtrl;
 
 protected:
 
@@ -55,8 +55,8 @@ protected:
 private:
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const ibClassID& clsid, const wxString& name = wxEmptyString) const {
-		const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
+		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_roleCtrl->GetImageList();
 		wxASSERT(imageList);
@@ -65,14 +65,14 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		ibValueMetaObject* metaObject) const {
+		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_roleCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
 		return m_roleCtrl->AppendItem(parent, metaObject->GetName(), imageIndex, imageIndex, new wxTreeItemMetaData(metaObject));
 	}
 
-	void AddInterfaceItem(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void AddInterfaceItem(IValueMetaObject* obj, const wxTreeItemId& item);
 
 	void InitRole();
 	void ClearRole();
@@ -90,12 +90,12 @@ public:
 		m_checkCtrl->Enable(!readOnly);
 	}
 
-	ibRoleEditor(wxWindow* parent,
+	CRoleEditor(wxWindow* parent,
 		wxWindowID winid = wxID_ANY,
-		ibValueMetaObject* metaObject = nullptr
+		IValueMetaObject* metaObject = nullptr
 	);
 
-	virtual ~ibRoleEditor();
+	virtual ~CRoleEditor();
 };
 
 #endif 

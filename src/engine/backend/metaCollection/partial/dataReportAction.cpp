@@ -5,11 +5,11 @@
 
 #include "dataReport.h"
 
-ibValueRecordDataObjectReport::ibActionCollection ibValueRecordDataObjectReport::GetActionCollection(const ibFormID &formType)
+CValueRecordDataObjectReport::CActionCollection CValueRecordDataObjectReport::GetActionCollection(const form_identifier_t &formType)
 {
-	return ibActionCollection(this);
+	return CActionCollection(this);
 }
 
-void ibValueRecordDataObjectReport::ExecuteAction(const ibActionID &action, ibBackendValueForm *srcForm)
+void CValueRecordDataObjectReport::ExecuteAction(const action_identifier_t &action, IBackendValueForm *srcForm)
 {
 }

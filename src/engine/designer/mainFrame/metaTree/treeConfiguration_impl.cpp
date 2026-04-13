@@ -47,14 +47,14 @@
 #include "frontend/mainFrame/mainFrame.h"
 #include "frontend/win/dlgs/formSelector/formSelector.h"
 
-ibFormID ibMetaDataTree::SelectFormType(ibValueMetaObjectForm* metaObject) const
+form_identifier_t IMetaDataTree::SelectFormType(CValueMetaObjectForm* metaObject) const
 {
-	ibValueMetaObjectGenericData* parent = wxDynamicCast(
-		metaObject->GetParent(), ibValueMetaObjectGenericData
+	IValueMetaObjectGenericData* parent = wxDynamicCast(
+		metaObject->GetParent(), IValueMetaObjectGenericData
 	);
 
-	ibDialogSelectTypeForm dlg(parent, metaObject);
-	ibFormTypeList optList = parent->GetFormType();
+	CDialogSelectTypeForm dlg(parent, metaObject);
+	CFormTypeList optList = parent->GetFormType();
 	for (unsigned int idx = 0; idx < optList.GetItemCount(); idx++) {
 		dlg.AppendTypeForm(optList.GetItemName(idx), optList.GetItemLabel(idx), optList.GetItemId(idx));
 	}
@@ -63,7 +63,7 @@ ibFormID ibMetaDataTree::SelectFormType(ibValueMetaObjectForm* metaObject) const
 	return dlg.ShowModal();
 }
 
-void ibMetaDataTree::Activate()
+void IMetaDataTree::Activate()
 {
 	if (m_docParent == nullptr) {
 		unsigned int count_doc = 0;
@@ -72,7 +72,7 @@ void ibMetaDataTree::Activate()
 	}
 }
 
-void ibMetaDataTree::Modify(bool modify)
+void IMetaDataTree::Modify(bool modify)
 {
 	if (m_docParent != nullptr) {
 		m_docParent->Modify(modify);
@@ -82,9 +82,9 @@ void ibMetaDataTree::Modify(bool modify)
 	}
 }
 
-bool ibMetaDataTree::OpenFormMDI(ibValueMetaObject* obj)
+bool IMetaDataTree::OpenFormMDI(IValueMetaObject* obj)
 {
-	ibMetaDocument* foundedDoc = GetDocument(obj);
+	CMetaDocument* foundedDoc = GetDocument(obj);
 	//not found in the list of existing ones
 	if (foundedDoc == nullptr) {
 		foundedDoc = docManager->OpenFormMDI(obj, m_docParent, m_bReadOnly ? wxDOC_READONLY : wxDOC_NEW);
@@ -101,9 +101,9 @@ bool ibMetaDataTree::OpenFormMDI(ibValueMetaObject* obj)
 	return false;
 }
 
-bool ibMetaDataTree::OpenFormMDI(ibValueMetaObject* obj, ibBackendMetaDocument*& doc)
+bool IMetaDataTree::OpenFormMDI(IValueMetaObject* obj, IBackendMetaDocument*& doc)
 {
-	ibMetaDocument* foundedDoc = GetDocument(obj);
+	CMetaDocument* foundedDoc = GetDocument(obj);
 
 	//not found in the list of existing ones
 	if (foundedDoc == nullptr) {
@@ -124,9 +124,9 @@ bool ibMetaDataTree::OpenFormMDI(ibValueMetaObject* obj, ibBackendMetaDocument*&
 	return false;
 }
 
-bool ibMetaDataTree::CloseFormMDI(ibValueMetaObject* obj)
+bool IMetaDataTree::CloseFormMDI(IValueMetaObject* obj)
 {
-	ibMetaDocument* foundedDoc = GetDocument(obj);
+	CMetaDocument* foundedDoc = GetDocument(obj);
 
 	//not found in the list of existing ones
 	if (foundedDoc != nullptr) {
@@ -140,16 +140,16 @@ bool ibMetaDataTree::CloseFormMDI(ibValueMetaObject* obj)
 	return false;
 }
 
-ibMetaDocument* ibMetaDataTree::GetDocument(ibValueMetaObject* obj) const
+CMetaDocument* IMetaDataTree::GetDocument(IValueMetaObject* obj) const
 {
 	for (auto& doc : docManager->GetDocumentsVector()) {
-		ibMetaDocument* metaDoc = wxDynamicCast(doc, ibMetaDocument);
+		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 		if (metaDoc != nullptr && obj == metaDoc->GetMetaObject()) {
 			return metaDoc;
 		}
 		else if (metaDoc != nullptr) {
 			for (auto& child_doc : metaDoc->GetChild()) {
-				ibMetaDocument* child_metaDoc = wxDynamicCast(child_doc, ibMetaDocument);
+				CMetaDocument* child_metaDoc = wxDynamicCast(child_doc, CMetaDocument);
 				if (child_metaDoc != nullptr && obj == child_metaDoc->GetMetaObject()) {
 					return child_metaDoc;
 				}
@@ -159,13 +159,13 @@ ibMetaDocument* ibMetaDataTree::GetDocument(ibValueMetaObject* obj) const
 	return nullptr;
 }
 
-void ibMetaDataTree::EditModule(const ibGuid& moduleName, int lineNumber, bool setRunLine)
+void IMetaDataTree::EditModule(const CGuid& moduleName, int lineNumber, bool setRunLine)
 {
-	const ibMetaData* metaData = GetMetaData();
+	const IMetaData* metaData = GetMetaData();
 	if (metaData == nullptr)
 		return;
 
-	ibValueMetaObject* metaObject = metaData->FindAnyObjectByFilter(moduleName, true);
+	IValueMetaObject* metaObject = metaData->FindAnyObjectByFilter(moduleName, true);
 
 	if (metaObject == nullptr || metaObject->IsDeleted())
 		return;
@@ -173,13 +173,13 @@ void ibMetaDataTree::EditModule(const ibGuid& moduleName, int lineNumber, bool s
 	if (m_bReadOnly)
 		return;
 
-	ibMetaDocument* foundedDoc = GetDocument(metaObject);
+	CMetaDocument* foundedDoc = GetDocument(metaObject);
 
 	//not found in the list of existing ones
 	if (foundedDoc == nullptr)
 		foundedDoc = docManager->OpenFormMDI(metaObject, m_docParent, m_bReadOnly ? wxDOC_READONLY : wxDOC_NEW);
 
-	ibValueModulibDocument* moduleDoc = static_cast<ibValueModulibDocument*>(foundedDoc);
+	IValueModuleDocument* moduleDoc = static_cast<IValueModuleDocument*>(foundedDoc);
 	if (moduleDoc != nullptr) moduleDoc->SetCurrentLine(lineNumber, setRunLine);
 }
 
@@ -187,35 +187,35 @@ void ibMetaDataTree::EditModule(const ibGuid& moduleName, int lineNumber, bool s
 //*								 metaData                               * 
 //***********************************************************************
 
-void ibMetadataTree::ActivateItem(const wxTreeItemId& item)
+void CMetadataTree::ActivateItem(const wxTreeItemId& item)
 {
-	ibValueMetaObject* currObject = GetMetaObject(item);
+	IValueMetaObject* currObject = GetMetaObject(item);
 	if (currObject == nullptr)
 		return;
 
 	OpenFormMDI(currObject);
 }
 
-ibValueMetaObject* ibMetadataTree::NewItem(const ibClassID& clsid, ibValueMetaObject* parent, bool runObject)
+IValueMetaObject* CMetadataTree::NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool runObject)
 {
 	return m_metaData->CreateMetaObject(clsid, parent, runObject);
 }
 
-ibValueMetaObject* ibMetadataTree::CreateItem(bool showValue)
+IValueMetaObject* CMetadataTree::CreateItem(bool showValue)
 {
 	const wxTreeItemId& item = GetSelectionIdentifier();
 	if (!item.IsOk()) return nullptr;
 
 	Freeze();
 
-	ibValueMetaObject* createdObject = NewItem(
+	IValueMetaObject* createdObject = NewItem(
 		GetClassIdentifier(),
 		GetMetaIdentifier()
 	);
 
 	if (createdObject != nullptr) {
 
-		ibPropertyObject* oldSelection = objectInspector->GetSelectedObject();
+		IPropertyObject* oldSelection = objectInspector->GetSelectedObject();
 		if (showValue) { OpenFormMDI(createdObject); }
 		UpdateToolbar(createdObject,
 			FillItem(createdObject, item, oldSelection == objectInspector->GetSelectedObject(), false));
@@ -227,7 +227,7 @@ ibValueMetaObject* ibMetadataTree::CreateItem(bool showValue)
 	return createdObject;
 }
 
-wxTreeItemId ibMetadataTree::FillItem(ibValueMetaObject* metaItem, const wxTreeItemId& item, bool select, bool scroll)
+wxTreeItemId CMetadataTree::FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select, bool scroll)
 {
 	m_metaTreeCtrl->Freeze();
 
@@ -253,7 +253,7 @@ wxTreeItemId ibMetadataTree::FillItem(ibValueMetaObject* metaItem, const wxTreeI
 
 	else if (metaItem->GetClassType() == g_metaTableCLSID) {
 
-		ibValueMetaObjectTableData* metaItemRecord = metaItem->ConvertToType<ibValueMetaObjectTableData>();
+		CValueMetaObjectTableData* metaItemRecord = metaItem->ConvertToType<CValueMetaObjectTableData>();
 		wxASSERT(metaItemRecord);
 
 		for (auto attribute : metaItemRecord->GetAttributeArrayObject()) {
@@ -265,7 +265,7 @@ wxTreeItemId ibMetadataTree::FillItem(ibValueMetaObject* metaItem, const wxTreeI
 		}
 	}
 	else if (metaItem->GetClassType() == g_metaInterfaceCLSID) {
-		ibValueMetaObjectInterface* metaItemRecord = metaItem->ConvertToType<ibValueMetaObjectInterface>();
+		CValueMetaObjectInterface* metaItemRecord = metaItem->ConvertToType<CValueMetaObjectInterface>();
 		for (auto object : metaItemRecord->GetInterfaceArrayObject()) {
 			if (object->IsDeleted())
 				continue;
@@ -287,19 +287,19 @@ wxTreeItemId ibMetadataTree::FillItem(ibValueMetaObject* metaItem, const wxTreeI
 	return createdItem;
 }
 
-void ibMetadataTree::EditItem()
+void CMetadataTree::EditItem()
 {
 	wxTreeItemId selection = m_metaTreeCtrl->GetSelection();
 	if (!selection.IsOk())
 		return;
-	ibValueMetaObject* m_currObject = GetMetaObject(selection);
+	IValueMetaObject* m_currObject = GetMetaObject(selection);
 	if (!m_currObject)
 		return;
 
 	OpenFormMDI(m_currObject);
 }
 
-void ibMetadataTree::RemoveItem()
+void CMetadataTree::RemoveItem()
 {
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 
@@ -314,7 +314,7 @@ void ibMetadataTree::RemoveItem()
 		hItem = m_metaTreeCtrl->GetNextChild(hItem, m_cookie);
 	}
 
-	ibValueMetaObject* metaObject = GetMetaObject(selection);
+	IValueMetaObject* metaObject = GetMetaObject(selection);
 	wxASSERT(metaObject);
 	EraseItem(selection);
 	m_metaData->RemoveMetaObject(metaObject);
@@ -323,7 +323,7 @@ void ibMetadataTree::RemoveItem()
 	m_metaTreeCtrl->Delete(selection);
 
 	for (auto& doc : docManager->GetDocumentsVector()) {
-		ibMetaDocument* metaDoc = wxDynamicCast(doc, ibMetaDocument);
+		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 		if (metaDoc != nullptr) metaDoc->UpdateAllViews();
 	}
 
@@ -333,36 +333,36 @@ void ibMetadataTree::RemoveItem()
 	}
 }
 
-void ibMetadataTree::EraseItem(const wxTreeItemId& item)
+void CMetadataTree::EraseItem(const wxTreeItemId& item)
 {
-	ibValueMetaObject* const metaObject = GetMetaObject(item);
+	IValueMetaObject* const metaObject = GetMetaObject(item);
 	for (auto& doc : docManager->GetDocumentsVector()) {
-		ibMetaDocument* metaDoc = wxDynamicCast(doc, ibMetaDocument);
+		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 		if (metaDoc != nullptr && metaObject != nullptr && metaObject == metaDoc->GetMetaObject()) {
 			metaDoc->DeleteAllViews();
 		}
 	}
 }
 
-void ibMetadataTree::SelectItem()
+void CMetadataTree::SelectItem()
 {
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
-	ibValueMetaObject* metaObject = GetMetaObject(selection);
+	IValueMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
 
-	if (appData->GetAppMode() != ibRunMode::eDESIGNER_MODE)
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
 	objectInspector->SelectObject(metaObject);
 }
 
-void ibMetadataTree::PropertyItem()
+void CMetadataTree::PropertyItem()
 {
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
-	ibValueMetaObject* metaObject = GetMetaObject(selection);
+	IValueMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
 
-	if (appData->GetAppMode() != ibRunMode::eDESIGNER_MODE)
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
 	if (!objectInspector->IsShownInspector())
@@ -373,36 +373,36 @@ void ibMetadataTree::PropertyItem()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibMetadataTree::Collapse()
+void CMetadataTree::Collapse()
 {
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
-	ibTreeData* data =
-		dynamic_cast<ibTreeData*>(m_metaTreeCtrl->GetItemData(selection));
+	CTreeData* data =
+		dynamic_cast<CTreeData*>(m_metaTreeCtrl->GetItemData(selection));
 	if (data != nullptr)
 		data->m_expanded = false;
 }
 
-void ibMetadataTree::Expand()
+void CMetadataTree::Expand()
 {
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
-	ibTreeData* data =
-		dynamic_cast<ibTreeData*>(m_metaTreeCtrl->GetItemData(selection));
+	CTreeData* data =
+		dynamic_cast<CTreeData*>(m_metaTreeCtrl->GetItemData(selection));
 	if (data != nullptr)
 		data->m_expanded = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibMetadataTree::UpItem()
+void CMetadataTree::UpItem()
 {
-	if (appData->GetAppMode() != ibRunMode::eDESIGNER_MODE)
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
 	m_metaTreeCtrl->Freeze();
 
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	const wxTreeItemId& nextItem = m_metaTreeCtrl->GetPrevSibling(selection);
-	ibValueMetaObject* metaObject = GetMetaObject(selection);
+	IValueMetaObject* metaObject = GetMetaObject(selection);
 	if (metaObject != nullptr && nextItem.IsOk()) {
 		const wxTreeItemId& parentItem = m_metaTreeCtrl->GetItemParent(nextItem);
 		wxTreeItemIdValue coockie; wxTreeItemId nextId = m_metaTreeCtrl->GetFirstChild(parentItem, coockie);
@@ -412,8 +412,8 @@ void ibMetadataTree::UpItem()
 				break;
 			nextId = m_metaTreeCtrl->GetNextChild(nextId, coockie); pos++;
 		} while (nextId.IsOk());
-		ibValueMetaObject* parentObject = metaObject->GetParent();
-		ibValueMetaObject* nextObject = GetMetaObject(nextItem);
+		IValueMetaObject* parentObject = metaObject->GetParent();
+		IValueMetaObject* nextObject = GetMetaObject(nextItem);
 		if (parentObject->ChangeChildPosition(metaObject, parentObject->GetChildPosition(nextObject))) {
 			wxTreeItemId newId = m_metaTreeCtrl->InsertItem(parentItem,
 				pos + 2,
@@ -424,7 +424,7 @@ void ibMetadataTree::UpItem()
 			);
 
 			auto tree = m_metaTreeCtrl;
-			std::function<void(ibMetaTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](ibMetaTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CMetaTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CMetaTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,
@@ -453,16 +453,16 @@ void ibMetadataTree::UpItem()
 	m_metaTreeCtrl->Thaw();
 }
 
-void ibMetadataTree::DownItem()
+void CMetadataTree::DownItem()
 {
-	if (appData->GetAppMode() != ibRunMode::eDESIGNER_MODE)
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
 	m_metaTreeCtrl->Freeze();
 
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	const wxTreeItemId& prevItem = m_metaTreeCtrl->GetNextSibling(selection);
-	ibValueMetaObject* metaObject = GetMetaObject(selection);
+	IValueMetaObject* metaObject = GetMetaObject(selection);
 	if (metaObject != nullptr && prevItem.IsOk()) {
 		const wxTreeItemId& parentItem = m_metaTreeCtrl->GetItemParent(prevItem);
 		wxTreeItemIdValue coockie; wxTreeItemId nextId = m_metaTreeCtrl->GetFirstChild(parentItem, coockie);
@@ -472,8 +472,8 @@ void ibMetadataTree::DownItem()
 				break;
 			nextId = m_metaTreeCtrl->GetNextChild(nextId, coockie); pos++;
 		} while (nextId.IsOk());
-		ibValueMetaObject* parentObject = metaObject->GetParent();
-		ibValueMetaObject* prevObject = GetMetaObject(prevItem);
+		IValueMetaObject* parentObject = metaObject->GetParent();
+		IValueMetaObject* prevObject = GetMetaObject(prevItem);
 		if (parentObject->ChangeChildPosition(metaObject, parentObject->GetChildPosition(prevObject))) {
 			wxTreeItemId newId = m_metaTreeCtrl->InsertItem(parentItem,
 				pos - 1,
@@ -484,7 +484,7 @@ void ibMetadataTree::DownItem()
 			);
 
 			auto tree = m_metaTreeCtrl;
-			std::function<void(ibMetaTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](ibMetaTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CMetaTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CMetaTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,
@@ -513,13 +513,13 @@ void ibMetadataTree::DownItem()
 	m_metaTreeCtrl->Thaw();
 }
 
-void ibMetadataTree::SortItem()
+void CMetadataTree::SortItem()
 {
-	if (appData->GetAppMode() != ibRunMode::eDESIGNER_MODE)
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 	m_metaTreeCtrl->Freeze();
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
-	ibValueMetaObject* prevObject = GetMetaObject(selection);
+	IValueMetaObject* prevObject = GetMetaObject(selection);
 	if (prevObject != nullptr && selection.IsOk()) {
 		const wxTreeItemId& parentItem =
 			m_metaTreeCtrl->GetItemParent(selection);
@@ -535,9 +535,9 @@ void ibMetadataTree::SortItem()
 #include "backend/metadataDataProcessor.h"
 #include "backend/metadataReport.h"
 
-void ibMetadataTree::InsertItem()
+void CMetadataTree::InsertItem()
 {
-	ibValueMetaObject* commonMetaObject = m_metaData->GetCommonMetaObject(); wxTreeItemId hSelItem = m_metaTreeCtrl->GetSelection();
+	IValueMetaObject* commonMetaObject = m_metaData->GetCommonMetaObject(); wxTreeItemId hSelItem = m_metaTreeCtrl->GetSelection();
 
 	if (hSelItem == m_treeDATAPROCESSORS) {
 
@@ -548,11 +548,11 @@ void ibMetadataTree::InsertItem()
 			return;     // the user changed idea...
 
 		//create main metaObject
-		ibMetaDataDataProcessor metadataDataProcessor(m_metaData);
+		CMetaDataDataProcessor metadataDataProcessor(m_metaData);
 
 		if (metadataDataProcessor.LoadFromFile(openFileDialog.GetPath())) {
 			m_metaTreeCtrl->Freeze();
-			ibValueMetaObjectDataProcessor* dataProcessor = metadataDataProcessor.GetDataProcessor();
+			CValueMetaObjectDataProcessor* dataProcessor = metadataDataProcessor.GetDataProcessor();
 			wxASSERT(dataProcessor);
 			const wxTreeItemId& createdItem = AppendItem(hSelItem, dataProcessor);
 			AddDataProcessorItem(dataProcessor, createdItem);
@@ -568,11 +568,11 @@ void ibMetadataTree::InsertItem()
 		if (openFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 
-		ibMetaDataReport metadataReport(m_metaData);
+		CMetaDataReport metadataReport(m_metaData);
 
 		if (metadataReport.LoadFromFile(openFileDialog.GetPath())) {
 			m_metaTreeCtrl->Freeze();
-			ibValueMetaObjectReport* report = metadataReport.GetReport();
+			CValueMetaObjectReport* report = metadataReport.GetReport();
 			wxASSERT(report);
 			const wxTreeItemId& createdItem = AppendItem(hSelItem, report);
 			AddReportItem(report, createdItem);
@@ -585,10 +585,10 @@ void ibMetadataTree::InsertItem()
 	m_metaData->Modify(true);
 }
 
-void ibMetadataTree::ReplaceItem()
+void CMetadataTree::ReplaceItem()
 {
 	wxTreeItemId hSelItem = m_metaTreeCtrl->GetSelection();
-	ibValueMetaObject* currentMetaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
+	IValueMetaObject* currentMetaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
 
 	if (currentMetaObject->GetClassType() == g_metaDataProcessorCLSID) {
 
@@ -598,13 +598,13 @@ void ibMetadataTree::ReplaceItem()
 		if (openFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 
-		ibMetaDataDataProcessor metadataDataProcessor(m_metaData);
+		CMetaDataDataProcessor metadataDataProcessor(m_metaData);
 		if (metadataDataProcessor.LoadFromFile(openFileDialog.GetPath())) {
 			m_metaTreeCtrl->Freeze();
-			ibValueMetaObjectDataProcessor* metaObject = metadataDataProcessor.GetDataProcessor();
+			CValueMetaObjectDataProcessor* metaObject = metadataDataProcessor.GetDataProcessor();
 			wxTreeItemData* itemData = m_metaTreeCtrl->GetItemData(hSelItem);
 			if (itemData != nullptr) {
-				ibTreeDataMetaItem* metaItem = dynamic_cast<ibTreeDataMetaItem*>(itemData);
+				CTreeDataMetaItem* metaItem = dynamic_cast<CTreeDataMetaItem*>(itemData);
 				if (metaItem != nullptr)
 					metaItem->m_metaObject = metaObject;
 			}
@@ -623,19 +623,19 @@ void ibMetadataTree::ReplaceItem()
 		if (openFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 
-		ibValueMetaObjectReport* newReport = dynamic_cast<ibValueMetaObjectReport*>(
+		CValueMetaObjectReport* newReport = dynamic_cast<CValueMetaObjectReport*>(
 			currentMetaObject
 			);
 
 		wxASSERT(newReport);
 
-		ibMetaDataReport metadataDataProcessor(m_metaData);
+		CMetaDataReport metadataDataProcessor(m_metaData);
 		if (metadataDataProcessor.LoadFromFile(openFileDialog.GetPath())) {
 			m_metaTreeCtrl->Freeze();
-			ibValueMetaObjectReport* metaObject = metadataDataProcessor.GetReport();
+			CValueMetaObjectReport* metaObject = metadataDataProcessor.GetReport();
 			wxTreeItemData* itemData = m_metaTreeCtrl->GetItemData(hSelItem);
 			if (itemData != nullptr) {
-				ibTreeDataMetaItem* metaItem = dynamic_cast<ibTreeDataMetaItem*>(itemData);
+				CTreeDataMetaItem* metaItem = dynamic_cast<CTreeDataMetaItem*>(itemData);
 				if (metaItem != nullptr)
 					metaItem->m_metaObject = metaObject;
 			}
@@ -650,9 +650,9 @@ void ibMetadataTree::ReplaceItem()
 	m_metaData->Modify(true);
 }
 
-void ibMetadataTree::SaveItem()
+void CMetadataTree::SaveItem()
 {
-	ibValueMetaObject* currentMetaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
+	IValueMetaObject* currentMetaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
 
 	if (currentMetaObject->GetClassType() == g_metaDataProcessorCLSID) {
 
@@ -664,11 +664,11 @@ void ibMetadataTree::SaveItem()
 		if (saveFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 
-		ibValueMetaObjectDataProcessor* newDataProcessor = dynamic_cast<ibValueMetaObjectDataProcessor*>(
+		CValueMetaObjectDataProcessor* newDataProcessor = dynamic_cast<CValueMetaObjectDataProcessor*>(
 			currentMetaObject
 			);
 		wxASSERT(newDataProcessor);
-		ibMetaDataDataProcessor metadataDataProcessor(m_metaData, newDataProcessor);
+		CMetaDataDataProcessor metadataDataProcessor(m_metaData, newDataProcessor);
 		metadataDataProcessor.SaveToFile(saveFileDialog.GetPath());
 	}
 	else {
@@ -680,21 +680,21 @@ void ibMetadataTree::SaveItem()
 		if (saveFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 
-		ibValueMetaObjectReport* newDataProcessor = dynamic_cast<ibValueMetaObjectReport*>(
+		CValueMetaObjectReport* newDataProcessor = dynamic_cast<CValueMetaObjectReport*>(
 			currentMetaObject
 			);
 		wxASSERT(newDataProcessor);
-		ibMetaDataReport metadataDataProcessor(m_metaData, newDataProcessor);
+		CMetaDataReport metadataDataProcessor(m_metaData, newDataProcessor);
 		metadataDataProcessor.SaveToFile(saveFileDialog.GetPath());
 	}
 }
 
-void ibMetadataTree::CommandItem(unsigned int id)
+void CMetadataTree::CommandItem(unsigned int id)
 {
-	if (appData->GetAppMode() != ibRunMode::eDESIGNER_MODE)
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
-	ibValueMetaObject* metaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
+	IValueMetaObject* metaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
 
 	if (!metaObject)
 		return;
@@ -702,7 +702,7 @@ void ibMetadataTree::CommandItem(unsigned int id)
 	metaObject->ProcessCommand(id);
 }
 
-void ibMetadataTree::PrepareReplaceMenu(wxMenu* defaultMenu)
+void CMetadataTree::PrepareReplaceMenu(wxMenu* defaultMenu)
 {
 	wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_REPLACE, _("Replace data processor, report..."));
 	menuItem->Enable(!m_bReadOnly);
@@ -712,9 +712,9 @@ void ibMetadataTree::PrepareReplaceMenu(wxMenu* defaultMenu)
 
 #include "frontend/artProvider/artProvider.h"
 
-void ibMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& item)
+void CMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& item)
 {
-	ibValueMetaObject* metaObject = GetMetaObject(item);
+	IValueMetaObject* metaObject = GetMetaObject(item);
 
 	if (metaObject
 		&& !metaObject->PrepareContextMenu(defaultMenu))
@@ -727,12 +727,12 @@ void ibMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId&
 		wxMenuItem* menuItem = nullptr;
 
 		menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
-		menuItem->SetBitmap(ibBackendPicture::GetPicture(g_picAddCLSID));
+		menuItem->SetBitmap(CBackendPicture::GetPicture(g_picAddCLSID));
 		menuItem->Enable(!m_bReadOnly);
 		menuItem = defaultMenu->Append(ID_METATREE_EDIT, _("Edit"));
-		menuItem->SetBitmap(ibBackendPicture::GetPicture(g_picEditCLSID));
+		menuItem->SetBitmap(CBackendPicture::GetPicture(g_picEditCLSID));
 		menuItem = defaultMenu->Append(ID_METATREE_DELETE, _("Remove"));
-		menuItem->SetBitmap(ibBackendPicture::GetPicture(g_picDeleteCLSID));
+		menuItem->SetBitmap(CBackendPicture::GetPicture(g_picDeleteCLSID));
 		menuItem->Enable(!m_bReadOnly);
 		defaultMenu->AppendSeparator();
 		menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
@@ -740,7 +740,7 @@ void ibMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId&
 	}
 	else if (!metaObject && item != m_treeCOMMON) {
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
-		menuItem->SetBitmap(ibBackendPicture::GetPicture(g_picAddCLSID));
+		menuItem->SetBitmap(CBackendPicture::GetPicture(g_picAddCLSID));
 		menuItem->Enable(!m_bReadOnly);
 
 		if (item == m_treeDATAPROCESSORS
@@ -757,7 +757,7 @@ void ibMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId&
 	}
 }
 
-void ibMetadataTree::UpdateToolbar(ibValueMetaObject* obj, const wxTreeItemId& item)
+void CMetadataTree::UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& item)
 {
 	m_metaTreeToolbar->EnableTool(ID_METATREE_NEW, item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly && item != m_treeCOMMON);
 	m_metaTreeToolbar->EnableTool(ID_METATREE_EDIT, obj != nullptr && item != m_metaTreeCtrl->GetRootItem());
@@ -770,7 +770,7 @@ void ibMetadataTree::UpdateToolbar(ibValueMetaObject* obj, const wxTreeItemId& i
 	m_metaTreeToolbar->Refresh();
 }
 
-bool ibMetadataTree::RenameMetaObject(ibValueMetaObject* metaObject, const wxString& newName)
+bool CMetadataTree::RenameMetaObject(IValueMetaObject* metaObject, const wxString& newName)
 {
 	wxTreeItemId curItem = m_metaTreeCtrl->GetSelection();
 
@@ -779,7 +779,7 @@ bool ibMetadataTree::RenameMetaObject(ibValueMetaObject* metaObject, const wxStr
 	}
 
 	if (m_metaData->RenameMetaObject(metaObject, newName)) {
-		ibMetaDocument* currDocument = GetDocument(metaObject);
+		CMetaDocument* currDocument = GetDocument(metaObject);
 		if (currDocument != nullptr) {
 			currDocument->SetTitle(metaObject->GetClassName() + wxT(": ") + newName);
 			currDocument->OnChangeFilename(true);
@@ -792,9 +792,9 @@ bool ibMetadataTree::RenameMetaObject(ibValueMetaObject* metaObject, const wxStr
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-void ibMetadataTree::AddInterfaceItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CMetadataTree::AddInterfaceItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	ibValueMetaObjectInterface* metaObjectValue = metaObject->ConvertToType<ibValueMetaObjectInterface>();
+	CValueMetaObjectInterface* metaObjectValue = metaObject->ConvertToType<CValueMetaObjectInterface>();
 	wxASSERT(metaObject);
 
 	for (auto commonInterface : metaObjectValue->GetInterfaceArrayObject()) {
@@ -813,9 +813,9 @@ void ibMetadataTree::AddInterfaceItem(ibValueMetaObject* metaObject, const wxTre
 	}
 }
 
-void ibMetadataTree::AddCatalogItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CMetadataTree::AddCatalogItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	ibValueMetaObjectRecordDataRef* metaObjectValue = metaObject->ConvertToType<ibValueMetaObjectRecordDataRef>();
+	IValueMetaObjectRecordDataRef* metaObjectValue = metaObject->ConvertToType<IValueMetaObjectRecordDataRef>();
 	wxASSERT(metaObject);
 
 	//Список аттрибутов 	
@@ -903,9 +903,9 @@ void ibMetadataTree::AddCatalogItem(ibValueMetaObject* metaObject, const wxTreeI
 	}
 }
 
-void ibMetadataTree::AddDocumentItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CMetadataTree::AddDocumentItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	ibValueMetaObjectRecordDataRef* metaObjectValue = metaObject->ConvertToType<ibValueMetaObjectRecordDataRef>();
+	IValueMetaObjectRecordDataRef* metaObjectValue = metaObject->ConvertToType<IValueMetaObjectRecordDataRef>();
 
 	wxASSERT(metaObject);
 
@@ -993,9 +993,9 @@ void ibMetadataTree::AddDocumentItem(ibValueMetaObject* metaObject, const wxTree
 	}
 }
 
-void ibMetadataTree::AddEnumerationItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CMetadataTree::AddEnumerationItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	ibValueMetaObjectRecordDataEnumRef* metaObjectValue = metaObject->ConvertToType <ibValueMetaObjectRecordDataEnumRef>();
+	IValueMetaObjectRecordDataEnumRef* metaObjectValue = metaObject->ConvertToType <IValueMetaObjectRecordDataEnumRef>();
 	wxASSERT(metaObjectValue);
 
 	//Enumerations
@@ -1048,9 +1048,9 @@ void ibMetadataTree::AddEnumerationItem(ibValueMetaObject* metaObject, const wxT
 	}
 }
 
-void ibMetadataTree::AddDataProcessorItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CMetadataTree::AddDataProcessorItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	ibValueMetaObjectRecordData* metaObjectValue = metaObject->ConvertToType <ibValueMetaObjectRecordData>();
+	IValueMetaObjectRecordData* metaObjectValue = metaObject->ConvertToType <IValueMetaObjectRecordData>();
 	wxASSERT(metaObjectValue);
 
 	//Список аттрибутов 	
@@ -1137,9 +1137,9 @@ void ibMetadataTree::AddDataProcessorItem(ibValueMetaObject* metaObject, const w
 	}
 }
 
-void ibMetadataTree::AddReportItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CMetadataTree::AddReportItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	ibValueMetaObjectRecordData* metaObjectValue = metaObject->ConvertToType<ibValueMetaObjectRecordData>();
+	IValueMetaObjectRecordData* metaObjectValue = metaObject->ConvertToType<IValueMetaObjectRecordData>();
 	wxASSERT(metaObjectValue);
 
 	//Список аттрибутов 	
@@ -1225,9 +1225,9 @@ void ibMetadataTree::AddReportItem(ibValueMetaObject* metaObject, const wxTreeIt
 	}
 }
 
-void ibMetadataTree::AddInformationRegisterItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CMetadataTree::AddInformationRegisterItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	ibValueMetaObjectRegisterData* metaObjectValue = metaObject->ConvertToType<ibValueMetaObjectRegisterData>();
+	IValueMetaObjectRegisterData* metaObjectValue = metaObject->ConvertToType<IValueMetaObjectRegisterData>();
 	wxASSERT(metaObjectValue);
 
 	//Список измерений 
@@ -1320,9 +1320,9 @@ void ibMetadataTree::AddInformationRegisterItem(ibValueMetaObject* metaObject, c
 	}
 }
 
-void ibMetadataTree::AddAccumulationRegisterItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CMetadataTree::AddAccumulationRegisterItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	ibValueMetaObjectRegisterData* metaObjectValue = metaObject->ConvertToType<ibValueMetaObjectRegisterData>();
+	IValueMetaObjectRegisterData* metaObjectValue = metaObject->ConvertToType<IValueMetaObjectRegisterData>();
 	wxASSERT(metaObjectValue);
 
 	//Список измерений 
@@ -1417,7 +1417,7 @@ void ibMetadataTree::AddAccumulationRegisterItem(ibValueMetaObject* metaObject, 
 
 #include "frontend/artProvider/artProvider.h"
 
-void ibMetadataTree::InitTree()
+void CMetadataTree::InitTree()
 {
 	wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 	wxASSERT(imageList);
@@ -1463,17 +1463,17 @@ void ibMetadataTree::InitTree()
 	m_metaTreeCtrl->SetItemBold(m_treeMETADATA);
 }
 
-void ibMetadataTree::ActivateTree()
+void CMetadataTree::ActivateTree()
 {
 	if (m_metaData != nullptr)
 		objectInspector->SelectObject(GetMetaObject(m_metaTreeCtrl->GetSelection()));
 }
 
-void ibMetadataTree::ClearTree()
+void CMetadataTree::ClearTree()
 {
 	for (auto& doc : docManager->GetDocumentsVector()) {
-		const ibMetaDocument* metaDoc = wxDynamicCast(doc, ibMetaDocument);
-		const ibValueMetaObject* metaObject = metaDoc->GetMetaObject();
+		const CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+		const IValueMetaObject* metaObject = metaDoc->GetMetaObject();
 		if (metaObject != nullptr && this == metaObject->GetMetaDataTree()) {
 			doc->DeleteAllViews();
 		}
@@ -1532,9 +1532,9 @@ void ibMetadataTree::ClearTree()
 	m_metaTreeCtrl->SetEvtHandlerEnabled(true);
 }
 
-void ibMetadataTree::FillData()
+void CMetadataTree::FillData()
 {
-	ibValueMetaObject* commonMetadata = m_metaData->GetCommonMetaObject();
+	IValueMetaObject* commonMetadata = m_metaData->GetCommonMetaObject();
 	wxASSERT(commonMetadata);
 
 	m_metaTreeCtrl->SetItemText(m_treeMETADATA, m_metaData->GetConfigName());
@@ -1856,11 +1856,11 @@ void ibMetadataTree::FillData()
 	UpdateToolbar(commonMetadata, m_treeMETADATA);
 }
 
-bool ibMetadataTree::Load(ibMetaDataConfigurationBase* metaData)
+bool CMetadataTree::Load(IMetaDataConfiguration* metaData)
 {
 	m_metaTreeCtrl->Freeze();
 	ClearTree();
-	m_metaData = metaData ? metaData : ibMetaDataConfiguration::Get();
+	m_metaData = metaData ? metaData : IMetaDataConfiguration::Get();
 	FillData(); //Fill all data from metaData
 	m_metaData->SetMetaTree(this);
 	m_metaTreeCtrl->SelectItem(m_treeMETADATA);
@@ -1870,7 +1870,7 @@ bool ibMetadataTree::Load(ibMetaDataConfigurationBase* metaData)
 	return true;
 }
 
-bool ibMetadataTree::Save()
+bool CMetadataTree::Save()
 {
 	wxASSERT(m_metaData);
 
@@ -1882,7 +1882,7 @@ bool ibMetadataTree::Save()
 
 /////////////////////////////////////////////////////////////
 
-void ibMetadataTree::Search(const wxString& strSearch)
+void CMetadataTree::Search(const wxString& strSearch)
 {
 	m_metaTreeCtrl->Freeze();
 

@@ -4,13 +4,13 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueTextBox, ibValueWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueTextBox, IValueWindow);
 
 //***********************************************************************************
 //*                                 Value Notebook                                  *
 //***********************************************************************************
 
-ibValueTextBox::ibValueTextBox() : ibValueWindow()
+CValueTextBox::CValueTextBox() : IValueWindow()
 {
 	//set default params
 	m_propertyMinSize->SetValue(wxSize(150, 50));
@@ -18,24 +18,24 @@ ibValueTextBox::ibValueTextBox() : ibValueWindow()
 
 #include "frontend/visualView/ctrl/form.h"
 
-wxObject* ibValueTextBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueTextBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ibTextEditor* textWindow = new ibTextEditor(nullptr, wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	CTextEditor* textWindow = new CTextEditor(nullptr, wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	return textWindow;
 }
 
-void ibValueTextBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueTextBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	ibTextEditor* textWindow = dynamic_cast<ibTextEditor*>(wxobject);
+	CTextEditor* textWindow = dynamic_cast<CTextEditor*>(wxobject);
 }
 
-void ibValueTextBox::OnSelected(wxObject* wxobject)
+void CValueTextBox::OnSelected(wxObject* wxobject)
 {
 }
 
-void ibValueTextBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueTextBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	ibTextEditor* textWindow = dynamic_cast<ibTextEditor*>(wxobject);
+	CTextEditor* textWindow = dynamic_cast<CTextEditor*>(wxobject);
 
 	if (textWindow) {
 	}
@@ -43,7 +43,7 @@ void ibValueTextBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(textWindow);
 }
 
-void ibValueTextBox::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueTextBox::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 {
 }
 
@@ -51,11 +51,11 @@ void ibValueTextBox::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 
 #include "frontend/win/editor/textEditor/textEditorPrintOut.h"
 
-wxPrintout* ibValueTextBox::CreatePrintout() const
+wxPrintout* CValueTextBox::CreatePrintout() const
 {
-	ibTextEditor* gridWindow = dynamic_cast<ibTextEditor*>(GetWxObject());
+	CTextEditor* gridWindow = dynamic_cast<CTextEditor*>(GetWxObject());
 	if (gridWindow != nullptr)
-		return new ibTextEditorPrintout(gridWindow);
+		return new CTextEditorPrintout(gridWindow);
 
 	return false;
 }
@@ -64,35 +64,35 @@ wxPrintout* ibValueTextBox::CreatePrintout() const
 //*                                   Data										   *
 //**********************************************************************************
 
-bool ibValueTextBox::LoadData(ibReaderMemory& reader)
+bool CValueTextBox::LoadData(CMemoryReader& reader)
 {
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueTextBox::SaveData(ibWriterMemory& writer)
+bool CValueTextBox::SaveData(CMemoryWriter& writer)
 {
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }
 
 //***********************************************************************************
 
-void ibValueTextBox::PrepareNames() const
+void CValueTextBox::PrepareNames() const
 {
-	ibValueFrame::PrepareNames();
+	IValueFrame::PrepareNames();
 }
 
-bool ibValueTextBox::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueTextBox::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
-	return ibValueFrame::SetPropVal(lPropNum, varPropVal);
+	return IValueFrame::SetPropVal(lPropNum, varPropVal);
 }
 
-bool ibValueTextBox::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueTextBox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
-	return ibValueFrame::GetPropVal(lPropNum, pvarPropVal);
+	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueTextBox, "Textbox", "Container", string_to_clsid("CT_TEXT"));
+CONTROL_TYPE_REGISTER(CValueTextBox, "Textbox", "Container", string_to_clsid("CT_TEXT"));

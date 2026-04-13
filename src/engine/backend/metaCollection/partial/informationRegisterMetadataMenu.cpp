@@ -6,7 +6,7 @@
 #include "informationRegister.h"
 #include "backend/metaData.h"
 
-bool ibValueMetaObjectInformationRegister::PrepareContextMenu(wxMenu* defaultMenu)
+bool CValueMetaObjectInformationRegister::PrepareContextMenu(wxMenu* defaultMenu)
 {
 	wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open record set module"));
 	menuItem->SetBitmap((*m_propertyModuleObject)->GetIcon());
@@ -16,9 +16,9 @@ bool ibValueMetaObjectInformationRegister::PrepareContextMenu(wxMenu* defaultMen
 	return false;
 }
 
-void ibValueMetaObjectInformationRegister::ProcessCommand(unsigned int id)
+void CValueMetaObjectInformationRegister::ProcessCommand(unsigned int id)
 {
-	ibBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
+	IBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_MODULE)

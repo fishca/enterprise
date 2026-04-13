@@ -3,7 +3,7 @@
 #include "frontend/win/theme/luna_tabart.h"
 #include "backend/debugger/debugServer.h"
 
-void ibDialogEnterpriseOption::FillOption()
+void CDialogEnterpriseOption::FillOption()
 {
 	m_enableDebugger->SetValue(debugServer->EnableDebugging());
 	m_enableDebugger->Enable(debugServer->AllowDebugging());
@@ -11,7 +11,7 @@ void ibDialogEnterpriseOption::FillOption()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-ibDialogEnterpriseOption::ibDialogEnterpriseOption(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
+CDialogEnterpriseOption::CDialogEnterpriseOption(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -30,7 +30,7 @@ ibDialogEnterpriseOption::ibDialogEnterpriseOption(wxWindow* parent, wxWindowID 
 	m_mainNotebook->AddPage(m_systemPanel, _("System"), true, wxNullBitmap);
 	mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, 5);
 	m_enableDebugger = new wxCheckBox(m_systemPanel, wxID_ANY, _("Debugging in the current session"), wxDefaultPosition, wxDefaultSize, 0);
-	m_enableDebugger->Bind(wxEVT_CHECKBOX, &ibDialogEnterpriseOption::OnEnableDebugger, this);
+	m_enableDebugger->Bind(wxEVT_CHECKBOX, &CDialogEnterpriseOption::OnEnableDebugger, this);
 
 	m_mainNotebook->SetSelection(2);
 
@@ -41,7 +41,7 @@ ibDialogEnterpriseOption::ibDialogEnterpriseOption(wxWindow* parent, wxWindowID 
 	FillOption();
 }
 
-void ibDialogEnterpriseOption::OnEnableDebugger(wxCommandEvent& event)
+void CDialogEnterpriseOption::OnEnableDebugger(wxCommandEvent& event)
 {
 	if (m_enableDebugger->GetValue())
 		debugServer->CreateServer();

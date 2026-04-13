@@ -1,4 +1,4 @@
-#ifndef __ODBC_DATABASE_LAYER_H__ibDatabaseLayerODBC
+#ifndef __ODBC_DATABASE_LAYER_H__
 #define __ODBC_DATABASE_LAYER_H__
 
 // For compilers that support precompilation, includes "wx.h".
@@ -17,20 +17,20 @@
 #include "backend/databaseLayer/databaseLayerDef.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-class ibInterfaceODBC;
+class COdbcInterface;
 
 #define ERR_BUFFER_LEN 1024
 #define ERR_STATE_LEN 10
 
-class BACKEND_API ibDatabaseLayerODBC : public ibDatabaseLayer
+class BACKEND_API COdbcDatabaseLayer : public IDatabaseLayer
 {
 public:
 	// ctor()
-	ibDatabaseLayerODBC();
-	ibDatabaseLayerODBC(const ibDatabaseLayerODBC& src);
+	COdbcDatabaseLayer();
+	COdbcDatabaseLayer(const COdbcDatabaseLayer& src);
 
 	// dtor()
-	virtual ~ibDatabaseLayerODBC();
+	virtual ~COdbcDatabaseLayer();
 
 	// open database
 	virtual bool Open();
@@ -47,7 +47,7 @@ public:
 	virtual bool IsOpen();
 
 	/// clone database  
-	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerODBC(*this); }
+	virtual IDatabaseLayer* Clone() { return new COdbcDatabaseLayer(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();
@@ -73,14 +73,14 @@ protected:
 
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
-	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
+	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
 
-	// ibPreparedStatement support
-	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+	// IPreparedStatement support
+	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
 
 private:
 
-	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bParseQuery);
+	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bParseQuery);
 
 	//SQLHENV m_sqlEnvHandle;
 	void* m_sqlEnvHandle;
@@ -99,7 +99,7 @@ private:
 #endif
 
 	bool m_bIsConnected;
-	ibInterfaceODBC* m_pInterface;
+	COdbcInterface* m_pInterface;
 
 public:
 

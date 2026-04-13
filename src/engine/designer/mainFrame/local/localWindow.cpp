@@ -6,15 +6,15 @@
 #include "localWindow.h"
 #include "backend/debugger/debugClient.h"
 
-wxBEGIN_EVENT_TABLE(ibLocalWindow, wxPanel)
-EVT_SIZE(ibLocalWindow::OnSize)
+wxBEGIN_EVENT_TABLE(CLocalWindow, wxPanel)
+EVT_SIZE(CLocalWindow::OnSize)
 wxEND_EVENT_TABLE()
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-ibLocalWindow::ibLocalWindow(wxWindow* parent, int id) :
+CLocalWindow::CLocalWindow(wxWindow* parent, int id) :
 	wxPanel(parent, id), m_treeCtrl(new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT))
 {
 	m_columnSize[0] = 0.09f;
@@ -25,12 +25,12 @@ ibLocalWindow::ibLocalWindow(wxWindow* parent, int id) :
 	ClearAndCreate();
 	GetSizer()->Add(m_treeCtrl, 1, wxEXPAND);
 
-	m_treeCtrl->Bind(wxEVT_LIST_ITEM_ACTIVATED, &ibLocalWindow::OnItemSelected, this);
+	m_treeCtrl->Bind(wxEVT_LIST_ITEM_ACTIVATED, &CLocalWindow::OnItemSelected, this);
 }
 
 static bool s_initialize = false;
 
-void ibLocalWindow::SetLocalVariable(const ibLocalWindowData& locData)
+void CLocalWindow::SetLocalVariable(const CLocalWindowData& locData)
 {
 	ClearAndCreate();
 
@@ -49,7 +49,7 @@ void ibLocalWindow::SetLocalVariable(const ibLocalWindowData& locData)
 	}
 }
 
-void ibLocalWindow::UpdateColumnSizes()
+void CLocalWindow::UpdateColumnSizes()
 {
 	// We subtract two off of the size to avoid generating scroll bars on the window.
 	int totalSize = GetClientSize().x - 2;
@@ -62,7 +62,7 @@ void ibLocalWindow::UpdateColumnSizes()
 	}
 }
 
-void ibLocalWindow::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) const
+void CLocalWindow::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) const
 {
 	int fixedSize = 0;
 
@@ -88,7 +88,7 @@ void ibLocalWindow::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) 
 	columnSize[s_numColumns - 1] = totalSize;
 }
 
-void ibLocalWindow::OnItemSelected(wxListEvent& event)
+void CLocalWindow::OnItemSelected(wxListEvent& event)
 {
 	if (s_initialize)
 		return;
@@ -96,13 +96,13 @@ void ibLocalWindow::OnItemSelected(wxListEvent& event)
 	event.Skip();
 }
 
-void ibLocalWindow::OnSize(wxSizeEvent& event)
+void CLocalWindow::OnSize(wxSizeEvent& event)
 {
 	UpdateColumnSizes();
 	event.Skip();
 }
 
-void ibLocalWindow::ClearAndCreate()
+void CLocalWindow::ClearAndCreate()
 {
 	m_treeCtrl->ClearAll();
 	m_treeCtrl->AppendColumn(_("Name"), wxLIST_FORMAT_LEFT, 100);
@@ -114,14 +114,14 @@ void ibLocalWindow::ClearAndCreate()
 
 #include "mainFrame/mainFrameDesigner.h"
 
-ibLocalWindow* ibLocalWindow::GetLocalWindow()
+CLocalWindow* CLocalWindow::GetLocalWindow()
 {
-	if (ibFrontendDocMDIFrameDesigner::GetFrame())
+	if (CFrontendDocMDIFrameDesigner::GetFrame())
 		return mainFrame->GetLocalWindow();
 	return nullptr; 
 }
 
-ibLocalWindow::~ibLocalWindow()
+CLocalWindow::~CLocalWindow()
 {
-	m_treeCtrl->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &ibLocalWindow::OnItemSelected, this);
+	m_treeCtrl->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &CLocalWindow::OnItemSelected, this);
 }

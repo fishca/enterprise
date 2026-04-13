@@ -8,9 +8,9 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectInformationRegister, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectInformationRegister, CValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectInformationRegister::GetModuleManager() const {
+CValueMetaObjectCommonModule* CValueManagerDataObjectInformationRegister::GetModuleManager() const {
 	return m_metaObject->GetModuleManager();
 }
 
@@ -30,9 +30,9 @@ enum {
 	eGetTemplate,
 };
 
-void ibValueManagerDataObjectInformationRegister::PrepareNames() const
+void CValueManagerDataObjectInformationRegister::PrepareNames() const
 {
-	ibValueManagerDataObject::PrepareNames();
+	IValueManagerDataObject::PrepareNames();
 
 	m_methodHelper->AppendFunc(wxT("CreateRecordSet"), wxT("CreateRecordSet()"));
 	m_methodHelper->AppendFunc(wxT("CreateRecordManager"), wxT("CreateRecordManager()"));
@@ -51,7 +51,7 @@ void ibValueManagerDataObjectInformationRegister::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool ibValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -62,59 +62,59 @@ bool ibValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodN
 		pvarRetValue = m_metaObject->CreateRecordManagerObjectValue();
 		return true;
 	case eCreateRecordKey:
-		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueRecordKeyObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueRecordKeyObject>(m_metaObject);
 		return true;
 	case eGet:
 		pvarRetValue = lSizeArray > 1 ?
-			ibValueManagerDataObjectInformationRegister::Get(*paParams[0], *paParams[1])
+			CValueManagerDataObjectInformationRegister::Get(*paParams[0], *paParams[1])
 			: lSizeArray > 0 ?
-			ibValueManagerDataObjectInformationRegister::Get(*paParams[0]) :
-			ibValueManagerDataObjectInformationRegister::Get();
+			CValueManagerDataObjectInformationRegister::Get(*paParams[0]) :
+			CValueManagerDataObjectInformationRegister::Get();
 		return true;
 	case eGetFirst:
 		pvarRetValue = lSizeArray > 1 ?
-			ibValueManagerDataObjectInformationRegister::GetFirst(*paParams[0], *paParams[1])
-			: ibValueManagerDataObjectInformationRegister::GetFirst(*paParams[0]);
+			CValueManagerDataObjectInformationRegister::GetFirst(*paParams[0], *paParams[1])
+			: CValueManagerDataObjectInformationRegister::GetFirst(*paParams[0]);
 		return true;
 	case eGetLast:
 		pvarRetValue = lSizeArray > 1 ?
-			ibValueManagerDataObjectInformationRegister::GetLast(*paParams[0], *paParams[1])
-			: ibValueManagerDataObjectInformationRegister::GetLast(*paParams[0]);
+			CValueManagerDataObjectInformationRegister::GetLast(*paParams[0], *paParams[1])
+			: CValueManagerDataObjectInformationRegister::GetLast(*paParams[0]);
 		return true;
 	case eSliceFirst:
 		pvarRetValue = lSizeArray > 1 ?
-			ibValueManagerDataObjectInformationRegister::SliceFirst(*paParams[0], *paParams[1])
-			: ibValueManagerDataObjectInformationRegister::SliceFirst(*paParams[0]);
+			CValueManagerDataObjectInformationRegister::SliceFirst(*paParams[0], *paParams[1])
+			: CValueManagerDataObjectInformationRegister::SliceFirst(*paParams[0]);
 	case eSliceLast:
 		pvarRetValue = lSizeArray > 1 ?
-			ibValueManagerDataObjectInformationRegister::SliceLast(*paParams[0], *paParams[1])
-			: ibValueManagerDataObjectInformationRegister::SliceLast(*paParams[0]);
+			CValueManagerDataObjectInformationRegister::SliceLast(*paParams[0], *paParams[1])
+			: CValueManagerDataObjectInformationRegister::SliceLast(*paParams[0]);
 		return true;
 	case eSelect:
-		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueSelectorRegisterDataObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSelectorRegisterDataObject>(m_metaObject);
 		return true;
 	case eGetForm:
 	{
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetGenericForm(paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetRecordForm:
 	{
-		ibValueRecordKeyObject* keyVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueRecordKeyObject>() : nullptr;
+		CValueRecordKeyObject* keyVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueRecordKeyObject>() : nullptr;
 		pvarRetValue = m_metaObject->GetRecordForm(paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
 			keyVal ? (keyVal->GetUniqueKey()) : nullptr);
 		return true;
 	}
 	case eGetListForm:
 	{
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetListForm(paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetTemplate:
@@ -122,5 +122,5 @@ bool ibValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodN
 		return true;
 	}
 
-	return ibValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+	return IValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }

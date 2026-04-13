@@ -8,100 +8,100 @@
 //*                                     Defines                                              *
 //********************************************************************************************
 
-class BACKEND_API ibMetaData;
+class BACKEND_API IMetaData;
 
 //********************************************************************************************
 
-class BACKEND_API ibValueMetaObjectRecordDataRef;
-class BACKEND_API ibValueRecordDataObjectRef;
+class BACKEND_API IValueMetaObjectRecordDataRef;
+class BACKEND_API IValueRecordDataObjectRef;
 
 //********************************************************************************************
 
-class BACKEND_API ibValueReferenceDataObject : public ibValue,
-	public ibValueDataObject {
-	wxDECLARE_DYNAMIC_CLASS(ibValueReferenceDataObject);
+class BACKEND_API CValueReferenceDataObject : public CValue,
+	public IValueDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueReferenceDataObject);
 private:
 	enum helperAlias {
 		eProperty,
 		eTable
 	};
 private:
-	ibValueReferenceDataObject() : ibValue(ibValueTypes::TYPE_VALUE, true), m_initializedRef(false) {}
-	ibValueReferenceDataObject(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid = wxNullGuid);
+	CValueReferenceDataObject() : CValue(eValueTypes::TYPE_VALUE, true), m_initializedRef(false) {}
+	CValueReferenceDataObject(IValueMetaObjectRecordDataRef* metaObject, const CGuid& objGuid = wxNullGuid);
 public:
 
-	ibReference* GetReferenceData() const {
+	reference_t* GetReferenceData() const {
 		return m_reference_impl;
 	}
 
 	void PrepareRef(bool createData = true);
 
-	virtual ~ibValueReferenceDataObject();
+	virtual ~CValueReferenceDataObject();
 
-	static ibValueReferenceDataObject* Create(ibMetaData* metaData, const ibMetaID& id, const ibGuid& objGuid = wxNullGuid);
-	static ibValueReferenceDataObject* Create(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid = wxNullGuid);
+	static CValueReferenceDataObject* Create(IMetaData* metaData, const meta_identifier_t& id, const CGuid& objGuid = wxNullGuid);
+	static CValueReferenceDataObject* Create(IValueMetaObjectRecordDataRef* metaObject, const CGuid& objGuid = wxNullGuid);
 
-	static ibValueReferenceDataObject* Create(ibMetaData* metaData, void* ptr);
-	static ibValueReferenceDataObject* CreateFromPtr(ibMetaData* metaData, void* ptr);
-	static ibValueReferenceDataObject* CreateFromResultSet(class ibDatabaseResultSet *rs, ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& refGuid);
+	static CValueReferenceDataObject* Create(IMetaData* metaData, void* ptr);
+	static CValueReferenceDataObject* CreateFromPtr(IMetaData* metaData, void* ptr);
+	static CValueReferenceDataObject* CreateFromResultSet(class IDatabaseResultSet *rs, IValueMetaObjectRecordDataRef* metaObject, const CGuid& refGuid);
 
 	//operator '>'
-	virtual bool CompareValueGT(const ibValue& cParam) const {
-		ibValueReferenceDataObject* rhs = dynamic_cast<ibValueReferenceDataObject*>(cParam.GetRef());
+	virtual bool CompareValueGT(const CValue& cParam) const {
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid > rhs->m_objGuid;
 		return false;
 	}
 	
 	//operator '>='
-	virtual bool CompareValueGE(const ibValue& cParam) const {
-		ibValueReferenceDataObject* rhs = dynamic_cast<ibValueReferenceDataObject*>(cParam.GetRef());
+	virtual bool CompareValueGE(const CValue& cParam) const {
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid >= rhs->m_objGuid;
 		return false;
 	}
 
 	//operator '<'
-	virtual bool CompareValueLS(const ibValue& cParam) const {
-		ibValueReferenceDataObject* rhs = dynamic_cast<ibValueReferenceDataObject*>(cParam.GetRef());
+	virtual bool CompareValueLS(const CValue& cParam) const {
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid < rhs->m_objGuid;
 		return false;
 	}
 
 	//operator '<='
-	virtual bool CompareValueLE(const ibValue& cParam) const {
-		ibValueReferenceDataObject* rhs = dynamic_cast<ibValueReferenceDataObject*>(cParam.GetRef());
+	virtual bool CompareValueLE(const CValue& cParam) const {
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid <= rhs->m_objGuid;
 		return false;
 	}
 
 	//operator '=='
-	virtual bool CompareValueEQ(const ibValue& cParam) const {
-		ibValueReferenceDataObject* rhs = dynamic_cast<ibValueReferenceDataObject*>(cParam.GetRef());
+	virtual bool CompareValueEQ(const CValue& cParam) const {
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid == rhs->m_objGuid;
 		return false;
 	}
 
 	//operator '!='
-	virtual bool CompareValueNE(const ibValue& cParam) const {
-		ibValueReferenceDataObject* rhs = dynamic_cast<ibValueReferenceDataObject*>(cParam.GetRef());
+	virtual bool CompareValueNE(const CValue& cParam) const {
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject != rhs->m_metaObject || m_objGuid != rhs->m_objGuid;
 		return true;
 	}
 
-	virtual bool FindValue(const wxString& findData, std::vector<ibValue>& listValue) const;
+	virtual bool FindValue(const wxString& findData, std::vector<CValue>& listValue) const;
 
 	//support source set/get data 
-	virtual bool SetValueByMetaID(const ibMetaID& id, const ibValue& varMetaVal);
-	virtual bool GetValueByMetaID(const ibMetaID& id, ibValue& pvarMetaVal) const;
+	virtual bool SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal);
+	virtual bool GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const;
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRecordData* GetMetaObject() const {
-		return (ibValueMetaObjectRecordData *)m_metaObject;
+	virtual IValueMetaObjectRecordData* GetMetaObject() const {
+		return (IValueMetaObjectRecordData *)m_metaObject;
 	}
 
 	//support show 
@@ -120,17 +120,17 @@ public:
 		return IsEmpty();
 	}
 
-	ibValueMetaObjectRecordDataRef* GetMetaObjectRef() const {
+	IValueMetaObjectRecordDataRef* GetMetaObjectRef() const {
 		return m_metaObject;
 	}
 
-	ibValueRecordDataObjectRef* GetObject() const;
+	IValueRecordDataObjectRef* GetObject() const;
 
 	//****************************************************************************
 	//*                              Support methods                             *
 	//****************************************************************************
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
@@ -139,22 +139,22 @@ public:
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);       
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);       
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   
 
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
 	//****************************************************************************
 	//*                              Override type                               *
 	//****************************************************************************
 
 	//Get ref class 
-	virtual ibClassID GetClassType() const;
+	virtual class_identifier_t GetClassType() const;
 
 	virtual wxString GetString() const;
 	virtual wxString GetClassName() const;
 
-	friend class ibValue;
+	friend class CValue;
 
 private:
 
@@ -164,9 +164,9 @@ protected:
 
 	bool m_initializedRef;
 
-	ibValueMethodHelper* m_methodHelper;
-	ibValueMetaObjectRecordDataRef* m_metaObject;
-	ibReference* m_reference_impl;
+	CMethodHelper* m_methodHelper;
+	IValueMetaObjectRecordDataRef* m_metaObject;
+	reference_t* m_reference_impl;
 
 	bool m_foundedRef;
 };

@@ -17,16 +17,16 @@
 #include "backend/databaseLayer/databaseResultSet.h"
 #include "firebirdInterface.h"
 
-class ibDatabaseResultSetFirebird : public ibDatabaseResultSet
+class CFirebirdResultSet : public IDatabaseResultSet
 {
 public:
 	// ctor
-	ibDatabaseResultSetFirebird(ibInterfaceFirebird* pInterface);
-	ibDatabaseResultSetFirebird(ibInterfaceFirebird* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, isc_stmt_handle pStatement, XSQLDA* pFields,
+	CFirebirdResultSet(CFirebirdInterface* pInterface);
+	CFirebirdResultSet(CFirebirdInterface* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, isc_stmt_handle pStatement, XSQLDA* pFields,
 		bool bManageStmt = false, bool bManageTrans = false);
 
 	// dtor
-	virtual ~ibDatabaseResultSetFirebird();
+	virtual ~CFirebirdResultSet();
 
 	virtual bool Next();
 	virtual void Close();
@@ -41,11 +41,11 @@ public:
 	virtual wxDateTime GetResultDate(int nField);
 	virtual void* GetResultBlob(int nField, wxMemoryBuffer& buffer);
 	virtual double GetResultDouble(int nField);
-	virtual ibNumber GetResultNumber(int nField);
+	virtual number_t GetResultNumber(int nField);
 	virtual bool IsFieldNull(int nField);
 
 	// get MetaData
-	virtual ibResultSetMetaData* GetMetaData();
+	virtual IResultSetMetaData* GetMetaData();
 
 private:
 	bool IsNull(XSQLVAR* pVar);
@@ -67,7 +67,7 @@ private:
 	XSQLDA* m_pFields;
 
 	ISC_STATUS_ARRAY m_Status;
-	ibInterfaceFirebird* m_pInterface;
+	CFirebirdInterface* m_pInterface;
 
 	bool m_bManageStatement;
 	bool m_bManageTransaction;

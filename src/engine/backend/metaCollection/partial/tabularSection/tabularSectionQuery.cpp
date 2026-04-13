@@ -12,29 +12,29 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool createData)
+bool CValueTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createData)
 {
 	if (m_objectValue->IsNewObject() && !srcGuid.isValid()) {
 		m_readAfter = true;
 		return false;
 	}
 
-	ibValueModelTableBase::Clear();
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	IValueTable::Clear();
+	IValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	const wxString& sqlQuery = "SELECT * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "'";
-	ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults(sqlQuery);
+	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(sqlQuery);
 	if (resultSet == nullptr)
 		return false;
 	while (resultSet->Next()) {
-		ibValueTableRow* rowData = new ibValueTableRow();
+		wxValueTableRow* rowData = new wxValueTableRow();
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (m_metaTable->IsNumberLine(object->GetMetaID()))
 				continue;
-			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet, createData);
+			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet, createData);
 		}
-		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 
 	}
 
@@ -48,7 +48,7 @@ bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool cr
 
 #include "backend/system/systemManager.h"
 
-bool ibValueTabularSectionDataObjectRef::SaveData()
+bool CValueTabularSectionDataObjectRef::SaveData()
 {
 	if (m_readOnly)
 		return true;
@@ -59,12 +59,12 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	for (long row = 0; row < GetRowCount(); row++) {
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (object->FillCheck()) {
-				ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(row));
+				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
 				wxASSERT(node);
 				if (node->IsEmptyValue(object->GetMetaID())) {
 					wxString fillError =
 						wxString::Format(_("The %s is required on line %i of the %s list"), object->GetSynonym(), currLine, m_metaTable->GetSynonym());
-					ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
+					CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
 					fillCheck = false;
 				}
 			}
@@ -75,35 +75,35 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	if (!fillCheck)
 		return false;
 
-	if (!ibValueTabularSectionDataObjectRef::DeleteData())
+	if (!CValueTabularSectionDataObjectRef::DeleteData())
 		return false;
 
-	ibValueMetaObjectAttributePredefined* numLine = m_metaTable->GetNumberLine();
+	CValueMetaObjectAttributePredefined* numLine = m_metaTable->GetNumberLine();
 	wxASSERT(numLine);
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	IValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
-	ibReference* reference_impl = new ibReference(metaObject->GetMetaID(), m_objectValue->GetGuid());
+	reference_t* reference_impl = new reference_t(metaObject->GetMetaID(), m_objectValue->GetGuid());
 
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	wxString queryText = "INSERT INTO " + tableName + " (";
 	queryText += "uuid";
 	for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
-		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(object);
 	}
 	queryText += ") VALUES (?";
 	for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
-		unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
+		unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += ", ?";
 		}
 	}
 	queryText += ");";
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
 
-	ibNumber numberLine = 1;
+	number_t numberLine = 1;
 	for (long row = 0; row < GetRowCount(); row++) {
 		if (hasError)
 			break;
@@ -111,9 +111,9 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 		statement->SetParamString(1, m_objectValue->GetGuid());
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
-				ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(row));
+				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
 				wxASSERT(node);
-				ibValueMetaObjectAttributeBase::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					object,
 					node->GetTableValue(object->GetMetaID()),
 					statement,
@@ -121,7 +121,7 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 				);
 			}
 			else {
-				ibValueMetaObjectAttributeBase::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					object,
 					numberLine++,
 					statement,
@@ -139,12 +139,12 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	return !hasError;
 }
 
-bool ibValueTabularSectionDataObjectRef::DeleteData()
+bool CValueTabularSectionDataObjectRef::DeleteData()
 {
 	if (m_readOnly || m_objectValue->IsNewObject())
 		return true;
 
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	IValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	db_query->RunQuery("DELETE FROM " + tableName + " WHERE uuid = '" + m_objectValue->GetGuid() + "';");

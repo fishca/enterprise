@@ -1,26 +1,26 @@
 
 #include "sizer.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueWrapSizer, ibValueSizer)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueWrapSizer, IValueSizer)
 
 //****************************************************************************
 //*                             WrapSizer                                    *
 //****************************************************************************
 
-ibValueWrapSizer::ibValueWrapSizer() : ibValueSizer()
+CValueWrapSizer::CValueWrapSizer() : IValueSizer()
 {
 }
 
-wxObject* ibValueWrapSizer::Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/)
+wxObject* CValueWrapSizer::Create(wxWindow* /*parent*/, IVisualHost* /*visualHost*/)
 {
 	return new wxWrapSizer(m_propertyOrient->GetValueAsInteger(), wxWRAPSIZER_DEFAULT_FLAGS);
 }
 
-void ibValueWrapSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost *visualHost, bool first—reated)
+void CValueWrapSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost *visualHost, bool first—reated)
 {
 }
 
-void ibValueWrapSizer::Update(wxObject* wxobject, ibVisualHost *visualHost)
+void CValueWrapSizer::Update(wxObject* wxobject, IVisualHost *visualHost)
 {
 	wxWrapSizer *wrapsizer = dynamic_cast<wxWrapSizer *>(wxobject);
 
@@ -32,7 +32,7 @@ void ibValueWrapSizer::Update(wxObject* wxobject, ibVisualHost *visualHost)
 	UpdateSizer(wrapsizer);
 }
 
-void ibValueWrapSizer::Cleanup(wxObject* obj, ibVisualHost *visualHost)
+void CValueWrapSizer::Cleanup(wxObject* obj, IVisualHost *visualHost)
 {
 }
 
@@ -40,14 +40,14 @@ void ibValueWrapSizer::Cleanup(wxObject* obj, ibVisualHost *visualHost)
 //*                            Data												   *
 //**********************************************************************************
 
-bool ibValueWrapSizer::LoadData(ibReaderMemory &reader)
+bool CValueWrapSizer::LoadData(CMemoryReader &reader)
 {
 	m_propertyOrient->SetValue(reader.r_u16());
-	return ibValueSizer::LoadData(reader);
+	return IValueSizer::LoadData(reader);
 }
 
-bool ibValueWrapSizer::SaveData(ibWriterMemory &writer)
+bool CValueWrapSizer::SaveData(CMemoryWriter &writer)
 {
 	writer.w_u16(m_propertyOrient->GetValueAsInteger());
-	return ibValueSizer::SaveData(writer);
+	return IValueSizer::SaveData(writer);
 }

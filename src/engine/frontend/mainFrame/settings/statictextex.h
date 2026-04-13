@@ -6,7 +6,7 @@
 /**
  * Extended static text control. The text is centered vertically in this control.
  */
-class ibStaticTextEx : public wxPanel
+class CStaticTextEx : public wxPanel
 {
 
 public:
@@ -14,7 +14,7 @@ public:
     /**
      * Constructor.
      */
-    ibStaticTextEx(wxWindow* parent, wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition,
+    CStaticTextEx(wxWindow* parent, wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = "staticText");
 
     /**

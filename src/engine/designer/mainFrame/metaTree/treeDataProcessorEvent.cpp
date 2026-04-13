@@ -5,7 +5,7 @@
 
 #include "treeDataProcessor.h"
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnLeftDClick(wxMouseEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftDClick(wxMouseEvent& event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
@@ -16,19 +16,19 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnLeftDClick(wxMouseEvent& ev
 
 #include "frontend/mainFrame/mainFrame.h"
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnLeftUp(wxMouseEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftUp(wxMouseEvent& event)
 {
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnLeftDown(wxMouseEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftDown(wxMouseEvent& event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk() && curItem == GetSelection()) m_ownerTree->SelectItem();
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightUp(wxMouseEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightUp(wxMouseEvent& event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
@@ -42,7 +42,7 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightUp(wxMouseEvent& event
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
-			GetEventHandler()->Bind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 		PopupMenu(defaultMenu, event.GetPosition());
 		for (auto def_menu : defaultMenu->GetMenuItems()) {
@@ -52,7 +52,7 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightUp(wxMouseEvent& event
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
-			GetEventHandler()->Unbind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 		delete defaultMenu;
 	}
@@ -61,7 +61,7 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightUp(wxMouseEvent& event
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightDown(wxMouseEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightDown(wxMouseEvent& event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
@@ -75,7 +75,7 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightDown(wxMouseEvent& eve
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
-			GetEventHandler()->Bind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 		PopupMenu(defaultMenu, event.GetPosition());
 		for (auto def_menu : defaultMenu->GetMenuItems()) {
@@ -85,7 +85,7 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightDown(wxMouseEvent& eve
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
-			GetEventHandler()->Unbind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 		delete defaultMenu;
 	}
@@ -94,69 +94,69 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightDown(wxMouseEvent& eve
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightDClick(wxMouseEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightDClick(wxMouseEvent& event)
 {
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnKeyUp(wxKeyEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnKeyUp(wxKeyEvent& event)
 {
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnKeyDown(wxKeyEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnKeyDown(wxKeyEvent& event)
 {
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnMouseMove(wxMouseEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnMouseMove(wxMouseEvent& event)
 {
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCreateItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem(wxCommandEvent& event)
 {
 	m_ownerTree->CreateItem(); event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnEditItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem(wxCommandEvent& event)
 {
 	m_ownerTree->EditItem(); event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRemoveItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem(wxCommandEvent& event)
 {
 	m_ownerTree->RemoveItem(); event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnPropertyItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnPropertyItem(wxCommandEvent& event)
 {
 	m_ownerTree->PropertyItem(); event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnUpItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnUpItem(wxCommandEvent& event)
 {
 	m_ownerTree->UpItem(); event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnDownItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnDownItem(wxCommandEvent& event)
 {
 	m_ownerTree->DownItem(); event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSortItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnSortItem(wxCommandEvent& event)
 {
 	m_ownerTree->SortItem(); event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCommandItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem(wxCommandEvent& event)
 {
 	m_ownerTree->CommandItem(event.GetId()); event.Skip();
 }
 
 #include <wx/clipbrd.h>
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCopyItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnCopyItem(wxCommandEvent& event)
 {
 	const wxTreeItemId& item = GetSelection();
 	if (!item.IsOk())
@@ -165,10 +165,10 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCopyItem(wxCommandEvent& ev
 	// Write some text to the clipboard
 	if (wxTheClipboard->Open()) {
 
-		ibValueMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
+		IValueMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
 		if (metaObject != nullptr) {
 
-			ibWriterMemory dataWritter;
+			CMemoryWriter dataWritter;
 			if (metaObject->CopyObject(dataWritter)) {
 
 				wxDataObjectComposite* composite_object = new wxDataObjectComposite;
@@ -189,7 +189,7 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCopyItem(wxCommandEvent& ev
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnPasteItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnPasteItem(wxCommandEvent& event)
 {
 	if (!m_ownerTree->IsEditable())
 		return;
@@ -205,14 +205,14 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnPasteItem(wxCommandEvent& e
 		wxCustomDataObject data(oes_clipboard_metadata);
 		if (wxTheClipboard->GetData(data)) {
 
-			ibValueMetaObject* metaObject = m_ownerTree->NewItem(
+			IValueMetaObject* metaObject = m_ownerTree->NewItem(
 				m_ownerTree->GetClassIdentifier(),
 				m_ownerTree->GetMetaIdentifier(),
 				false
 			);
 
 			if (metaObject != nullptr) {
-				ibReaderMemory reader(data.GetData(), data.GetDataSize());
+				CMemoryReader reader(data.GetData(), data.GetDataSize());
 				if (metaObject->PasteObject(reader)) {
 					objectInspector->SelectObject(metaObject);
 				}
@@ -231,7 +231,7 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnPasteItem(wxCommandEvent& e
 #include "frontend/docView/docManager.h"
 #include "frontend/mainFrame/mainFrameChild.h"
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSetFocus(wxFocusEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnSetFocus(wxFocusEvent& event)
 {
 	if (event.GetEventType() == wxEVT_SET_FOCUS) {
 		docManager->ActivateView(m_metaView);
@@ -248,17 +248,17 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSetFocus(wxFocusEvent& even
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSelecting(wxTreeEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnSelecting(wxTreeEvent& event)
 {
 	event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSelected(wxTreeEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnSelected(wxTreeEvent& event)
 {
 	m_ownerTree->SelectItem(); event.Skip();
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCollapsing(wxTreeEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnCollapsing(wxTreeEvent& event)
 {
 	if (GetRootItem() != event.GetItem()) {
 		m_ownerTree->Collapse(); event.Skip();
@@ -268,7 +268,7 @@ void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCollapsing(wxTreeEvent& eve
 	}
 }
 
-void ibDataProcessorTree::ibDataProcessorTreeCtrl::OnExpanding(wxTreeEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnExpanding(wxTreeEvent& event)
 {
 	m_ownerTree->Expand(); event.Skip();
 }

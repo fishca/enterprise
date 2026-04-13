@@ -6,13 +6,13 @@
 #include "window.h"
 #include "form.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueWindow, ibValueControl)
+wxIMPLEMENT_ABSTRACT_CLASS(IValueWindow, IValueControl)
 
 //***********************************************************************************
 //*                                    ValueWindow                                  *
 //***********************************************************************************
 
-ibValueWindow::ibValueWindow() : ibValueControl()
+IValueWindow::IValueWindow() : IValueControl()
 {
 }
 
@@ -20,7 +20,7 @@ ibValueWindow::ibValueWindow() : ibValueControl()
 //*                                  Update                                       *
 //***********************************************************************************
 
-void ibValueWindow::UpdateWindow(wxWindow* window)
+void IValueWindow::UpdateWindow(wxWindow* window)
 {
 	// All of the properties of the wxWindow object are applied in this function
 	if (window == nullptr)
@@ -46,7 +46,7 @@ void ibValueWindow::UpdateWindow(wxWindow* window)
 	if (m_propertyBG->IsOk())
 		window->SetBackgroundColour(m_propertyBG->GetValueAsColour());
 
-	ibValueForm* ownerForm = GetOwnerForm();
+	CValueForm* ownerForm = GetOwnerForm();
 	wxASSERT(ownerForm);
 
 	// Enabled
@@ -69,7 +69,7 @@ void ibValueWindow::UpdateWindow(wxWindow* window)
 //*                                    Data										   *
 //**********************************************************************************
 
-bool ibValueWindow::LoadData(ibReaderMemory& reader)
+bool IValueWindow::LoadData(CMemoryReader& reader)
 {
 	wxString propValue = wxEmptyString;
 	reader.r_stringZ(propValue);
@@ -89,10 +89,10 @@ bool ibValueWindow::LoadData(ibReaderMemory& reader)
 	m_propertyEnabled->SetValue(reader.r_u8());
 	m_propertyVisible->SetValue(reader.r_u8());
 
-	return ibValueControl::LoadData(reader);
+	return IValueControl::LoadData(reader);
 }
 
-bool ibValueWindow::SaveData(ibWriterMemory& writer)
+bool IValueWindow::SaveData(CMemoryWriter& writer)
 {
 	writer.w_stringZ(
 		m_propertyMinSize->GetValueAsString()
@@ -119,5 +119,5 @@ bool ibValueWindow::SaveData(ibWriterMemory& writer)
 		m_propertyVisible->GetValueAsBoolean()
 	);
 
-	return ibValueControl::SaveData(writer);
+	return IValueControl::SaveData(writer);
 }

@@ -72,12 +72,12 @@ public:
 		int state) wxOVERRIDE;
 
 	virtual wxSize GetLabelSize(
-		wxReadOnlyDC& dc,
+		wxDC& dc,
 		wxWindow* wnd,
 		const wxAuiToolBarItem& item) wxOVERRIDE;
 
 	virtual wxSize GetToolSize(
-		wxReadOnlyDC& dc,
+		wxDC& dc,
 		wxWindow* wnd,
 		const wxAuiToolBarItem& item) wxOVERRIDE;
 

@@ -1,48 +1,46 @@
 #include "propertyType.h"
 #include "backend/propertyManager/property/variant/variantType.h"
 
-wxObject* (*ibPropertyType::ms_propertyType)(ibPropertyObject*, ibSelectorDataType, const wxString&, const wxString&, const wxVariant&) = nullptr;
+////////////////////////////////////////////////////////////////////////
+
+wxVariantData* CPropertyType::CreateVariantData(IPropertyObject* property, const eValueTypes type) const
+{
+	const IBackendTypeConfigFactory* propFactory = dynamic_cast<const IBackendTypeConfigFactory*>(property);
+	if (propFactory == nullptr)
+		return nullptr;
+	return new wxVariantDataAttribute(propFactory, type);
+}
+
+wxVariantData* CPropertyType::CreateVariantData(IPropertyObject* property, const class_identifier_t& clsid) const
+{
+	const IBackendTypeConfigFactory* propFactory = dynamic_cast<const IBackendTypeConfigFactory*>(property);
+	if (propFactory == nullptr)
+		return nullptr;
+	return new wxVariantDataAttribute(propFactory, clsid);
+}
+
+wxVariantData* CPropertyType::CreateVariantData(IPropertyObject* property, const CTypeDescription& typeDesc) const
+{
+	const IBackendTypeConfigFactory* propFactory = dynamic_cast<const IBackendTypeConfigFactory*>(property);
+	if (propFactory == nullptr)
+		return nullptr;
+	return new wxVariantDataAttribute(propFactory, typeDesc);
+}
 
 ////////////////////////////////////////////////////////////////////////
 
-wxVariantData* ibPropertyType::CreateVariantData(ibPropertyObject* property, const ibValueTypes type) const
-{
-	const ibBackendTypeConfigFactory* propFactory = dynamic_cast<const ibBackendTypeConfigFactory*>(property);
-	if (propFactory == nullptr)
-		return nullptr;
-	return new ibVariantDataAttribute(propFactory, type);
+CTypeDescription& CPropertyType::GetValueAsTypeDesc() const {
+	return get_cell_variant<wxVariantDataAttribute>()->GetTypeDesc();
 }
 
-wxVariantData* ibPropertyType::CreateVariantData(ibPropertyObject* property, const ibClassID& clsid) const
-{
-	const ibBackendTypeConfigFactory* propFactory = dynamic_cast<const ibBackendTypeConfigFactory*>(property);
-	if (propFactory == nullptr)
-		return nullptr;
-	return new ibVariantDataAttribute(propFactory, clsid);
-}
-
-wxVariantData* ibPropertyType::CreateVariantData(ibPropertyObject* property, const ibTypeDescription& typeDesc) const
-{
-	const ibBackendTypeConfigFactory* propFactory = dynamic_cast<const ibBackendTypeConfigFactory*>(property);
-	if (propFactory == nullptr)
-		return nullptr;
-	return new ibVariantDataAttribute(propFactory, typeDesc);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-ibTypeDescription& ibPropertyType::GetValueAsTypeDesc() const {
-	return get_cell_variant<ibVariantDataAttribute>()->GetTypeDesc();
-}
-
-void ibPropertyType::SetValue(const ibTypeDescription& val) {
+void CPropertyType::SetValue(const CTypeDescription& val) {
 	m_propValue = CreateVariantData(m_owner, val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-ibSelectorDataType ibPropertyType::GetFilterDataType() const {
-	return get_cell_variant<ibVariantDataAttribute>()->GetFilterDataType();
+eSelectorDataType CPropertyType::GetFilterDataType() const {
+	return get_cell_variant<wxVariantDataAttribute>()->GetFilterDataType();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -50,9 +48,9 @@ ibSelectorDataType ibPropertyType::GetFilterDataType() const {
 #include "backend/system/value/valueType.h"
 
 //base property for "type"
-bool ibPropertyType::SetDataValue(const ibValue& varPropVal)
+bool CPropertyType::SetDataValue(const CValue& varPropVal)
 {
-	ibValueTypeDescription* valueType = varPropVal.ConvertToType<ibValueTypeDescription>();
+	CValueTypeDescription* valueType = varPropVal.ConvertToType<CValueTypeDescription>();
 	if (valueType != nullptr) {
 		SetValue(valueType->GetTypeDesc());
 		return true;
@@ -60,18 +58,18 @@ bool ibPropertyType::SetDataValue(const ibValue& varPropVal)
 	return false;
 }
 
-bool ibPropertyType::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyType::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibValue::CreateObjectValue<ibValueTypeDescription>(GetValueAsTypeDesc());
+	pvarPropVal = CValue::CreateObjectValue<CValueTypeDescription>(GetValueAsTypeDesc());
 	return true;
 }
 
-bool ibPropertyType::LoadData(ibReaderMemory& reader)
+bool CPropertyType::LoadData(CMemoryReader& reader)
 {
-	return ibTypeDescriptionMemory::LoadData(reader, GetValueAsTypeDesc());
+	return CTypeDescriptionMemory::LoadData(reader, GetValueAsTypeDesc());
 }
 
-bool ibPropertyType::SaveData(ibWriterMemory& writer)
+bool CPropertyType::SaveData(CMemoryWriter& writer)
 {
-	return ibTypeDescriptionMemory::SaveData(writer, GetValueAsTypeDesc());
+	return CTypeDescriptionMemory::SaveData(writer, GetValueAsTypeDesc());
 }

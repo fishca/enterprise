@@ -4,13 +4,13 @@
 #include "odbcDatabaseLayer.h"
 
 // ctor
-ibDatabaseResultSetMetaDataODBC::ibDatabaseResultSetMetaDataODBC(ibInterfaceODBC* pInterface, SQLHSTMT sqlODBCStatement)
+COdbcResultSetMetaData::COdbcResultSetMetaData(COdbcInterface* pInterface, SQLHSTMT sqlOdbcStatement)
 {
 	m_pInterface = pInterface;
-	m_pODBCStatement = sqlODBCStatement;
+	m_pOdbcStatement = sqlOdbcStatement;
 }
 
-int ibDatabaseResultSetMetaDataODBC::GetColumnType(int i)
+int COdbcResultSetMetaData::GetColumnType(int i)
 {
 	int returnType = COLUMN_UNKNOWN;
 
@@ -27,7 +27,7 @@ int ibDatabaseResultSetMetaDataODBC::GetColumnType(int i)
 
 	memset(col_name, 0, 8192);
 
-	SQLRETURN nRet = m_pInterface->GetSQLDescribeCol()(m_pODBCStatement, i, col_name,
+	SQLRETURN nRet = m_pInterface->GetSQLDescribeCol()(m_pOdbcStatement, i, col_name,
 		8192, &col_name_length, &col_data_type, &col_size, &col_decimal_digits, &col_nullable);
 
 	if (nRet != SQL_SUCCESS)
@@ -75,7 +75,7 @@ int ibDatabaseResultSetMetaDataODBC::GetColumnType(int i)
 	return returnType;
 }
 
-int ibDatabaseResultSetMetaDataODBC::GetColumnSize(int i)
+int COdbcResultSetMetaData::GetColumnSize(int i)
 {
 	int returnSize = -1;
 
@@ -92,7 +92,7 @@ int ibDatabaseResultSetMetaDataODBC::GetColumnSize(int i)
 
 	memset(col_name, 0, 8192);
 
-	SQLRETURN nRet = m_pInterface->GetSQLDescribeCol()(m_pODBCStatement, i, col_name,
+	SQLRETURN nRet = m_pInterface->GetSQLDescribeCol()(m_pOdbcStatement, i, col_name,
 		8192, &col_name_length, &col_data_type, &col_size, &col_decimal_digits, &col_nullable);
 
 	if (nRet == SQL_SUCCESS)
@@ -101,7 +101,7 @@ int ibDatabaseResultSetMetaDataODBC::GetColumnSize(int i)
 	return returnSize;
 }
 
-wxString ibDatabaseResultSetMetaDataODBC::GetColumnName(int i)
+wxString COdbcResultSetMetaData::GetColumnName(int i)
 {
 	wxString columnName;
 
@@ -118,7 +118,7 @@ wxString ibDatabaseResultSetMetaDataODBC::GetColumnName(int i)
 
 	memset(col_name, 0, 8192);
 
-	SQLRETURN nRet = m_pInterface->GetSQLDescribeCol()(m_pODBCStatement, i, col_name,
+	SQLRETURN nRet = m_pInterface->GetSQLDescribeCol()(m_pOdbcStatement, i, col_name,
 		8192, &col_name_length, &col_data_type, &col_size, &col_decimal_digits, &col_nullable);
 
 	if (nRet == SQL_SUCCESS)
@@ -130,11 +130,11 @@ wxString ibDatabaseResultSetMetaDataODBC::GetColumnName(int i)
 	return columnName;
 }
 
-int ibDatabaseResultSetMetaDataODBC::GetColumnCount()
+int COdbcResultSetMetaData::GetColumnCount()
 {
 	SQLSMALLINT   col_count;
 
-	SQLRETURN nRet = m_pInterface->GetSQLNumResultCols()(m_pODBCStatement, &col_count);
+	SQLRETURN nRet = m_pInterface->GetSQLNumResultCols()(m_pOdbcStatement, &col_count);
 
 	if (nRet == SQL_SUCCESS)
 		return col_count;

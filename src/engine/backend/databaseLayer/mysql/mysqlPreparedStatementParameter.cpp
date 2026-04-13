@@ -3,58 +3,58 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
 // ctor
-ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind)
-	: ibDatabaseErrorReporter()
+CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* pBind)
+	: CDatabaseErrorReporter()
 {
 	m_pBind = pBind;
 	// Default to nullptr
 	SetNull();
 }
 
-ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, const wxString& strValue)
-	: ibDatabaseErrorReporter()
+CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, const wxString& strValue)
+	: CDatabaseErrorReporter()
 {
 	m_pBind = pBind;
 	SetString(strValue);
 }
 
-ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, int nValue)
-	: ibDatabaseErrorReporter()
+CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, int nValue)
+	: CDatabaseErrorReporter()
 {
 	m_pBind = pBind;
 	SetInt(nValue);
 }
 
-ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, double dblValue)
-	: ibDatabaseErrorReporter()
+CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, double dblValue)
+	: CDatabaseErrorReporter()
 {
 	m_pBind = pBind;
 	SetDouble(dblValue);
 }
 
-ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, const void* pData, long nDataLength)
-	: ibDatabaseErrorReporter()
+CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, const void* pData, long nDataLength)
+	: CDatabaseErrorReporter()
 {
 	m_pBind = pBind;
 	SetBlob(pData, nDataLength);
 }
 
-ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, const wxDateTime& dateValue)
-	: ibDatabaseErrorReporter()
+CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, const wxDateTime& dateValue)
+	: CDatabaseErrorReporter()
 {
 	m_pBind = pBind;
 	SetDate(dateValue);
 }
 
-ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, bool bValue)
-	: ibDatabaseErrorReporter()
+CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, bool bValue)
+	: CDatabaseErrorReporter()
 {
 	m_pBind = pBind;
 	SetBool(bValue);
 }
 
-ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, MYSQL_FIELD* pField)
-	: ibDatabaseErrorReporter()
+CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, MYSQL_FIELD* pField)
+	: CDatabaseErrorReporter()
 {
 	m_pBind = pBind;
 	m_pBind->is_null = &m_bIsNull;
@@ -70,7 +70,7 @@ ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND*
 	void* pBuffer = m_Data.bufferValue.GetWriteBuf(m_pBind->buffer_length);
 	if (pBuffer == 0)
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(0));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(0));
 		SetErrorMessage(wxT("Error allocating buffer"));
 		ThrowDatabaseException();
 	}
@@ -89,11 +89,11 @@ ibPreparedStatementMySQLParameter::ibPreparedStatementMySQLParameter(MYSQL_BIND*
 }
 
 // dtor
-ibPreparedStatementMySQLParameter::~ibPreparedStatementMySQLParameter()
+CMysqlPreparedStatementParameter::~CMysqlPreparedStatementParameter()
 {
 }
 
-void ibPreparedStatementMySQLParameter::ClearBuffer()
+void CMysqlPreparedStatementParameter::ClearBuffer()
 {
 	if (m_pBind && m_pBind->buffer && (m_pBind->buffer_length > 0))
 	{
@@ -101,21 +101,21 @@ void ibPreparedStatementMySQLParameter::ClearBuffer()
 	}
 }
 
-void ibPreparedStatementMySQLParameter::SetInt(int nValue)
+void CMysqlPreparedStatementParameter::SetInt(int nValue)
 {
 	m_Data.nValue = nValue;
 	m_pBind->buffer_type = MYSQL_TYPE_LONG;
 	m_pBind->buffer = (void*)&m_Data.nValue;
 }
 
-void ibPreparedStatementMySQLParameter::SetDouble(double dblValue)
+void CMysqlPreparedStatementParameter::SetDouble(double dblValue)
 {
 	m_Data.dblValue = dblValue;
 	m_pBind->buffer_type = MYSQL_TYPE_DOUBLE;
 	m_pBind->buffer = (void*)&m_Data.dblValue;
 }
 
-void ibPreparedStatementMySQLParameter::SetString(const wxString& strValue)
+void CMysqlPreparedStatementParameter::SetString(const wxString& strValue)
 {
 	memset(m_pBind, 0, sizeof(MYSQL_BIND));
 	m_Data.strValue = strValue;
@@ -127,13 +127,13 @@ void ibPreparedStatementMySQLParameter::SetString(const wxString& strValue)
 	m_pBind->buffer_length = m_Data.nBufferLength;
 }
 
-void ibPreparedStatementMySQLParameter::SetNull()
+void CMysqlPreparedStatementParameter::SetNull()
 {
 	m_bIsNull = 1;
 	m_pBind->is_null = &m_bIsNull;
 }
 
-void ibPreparedStatementMySQLParameter::SetBlob(const void* pData, long nDataLength)
+void CMysqlPreparedStatementParameter::SetBlob(const void* pData, long nDataLength)
 {
 	void* pBuffer = m_Data.bufferValue.GetWriteBuf(nDataLength);
 	memcpy(pBuffer, pData, nDataLength);
@@ -142,7 +142,7 @@ void ibPreparedStatementMySQLParameter::SetBlob(const void* pData, long nDataLen
 	m_pBind->buffer_length = nDataLength;
 }
 
-void ibPreparedStatementMySQLParameter::SetDate(const wxDateTime& dateValue)
+void CMysqlPreparedStatementParameter::SetDate(const wxDateTime& dateValue)
 {
 	m_Data.dateValue.year = dateValue.GetYear();
 	m_Data.dateValue.month = dateValue.GetMonth();
@@ -155,7 +155,7 @@ void ibPreparedStatementMySQLParameter::SetDate(const wxDateTime& dateValue)
 	m_pBind->buffer = (void*)&m_Data.dateValue;
 }
 
-void ibPreparedStatementMySQLParameter::SetBool(bool bValue)
+void CMysqlPreparedStatementParameter::SetBool(bool bValue)
 {
 	m_Data.bValue = bValue;
 	m_pBind->buffer_type = MYSQL_TYPE_TINY;

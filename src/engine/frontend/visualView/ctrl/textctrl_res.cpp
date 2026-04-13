@@ -35,12 +35,12 @@ static char* s_text_ctrl_xpm[] = {
 	"                "
 };
 
-wxIcon ibValueTextCtrl::GetIcon() const
+wxIcon CValueTextCtrl::GetIcon() const
 {
 	return wxIcon(s_text_ctrl_xpm);
 }
 
-wxIcon ibValueTextCtrl::GetIconGroup()
+wxIcon CValueTextCtrl::GetIconGroup()
 {
 	return wxIcon(s_text_ctrl_xpm);
 }

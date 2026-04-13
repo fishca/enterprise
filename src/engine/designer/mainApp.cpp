@@ -22,7 +22,7 @@
 #include <wx/xrc/xh_aui.h>
 #endif
 
-wxIMPLEMENT_APP(ibAppDesigner);
+wxIMPLEMENT_APP(CDesignerApp);
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +33,7 @@ wxIMPLEMENT_APP(ibAppDesigner);
 #if wxUSE_CMDLINE_PARSER
 #include <wx/cmdline.h>
 
-void ibAppDesigner::OnInitCmdLine(wxCmdLineParser& parser)
+void CDesignerApp::OnInitCmdLine(wxCmdLineParser& parser)
 {
 	// FILE ENTRY 
 	parser.AddOption(wxT("file"), wxT("pwd"), "Start from current dir", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
@@ -55,7 +55,7 @@ void ibAppDesigner::OnInitCmdLine(wxCmdLineParser& parser)
 	return wxApp::OnInitCmdLine(parser);
 }
 
-bool ibAppDesigner::OnCmdLineParsed(wxCmdLineParser& parser)
+bool CDesignerApp::OnCmdLineParsed(wxCmdLineParser& parser)
 {
 	// FILE ENTRY 
 	parser.Found(wxT("file"), &m_strFile);
@@ -80,13 +80,13 @@ bool ibAppDesigner::OnCmdLineParsed(wxCmdLineParser& parser)
 
 //////////////////////////////////////////////////////////////////////////////////
 
-bool ibAppDesigner::OnInit()
+bool CDesignerApp::OnInit()
 {
 	wxSocketBase::Initialize();
 	return wxApp::OnInit();
 }
 
-int ibAppDesigner::OnRun()
+int CDesignerApp::OnRun()
 {
 	// Abnormal Termination Handling
 #if wxUSE_ON_FATAL_EXCEPTION && wxUSE_STACKWALKER
@@ -97,24 +97,24 @@ int ibAppDesigner::OnRun()
 	bool ret = false;
 
 	if (m_strFile.IsEmpty()) {
-		ret = appDataCreateServer(ibRunMode::eDESIGNER_MODE,
+		ret = appDataCreateServer(eRunMode::eDESIGNER_MODE,
 			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase, m_strLocale
 		);
 	}
 	else {
-		ret = appDataCreateFile(ibRunMode::eDESIGNER_MODE,
+		ret = appDataCreateFile(eRunMode::eDESIGNER_MODE,
 			m_strFile, m_strLocale
 		);
 	}
 
 	if (!ret) {
-		const wxString& strLastError = ibBackendException::GetLastError();
+		const wxString& strLastError = CBackendException::GetLastError();
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		return 1;
 	}
 
-	ibProcessSplashScreen* splashScreenLoader =
-		new ibProcessSplashScreen(wxBitmap(splashLogo_xpm),
+	CProcessSplashScreen* splashScreenLoader =
+		new CProcessSplashScreen(wxBitmap(splashLogo_xpm),
 			wxSPLASH_CENTRE_ON_SCREEN,
 			-1, nullptr, -1, wxDefaultPosition, wxDefaultSize,
 			wxBORDER_SIMPLE
@@ -167,9 +167,9 @@ int ibAppDesigner::OnRun()
 #if wxUSE_LIBPNG
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
-	mainFrameCreate(ibFrontendDocMDIFrameDesigner);
+	mainFrameCreate(CFrontendDocMDIFrameDesigner);
 	if (!appData->Connect(m_strIBUser, m_strIBPassword)) {
-		const wxString& strLastError = ibBackendException::GetLastError();
+		const wxString& strLastError = CBackendException::GetLastError();
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		mainFrameDestroy();
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
@@ -181,13 +181,13 @@ int ibAppDesigner::OnRun()
 	return wxApp::OnRun();
 }
 
-void ibAppDesigner::OnUnhandledException()
+void CDesignerApp::OnUnhandledException()
 {
 }
 
 #include "backend/system/value/valueOLE.h"
 
-void ibAppDesigner::OnFatalException()
+void CDesignerApp::OnFatalException()
 {
 	//generate dump
 	wxDebugReport report;
@@ -196,7 +196,7 @@ void ibAppDesigner::OnFatalException()
 	report.AddExceptionDump();
 
 	//release all created com-objects
-	ibValueOLE::ReleaseComObjects();
+	CValueOLE::ReleaseComObjects();
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
@@ -208,10 +208,10 @@ void ibAppDesigner::OnFatalException()
 	if (preview.Show(report)) report.Process();
 }
 
-int ibAppDesigner::OnExit()
+int CDesignerApp::OnExit()
 {
 	//release all created com-objects
-	ibValueOLE::ReleaseComObjects();
+	CValueOLE::ReleaseComObjects();
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();

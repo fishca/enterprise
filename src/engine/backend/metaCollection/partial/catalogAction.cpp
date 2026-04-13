@@ -14,9 +14,9 @@ enum
 	eMarkAsDelete,
 };
 
-ibValueRecordDataObjectCatalog::ibActionCollection ibValueRecordDataObjectCatalog::GetActionCollection(const ibFormID &formType)
+CValueRecordDataObjectCatalog::CActionCollection CValueRecordDataObjectCatalog::GetActionCollection(const form_identifier_t &formType)
 {
-	ibActionCollection catalogActions(this);
+	CActionCollection catalogActions(this);
 	catalogActions.AddAction(wxT("SaveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
 	catalogActions.AddAction(wxT("Save"), _("Save"), g_picSaveCLSID, true, eSave);
 	catalogActions.AddSeparator();
@@ -26,7 +26,7 @@ ibValueRecordDataObjectCatalog::ibActionCollection ibValueRecordDataObjectCatalo
 	return catalogActions;
 }
 
-void ibValueRecordDataObjectCatalog::ExecuteAction(const ibActionID &action, ibBackendValueForm* srcForm)
+void CValueRecordDataObjectCatalog::ExecuteAction(const action_identifier_t &action, IBackendValueForm* srcForm)
 {
 	switch (action)
 	{

@@ -1,21 +1,21 @@
 #include "value.h"
 
-bool ibValue::DoSerialize(wxString& strValue) const
+bool CValue::DoSerialize(wxString& strValue) const
 {
-	if (m_typeClass == ibValueTypes::TYPE_REFFER) 
+	if (m_typeClass == eValueTypes::TYPE_REFFER) 
 		return m_pRef->DoSerialize(strValue);
 	
 	switch (m_typeClass) {
-	case ibValueTypes::TYPE_NULL:
+	case eValueTypes::TYPE_NULL:
 		break;
-	case ibValueTypes::TYPE_BOOLEAN:
+	case eValueTypes::TYPE_BOOLEAN:
 
 		break;
-	case ibValueTypes::TYPE_NUMBER:
+	case eValueTypes::TYPE_NUMBER:
 		break;
-	case ibValueTypes::TYPE_STRING:
+	case eValueTypes::TYPE_STRING:
 		break;
-	case ibValueTypes::TYPE_DATE:
+	case eValueTypes::TYPE_DATE:
 		break;
 	default:
 		break;
@@ -24,21 +24,21 @@ bool ibValue::DoSerialize(wxString& strValue) const
 	return false;
 }
 
-bool ibValue::DoDeserialize(const wxString& strValue)
+bool CValue::DoDeserialize(const wxString& strValue)
 {
-	if (m_typeClass == ibValueTypes::TYPE_REFFER)
+	if (m_typeClass == eValueTypes::TYPE_REFFER)
 		return m_pRef->DoDeserialize(strValue);
 
 	switch (m_typeClass) {
-	case ibValueTypes::TYPE_NULL:
+	case eValueTypes::TYPE_NULL:
 		break;
-	case ibValueTypes::TYPE_BOOLEAN:
+	case eValueTypes::TYPE_BOOLEAN:
 		break;
-	case ibValueTypes::TYPE_NUMBER:
+	case eValueTypes::TYPE_NUMBER:
 		break;
-	case ibValueTypes::TYPE_STRING:
+	case eValueTypes::TYPE_STRING:
 		break;
-	case ibValueTypes::TYPE_DATE:
+	case eValueTypes::TYPE_DATE:
 		break;
 	default:
 		break;

@@ -1,32 +1,30 @@
 #include "propertyFont.h"
 #include "backend/system/value/valueFont.h"
 
-wxObject* (*ibPropertyFont::ms_propertyFont)(const wxString&, const wxString&, const wxFont&) = nullptr;
-
 //base property for "colour"
-bool ibPropertyFont::SetDataValue(const ibValue& varPropVal)
+bool CPropertyFont::SetDataValue(const CValue& varPropVal)
 {
-	ibValueFont* valueFont = varPropVal.ConvertToType<ibValueFont>();
+	CValueFont *valueFont = varPropVal.ConvertToType<CValueFont>();
 	if (valueFont == nullptr)
 		return false;
 	SetValue(valueFont->m_font);
 	return true;
 }
 
-bool ibPropertyFont::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyFont::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibValue::CreateObjectValue<ibValueFont>(GetValueAsFont());
+	pvarPropVal = CValue::CreateObjectValue<CValueFont>(GetValueAsFont());
 	return true;
 }
 
-bool ibPropertyFont::LoadData(ibReaderMemory& reader)
+bool CPropertyFont::LoadData(CMemoryReader& reader)
 {
-	ibPropertyFont::SetValue(reader.r_stringZ());
+	CPropertyFont::SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool ibPropertyFont::SaveData(ibWriterMemory& writer)
+bool CPropertyFont::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(ibPropertyFont::GetValueAsString());
+	writer.w_stringZ(CPropertyFont::GetValueAsString());
 	return true;
 }

@@ -59,7 +59,7 @@ wxBitmap BitmapFromRGBAImage(int width, int height, const unsigned char *pixelsI
 }
 #endif
 
-ibListBoxVisualData::ibListBoxVisualData(int d) :m_desiredVisibleRows(d),
+CListBoxVisualData::CListBoxVisualData(int d) :m_desiredVisibleRows(d),
 m_useDefaultBgColour(true),
 m_useDefaultTextColour(true),
 m_useDefaultHighlightBgColour(true),
@@ -72,22 +72,22 @@ m_listType(nullptr), m_posStart(nullptr), m_startLen(nullptr)
 	ComputeColours();
 }
 
-ibListBoxVisualData::~ibListBoxVisualData()
+CListBoxVisualData::~CListBoxVisualData()
 {
 	m_imgList.clear();
 }
 
-void ibListBoxVisualData::SetDesiredVisibleRows(int d)
+void CListBoxVisualData::SetDesiredVisibleRows(int d)
 {
 	m_desiredVisibleRows = d;
 }
 
-int ibListBoxVisualData::GetDesiredVisibleRows() const
+int CListBoxVisualData::GetDesiredVisibleRows() const
 {
 	return m_desiredVisibleRows;
 }
 
-void ibListBoxVisualData::RegisterImage(int type, const wxBitmap& bmp)
+void CListBoxVisualData::RegisterImage(int type, const wxBitmap& bmp)
 {
 	if (!bmp.IsOk())
 		return;
@@ -99,7 +99,7 @@ void ibListBoxVisualData::RegisterImage(int type, const wxBitmap& bmp)
 	m_imgList[type] = bmp;
 }
 
-void ibListBoxVisualData::RegisterImage(int type, const char *xpm_data)
+void CListBoxVisualData::RegisterImage(int type, const char *xpm_data)
 {
 	wxXPMDecoder dec;
 	wxImage img;
@@ -120,19 +120,19 @@ void ibListBoxVisualData::RegisterImage(int type, const char *xpm_data)
 	RegisterImage(type, bmp);
 }
 
-void ibListBoxVisualData::RegisterRGBAImage(int type, int width, int height,
+void CListBoxVisualData::RegisterRGBAImage(int type, int width, int height,
 	const unsigned char *pixelsImage)
 {
 	wxBitmap bmp = BitmapFromRGBAImage(width, height, pixelsImage);
 	RegisterImage(type, bmp);
 }
 
-void ibListBoxVisualData::ClearRegisteredImages()
+void CListBoxVisualData::ClearRegisteredImages()
 {
 	m_imgList.clear();
 }
 
-const wxBitmap* ibListBoxVisualData::GetImage(int i) const
+const wxBitmap* CListBoxVisualData::GetImage(int i) const
 {
 	ImgList::const_iterator it = m_imgList.find(i);
 
@@ -142,7 +142,7 @@ const wxBitmap* ibListBoxVisualData::GetImage(int i) const
 		return nullptr;
 }
 
-void ibListBoxVisualData::ComputeColours()
+void CListBoxVisualData::ComputeColours()
 {
 	// wxSYS_COLOUR_BTNSHADOW seems to be the closest match with most themes.
 	m_borderColour = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW);
@@ -202,7 +202,7 @@ static void SetColourHelper(bool& isDefault, wxColour& itemColour,
 	itemColour = newColour;
 }
 
-void ibListBoxVisualData::SetColours(const wxColour& bg,
+void CListBoxVisualData::SetColours(const wxColour& bg,
 	const wxColour& txt,
 	const wxColour& hlbg,
 	const wxColour& hltext)
@@ -215,32 +215,32 @@ void ibListBoxVisualData::SetColours(const wxColour& bg,
 	ComputeColours();
 }
 
-const wxColour& ibListBoxVisualData::GetBorderColour() const
+const wxColour& CListBoxVisualData::GetBorderColour() const
 {
 	return m_borderColour;
 }
 
-const wxColour& ibListBoxVisualData::GetBgColour() const
+const wxColour& CListBoxVisualData::GetBgColour() const
 {
 	return m_bgColour;
 }
 
-const wxColour& ibListBoxVisualData::GetTextColour() const
+const wxColour& CListBoxVisualData::GetTextColour() const
 {
 	return m_textColour;
 }
 
-const wxColour& ibListBoxVisualData::GetHighlightBgColour() const
+const wxColour& CListBoxVisualData::GetHighlightBgColour() const
 {
 	return m_highlightBgColour;
 }
 
-const wxColour& ibListBoxVisualData::GetHighlightTextColour() const
+const wxColour& CListBoxVisualData::GetHighlightTextColour() const
 {
 	return m_highlightTextColour;
 }
 
-void ibListBoxVisualData::UseListCtrlStyle(bool useListCtrlStyle,
+void CListBoxVisualData::UseListCtrlStyle(bool useListCtrlStyle,
 	const wxColour& curBg,
 	const wxColour& curText)
 {
@@ -251,39 +251,39 @@ void ibListBoxVisualData::UseListCtrlStyle(bool useListCtrlStyle,
 	ComputeColours();
 }
 
-bool ibListBoxVisualData::HasListCtrlAppearance() const
+bool CListBoxVisualData::HasListCtrlAppearance() const
 {
 	return m_hasListCtrlAppearance;
 }
 
-const wxColour& ibListBoxVisualData::GetCurrentBgColour() const
+const wxColour& CListBoxVisualData::GetCurrentBgColour() const
 {
 	return m_currentBgColour;
 }
 
-const wxColour& ibListBoxVisualData::GetCurrentTextColour() const
+const wxColour& CListBoxVisualData::GetCurrentTextColour() const
 {
 	return m_currentTextColour;
 }
 
-void ibListBoxVisualData::SetSciListData(int* type, int* pos, int* len)
+void CListBoxVisualData::SetSciListData(int* type, int* pos, int* len)
 {
 	m_listType = type;
 	m_posStart = pos;
 	m_startLen = len;
 }
 
-int ibListBoxVisualData::GetListType() const
+int CListBoxVisualData::GetListType() const
 {
 	return (m_listType ? *m_listType : 0);
 }
 
-int ibListBoxVisualData::GetPosStart() const
+int CListBoxVisualData::GetPosStart() const
 {
 	return (m_posStart ? *m_posStart : 0);
 }
 
-int ibListBoxVisualData::GetStartLen() const
+int CListBoxVisualData::GetStartLen() const
 {
 	return (m_startLen ? *m_startLen : 0);
 }

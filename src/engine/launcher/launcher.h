@@ -25,7 +25,7 @@ struct CListInfo {
 	wxString m_strPort;
 };
 
-class ibFrameLauncher : public wxFrame {
+class CFrameLauncher : public wxFrame {
 
 	wxListBox* m_listIBwnd;
 	wxStaticText* m_staticDBName;
@@ -43,8 +43,8 @@ public:
 	void LoadListIB();
 	void SaveListIB();
 
-	ibFrameLauncher(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Launch OES"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(450, 375), long style = wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER);
-	virtual ~ibFrameLauncher();
+	CFrameLauncher(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Launch OES"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(450, 375), long style = wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER);
+	virtual ~CFrameLauncher();
 
 	//events:
 protected:

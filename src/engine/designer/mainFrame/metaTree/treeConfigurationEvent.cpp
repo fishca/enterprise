@@ -5,7 +5,7 @@
 
 #include "treeConfiguration.h"
 
-void ibMetadataTree::ibMetaTreeCtrl::OnLeftDClick(wxMouseEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnLeftDClick(wxMouseEvent& event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
@@ -17,19 +17,19 @@ void ibMetadataTree::ibMetaTreeCtrl::OnLeftDClick(wxMouseEvent& event)
 
 #include "frontend/mainFrame/mainFrame.h"
 
-void ibMetadataTree::ibMetaTreeCtrl::OnLeftUp(wxMouseEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnLeftUp(wxMouseEvent& event)
 {
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnLeftDown(wxMouseEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnLeftDown(wxMouseEvent& event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk() && curItem == GetSelection()) m_ownerTree->SelectItem();
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnRightUp(wxMouseEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnRightUp(wxMouseEvent& event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 
@@ -55,7 +55,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnRightUp(wxMouseEvent& event)
 				continue;
 			}
 
-			GetEventHandler()->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		PopupMenu(innerMenu, event.GetPosition());
@@ -76,7 +76,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnRightUp(wxMouseEvent& event)
 				continue;
 			}
 
-			GetEventHandler()->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		delete innerMenu;
@@ -86,7 +86,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnRightUp(wxMouseEvent& event)
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnRightDown(wxMouseEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnRightDown(wxMouseEvent& event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 
@@ -112,7 +112,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnRightDown(wxMouseEvent& event)
 				continue;
 			}
 
-			GetEventHandler()->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		PopupMenu(innerMenu, event.GetPosition());
@@ -133,7 +133,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnRightDown(wxMouseEvent& event)
 				continue;
 			}
 
-			GetEventHandler()->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		delete innerMenu;
@@ -143,27 +143,27 @@ void ibMetadataTree::ibMetaTreeCtrl::OnRightDown(wxMouseEvent& event)
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnRightDClick(wxMouseEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnRightDClick(wxMouseEvent& event)
 {
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnKeyUp(wxKeyEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnKeyUp(wxKeyEvent& event)
 {
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnKeyDown(wxKeyEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnKeyDown(wxKeyEvent& event)
 {
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnMouseMove(wxMouseEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnMouseMove(wxMouseEvent& event)
 {
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnBeginDrag(wxTreeEvent& event) {
+void CMetadataTree::CMetaTreeCtrl::OnBeginDrag(wxTreeEvent& event) {
 
 	wxTreeItemId curItem = event.GetItem();
 	if (!curItem.IsOk())
@@ -171,14 +171,14 @@ void ibMetadataTree::ibMetaTreeCtrl::OnBeginDrag(wxTreeEvent& event) {
 	// need to explicitly allow drag
 	if (curItem == GetRootItem())
 		return;
-	ibValueMetaObject* metaObject = m_ownerTree->GetMetaObject(curItem);
+	IValueMetaObject* metaObject = m_ownerTree->GetMetaObject(curItem);
 	if (metaObject == nullptr)
 		return;
 	m_draggedItem = curItem;
 	event.Allow();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnEndDrag(wxTreeEvent& event) {
+void CMetadataTree::CMetaTreeCtrl::OnEndDrag(wxTreeEvent& event) {
 
 	bool copy = ::wxGetKeyState(WXK_CONTROL);
 	wxTreeItemId itemSrc = m_draggedItem, itemDst = event.GetItem();
@@ -188,7 +188,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnEndDrag(wxTreeEvent& event) {
 		return;
 
 	// ensure that itemDst is not itemSrc or a child of itemSrc
-	ibValueMetaObject* metaSrcObject = m_ownerTree->GetMetaObject(itemSrc);
+	IValueMetaObject* metaSrcObject = m_ownerTree->GetMetaObject(itemSrc);
 
 	if (metaSrcObject != nullptr) {
 
@@ -197,7 +197,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnEndDrag(wxTreeEvent& event) {
 		if (!item.IsOk())
 			return;
 
-		ibValueMetaObject* createdMetaObject = m_ownerTree->NewItem(
+		IValueMetaObject* createdMetaObject = m_ownerTree->NewItem(
 			m_ownerTree->GetClassIdentifier(item),
 			m_ownerTree->GetMetaIdentifier(item),
 			false
@@ -205,10 +205,10 @@ void ibMetadataTree::ibMetaTreeCtrl::OnEndDrag(wxTreeEvent& event) {
 
 		if (createdMetaObject != nullptr) {
 
-			ibWriterMemory dataWritter;
+			CMemoryWriter dataWritter;
 			if (metaSrcObject->CopyObject(dataWritter)) {
 
-				ibReaderMemory reader(dataWritter.pointer(), dataWritter.size());
+				CMemoryReader reader(dataWritter.pointer(), dataWritter.size());
 				if (createdMetaObject->PasteObject(reader)) {
 					m_ownerTree->FillItem(createdMetaObject, item);
 				}
@@ -220,13 +220,13 @@ void ibMetadataTree::ibMetaTreeCtrl::OnEndDrag(wxTreeEvent& event) {
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnStartSearch(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnStartSearch(wxCommandEvent& event)
 {
 	m_ownerTree->Search(event.GetString()); //Fill all data from metaData
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnCancelSearch(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnCancelSearch(wxCommandEvent& event)
 {
 	const wxString& strSearch = event.GetString();
 	if (strSearch.IsEmpty())
@@ -234,63 +234,63 @@ void ibMetadataTree::ibMetaTreeCtrl::OnCancelSearch(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnCreateItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnCreateItem(wxCommandEvent& event)
 {
 	m_ownerTree->CreateItem(); event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnEditItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnEditItem(wxCommandEvent& event)
 {
 	m_ownerTree->EditItem(); event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnRemoveItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnRemoveItem(wxCommandEvent& event)
 {
 	m_ownerTree->RemoveItem(); event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnPropertyItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnPropertyItem(wxCommandEvent& event)
 {
 	m_ownerTree->PropertyItem(); event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnUpItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnUpItem(wxCommandEvent& event)
 {
 	m_ownerTree->UpItem();
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnDownItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnDownItem(wxCommandEvent& event)
 {
 	m_ownerTree->DownItem();
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnSortItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnSortItem(wxCommandEvent& event)
 {
 	m_ownerTree->SortItem();
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnInsertItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnInsertItem(wxCommandEvent& event)
 {
 	m_ownerTree->InsertItem();
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnReplaceItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnReplaceItem(wxCommandEvent& event)
 {
 	m_ownerTree->ReplaceItem();
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnSaveItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnSaveItem(wxCommandEvent& event)
 {
 	m_ownerTree->SaveItem();
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnCommandItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnCommandItem(wxCommandEvent& event)
 {
 	m_ownerTree->CommandItem(event.GetId());
 	event.Skip();
@@ -298,7 +298,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnCommandItem(wxCommandEvent& event)
 
 #include <wx/clipbrd.h>
 
-void ibMetadataTree::ibMetaTreeCtrl::OnCopyItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnCopyItem(wxCommandEvent& event)
 {
 	const wxTreeItemId& item = GetSelection();
 	if (!item.IsOk())
@@ -307,10 +307,10 @@ void ibMetadataTree::ibMetaTreeCtrl::OnCopyItem(wxCommandEvent& event)
 	// Write some text to the clipboard
 	if (wxTheClipboard->Open()) {
 
-		ibValueMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
+		IValueMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
 		if (metaObject != nullptr) {
 
-			ibWriterMemory dataWritter;
+			CMemoryWriter dataWritter;
 			if (metaObject->CopyObject(dataWritter)) {
 
 				wxDataObjectComposite* composite_object = new wxDataObjectComposite;
@@ -331,7 +331,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnCopyItem(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 {
 	if (!m_ownerTree->IsEditable())
 		return;
@@ -348,14 +348,14 @@ void ibMetadataTree::ibMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 
 		if (wxTheClipboard->GetData(data)) {
 
-			ibValueMetaObject* metaObject = m_ownerTree->NewItem(
+			IValueMetaObject* metaObject = m_ownerTree->NewItem(
 				m_ownerTree->GetClassIdentifier(),
 				m_ownerTree->GetMetaIdentifier(),
 				false
 			);
 
 			if (metaObject != nullptr) {
-				ibReaderMemory reader(data.GetData(), data.GetDataSize());
+				CMemoryReader reader(data.GetData(), data.GetDataSize());
 				if (metaObject->PasteObject(reader))
 					m_ownerTree->FillItem(metaObject, item, true, false);
 				objectInspector->SelectObject(metaObject);
@@ -374,7 +374,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 #include "frontend/docView/docManager.h"
 #include "frontend/mainFrame/mainFrameChild.h"
 
-void ibMetadataTree::ibMetaTreeCtrl::OnSetFocus(wxFocusEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnSetFocus(wxFocusEvent& event)
 {
 	if (docManager != nullptr && event.GetEventType() == wxEVT_SET_FOCUS) {
 
@@ -412,17 +412,17 @@ void ibMetadataTree::ibMetaTreeCtrl::OnSetFocus(wxFocusEvent& event)
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnSelecting(wxTreeEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnSelecting(wxTreeEvent& event)
 {
 	event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnSelected(wxTreeEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnSelected(wxTreeEvent& event)
 {
 	m_ownerTree->SelectItem(); event.Skip();
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnCollapsing(wxTreeEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnCollapsing(wxTreeEvent& event)
 {
 	if (GetRootItem() != event.GetItem()) {
 		m_ownerTree->Collapse(); event.Skip();
@@ -432,7 +432,7 @@ void ibMetadataTree::ibMetaTreeCtrl::OnCollapsing(wxTreeEvent& event)
 	}
 }
 
-void ibMetadataTree::ibMetaTreeCtrl::OnExpanding(wxTreeEvent& event)
+void CMetadataTree::CMetaTreeCtrl::OnExpanding(wxTreeEvent& event)
 {
 	m_ownerTree->Expand(); event.Skip();
 }

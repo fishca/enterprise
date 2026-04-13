@@ -7,21 +7,21 @@
 
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueFont, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueFont, CValue);
 
-ibValue::ibValueMethodHelper ibValueFont::m_methodHelper;
+CValue::CMethodHelper CValueFont::m_methodHelper;
 
-ibValueFont::ibValueFont() : ibValue(ibValueTypes::TYPE_VALUE), m_font()
+CValueFont::CValueFont() : CValue(eValueTypes::TYPE_VALUE), m_font()
 {
 }
 
-ibValueFont::ibValueFont(const wxFont& font) : ibValue(ibValueTypes::TYPE_VALUE), m_font(font)
+CValueFont::CValueFont(const wxFont& font) : CValue(eValueTypes::TYPE_VALUE), m_font(font)
 {
 }
 
-bool ibValueFont::Init(ibValue** paParams, const long lSizeArray)
+bool CValueFont::Init(CValue** paParams, const long lSizeArray)
 {
-	if (lSizeArray == 1 && paParams[0]->GetType() == ibValueTypes::TYPE_STRING) {
+	if (lSizeArray == 1 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		m_font = typeConv::StringToFont(paParams[0]->GetString()); 
 		return true;
 	}
@@ -48,7 +48,7 @@ enum
 	eFace
 };
 
-void ibValueFont::PrepareNames() const
+void CValueFont::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
@@ -60,7 +60,7 @@ void ibValueFont::PrepareNames() const
 	m_methodHelper.AppendProp(wxT("Face"));
 }
 
-bool ibValueFont::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueFont::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	switch (lPropNum)
 	{
@@ -86,7 +86,7 @@ bool ibValueFont::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 	return false; 
 }
 
-bool ibValueFont::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueFont::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -117,4 +117,4 @@ bool ibValueFont::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(ibValueFont, "Font", string_to_clsid("VL_FONT"));
+VALUE_TYPE_REGISTER(CValueFont, "Font", string_to_clsid("VL_FONT"));

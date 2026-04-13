@@ -8,11 +8,11 @@
 
 ///////////////////////////////////////////////////////////////////
 
-ibFrontendDocMDIFrameEnterprise* ibFrontendDocMDIFrameEnterprise::GetFrame() {
-	ibFrontendDocMDIFrame* instance = ibFrontendDocMDIFrame::GetFrame();
+CFrontendDocMDIFrameEnterprise* CFrontendDocMDIFrameEnterprise::GetFrame() {
+	CFrontendDocMDIFrame* instance = CFrontendDocMDIFrame::GetFrame();
 	if (instance != nullptr) {
-		ibFrontendDocMDIFrameEnterprise* enterprise_instance =
-			dynamic_cast<ibFrontendDocMDIFrameEnterprise*>(instance);
+		CFrontendDocMDIFrameEnterprise* enterprise_instance =
+			dynamic_cast<CFrontendDocMDIFrameEnterprise*>(instance);
 		wxASSERT(enterprise_instance);
 		return enterprise_instance;
 	}
@@ -21,16 +21,16 @@ ibFrontendDocMDIFrameEnterprise* ibFrontendDocMDIFrameEnterprise::GetFrame() {
 
 ///////////////////////////////////////////////////////////////////
 
-ibFrontendDocMDIFrameEnterprise::ibFrontendDocMDIFrameEnterprise(const wxString& title,
+CFrontendDocMDIFrameEnterprise::CFrontendDocMDIFrameEnterprise(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size) :
-	ibFrontendDocMDIFrame(title, pos, size),
-	m_outputWindow(new ibOutputWindow(this, wxID_ANY))
+	CFrontendDocMDIFrame(title, pos, size),
+	m_outputWindow(new COutputWindow(this, wxID_ANY))
 {
-	m_docManager = new ibMetaDocManagerEnterprise;
+	m_docManager = new CEnterpriseDocManager;
 }
 
-ibFrontendDocMDIFrameEnterprise::~ibFrontendDocMDIFrameEnterprise()
+CFrontendDocMDIFrameEnterprise::~CFrontendDocMDIFrameEnterprise()
 {
 	wxDELETE(m_docManager);
 }
@@ -40,10 +40,10 @@ ibFrontendDocMDIFrameEnterprise::~ibFrontendDocMDIFrameEnterprise()
 
 #include "backend/appData.h"
 
-void ibFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, const wxString& strDocPath, const long currLine, const wxString& strErrorMessage) const
+void CFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, const wxString& strDocPath, const long currLine, const wxString& strErrorMessage) const
 {
 	//open error dialog
-	std::shared_ptr<ibDialogError> errDlg(new ibDialogError(mainFrame, wxID_ANY));
+	std::shared_ptr<CDialogError> errDlg(new CDialogError(mainFrame, wxID_ANY));
 	
 	//set message 
 	errDlg->SetErrorMessage(strErrorMessage);
@@ -68,18 +68,18 @@ void ibFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, 
 
 	//close window
 	if (retCode == 3) {
-		ibApplicationData::ForceExit();
+		CApplicationData::ForceExit();
 	}
 }
 
-void ibFrontendDocMDIFrameEnterprise::CreateGUI()
+void CFrontendDocMDIFrameEnterprise::CreateGUI()
 {
 	CreateWideGui();
 }
 
-bool ibFrontendDocMDIFrameEnterprise::Show(bool show)
+bool CFrontendDocMDIFrameEnterprise::Show(bool show)
 {
-	bool ret = ibFrontendDocMDIFrame::Show(show);
+	bool ret = CFrontendDocMDIFrame::Show(show);
 	if (ret) {
 		if (!outputWindow->IsEmpty()) {
 			outputWindow->SetFocus();
@@ -94,7 +94,7 @@ bool ibFrontendDocMDIFrameEnterprise::Show(bool show)
 
 #include "backend/metadataConfiguration.h"
 
-bool ibFrontendDocMDIFrameEnterprise::AllowRun() const
+bool CFrontendDocMDIFrameEnterprise::AllowRun() const
 {
 	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
 		return true;
@@ -102,7 +102,7 @@ bool ibFrontendDocMDIFrameEnterprise::AllowRun() const
 	return false;
 }
 
-bool ibFrontendDocMDIFrameEnterprise::AllowClose() const
+bool CFrontendDocMDIFrameEnterprise::AllowClose() const
 {
 	if (activeMetaData != nullptr && activeMetaData->ExitMainModule())
 		return true;

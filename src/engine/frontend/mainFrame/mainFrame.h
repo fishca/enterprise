@@ -14,12 +14,12 @@
 #undef backend_mainFrame
 #endif
 
-class ibMetaView;
+class CMetaView;
 
-#define mainFrame            		 (ibFrontendDocMDIFrame::GetFrame())
-#define mainFrameCreate(frame)       (ibFrontendDocMDIFrame::InitFrame(new frame))
-#define mainFrameShow()				 (ibFrontendDocMDIFrame::ShowFrame())
-#define mainFrameDestroy()  		 (ibFrontendDocMDIFrame::DestroyFrame())
+#define mainFrame            		 (CFrontendDocMDIFrame::GetFrame())
+#define mainFrameCreate(frame)       (CFrontendDocMDIFrame::InitFrame(new frame))
+#define mainFrameShow()				 (CFrontendDocMDIFrame::ShowFrame())
+#define mainFrameDestroy()  		 (CFrontendDocMDIFrame::DestroyFrame())
 
 #include "objinspect/objinspect.h"
 
@@ -36,8 +36,8 @@ class ibMetaView;
 #define wxAUI_DEFAULT_COLOUR wxColour(41, 57, 85) 
 #define wxAUI_WHITE_COLOUR wxColour(255, 255, 255) 
 
-class FRONTEND_API ibFrontendDocMDIFrame :
-	public ibBackendDocMDIFrame, public wxAuiMDIParentFrame,
+class FRONTEND_API CFrontendDocMDIFrame :
+	public IBackendDocMDIFrame, public wxAuiMDIParentFrame,
 	public wxDocParentFrameAnyBase {
 public:
 
@@ -50,30 +50,30 @@ public:
 
 	virtual bool AuthenticationUser(const wxString& userName, const wxString& userPassword) const;
 
-	virtual ibMetaData* FindMetadataByPath(const wxString& strFileName) const;
+	virtual IMetaData* FindMetadataByPath(const wxString& strFileName) const;
 
 #pragma region _frontend_call_h__
 
 	// Form support
-	virtual ibBackendValueForm* ActiveWindow() const override;
-	virtual ibBackendValueForm* CreateNewForm(const ibValueMetaObjectFormBase* creator, class ibBackendControlFrame* ownerControl = nullptr,
-		class ibSourceDataObject* srcObject = nullptr, const ibUniqueKey& formGuid = wxNullUniqueKey) override;
+	virtual IBackendValueForm* ActiveWindow() const override;
+	virtual IBackendValueForm* CreateNewForm(const IValueMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
+		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) override;
 
-	virtual ibUniqueKey CreateFormUniqueKey(const ibBackendControlFrame* ownerControl,
-		const ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid);
+	virtual CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
-	virtual class ibBackendValueForm* FindFormByUniqueKey(const ibBackendControlFrame* ownerControl,
-		const ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid);
+	virtual class IBackendValueForm* FindFormByUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
-	virtual class ibBackendValueForm* FindFormByUniqueKey(const ibUniqueKey& guid) override;
-	virtual class ibBackendValueForm* FindFormByControlUniqueKey(const ibUniqueKey& guid) override;
-	virtual class ibBackendValueForm* FindFormBySourceUniqueKey(const ibUniqueKey& guid) override;
+	virtual class IBackendValueForm* FindFormByUniqueKey(const CUniqueKey& guid) override;
+	virtual class IBackendValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid) override;
+	virtual class IBackendValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid) override;
 
-	virtual bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid) override;
+	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) override;
 
 	// Grid support
-	virtual bool ShowSpreadsheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument) override;
-	virtual bool PrintSpreadsheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg = true) override;
+	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument) override;
+	virtual bool PrintSpreadSheetDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, bool showPrintDlg = true) override;
 
 #pragma endregion 
 
@@ -85,8 +85,8 @@ public:
 
 	virtual wxFrame* GetFrameHandler() const { return s_instance; }
 
-	virtual ibPropertyObject* GetProperty() const;
-	virtual bool SetProperty(ibPropertyObject* prop);
+	virtual IPropertyObject* GetProperty() const;
+	virtual bool SetProperty(IPropertyObject* prop);
 
 	virtual void SetTitle(const wxString& title) override { wxAuiMDIParentFrame::SetTitle(title); }
 	virtual void SetStatusText(const wxString& text, int number = 0) override { wxAuiMDIParentFrame::SetStatusText(text, number); }
@@ -108,7 +108,7 @@ public:
 	void UpdateManager() {
 		if (!m_callUpdateFrameManager) {
 			m_callUpdateFrameManager = true;
-			CallAfter(&ibFrontendDocMDIFrame::UpdateFrameManager);
+			CallAfter(&CFrontendDocMDIFrame::UpdateFrameManager);
 		}
 	}
 
@@ -126,7 +126,7 @@ protected:
 	virtual bool AllowRun() const { return true; }
 	virtual bool AllowClose() const { return true; }
 
-	ibFrontendDocMDIFrame(const wxString& title,
+	CFrontendDocMDIFrame(const wxString& title,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxDEFAULT_FRAME_STYLE,
@@ -140,28 +140,28 @@ protected:
 
 public:
 
-	virtual ~ibFrontendDocMDIFrame();
+	virtual ~CFrontendDocMDIFrame();
 
-	static wxWindow* CreateChildFrame(ibMetaView* view,
+	static wxWindow* CreateChildFrame(CMetaView* view,
 		const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
 
-	static ibObjectInspector* GetObjectInspector() {
+	static CObjectInspector* GetObjectInspector() {
 		if (s_instance != nullptr)
 			return s_instance->m_objectInspector;
 		return nullptr;
 	}
 
-	static ibFrontendDocMDIFrame* GetFrame() { return s_instance; }
+	static CFrontendDocMDIFrame* GetFrame() { return s_instance; }
 
 	// Force the static appData instance to Init()
-	static void InitFrame(ibFrontendDocMDIFrame* mf);
+	static void InitFrame(CFrontendDocMDIFrame* mf);
 	static bool ShowFrame();
 
 	static void DestroyFrame();
 
-	ibKeyBinder             GetKeyBinder() const { return m_keyBinder; }
-	ibFontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
-	ibEditorSettings        GetEditorSettings() const { return m_editorSettings; }
+	CKeyBinder             GetKeyBinder() const { return m_keyBinder; }
+	CFontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
+	CEditorSettings        GetEditorSettings() const { return m_editorSettings; }
 
 	/**
 	* Show property in mainFrame
@@ -170,7 +170,7 @@ public:
 	void ShowInspector();
 
 	// Activate view 
-	void ActivateView(ibMetaView* view, bool activate = true);
+	void ActivateView(CMetaView* view, bool activate = true);
 
 protected:
 
@@ -182,9 +182,9 @@ protected:
 
 	virtual void CreatePropertyPane();
 
-	class ibFrameManager : public wxAuiManager {
+	class CFrameManager : public wxAuiManager {
 	public:
-		ibFrameManager(wxWindow* managedWnd = nullptr,
+		CFrameManager(wxWindow* managedWnd = nullptr,
 			unsigned int flags = wxAUI_MGR_DEFAULT) :
 			wxAuiManager(managedWnd, flags) {
 		}
@@ -192,13 +192,13 @@ protected:
 		void Refresh() { Repaint(); }
 	};
 
-	static ibFrontendDocMDIFrame* s_instance;
+	static CFrontendDocMDIFrame* s_instance;
 
-	ibObjectInspector* m_objectInspector;
+	CObjectInspector* m_objectInspector;
 
-	ibKeyBinder             m_keyBinder;
-	ibFontColorSettings     m_fontColorSettings;
-	ibEditorSettings        m_editorSettings;
+	CKeyBinder             m_keyBinder;
+	CFontColorSettings     m_fontColorSettings;
+	CEditorSettings        m_editorSettings;
 
 	bool m_callRaiseFrame, m_callUpdateFrameManager;
 
@@ -206,16 +206,16 @@ protected:
 	wxAuiToolBar* m_docToolbar;
 
 	// Create frame manager 
-	ibFrameManager m_mgr;
+	CFrameManager m_mgr;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class ibDocBottomStatusBar : public wxStatusBar {
+class CDocBottomStatusBar : public wxStatusBar {
 public:
 
-	ibDocBottomStatusBar() : wxStatusBar() {};
-	ibDocBottomStatusBar(wxWindow* parent,
+	CDocBottomStatusBar() : wxStatusBar() {};
+	CDocBottomStatusBar(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		long style = wxSTB_DEFAULT_STYLE,
 		const wxString& name = wxStatusBarNameStr)
@@ -240,9 +240,9 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class ibProcessSplashScreen : public wxSplashScreen {
+class CProcessSplashScreen : public wxSplashScreen {
 public:
-	ibProcessSplashScreen(const wxBitmap& bitmap, long splashStyle = wxSPLASH_CENTRE_ON_SCREEN, int milliseconds = -1,
+	CProcessSplashScreen(const wxBitmap& bitmap, long splashStyle = wxSPLASH_CENTRE_ON_SCREEN, int milliseconds = -1,
 		wxWindow* parent = nullptr, wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,

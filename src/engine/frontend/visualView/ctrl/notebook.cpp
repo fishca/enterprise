@@ -5,17 +5,17 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueNotebook, ibValueWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueNotebook, IValueWindow);
 
 //***********************************************************************************
 //*                                 Special Notebook func                           *
 //***********************************************************************************
 
-void ibValueNotebook::AddNotebookPage()
+void CValueNotebook::AddNotebookPage()
 {
 	wxASSERT(m_formOwner);
 
-	ibValueFrame* newNotebookPage = m_formOwner->NewObject(g_controlNotebookPageCLSID, this);
+	IValueFrame* newNotebookPage = m_formOwner->NewObject(g_controlNotebookPageCLSID, this);
 	g_visualHostContext->InsertControl(newNotebookPage, this);
 	g_visualHostContext->RefreshEditor();
 }
@@ -24,7 +24,7 @@ void ibValueNotebook::AddNotebookPage()
 //*                                 Value Notebook                                  *
 //***********************************************************************************
 
-ibValueNotebook::ibValueNotebook() : ibValueWindow(), m_activePage(nullptr)
+CValueNotebook::CValueNotebook() : IValueWindow(), m_activePage(nullptr)
 {
 	//set default params
 	//m_minimum_size = wxSize(300, 100);
@@ -32,7 +32,7 @@ ibValueNotebook::ibValueNotebook() : ibValueWindow(), m_activePage(nullptr)
 
 #include "frontend/win/theme/luna_tabart.h"
 
-wxObject* ibValueNotebook::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueNotebook::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	long style = m_propertyOrient->GetValueAsInteger() |
 		wxAUI_NB_TAB_MOVE | 
@@ -46,26 +46,26 @@ wxObject* ibValueNotebook::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 	return notebook;
 }
 
-void ibValueNotebook::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueNotebook::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 	if (visualHost->IsDesignerHost() && GetChildCount() == 0
 		&& first—reated) {
-		ibValueNotebook::AddNotebookPage();
+		CValueNotebook::AddNotebookPage();
 	}
 
 	wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(wxobject);
 	if (notebook != nullptr) {
-		notebook->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &ibValueNotebook::OnPageChanged, this);
-		notebook->Bind(wxEVT_AUINOTEBOOK_END_DRAG, &ibValueNotebook::OnEndDrag, this);
-		notebook->Bind(wxEVT_AUINOTEBOOK_BG_DCLICK, &ibValueNotebook::OnBGDClick, this);
+		notebook->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &CValueNotebook::OnPageChanged, this);
+		notebook->Bind(wxEVT_AUINOTEBOOK_END_DRAG, &CValueNotebook::OnEndDrag, this);
+		notebook->Bind(wxEVT_AUINOTEBOOK_BG_DCLICK, &CValueNotebook::OnBGDClick, this);
 	}
 }
 
-void ibValueNotebook::OnSelected(wxObject* wxobject)
+void CValueNotebook::OnSelected(wxObject* wxobject)
 {
 }
 
-void ibValueNotebook::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueNotebook::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(wxobject);
 	if (notebook != nullptr) {
@@ -74,7 +74,7 @@ void ibValueNotebook::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(notebook);
 }
 
-void ibValueNotebook::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void CValueNotebook::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(wxobject);
 
@@ -88,12 +88,12 @@ void ibValueNotebook::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisual
 	}
 }
 
-void ibValueNotebook::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueNotebook::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(wxobject);
 	if (notebook != nullptr) {
-		notebook->Unbind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &ibValueNotebook::OnPageChanged, this);
-		notebook->Unbind(wxEVT_AUINOTEBOOK_END_DRAG, &ibValueNotebook::OnEndDrag, this);
+		notebook->Unbind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &CValueNotebook::OnPageChanged, this);
+		notebook->Unbind(wxEVT_AUINOTEBOOK_END_DRAG, &CValueNotebook::OnEndDrag, this);
 	}
 }
 
@@ -101,22 +101,22 @@ void ibValueNotebook::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 //*                                   Data		                                   *
 //**********************************************************************************
 
-bool ibValueNotebook::LoadData(ibReaderMemory& reader)
+bool CValueNotebook::LoadData(CMemoryReader& reader)
 {
 	m_propertyOrient->SetValue(reader.r_s32());
 
 	//events
 	m_eventOnPageChanged->LoadData(reader);
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueNotebook::SaveData(ibWriterMemory& writer)
+bool CValueNotebook::SaveData(CMemoryWriter& writer)
 {
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());
 
 	//events
 	m_eventOnPageChanged->SaveData(writer);
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }
 
 //**********************************************************************************
@@ -126,9 +126,9 @@ enum Func {
 	enActivePage
 };
 
-void ibValueNotebook::PrepareNames() const // this method is automatically called to initialize attribute and method names.
+void CValueNotebook::PrepareNames() const // this method is automatically called to initialize attribute and method names.
 {
-	ibValueFrame::PrepareNames();
+	IValueFrame::PrepareNames();
 
 	m_methodHelper->AppendFunc(wxT("Pages"), wxT("Pages()"));
 	m_methodHelper->AppendFunc(wxT("ActivePage"), wxT("ActivePage()"));
@@ -136,17 +136,17 @@ void ibValueNotebook::PrepareNames() const // this method is automatically calle
 
 #include "backend/system/value/valueMap.h"
 
-bool ibValueNotebook::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)       //method call
+bool CValueNotebook::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)       //method call
 {
 	switch (lMethodNum)
 	{
 	case enPages:
 	{
-		ibValueStructure* structurePage = ibValue::CreateAndPrepareValueRef<ibValueStructure>(true);
+		CValueStructure* structurePage = CValue::CreateAndPrepareValueRef<CValueStructure>(true);
 		for (unsigned int i = 0; i < GetChildCount(); i++) {
-			ibValueNotebookPage* notebookPage = dynamic_cast<ibValueNotebookPage*>(GetChild(i));
+			CValueNotebookPage* notebookPage = dynamic_cast<CValueNotebookPage*>(GetChild(i));
 			if (notebookPage) {
-				structurePage->Insert(notebookPage->GetControlName(), ibValue(notebookPage));
+				structurePage->Insert(notebookPage->GetControlName(), CValue(notebookPage));
 			}
 		}
 #pragma message("nouverbe to nouverbe: ÌÂÓ·ıÓ‰ËÏÓ ‰Ó‡·ÓÚ‡Ú¸!")
@@ -158,11 +158,11 @@ bool ibValueNotebook::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, i
 		return true;
 	}
 
-	return ibValueWindow::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+	return IValueWindow::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueNotebook, "Notebook", "Notebook", g_controlNotebookCLSID);
+CONTROL_TYPE_REGISTER(CValueNotebook, "Notebook", "Notebook", g_controlNotebookCLSID);

@@ -14,7 +14,7 @@
 
 #define ICON_SIZE 16
 
-CFunctionList::CFunctionList(ibMetaDocument* moduleDoc, ibCodeEditor* parent)
+CFunctionList::CFunctionList(CMetaDocument* moduleDoc, CCodeEditor* parent)
 	: wxDialog(parent, wxID_ANY, _("Procedures and functions")), m_docModule(moduleDoc), m_codeEditor(parent)
 {
 	m_OK = new wxButton(this, wxID_ANY, _("OK"));
@@ -37,26 +37,26 @@ CFunctionList::CFunctionList(ibMetaDocument* moduleDoc, ibCodeEditor* parent)
 	int funcRed = imageList->Add(wxArtProvider::GetIcon(wxART_FUNCTION_RED, wxART_AUTOCOMPLETE));
 	m_listProcedures->AssignImageList(imageList, wxIMAGE_LIST_SMALL);
 
-	const ibValueMetaObjectModuleBase* metaModule = dynamic_cast<const ibValueMetaObjectModuleBase*>(moduleDoc->GetMetaObject());
+	const IValueMetaObjectModule* metaModule = dynamic_cast<const IValueMetaObjectModule*>(moduleDoc->GetMetaObject());
 	wxASSERT(metaModule);
 
-	ibParserModule moduleParser; std::vector<wxString> arrayProcedures; int maxLine = 0;
+	CParserModule moduleParser; std::vector<wxString> arrayProcedures; int maxLine = 0;
 
 	if (moduleParser.ParseModule(metaModule->GetModuleText())) {
 		for (auto content : moduleParser.GetAllContent()) {
 
-			if (content.eType == ibContentType::eExportFunction ||
-				content.eType == ibContentType::eFunction ||
-				content.eType == ibContentType::eExportProcedure ||
-				content.eType == ibContentType::eProcedure) {
+			if (content.eType == eContentType::eExportFunction ||
+				content.eType == eContentType::eFunction ||
+				content.eType == eContentType::eExportProcedure ||
+				content.eType == eContentType::eProcedure) {
 				wxListItem info;
 				info.m_text = content.strName;
 				info.m_mask = wxLIST_MASK_TEXT | wxLIST_MASK_IMAGE | wxLIST_MASK_DATA;
 				info.m_itemId = m_listProcedures->GetItemCount();
 				info.m_col = 0;
 
-				if (content.eType == ibContentType::eExportFunction ||
-					content.eType == ibContentType::eFunction)
+				if (content.eType == eContentType::eExportFunction ||
+					content.eType == eContentType::eFunction)
 					info.m_image = funcRed;
 				else
 					info.m_image = procRed;
@@ -131,8 +131,8 @@ void CFunctionList::OnButtonOk(wxCommandEvent& event)
 			m_codeEditor->GotoLine(line.m_line - 1);
 		}
 		else {
-			ibValueMetaObjectModuleBase* metaModule = wxDynamicCast(
-				m_docModule->GetMetaObject(), ibValueMetaObjectModuleBase
+			IValueMetaObjectModule* metaModule = wxDynamicCast(
+				m_docModule->GetMetaObject(), IValueMetaObjectModule
 			);
 			wxASSERT(metaModule);
 			wxString procName = m_listProcedures->GetItemText(lSelectedItem);

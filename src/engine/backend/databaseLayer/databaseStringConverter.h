@@ -14,16 +14,16 @@
 
 #include "databaseLayerDef.h"
 
-class BACKEND_API ibDatabaseStringConverter
+class BACKEND_API CDatabaseStringConverter
 {
 public:
 
 	// ctor
-	ibDatabaseStringConverter();
-	ibDatabaseStringConverter(const ibDatabaseStringConverter& src);
+	CDatabaseStringConverter();
+	CDatabaseStringConverter(const CDatabaseStringConverter& src);
 
 	// dtor
-	virtual ~ibDatabaseStringConverter() {
+	virtual ~CDatabaseStringConverter() {
 		wxDELETE(m_Encoding);
 	}
 

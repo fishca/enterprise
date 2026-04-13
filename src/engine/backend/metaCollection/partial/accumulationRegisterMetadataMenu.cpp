@@ -6,7 +6,7 @@
 #include "accumulationRegister.h"
 #include "backend/metadataConfiguration.h"
 
-bool ibValueMetaObjectAccumulationRegister::PrepareContextMenu(wxMenu* defaultMenu)
+bool CValueMetaObjectAccumulationRegister::PrepareContextMenu(wxMenu* defaultMenu)
 {
 	wxMenuItem* menuItem = nullptr;
 	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open record set module"));
@@ -17,9 +17,9 @@ bool ibValueMetaObjectAccumulationRegister::PrepareContextMenu(wxMenu* defaultMe
 	return false;
 }
 
-void ibValueMetaObjectAccumulationRegister::ProcessCommand(unsigned int id)
+void CValueMetaObjectAccumulationRegister::ProcessCommand(unsigned int id)
 {
-	ibBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
+	IBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_MODULE)

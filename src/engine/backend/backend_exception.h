@@ -67,13 +67,13 @@ enum { //Error message numbers
 
 #include "backend/backend.h"
 
-class BACKEND_API ibBackendException {
+class BACKEND_API CBackendException {
 protected:
 
 	class wxFormatErrorString : public wxFormatString {
 	public:
 		wxFormatErrorString(int codeError)
-			: wxFormatString(ibBackendException::GetErrorDesc(codeError)) {
+			: wxFormatString(CBackendException::GetErrorDesc(codeError)) {
 		}
 
 #ifndef wxNO_IMPLICIT_WXSTRING_ENCODING
@@ -100,7 +100,7 @@ protected:
 		}
 	};
 
-	ibBackendException(const wxString& strErrorDescription);
+	CBackendException(const wxString& strErrorDescription);
 
 public:
 
@@ -111,7 +111,7 @@ public:
 	const wxString GetErrorDescription() const { return m_strErrorDescription; }
 
 	//error from proc unit/compile module 
-	static void ProcessError(const ibBackendException* err, const struct ibByteUnit& error);
+	static void ProcessError(const CBackendException* err, const struct CByteUnit& error);
 	static void ProcessError(const wxString& strFileName,
 		const wxString& strModuleName, const wxString& strDocPath,
 		const unsigned int currPos, const unsigned int currLine,
@@ -158,9 +158,9 @@ private:
 
 #pragma region _exception_h_
 
-class BACKEND_API ibBackendCoreException : public ibBackendException {
+class BACKEND_API CBackendCoreException : public CBackendException {
 protected:
-	ibBackendCoreException(const wxString& strErrorDescription) : ibBackendException(strErrorDescription) {}
+	CBackendCoreException(const wxString& strErrorDescription) : CBackendException(strErrorDescription) {}
 public:
 
 	WX_DEFINE_VARARG_FUNC(static void, Error, 1, (const wxFormatErrorString&),
@@ -176,14 +176,14 @@ private:
 #endif
 };
 
-class BACKEND_API ibBackendInterruptException : public ibBackendException {
-	ibBackendInterruptException() : ibBackendException(_("The program was stopped by the user!")) {}
+class BACKEND_API CBackendInterruptException : public CBackendException {
+	CBackendInterruptException() : CBackendException(_("The program was stopped by the user!")) {}
 public:
 	static void Error();
 };
 
-class BACKEND_API ibBackendAccessException : public ibBackendException {
-	ibBackendAccessException() : ibBackendException(_("Not enough access rights for this user!")) {}
+class BACKEND_API CBackendAccessException : public CBackendException {
+	CBackendAccessException() : CBackendException(_("Not enough access rights for this user!")) {}
 public:
 	static void Error();
 };

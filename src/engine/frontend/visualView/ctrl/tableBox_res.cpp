@@ -28,12 +28,12 @@ static char* s_dataviewlist_ctrl_xpm[] = {
 	"                "
 };
 
-wxIcon ibValueModelTableBox::GetIcon() const
+wxIcon CValueTableBox::GetIcon() const
 {
 	return wxIcon(s_dataviewlist_ctrl_xpm);
 }
 
-wxIcon ibValueModelTableBox::GetIconGroup()
+wxIcon CValueTableBox::GetIconGroup()
 {
 	return wxIcon(s_dataviewlist_ctrl_xpm);
 }

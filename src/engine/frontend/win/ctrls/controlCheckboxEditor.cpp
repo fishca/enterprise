@@ -1,17 +1,17 @@
 #include "controlCheckboxEditor.h"
 
-wxBEGIN_EVENT_TABLE(ibControlCheckbox, wxWindow)
-EVT_SIZE(ibControlCheckbox::OnSize)
-EVT_DPI_CHANGED(ibControlCheckbox::OnDPIChanged)
+wxBEGIN_EVENT_TABLE(wxControlCheckbox, wxWindow)
+EVT_SIZE(wxControlCheckbox::OnSize)
+EVT_DPI_CHANGED(wxControlCheckbox::OnDPIChanged)
 wxEND_EVENT_TABLE()
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibControlCheckbox, wxWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(wxControlCheckbox, wxWindow);
 
 // ----------------------------------------------------------------------------
 // geometry
 // ----------------------------------------------------------------------------
 
-wxSize ibControlCheckbox::DoGetBestClientSize() const
+wxSize wxControlCheckbox::DoGetBestClientSize() const
 {
 	wxSize size = m_checkBox->GetBestSize();
 	wxSize labelSize = m_label->GetBestSize();
@@ -23,7 +23,7 @@ wxSize ibControlCheckbox::DoGetBestClientSize() const
 	return size;
 }
 
-wxWindowList ibControlCheckbox::GetCompositeWindowParts() const
+wxWindowList wxControlCheckbox::GetCompositeWindowParts() const
 {
 	wxWindowList parts;
 	parts.push_back(m_label);
@@ -35,13 +35,13 @@ wxWindowList ibControlCheckbox::GetCompositeWindowParts() const
 // label
 // ----------------------------------------------------------------------------
 
-void ibControlCheckbox::CalculateLabelSize(wxCoord* w, wxCoord* h) const
+void wxControlCheckbox::CalculateLabelSize(wxCoord* w, wxCoord* h) const
 {
 	m_label->SetMinSize(wxDefaultSize);
 	m_label->GetBestSize(w, h);
 }
 
-void ibControlCheckbox::ApplyLabelSize(const wxSize& s)
+void wxControlCheckbox::ApplyLabelSize(const wxSize& s)
 {
 	m_label->SetMinSize(s);
 }

@@ -20,7 +20,7 @@
 #include "frontend/frontend.h"
 #include "frontend/win/ctrls/dataview/dataview.h"
 
-class FRONTEND_API ibDialogUserList : public wxDialog
+class FRONTEND_API CDialogUserList : public wxDialog
 {
 	wxAuiToolBar* m_toolbarMain;
 
@@ -29,17 +29,17 @@ class FRONTEND_API ibDialogUserList : public wxDialog
 	wxAuiToolBarItem* m_toolEdit;
 	wxAuiToolBarItem* m_toolDelete;
 
-	ibDataViewCtrl* m_dataEditor;
+	wxDataViewExtCtrl* m_dataEditor;
 
 public:
 
-	ibDialogUserList(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("User list"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(614, 317), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
-	virtual ~ibDialogUserList();
+	CDialogUserList(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("User list"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(614, 317), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+	virtual ~CDialogUserList();
 
 	void OnCommandMenu(wxCommandEvent &event);
-	void OnContextMenu(ibDataViewEvent &event);
+	void OnContextMenu(wxDataViewExtEvent &event);
 
-	void OnItemActivated(ibDataViewEvent &event);
+	void OnItemActivated(wxDataViewExtEvent &event);
 };
 
 #endif 

@@ -2,11 +2,11 @@
 
 #define interfaceBlock 0x200020
 
-bool ibInterfaceObject::LoadInterface(ibReaderMemory& dataReader)
+bool IInterfaceObject::LoadInterface(CMemoryReader& dataReader)
 {
 	wxMemoryBuffer buf;
 	if (dataReader.r_chunk(interfaceBlock, buf)) {
-		std::shared_ptr<ibReaderMemory> dataInterfaceReader(new ibReaderMemory(buf));
+		std::shared_ptr<CMemoryReader> dataInterfaceReader(new CMemoryReader(buf));
 		unsigned int countInterface = dataInterfaceReader->r_u32(); m_interfaces.clear();
 		for (unsigned int idx = 0; idx < countInterface; idx++) {
 			m_interfaces.emplace(dataInterfaceReader->r_s32());
@@ -17,9 +17,9 @@ bool ibInterfaceObject::LoadInterface(ibReaderMemory& dataReader)
 	return true;
 }
 
-bool ibInterfaceObject::SaveInterface(ibWriterMemory& dataWritter) const
+bool IInterfaceObject::SaveInterface(CMemoryWriter& dataWritter) const
 {
-	ibWriterMemory dataRoleWritter;
+	CMemoryWriter dataRoleWritter;
 	dataRoleWritter.w_u32(m_interfaces.size());
 	for (auto id : m_interfaces) {
 		dataRoleWritter.w_s32(id); // interface id

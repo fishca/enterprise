@@ -10,7 +10,7 @@ class wxSTCCallTip;
 
 /**
  */
-class ibCallTip 
+class CCallTip 
 {
 	int startHighlight;    // character offset to start and...
 	int endHighlight;      // ...end of highlighted text
@@ -27,8 +27,8 @@ class ibCallTip
 
 	wxStyledTextCtrl *m_owner;
 
-	// Private so ibCallTip objects can not be copied
-	ibCallTip(const ibCallTip &);
+	// Private so CCallTip objects can not be copied
+	CCallTip(const CCallTip &);
 
 	void DrawChunk(wxDC &dc, int &x, const char *s,
 		int posStart, int posEnd, int ytext, wxRect rcClient,
@@ -57,8 +57,8 @@ public:
 	int borderHeight;
 	int verticalOffset; // pixel offset up or down of the calltip with respect to the line
 
-	ibCallTip(wxStyledTextCtrl *owner);
-	~ibCallTip();
+	CCallTip(wxStyledTextCtrl *owner);
+	~CCallTip();
 
 	void PaintCT(wxDC &dc);
 
@@ -97,11 +97,11 @@ public:
 
 #include "helpers/popupWnd.h"
 
-class wxSTCCallTip : public ibOESPopupWindow 
+class wxSTCCallTip : public COESPopupWindow 
 {
 public:
-	wxSTCCallTip(wxWindow* parent, ibCallTip* ct) :
-		ibOESPopupWindow(parent), m_ct(ct)
+	wxSTCCallTip(wxWindow* parent, CCallTip* ct) :
+		COESPopupWindow(parent), m_ct(ct)
 	{
 		Bind(wxEVT_LEFT_DOWN, &wxSTCCallTip::OnLeftDown, this);
 		Bind(wxEVT_SIZE, &wxSTCCallTip::OnSize, this);
@@ -130,7 +130,7 @@ public:
 		if (rect == nullptr)
 			DrawBack(GetSize());
 
-		ibOESPopupWindow::Refresh(eraseBg, rect);
+		COESPopupWindow::Refresh(eraseBg, rect);
 	}
 
 	void OnLeftDown(wxMouseEvent& event)
@@ -176,7 +176,7 @@ public:
 
 private:
 
-	ibCallTip*      m_ct;
+	CCallTip*      m_ct;
 	wxBitmap      m_back;
 };
 

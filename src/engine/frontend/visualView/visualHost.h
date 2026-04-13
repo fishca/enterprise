@@ -17,13 +17,13 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API ibValueFrame;
+class FRONTEND_API IValueFrame;
 
-class FRONTEND_API ibVisualHost : public wxScrolledCanvas {
-	wxDECLARE_ABSTRACT_CLASS(ibVisualHost);
+class FRONTEND_API IVisualHost : public wxScrolledCanvas {
+	wxDECLARE_ABSTRACT_CLASS(IVisualHost);
 public:
 
-	ibVisualHost(wxWindow* parent,
+	IVisualHost(wxWindow* parent,
 		wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
@@ -33,10 +33,10 @@ public:
 		wxScrolledCanvas::SetScrollRate(5, 5);
 	}
 
-	virtual ~ibVisualHost() {/* ClearVisualHost(); */ }
+	virtual ~IVisualHost() {/* ClearVisualHost(); */ }
 
-	ibValueFrame* GetObjectBase(const wxObject* wxobject) const;
-	wxObject* GetWxObject(const ibValueFrame* baseobject) const;
+	IValueFrame* GetObjectBase(const wxObject* wxobject) const;
+	wxObject* GetWxObject(const IValueFrame* baseobject) const;
 	wxSizer* GetFrameSizer() const { return GetBackgroundWindow()->GetSizer(); }
 
 	bool CreateAndUpdateVisualHost() {
@@ -51,7 +51,7 @@ public:
 	virtual bool IsShownHost() const { return true; }
 	virtual bool IsDesignerHost() const { return false; }
 
-	virtual class ibValueForm* GetValueForm() const = 0;
+	virtual class CValueForm* GetValueForm() const = 0;
 
 	virtual wxWindow* GetParentBackgroundWindow() const = 0;
 	virtual wxWindow* GetBackgroundWindow() const = 0;
@@ -68,27 +68,27 @@ protected:
 private:
 
 	//Generate component 
-	void GenerateControl(ibValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated = false);
+	void GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated = false);
 
 	//Update component
-	void RefreshControl(ibValueFrame* obj, wxWindow* wxparent, wxObject* parentObject);
+	void RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject);
 
 protected:
 
 	//Insert new control
-	void CreateControl(ibValueFrame* obj, ibValueFrame* parent = nullptr, bool firstCreated = false);
+	void CreateControl(IValueFrame* obj, IValueFrame* parent = nullptr, bool firstCreated = false);
 
 	//Update exist control
-	void UpdateControl(ibValueFrame* obj, ibValueFrame* parent = nullptr);
+	void UpdateControl(IValueFrame* obj, IValueFrame* parent = nullptr);
 
 	//Remove control
-	void RemoveControl(ibValueFrame* obj, ibValueFrame* parent = nullptr);
+	void RemoveControl(IValueFrame* obj, IValueFrame* parent = nullptr);
 
 	// Give components an opportunity to cleanup
-	void ClearControl(ibValueFrame* control, bool force = false);
+	void ClearControl(IValueFrame* control, bool force = false);
 
 	// Calculate label size for static text
-	bool CalculateLabelSize(ibValueFrame* control = nullptr);
+	bool CalculateLabelSize(IValueFrame* control = nullptr);
 
 	//Update virtual size
 	void UpdateVirtualSize();
@@ -100,7 +100,7 @@ protected:
 	/**
 	* Create an instance of the wxObject and return a pointer
 	*/
-	virtual wxObject* Create(ibValueFrame* control, wxWindow* wndParent);
+	virtual wxObject* Create(IValueFrame* control, wxWindow* wndParent);
 
 	/**
 	* Allows components to do something after they have been created.
@@ -110,18 +110,18 @@ protected:
 	* @param wxobject The object which was just created.
 	* @param wxparent The wxWidgets parent - the wxObject that the created object was added to.
 	*/
-	virtual void OnCreated(ibValueFrame* control, wxObject* obj, wxWindow* wndParent, bool first—reated = false);
+	virtual void OnCreated(IValueFrame* control, wxObject* obj, wxWindow* wndParent, bool first—reated = false);
 
 	/**
 	* Allows components to respond when selected in object tree.
 	* For example, when a wxNotebook's page is selected, it can switch to that page
 	*/
-	virtual void OnSelected(ibValueFrame* control, wxObject* obj);
+	virtual void OnSelected(IValueFrame* control, wxObject* obj);
 
 	/**
 	* Allows components to do something after they have been updated.
 	*/
-	virtual void Update(ibValueFrame* control, wxObject* obj);
+	virtual void Update(IValueFrame* control, wxObject* obj);
 
 	/**
 	* Allows components to do something after they have been updated.
@@ -131,64 +131,64 @@ protected:
 	* @param wxobject The object which was just updated.
 	* @param wxparent The wxWidgets parent - the wxObject that the updated object was added to.
 	*/
-	virtual void OnUpdated(ibValueFrame* control, wxObject* obj, wxWindow* wndParent);
+	virtual void OnUpdated(IValueFrame* control, wxObject* obj, wxWindow* wndParent);
 
 	/**
 	 * Cleanup (do the reverse of Create)
 	 */
-	virtual void Cleanup(ibValueFrame* control, wxObject* obj);
+	virtual void Cleanup(IValueFrame* control, wxObject* obj);
 
 private:
 
-	inline void AppendInnerControl(ibValueFrame* control, wxObject* wx_object) {
+	inline void AppendInnerControl(IValueFrame* control, wxObject* wx_object) {
 		m_baseObjects.insert_or_assign(control, wx_object);
 	}
 
-	inline void RemoveInnerControl(ibValueFrame* control) {
+	inline void RemoveInnerControl(IValueFrame* control) {
 		m_baseObjects.erase(control);
 	}
 
 protected:
 
-	friend class ibValueForm;
-	friend class ibValueModelTableBox;
+	friend class CValueForm;
+	friend class CValueTableBox;
 
 	//controls
-	std::unordered_map<ibValueFrame*, wxObject* > m_baseObjects;
+	std::unordered_map<IValueFrame*, wxObject* > m_baseObjects;
 };
 
 #include "frontend/docView/docView.h"
 
-class FRONTEND_API ibFrontendVisualEditorNotebook {
+class FRONTEND_API IVisualEditorNotebook {
 public:
 
-	static ibFrontendVisualEditorNotebook* FindEditorByForm(const ibValueFrame* valueForm);
+	static IVisualEditorNotebook* FindEditorByForm(const IValueFrame* valueForm);
 
-	ibFrontendVisualEditorNotebook();
-	virtual ~ibFrontendVisualEditorNotebook();
+	IVisualEditorNotebook();
+	virtual ~IVisualEditorNotebook();
 
 	virtual void CreateControl(const wxString& controlName) = 0;
-	virtual void RemoveControl(ibValueFrame* obj) = 0;
-	virtual void CutControl(ibValueFrame* obj, bool force = false) = 0;
-	virtual void CopyControl(ibValueFrame* obj) = 0;
-	virtual bool PasteControl(ibValueFrame* parent) = 0;
-	virtual void InsertControl(ibValueFrame* obj, ibValueFrame* parent) = 0;
-	virtual void ExpandControl(ibValueFrame* obj, bool expand) = 0;
-	virtual void SelectControl(ibValueFrame* obj) = 0;
+	virtual void RemoveControl(IValueFrame* obj) = 0;
+	virtual void CutControl(IValueFrame* obj, bool force = false) = 0;
+	virtual void CopyControl(IValueFrame* obj) = 0;
+	virtual bool PasteControl(IValueFrame* parent) = 0;
+	virtual void InsertControl(IValueFrame* obj, IValueFrame* parent) = 0;
+	virtual void ExpandControl(IValueFrame* obj, bool expand) = 0;
+	virtual void SelectControl(IValueFrame* obj) = 0;
 
-	virtual void ModifyEvent(class ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue) = 0;
-	virtual void ModifyProperty(class ibProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) = 0;
+	virtual void ModifyEvent(class IEvent* event, const wxVariant& oldValue, const wxVariant& newValue) = 0;
+	virtual void ModifyProperty(class IProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) = 0;
 
 	virtual void RefreshEditor() = 0;
 
-	virtual ibValueFrame* GetValueForm() const = 0;
-	virtual ibMetaDocument* GetEditorDocument() const = 0;
-	virtual ibVisualHost* GetVisualHost() const = 0;
+	virtual IValueFrame* GetValueForm() const = 0;
+	virtual CMetaDocument* GetEditorDocument() const = 0;
+	virtual IVisualHost* GetVisualHost() const = 0;
 
 	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const = 0;
 
 private:
-	static std::set<ibFrontendVisualEditorNotebook*> ms_visualEditorArray;
+	static std::set<IVisualEditorNotebook*> ms_visualEditorArray;
 };
 
 #define g_visualHostContext FindVisualEditor()

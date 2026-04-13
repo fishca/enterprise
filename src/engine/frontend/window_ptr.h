@@ -4,7 +4,7 @@
 #include <wx/wx.h>
 
 template<typename T>
-class ibWindowPtr : public wxSharedPtr<T> {
+class CWindowPtr : public wxSharedPtr<T> {
 
 	struct CWindowDeleter {
 		void operator()(wxWindow* win) {}
@@ -14,7 +14,7 @@ public:
 
 	typedef T element_type;
 
-	explicit ibWindowPtr(element_type* win)
+	explicit CWindowPtr(element_type* win)
 		: wxSharedPtr<T>(win, CWindowDeleter())
 	{
 		win->Bind(wxEVT_CLOSE_WINDOW,
@@ -22,16 +22,16 @@ public:
 		);
 	}
 
-	ibWindowPtr() {}
-	ibWindowPtr(const ibWindowPtr& tocopy) : wxSharedPtr<T>(tocopy) {}
+	CWindowPtr() {}
+	CWindowPtr(const CWindowPtr& tocopy) : wxSharedPtr<T>(tocopy) {}
 
-	ibWindowPtr& operator=(const ibWindowPtr& tocopy) {
+	CWindowPtr& operator=(const CWindowPtr& tocopy) {
 		wxSharedPtr<T>::operator=(tocopy);
 		return *this;
 	}
 
-	ibWindowPtr& operator=(element_type* win) {
-		return operator=(ibWindowPtr(win));
+	CWindowPtr& operator=(element_type* win) {
+		return operator=(CWindowPtr(win));
 	}
 
 	void reset(T* ptr = NULL) {

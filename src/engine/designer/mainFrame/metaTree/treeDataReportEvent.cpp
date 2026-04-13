@@ -5,7 +5,7 @@
 
 #include "treeDataReport.h"
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnLeftDClick(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnLeftDClick(wxMouseEvent &event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
@@ -16,19 +16,19 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnLeftDClick(wxMouseEvent &event)
 
 #include "frontend/mainFrame/mainFrame.h"
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnLeftUp(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnLeftUp(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnLeftDown(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnLeftDown(wxMouseEvent &event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk() && curItem == GetSelection()) m_ownerTree->SelectItem();
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnRightUp(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnRightUp(wxMouseEvent &event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 
@@ -48,7 +48,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnRightUp(wxMouseEvent &event)
 				continue;
 			}
 
-			GetEventHandler()->Bind(wxEVT_MENU, &ibDataReportTree::ibDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		PopupMenu(innerMenu, event.GetPosition());
@@ -63,7 +63,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnRightUp(wxMouseEvent &event)
 				continue;
 			}
 
-			GetEventHandler()->Unbind(wxEVT_MENU, &ibDataReportTree::ibDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		delete innerMenu;
@@ -72,7 +72,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnRightUp(wxMouseEvent &event)
 	m_ownerTree->SelectItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 
@@ -92,7 +92,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
 				continue;
 			}
 
-			GetEventHandler()->Bind(wxEVT_MENU, &ibDataReportTree::ibDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		PopupMenu(defaultMenu, event.GetPosition());
@@ -107,7 +107,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
 				continue;
 			}
 
-			GetEventHandler()->Unbind(wxEVT_MENU, &ibDataReportTree::ibDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		delete defaultMenu;
@@ -117,69 +117,69 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnRightDClick(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnRightDClick(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnKeyUp(wxKeyEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnKeyUp(wxKeyEvent &event)
 {
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnKeyDown(wxKeyEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnKeyDown(wxKeyEvent &event)
 {
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnMouseMove(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnMouseMove(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnCreateItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnCreateItem(wxCommandEvent &event)
 {
 	m_ownerTree->CreateItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnEditItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnEditItem(wxCommandEvent &event)
 {
 	m_ownerTree->EditItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnRemoveItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnRemoveItem(wxCommandEvent &event)
 {
 	m_ownerTree->RemoveItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnPropertyItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnPropertyItem(wxCommandEvent &event)
 {
 	m_ownerTree->PropertyItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnUpItem(wxCommandEvent& event)
+void CDataReportTree::CDataReportTreeCtrl::OnUpItem(wxCommandEvent& event)
 {
 	m_ownerTree->UpItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnDownItem(wxCommandEvent& event)
+void CDataReportTree::CDataReportTreeCtrl::OnDownItem(wxCommandEvent& event)
 {
 	m_ownerTree->DownItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnSortItem(wxCommandEvent& event)
+void CDataReportTree::CDataReportTreeCtrl::OnSortItem(wxCommandEvent& event)
 {
 	m_ownerTree->SortItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnCommandItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnCommandItem(wxCommandEvent &event)
 {
 	m_ownerTree->CommandItem(event.GetId()); event.Skip();
 }
 
 #include <wx/clipbrd.h>
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnCopyItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnCopyItem(wxCommandEvent &event)
 {
 	const wxTreeItemId& item = GetSelection();
 	if (!item.IsOk())
@@ -188,10 +188,10 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnCopyItem(wxCommandEvent &event)
 	// Write some text to the clipboard
 	if (wxTheClipboard->Open()) {
 
-		ibValueMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
+		IValueMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
 		if (metaObject != nullptr) {
 
-			ibWriterMemory dataWritter;
+			CMemoryWriter dataWritter;
 			if (metaObject->CopyObject(dataWritter)) {
 
 				wxDataObjectComposite* composite_object = new wxDataObjectComposite;
@@ -212,7 +212,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnCopyItem(wxCommandEvent &event)
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 {
 	if (!m_ownerTree->IsEditable())
 		return;
@@ -228,14 +228,14 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 		wxCustomDataObject data(oes_clipboard_metadata);
 		if (wxTheClipboard->GetData(data)) {
 
-			ibValueMetaObject* metaObject = m_ownerTree->NewItem(
+			IValueMetaObject* metaObject = m_ownerTree->NewItem(
 				m_ownerTree->GetClassIdentifier(),
 				m_ownerTree->GetMetaIdentifier(),
 				false
 			);
 
 			if (metaObject != nullptr) {
-				ibReaderMemory reader(data.GetData(), data.GetDataSize());
+				CMemoryReader reader(data.GetData(), data.GetDataSize());
 				if (metaObject->PasteObject(reader)) 		
 					m_ownerTree->FillItem(metaObject, item);
 				objectInspector->SelectObject(metaObject);
@@ -253,7 +253,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 #include "frontend/docView/docManager.h"
 #include "frontend/mainFrame/mainFrameChild.h"
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnSetFocus(wxFocusEvent& event)
+void CDataReportTree::CDataReportTreeCtrl::OnSetFocus(wxFocusEvent& event)
 {
 	if (event.GetEventType() == wxEVT_SET_FOCUS) {
 		docManager->ActivateView(m_metaView);
@@ -270,17 +270,17 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnSetFocus(wxFocusEvent& event)
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnSelecting(wxTreeEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnSelecting(wxTreeEvent &event)
 {
 	event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnSelected(wxTreeEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnSelected(wxTreeEvent &event)
 {
 	m_ownerTree->SelectItem(); event.Skip();
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnCollapsing(wxTreeEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnCollapsing(wxTreeEvent &event)
 {
 	if (GetRootItem() != event.GetItem()) {
 		m_ownerTree->Collapse(); event.Skip();
@@ -290,7 +290,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnCollapsing(wxTreeEvent &event)
 	}
 }
 
-void ibDataReportTree::ibDataReportTreeCtrl::OnExpanding(wxTreeEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnExpanding(wxTreeEvent &event)
 {
 	m_ownerTree->Expand(); event.Skip();
 }

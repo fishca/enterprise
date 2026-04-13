@@ -6,14 +6,14 @@ enum
 	MENU_ADDITEM_SEPARATOR,
 };
 
-void ibValueToolbar::PrepareDefaultMenu(wxMenu* menu)
+void CValueToolbar::PrepareDefaultMenu(wxMenu* menu)
 {
-	menu->Append(MENU_ADDITEM, _("Add tool\tInsert"))->SetBitmap(ibValueToolBarItem::GetIconGroup());
-	menu->Append(MENU_ADDITEM_SEPARATOR, _("Add separator\tInsert"))->SetBitmap(ibValueToolBarSeparator::GetIconGroup());
+	menu->Append(MENU_ADDITEM, _("Add tool\tInsert"))->SetBitmap(CValueToolBarItem::GetIconGroup());
+	menu->Append(MENU_ADDITEM_SEPARATOR, _("Add separator\tInsert"))->SetBitmap(CValueToolBarSeparator::GetIconGroup());
 	menu->AppendSeparator();
 }
 
-void ibValueToolbar::ExecuteMenu(ibVisualHost* visualHost, int id)
+void CValueToolbar::ExecuteMenu(IVisualHost* visualHost, int id)
 {
 	switch (id)
 	{

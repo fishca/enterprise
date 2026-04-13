@@ -1,26 +1,26 @@
 
 #include "sizer.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueGridSizer, ibValueSizer)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueGridSizer, IValueSizer)
 
 //****************************************************************************
 //*                             GridSizer                                    *
 //****************************************************************************
 
-ibValueGridSizer::ibValueGridSizer() : ibValueSizer()
+CValueGridSizer::CValueGridSizer() : IValueSizer()
 {
 }
 
-wxObject* ibValueGridSizer::Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/)
+wxObject* CValueGridSizer::Create(wxWindow* /*parent*/, IVisualHost* /*visualHost*/)
 {
 	return new wxGridSizer(m_propertyRows->GetValueAsUInteger(), m_propertyCols->GetValueAsUInteger(), 0, 0);
 }
 
-void ibValueGridSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost *visualHost, bool first—reated)
+void CValueGridSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost *visualHost, bool first—reated)
 {
 }
 
-void ibValueGridSizer::Update(wxObject* wxobject, ibVisualHost *visualHost)
+void CValueGridSizer::Update(wxObject* wxobject, IVisualHost *visualHost)
 {
 	wxGridSizer *gridsizer = dynamic_cast<wxGridSizer *>(wxobject);
 
@@ -34,7 +34,7 @@ void ibValueGridSizer::Update(wxObject* wxobject, ibVisualHost *visualHost)
 	UpdateSizer(gridsizer);
 }
 
-void ibValueGridSizer::Cleanup(wxObject* obj, ibVisualHost *visualHost)
+void CValueGridSizer::Cleanup(wxObject* obj, IVisualHost *visualHost)
 {
 }
 
@@ -42,24 +42,24 @@ void ibValueGridSizer::Cleanup(wxObject* obj, ibVisualHost *visualHost)
 //*                           Property                                             *
 //**********************************************************************************
 
-bool ibValueGridSizer::LoadData(ibReaderMemory &reader)
+bool CValueGridSizer::LoadData(CMemoryReader &reader)
 {
 	m_propertyRows->SetValue(reader.r_s32());
 	m_propertyCols->SetValue(reader.r_s32());
 
-	return ibValueSizer::LoadData(reader);
+	return IValueSizer::LoadData(reader);
 }
 
-bool ibValueGridSizer::SaveData(ibWriterMemory &writer)
+bool CValueGridSizer::SaveData(CMemoryWriter &writer)
 {
 	writer.w_s32(m_propertyRows->GetValueAsUInteger());
 	writer.w_s32(m_propertyCols->GetValueAsUInteger());
 
-	return ibValueSizer::SaveData(writer);
+	return IValueSizer::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueGridSizer, "Gridsizer", "Sizer", string_to_clsid("CT_GSZR"));
+CONTROL_TYPE_REGISTER(CValueGridSizer, "Gridsizer", "Sizer", string_to_clsid("CT_GSZR"));

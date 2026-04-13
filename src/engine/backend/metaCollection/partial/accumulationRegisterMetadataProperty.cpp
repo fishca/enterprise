@@ -1,13 +1,13 @@
 #include "accumulationRegister.h"
 
-void ibValueMetaObjectAccumulationRegister::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CValueMetaObjectAccumulationRegister::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	if (GetRegisterType() == ibRegisterType::eBalances) {
-		(*m_propertyAttributibRecordType)->ClearFlag(metaDisableFlag);
+	if (GetRegisterType() == eRegisterType::eBalances) {
+		(*m_propertyAttributeRecordType)->ClearFlag(metaDisableFlag);
 	}
-	else if (GetRegisterType() == ibRegisterType::eTurnovers) {
-		(*m_propertyAttributibRecordType)->SetFlag(metaDisableFlag);
+	else if (GetRegisterType() == eRegisterType::eTurnovers) {
+		(*m_propertyAttributeRecordType)->SetFlag(metaDisableFlag);
 	}
 
-	ibValueMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);
+	IValueMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);
 }

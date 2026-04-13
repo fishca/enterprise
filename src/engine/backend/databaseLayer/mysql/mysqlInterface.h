@@ -48,10 +48,10 @@ typedef int (STDCALL *MysqlStmtFetchType)(MYSQL_STMT*);
 typedef my_bool(STDCALL *MysqlStmtBindResultType)(MYSQL_STMT*, MYSQL_BIND*);
 
 
-class ibInterfaceMySQL
+class CMysqlInterface
 {
 public:
-	ibInterfaceMySQL() { }
+	CMysqlInterface() { }
 	bool Init();
 
 	MysqlServerEndType GetMysqlServerEnd() { return m_pMysqlServerEnd; }

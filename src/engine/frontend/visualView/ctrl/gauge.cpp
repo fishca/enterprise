@@ -2,17 +2,17 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueGauge, ibValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueGauge, IValueWindow)
 
 //****************************************************************************
 //*                             Gauge                                        *
 //****************************************************************************
 
-ibValueGauge::ibValueGauge() : ibValueWindow()
+CValueGauge::CValueGauge() : IValueWindow()
 {
 }
 
-wxObject* ibValueGauge::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueGauge::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	return new wxGauge(wxparent, wxID_ANY,
 		m_propertyRange->GetValueAsInteger(),
@@ -22,11 +22,11 @@ wxObject* ibValueGauge::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 	);
 }
 
-void ibValueGauge::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueGauge::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 }
 
-void ibValueGauge::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueGauge::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxGauge* gauge = dynamic_cast<wxGauge*>(wxobject);
 	if (gauge != nullptr) {
@@ -49,11 +49,11 @@ void ibValueGauge::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(gauge);
 }
 
-void ibValueGauge::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void CValueGauge::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
 }
 
-void ibValueGauge::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueGauge::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 }
 
@@ -61,24 +61,24 @@ void ibValueGauge::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 //*								Data                                *
 //*******************************************************************
 
-bool ibValueGauge::LoadData(ibReaderMemory& reader)
+bool CValueGauge::LoadData(CMemoryReader& reader)
 {
 	m_propertyRange->SetValue(reader.r_s32());
 	m_propertyValue->SetValue(reader.r_s32());
 	m_propertyOrient->SetValue(reader.r_s32());
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueGauge::SaveData(ibWriterMemory& writer)
+bool CValueGauge::SaveData(CMemoryWriter& writer)
 {
 	writer.w_s32(m_propertyRange->GetValueAsInteger());
 	writer.w_s32(m_propertyValue->GetValueAsInteger());
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueGauge, "Gauge", "Widget", string_to_clsid("CT_GAUG"));
+CONTROL_TYPE_REGISTER(CValueGauge, "Gauge", "Widget", string_to_clsid("CT_GAUG"));

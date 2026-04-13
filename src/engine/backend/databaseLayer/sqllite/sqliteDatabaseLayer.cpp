@@ -12,16 +12,16 @@
 #include <wx/filename.h>
 
 // ctor()
-ibDatabaseLayerSQLite::ibDatabaseLayerSQLite()
-	: ibDatabaseLayer()
+CSqliteDatabaseLayer::CSqliteDatabaseLayer()
+	: IDatabaseLayer()
 {
 	m_pDatabase = nullptr; //&m_Database; //new sqlite3;
 	wxCSConv conv(wxT("UTF-8"));
 	SetEncoding(&conv);
 }
 
-ibDatabaseLayerSQLite::ibDatabaseLayerSQLite(const wxString& strDatabase, bool mustExist /*= false*/)
-	: ibDatabaseLayer()
+CSqliteDatabaseLayer::CSqliteDatabaseLayer(const wxString& strDatabase, bool mustExist /*= false*/)
+	: IDatabaseLayer()
 {
 	m_pDatabase = nullptr; //new sqlite3;
 	wxCSConv conv(wxT("UTF-8"));
@@ -29,8 +29,8 @@ ibDatabaseLayerSQLite::ibDatabaseLayerSQLite(const wxString& strDatabase, bool m
 	Open(strDatabase, mustExist);
 }
 
-ibDatabaseLayerSQLite::ibDatabaseLayerSQLite(const ibDatabaseLayerSQLite& src)
-	: ibDatabaseLayer()
+CSqliteDatabaseLayer::CSqliteDatabaseLayer(const CSqliteDatabaseLayer& src)
+	: IDatabaseLayer()
 {
 	m_pDatabase = nullptr; //new sqlite3;
 	wxCSConv conv(wxT("UTF-8"));
@@ -39,15 +39,15 @@ ibDatabaseLayerSQLite::ibDatabaseLayerSQLite(const ibDatabaseLayerSQLite& src)
 }
 
 // dtor()
-ibDatabaseLayerSQLite::~ibDatabaseLayerSQLite()
+CSqliteDatabaseLayer::~CSqliteDatabaseLayer()
 {
-	//wxPrintf(_("~ibDatabaseLayerSQLite()\n"));
+	//wxPrintf(_("~CSqliteDatabaseLayer()\n"));
 	Close();
 	//wxDELETE(m_pDatabase);
 }
 
 // open database
-bool ibDatabaseLayerSQLite::Open(const wxString& strDatabase, bool mustExist)
+bool CSqliteDatabaseLayer::Open(const wxString& strDatabase, bool mustExist)
 {
 	if (strDatabase != wxT(":memory:") && // :memory: is a special SQLite in-memory database
 		mustExist && !(wxFileName::FileExists(strDatabase)))
@@ -60,7 +60,7 @@ bool ibDatabaseLayerSQLite::Open(const wxString& strDatabase, bool mustExist)
 	return Open(strDatabase);
 }
 
-bool ibDatabaseLayerSQLite::Open(const wxString& strDatabase)
+bool CSqliteDatabaseLayer::Open(const wxString& strDatabase)
 {
 	ResetErrorCodes();
 
@@ -74,7 +74,7 @@ bool ibDatabaseLayerSQLite::Open(const wxString& strDatabase)
 
 	if (nReturn != SQLITE_OK)
 	{
-		SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
+		SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg((sqlite3*)m_pDatabase)));
 		ThrowDatabaseException();
 		return false;
@@ -84,7 +84,7 @@ bool ibDatabaseLayerSQLite::Open(const wxString& strDatabase)
 }
 
 // close database  
-bool ibDatabaseLayerSQLite::Close()
+bool CSqliteDatabaseLayer::Close()
 {
 	ResetErrorCodes();
 
@@ -96,7 +96,7 @@ bool ibDatabaseLayerSQLite::Close()
 		int nReturn = sqlite3_close((sqlite3*)m_pDatabase);
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
+			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg((sqlite3*)m_pDatabase)));
 			ThrowDatabaseException();
 			return false;
@@ -107,36 +107,36 @@ bool ibDatabaseLayerSQLite::Close()
 	return true;
 }
 
-bool ibDatabaseLayerSQLite::IsOpen()
+bool CSqliteDatabaseLayer::IsOpen()
 {
 	return (m_pDatabase != nullptr);
 }
 
-void ibDatabaseLayerSQLite::BeginTransaction()
+void CSqliteDatabaseLayer::BeginTransaction()
 {
 	wxLogDebug(wxT("Beginning transaction"));
 	DoRunQuery(wxT("begin deferred transaction;"), false);
 }
 
-void ibDatabaseLayerSQLite::Commit()
+void CSqliteDatabaseLayer::Commit()
 {
 	wxLogDebug(wxT("Commiting transaction"));
 	DoRunQuery(wxT("commit transaction;"), false);
 }
 
-void ibDatabaseLayerSQLite::RollBack()
+void CSqliteDatabaseLayer::RollBack()
 {
 	wxLogDebug(wxT("Rolling back transaction"));
 	DoRunQuery(wxT("rollback transaction;"), false);
 }
 
-bool ibDatabaseLayerSQLite::IsActiveTransaction()
+bool CSqliteDatabaseLayer::IsActiveTransaction()
 {
 	return false;
 }
 
 // query database
-int ibDatabaseLayerSQLite::DoRunQuery(const wxString& strQuery, bool bParseQuery)
+int CSqliteDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 {
 	ResetErrorCodes();
 
@@ -167,7 +167,7 @@ int ibDatabaseLayerSQLite::DoRunQuery(const wxString& strQuery, bool bParseQuery
 
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
+			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
 			SetErrorMessage(strErrorMessage);
 			ThrowDatabaseException();
 			return DATABASE_LAYER_QUERY_RESULT_ERROR;
@@ -178,7 +178,7 @@ int ibDatabaseLayerSQLite::DoRunQuery(const wxString& strQuery, bool bParseQuery
 	return (sqlite3_changes((sqlite3*)m_pDatabase));
 }
 
-ibDatabaseResultSet* ibDatabaseLayerSQLite::DoRunQueryWithResults(const wxString& strQuery)
+IDatabaseResultSet* CSqliteDatabaseLayer::DoRunQueryWithResults(const wxString& strQuery)
 {
 	ResetErrorCodes();
 
@@ -195,7 +195,7 @@ ibDatabaseResultSet* ibDatabaseLayerSQLite::DoRunQueryWithResults(const wxString
 
 			if (szErrorMessage != nullptr)
 			{
-				SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
+				SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
 				strErrorMessage = ConvertFromUnicodeStream(szErrorMessage);
 				sqlite3_free(szErrorMessage);
 				return nullptr;
@@ -203,7 +203,7 @@ ibDatabaseResultSet* ibDatabaseLayerSQLite::DoRunQueryWithResults(const wxString
 
 			if (nReturn != SQLITE_OK)
 			{
-				SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
+				SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(sqlite3_errcode((sqlite3*)m_pDatabase)));
 				SetErrorMessage(strErrorMessage);
 				ThrowDatabaseException();
 				return nullptr;
@@ -211,8 +211,8 @@ ibDatabaseResultSet* ibDatabaseLayerSQLite::DoRunQueryWithResults(const wxString
 		}
 
 		// Create a Prepared statement for the last SQL statement and get a result set from it
-		ibPreparedStatementSQLite* pStatement = (ibPreparedStatementSQLite*)DoPrepareStatement(QueryArray[QueryArray.size() - 1], false);
-		ibDatabaseResultSetSQLite* pResultSet = new ibDatabaseResultSetSQLite(pStatement, true);
+		CSqlitePreparedStatement* pStatement = (CSqlitePreparedStatement*)DoPrepareStatement(QueryArray[QueryArray.size() - 1], false);
+		CSqliteResultSet* pResultSet = new CSqliteResultSet(pStatement, true);
 		if (pResultSet)
 			pResultSet->SetEncoding(GetEncoding());
 
@@ -225,18 +225,18 @@ ibDatabaseResultSet* ibDatabaseLayerSQLite::DoRunQueryWithResults(const wxString
 	}
 }
 
-ibPreparedStatement* ibDatabaseLayerSQLite::DoPrepareStatement(const wxString& strQuery)
+IPreparedStatement* CSqliteDatabaseLayer::DoPrepareStatement(const wxString& strQuery)
 {
 	return DoPrepareStatement(strQuery, true);
 }
 
-ibPreparedStatement* ibDatabaseLayerSQLite::DoPrepareStatement(const wxString& strQuery, bool bLogForCleanup)
+IPreparedStatement* CSqliteDatabaseLayer::DoPrepareStatement(const wxString& strQuery, bool bLogForCleanup)
 {
 	ResetErrorCodes();
 
 	if (m_pDatabase != nullptr)
 	{
-		ibPreparedStatementSQLite* pReturnStatement = new ibPreparedStatementSQLite((sqlite3*)m_pDatabase);
+		CSqlitePreparedStatement* pReturnStatement = new CSqlitePreparedStatement((sqlite3*)m_pDatabase);
 		if (pReturnStatement)
 			pReturnStatement->SetEncoding(GetEncoding());
 
@@ -272,7 +272,7 @@ ibPreparedStatement* ibDatabaseLayerSQLite::DoPrepareStatement(const wxString& s
 
 				if (nReturn != SQLITE_OK)
 				{
-					SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
+					SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
 					SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg((sqlite3*)m_pDatabase)));
 					wxDELETE(pReturnStatement);
 					ThrowDatabaseException();
@@ -299,14 +299,14 @@ ibPreparedStatement* ibDatabaseLayerSQLite::DoPrepareStatement(const wxString& s
 	}
 }
 
-bool ibDatabaseLayerSQLite::TableExists(const wxString& table)
+bool CSqliteDatabaseLayer::TableExists(const wxString& table)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = nullptr;
-	ibDatabaseResultSet* pResult = nullptr;
+	IPreparedStatement* pStatement = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -338,7 +338,7 @@ bool ibDatabaseLayerSQLite::TableExists(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -371,14 +371,14 @@ bool ibDatabaseLayerSQLite::TableExists(const wxString& table)
 	return bReturn;
 }
 
-bool ibDatabaseLayerSQLite::ViewExists(const wxString& view)
+bool CSqliteDatabaseLayer::ViewExists(const wxString& view)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = nullptr;
-	ibDatabaseResultSet* pResult = nullptr;
+	IPreparedStatement* pStatement = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -410,7 +410,7 @@ bool ibDatabaseLayerSQLite::ViewExists(const wxString& view)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -443,11 +443,11 @@ bool ibDatabaseLayerSQLite::ViewExists(const wxString& view)
 	return bReturn;
 }
 
-wxArrayString ibDatabaseLayerSQLite::GetTables()
+wxArrayString CSqliteDatabaseLayer::GetTables()
 {
 	wxArrayString returnArray;
 
-	ibDatabaseResultSet* pResult = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -461,7 +461,7 @@ wxArrayString ibDatabaseLayerSQLite::GetTables()
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -482,11 +482,11 @@ wxArrayString ibDatabaseLayerSQLite::GetTables()
 	return returnArray;
 }
 
-wxArrayString ibDatabaseLayerSQLite::GetViews()
+wxArrayString CSqliteDatabaseLayer::GetViews()
 {
 	wxArrayString returnArray;
 
-	ibDatabaseResultSet* pResult = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -500,7 +500,7 @@ wxArrayString ibDatabaseLayerSQLite::GetViews()
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -521,14 +521,14 @@ wxArrayString ibDatabaseLayerSQLite::GetViews()
 	return returnArray;
 }
 
-wxArrayString ibDatabaseLayerSQLite::GetColumns(const wxString& table)
+wxArrayString CSqliteDatabaseLayer::GetColumns(const wxString& table)
 {
 	wxArrayString returnArray;
 
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibDatabaseResultSet* pResult = nullptr;
-	ibResultSetMetaData* pMetaData = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
+	IResultSetMetaData* pMetaData = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -548,7 +548,7 @@ wxArrayString ibDatabaseLayerSQLite::GetColumns(const wxString& table)
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pMetaData != nullptr)
 		{
@@ -581,9 +581,9 @@ wxArrayString ibDatabaseLayerSQLite::GetColumns(const wxString& table)
 	return returnArray;
 }
 
-int ibDatabaseLayerSQLite::TranslateErrorCode(int nCode)
+int CSqliteDatabaseLayer::TranslateErrorCode(int nCode)
 {
-	// Ultimately, this will probably be a map of SQLite database error code values to ibDatabaseLayer values
+	// Ultimately, this will probably be a map of SQLite database error code values to IDatabaseLayer values
 	// For now though, we'll just return error
 	int nReturn = nCode;
 	/*

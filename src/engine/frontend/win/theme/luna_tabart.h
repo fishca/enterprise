@@ -58,7 +58,7 @@ public:
 		wxWindow* wnd) override;
 
 	virtual wxSize GetTabSize(
-		wxReadOnlyDC& dc,
+		wxDC& dc,
 		wxWindow* wnd,
 		const wxString& caption,
 		const wxBitmapBundle& bitmap,

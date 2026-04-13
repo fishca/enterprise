@@ -7,11 +7,11 @@
 #include "backend/databaseLayer/databaseLayerException.h"
 
 // ctor
-ibDatabaseLayerPostgres::ibDatabaseLayerPostgres()
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+CPostgresDatabaseLayer::CPostgresDatabaseLayer()
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfacePostgres();
+	m_pInterface = new CPostgresInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -27,11 +27,11 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres()
 	m_strPort = wxT("5432");
 }
 
-ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strDatabase)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfacePostgres();
+	m_pInterface = new CPostgresInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -48,11 +48,11 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strDatabase)
 	Open(strDatabase);
 }
 
-ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strDatabase)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const wxString& strDatabase)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfacePostgres();
+	m_pInterface = new CPostgresInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -69,11 +69,11 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, cons
 	Open(strDatabase);
 }
 
-ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfacePostgres();
+	m_pInterface = new CPostgresInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -90,11 +90,11 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strDatabase, co
 	Open(strDatabase);
 }
 
-ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfacePostgres();
+	m_pInterface = new CPostgresInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -111,11 +111,11 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, cons
 	Open(strDatabase);
 }
 
-ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer(), m_transaction_is_active(false)
+CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: IDatabaseLayer(), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfacePostgres();
+	m_pInterface = new CPostgresInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -132,11 +132,11 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, cons
 	Open(strDatabase);
 }
 
-ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const ibDatabaseLayerPostgres& src)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+CPostgresDatabaseLayer::CPostgresDatabaseLayer(const CPostgresDatabaseLayer& src)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfacePostgres();
+	m_pInterface = new CPostgresInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -155,14 +155,14 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const ibDatabaseLayerPostgres& 
 }
 
 // dtor
-ibDatabaseLayerPostgres::~ibDatabaseLayerPostgres()
+CPostgresDatabaseLayer::~CPostgresDatabaseLayer()
 {
 	Close();
 	wxDELETE(m_pInterface);
 }
 
 // open database
-bool ibDatabaseLayerPostgres::Open()
+bool CPostgresDatabaseLayer::Open()
 {
 	ResetErrorCodes();
 
@@ -209,7 +209,7 @@ bool ibDatabaseLayerPostgres::Open()
 	m_pDatabase = m_pInterface->GetPQsetdbLogin()(pHost, pPort, pOptions, pTty, nullptr, pUser, pPassword);
 	if (m_pInterface->GetPQstatus()((PGconn*)m_pDatabase) == CONNECTION_BAD)
 	{
-		SetErrorCode(ibDatabaseLayerPostgres::TranslateErrorCode(m_pInterface->GetPQstatus()((PGconn*)m_pDatabase)));
+		SetErrorCode(CPostgresDatabaseLayer::TranslateErrorCode(m_pInterface->GetPQstatus()((PGconn*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetPQerrorMessage()((PGconn*)m_pDatabase)));
 		ThrowDatabaseException();
 		return false;
@@ -250,7 +250,7 @@ bool ibDatabaseLayerPostgres::Open()
 	m_pDatabase = m_pInterface->GetPQsetdbLogin()(pHost, pPort, pOptions, pTty, databaseBuffer, pUser, pPassword);
 	if (m_pInterface->GetPQstatus()((PGconn*)m_pDatabase) == CONNECTION_BAD)
 	{
-		SetErrorCode(ibDatabaseLayerPostgres::TranslateErrorCode(m_pInterface->GetPQstatus()((PGconn*)m_pDatabase)));
+		SetErrorCode(CPostgresDatabaseLayer::TranslateErrorCode(m_pInterface->GetPQstatus()((PGconn*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetPQerrorMessage()((PGconn*)m_pDatabase)));
 		ThrowDatabaseException();
 		return false;
@@ -265,13 +265,13 @@ bool ibDatabaseLayerPostgres::Open()
 	return true;
 }
 
-bool ibDatabaseLayerPostgres::Open(const wxString& strDatabase)
+bool CPostgresDatabaseLayer::Open(const wxString& strDatabase)
 {
 	m_strDatabase = strDatabase;
 	return Open();
 }
 
-bool ibDatabaseLayerPostgres::Open(const wxString& strServer, const wxString& strDatabase)
+bool CPostgresDatabaseLayer::Open(const wxString& strServer, const wxString& strDatabase)
 {
 	m_strServer = strServer;
 	m_strUser = wxT("");
@@ -281,7 +281,7 @@ bool ibDatabaseLayerPostgres::Open(const wxString& strServer, const wxString& st
 	return Open();
 }
 
-bool ibDatabaseLayerPostgres::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool CPostgresDatabaseLayer::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_strServer = wxT("localhost");
 	m_strUser = strUser;
@@ -291,7 +291,7 @@ bool ibDatabaseLayerPostgres::Open(const wxString& strDatabase, const wxString& 
 	return Open();
 }
 
-bool ibDatabaseLayerPostgres::Open(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool CPostgresDatabaseLayer::Open(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_strServer = strServer;
 	m_strUser = strUser;
@@ -301,7 +301,7 @@ bool ibDatabaseLayerPostgres::Open(const wxString& strServer, const wxString& st
 	return Open();
 }
 
-bool ibDatabaseLayerPostgres::Open(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool CPostgresDatabaseLayer::Open(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_strServer = strServer;
 	m_strPort = strPort;
@@ -313,7 +313,7 @@ bool ibDatabaseLayerPostgres::Open(const wxString& strServer, const wxString& st
 }
 
 // close database
-bool ibDatabaseLayerPostgres::Close()
+bool CPostgresDatabaseLayer::Close()
 {
 	CloseResultSets();
 	CloseStatements();
@@ -327,7 +327,7 @@ bool ibDatabaseLayerPostgres::Close()
 	return true;
 }
 
-bool ibDatabaseLayerPostgres::IsOpen()
+bool CPostgresDatabaseLayer::IsOpen()
 {
 	if (m_pDatabase)
 		return (m_pInterface->GetPQstatus()((PGconn*)m_pDatabase) != CONNECTION_BAD);
@@ -336,31 +336,31 @@ bool ibDatabaseLayerPostgres::IsOpen()
 }
 
 // transaction support
-void ibDatabaseLayerPostgres::BeginTransaction()
+void CPostgresDatabaseLayer::BeginTransaction()
 {
 	DoRunQuery(wxT("BEGIN"), false);
 	m_transaction_is_active = true;
 }
 
-void ibDatabaseLayerPostgres::Commit()
+void CPostgresDatabaseLayer::Commit()
 {
 	DoRunQuery(wxT("COMMIT"), false);
 	m_transaction_is_active = false;
 }
 
-void ibDatabaseLayerPostgres::RollBack()
+void CPostgresDatabaseLayer::RollBack()
 {
 	DoRunQuery(wxT("ROLLBACK"), false);
 	m_transaction_is_active = false; 
 }
 
-bool ibDatabaseLayerPostgres::IsActiveTransaction()
+bool CPostgresDatabaseLayer::IsActiveTransaction()
 {
 	return m_transaction_is_active;
 }
 
 // query database
-int ibDatabaseLayerPostgres::DoRunQuery(const wxString& strQuery, bool WXUNUSED(bParseQuery))
+int CPostgresDatabaseLayer::DoRunQuery(const wxString& strQuery, bool WXUNUSED(bParseQuery))
 {
 	// PostgreSQL takes care of parsing the queries itself so bParseQuery is ignored
 
@@ -370,7 +370,7 @@ int ibDatabaseLayerPostgres::DoRunQuery(const wxString& strQuery, bool WXUNUSED(
 	PGresult* pResultCode = m_pInterface->GetPQexec()((PGconn*)m_pDatabase, sqlBuffer);
 	if ((pResultCode == nullptr) || (m_pInterface->GetPQresultStatus()(pResultCode) != PGRES_COMMAND_OK))
 	{
-		SetErrorCode(ibDatabaseLayerPostgres::TranslateErrorCode(m_pInterface->GetPQresultStatus()(pResultCode)));
+		SetErrorCode(CPostgresDatabaseLayer::TranslateErrorCode(m_pInterface->GetPQresultStatus()(pResultCode)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetPQerrorMessage()((PGconn*)m_pDatabase)));
 		m_pInterface->GetPQclear()(pResultCode);
 		ThrowDatabaseException();
@@ -386,7 +386,7 @@ int ibDatabaseLayerPostgres::DoRunQuery(const wxString& strQuery, bool WXUNUSED(
 	}
 }
 
-ibDatabaseResultSet* ibDatabaseLayerPostgres::DoRunQueryWithResults(const wxString& strQuery)
+IDatabaseResultSet* CPostgresDatabaseLayer::DoRunQueryWithResults(const wxString& strQuery)
 {
 	ResetErrorCodes();
 
@@ -394,7 +394,7 @@ ibDatabaseResultSet* ibDatabaseLayerPostgres::DoRunQueryWithResults(const wxStri
 	PGresult* pResultCode = m_pInterface->GetPQexec()((PGconn*)m_pDatabase, sqlBuffer);
 	if ((pResultCode == nullptr) || (m_pInterface->GetPQresultStatus()(pResultCode) != PGRES_TUPLES_OK))
 	{
-		SetErrorCode(ibDatabaseLayerPostgres::TranslateErrorCode(m_pInterface->GetPQstatus()((PGconn*)m_pDatabase)));
+		SetErrorCode(CPostgresDatabaseLayer::TranslateErrorCode(m_pInterface->GetPQstatus()((PGconn*)m_pDatabase)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetPQerrorMessage()((PGconn*)m_pDatabase)));
 		m_pInterface->GetPQclear()(pResultCode);
 		ThrowDatabaseException();
@@ -402,31 +402,31 @@ ibDatabaseResultSet* ibDatabaseLayerPostgres::DoRunQueryWithResults(const wxStri
 	}
 	else
 	{
-		ibDatabaseResultSetPostgres* pResultSet = new ibDatabaseResultSetPostgres(m_pInterface, pResultCode);
+		CPostgresResultSet* pResultSet = new CPostgresResultSet(m_pInterface, pResultCode);
 		pResultSet->SetEncoding(GetEncoding());
 		LogResultSetForCleanup(pResultSet);
 		return pResultSet;
 	}
 }
 
-// ibPreparedStatement support
-ibPreparedStatement* ibDatabaseLayerPostgres::DoPrepareStatement(const wxString& strQuery)
+// IPreparedStatement support
+IPreparedStatement* CPostgresDatabaseLayer::DoPrepareStatement(const wxString& strQuery)
 {
 	ResetErrorCodes();
 
-	ibPreparedStatementPostgres* pStatement = ibPreparedStatementPostgres::CreateStatement(m_pInterface, (PGconn*)m_pDatabase, strQuery);
+	CPostgresPreparedStatement* pStatement = CPostgresPreparedStatement::CreateStatement(m_pInterface, (PGconn*)m_pDatabase, strQuery);
 	LogStatementForCleanup(pStatement);
 	return pStatement;
 }
 
-bool ibDatabaseLayerPostgres::DatabaseExists(const wxString& database)
+bool CPostgresDatabaseLayer::DatabaseExists(const wxString& database)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = nullptr;
-	ibDatabaseResultSet* pResult = nullptr;
+	IPreparedStatement* pStatement = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -447,7 +447,7 @@ bool ibDatabaseLayerPostgres::DatabaseExists(const wxString& database)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -480,14 +480,14 @@ bool ibDatabaseLayerPostgres::DatabaseExists(const wxString& database)
 	return bReturn;
 }
 
-bool ibDatabaseLayerPostgres::TableExists(const wxString& table)
+bool CPostgresDatabaseLayer::TableExists(const wxString& table)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = nullptr;
-	ibDatabaseResultSet* pResult = nullptr;
+	IPreparedStatement* pStatement = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -508,7 +508,7 @@ bool ibDatabaseLayerPostgres::TableExists(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -541,14 +541,14 @@ bool ibDatabaseLayerPostgres::TableExists(const wxString& table)
 	return bReturn;
 }
 
-bool ibDatabaseLayerPostgres::ViewExists(const wxString& view)
+bool CPostgresDatabaseLayer::ViewExists(const wxString& view)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = nullptr;
-	ibDatabaseResultSet* pResult = nullptr;
+	IPreparedStatement* pStatement = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -569,7 +569,7 @@ bool ibDatabaseLayerPostgres::ViewExists(const wxString& view)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -602,11 +602,11 @@ bool ibDatabaseLayerPostgres::ViewExists(const wxString& view)
 	return bReturn;
 }
 
-wxArrayString ibDatabaseLayerPostgres::GetTables()
+wxArrayString CPostgresDatabaseLayer::GetTables()
 {
 	wxArrayString returnArray;
 
-	ibDatabaseResultSet* pResult = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -620,7 +620,7 @@ wxArrayString ibDatabaseLayerPostgres::GetTables()
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -641,11 +641,11 @@ wxArrayString ibDatabaseLayerPostgres::GetTables()
 	return returnArray;
 }
 
-wxArrayString ibDatabaseLayerPostgres::GetViews()
+wxArrayString CPostgresDatabaseLayer::GetViews()
 {
 	wxArrayString returnArray;
 
-	ibDatabaseResultSet* pResult = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -659,7 +659,7 @@ wxArrayString ibDatabaseLayerPostgres::GetViews()
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -680,15 +680,15 @@ wxArrayString ibDatabaseLayerPostgres::GetViews()
 	return returnArray;
 }
 
-wxArrayString ibDatabaseLayerPostgres::GetColumns(const wxString& table)
+wxArrayString CPostgresDatabaseLayer::GetColumns(const wxString& table)
 {
 	// Initialize variables
 	wxArrayString returnArray;
 
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = nullptr;
-	ibDatabaseResultSet* pResult = nullptr;
+	IPreparedStatement* pStatement = nullptr;
+	IDatabaseResultSet* pResult = nullptr;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -710,7 +710,7 @@ wxArrayString ibDatabaseLayerPostgres::GetColumns(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -743,18 +743,18 @@ wxArrayString ibDatabaseLayerPostgres::GetColumns(const wxString& table)
 	return returnArray;
 }
 
-int ibDatabaseLayerPostgres::TranslateErrorCode(int nCode)
+int CPostgresDatabaseLayer::TranslateErrorCode(int nCode)
 {
-	// Ultimately, this will probably be a map of Postgresql database error code values to ibDatabaseLayer values
+	// Ultimately, this will probably be a map of Postgresql database error code values to IDatabaseLayer values
 	// For now though, we'll just return error
 	return nCode;
 	//return DATABASE_LAYER_ERROR;
 }
 
-bool ibDatabaseLayerPostgres::IsAvailable()
+bool CPostgresDatabaseLayer::IsAvailable()
 {
 	bool bAvailable = false;
-	ibInterfacePostgres* pInterface = new ibInterfacePostgres();
+	CPostgresInterface* pInterface = new CPostgresInterface();
 	bAvailable = pInterface && pInterface->Init();
 	wxDELETE(pInterface);
 	return bAvailable;

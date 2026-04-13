@@ -4,18 +4,18 @@
 #include "backend/databaseLayer/databaseResultSet.h"
 #include "engine/sqlite3.h"
 
-class ibResultSetMetaData;
-class ibPreparedStatementSQLite;
+class IResultSetMetaData;
+class CSqlitePreparedStatement;
 
-class ibDatabaseResultSetSQLite : public ibDatabaseResultSet
+class CSqliteResultSet : public IDatabaseResultSet
 {
 public:
 	// ctor
-	ibDatabaseResultSetSQLite();
-	ibDatabaseResultSetSQLite(ibPreparedStatementSQLite* pStatement, bool bManageStatement = false);
+	CSqliteResultSet();
+	CSqliteResultSet(CSqlitePreparedStatement* pStatement, bool bManageStatement = false);
 
 	// dtor
-	virtual ~ibDatabaseResultSetSQLite();
+	virtual ~CSqliteResultSet();
 
 	virtual bool Next();
 	virtual void Close();
@@ -30,15 +30,15 @@ public:
 	virtual wxDateTime GetResultDate(int nField);
 	virtual void* GetResultBlob(int nField, wxMemoryBuffer& buffer);
 	virtual double GetResultDouble(int nField);
-	virtual ibNumber GetResultNumber(int nField);
+	virtual number_t GetResultNumber(int nField);
 	virtual bool IsFieldNull(int nField);
 
 	// get MetaData
-	virtual ibResultSetMetaData* GetMetaData();
+	virtual IResultSetMetaData* GetMetaData();
 
 private:
 
-	ibPreparedStatementSQLite* m_pStatement;
+	CSqlitePreparedStatement* m_pStatement;
 	sqlite3_stmt* m_pSqliteStatement;
 
 	StringToIntMap m_FieldLookupMap;

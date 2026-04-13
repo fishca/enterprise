@@ -19,21 +19,21 @@
 #include "backend/databaseLayer/databaseStringConverter.h"
 #include "engine/mysql.h"
 
-class ibDatabaseParameterMySQL : public ibDatabaseStringConverter
+class CMysqlParameter : public CDatabaseStringConverter
 {
 public:
 	// ctor
-	ibDatabaseParameterMySQL();
-	ibDatabaseParameterMySQL(const wxString& strValue);
-	ibDatabaseParameterMySQL(int nValue);
-	ibDatabaseParameterMySQL(double dblValue);
-	ibDatabaseParameterMySQL(const ibNumber& numValue);
-	ibDatabaseParameterMySQL(bool bValue);
-	ibDatabaseParameterMySQL(const wxDateTime& dateValue);
-	ibDatabaseParameterMySQL(const void* pData, long nDataLength);
+	CMysqlParameter();
+	CMysqlParameter(const wxString& strValue);
+	CMysqlParameter(int nValue);
+	CMysqlParameter(double dblValue);
+	CMysqlParameter(const number_t& numValue);
+	CMysqlParameter(bool bValue);
+	CMysqlParameter(const wxDateTime& dateValue);
+	CMysqlParameter(const void* pData, long nDataLength);
 
 	// dtor
-	virtual ~ibDatabaseParameterMySQL();
+	virtual ~CMysqlParameter();
 
 	enum {
 		PARAM_STRING = 0,
@@ -62,7 +62,7 @@ private:
 	int m_nValue;
 	double m_dblValue;
 
-	ibNumber m_numValue;
+	number_t m_numValue;
 
 	MYSQL_TIME* m_pDate;
 	bool m_bValue;

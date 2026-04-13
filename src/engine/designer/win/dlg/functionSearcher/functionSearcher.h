@@ -7,8 +7,8 @@
 #include <wx/dialog.h>
 #include <wx/listctrl.h>
 
-class ibMetaDocument;
-class ibCodeEditor;
+class CMetaDocument;
+class CCodeEditor;
 
 #include <map>
 
@@ -23,8 +23,8 @@ struct CFunctionList : public wxDialog
 
 	wxListCtrl *m_listProcedures;
 
-	ibMetaDocument *m_docModule;
-	ibCodeEditor *m_codeEditor;
+	CMetaDocument *m_docModule;
+	CCodeEditor *m_codeEditor;
 
 	struct offset_proc_t {
 		int m_line;
@@ -35,7 +35,7 @@ struct CFunctionList : public wxDialog
 
 public:
 
-	CFunctionList(ibMetaDocument *moduleDoc, ibCodeEditor* parent);   // standard constructor
+	CFunctionList(CMetaDocument *moduleDoc, CCodeEditor* parent);   // standard constructor
 
 	void OnButtonOk(wxCommandEvent &event);
 	void OnButtonCancel(wxCommandEvent &event);

@@ -20,11 +20,11 @@ enum
 //*                              actionData                                     *
 //****************************************************************************
 
-ibValueForm::ibActionCollection ibValueForm::GetActionCollection(const ibFormID& formType)
+CValueForm::CActionCollection CValueForm::GetActionCollection(const form_identifier_t& formType)
 {
-	ibActionCollection actionData(this);
+	CActionCollection actionData(this);
 
-	ibActionDataObject* srcAction = dynamic_cast<ibActionDataObject*>(ibValueForm::GetSourceObject());
+	IActionDataObject* srcAction = dynamic_cast<IActionDataObject*>(CValueForm::GetSourceObject());
 	if (srcAction != nullptr) srcAction->AppendActionCollection(actionData, formType);
 
 	actionData.AddAction(wxT("Close"), _("Close"), g_picCloseFormCLSID, false, enClose);
@@ -37,7 +37,7 @@ ibValueForm::ibActionCollection ibValueForm::GetActionCollection(const ibFormID&
 	return actionData;
 }
 
-void ibValueForm::ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm)
+void CValueForm::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
 {
 	if (appData->DesignerMode()) {
 		return;
@@ -59,8 +59,8 @@ void ibValueForm::ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm
 		break;
 	default:
 	{
-		ibActionDataObject* srcAction = 
-			dynamic_cast<ibActionDataObject*>(ibValueForm::GetSourceObject());
+		IActionDataObject* srcAction = 
+			dynamic_cast<IActionDataObject*>(CValueForm::GetSourceObject());
 		if (srcAction != nullptr)
 			srcAction->ExecuteAction(lNumAction, srcForm);	
 		break;

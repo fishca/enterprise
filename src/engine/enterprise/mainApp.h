@@ -5,7 +5,7 @@
 #include <wx/aui/framemanager.h>
 #include <wx/socket.h>
 
-class ibAppEnterprise : public wxApp {
+class CEnterpriseApp : public wxApp {
 
 	bool m_debugEnable;
 	
@@ -59,6 +59,6 @@ protected:
 	void OnSetFocus(wxFocusEvent &event);
 };
 
-wxDECLARE_APP(ibAppEnterprise);
+wxDECLARE_APP(CEnterpriseApp);
 
 #endif 

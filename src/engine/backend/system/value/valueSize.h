@@ -3,15 +3,15 @@
 
 #include "backend/compiler/value.h"
 
-class BACKEND_API ibValueSize : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueSize);
+class BACKEND_API CValueSize : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueSize);
 public:
 
-	ibValueSize();
-	ibValueSize(const wxSize& size);
-	virtual ~ibValueSize() {}
+	CValueSize();
+	CValueSize(const wxSize& size);
+	virtual ~CValueSize() {}
 
-	virtual bool Init(ibValue** paParams, const long lSizeArray);
+	virtual bool Init(CValue** paParams, const long lSizeArray);
 	virtual wxString GetString() const {
 		return typeConv::SizeToString(m_size);
 	}
@@ -20,12 +20,12 @@ public:
 		return m_size == wxDefaultSize;
 	}
 
-	static ibValueMethodHelper m_methodHelper;
+	static CMethodHelper m_methodHelper;
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return &m_methodHelper;
 	}

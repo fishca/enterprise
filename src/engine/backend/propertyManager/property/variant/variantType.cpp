@@ -1,11 +1,11 @@
 #include "variantType.h"
 #include "backend/metaData.h"
 
-wxString ibVariantDataAttribute::MakeString() const
+wxString wxVariantDataAttribute::MakeString() const
 {
 	wxString strDescr;
 	if (m_ownerProperty != nullptr) {
-		const ibMetaData* metaData = m_ownerProperty->GetMetaData();
+		const IMetaData* metaData = m_ownerProperty->GetMetaData();
 		wxASSERT(metaData);
 		for (const auto clsid : m_typeDesc.GetClsidList()) {
 			if (metaData->IsRegisterCtor(clsid) && strDescr.IsEmpty()) {
@@ -22,18 +22,18 @@ wxString ibVariantDataAttribute::MakeString() const
 
 #include "backend/system/value/valueTable.h"
 
-void ibVariantDataAttribute::DoSetDefaultMetaType() {
+void wxVariantDataAttribute::DoSetDefaultMetaType() {
 	if (m_ownerProperty != nullptr) {
-		if (ibSelectorDataType::ibSelectorDataType_boolean == m_ownerProperty->GetFilterDataType()) {
+		if (eSelectorDataType::eSelectorDataType_boolean == m_ownerProperty->GetFilterDataType()) {
 			m_typeDesc.SetDefaultMetaType(g_valueBooleanCLSID);
 		}
-		else if (ibSelectorDataType::ibSelectorDataType_reference == m_ownerProperty->GetFilterDataType()) {
+		else if (eSelectorDataType::eSelectorDataType_reference == m_ownerProperty->GetFilterDataType()) {
 			m_typeDesc.SetDefaultMetaType(g_valueStringCLSID);
 		}
-		else if (ibSelectorDataType::ibSelectorDataType_resource == m_ownerProperty->GetFilterDataType()) {
+		else if (eSelectorDataType::eSelectorDataType_resource == m_ownerProperty->GetFilterDataType()) {
 			m_typeDesc.SetDefaultMetaType(g_valueNumberCLSID);
 		}
-		else if (ibSelectorDataType::ibSelectorDataType_table == m_ownerProperty->GetFilterDataType()) {
+		else if (eSelectorDataType::eSelectorDataType_table == m_ownerProperty->GetFilterDataType()) {
 			m_typeDesc.SetDefaultMetaType(g_valueTableCLSID);
 		}
 		else {
@@ -42,20 +42,20 @@ void ibVariantDataAttribute::DoSetDefaultMetaType() {
 	}
 }
 
-void ibVariantDataAttribute::DoSetFromMetaId(const ibMetaID& id)
+void wxVariantDataAttribute::DoSetFromMetaId(const meta_identifier_t& id)
 {
 	if (m_ownerProperty != nullptr && id != wxNOT_FOUND) {
 
-		const ibMetaData* metaData = m_ownerProperty->GetMetaData();
+		const IMetaData* metaData = m_ownerProperty->GetMetaData();
 		wxASSERT(metaData);
 
-		ibValueMetaObjectAttributeBase* attribute = metaData->FindAnyObjectByFilter<ibValueMetaObjectAttributeBase>(id, true);
+		IValueMetaObjectAttribute* attribute = metaData->FindAnyObjectByFilter<IValueMetaObjectAttribute>(id, true);
 		if (attribute != nullptr && attribute->IsAllowed()) {
 			m_typeDesc.SetDefaultMetaType(attribute->GetTypeDesc());
 			return;
 		}
 
-		ibValueMetaObjectTableData* metaTable = metaData->FindAnyObjectByFilter<ibValueMetaObjectTableData>(id, true);
+		CValueMetaObjectTableData* metaTable = metaData->FindAnyObjectByFilter<CValueMetaObjectTableData>(id, true);
 		if (metaTable != nullptr && metaTable->IsAllowed()) {
 			m_typeDesc.SetDefaultMetaType(metaTable->GetTypeDesc());
 			return;
@@ -65,17 +65,17 @@ void ibVariantDataAttribute::DoSetFromMetaId(const ibMetaID& id)
 	}
 }
 
-void ibVariantDataAttribute::DoSetFromTypeId(const ibTypeDescription& td)
+void wxVariantDataAttribute::DoSetFromTypeId(const CTypeDescription& td)
 {
 	m_typeDesc = td;
 	RefreshTypeDesc();
 }
 
-void ibVariantDataAttribute::DoRefreshTypeDesc()
+void wxVariantDataAttribute::DoRefreshTypeDesc()
 {
 	if (m_ownerProperty != nullptr) {
 
-		const ibMetaData* metaData = m_ownerProperty->GetMetaData();
+		const IMetaData* metaData = m_ownerProperty->GetMetaData();
 		wxASSERT(metaData);
 
 		const unsigned int object_version = metaData->GetFactoryCountChanges();

@@ -15,37 +15,37 @@
 wxDEFINE_EVENT(wxEVT_CHECKTREE_FOCUS, wxTreeEvent);
 wxDEFINE_EVENT(wxEVT_CHECKTREE_CHOICE, wxTreeEvent);
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibCheckTree, wxTreeCtrl)
+wxIMPLEMENT_DYNAMIC_CLASS(wxCheckTree, wxTreeCtrl)
 
-bool ibCheckTree::on_check_or_label(int flags)
+bool wxCheckTree::on_check_or_label(int flags)
 {
 	return flags & (wxTREE_HITTEST_ONITEMSTATEICON | wxTREE_HITTEST_ONITEMLABEL) ? true : false;
 }
 
-void ibCheckTree::unhighlight(const wxTreeItemId& id)
+void wxCheckTree::unhighlight(const wxTreeItemId& id)
 {
 	if (!id.IsOk())
 		return;
 
-	int i = ibCheckTree::GetItemState(id);
+	int i = wxCheckTree::GetItemState(id);
 
-	if (ibCheckTree::UNCHECKED <= i && i < ibCheckTree::UNCHECKED_DISABLED)
+	if (wxCheckTree::UNCHECKED <= i && i < wxCheckTree::UNCHECKED_DISABLED)
 	{
-		ibCheckTree::SetItemState(id, ibCheckTree::UNCHECKED);
+		wxCheckTree::SetItemState(id, wxCheckTree::UNCHECKED);
 
 	}
-	else if (ibCheckTree::CHECKED <= i && i < ibCheckTree::CHECKED_DISABLED)
+	else if (wxCheckTree::CHECKED <= i && i < wxCheckTree::CHECKED_DISABLED)
 	{
-		ibCheckTree::SetItemState(id, ibCheckTree::CHECKED);
+		wxCheckTree::SetItemState(id, wxCheckTree::CHECKED);
 	}
 }
 
-void ibCheckTree::mohighlight(const wxTreeItemId& id, bool toggle)
+void wxCheckTree::mohighlight(const wxTreeItemId& id, bool toggle)
 {
 	if (!id.IsOk())
 		return;
 
-	int i = ibCheckTree::GetItemState(id);
+	int i = wxCheckTree::GetItemState(id);
 
 	if (!id.IsOk() || i < 0) {
 		return;
@@ -58,16 +58,16 @@ void ibCheckTree::mohighlight(const wxTreeItemId& id, bool toggle)
 
 	bool is_checked;
 
-	if (ibCheckTree::UNCHECKED <= i && i < ibCheckTree::UNCHECKED_DISABLED)
+	if (wxCheckTree::UNCHECKED <= i && i < wxCheckTree::UNCHECKED_DISABLED)
 	{
-		ibCheckTree::SetItemState(id, toggle ? ibCheckTree::CHECKED_MOUSE_OVER : ibCheckTree::UNCHECKED_MOUSE_OVER);
+		wxCheckTree::SetItemState(id, toggle ? wxCheckTree::CHECKED_MOUSE_OVER : wxCheckTree::UNCHECKED_MOUSE_OVER);
 		is_checked = true;
 	}
-	else if (ibCheckTree::CHECKED <= i && i < ibCheckTree::CHECKED_DISABLED)
+	else if (wxCheckTree::CHECKED <= i && i < wxCheckTree::CHECKED_DISABLED)
 	{
 		if (!m_allowEmpty && checkedCount <= 1)
 			return;
-		ibCheckTree::SetItemState(id, toggle ? ibCheckTree::UNCHECKED_MOUSE_OVER : ibCheckTree::CHECKED_MOUSE_OVER);
+		wxCheckTree::SetItemState(id, toggle ? wxCheckTree::UNCHECKED_MOUSE_OVER : wxCheckTree::CHECKED_MOUSE_OVER);
 		is_checked = false;
 	}
 
@@ -75,12 +75,12 @@ void ibCheckTree::mohighlight(const wxTreeItemId& id, bool toggle)
 	{
 		wxTreeEvent eventChoice(wxEVT_CHECKTREE_CHOICE, this, id);
 		eventChoice.SetExtraLong(is_checked ? 1 : 0);
-		ibCheckTree::ProcessWindowEvent(eventChoice);
+		wxCheckTree::ProcessWindowEvent(eventChoice);
 
 		if (m_singleCheck) {
 			for (auto item : m_checkedItems) {
 				if (item.second) {
-					ibCheckTree::SetItemState(item.first, ibCheckTree::UNCHECKED);
+					wxCheckTree::SetItemState(item.first, wxCheckTree::UNCHECKED);
 				}
 			}
 			m_checkedItems.clear();
@@ -90,43 +90,43 @@ void ibCheckTree::mohighlight(const wxTreeItemId& id, bool toggle)
 	}
 }
 
-void ibCheckTree::ldhighlight(const wxTreeItemId& id)
+void wxCheckTree::ldhighlight(const wxTreeItemId& id)
 {
 	if (!id.IsOk())
 		return;
 
-	int i = ibCheckTree::GetItemState(id);
+	int i = wxCheckTree::GetItemState(id);
 
-	if (ibCheckTree::UNCHECKED <= i && i < ibCheckTree::UNCHECKED_DISABLED)
+	if (wxCheckTree::UNCHECKED <= i && i < wxCheckTree::UNCHECKED_DISABLED)
 	{
-		ibCheckTree::SetItemState(id, ibCheckTree::UNCHECKED_LEFT_DOWN);
+		wxCheckTree::SetItemState(id, wxCheckTree::UNCHECKED_LEFT_DOWN);
 	}
-	else if (ibCheckTree::CHECKED <= i && i < ibCheckTree::CHECKED_DISABLED)
+	else if (wxCheckTree::CHECKED <= i && i < wxCheckTree::CHECKED_DISABLED)
 	{
-		ibCheckTree::SetItemState(id, ibCheckTree::CHECKED_LEFT_DOWN);
+		wxCheckTree::SetItemState(id, wxCheckTree::CHECKED_LEFT_DOWN);
 	}
 }
 
-ibCheckTree::ibCheckTree()
+wxCheckTree::wxCheckTree()
 	:wxTreeCtrl()
 	, last_mo(), last_ld(), last_kf(), mouse_entered_tree_with_left_down(false), m_singleCheck(false), m_allowEmpty(false)
 {
 }
 
-ibCheckTree::ibCheckTree(wxWindow* parent, const wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
+wxCheckTree::wxCheckTree(wxWindow* parent, const wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
 	: wxTreeCtrl(parent, id, pos, size, style & ~wxCR_MULTIPLE_CHECK & ~wxCR_SINGLE_CHECK & ~wxCR_EMPTY_CHECK)
 	, last_mo(), last_ld(), last_kf(), mouse_entered_tree_with_left_down(false), m_singleCheck((style& wxCR_SINGLE_CHECK) == wxCR_SINGLE_CHECK), m_allowEmpty((style& wxCR_EMPTY_CHECK) == wxCR_EMPTY_CHECK)
 {
 	Init();
 }
 
-ibCheckTree::~ibCheckTree()
+wxCheckTree::~wxCheckTree()
 {
 	wxTreeCtrl::UnselectAll();
 	m_colors.clear();
 }
 
-void ibCheckTree::Init()
+void wxCheckTree::Init()
 {
 	wxImageList* states;
 
@@ -151,25 +151,25 @@ void ibCheckTree::Init()
 
 	AssignStateImageList(states);
 
-	Connect(wxEVT_COMMAND_TREE_SEL_CHANGED, wxTreeEventHandler(ibCheckTree::On_Tree_Sel_Changed), nullptr, this);
+	Connect(wxEVT_COMMAND_TREE_SEL_CHANGED, wxTreeEventHandler(wxCheckTree::On_Tree_Sel_Changed), nullptr, this);
 
-	Connect(wxEVT_CHAR, wxKeyEventHandler(ibCheckTree::On_Char), nullptr, this);
-	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(ibCheckTree::On_KeyDown), nullptr, this);
-	Connect(wxEVT_KEY_UP, wxKeyEventHandler(ibCheckTree::On_KeyUp), nullptr, this);
+	Connect(wxEVT_CHAR, wxKeyEventHandler(wxCheckTree::On_Char), nullptr, this);
+	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(wxCheckTree::On_KeyDown), nullptr, this);
+	Connect(wxEVT_KEY_UP, wxKeyEventHandler(wxCheckTree::On_KeyUp), nullptr, this);
 
-	Connect(wxEVT_ENTER_WINDOW, wxMouseEventHandler(ibCheckTree::On_Mouse_Enter_Tree), nullptr, this);
-	Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(ibCheckTree::On_Mouse_Leave_Tree), nullptr, this);
-	Connect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(ibCheckTree::On_Left_DClick), nullptr, this);
-	Connect(wxEVT_LEFT_DOWN, wxMouseEventHandler(ibCheckTree::On_Left_Down), nullptr, this);
-	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(ibCheckTree::On_Left_Up), nullptr, this);
-	Connect(wxEVT_MOTION, wxMouseEventHandler(ibCheckTree::On_Mouse_Motion), nullptr, this);
-	Connect(wxEVT_MOUSEWHEEL, wxMouseEventHandler(ibCheckTree::On_Mouse_Wheel), nullptr, this);
+	Connect(wxEVT_ENTER_WINDOW, wxMouseEventHandler(wxCheckTree::On_Mouse_Enter_Tree), nullptr, this);
+	Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(wxCheckTree::On_Mouse_Leave_Tree), nullptr, this);
+	Connect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(wxCheckTree::On_Left_DClick), nullptr, this);
+	Connect(wxEVT_LEFT_DOWN, wxMouseEventHandler(wxCheckTree::On_Left_Down), nullptr, this);
+	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(wxCheckTree::On_Left_Up), nullptr, this);
+	Connect(wxEVT_MOTION, wxMouseEventHandler(wxCheckTree::On_Mouse_Motion), nullptr, this);
+	Connect(wxEVT_MOUSEWHEEL, wxMouseEventHandler(wxCheckTree::On_Mouse_Wheel), nullptr, this);
 
-	Connect(wxEVT_SET_FOCUS, wxFocusEventHandler(ibCheckTree::On_Tree_Focus_Set), nullptr, this);
-	Connect(wxEVT_KILL_FOCUS, wxFocusEventHandler(ibCheckTree::On_Tree_Focus_Lost), nullptr, this);
+	Connect(wxEVT_SET_FOCUS, wxFocusEventHandler(wxCheckTree::On_Tree_Focus_Set), nullptr, this);
+	Connect(wxEVT_KILL_FOCUS, wxFocusEventHandler(wxCheckTree::On_Tree_Focus_Lost), nullptr, this);
 }
 
-void ibCheckTree::SetItemTextColour(const wxTreeItemId& item, const wxColour& col)
+void wxCheckTree::SetItemTextColour(const wxTreeItemId& item, const wxColour& col)
 {
 	std::map<wxTreeItemId, wxColor>::iterator it = m_colors.find(item);
 
@@ -185,7 +185,7 @@ void ibCheckTree::SetItemTextColour(const wxTreeItemId& item, const wxColour& co
 	wxTreeCtrl::SetItemTextColour(item, col);
 }
 
-bool ibCheckTree::EnableCheckBox(const wxTreeItemId& item, bool enable)
+bool wxCheckTree::EnableCheckBox(const wxTreeItemId& item, bool enable)
 {
 	if (!item.IsOk())
 	{
@@ -245,12 +245,12 @@ bool ibCheckTree::EnableCheckBox(const wxTreeItemId& item, bool enable)
 	}
 }
 
-bool ibCheckTree::DisableCheckBox(const wxTreeItemId& item)
+bool wxCheckTree::DisableCheckBox(const wxTreeItemId& item)
 {
 	return EnableCheckBox(item, false);
 }
 
-void ibCheckTree::MakeCheckable(const wxTreeItemId& item, bool state)
+void wxCheckTree::MakeCheckable(const wxTreeItemId& item, bool state)
 {
 	if (item.IsOk())
 	{
@@ -263,7 +263,7 @@ void ibCheckTree::MakeCheckable(const wxTreeItemId& item, bool state)
 	}
 }
 
-void ibCheckTree::Check(const wxTreeItemId& item, bool state)
+void wxCheckTree::Check(const wxTreeItemId& item, bool state)
 {
 	if (item.IsOk())
 	{
@@ -291,11 +291,11 @@ void ibCheckTree::Check(const wxTreeItemId& item, bool state)
 				return;
 
 			if (new_state != old_state) {
-				ibCheckTree::SetItemState(item, new_state);
+				wxCheckTree::SetItemState(item, new_state);
 			}
 
 			if (state) {
-				ibCheckTree::SelectItem(item);
+				wxCheckTree::SelectItem(item);
 			}
 
 			m_checkedItems.insert_or_assign(item, state);
@@ -303,12 +303,12 @@ void ibCheckTree::Check(const wxTreeItemId& item, bool state)
 	}
 }
 
-void ibCheckTree::Uncheck(const wxTreeItemId& item)
+void wxCheckTree::Uncheck(const wxTreeItemId& item)
 {
 	Check(item, false);
 }
 
-void ibCheckTree::On_Tree_Sel_Changed(wxTreeEvent& event)
+void wxCheckTree::On_Tree_Sel_Changed(wxTreeEvent& event)
 {
 	wxTreeItemId id = event.GetItem();
 
@@ -319,7 +319,7 @@ void ibCheckTree::On_Tree_Sel_Changed(wxTreeEvent& event)
 	event.Skip();
 }
 
-void ibCheckTree::On_Char(wxKeyEvent& event)
+void wxCheckTree::On_Char(wxKeyEvent& event)
 {
 	if (!GetSelection().IsOk()) {
 		//If there is no selection, any keypress should just select the first item
@@ -335,7 +335,7 @@ void ibCheckTree::On_Char(wxKeyEvent& event)
 	event.Skip();
 }
 
-void ibCheckTree::On_KeyDown(wxKeyEvent& event)
+void wxCheckTree::On_KeyDown(wxKeyEvent& event)
 {
 	if (event.GetKeyCode() == WXK_SPACE) {
 		ldhighlight(last_kf);
@@ -344,7 +344,7 @@ void ibCheckTree::On_KeyDown(wxKeyEvent& event)
 	event.Skip();
 }
 
-void ibCheckTree::On_KeyUp(wxKeyEvent& event)
+void wxCheckTree::On_KeyUp(wxKeyEvent& event)
 {
 	if (event.GetKeyCode() == WXK_SPACE) {
 		mohighlight(last_kf, true);
@@ -359,7 +359,7 @@ void ibCheckTree::On_KeyUp(wxKeyEvent& event)
 }
 
 
-void ibCheckTree::On_Mouse_Enter_Tree(wxMouseEvent& event)
+void wxCheckTree::On_Mouse_Enter_Tree(wxMouseEvent& event)
 {
 	if (event.LeftIsDown())
 	{
@@ -367,7 +367,7 @@ void ibCheckTree::On_Mouse_Enter_Tree(wxMouseEvent& event)
 	}
 }
 
-void ibCheckTree::On_Mouse_Leave_Tree(wxMouseEvent& event)
+void wxCheckTree::On_Mouse_Leave_Tree(wxMouseEvent& event)
 {
 	unhighlight(last_mo);
 	unhighlight(last_ld);
@@ -375,7 +375,7 @@ void ibCheckTree::On_Mouse_Leave_Tree(wxMouseEvent& event)
 	last_ld = wxTreeItemId();
 }
 
-void ibCheckTree::On_Left_DClick(wxMouseEvent& event)
+void wxCheckTree::On_Left_DClick(wxMouseEvent& event)
 {
 	int flags;
 
@@ -392,7 +392,7 @@ void ibCheckTree::On_Left_DClick(wxMouseEvent& event)
 	}
 }
 
-void ibCheckTree::On_Left_Down(wxMouseEvent& event)
+void wxCheckTree::On_Left_Down(wxMouseEvent& event)
 {
 	int flags;
 	wxTreeItemId id = HitTest(event.GetPosition(), flags);
@@ -405,11 +405,11 @@ void ibCheckTree::On_Left_Down(wxMouseEvent& event)
 		last_ld = id;
 		ldhighlight(id);
 
-		ibCheckTree::SelectItem(id);
+		wxCheckTree::SelectItem(id);
 	}
 }
 
-void ibCheckTree::On_Left_Up(wxMouseEvent& event)
+void wxCheckTree::On_Left_Up(wxMouseEvent& event)
 {
 	SetFocus();
 
@@ -475,7 +475,7 @@ void ibCheckTree::On_Left_Up(wxMouseEvent& event)
 	}
 }
 
-void ibCheckTree::On_Mouse_Motion(wxMouseEvent& event)
+void wxCheckTree::On_Mouse_Motion(wxMouseEvent& event)
 {
 	if (mouse_entered_tree_with_left_down)
 	{
@@ -558,12 +558,12 @@ void ibCheckTree::On_Mouse_Motion(wxMouseEvent& event)
 	}
 }
 
-void ibCheckTree::On_Mouse_Wheel(wxMouseEvent& event)
+void wxCheckTree::On_Mouse_Wheel(wxMouseEvent& event)
 {
 	event.Skip();
 }
 
-void ibCheckTree::On_Tree_Focus_Set(wxFocusEvent& event)
+void wxCheckTree::On_Tree_Focus_Set(wxFocusEvent& event)
 {
 	//event.Skip();
 
@@ -572,7 +572,7 @@ void ibCheckTree::On_Tree_Focus_Set(wxFocusEvent& event)
 	//highlighted by keyboard actionData.
 }
 
-void ibCheckTree::On_Tree_Focus_Lost(wxFocusEvent& event)
+void wxCheckTree::On_Tree_Focus_Lost(wxFocusEvent& event)
 {
 	unhighlight(last_kf);
 	Unselect();
@@ -580,7 +580,7 @@ void ibCheckTree::On_Tree_Focus_Lost(wxFocusEvent& event)
 	event.Skip();
 }
 
-void ibCheckTree::SetFocusFromKbd()
+void wxCheckTree::SetFocusFromKbd()
 {
 	if (last_kf.IsOk()) {
 		SelectItem(last_kf);

@@ -11,33 +11,33 @@
 #include "frontend/win/dlgs/activeUser.h"
 #include "frontend/win/dlgs/about.h"
 
-void ibFrontendDocMDIFrameEnterprise::OnClickAllOperation(wxCommandEvent& event)
+void CFrontendDocMDIFrameEnterprise::OnClickAllOperation(wxCommandEvent& event)
 {
-	ibDialogFunctionAll* dlg = new ibDialogFunctionAll(this, wxID_ANY);
+	CDialogFunctionAll* dlg = new CDialogFunctionAll(this, wxID_ANY);
 	dlg->Show();
 
 	event.Skip();
 }
 
-void ibFrontendDocMDIFrameEnterprise::OnToolsSettings(wxCommandEvent& event)
+void CFrontendDocMDIFrameEnterprise::OnToolsSettings(wxCommandEvent& event)
 {
-	ibDialogEnterpriseOption* dlg = new ibDialogEnterpriseOption(this, wxID_ANY);
+	CDialogEnterpriseOption* dlg = new CDialogEnterpriseOption(this, wxID_ANY);
 	dlg->Show();
 
 	event.Skip();
 }
 
-void ibFrontendDocMDIFrameEnterprise::OnActiveUsers(wxCommandEvent& event)
+void CFrontendDocMDIFrameEnterprise::OnActiveUsers(wxCommandEvent& event)
 {
-	ibDialogActiveUser* dlg = new ibDialogActiveUser(this, wxID_ANY);
+	CDialogActiveUser* dlg = new CDialogActiveUser(this, wxID_ANY);
 	dlg->Show();
 
 	event.Skip();
 }
 
-void ibFrontendDocMDIFrameEnterprise::OnAbout(wxCommandEvent& event)
+void CFrontendDocMDIFrameEnterprise::OnAbout(wxCommandEvent& event)
 {
-	ibDialogAbout* dlg = new ibDialogAbout(this, wxID_ANY);
+	CDialogAbout* dlg = new CDialogAbout(this, wxID_ANY);
 	dlg->Show();
 
 	event.Skip();

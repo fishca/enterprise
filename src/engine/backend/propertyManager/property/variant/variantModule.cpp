@@ -1,6 +1,6 @@
 #include "variantModule.h"
 
-wxString ibVariantDataModule::MakeString() const
+wxString wxVariantDataModule::MakeString() const
 {
 	return _("Module");
 }

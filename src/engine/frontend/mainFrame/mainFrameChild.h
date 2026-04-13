@@ -285,9 +285,10 @@ protected:
 			wxWindow* new_active = pClientWindow->GetPage(pClientWindow->GetSelection());
 
 			pClientWindow->SetEvtHandlerEnabled(false);
+
 			const int page_idx = pClientWindow->GetPageIndex(this);
 			success_destroy = page_idx != wxNOT_FOUND ?
-				pClientWindow->RemovePage(page_idx) : false;
+				pClientWindow->DeletePage(page_idx) : false;
 
 			const int restore_selection = pClientWindow->GetPageIndex(new_active);
 
@@ -298,10 +299,6 @@ protected:
 		}
 	
 		pClientWindow->Thaw();
-
-		// This is a child window, so we need to delete it immediately instead of
-		// postponing it until idle time as we do with real TLWs.
-		delete this;
 
 		return success_destroy;
 	}
@@ -319,15 +316,15 @@ private:
 	wxDECLARE_NO_COPY_CLASS(CAuiDocChildFrame);
 };
 
-class FRONTEND_API ibDialogDocChildFrame :
+class FRONTEND_API CDialogDocChildFrame :
 	public wxDocChildFrameAny<wxDialog, wxWindow> {
 public:
 
-	ibDialogDocChildFrame()
+	CDialogDocChildFrame()
 	{
 	}
 
-	ibDialogDocChildFrame(wxDocument* doc,
+	CDialogDocChildFrame(wxDocument* doc,
 		wxView* view,
 		wxWindow* parent,
 		wxWindowID id,
@@ -360,7 +357,7 @@ public:
 
 private:
 
-	wxDECLARE_CLASS(ibDialogDocChildFrame);
-	wxDECLARE_NO_COPY_CLASS(ibDialogDocChildFrame);
+	wxDECLARE_CLASS(CDialogDocChildFrame);
+	wxDECLARE_NO_COPY_CLASS(CDialogDocChildFrame);
 };
 #endif 

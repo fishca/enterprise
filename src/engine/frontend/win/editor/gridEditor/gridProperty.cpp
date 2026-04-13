@@ -6,16 +6,16 @@
 #include "gridEditor.h"
 #include "frontend/mainFrame/mainFrame.h"
 
-void ibGridEditor::ibPropertyGridEditorSpreadsheet::ShowInspector()
+void CGridEditor::CPropertyGridEditorSpreadsheet::ShowInspector()
 {
 	m_selection.clear(); bool hasBlocks = false;
 
-	for (const ibGridBlockCoords& coords : m_view->GetSelectedBlocks()) {
+	for (const wxGridExtBlockCoords& coords : m_view->GetSelectedBlocks()) {
 		m_selection.push_back(coords); hasBlocks = true;
 	}
 
 	if (!hasBlocks) {
-		ibGridBlockCoords coords(m_view->GetGridCursorRow(), m_view->GetGridCursorCol(),
+		wxGridExtBlockCoords coords(m_view->GetGridCursorRow(), m_view->GetGridCursorCol(),
 			m_view->GetGridCursorRow(), m_view->GetGridCursorCol());
 		m_selection.push_back(coords);
 	}
@@ -29,7 +29,7 @@ void ibGridEditor::ibPropertyGridEditorSpreadsheet::ShowInspector()
 	}
 }
 
-void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty* property, const ibGridBlockCoords& coords)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords)
 {
 	if (m_propertyName == property) {
 		if (coords.GetTopLeft() != coords.GetBottomRight()) {
@@ -70,10 +70,10 @@ void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty
 		m_propertyTextColour->SetValue(m_view->GetCellTextColour(coords.GetTopRow(), coords.GetLeftCol()));
 	}
 	else if (m_propertyLeftBorder == property || m_propertyRightBorder == property || m_propertyTopBorder == property || m_propertyBottomBorder == property || m_propertyColourBorder == property) {
-		ibGridCellBorder borderLeft = m_view->GetCellBorderLeft(coords.GetTopRow(), coords.GetLeftCol());
-		ibGridCellBorder borderRight = m_view->GetCellBorderRight(coords.GetTopRow(), coords.GetLeftCol());
-		ibGridCellBorder borderTop = m_view->GetCellBorderTop(coords.GetTopRow(), coords.GetLeftCol());
-		ibGridCellBorder borderBottom = m_view->GetCellBorderBottom(coords.GetTopRow(), coords.GetLeftCol());
+		wxGridExtCellBorder borderLeft = m_view->GetCellBorderLeft(coords.GetTopRow(), coords.GetLeftCol());
+		wxGridExtCellBorder borderRight = m_view->GetCellBorderRight(coords.GetTopRow(), coords.GetLeftCol());
+		wxGridExtCellBorder borderTop = m_view->GetCellBorderTop(coords.GetTopRow(), coords.GetLeftCol());
+		wxGridExtCellBorder borderBottom = m_view->GetCellBorderBottom(coords.GetTopRow(), coords.GetLeftCol());
 		m_propertyLeftBorder->SetValue(borderLeft.m_style);
 		m_propertyRightBorder->SetValue(borderRight.m_style);
 		m_propertyTopBorder->SetValue(borderTop.m_style);
@@ -81,38 +81,38 @@ void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty
 		m_propertyColourBorder->SetValue(borderLeft.m_colour);
 	}
 	else if (m_propertyFitMode == property) {
-		ibGridFitMode fitMode = m_view->GetCellFitMode(coords.GetTopRow(), coords.GetLeftCol());
+		wxGridExtFitMode fitMode = m_view->GetCellFitMode(coords.GetTopRow(), coords.GetLeftCol());
 		if (fitMode.IsOverflow())
-			m_propertyFitMode->SetValue(ibFitMode_Overflow);
+			m_propertyFitMode->SetValue(enFitMode_Overflow);
 		else if (fitMode.IsClip())
-			m_propertyFitMode->SetValue(ibFitMode_Clip);
+			m_propertyFitMode->SetValue(enFitMode_Clip);
 	}
 	else if (m_propertyReadOnly == property) {
 		m_propertyReadOnly->SetValue(m_view->IsCellReadOnly(coords.GetTopRow(), coords.GetLeftCol()));
 	}
 	else if (m_propertyFillType == property) {
 		if (m_view->GetTable()->CanGetValueAs(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeTextOrString))
-			m_propertyFillType->SetValue(ibSpreadsheetFillType::ibSpreadsheetFillType_StrText);
+			m_propertyFillType->SetValue(enSpreadsheetFillType::enSpreadsheetFillType_StrText);
 		else if (m_view->GetTable()->CanGetValueAs(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeTemplate))
-			m_propertyFillType->SetValue(ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate);
+			m_propertyFillType->SetValue(enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate);
 		else if (m_view->GetTable()->CanGetValueAs(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeParameter))
-			m_propertyFillType->SetValue(ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter);
+			m_propertyFillType->SetValue(enSpreadsheetFillType::enSpreadsheetFillType_StrParameter);
 	}
 	else if (m_propertyText == property) {
 
-		if (m_propertyFillType->GetValueAsEnum() == ibSpreadsheetFillType::ibSpreadsheetFillType_StrText) {
+		if (m_propertyFillType->GetValueAsEnum() == enSpreadsheetFillType::enSpreadsheetFillType_StrText) {
 			void* value = m_view->GetTable()->GetValueAsCustom(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeTextOrString);
 			wxSharedPtr<wxString> textString =
 				wxSharedPtr<wxString>(static_cast<wxString*>(value));
 			m_propertyText->SetValue(*textString);
 		}
-		else if (m_propertyFillType->GetValueAsEnum() == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
+		else if (m_propertyFillType->GetValueAsEnum() == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
 			void* value = m_view->GetTable()->GetValueAsCustom(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeTemplate);
 			wxSharedPtr<wxString> textString =
 				wxSharedPtr<wxString>(static_cast<wxString*>(value));
 			m_propertyText->SetValue(*textString);
 		}
-		else if (m_propertyFillType->GetValueAsEnum() == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
+		else if (m_propertyFillType->GetValueAsEnum() == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
 			void* value = m_view->GetTable()->GetValueAsCustom(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeParameter);
 			wxSharedPtr<wxString> textString =
 				wxSharedPtr<wxString>(static_cast<wxString*>(value));
@@ -130,7 +130,7 @@ void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty
 	}
 }
 
-void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty* property, const ibGridBlockCoords& coords)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords)
 {
 	if (m_propertyFont == property) {
 		m_view->SetCellFont(coords, m_propertyFont->GetValueAsFont());
@@ -166,26 +166,26 @@ void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty
 		m_view->SetCellBorderBottom(coords, (wxPenStyle)m_propertyBottomBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
 	}
 	else if (m_propertyFitMode == property) {
-		m_view->SetCellFitMode(coords, m_propertyFitMode->GetValueAsEnum() == ibFitMode_Overflow ? ibGridFitMode::Overflow() : ibGridFitMode::Clip());
+		m_view->SetCellFitMode(coords, m_propertyFitMode->GetValueAsEnum() == enFitMode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
 	}
 	else if (m_propertyReadOnly == property) {
 		m_view->SetCellReadOnly(coords, m_propertyReadOnly->GetValueAsBoolean());
 	}
 	else if (m_propertyFillType == property) {
-		ibSpreadsheetFillType type = m_propertyFillType->GetValueAsEnum();
+		enSpreadsheetFillType type = m_propertyFillType->GetValueAsEnum();
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++) {
 			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++) {
-				if (type == ibSpreadsheetFillType::ibSpreadsheetFillType_StrText) {
+				if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrText) {
 					wxSharedPtr<wxString> ptr;
 					ptr = static_cast<wxString*>(m_view->GetTable()->GetValueAsCustom(row, col, s_strTypeTextOrString));
 					m_view->GetTable()->SetValueAsCustom(row, col, s_strTypeTextOrString, ptr.get());
 				}
-				else if (type == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
+				else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
 					wxSharedPtr<wxString> ptr;
 					ptr = static_cast<wxString*>(m_view->GetTable()->GetValueAsCustom(row, col, s_strTypeTemplate));
 					m_view->GetTable()->SetValueAsCustom(row, col, s_strTypeTemplate, ptr.get());
 				}
-				else if (type == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
+				else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
 					wxSharedPtr<wxString> ptr;
 					ptr = static_cast<wxString*>(m_view->GetTable()->GetValueAsCustom(row, col, s_strTypeParameter));
 					m_view->GetTable()->SetValueAsCustom(row, col, s_strTypeParameter, ptr.get());
@@ -206,43 +206,43 @@ void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty
 
 #include "backend/metadataConfiguration.h"
 
-ibMetaData* ibGridEditor::ibPropertyGridEditorSpreadsheet::GetMetaData() const
+IMetaData* CGridEditor::CPropertyGridEditorSpreadsheet::GetMetaData() const
 {
-	return ibMetaDataConfiguration::Get();
+	return IMetaDataConfiguration::Get();
 }
 
-void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty* property)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyCreated(IProperty* property)
 {
 	for (const auto& coords : m_selection)
-		ibPropertyGridEditorSpreadsheet::OnPropertyCreated(property, coords);
+		CPropertyGridEditorSpreadsheet::OnPropertyCreated(property, coords);
 }
 
-void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
 {
 	if (m_propertyText == property) {
-		pg->HideProperty(pgProperty, m_propertyFillType->GetValueAsEnum() == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter);
+		pg->HideProperty(pgProperty, m_propertyFillType->GetValueAsEnum() == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter);
 	}
 	else if (m_propertyParameter == property) {
-		pg->HideProperty(pgProperty, m_propertyFillType->GetValueAsEnum() != ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter);
+		pg->HideProperty(pgProperty, m_propertyFillType->GetValueAsEnum() != enSpreadsheetFillType::enSpreadsheetFillType_StrParameter);
 	}
 
 }
 
-void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	const int row = m_view->GetGridCursorRow(),
 		col = m_view->GetGridCursorCol();
 
-	for (const ibGridBlockCoords& coords : m_selection)
-		ibPropertyGridEditorSpreadsheet::OnPropertyChanged(property, coords);
+	for (const wxGridExtBlockCoords& coords : m_selection)
+		CPropertyGridEditorSpreadsheet::OnPropertyChanged(property, coords);
 
 	m_view->ForceRefresh();
 }
 
-void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnSelectCell(ibGridEvent& event)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnSelectCell(wxGridExtEvent& event)
 {
 	if (event.Selecting()) {
-		ibGridBlockCoords coords(event.GetRow(), event.GetCol(),
+		wxGridExtBlockCoords coords(event.GetRow(), event.GetCol(),
 			event.GetRow(), event.GetCol());
 		m_selection.push_back(coords);
 	}
@@ -258,10 +258,10 @@ void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnSelectCell(ibGridEvent& ev
 	event.Skip();
 }
 
-void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnSelectCells(ibGridRangeSelectEvent& event)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnSelectCells(wxGridExtRangeSelectEvent& event)
 {
 	if (event.Selecting()) {
-		ibGridBlockCoords coords(event.GetTopRow(), event.GetLeftCol(),
+		wxGridExtBlockCoords coords(event.GetTopRow(), event.GetLeftCol(),
 			event.GetBottomRow(), event.GetRightCol());
 		m_selection.push_back(coords);
 	}

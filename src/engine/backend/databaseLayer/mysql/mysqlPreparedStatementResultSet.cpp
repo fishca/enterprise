@@ -4,8 +4,8 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 #include "backend/databaseLayer/databaseLayerException.h"
 
-ibDatabaseResultSetMySQL::ibDatabaseResultSetMySQL(ibInterfaceMySQL* pInterface)
-	: ibDatabaseResultSet()
+CMysqlPreparedStatementResultSet::CMysqlPreparedStatementResultSet(CMysqlInterface* pInterface)
+	: IDatabaseResultSet()
 {
 	m_pInterface = pInterface;
 	m_pStatement = nullptr;
@@ -13,8 +13,8 @@ ibDatabaseResultSetMySQL::ibDatabaseResultSetMySQL(ibInterfaceMySQL* pInterface)
 	m_bManageStatement = false;
 }
 
-ibDatabaseResultSetMySQL::ibDatabaseResultSetMySQL(ibInterfaceMySQL* pInterface, MYSQL_STMT* pStatement, bool bManageStatement /* = false*/)
-	: ibDatabaseResultSet()
+CMysqlPreparedStatementResultSet::CMysqlPreparedStatementResultSet(CMysqlInterface* pInterface, MYSQL_STMT* pStatement, bool bManageStatement /* = false*/)
+	: IDatabaseResultSet()
 {
 	m_pInterface = pInterface;
 	m_pStatement = pStatement;
@@ -23,7 +23,7 @@ ibDatabaseResultSetMySQL::ibDatabaseResultSetMySQL(ibInterfaceMySQL* pInterface,
 	MYSQL_RES* pResultMetadata = m_pInterface->GetMysqlStmtResultMetadata()(m_pStatement);
 	if (!pResultMetadata)
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlStmtErrno()(m_pStatement)));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlStmtErrno()(m_pStatement)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlStmtError()(m_pStatement)));
 		ThrowDatabaseException();
 	}
@@ -40,7 +40,7 @@ ibDatabaseResultSetMySQL::ibDatabaseResultSetMySQL(ibInterfaceMySQL* pInterface,
 			// Set up the map so we can look this value up later
 			wxString strFieldName = ConvertFromUnicodeStream(pCurrentField->name);
 
-			ibPreparedStatementMySQLParameter* pParameter = new ibPreparedStatementMySQLParameter(pCurrentBinding, pCurrentField);
+			CMysqlPreparedStatementParameter* pParameter = new CMysqlPreparedStatementParameter(pCurrentBinding, pCurrentField);
 			if (pParameter)
 				pParameter->SetEncoding(GetEncoding());
 
@@ -56,18 +56,18 @@ ibDatabaseResultSetMySQL::ibDatabaseResultSetMySQL(ibInterfaceMySQL* pInterface,
 	}
 }
 
-ibDatabaseResultSetMySQL::~ibDatabaseResultSetMySQL()
+CMysqlPreparedStatementResultSet::~CMysqlPreparedStatementResultSet()
 {
 	Close();
 }
 
-bool ibDatabaseResultSetMySQL::Next()
+bool CMysqlPreparedStatementResultSet::Next()
 {
 	ClearPreviousData();
 	return (m_pInterface->GetMysqlStmtFetch()(m_pStatement) != MYSQL_NO_DATA);
 }
 
-void ibDatabaseResultSetMySQL::Close()
+void CMysqlPreparedStatementResultSet::Close()
 {
 	ResetErrorCodes();
 
@@ -76,7 +76,7 @@ void ibDatabaseResultSetMySQL::Close()
 	MYSQL_RES* pResultMetadata = m_pInterface->GetMysqlStmtResultMetadata()(m_pStatement);
 	if (!pResultMetadata)
 	{
-		SetErrorCode(ibDatabaseLayerMySQL::TranslateErrorCode(m_pInterface->GetMysqlStmtErrno()(m_pStatement)));
+		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(m_pInterface->GetMysqlStmtErrno()(m_pStatement)));
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlStmtError()(m_pStatement)));
 		ThrowDatabaseException();
 	}
@@ -122,7 +122,7 @@ void ibDatabaseResultSetMySQL::Close()
 }
 
 // get field
-int ibDatabaseResultSetMySQL::GetResultInt(int nField)
+int CMysqlPreparedStatementResultSet::GetResultInt(int nField)
 {
 	long long nValue = 0;
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
@@ -164,7 +164,7 @@ int ibDatabaseResultSetMySQL::GetResultInt(int nField)
 	return nValue;
 }
 
-wxString ibDatabaseResultSetMySQL::GetResultString(int nField)
+wxString CMysqlPreparedStatementResultSet::GetResultString(int nField)
 {
 	wxString strValue = wxEmptyString;
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
@@ -178,7 +178,7 @@ wxString ibDatabaseResultSetMySQL::GetResultString(int nField)
 	return strValue;
 }
 
-long long ibDatabaseResultSetMySQL::GetResultLong(int nField)
+long long CMysqlPreparedStatementResultSet::GetResultLong(int nField)
 {
 	long long nValue = 0;
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
@@ -220,7 +220,7 @@ long long ibDatabaseResultSetMySQL::GetResultLong(int nField)
 	return nValue;
 }
 
-bool ibDatabaseResultSetMySQL::GetResultBool(int nField)
+bool CMysqlPreparedStatementResultSet::GetResultBool(int nField)
 {
 	bool bValue = false;
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
@@ -232,7 +232,7 @@ bool ibDatabaseResultSetMySQL::GetResultBool(int nField)
 	return bValue;
 }
 
-wxDateTime ibDatabaseResultSetMySQL::GetResultDate(int nField)
+wxDateTime CMysqlPreparedStatementResultSet::GetResultDate(int nField)
 {
 	wxDateTime returnDate = wxInvalidDateTime;
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
@@ -247,7 +247,7 @@ wxDateTime ibDatabaseResultSetMySQL::GetResultDate(int nField)
 	return returnDate;
 }
 
-void* ibDatabaseResultSetMySQL::GetResultBlob(int nField, wxMemoryBuffer& buffer)
+void* CMysqlPreparedStatementResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 {
 	void* pReturn = nullptr;
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
@@ -290,7 +290,7 @@ void* ibDatabaseResultSetMySQL::GetResultBlob(int nField, wxMemoryBuffer& buffer
 	return pReturn;
 }
 
-double ibDatabaseResultSetMySQL::GetResultDouble(int nField)
+double CMysqlPreparedStatementResultSet::GetResultDouble(int nField)
 {
 	double dblValue = 0.0;
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
@@ -315,9 +315,9 @@ double ibDatabaseResultSetMySQL::GetResultDouble(int nField)
 	return dblValue;
 }
 
-ibNumber ibDatabaseResultSetMySQL::GetResultNumber(int nField)
+number_t CMysqlPreparedStatementResultSet::GetResultNumber(int nField)
 {
-	ibNumber numValue = 0.0;
+	number_t numValue = 0.0;
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
 	if (pResultBinding != nullptr)
 	{
@@ -340,7 +340,7 @@ ibNumber ibDatabaseResultSetMySQL::GetResultNumber(int nField)
 	return numValue;
 }
 
-bool ibDatabaseResultSetMySQL::IsFieldNull(int nField)
+bool CMysqlPreparedStatementResultSet::IsFieldNull(int nField)
 {
 	MYSQL_BIND* pResultBinding = GetResultBinding(nField);
 	my_bool isNull = *(pResultBinding->is_null);
@@ -350,7 +350,7 @@ bool ibDatabaseResultSetMySQL::IsFieldNull(int nField)
 		return false;
 }
 
-int ibDatabaseResultSetMySQL::LookupField(const wxString& strField)
+int CMysqlPreparedStatementResultSet::LookupField(const wxString& strField)
 {
 	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
 		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
@@ -359,7 +359,7 @@ int ibDatabaseResultSetMySQL::LookupField(const wxString& strField)
 	{
 		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
-		ibDatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
+		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;
 #else
 		wxLogError(msg);
@@ -372,14 +372,14 @@ int ibDatabaseResultSetMySQL::LookupField(const wxString& strField)
 	}
 }
 
-MYSQL_BIND* ibDatabaseResultSetMySQL::GetResultBinding(int nField)
+MYSQL_BIND* CMysqlPreparedStatementResultSet::GetResultBinding(int nField)
 {
 	IntToMysqlParameterMap::iterator finder = m_BindingWrappers.find(nField - 1);
 	if (finder == m_BindingWrappers.end())
 	{
 		wxString msg(wxT("Field '") + wxString::Format(wxT("%d"), nField) + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
-		ibDatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
+		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;
 #else
 		wxLogError(msg);
@@ -392,14 +392,14 @@ MYSQL_BIND* ibDatabaseResultSetMySQL::GetResultBinding(int nField)
 	}
 }
 
-ibResultSetMetaData* ibDatabaseResultSetMySQL::GetMetaData()
+IResultSetMetaData* CMysqlPreparedStatementResultSet::GetMetaData()
 {
-	ibResultSetMetaData* pMetaData = new ibResultSetMetaDataMySQL(m_pInterface, m_pInterface->GetMysqlStmtResultMetadata()(m_pStatement));
+	IResultSetMetaData* pMetaData = new CMysqlResultSetMetaData(m_pInterface, m_pInterface->GetMysqlStmtResultMetadata()(m_pStatement));
 	LogMetaDataForCleanup(pMetaData);
 	return pMetaData;
 }
 
-void ibDatabaseResultSetMySQL::ClearPreviousData()
+void CMysqlPreparedStatementResultSet::ClearPreviousData()
 {
 	// Go through all the bindings and clear the data resetting for the next retrieval
 	IntToMysqlParameterMap::iterator start = m_BindingWrappers.begin();

@@ -1,26 +1,26 @@
 #include "docViewDataProcessorFile.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibDataProcessorEditView, ibMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorEditView, CMetaView);
 
-bool ibDataProcessorEditView::OnCreate(ibMetaDocument* doc, long flags)
+bool CDataProcessorEditView::OnCreate(CMetaDocument* doc, long flags)
 {
-	m_metaTree = new ibDataProcessorTree(doc, m_viewFrame);
+	m_metaTree = new CDataProcessorTree(doc, m_viewFrame);
 	m_metaTree->SetReadOnly(false);
 
-	return ibMetaView::OnCreate(doc, flags);
+	return CMetaView::OnCreate(doc, flags);
 }
 
-void ibDataProcessorEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+void CDataProcessorEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
 	if (activate) m_metaTree->ActivateTree();
 }
 
-void ibDataProcessorEditView::OnDraw(wxDC* WXUNUSED(dc))
+void CDataProcessorEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-bool ibDataProcessorEditView::OnClose(bool deleteWindow)
+bool CDataProcessorEditView::OnClose(bool deleteWindow)
 {
 	Activate(false);
 
@@ -29,7 +29,7 @@ bool ibDataProcessorEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (ibMetaView::OnClose(deleteWindow)) {
+	if (CMetaView::OnClose(deleteWindow)) {
 		
 		m_metaTree->Freeze();
 		
@@ -42,19 +42,19 @@ bool ibDataProcessorEditView::OnClose(bool deleteWindow)
 	return false;
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibDataProcessorFilibDocument, ibMetaDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorFileDocument, CMetaDocument);
 
-bool ibDataProcessorFilibDocument::OnCreate(const wxString& path, long flags)
+bool CDataProcessorFileDocument::OnCreate(const wxString& path, long flags)
 {
-	m_metaData = new ibMetaDataDataProcessor();
-	if (!ibMetaDocument::OnCreate(path, flags))
+	m_metaData = new CMetaDataDataProcessor();
+	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
 	return true;
 }
 
 #include "frontend/mainFrame/mainFrame.h"
 
-bool ibDataProcessorFilibDocument::OnCloseDocument()
+bool CDataProcessorFileDocument::OnCloseDocument()
 {
 	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
@@ -65,7 +65,7 @@ bool ibDataProcessorFilibDocument::OnCloseDocument()
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool ibDataProcessorFilibDocument::DoOpenDocument(const wxString& filename)
+bool CDataProcessorFileDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_metaData->LoadFromFile(filename))
 		return false;
@@ -76,7 +76,7 @@ bool ibDataProcessorFilibDocument::DoOpenDocument(const wxString& filename)
 	return true;
 }
 
-bool ibDataProcessorFilibDocument::DoSaveDocument(const wxString& filename)
+bool CDataProcessorFileDocument::DoSaveDocument(const wxString& filename)
 {
 	if (!GetMetaTree()->Save())
 		return false;
@@ -87,18 +87,18 @@ bool ibDataProcessorFilibDocument::DoSaveDocument(const wxString& filename)
 	return true;
 }
 
-bool ibDataProcessorFilibDocument::IsModified() const
+bool CDataProcessorFileDocument::IsModified() const
 {
-	return ibMetaDocument::IsModified();
+	return CMetaDocument::IsModified();
 }
 
-void ibDataProcessorFilibDocument::Modify(bool modified)
+void CDataProcessorFileDocument::Modify(bool modified)
 {
-	ibMetaDocument::Modify(modified);
+	CMetaDocument::Modify(modified);
 }
 
-ibDataProcessorTree* ibDataProcessorFilibDocument::GetMetaTree() const
+CDataProcessorTree* CDataProcessorFileDocument::GetMetaTree() const
 {
 	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, ibDataProcessorEditView)->GetMetaTree() : nullptr;
+	return view ? wxDynamicCast(view, CDataProcessorEditView)->GetMetaTree() : nullptr;
 }

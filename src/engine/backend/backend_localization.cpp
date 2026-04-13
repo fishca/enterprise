@@ -6,7 +6,7 @@ static wxString ms_strUserLanguage = wxT("en");
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ibBackendLocalization::SetUserLanguage(const wxString& strUserLanguage)
+void CBackendLocalization::SetUserLanguage(const wxString& strUserLanguage)
 {
 	if (strUserLanguage.IsEmpty()) {
 		ms_strUserLanguage = wxT("en");
@@ -16,14 +16,14 @@ void ibBackendLocalization::SetUserLanguage(const wxString& strUserLanguage)
 	ms_strUserLanguage = strUserLanguage;
 }
 
-wxString ibBackendLocalization::GetUserLanguage()
+wxString CBackendLocalization::GetUserLanguage()
 {
 	return ms_strUserLanguage;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale, ibBackendLocalizationEntryArray& array)
+bool CBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale, CBackendLocalizationEntryArray& array)
 {
 	bool open_text = false,
 		open_symbol = false;
@@ -62,7 +62,7 @@ bool ibBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale
 
 #pragma endregion
 
-	static ibBackendLocalizationEntry entry;
+	static CBackendLocalizationEntry entry;
 
 	for (const auto& c : strRawLocale.ToStdWstring()) {
 
@@ -78,7 +78,7 @@ bool ibBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale
 		else if (open_text && !open_symbol && c == wxT(';')) {
 			const wxString& code = entry.m_code;
 			const auto iterator = std::find_if(array.begin(), array.end(),
-				[code](const ibBackendLocalizationEntry& e) {
+				[code](const CBackendLocalizationEntry& e) {
 					return stringUtils::CompareString(code, e.m_code); });
 
 			if (iterator == array.end()) {
@@ -101,9 +101,9 @@ bool ibBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale
 	return array.size() > 0;
 }
 
-wxString ibBackendLocalization::CreateLocalizationRawLocText(const wxString& strLocale)
+wxString CBackendLocalization::CreateLocalizationRawLocText(const wxString& strLocale)
 {
-	static ibBackendLocalizationEntryArray array;
+	static CBackendLocalizationEntryArray array;
 	if (CreateLocalizationArray(strLocale, array))
 		return GetTranslateFromArray(ms_strUserLanguage, array);
 
@@ -111,7 +111,7 @@ wxString ibBackendLocalization::CreateLocalizationRawLocText(const wxString& str
 		ms_strUserLanguage, strLocale);
 }
 
-bool ibBackendLocalization::IsLocalizationString(const wxString& strRawLocale)
+bool CBackendLocalization::IsLocalizationString(const wxString& strRawLocale)
 {
 	if (strRawLocale.IsEmpty())
 		return false;
@@ -144,14 +144,14 @@ bool ibBackendLocalization::IsLocalizationString(const wxString& strRawLocale)
 	return success;
 }
 
-wxString ibBackendLocalization::GetRawLocText(const ibBackendLocalizationEntryArray& array)
+wxString CBackendLocalization::GetRawLocText(const CBackendLocalizationEntryArray& array)
 {
 	static wxString strRawTranslate;
 	GetRawLocText(array, strRawTranslate);
 	return std::move(strRawTranslate);
 }
 
-bool ibBackendLocalization::GetRawLocText(const ibBackendLocalizationEntryArray& array, wxString& strResult)
+bool CBackendLocalization::GetRawLocText(const CBackendLocalizationEntryArray& array, wxString& strResult)
 {
 	strResult.Clear();
 	for (const auto pair : array) {
@@ -161,7 +161,7 @@ bool ibBackendLocalization::GetRawLocText(const ibBackendLocalizationEntryArray&
 	return array.size() > 0;
 }
 
-bool ibBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLocale)
+bool CBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLocale)
 {
 	if (strRawLocale.IsEmpty())
 		return true;
@@ -207,14 +207,14 @@ bool ibBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLoca
 	return true; 
 }
 
-bool ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale, wxString& strResult)
+bool CBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale, wxString& strResult)
 {
 	return GetTranslateGetRawLocText(ms_strUserLanguage, strRawLocale, strResult);
 }
 
-bool ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale, wxString& strResult)
+bool CBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale, wxString& strResult)
 {
-	static ibBackendLocalizationEntryArray array;
+	static CBackendLocalizationEntryArray array;
 	
 	if (CreateLocalizationArray(strRawLocale, array) && 
 		GetTranslateFromArray(strLangCode, array, strResult))
@@ -225,7 +225,7 @@ bool ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCod
 	return false;
 }
 
-wxString ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale)
+wxString CBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale)
 {
 	static wxString strResult;
 	if (GetTranslateGetRawLocText(strRawLocale, strResult))
@@ -233,7 +233,7 @@ wxString ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strRaw
 	return ms_strEmptyLanguage;
 }
 
-wxString ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale)
+wxString CBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale)
 {
 	static wxString strResult;
 	if (GetTranslateGetRawLocText(strLangCode, strRawLocale, strResult))
@@ -241,12 +241,12 @@ wxString ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLan
 	return ms_strEmptyLanguage;
 }
 
-void ibBackendLocalization::SetArrayTranslate(ibBackendLocalizationEntryArray& array, const wxString& strResult)
+void CBackendLocalization::SetArrayTranslate(CBackendLocalizationEntryArray& array, const wxString& strResult)
 {
 	SetArrayTranslate(ms_strUserLanguage, array, strResult);
 }
 
-void ibBackendLocalization::SetArrayTranslate(const wxString& strLangCode, ibBackendLocalizationEntryArray& array, const wxString& strResult)
+void CBackendLocalization::SetArrayTranslate(const wxString& strLangCode, CBackendLocalizationEntryArray& array, const wxString& strResult)
 {
 	for (auto& entry : array) {
 		if (entry.m_code == strLangCode) {
@@ -256,18 +256,18 @@ void ibBackendLocalization::SetArrayTranslate(const wxString& strLangCode, ibBac
 	}
 }
 
-wxString ibBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const ibBackendLocalizationEntryArray& array)
+wxString CBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const CBackendLocalizationEntryArray& array)
 {
 	static wxString result;
 	GetTranslateFromArray(strLangCode, array, result);
 	return std::move(result);
 }
 
-bool ibBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const ibBackendLocalizationEntryArray& array, wxString& strResult)
+bool CBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const CBackendLocalizationEntryArray& array, wxString& strResult)
 {
 	if (!strLangCode.IsEmpty()) {
 		auto iterator = std::find_if(array.begin(), array.end(),
-			[strLangCode](const ibBackendLocalizationEntry& entry) {
+			[strLangCode](const CBackendLocalizationEntry& entry) {
 				return stringUtils::CompareString(entry.m_code, strLangCode); });
 
 		if (iterator != array.end()) {
@@ -277,7 +277,7 @@ bool ibBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, c
 		else if (!stringUtils::CompareString(ms_strUserLanguage, strLangCode)) {
 			const wxString& strUserLanguage = ms_strUserLanguage;
 			const auto iterator_by_default_lang = std::find_if(array.begin(), array.end(),
-				[strUserLanguage](const ibBackendLocalizationEntry& entry) {
+				[strUserLanguage](const CBackendLocalizationEntry& entry) {
 					return stringUtils::CompareString(entry.m_code, strUserLanguage); });
 			if (iterator_by_default_lang != array.end()) {
 				strResult = iterator_by_default_lang->m_data;
@@ -288,7 +288,7 @@ bool ibBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, c
 	else {
 		const wxString& strUserLanguage = ms_strUserLanguage;
 		const auto iterator_by_default_lang = std::find_if(array.begin(), array.end(),
-			[strUserLanguage](const ibBackendLocalizationEntry& entry) {
+			[strUserLanguage](const CBackendLocalizationEntry& entry) {
 				return stringUtils::CompareString(entry.m_code, strUserLanguage); });
 		if (iterator_by_default_lang != array.end()) {
 			strResult = iterator_by_default_lang->m_data;

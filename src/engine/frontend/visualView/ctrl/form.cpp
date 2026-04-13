@@ -6,38 +6,38 @@
 #include "form.h"
 #include "backend/metaCollection/partial/commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueForm, ibValueFrame);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueForm, IValueFrame);
 
 //****************************************************************************
 //*                              Frame                                       *
 //****************************************************************************
 
-ibValueForm::ibValueForm(const ibValueMetaObjectFormBase* creator, ibControlFrame* ownerControl,
-	ibSourceDataObject* srcObject, const ibUniqueKey& formGuid) : ibValueFrame(), ibModuleDataObject(),
+CValueForm::CValueForm(const IValueMetaObjectForm* creator, IControlFrame* ownerControl,
+	ISourceDataObject* srcObject, const CUniqueKey& formGuid) : IValueFrame(), IModuleDataObject(),
 	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr),
-	m_formCollectionControl(ibValue::CreateAndPrepareValueRef<ibValueFormCollectionControl>(this)),
+	m_formCollectionControl(CValue::CreateAndPrepareValueRef<CValueFormCollectionControl>(this)),
 	m_formType(defaultFormType), m_closeOnChoice(true), m_closeOnOwnerClose(true), m_formModified(false)
 {
 	//init default params
-	ibValueForm::InitializeForm(creator, ownerControl, srcObject, formGuid);
+	CValueForm::InitializeForm(creator, ownerControl, srcObject, formGuid);
 
 	//set default params
 	m_controlId = defaultFormId;
 }
 
-ibValueForm::~ibValueForm()
+CValueForm::~CValueForm()
 {
 	for (auto pair : m_idleHandlerArray) {
 		wxTimer* timer = pair.second;
 		if (timer->IsRunning()) {
 			timer->Stop();
 		}
-		timer->Unbind(wxEVT_TIMER, &ibValueForm::OnIdleHandler, this);
+		timer->Unbind(wxEVT_TIMER, &CValueForm::OnIdleHandler, this);
 		delete timer;
 	}
 
 	for (unsigned int idx = GetChildCount(); idx > 0; idx--) {
-		ibValueFrame* controlChild = GetChild(idx - 1);
+		IValueFrame* controlChild = GetChild(idx - 1);
 		ClearRecursive(controlChild);
 		if (controlChild != nullptr) controlChild->DecrRef();
 	}
@@ -46,12 +46,12 @@ ibValueForm::~ibValueForm()
 	if (m_sourceObject != nullptr) m_sourceObject->SourceDecrRef();
 }
 
-void ibValueForm::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueForm::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	UpdateForm();
 }
 
-void ibValueForm::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void CValueForm::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
 	//lay out parent window 
 	wxWindow* wndParent = visualHost->GetParent();
@@ -64,7 +64,7 @@ void ibValueForm::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost
 //*                                   Data		                                   *
 //**********************************************************************************
 
-bool ibValueForm::LoadData(ibReaderMemory& reader)
+bool CValueForm::LoadData(CMemoryReader& reader)
 {
 	wxString propValue = wxEmptyString;
 	reader.r_stringZ(propValue);
@@ -75,10 +75,10 @@ bool ibValueForm::LoadData(ibReaderMemory& reader)
 	reader.r_stringZ(propValue);
 	m_propertyBG->SetValue(typeConv::StringToColour(propValue));
 	m_propertyEnabled->SetValue((bool)reader.r_u8());
-	return ibValueFrame::LoadData(reader);
+	return IValueFrame::LoadData(reader);
 }
 
-bool ibValueForm::SaveData(ibWriterMemory& writer)
+bool CValueForm::SaveData(CMemoryWriter& writer)
 {
 	writer.w_stringZ(m_propertyTitle->GetValueAsString());
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());
@@ -90,17 +90,17 @@ bool ibValueForm::SaveData(ibWriterMemory& writer)
 		m_propertyBG->GetValueAsString()
 	);
 	writer.w_u8(m_propertyEnabled->GetValueAsBoolean());
-	return ibValueFrame::SaveData(writer);
+	return IValueFrame::SaveData(writer);
 }
 
 //**********************************************************************************
 //*                                   Other                                        *
 //**********************************************************************************
 
-ibMetaData* ibValueForm::GetMetaData() const
+IMetaData* CValueForm::GetMetaData() const
 {
 	if (m_sourceObject != nullptr) {
-		const ibValueMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
+		const IValueMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
 		if (metaObject != nullptr)
 			return metaObject->GetMetaData();
 	}
@@ -110,17 +110,17 @@ ibMetaData* ibValueForm::GetMetaData() const
 		nullptr;
 }
 
-ibFormID ibValueForm::GetTypeForm() const
+form_identifier_t CValueForm::GetTypeForm() const
 {
 	return m_metaFormObject != nullptr ?
 		m_metaFormObject->GetTypeForm() :
 		m_formType;
 }
 
-bool ibValueForm::IsEditable() const
+bool CValueForm::IsEditable() const
 {
 	if (m_sourceObject != nullptr) {
-		const ibValueMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
+		const IValueMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
 		if (metaObject != nullptr)
 			return metaObject->IsEditable();
 	}
@@ -158,7 +158,7 @@ enum Func
 	enNotifyChoice,
 };
 
-void ibValueForm::PrepareNames() const
+void CValueForm::PrepareNames() const
 {
 	//default element
 	m_methodHelper->ClearHelper();
@@ -183,15 +183,15 @@ void ibValueForm::PrepareNames() const
 	m_methodHelper->AppendProc(wxT("NotifyChoice"), 1, wxT("NotifyChoice(value)"));
 
 	//from property 
-	for (unsigned int idx = 0; idx < ibPropertyObject::GetPropertyCount(); idx++) {
-		ibProperty* property = ibPropertyObject::GetProperty(idx);
+	for (unsigned int idx = 0; idx < IPropertyObject::GetPropertyCount(); idx++) {
+		IProperty* property = IPropertyObject::GetProperty(idx);
 		if (property == nullptr)
 			continue;
 		m_methodHelper->AppendProp(property->GetName(), idx, eProperty);
 	}
 
 	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
+		CByteCode* byteCode = m_procUnit->GetByteCode();
 		if (byteCode != nullptr) {
 			for (auto exportVariable : byteCode->m_listExportVar)
 				m_methodHelper->AppendProp(
@@ -224,7 +224,7 @@ void ibValueForm::PrepareNames() const
 	m_formCollectionControl->PrepareNames();
 }
 
-bool ibValueForm::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueForm::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -233,7 +233,7 @@ bool ibValueForm::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 		}
 	}
 	else if (lPropAlias == eProperty) {
-		return ibValueFrame::SetPropVal(lPropNum, varPropVal);
+		return IValueFrame::SetPropVal(lPropNum, varPropVal);
 	}
 	else if (lPropAlias == eSystem) {
 		switch (m_methodHelper->GetPropData(lPropNum)) {
@@ -251,7 +251,7 @@ bool ibValueForm::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 	else if (lPropAlias == eAttribute) {
 		unsigned int id = m_methodHelper->GetPropData(lPropNum);
 		auto& it = std::find_if(m_listControl.begin(), m_listControl.end(),
-			[id](const ibValueFrame* control) {
+			[id](const IValueFrame* control) {
 				return id == control->GetControlID();
 			}
 		);
@@ -261,7 +261,7 @@ bool ibValueForm::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 	return false;
 }
 
-bool ibValueForm::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueForm::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -272,7 +272,7 @@ bool ibValueForm::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 		}
 	}
 	else if (lPropAlias == eProperty) {
-		return ibValueFrame::GetPropVal(lPropNum, pvarPropVal);
+		return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 	}
 	else if (lPropAlias == eSystem) {
 		switch (m_methodHelper->GetPropData(lPropNum))
@@ -284,16 +284,16 @@ bool ibValueForm::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 			pvarPropVal = m_formCollectionControl;
 			return true;
 		case eDataSource:
-			pvarPropVal = dynamic_cast<ibValue*>(m_sourceObject);
+			pvarPropVal = dynamic_cast<CValue*>(m_sourceObject);
 			return true;
 		case eModified:
 			pvarPropVal = IsModified();
 			return true;
 		case eFormOwner:
-			pvarPropVal = dynamic_cast<ibValue*>(m_controlOwner);
+			pvarPropVal = dynamic_cast<CValue*>(m_controlOwner);
 			return true;
 		case eUniqueKey:
-			pvarPropVal = ibValue::CreateAndPrepareValueRef<ibValueGuid>(m_formKey);
+			pvarPropVal = CValue::CreateAndPrepareValueRef<CValueGuid>(m_formKey);
 			return true;
 		case eCloseOnChoice:
 			pvarPropVal = m_closeOnChoice;
@@ -306,7 +306,7 @@ bool ibValueForm::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 	else if (lPropAlias == eAttribute) {
 		unsigned int id = m_methodHelper->GetPropData(lPropNum);
 		auto& it = std::find_if(m_listControl.begin(), m_listControl.end(),
-			[id](const ibValueFrame* control) {
+			[id](const IValueFrame* control) {
 				return id == control->GetControlID();
 			}
 		);
@@ -317,7 +317,7 @@ bool ibValueForm::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 	return false;
 }
 
-bool ibValueForm::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
+bool CValueForm::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -336,12 +336,12 @@ bool ibValueForm::CallAsProc(const long lMethodNum, ibValue** paParams, const lo
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteProc(
+	return IModuleDataObject::ExecuteProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
-bool ibValueForm::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueForm::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -353,7 +353,7 @@ bool ibValueForm::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibVal
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return IModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
@@ -362,4 +362,4 @@ bool ibValueForm::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibVal
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(ibValueForm, "ClientForm", "Form", g_controlFormCLSID);
+S_CONTROL_TYPE_REGISTER(CValueForm, "ClientForm", "Form", g_controlFormCLSID);

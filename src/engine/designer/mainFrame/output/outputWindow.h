@@ -13,17 +13,17 @@
 // Forward declarations.
 //
 
-#define outputWindow ibOutputWindow::GetOutputWindow()
+#define outputWindow COutputWindow::GetOutputWindow()
 
 /**
  *
  */
-class ibOutputWindow : public wxStyledTextCtrl {
+class COutputWindow : public wxStyledTextCtrl {
 	
 	/**
 	* Constructor.
 	*/
-	ibOutputWindow(class FRONTEND_API ibFrontendDocMDIFrame* parent, wxWindowID winid);
+	COutputWindow(class FRONTEND_API CFrontendDocMDIFrame* parent, wxWindowID winid);
 
 private:
 
@@ -44,12 +44,12 @@ private:
 
 public:
 
-	static ibOutputWindow* GetOutputWindow();
+	static COutputWindow* GetOutputWindow();
 
 	/**
 	 * Sets the font and color settings used in the output window.
 	 */
-	void SetFontColorSettings(const class ibFontColorSettings& settings);
+	void SetFontColorSettings(const class CFontColorSettings& settings);
 
 	/**
 	 * Adds a message to the end of the log.
@@ -99,14 +99,14 @@ public:
 
 private:
 
-	friend class ibFrontendDocMDIFrameDesigner;
+	friend class CFrontendDocMDIFrameDesigner;
 
 	/**
 	 * Outputs text using the passed in text attribute. This method will only
 	 * cause the output window to scroll down if the insertion point is already
 	 * at the bottom of the text.
 	 */
-	void SharedOutput(const wxString& message, ibStatusMessage status,
+	void SharedOutput(const wxString& message, eStatusMessage status,
 		const wxString &strFileName = wxEmptyString, const wxString &strDocPath = wxEmptyString,
 		int currLine = wxNOT_FOUND);
 

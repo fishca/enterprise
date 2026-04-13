@@ -2,19 +2,19 @@
 #include "resultSetMetaData.h"
 
 // ctor()
-ibDatabaseResultSet::ibDatabaseResultSet()
-	: ibDatabaseErrorReporter()
+IDatabaseResultSet::IDatabaseResultSet()
+	: CDatabaseErrorReporter()
 {
 }
 
 // dtor()
-ibDatabaseResultSet::~ibDatabaseResultSet()
+IDatabaseResultSet::~IDatabaseResultSet()
 {
-	//wxPrintf(_("~ibDatabaseResultSet()\n"));
+	//wxPrintf(_("~IDatabaseResultSet()\n"));
 	CloseMetaData();
 }
 
-int ibDatabaseResultSet::GetResultInt(const wxString& strField)
+int IDatabaseResultSet::GetResultInt(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -24,7 +24,7 @@ int ibDatabaseResultSet::GetResultInt(const wxString& strField)
 	return -1;
 }
 
-wxString ibDatabaseResultSet::GetResultString(const wxString& strField)
+wxString IDatabaseResultSet::GetResultString(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -34,7 +34,7 @@ wxString ibDatabaseResultSet::GetResultString(const wxString& strField)
 	return wxEmptyString;
 }
 
-long long ibDatabaseResultSet::GetResultLong(const wxString& strField)
+long long IDatabaseResultSet::GetResultLong(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -44,7 +44,7 @@ long long ibDatabaseResultSet::GetResultLong(const wxString& strField)
 	return -1;
 }
 
-bool ibDatabaseResultSet::GetResultBool(const wxString& strField)
+bool IDatabaseResultSet::GetResultBool(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -54,7 +54,7 @@ bool ibDatabaseResultSet::GetResultBool(const wxString& strField)
 	return false;
 }
 
-wxDateTime ibDatabaseResultSet::GetResultDate(const wxString& strField)
+wxDateTime IDatabaseResultSet::GetResultDate(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -65,7 +65,7 @@ wxDateTime ibDatabaseResultSet::GetResultDate(const wxString& strField)
 	return wxDefaultDateTime;
 }
 
-void* ibDatabaseResultSet::GetResultBlob(const wxString& strField, wxMemoryBuffer& buffer)
+void* IDatabaseResultSet::GetResultBlob(const wxString& strField, wxMemoryBuffer& buffer)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -75,7 +75,7 @@ void* ibDatabaseResultSet::GetResultBlob(const wxString& strField, wxMemoryBuffe
 	return nullptr;
 }
 
-double ibDatabaseResultSet::GetResultDouble(const wxString& strField)
+double IDatabaseResultSet::GetResultDouble(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -85,7 +85,7 @@ double ibDatabaseResultSet::GetResultDouble(const wxString& strField)
 	return -1;
 }
 
-ibNumber ibDatabaseResultSet::GetResultNumber(const wxString& strField)
+number_t IDatabaseResultSet::GetResultNumber(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -95,7 +95,7 @@ ibNumber ibDatabaseResultSet::GetResultNumber(const wxString& strField)
 	return -1;
 }
 
-bool ibDatabaseResultSet::IsFieldNull(const wxString& strField)
+bool IDatabaseResultSet::IsFieldNull(const wxString& strField)
 {
 	int nIndex = LookupField(strField);
 	if (nIndex != -1)
@@ -105,7 +105,7 @@ bool ibDatabaseResultSet::IsFieldNull(const wxString& strField)
 	return true;
 }
 
-void ibDatabaseResultSet::CloseMetaData()
+void IDatabaseResultSet::CloseMetaData()
 {
 	// Iterate through all of the meta data and close them all
 	MetaDataHashSet::iterator start = m_MetaData.begin();
@@ -118,7 +118,7 @@ void ibDatabaseResultSet::CloseMetaData()
 	m_MetaData.clear();
 }
 
-bool ibDatabaseResultSet::CloseMetaData(ibResultSetMetaData* pMetaData)
+bool IDatabaseResultSet::CloseMetaData(IResultSetMetaData* pMetaData)
 {
 	if (pMetaData != nullptr)
 	{

@@ -4,23 +4,23 @@
 #include "backend/moduleManager/moduleManager.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-class BACKEND_API ibBackendMetadataTree;
+class BACKEND_API IBackendMetadataTree;
 ///////////////////////////////////////////////////////////////////////////////
-class BACKEND_API ibCtorMetaValueType;
+class BACKEND_API IMetaValueTypeCtor;
 ///////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibMetaData {
-	void DoGenerateNewID(ibMetaID& id, ibValueMetaObject* top) const;
+class BACKEND_API IMetaData {
+	void DoGenerateNewID(meta_identifier_t& id, IValueMetaObject* top) const;
 public:
 
-	ibMetaData() :
+	IMetaData() :
 		m_metaTree(nullptr),
 		m_metaModify(false) {
 	}
 
-	virtual ~ibMetaData() {}
+	virtual ~IMetaData() {}
 
-	virtual ibValueModuleManager* GetModuleManager() const = 0;
+	virtual IValueModuleManager* GetModuleManager() const = 0;
 
 	virtual bool IsModified() const { return m_metaModify; }
 	virtual void Modify(bool modify = true) {
@@ -29,46 +29,46 @@ public:
 		m_metaModify = modify;
 	}
 
-	virtual void SetVersion(const ibVersionID& version) = 0;
-	virtual ibVersionID GetVersion() const = 0;
+	virtual void SetVersion(const version_identifier_t& version) = 0;
+	virtual version_identifier_t GetVersion() const = 0;
 
 	virtual wxString GetFileName() const { return wxEmptyString; }
-	virtual ibValueMetaObject* GetCommonMetaObject() const { return nullptr; }
+	virtual IValueMetaObject* GetCommonMetaObject() const { return nullptr; }
 
 	//runtime support:
-	inline ibValue CreateObject(const ibClassID& clsid, ibValue** paParams = nullptr, const long lSizeArray = 0) const {
+	inline CValue CreateObject(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) const {
 		return CreateObjectRef(clsid, paParams, lSizeArray);
 	}
-	inline ibValue CreateObject(const wxString& className, ibValue** paParams = nullptr, const long lSizeArray = 0) const {
+	inline CValue CreateObject(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) const {
 		return CreateObjectRef(className, paParams, lSizeArray);
 	}
 
 	template<typename T, typename... Args>
-	inline ibValue CreateObjectValue(Args&&... args) const {
+	inline CValue CreateObjectValue(Args&&... args) const {
 		return CreateObjectValueRef<T>(std::forward<Args>(args)...);
 	}
 
-	virtual ibValue* CreateObjectRef(const ibClassID& clsid, ibValue** paParams = nullptr, const long lSizeArray = 0) const;
-	virtual ibValue* CreateObjectRef(const wxString& className, ibValue** paParams = nullptr, const long lSizeArray = 0) const {
-		const ibClassID& clsid = GetIDObjectFromString(className);
+	virtual CValue* CreateObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) const;
+	virtual CValue* CreateObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) const {
+		const class_identifier_t& clsid = GetIDObjectFromString(className);
 		return CreateObjectRef(clsid, paParams, lSizeArray);
 	}
 	template<typename T, typename... Args>
-	inline ibValue* CreateObjectValueRef(Args&&... args) const {
+	inline CValue* CreateObjectValueRef(Args&&... args) const {
 		return CreateAndConvertObjectValueRef<T>(std::forward<Args>(args)...);
 	}
 
-	template<class T = ibValue>
-	inline T* CreateAndConvertObjectRef(const ibClassID& clsid, ibValue** paParams = nullptr, const long lSizeArray = 0) const {
+	template<class T = CValue>
+	inline T* CreateAndConvertObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) const {
 		return CastValue<T>(CreateObjectRef(clsid, paParams, lSizeArray));
 	}
-	template<class T = ibValue>
-	inline T* CreateAndConvertObjectRef(const wxString& className, ibValue** paParams = nullptr, const long lSizeArray = 0) const {
+	template<class T = CValue>
+	inline T* CreateAndConvertObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) const {
 		return CastValue<T>(CreateObjectRef(className, paParams, lSizeArray));
 	}
 	template<typename T, typename... Args>
 	inline T* CreateAndConvertObjectValueRef(Args&&... args) const {
-		T* created_value = ibValue::CreateAndPrepareValueRef<T>(args...);
+		T* created_value = CValue::CreateAndPrepareValueRef<T>(args...);
 		if (!IsRegisterCtor(created_value->GetClassType())) {
 			wxDELETE(created_value);
 			wxASSERT_MSG(false, "CreateAndConvertObjectValueRef ret null!");
@@ -77,40 +77,40 @@ public:
 		return created_value;
 	}
 
-	void RegisterCtor(ibCtorMetaValueType* typeCtor);
-	void UnRegisterCtor(ibCtorMetaValueType*& typeCtor);
+	void RegisterCtor(IMetaValueTypeCtor* typeCtor);
+	void UnRegisterCtor(IMetaValueTypeCtor*& typeCtor);
 
 	void UnRegisterCtor(const wxString& className);
 
 	virtual bool IsRegisterCtor(const wxString& className) const;
-	virtual bool IsRegisterCtor(const wxString& className, ibCtorObjectType objectType) const;
-	virtual bool IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, enum ibCtorObjectMetaType metaType) const;
+	virtual bool IsRegisterCtor(const wxString& className, eCtorObjectType objectType) const;
+	virtual bool IsRegisterCtor(const wxString& className, eCtorObjectType objectType, enum eCtorMetaType metaType) const;
 
-	virtual bool IsRegisterCtor(const ibClassID& clsid) const;
+	virtual bool IsRegisterCtor(const class_identifier_t& clsid) const;
 
-	virtual ibClassID GetIDObjectFromString(const wxString& className) const;
-	virtual wxString GetNameObjectFromID(const ibClassID& clsid, bool upper = false) const;
+	virtual class_identifier_t GetIDObjectFromString(const wxString& className) const;
+	virtual wxString GetNameObjectFromID(const class_identifier_t& clsid, bool upper = false) const;
 
-	inline ibMetaID GetVTByID(const ibClassID& clsid) const;
-	inline ibClassID GetIDByVT(const ibMetaID& valueType, enum ibCtorObjectMetaType refType) const;
+	inline meta_identifier_t GetVTByID(const class_identifier_t& clsid) const;
+	inline class_identifier_t GetIDByVT(const meta_identifier_t& valueType, enum eCtorMetaType refType) const;
 
-	virtual ibCtorMetaValueType* GetTypeCtor(const wxString& className) const;
-	virtual ibCtorMetaValueType* GetTypeCtor(const ibClassID& clsid) const;
-	virtual ibCtorMetaValueType* GetTypeCtor(const ibValueMetaObject* metaValue, enum ibCtorObjectMetaType refType) const;
+	virtual IMetaValueTypeCtor* GetTypeCtor(const wxString& className) const;
+	virtual IMetaValueTypeCtor* GetTypeCtor(const class_identifier_t& clsid) const;
+	virtual IMetaValueTypeCtor* GetTypeCtor(const IValueMetaObject* metaValue, enum eCtorMetaType refType) const;
 
-	virtual ibCtorAbstractType* GetAvailableCtor(const wxString& className) const;
-	virtual ibCtorAbstractType* GetAvailableCtor(const ibClassID& clsid) const;
+	virtual IAbstractTypeCtor* GetAvailableCtor(const wxString& className) const;
+	virtual IAbstractTypeCtor* GetAvailableCtor(const class_identifier_t& clsid) const;
 
-	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType() const;
-	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType(const ibClassID& clsid, enum ibCtorObjectMetaType refType) const;
-	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType(enum ibCtorObjectMetaType refType) const;
+	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType() const;
+	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, enum eCtorMetaType refType) const;
+	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
 
 	//get parent metadata 
-	virtual bool GetOwner(ibMetaData*& metaData) const { return false; }
+	virtual bool GetOwner(IMetaData*& metaData) const { return false; }
 
 	//factory version 
 	virtual unsigned int GetFactoryCountChanges() const {
-		return m_factoryCtorCountChanges + ibValue::GetFactoryCountChanges();
+		return m_factoryCtorCountChanges + CValue::GetFactoryCountChanges();
 	}
 
 	//get language code 
@@ -120,43 +120,43 @@ public:
 	virtual bool IsFullAccess() const { return true; }
 
 	//associate this metaData with 
-	virtual ibBackendMetadataTree* GetMetaTree() const { return m_metaTree; }
-	virtual void SetMetaTree(ibBackendMetadataTree* metaTree) { m_metaTree = metaTree; }
+	virtual IBackendMetadataTree* GetMetaTree() const { return m_metaTree; }
+	virtual void SetMetaTree(IBackendMetadataTree* metaTree) { m_metaTree = metaTree; }
 
 	//run/close 
 	virtual bool RunDatabase(int flags = defaultFlag) = 0;
 	virtual bool CloseDatabase(int flags = defaultFlag) = 0;
 
 	//metaobject
-	ibValueMetaObject* CreateMetaObject(const ibClassID& clsid,
-		ibValueMetaObject* parentMetaObj, bool runObject = true);
+	IValueMetaObject* CreateMetaObject(const class_identifier_t& clsid,
+		IValueMetaObject* parentMetaObj, bool runObject = true);
 
-	bool RenameMetaObject(ibValueMetaObject* object, const wxString& newName);
-	void RemoveMetaObject(ibValueMetaObject* object, ibValueMetaObject* objParent = nullptr);
+	bool RenameMetaObject(IValueMetaObject* object, const wxString& newName);
+	void RemoveMetaObject(IValueMetaObject* object, IValueMetaObject* objParent = nullptr);
 
 #pragma region __array_h__
 
 	//any  
-	template <typename _T1 = ibValueMetaObject>
+	template <typename _T1 = IValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, ibValueMetaObject>(array, {}, use_child_filter);
+		FillArrayObjectByFilter<_T1, IValueMetaObject>(array, {}, use_child_filter);
 		return array;
 	}
 
 	//any 
-	template <typename _T1 = ibValueMetaObject>
-	std::vector<_T1*> GetAnyArrayObject(const ibClassID& clsid, const bool use_child_filter = false) const {
+	template <typename _T1 = IValueMetaObject>
+	std::vector<_T1*> GetAnyArrayObject(const class_identifier_t& clsid, const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, ibValueMetaObject>(array, { clsid });
+		FillArrayObjectByFilter<_T1, IValueMetaObject>(array, { clsid });
 		return array;
 	}
 
 	//any  
-	template <typename _T1 = ibValueMetaObject>
-	std::vector<_T1*> GetAnyArrayObject(const std::initializer_list<ibClassID> filter, const bool use_child_filter = false) const {
+	template <typename _T1 = IValueMetaObject>
+	std::vector<_T1*> GetAnyArrayObject(const std::initializer_list<class_identifier_t> filter, const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, ibValueMetaObject>(array, filter, use_child_filter);
+		FillArrayObjectByFilter<_T1, IValueMetaObject>(array, filter, use_child_filter);
 		return array;
 	}
 
@@ -164,37 +164,37 @@ public:
 #pragma region __filter_h__
 
 	//any 
-	template <typename _T1 = ibValueMetaObject, typename _T2>
+	template <typename _T1 = IValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id, const bool use_child_filter = false) const {
-		return FindObjectByFilter<_T2, ibValueMetaObject, _T1>(id, {}, use_child_filter);
+		return FindObjectByFilter<_T2, IValueMetaObject, _T1>(id, {}, use_child_filter);
 	}
 
 	//any 
-	template <typename _T1 = ibValueMetaObject, typename _T2>
-	_T1* FindAnyObjectByFilter(const _T2& id, const ibClassID& clsid, const bool use_child_filter = false) const {
-		return FindObjectByFilter<_T2, ibValueMetaObject, _T1>(id, { clsid }, use_child_filter);
+	template <typename _T1 = IValueMetaObject, typename _T2>
+	_T1* FindAnyObjectByFilter(const _T2& id, const class_identifier_t& clsid, const bool use_child_filter = false) const {
+		return FindObjectByFilter<_T2, IValueMetaObject, _T1>(id, { clsid }, use_child_filter);
 	}
 
 	//any 
-	template <typename _T1 = ibValueMetaObject, typename _T2>
+	template <typename _T1 = IValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id,
-		const std::initializer_list<ibClassID> filter, const bool use_child_filter = false) const {
-		return FindObjectByFilter<_T2, ibValueMetaObject, ibValueMetaObject, _T1>(id, filter, use_child_filter);
+		const std::initializer_list<class_identifier_t> filter, const bool use_child_filter = false) const {
+		return FindObjectByFilter<_T2, IValueMetaObject, IValueMetaObject, _T1>(id, filter, use_child_filter);
 	}
 
 #pragma endregion 
 
 	//ID's 
-	ibMetaID GenerateNewID() const;
+	meta_identifier_t GenerateNewID() const;
 
 	//generate new name
-	wxString GetNewName(const ibClassID& clsid,
-		ibValueMetaObject* parent, const wxString& strPrefix = wxEmptyString, bool forConstructor = false);
+	wxString GetNewName(const class_identifier_t& clsid,
+		IValueMetaObject* parent, const wxString& strPrefix = wxEmptyString, bool forConstructor = false);
 
 #pragma region serialization
 
-	wxString Serialize(const ibValue& cValue);
-	ibValue Deserialize(const wxString& strValue);
+	wxString Serialize(const CValue& cValue);
+	CValue Deserialize(const wxString& strValue);
 
 #pragma endregion
 
@@ -202,10 +202,10 @@ protected:
 
 #pragma region __array_h__
 
-	template <typename _T1 = ibValueMetaObject, typename _T2 = ibValueMetaObject>
+	template <typename _T1 = IValueMetaObject, typename _T2 = IValueMetaObject>
 	bool FillArrayObjectByFilter(
 		std::vector<_T1*>& array,
-		const std::initializer_list<ibClassID> filter) const
+		const std::initializer_list<class_identifier_t> filter) const
 	{
 		const auto commonObject = GetCommonMetaObject();
 		if (commonObject != nullptr)
@@ -213,10 +213,10 @@ protected:
 		return false;
 	}
 
-	template <typename _T1 = ibValueMetaObject, typename _T2 = ibValueMetaObject>
+	template <typename _T1 = IValueMetaObject, typename _T2 = IValueMetaObject>
 	bool FillArrayObjectByFilter(
 		std::vector<_T1*>& array,
-		const std::initializer_list<ibClassID> filter,
+		const std::initializer_list<class_identifier_t> filter,
 		const bool use_child_filter) const
 	{
 		const auto commonObject = GetCommonMetaObject();
@@ -228,20 +228,20 @@ protected:
 #pragma endregion 
 #pragma region __filter_h__
 
-	template<typename _T1, typename _T2 = ibValueMetaObject, typename _T3 = ibValueMetaObject>
+	template<typename _T1, typename _T2 = IValueMetaObject, typename _T3 = IValueMetaObject>
 	_T3* FindObjectByFilter(
 		const _T1& id,
-		const std::initializer_list<ibClassID> filter) const {
+		const std::initializer_list<class_identifier_t> filter) const {
 		const auto commonObject = GetCommonMetaObject();
 		if (commonObject != nullptr)
 			return commonObject->FindObjectByFilter<_T3>(id, filter, false);
 		return nullptr;
 	}
 
-	template<typename _T1, typename _T2 = ibValueMetaObject, typename _T3 = ibValueMetaObject>
+	template<typename _T1, typename _T2 = IValueMetaObject, typename _T3 = IValueMetaObject>
 	_T3* FindObjectByFilter(
 		const _T1& id,
-		const std::initializer_list<ibClassID> filter,
+		const std::initializer_list<class_identifier_t> filter,
 		const bool use_child_filter) const {
 		const auto commonObject = GetCommonMetaObject();
 		if (commonObject != nullptr)
@@ -261,11 +261,11 @@ protected:
 	bool m_metaModify;
 
 	//custom types
-	std::vector<ibCtorMetaValueType*> m_factoryCtors;
+	std::vector<IMetaValueTypeCtor*> m_factoryCtors;
 	std::atomic<unsigned int> m_factoryCtorCountChanges = 0;
 
 private:
-	ibBackendMetadataTree* m_metaTree;
+	IBackendMetadataTree* m_metaTree;
 };
 
 #endif 

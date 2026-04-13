@@ -5,8 +5,8 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
 // ctor
-ibPreparedStatementODBC::ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC)
-	: ibPreparedStatement()
+COdbcPreparedStatement::COdbcPreparedStatement(COdbcInterface* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC)
+	: IPreparedStatement()
 {
 	m_pInterface = pInterface;
 	m_sqlEnvHandle = sqlEnvHandle;
@@ -14,8 +14,8 @@ ibPreparedStatementODBC::ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQ
 	m_bOneTimeStatement = false;
 }
 
-ibPreparedStatementODBC::ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC, SQLHSTMT sqlStatementHandle)
-	: ibPreparedStatement()
+COdbcPreparedStatement::COdbcPreparedStatement(COdbcInterface* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC, SQLHSTMT sqlStatementHandle)
+	: IPreparedStatement()
 {
 	m_pInterface = pInterface;
 	m_sqlEnvHandle = sqlEnvHandle;
@@ -24,8 +24,8 @@ ibPreparedStatementODBC::ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQ
 	m_Statements.push_back(sqlStatementHandle);
 }
 
-ibPreparedStatementODBC::ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC, StatementVector statements)
-	: ibPreparedStatement(), m_Statements(statements)
+COdbcPreparedStatement::COdbcPreparedStatement(COdbcInterface* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC, StatementVector statements)
+	: IPreparedStatement(), m_Statements(statements)
 {
 	m_pInterface = pInterface;
 	m_sqlEnvHandle = sqlEnvHandle;
@@ -34,13 +34,13 @@ ibPreparedStatementODBC::ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQ
 }
 
 // dtor
-ibPreparedStatementODBC::~ibPreparedStatementODBC()
+COdbcPreparedStatement::~COdbcPreparedStatement()
 {
 	FreeParameters();
 	Close();
 }
 
-void ibPreparedStatementODBC::Close()
+void COdbcPreparedStatement::Close()
 {
 	CloseResultSets();
 
@@ -64,16 +64,16 @@ void ibPreparedStatementODBC::Close()
 	m_Statements.Clear();
 }
 
-void ibPreparedStatementODBC::FreeParameters()
+void COdbcPreparedStatement::FreeParameters()
 {
-	ArrayOfODBCParameters::iterator start = m_Parameters.begin();
-	ArrayOfODBCParameters::iterator stop = m_Parameters.end();
+	ArrayOfOdbcParameters::iterator start = m_Parameters.begin();
+	ArrayOfOdbcParameters::iterator stop = m_Parameters.end();
 
 	while (start != stop)
 	{
 		if ((*start) != nullptr)
 		{
-			ibDatabaseParameterODBC* pParameter = *start;
+			COdbcParameter* pParameter = *start;
 			delete(pParameter);
 			(*start) = nullptr;
 		}
@@ -82,77 +82,77 @@ void ibPreparedStatementODBC::FreeParameters()
 	m_Parameters.Clear();
 }
 
-void ibPreparedStatementODBC::AddPreparedStatement(SQLHSTMT sqlStatementHandle)
+void COdbcPreparedStatement::AddPreparedStatement(SQLHSTMT sqlStatementHandle)
 {
 	m_Statements.push_back(sqlStatementHandle);
 }
 
 // get field
-void ibPreparedStatementODBC::SetParamInt(int nPosition, int nValue)
+void COdbcPreparedStatement::SetParamInt(int nPosition, int nValue)
 {
 	ResetErrorCodes();
 
-	ibDatabaseParameterODBC* pParameter = new ibDatabaseParameterODBC(nValue);
+	COdbcParameter* pParameter = new COdbcParameter(nValue);
 	SetParam(nPosition, pParameter);
 }
 
-void ibPreparedStatementODBC::SetParamDouble(int nPosition, double dblValue)
+void COdbcPreparedStatement::SetParamDouble(int nPosition, double dblValue)
 {
 	ResetErrorCodes();
 
-	ibDatabaseParameterODBC* pParameter = new ibDatabaseParameterODBC(dblValue);
+	COdbcParameter* pParameter = new COdbcParameter(dblValue);
 	SetParam(nPosition, pParameter);
 }
 
-void ibPreparedStatementODBC::SetParamNumber(int nPosition, const ibNumber& dblValue)
+void COdbcPreparedStatement::SetParamNumber(int nPosition, const number_t& dblValue)
 {
 	ResetErrorCodes();
 
-	ibDatabaseParameterODBC* pParameter = new ibDatabaseParameterODBC(dblValue);
+	COdbcParameter* pParameter = new COdbcParameter(dblValue);
 	SetParam(nPosition, pParameter);
 }
 
-void ibPreparedStatementODBC::SetParamString(int nPosition, const wxString& strValue)
+void COdbcPreparedStatement::SetParamString(int nPosition, const wxString& strValue)
 {
 	ResetErrorCodes();
 
-	ibDatabaseParameterODBC* pParameter = new ibDatabaseParameterODBC(strValue);
+	COdbcParameter* pParameter = new COdbcParameter(strValue);
 	SetParam(nPosition, pParameter);
 }
 
-void ibPreparedStatementODBC::SetParamNull(int nPosition)
+void COdbcPreparedStatement::SetParamNull(int nPosition)
 {
 	ResetErrorCodes();
 
-	ibDatabaseParameterODBC* pParameter = new ibDatabaseParameterODBC();
+	COdbcParameter* pParameter = new COdbcParameter();
 	SetParam(nPosition, pParameter);
 }
 
-void ibPreparedStatementODBC::SetParamBlob(int nPosition, const void* pData, long nDataLength)
+void COdbcPreparedStatement::SetParamBlob(int nPosition, const void* pData, long nDataLength)
 {
 	ResetErrorCodes();
 
-	ibDatabaseParameterODBC* pParameter = new ibDatabaseParameterODBC(pData, nDataLength);
+	COdbcParameter* pParameter = new COdbcParameter(pData, nDataLength);
 	SetParam(nPosition, pParameter);
 }
 
-void ibPreparedStatementODBC::SetParamDate(int nPosition, const wxDateTime& dateValue)
+void COdbcPreparedStatement::SetParamDate(int nPosition, const wxDateTime& dateValue)
 {
 	ResetErrorCodes();
 
-	ibDatabaseParameterODBC* pParameter = new ibDatabaseParameterODBC(dateValue);
+	COdbcParameter* pParameter = new COdbcParameter(dateValue);
 	SetParam(nPosition, pParameter);
 }
 
-void ibPreparedStatementODBC::SetParamBool(int nPosition, bool bValue)
+void COdbcPreparedStatement::SetParamBool(int nPosition, bool bValue)
 {
 	ResetErrorCodes();
 
-	ibDatabaseParameterODBC* pParameter = new ibDatabaseParameterODBC(bValue);
+	COdbcParameter* pParameter = new COdbcParameter(bValue);
 	SetParam(nPosition, pParameter);
 }
 
-int ibPreparedStatementODBC::GetParameterCount()
+int COdbcPreparedStatement::GetParameterCount()
 {
 	ResetErrorCodes();
 
@@ -175,7 +175,7 @@ int ibPreparedStatementODBC::GetParameterCount()
 	return nReturn;
 }
 
-int ibPreparedStatementODBC::RunQuery()
+int COdbcPreparedStatement::RunQuery()
 {
 	ResetErrorCodes();
 
@@ -219,7 +219,7 @@ int ibPreparedStatementODBC::RunQuery()
 				// Find the parameter
 				for (unsigned int i = 0; i < m_Parameters.size(); i++)
 				{
-					ibDatabaseParameterODBC* pParameter = m_Parameters[i];
+					COdbcParameter* pParameter = m_Parameters[i];
 					if (pParmID == pParameter->GetDataPtr())
 					{
 						// We found it.  Store the parameter.
@@ -257,12 +257,12 @@ int ibPreparedStatementODBC::RunQuery()
 	return nRows;
 }
 
-ibDatabaseResultSet* ibPreparedStatementODBC::RunQueryWithResults()
+IDatabaseResultSet* COdbcPreparedStatement::RunQueryWithResults()
 {
 	return RunQueryWithResults(true);
 }
 
-ibDatabaseResultSet* ibPreparedStatementODBC::RunQueryWithResults(bool bLogForCleanup)
+IDatabaseResultSet* COdbcPreparedStatement::RunQueryWithResults(bool bLogForCleanup)
 {
 	ResetErrorCodes();
 	SQLSMALLINT ncol = 0;
@@ -301,19 +301,19 @@ ibDatabaseResultSet* ibPreparedStatementODBC::RunQueryWithResults(bool bLogForCl
 	}
 
 	// Work off the assumption that only the last statement will return result
-	ibDatabaseResultSet* pResultSet = new ibDatabaseResultSetODBC(m_pInterface, this, m_bOneTimeStatement, (int)ncol);
+	IDatabaseResultSet* pResultSet = new COdbcResultSet(m_pInterface, this, m_bOneTimeStatement, (int)ncol);
 	if (bLogForCleanup)
 		LogResultSetForCleanup(pResultSet);
 	return pResultSet;
 }
 
-void ibPreparedStatementODBC::BindParameters()
+void COdbcPreparedStatement::BindParameters()
 {
 	// Iterate through all of the parameters and bind them to the prepared statement
 	for (unsigned int i = 1; i <= m_Parameters.size(); i++)
 	{
 		int nPosition = i;
-		ibDatabaseParameterODBC* pParameter = m_Parameters[i - 1];
+		COdbcParameter* pParameter = m_Parameters[i - 1];
 		int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 
 		if ((nIndex > -1) && (pParameter != nullptr))
@@ -346,7 +346,7 @@ void ibPreparedStatementODBC::BindParameters()
 	}
 }
 
-int ibPreparedStatementODBC::FindStatementAndAdjustPositionIndex(int* pPosition)
+int COdbcPreparedStatement::FindStatementAndAdjustPositionIndex(int* pPosition)
 {
 	// Don't mess around if there's just one entry in the vector
 	if (m_Statements.size() == 0)
@@ -380,7 +380,7 @@ int ibPreparedStatementODBC::FindStatementAndAdjustPositionIndex(int* pPosition)
 	return -1;
 }
 
-void ibPreparedStatementODBC::SetParam(int nPosition, ibDatabaseParameterODBC* pParameter)
+void COdbcPreparedStatement::SetParam(int nPosition, COdbcParameter* pParameter)
 {
 	// First make sure that there are enough elements in the collection
 	while (m_Parameters.size() < (unsigned int)(nPosition))
@@ -396,9 +396,9 @@ void ibPreparedStatementODBC::SetParam(int nPosition, ibDatabaseParameterODBC* p
 	m_Parameters[nPosition - 1] = pParameter;
 }
 
-void ibPreparedStatementODBC::InterpretErrorCodes(long nCode, SQLHSTMT stmth_ptr)
+void COdbcPreparedStatement::InterpretErrorCodes(long nCode, SQLHSTMT stmth_ptr)
 {
-	wxLogDebug(wxT("ibPreparedStatementODBC::InterpretErrorCodes()\n"));
+	wxLogDebug(wxT("COdbcPreparedStatement::InterpretErrorCodes()\n"));
 
 	//if ((nCode != SQL_SUCCESS) ) // && (nCode != SQL_SUCCESS_WITH_INFO))
 	{

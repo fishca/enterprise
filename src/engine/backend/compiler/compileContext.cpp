@@ -2,56 +2,41 @@
 #include "compileCode.h"
 
 ////////////////////////////////////////////////////////////////////////
-// ibCompileContext ibCompileContext ibCompileContext ibCompileContext//
+// CCompileContext CCompileContext CCompileContext CCompileContext//
 ////////////////////////////////////////////////////////////////////////
 
 /**
 * Create a new variable identifier
 */
 
-ibParamUnit ibCompileContext::CreateVariable(const wxString& strPrefix)
+CParamUnit CCompileContext::CreateVariable(const wxString strPrefix)
 {
-	if (m_numReturn == RETURN_BLOCK)
-		return m_parentContext->CreateVariable(strPrefix);
+	const wxString& strTempName = wxString::Format(strPrefix + wxT("%d"), ++m_numTempVar); //@temp_ - to ensure the uniqueness of the name
 
-	const wxString& strTempName =
-		wxString::Format(strPrefix + wxT("%d"), ++m_numTempVar); //@temp_ - to ensure the uniqueness of the name
-
-	ibParamUnit variable =
-		GetVariable(strTempName, false, false, false, true); //we look for a temporary variable only in the local context
+	CParamUnit variable = GetVariable(strTempName, false, false, false, true); //we look for a temporary variable only in the local context
 	variable.m_numArray = DEF_VAR_TEMP; //flag of a temporary local variable
 	return variable;
 }
 
 /**
 * Adds a new variable to the list
-* Returns the added variable as a ibParamUnit
+* Returns the added variable as a CParamUnit
 */
 
-ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
+CParamUnit CCompileContext::AddVariable(const wxString& strVarName,
 	const wxString& typeVar, bool exportVar, bool contextVar, bool tempVar)
 {
-	std::shared_ptr<ibVariable> foundedVariable = nullptr;
+	std::shared_ptr<CVariable> foundedVariable = nullptr;
 	if (FindVariable(strVarName, foundedVariable)) { //there was a declaration + repeated declaration = error
 		m_compileModule->SetError(ERROR_IDENTIFIER_DUPLICATE, strVarName);
-		return ibParamUnit();
-	}
-
-	if (m_numReturn == RETURN_BLOCK) {
-
-		ibParamUnit variable = CreateVariable(wxT("@context"));
-
-		PushVariable(strVarName, wxT(""), variable.m_numIndex,
-			typeVar, exportVar, true, tempVar);
-
-		return variable;
+		return CParamUnit();
 	}
 
 	unsigned int numVariable = m_listVariable.size();
-	PushVariable(strVarName, wxT(""), numVariable,
+	PushVariable(strVarName, wxEmptyString, numVariable,
 		typeVar, exportVar, contextVar, tempVar);
 
-	ibParamUnit variable;
+	CParamUnit variable;
 
 	//determine the number and type of the variable
 	variable.m_numArray = 0;
@@ -67,56 +52,40 @@ ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
 * If the required variable does not exist, then a new variable definition is created
 */
 
-ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFindInParent, bool bCheckError, bool contextVar, bool tempVar)
+CParamUnit CCompileContext::GetVariable(const wxString& strVarName, bool bFindInParent, bool bCheckError, bool contextVar, bool tempVar)
 {
 	int numCanUseLocalInParent = m_numFindLocalInParent;
 
-	std::shared_ptr <ibVariable> currentVariable = nullptr;
+	std::shared_ptr <CVariable> currentVariable = nullptr;
 	if (!FindVariable(strVarName, currentVariable)) {
 
 		//search in parent contexts (modules)
 		if (bFindInParent) {
-
-			int numParent = 0, numContext = 0;
-			ibCompileContext* pCurContext = m_parentContext;
-
-			if (m_numReturn == RETURN_BLOCK)
-				numContext++;
-
+			int numParent = 0;
+			CCompileContext* pCurContext = m_parentContext;
 			while (pCurContext) {
-
 				numParent++;
-
-				if (pCurContext->m_numReturn == RETURN_BLOCK)
-					numContext++;
-
 				if (numParent > MAX_OBJECTS_LEVEL) {
-					//ibValueSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
+					//CSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
 					if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-						ibBackendCoreException::Error(_("Recursive call of modules!"));
+						CBackendCoreException::Error(_("Recursive call of modules!"));
 					}
 				}
-
 				if (pCurContext->FindVariable(strVarName, currentVariable)) { // found
-
 					//check if this is an export variable or not (if m_numFindLocalInParent=true, then you can take local variables of the parent)
-					if (m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || currentVariable->m_bExport) {
+					if (numCanUseLocalInParent > 0 ||
+						currentVariable->m_bExport) {
 
-						ibParamUnit variable;
+						CParamUnit variable;
 
 						//determine the variable number
-						if (pCurContext->m_numReturn == RETURN_BLOCK)
-							variable.m_numArray = DEF_VAR_TEMP;
-						else
-							variable.m_numArray = numParent - numContext;
-
+						variable.m_numArray = numParent;
 						variable.m_numIndex = currentVariable->m_numVariable;
 						variable.m_strType = currentVariable->m_strType;
 
 						return variable;
 					}
 				}
-
 				numCanUseLocalInParent--;
 				pCurContext = pCurContext->m_parentContext;
 			}
@@ -124,7 +93,7 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 
 		if (bCheckError) {
 			m_compileModule->SetError(ERROR_VAR_NOT_FOUND, strVarName); //display an error message
-			return ibParamUnit();
+			return CParamUnit();
 		}
 
 		// there was no variable declaration yet - add
@@ -133,25 +102,21 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 
 	wxASSERT(currentVariable);
 
-	ibParamUnit variable;
+	CParamUnit variable;
 
 	//determine the number and type of the variable
-	if (m_numReturn == RETURN_BLOCK)
-		variable.m_numArray = DEF_VAR_TEMP;
-	else
-		variable.m_numArray = 0;
-
+	variable.m_numArray = 0;
 	variable.m_numIndex = currentVariable->m_numVariable;
 	variable.m_strType = currentVariable->m_strType;
 
 	return variable;
 }
 
-void ibCompileContext::PushVariable(const wxString& strVarName, const wxString& strContextVar, unsigned int numVariable,
+void CCompileContext::PushVariable(const wxString& strVarName, const wxString& strContextVar, unsigned int numVariable,
 	const wxString& typeVar, bool exportVar, bool contextVar, bool tempVar)
 {
-	std::shared_ptr<ibVariable> currentVariable(
-		new ibVariable(stringUtils::MakeUpper(strVarName))
+	std::shared_ptr<CVariable> currentVariable(
+		new CVariable(stringUtils::MakeUpper(strVarName))
 	);
 
 	currentVariable->m_strRealName = strVarName;
@@ -169,10 +134,10 @@ void ibCompileContext::PushVariable(const wxString& strVarName, const wxString& 
 	);
 }
 
-void ibCompileContext::PushFunction(const wxString& strFuncName, const wxString& strContextVar, const wxString& strShortDescription, unsigned int numFunction, bool hasRetVal, int argCount)
+void CCompileContext::PushFunction(const wxString& strFuncName, const wxString& strContextVar, const wxString& strShortDescription, unsigned int numFunction, bool hasRetVal, int argCount)
 {
-	std::shared_ptr<ibCompileContext::ibFunction> contextFunction(
-		new ibFunction(stringUtils::MakeUpper(strFuncName), CreateContext(hasRetVal ? RETURN_FUNCTION : RETURN_PROCEDURE))
+	std::shared_ptr<CCompileContext::CFunction> contextFunction(
+		new CFunction(stringUtils::MakeUpper(strFuncName), CreateContext(hasRetVal ? RETURN_FUNCTION : RETURN_PROCEDURE))
 	);
 
 	contextFunction->m_nStart = numFunction;
@@ -184,7 +149,7 @@ void ibCompileContext::PushFunction(const wxString& strFuncName, const wxString&
 	if (argCount > 0) contextFunction->m_listParam.reserve(argCount);
 
 	for (long arg = 0; arg < argCount; arg++) {
-		ibFunction::ibParamVariable contextVariable;
+		CFunction::CParamVariable contextVariable;
 		contextVariable.m_puValue.m_numArray = DEF_VAR_DEFAULT;
 		contextVariable.m_puValue.m_numIndex = DEF_VAR_DEFAULT;
 		contextFunction->m_listParam.emplace_back(std::move(contextVariable));
@@ -203,7 +168,7 @@ void ibCompileContext::PushFunction(const wxString& strFuncName, const wxString&
  * Returns true - if the variable is found
  */
 
-bool ibCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<ibVariable>& foundedVar, bool contextVar)
+bool CCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<CVariable>& foundedVar, bool contextVar)
 {
 	auto it = std::find_if(m_listVariable.begin(), m_listVariable.end(),
 		[strVarName](const auto pair) {return stringUtils::CompareString(strVarName, pair.first); });
@@ -235,7 +200,7 @@ bool ibCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<
  * Returns true - if the variable is found
  */
 
-bool ibCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr<ibFunction>& foundedFunc, bool contextVar)
+bool CCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr<CFunction>& foundedFunc, bool contextVar)
 {
 	auto it = std::find_if(m_listFunction.begin(), m_listFunction.end(),
 		[strFuncName](const auto pair) { return stringUtils::CompareString(strFuncName, pair.first); });
@@ -264,7 +229,7 @@ bool ibCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr
 /**
  * Linking GOTO statements to labels
  */
-void ibCompileContext::CreateLabels()
+void CCompileContext::DoLabels()
 {
 	wxASSERT(m_compileModule != nullptr);
 	for (unsigned int i = 0; i < m_listLabel.size(); i++) {

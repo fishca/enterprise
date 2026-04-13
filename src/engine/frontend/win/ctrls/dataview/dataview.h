@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
 // Name:        wx/dataview.h
-// Purpose:     ibDataViewCtrl base classes
+// Purpose:     wxDataViewExtCtrl base classes
 // Author:      Robert Roebling
 // Modified by: Bo Yang
 // Created:     08.01.06
@@ -31,34 +31,34 @@
 
 class WXDLLIMPEXP_FWD_CORE wxImageList;
 class wxItemAttr;
-class ibHeaderGenericCtrl;
+class wxHeaderGenericCtrl;
 
 #include "backend/tableView.h"
 #include "headerctrlg.h"
 #include "frontend/frontend.h"
 
 // ----------------------------------------------------------------------------
-// ibDataViewCtrl globals
+// wxDataViewExtCtrl globals
 // ----------------------------------------------------------------------------
 
-class BACKEND_API ibDataViewModel;
-class FRONTEND_API ibDataViewCtrl;
-class FRONTEND_API ibDataViewColumn;
-class FRONTEND_API ibDataViewRenderer;
-class ibDataViewModelNotifier;
+class BACKEND_API wxDataViewExtModel;
+class FRONTEND_API wxDataViewExtCtrl;
+class FRONTEND_API wxDataViewExtColumn;
+class FRONTEND_API wxDataViewExtRenderer;
+class wxDataViewExtModelNotifier;
 #if wxUSE_ACCESSIBILITY
-class FRONTEND_API ibDataViewCtrlAccessible;
+class FRONTEND_API wxDataViewExtCtrlAccessible;
 #endif // wxUSE_ACCESSIBILITY
 
-extern const char FRONTEND_API ibDataViewCtrlNameStr[];
+extern const char FRONTEND_API wxDataViewExtCtrlNameStr[];
 
 // ----------------------------------------------------------------------------
-// ibDataViewListModel: a model of a list, i.e. flat data structure without any
-//      branches/containers, used as base class by ibDataViewIndexListModel and
-//      ibDataViewVirtualListModel
+// wxDataViewExtListModel: a model of a list, i.e. flat data structure without any
+//      branches/containers, used as base class by wxDataViewExtIndexListModel and
+//      wxDataViewExtVirtualListModel
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API ibDataViewListModel : public ibDataViewModel
+class FRONTEND_API wxDataViewExtListModel : public wxDataViewExtModel
 {
 public:
 	// derived classes should override these methods instead of
@@ -72,7 +72,7 @@ public:
 
 	virtual bool
 		GetAttrByRow(unsigned WXUNUSED(row), unsigned WXUNUSED(col),
-			ibDataViewItemAttr& WXUNUSED(attr)) const
+			wxDataViewExtItemAttr& WXUNUSED(attr)) const
 	{
 		return false;
 	}
@@ -85,20 +85,20 @@ public:
 
 
 	// helper methods provided by list models only
-	virtual unsigned GetRow(const ibDataViewItem& item) const = 0;
+	virtual unsigned GetRow(const wxDataViewExtItem& item) const = 0;
 
 	// returns the number of rows
 	virtual unsigned int GetCount() const = 0;
 
 	// implement some base class pure virtual directly
-	virtual ibDataViewItem
-		GetParent(const ibDataViewItem& WXUNUSED(item)) const wxOVERRIDE
+	virtual wxDataViewExtItem
+		GetParent(const wxDataViewExtItem& WXUNUSED(item)) const wxOVERRIDE
 	{
 		// items never have valid parent in this model
-		return ibDataViewItem();
+		return wxDataViewExtItem();
 	}
 
-	virtual bool IsContainer(const ibDataViewItem& item) const wxOVERRIDE
+	virtual bool IsContainer(const wxDataViewExtItem& item) const wxOVERRIDE
 	{
 		// only the invisible (and invalid) root item has children
 		return !item.IsOk();
@@ -106,24 +106,24 @@ public:
 
 	// and implement some others by forwarding them to our own ones
 	virtual void GetValue(wxVariant& variant,
-		const ibDataViewItem& item, unsigned int col) const wxOVERRIDE
+		const wxDataViewExtItem& item, unsigned int col) const wxOVERRIDE
 	{
 		GetValueByRow(variant, GetRow(item), col);
 	}
 
 	virtual bool SetValue(const wxVariant& variant,
-		const ibDataViewItem& item, unsigned int col) wxOVERRIDE
+		const wxDataViewExtItem& item, unsigned int col) wxOVERRIDE
 	{
 		return SetValueByRow(variant, GetRow(item), col);
 	}
 
-	virtual bool GetAttr(const ibDataViewItem& item, unsigned int col,
-		ibDataViewItemAttr& attr) const wxOVERRIDE
+	virtual bool GetAttr(const wxDataViewExtItem& item, unsigned int col,
+		wxDataViewExtItemAttr& attr) const wxOVERRIDE
 	{
 		return GetAttrByRow(GetRow(item), col, attr);
 	}
 
-	virtual bool IsEnabled(const ibDataViewItem& item, unsigned int col) const wxOVERRIDE
+	virtual bool IsEnabled(const wxDataViewExtItem& item, unsigned int col) const wxOVERRIDE
 	{
 		return IsEnabledByRow(GetRow(item), col);
 	}
@@ -133,13 +133,13 @@ public:
 };
 
 // ---------------------------------------------------------
-// ibDataViewIndexListModel
+// wxDataViewExtIndexListModel
 // ---------------------------------------------------------
 
-class FRONTEND_API ibDataViewIndexListModel : public ibDataViewListModel
+class FRONTEND_API wxDataViewExtIndexListModel : public wxDataViewExtListModel
 {
 public:
-	ibDataViewIndexListModel(unsigned int initial_size = 0);
+	wxDataViewExtIndexListModel(unsigned int initial_size = 0);
 
 	void RowPrepended();
 	void RowInserted(unsigned int before);
@@ -150,35 +150,35 @@ public:
 	void RowValueChanged(unsigned int row, unsigned int col);
 	void Reset(unsigned int new_size);
 
-	// convert to/from row/ibDataViewItem
+	// convert to/from row/wxDataViewExtItem
 
-	virtual unsigned GetRow(const ibDataViewItem& item) const wxOVERRIDE;
-	ibDataViewItem GetItem(unsigned int row) const;
+	virtual unsigned GetRow(const wxDataViewExtItem& item) const wxOVERRIDE;
+	wxDataViewExtItem GetItem(unsigned int row) const;
 
 	// implement base methods
-	virtual unsigned int GetChildren(const ibDataViewItem& item, ibDataViewItemArray& children) const wxOVERRIDE;
+	virtual unsigned int GetChildren(const wxDataViewExtItem& item, wxDataViewExtItemArray& children) const wxOVERRIDE;
 
 	unsigned int GetCount() const wxOVERRIDE { return (unsigned int)m_hash.GetCount(); }
 
 private:
-	ibDataViewItemArray m_hash;
+	wxDataViewExtItemArray m_hash;
 	unsigned int m_nextFreeID;
 	bool m_ordered;
 };
 
 // ---------------------------------------------------------
-// ibDataViewVirtualListModel
+// wxDataViewExtVirtualListModel
 // ---------------------------------------------------------
 
 #ifdef __WXMAC__
 // better than nothing
-typedef ibDataViewIndexListModel ibDataViewVirtualListModel;
+typedef wxDataViewExtIndexListModel wxDataViewExtVirtualListModel;
 #else
 
-class FRONTEND_API ibDataViewVirtualListModel : public ibDataViewListModel
+class FRONTEND_API wxDataViewExtVirtualListModel : public wxDataViewExtListModel
 {
 public:
-	ibDataViewVirtualListModel(unsigned int initial_size = 0);
+	wxDataViewExtVirtualListModel(unsigned int initial_size = 0);
 
 	void RowPrepended();
 	void RowInserted(unsigned int before);
@@ -189,19 +189,19 @@ public:
 	void RowValueChanged(unsigned int row, unsigned int col);
 	void Reset(unsigned int new_size);
 
-	// convert to/from row/ibDataViewItem
+	// convert to/from row/wxDataViewExtItem
 
-	virtual unsigned GetRow(const ibDataViewItem& item) const wxOVERRIDE;
-	ibDataViewItem GetItem(unsigned int row) const;
+	virtual unsigned GetRow(const wxDataViewExtItem& item) const wxOVERRIDE;
+	wxDataViewExtItem GetItem(unsigned int row) const;
 
 	// compare based on index
 
-	virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
+	virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
 		unsigned int column, bool ascending) const wxOVERRIDE;
 	virtual bool HasDefaultCompare() const wxOVERRIDE;
 
 	// implement base methods
-	virtual unsigned int GetChildren(const ibDataViewItem& item, ibDataViewItemArray& children) const wxOVERRIDE;
+	virtual unsigned int GetChildren(const wxDataViewExtItem& item, wxDataViewExtItemArray& children) const wxOVERRIDE;
 
 	unsigned int GetCount() const wxOVERRIDE { return m_size; }
 
@@ -214,17 +214,17 @@ private:
 #endif
 
 // ----------------------------------------------------------------------------
-// ibDataViewRenderer and related classes
+// wxDataViewExtRenderer and related classes
 // ----------------------------------------------------------------------------
 
 #include "dvrenderers.h"
 
 // ---------------------------------------------------------
-// ibDataViewColumnBase
+// wxDataViewExtColumnBase
 // ---------------------------------------------------------
 
 // for compatibility only, do not use
-enum ibDataViewColumnFlags
+enum wxDataViewExtColumnFlags
 {
 	wxDATAVIEW_COL_RESIZABLE = wxCOL_RESIZABLE,
 	wxDATAVIEW_COL_SORTABLE = wxCOL_SORTABLE,
@@ -232,37 +232,37 @@ enum ibDataViewColumnFlags
 	wxDATAVIEW_COL_HIDDEN = wxCOL_HIDDEN
 };
 
-class FRONTEND_API ibDataViewColumnBase : public wxSettableHeaderColumn
+class FRONTEND_API wxDataViewExtColumnBase : public wxSettableHeaderColumn
 {
 public:
 	// ctor for the text columns: takes ownership of renderer
-	ibDataViewColumnBase(ibDataViewRenderer* renderer,
+	wxDataViewExtColumnBase(wxDataViewExtRenderer* renderer,
 		unsigned int model_column)
 	{
 		Init(renderer, model_column);
 	}
 
 	// ctor for the bitmap columns
-	ibDataViewColumnBase(const wxBitmapBundle& bitmap,
-		ibDataViewRenderer* renderer,
+	wxDataViewExtColumnBase(const wxBitmapBundle& bitmap,
+		wxDataViewExtRenderer* renderer,
 		unsigned int model_column)
 		: m_bitmap(bitmap)
 	{
 		Init(renderer, model_column);
 	}
 
-	virtual ~ibDataViewColumnBase();
+	virtual ~wxDataViewExtColumnBase();
 
 	// setters:
-	virtual void SetOwner(ibDataViewCtrl* owner)
+	virtual void SetOwner(wxDataViewExtCtrl* owner)
 	{
 		m_owner = owner;
 	}
 
 	// getters:
 	unsigned int GetModelColumn() const { return static_cast<unsigned int>(m_model_column); }
-	ibDataViewCtrl* GetOwner() const { return m_owner; }
-	ibDataViewRenderer* GetRenderer() const { return m_renderer; }
+	wxDataViewExtCtrl* GetOwner() const { return m_owner; }
+	wxDataViewExtRenderer* GetRenderer() const { return m_renderer; }
 
 	// implement some of base class pure virtuals (the rest is port-dependent
 	// and done differently in generic and native versions)
@@ -278,19 +278,19 @@ public:
 
 protected:
 	
-	ibDataViewRenderer* m_renderer;
+	wxDataViewExtRenderer* m_renderer;
 	int                      m_model_column;
 	wxBitmapBundle           m_bitmap;
-	ibDataViewCtrl* m_owner;
+	wxDataViewExtCtrl* m_owner;
 
 private:
 
 	// common part of all ctors
-	void Init(ibDataViewRenderer* renderer, unsigned int model_column);
+	void Init(wxDataViewExtRenderer* renderer, unsigned int model_column);
 };
 
 // ---------------------------------------------------------
-// ibDataViewCtrlBase
+// wxDataViewExtCtrlBase
 // ---------------------------------------------------------
 
 #define wxDV_SINGLE                  0x0000     // for convenience
@@ -306,159 +306,159 @@ private:
 #define wxDV_FOOTER					 0x0040     // column footer visible
 
 // possible selection modes
-enum ibDataViewSelectionMode
+enum wxDataViewExtSelectionMode
 {
-	ibDataViewSelectCell = 0,  // allow selecting anything
-	ibDataViewSelectRow = 1,  // allow selecting only entire rows
+	wxDataViewExtSelectCell = 0,  // allow selecting anything
+	wxDataViewExtSelectRow = 1,  // allow selecting only entire rows
 };
 
-enum ibDataViewViewMode 
+enum wxDataViewExtViewMode 
 {
-	ibDataViewTree, 
-	ibDataViewHierarchical, 
-	ibDataViewList
+	wxDataViewExtTree, 
+	wxDataViewExtHierarchical, 
+	wxDataViewExtList
 };
 
-class FRONTEND_API ibDataViewCtrlBase : public wxSystemThemedControl<wxControl>
+class FRONTEND_API wxDataViewExtCtrlBase : public wxSystemThemedControl<wxControl>
 {
 public:
 
-	ibDataViewCtrlBase();
-	virtual ~ibDataViewCtrlBase();
+	wxDataViewExtCtrlBase();
+	virtual ~wxDataViewExtCtrlBase();
 
 	// model
 	// -----
 
-	virtual bool AssociateModel(ibDataViewModel* model);
-	ibDataViewModel* GetModel();
-	const ibDataViewModel* GetModel() const;
+	virtual bool AssociateModel(wxDataViewExtModel* model);
+	wxDataViewExtModel* GetModel();
+	const wxDataViewExtModel* GetModel() const;
 
 	// column management
 	// -----------------
 
-	ibDataViewColumn* PrependTextColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* PrependTextColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_NOT,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependIconTextColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* PrependIconTextColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_NOT,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependToggleColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_TOGGLE_DEFAULT_WIDTH,
+	wxDataViewExtColumn* PrependToggleColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_TOGGLE_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependProgressColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_DEFAULT_WIDTH,
+	wxDataViewExtColumn* PrependProgressColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependDateColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* PrependDateColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_NOT,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependBitmapColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* PrependBitmapColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependTextColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* PrependTextColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_NOT,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependIconTextColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* PrependIconTextColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_NOT,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependToggleColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_TOGGLE_DEFAULT_WIDTH,
+	wxDataViewExtColumn* PrependToggleColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_TOGGLE_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependProgressColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_DEFAULT_WIDTH,
+	wxDataViewExtColumn* PrependProgressColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependDateColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* PrependDateColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_NOT,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* PrependBitmapColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
-		wxAlignment align = wxALIGN_CENTER,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-
-	ibDataViewColumn* AppendTextColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
-		wxAlignment align = wxALIGN_NOT,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendIconTextColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
-		wxAlignment align = wxALIGN_NOT,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendToggleColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_TOGGLE_DEFAULT_WIDTH,
-		wxAlignment align = wxALIGN_CENTER,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendProgressColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_DEFAULT_WIDTH,
-		wxAlignment align = wxALIGN_CENTER,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendDateColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
-		wxAlignment align = wxALIGN_NOT,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendBitmapColumn(const wxString& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
-		wxAlignment align = wxALIGN_CENTER,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendTextColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
-		wxAlignment align = wxALIGN_NOT,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendIconTextColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
-		wxAlignment align = wxALIGN_NOT,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendToggleColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_TOGGLE_DEFAULT_WIDTH,
-		wxAlignment align = wxALIGN_CENTER,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendProgressColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_DEFAULT_WIDTH,
-		wxAlignment align = wxALIGN_CENTER,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendDateColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
-		wxAlignment align = wxALIGN_NOT,
-		int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendBitmapColumn(const wxBitmap& label, unsigned int model_column,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* PrependBitmapColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE);
 
-	virtual bool PrependColumn(ibDataViewColumn* col);
-	virtual bool InsertColumn(unsigned int pos, ibDataViewColumn* col);
-	virtual bool AppendColumn(ibDataViewColumn* col);
+	wxDataViewExtColumn* AppendTextColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+		wxAlignment align = wxALIGN_NOT,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendIconTextColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+		wxAlignment align = wxALIGN_NOT,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendToggleColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_TOGGLE_DEFAULT_WIDTH,
+		wxAlignment align = wxALIGN_CENTER,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendProgressColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_DEFAULT_WIDTH,
+		wxAlignment align = wxALIGN_CENTER,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendDateColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
+		wxAlignment align = wxALIGN_NOT,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendBitmapColumn(const wxString& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+		wxAlignment align = wxALIGN_CENTER,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendTextColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+		wxAlignment align = wxALIGN_NOT,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendIconTextColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+		wxAlignment align = wxALIGN_NOT,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendToggleColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_TOGGLE_DEFAULT_WIDTH,
+		wxAlignment align = wxALIGN_CENTER,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendProgressColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxDVC_DEFAULT_WIDTH,
+		wxAlignment align = wxALIGN_CENTER,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendDateColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
+		wxAlignment align = wxALIGN_NOT,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+	wxDataViewExtColumn* AppendBitmapColumn(const wxBitmap& label, unsigned int model_column,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+		wxAlignment align = wxALIGN_CENTER,
+		int flags = wxDATAVIEW_COL_RESIZABLE);
+
+	virtual bool PrependColumn(wxDataViewExtColumn* col);
+	virtual bool InsertColumn(unsigned int pos, wxDataViewExtColumn* col);
+	virtual bool AppendColumn(wxDataViewExtColumn* col);
 
 	virtual unsigned int GetColumnCount() const = 0;
-	virtual ibDataViewColumn* GetColumn(unsigned int pos) const = 0;
-	virtual int GetColumnPosition(const ibDataViewColumn* column) const = 0;
+	virtual wxDataViewExtColumn* GetColumn(unsigned int pos) const = 0;
+	virtual int GetColumnPosition(const wxDataViewExtColumn* column) const = 0;
 
-	virtual bool DeleteColumn(ibDataViewColumn* column) = 0;
+	virtual bool DeleteColumn(wxDataViewExtColumn* column) = 0;
 	virtual bool ClearColumns() = 0;
 
-	void SetExpanderColumn(ibDataViewColumn* col)
+	void SetExpanderColumn(wxDataViewExtColumn* col)
 	{
 		m_expander_column = col; DoSetExpanderColumn();
 	}
-	ibDataViewColumn* GetExpanderColumn() const
+	wxDataViewExtColumn* GetExpanderColumn() const
 	{
 		return m_expander_column;
 	}
 
-	virtual ibDataViewColumn* GetSortingColumn() const = 0;
-	virtual wxVector<ibDataViewColumn*> GetSortingColumns() const
+	virtual wxDataViewExtColumn* GetSortingColumn() const = 0;
+	virtual wxVector<wxDataViewExtColumn*> GetSortingColumns() const
 	{
-		wxVector<ibDataViewColumn*> columns;
-		if (ibDataViewColumn* col = GetSortingColumn())
+		wxVector<wxDataViewExtColumn*> columns;
+		if (wxDataViewExtColumn* col = GetSortingColumn())
 			columns.push_back(col);
 		return columns;
 	}
@@ -494,14 +494,14 @@ public:
 	// Current item is the one used by the keyboard navigation, it is the same
 	// as the (unique) selected item in single selection mode so these
 	// functions are mostly useful for controls with wxDV_MULTIPLE style.
-	ibDataViewItem GetCurrentItem() const;
-	void SetCurrentItem(const ibDataViewItem& item);
+	wxDataViewExtItem GetCurrentItem() const;
+	void SetCurrentItem(const wxDataViewExtItem& item);
 
-	virtual ibDataViewItem GetTopItem() const { return ibDataViewItem(NULL); }
+	virtual wxDataViewExtItem GetTopItem() const { return wxDataViewExtItem(NULL); }
 	virtual int GetCountPerPage() const { return wxNOT_FOUND; }
 
 	// Currently focused column of the current item or NULL if no column has focus
-	virtual ibDataViewColumn* GetCurrentColumn() const = 0;
+	virtual wxDataViewExtColumn* GetCurrentColumn() const = 0;
 
 	// Selection: both GetSelection() and GetSelections() can be used for the
 	// controls both with and without wxDV_MULTIPLE style. For single selection
@@ -512,44 +512,44 @@ public:
 	virtual int GetSelectedItemsCount() const = 0;
 
 	bool HasSelection() const { return GetSelectedItemsCount() != 0; }
-	ibDataViewItem GetSelection() const;
-	virtual int GetSelections(ibDataViewItemArray& sel) const = 0;
-	virtual void SetSelections(const ibDataViewItemArray& sel) = 0;
-	virtual void Select(const ibDataViewItem& item) = 0;
-	virtual void Unselect(const ibDataViewItem& item) = 0;
-	virtual bool IsSelected(const ibDataViewItem& item) const = 0;
+	wxDataViewExtItem GetSelection() const;
+	virtual int GetSelections(wxDataViewExtItemArray& sel) const = 0;
+	virtual void SetSelections(const wxDataViewExtItemArray& sel) = 0;
+	virtual void Select(const wxDataViewExtItem& item) = 0;
+	virtual void Unselect(const wxDataViewExtItem& item) = 0;
+	virtual bool IsSelected(const wxDataViewExtItem& item) const = 0;
 
 	virtual void SelectAll() = 0;
 	virtual void UnselectAll() = 0;
 
-	virtual void SetSelectionMode(ibDataViewSelectionMode selmode) = 0;
-	virtual ibDataViewSelectionMode GetSelectionMode() const = 0;
+	virtual void SetSelectionMode(wxDataViewExtSelectionMode selmode) = 0;
+	virtual wxDataViewExtSelectionMode GetSelectionMode() const = 0;
 
-	virtual void SetViewMode(ibDataViewViewMode viewMode) = 0;
-	virtual ibDataViewViewMode GetViewMode() const = 0;
+	virtual void SetViewMode(wxDataViewExtViewMode viewMode) = 0;
+	virtual wxDataViewExtViewMode GetViewMode() const = 0;
 
-	virtual void SetTopParent(const ibDataViewItem& item) = 0;
+	virtual void SetTopParent(const wxDataViewExtItem& item) = 0;
 
-	void Expand(const ibDataViewItem& item);
-	void ExpandChildren(const ibDataViewItem& item);
-	void ExpandAncestors(const ibDataViewItem& item);
+	void Expand(const wxDataViewExtItem& item);
+	void ExpandChildren(const wxDataViewExtItem& item);
+	void ExpandAncestors(const wxDataViewExtItem& item);
 	
-	virtual void Collapse(const ibDataViewItem& item) = 0;
-	virtual bool IsExpanded(const ibDataViewItem& item) const = 0;
+	virtual void Collapse(const wxDataViewExtItem& item) = 0;
+	virtual bool IsExpanded(const wxDataViewExtItem& item) const = 0;
 
-	virtual void EnsureVisible(const ibDataViewItem& item,
-		const ibDataViewColumn* column = NULL) = 0;
-	virtual void HitTest(const wxPoint& point, ibDataViewItem& item, ibDataViewColumn*& column) const = 0;
-	virtual wxRect GetItemRect(const ibDataViewItem& item, const ibDataViewColumn* column = NULL) const = 0;
+	virtual void EnsureVisible(const wxDataViewExtItem& item,
+		const wxDataViewExtColumn* column = NULL) = 0;
+	virtual void HitTest(const wxPoint& point, wxDataViewExtItem& item, wxDataViewExtColumn*& column) const = 0;
+	virtual wxRect GetItemRect(const wxDataViewExtItem& item, const wxDataViewExtColumn* column = NULL) const = 0;
 
 	virtual bool SetRowHeight(int WXUNUSED(rowHeight)) { return false; }
 	virtual int GetRowHeight() const { return 0; }
 	virtual int GetDefaultRowHeight() const { return 0; }
 
-	virtual void EditItem(const ibDataViewItem& item, const ibDataViewColumn* column) = 0;
+	virtual void EditItem(const wxDataViewExtItem& item, const wxDataViewExtColumn* column) = 0;
 
 	// Use EditItem() instead
-	wxDEPRECATED(void StartEditor(const ibDataViewItem& item, unsigned int column));
+	wxDEPRECATED(void StartEditor(const wxDataViewExtItem& item, unsigned int column));
 
 #if wxUSE_DRAG_AND_DROP
 	virtual bool EnableDragSource(const wxDataFormat& WXUNUSED(format))
@@ -624,58 +624,58 @@ protected:
 	// been already expanded using ExpandAncestors().
 	//
 	// If expandChildren is true, also expand all its children recursively.
-	virtual void DoExpand(const ibDataViewItem& item, bool expandChildren) = 0;
+	virtual void DoExpand(const wxDataViewExtItem& item, bool expandChildren) = 0;
 
 private:
 	// Implementation of the public Set/GetCurrentItem() methods which are only
 	// called in multi selection case (for single selection controls their
 	// implementation is trivial and is done in the base class itself).
-	virtual ibDataViewItem DoGetCurrentItem() const = 0;
-	virtual void DoSetCurrentItem(const ibDataViewItem& item) = 0;
+	virtual wxDataViewExtItem DoGetCurrentItem() const = 0;
+	virtual void DoSetCurrentItem(const wxDataViewExtItem& item) = 0;
 
-	ibDataViewModel* m_model;
-	ibDataViewColumn* m_expander_column;
+	wxDataViewExtModel* m_model;
+	wxDataViewExtColumn* m_expander_column;
 	int m_indent;
 
 protected:
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewCtrlBase);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtCtrlBase);
 };
 
 // ----------------------------------------------------------------------------
-// ibDataViewEvent - the event class for the ibDataViewCtrl notifications
+// wxDataViewExtEvent - the event class for the wxDataViewExtCtrl notifications
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API ibDataViewEvent : public wxNotifyEvent
+class FRONTEND_API wxDataViewExtEvent : public wxNotifyEvent
 {
 public:
 	// Default ctor, normally shouldn't be used and mostly exists only for
 	// backwards compatibility.
-	ibDataViewEvent()
+	wxDataViewExtEvent()
 		: wxNotifyEvent()
 	{
-		Init(NULL, NULL, ibDataViewItem());
+		Init(NULL, NULL, wxDataViewExtItem());
 	}
 
 	// Constructor for the events affecting columns (and possibly also items).
-	ibDataViewEvent(wxEventType evtType,
-		ibDataViewCtrlBase* dvc,
-		ibDataViewColumn* column,
-		const ibDataViewItem& item = ibDataViewItem())
+	wxDataViewExtEvent(wxEventType evtType,
+		wxDataViewExtCtrlBase* dvc,
+		wxDataViewExtColumn* column,
+		const wxDataViewExtItem& item = wxDataViewExtItem())
 		: wxNotifyEvent(evtType, dvc->GetId())
 	{
 		Init(dvc, column, item);
 	}
 
 	// Constructor for the events affecting only the items.
-	ibDataViewEvent(wxEventType evtType,
-		ibDataViewCtrlBase* dvc,
-		const ibDataViewItem& item)
+	wxDataViewExtEvent(wxEventType evtType,
+		wxDataViewExtCtrlBase* dvc,
+		const wxDataViewExtItem& item)
 		: wxNotifyEvent(evtType, dvc->GetId())
 	{
 		Init(dvc, NULL, item);
 	}
 
-	ibDataViewEvent(const ibDataViewEvent& event)
+	wxDataViewExtEvent(const wxDataViewExtEvent& event)
 		: wxNotifyEvent(event),
 		m_item(event.m_item),
 		m_col(event.m_col),
@@ -699,9 +699,9 @@ public:
 	{
 	}
 
-	ibDataViewItem GetItem() const { return m_item; }
+	wxDataViewExtItem GetItem() const { return m_item; }
 	int GetColumn() const { return m_col; }
-	ibDataViewModel* GetModel() const { return m_model; }
+	wxDataViewExtModel* GetModel() const { return m_model; }
 
 	const wxVariant& GetValue() const { return m_value; }
 	void SetValue(const wxVariant& value) { m_value = value; }
@@ -710,7 +710,7 @@ public:
 	bool IsEditCancelled() const { return m_editCancelled; }
 
 	// for wxEVT_DATAVIEW_COLUMN_HEADER_CLICKED only
-	ibDataViewColumn* GetDataViewColumn() const { return m_column; }
+	wxDataViewExtColumn* GetDataViewColumn() const { return m_column; }
 
 	// for wxEVT_DATAVIEW_CONTEXT_MENU only
 	wxPoint GetPosition() const { return m_pos; }
@@ -722,8 +722,8 @@ public:
 	void SetCache(int from, int to) { m_cacheFrom = from; m_cacheTo = to; }
 
 	// For wxEVT_DATAVIEW_VIEW_SET
-	ibDataViewViewMode GetViewMode() const { return m_viewMode; }
-	void SetViewMode(ibDataViewViewMode mode) { m_viewMode = mode; }
+	wxDataViewExtViewMode GetViewMode() const { return m_viewMode; }
+	void SetViewMode(wxDataViewExtViewMode mode) { m_viewMode = mode; }
 
 #if wxUSE_DRAG_AND_DROP
 	// For drag operations
@@ -750,18 +750,18 @@ public:
 	void InitData(wxDataObjectComposite* obj, wxDataFormat format);
 #endif // wxUSE_DRAG_AND_DROP
 
-	virtual wxEvent* Clone() const wxOVERRIDE { return new ibDataViewEvent(*this); }
+	virtual wxEvent* Clone() const wxOVERRIDE { return new wxDataViewExtEvent(*this); }
 
 	// These methods shouldn't be used outside of wxWidgets and wxWidgets
 	// itself doesn't use them any longer either as it constructs the events
 	// with the appropriate ctors directly.
 #if WXWIN_COMPATIBILITY_3_0
 	wxDEPRECATED_MSG("Pass the argument to the ctor instead")
-		void SetModel(ibDataViewModel* model) { m_model = model; }
+		void SetModel(wxDataViewExtModel* model) { m_model = model; }
 	wxDEPRECATED_MSG("Pass the argument to the ctor instead")
-		void SetDataViewColumn(ibDataViewColumn* col) { m_column = col; }
+		void SetDataViewColumn(wxDataViewExtColumn* col) { m_column = col; }
 	wxDEPRECATED_MSG("Pass the argument to the ctor instead")
-		void SetItem(const ibDataViewItem& item) { m_item = item; }
+		void SetItem(const wxDataViewExtItem& item) { m_item = item; }
 #endif // WXWIN_COMPATIBILITY_3_0
 
 	void SetColumn(int col) { m_col = col; }
@@ -769,11 +769,11 @@ public:
 
 protected:
 
-	ibDataViewItem      m_item;
+	wxDataViewExtItem      m_item;
 	int                 m_col;
-	ibDataViewModel* m_model;
+	wxDataViewExtModel* m_model;
 	wxVariant           m_value;
-	ibDataViewColumn* m_column;
+	wxDataViewExtColumn* m_column;
 	wxPoint             m_pos;
 	int                 m_cacheFrom;
 	int                 m_cacheTo;
@@ -792,55 +792,55 @@ protected:
 	int                 m_proposedDropIndex;
 #endif // wxUSE_DRAG_AND_DROP
 
-	ibDataViewViewMode m_viewMode; 
+	wxDataViewExtViewMode m_viewMode; 
 
 private:
 
 	// Common part of non-copy ctors.
-	void Init(ibDataViewCtrlBase* dvc,
-		ibDataViewColumn* column,
-		const ibDataViewItem& item);
+	void Init(wxDataViewExtCtrlBase* dvc,
+		wxDataViewExtColumn* column,
+		const wxDataViewExtItem& item);
 
-	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(ibDataViewEvent);
+	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxDataViewExtEvent);
 };
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_SELECTION_CHANGED, ibDataViewEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_SELECTION_CHANGED, wxDataViewExtEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_ACTIVATED, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_COLLAPSED, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EXPANDED, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_COLLAPSING, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EXPANDING, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_EDITING, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EDITING_STARTED, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EDITING_DONE, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_VALUE_CHANGED, ibDataViewEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_ACTIVATED, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_COLLAPSED, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EXPANDED, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_COLLAPSING, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EXPANDING, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_EDITING, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EDITING_STARTED, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EDITING_DONE, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_VALUE_CHANGED, wxDataViewExtEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_INSERTING, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_DELETING, ibDataViewEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_INSERTING, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_DELETING, wxDataViewExtEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, ibDataViewEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, wxDataViewExtEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_COLUMN_HEADER_CLICK, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_COLUMN_SORTED, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_COLUMN_REORDERED, ibDataViewEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_COLUMN_HEADER_CLICK, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_COLUMN_SORTED, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_COLUMN_REORDERED, wxDataViewExtEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_CACHE_HINT, ibDataViewEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_CACHE_HINT, wxDataViewExtEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE, ibDataViewEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_DROP, ibDataViewEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE, wxDataViewExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_DROP, wxDataViewExtEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_VIEW_SET, ibDataViewEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_VIEW_SET, wxDataViewExtEvent);
 
-typedef void (wxEvtHandler::* ibDataViewEventFunction)(ibDataViewEvent&);
+typedef void (wxEvtHandler::* wxDataViewExtEventFunction)(wxDataViewExtEvent&);
 
-#define ibDataViewEventHandler(func) \
-    wxEVENT_HANDLER_CAST(ibDataViewEventFunction, func)
+#define wxDataViewExtEventHandler(func) \
+    wxEVENT_HANDLER_CAST(wxDataViewExtEventFunction, func)
 
 #define wx__DECLARE_DATAVIEWEVT(evt, id, fn) \
-    wx__DECLARE_EVT1(wxEVT_DATAVIEW_ ## evt, id, ibDataViewEventHandler(fn))
+    wx__DECLARE_EVT1(wxEVT_DATAVIEW_ ## evt, id, wxDataViewExtEventHandler(fn))
 
 #define EVT_DATAVIEW_SELECTION_CHANGED(id, fn) wx__DECLARE_DATAVIEWEVT(SELECTION_CHANGED, id, fn)
 
@@ -872,13 +872,13 @@ typedef void (wxEvtHandler::* ibDataViewEventFunction)(ibDataViewEvent&);
 #include "datavgen.h"
 
 //-----------------------------------------------------------------------------
-// ibDataViewListStore
+// wxDataViewExtListStore
 //-----------------------------------------------------------------------------
 
-class FRONTEND_API ibDataViewListStoreLine
+class FRONTEND_API wxDataViewExtListStoreLine
 {
 public:
-	ibDataViewListStoreLine(wxUIntPtr data = 0)
+	wxDataViewExtListStoreLine(wxUIntPtr data = 0)
 	{
 		m_data = data;
 	}
@@ -898,11 +898,11 @@ private:
 	wxUIntPtr m_data;
 };
 
-class FRONTEND_API ibDataViewListStore : public ibDataViewIndexListModel
+class FRONTEND_API wxDataViewExtListStore : public wxDataViewExtIndexListModel
 {
 public:
-	ibDataViewListStore();
-	~ibDataViewListStore();
+	wxDataViewExtListStore();
+	~wxDataViewExtListStore();
 
 	void PrependColumn(const wxString& varianttype);
 	void InsertColumn(unsigned int pos, const wxString& varianttype);
@@ -917,8 +917,8 @@ public:
 
 	unsigned int GetItemCount() const;
 
-	void SetItemData(const ibDataViewItem& item, wxUIntPtr data);
-	wxUIntPtr GetItemData(const ibDataViewItem& item) const;
+	void SetItemData(const wxDataViewExtItem& item, wxUIntPtr data);
+	wxUIntPtr GetItemData(const wxDataViewExtItem& item) const;
 
 	// override base virtuals
 
@@ -930,43 +930,43 @@ public:
 
 
 public:
-	wxVector<ibDataViewListStoreLine*> m_data;
+	wxVector<wxDataViewExtListStoreLine*> m_data;
 	wxArrayString                      m_cols;
 };
 
 //-----------------------------------------------------------------------------
 
-class FRONTEND_API ibDataViewListCtrl : public ibDataViewCtrl
+class FRONTEND_API wxDataViewExtListCtrl : public wxDataViewExtCtrl
 {
 public:
-	ibDataViewListCtrl();
-	ibDataViewListCtrl(wxWindow* parent, wxWindowID id,
+	wxDataViewExtListCtrl();
+	wxDataViewExtListCtrl(wxWindow* parent, wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = wxDV_ROW_LINES,
 		const wxValidator& validator = wxDefaultValidator);
-	~ibDataViewListCtrl();
+	~wxDataViewExtListCtrl();
 
 	bool Create(wxWindow* parent, wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = wxDV_ROW_LINES,
 		const wxValidator& validator = wxDefaultValidator);
 
-	ibDataViewListStore* GetStore()
+	wxDataViewExtListStore* GetStore()
 	{
-		return (ibDataViewListStore*)GetModel();
+		return (wxDataViewExtListStore*)GetModel();
 	}
-	const ibDataViewListStore* GetStore() const
+	const wxDataViewExtListStore* GetStore() const
 	{
-		return (const ibDataViewListStore*)GetModel();
+		return (const wxDataViewExtListStore*)GetModel();
 	}
 
-	int ItemToRow(const ibDataViewItem& item) const
+	int ItemToRow(const wxDataViewExtItem& item) const
 	{
 		return item.IsOk() ? (int)GetStore()->GetRow(item) : wxNOT_FOUND;
 	}
-	ibDataViewItem RowToItem(int row) const
+	wxDataViewExtItem RowToItem(int row) const
 	{
-		return row == wxNOT_FOUND ? ibDataViewItem() : GetStore()->GetItem(row);
+		return row == wxNOT_FOUND ? wxDataViewExtItem() : GetStore()->GetItem(row);
 	}
 
 	int GetSelectedRow() const
@@ -986,27 +986,27 @@ public:
 		return IsSelected(RowToItem(row));
 	}
 
-	bool AppendColumn(ibDataViewColumn* column, const wxString& varianttype);
-	bool PrependColumn(ibDataViewColumn* column, const wxString& varianttype);
-	bool InsertColumn(unsigned int pos, ibDataViewColumn* column, const wxString& varianttype);
+	bool AppendColumn(wxDataViewExtColumn* column, const wxString& varianttype);
+	bool PrependColumn(wxDataViewExtColumn* column, const wxString& varianttype);
+	bool InsertColumn(unsigned int pos, wxDataViewExtColumn* column, const wxString& varianttype);
 
 	// overridden from base class
-	virtual bool PrependColumn(ibDataViewColumn* col) wxOVERRIDE;
-	virtual bool InsertColumn(unsigned int pos, ibDataViewColumn* col) wxOVERRIDE;
-	virtual bool AppendColumn(ibDataViewColumn* col) wxOVERRIDE;
+	virtual bool PrependColumn(wxDataViewExtColumn* col) wxOVERRIDE;
+	virtual bool InsertColumn(unsigned int pos, wxDataViewExtColumn* col) wxOVERRIDE;
+	virtual bool AppendColumn(wxDataViewExtColumn* col) wxOVERRIDE;
 	virtual bool ClearColumns() wxOVERRIDE;
 
-	ibDataViewColumn* AppendTextColumn(const wxString& label,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* AppendTextColumn(const wxString& label,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_LEFT, int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendToggleColumn(const wxString& label,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* AppendToggleColumn(const wxString& label,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_LEFT, int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendProgressColumn(const wxString& label,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* AppendProgressColumn(const wxString& label,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_LEFT, int flags = wxDATAVIEW_COL_RESIZABLE);
-	ibDataViewColumn* AppendIconTextColumn(const wxString& label,
-		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
+	wxDataViewExtColumn* AppendIconTextColumn(const wxString& label,
+		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT, int width = wxCOL_WIDTH_DEFAULT,
 		wxAlignment align = wxALIGN_LEFT, int flags = wxDATAVIEW_COL_RESIZABLE);
 
 	void AppendItem(const wxVector<wxVariant>& values, wxUIntPtr data = 0)
@@ -1060,11 +1060,11 @@ public:
 		wxVariant value; GetStore()->GetValueByRow(value, row, col); return value.GetBool();
 	}
 
-	void SetItemData(const ibDataViewItem& item, wxUIntPtr data)
+	void SetItemData(const wxDataViewExtItem& item, wxUIntPtr data)
 	{
 		GetStore()->SetItemData(item, data);
 	}
-	wxUIntPtr GetItemData(const ibDataViewItem& item) const
+	wxUIntPtr GetItemData(const wxDataViewExtItem& item) const
 	{
 		return GetStore()->GetItemData(item);
 	}
@@ -1075,21 +1075,21 @@ public:
 	}
 
 private:
-	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(ibDataViewListCtrl);
+	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxDataViewExtListCtrl);
 };
 
 //-----------------------------------------------------------------------------
-// ibDataViewTreeStore
+// wxDataViewExtTreeStore
 //-----------------------------------------------------------------------------
 
-class FRONTEND_API ibDataViewTreeStoreNode
+class FRONTEND_API wxDataViewExtTreeStoreNode
 {
 public:
-	ibDataViewTreeStoreNode(ibDataViewTreeStoreNode* parent,
+	wxDataViewExtTreeStoreNode(wxDataViewExtTreeStoreNode* parent,
 		const wxString& text,
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		wxClientData* data = NULL);
-	virtual ~ibDataViewTreeStoreNode();
+	virtual ~wxDataViewExtTreeStoreNode();
 
 	void SetText(const wxString& text)
 	{
@@ -1120,9 +1120,9 @@ public:
 		return m_data;
 	}
 
-	ibDataViewItem GetItem() const
+	wxDataViewExtItem GetItem() const
 	{
-		return ibDataViewItem(const_cast<void*>(static_cast<const void*>(this)));
+		return wxDataViewExtItem(const_cast<void*>(static_cast<const void*>(this)));
 	}
 
 	virtual bool IsContainer()
@@ -1130,40 +1130,40 @@ public:
 		return false;
 	}
 
-	ibDataViewTreeStoreNode* GetParent()
+	wxDataViewExtTreeStoreNode* GetParent()
 	{
 		return m_parent;
 	}
 
 private:
-	ibDataViewTreeStoreNode* m_parent;
+	wxDataViewExtTreeStoreNode* m_parent;
 	wxString                  m_text;
 	wxBitmapBundle            m_icon;
 	wxClientData* m_data;
 };
 
-typedef wxVector<ibDataViewTreeStoreNode*> ibDataViewTreeStoreNodes;
+typedef wxVector<wxDataViewExtTreeStoreNode*> wxDataViewExtTreeStoreNodes;
 
-class FRONTEND_API ibDataViewTreeStoreContainerNode : public ibDataViewTreeStoreNode
+class FRONTEND_API wxDataViewExtTreeStoreContainerNode : public wxDataViewExtTreeStoreNode
 {
 public:
-	ibDataViewTreeStoreContainerNode(ibDataViewTreeStoreNode* parent,
+	wxDataViewExtTreeStoreContainerNode(wxDataViewExtTreeStoreNode* parent,
 		const wxString& text,
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		const wxBitmapBundle& expanded = wxBitmapBundle(),
 		wxClientData* data = NULL);
-	virtual ~ibDataViewTreeStoreContainerNode();
+	virtual ~wxDataViewExtTreeStoreContainerNode();
 
-	const ibDataViewTreeStoreNodes& GetChildren() const
+	const wxDataViewExtTreeStoreNodes& GetChildren() const
 	{
 		return m_children;
 	}
-	ibDataViewTreeStoreNodes& GetChildren()
+	wxDataViewExtTreeStoreNodes& GetChildren()
 	{
 		return m_children;
 	}
 
-	ibDataViewTreeStoreNodes::iterator FindChild(ibDataViewTreeStoreNode* node);
+	wxDataViewExtTreeStoreNodes::iterator FindChild(wxDataViewExtTreeStoreNode* node);
 
 	void SetExpandedIcon(const wxBitmapBundle& icon)
 	{
@@ -1195,77 +1195,77 @@ public:
 	void DestroyChildren();
 
 private:
-	ibDataViewTreeStoreNodes     m_children;
+	wxDataViewExtTreeStoreNodes     m_children;
 	wxBitmapBundle               m_iconExpanded;
 	bool                         m_isExpanded;
 };
 
 //-----------------------------------------------------------------------------
 
-class FRONTEND_API ibDataViewTreeStore : public ibDataViewModel
+class FRONTEND_API wxDataViewExtTreeStore : public wxDataViewExtModel
 {
 public:
-	ibDataViewTreeStore();
-	~ibDataViewTreeStore();
+	wxDataViewExtTreeStore();
+	~wxDataViewExtTreeStore();
 
-	ibDataViewItem AppendItem(const ibDataViewItem& parent,
+	wxDataViewExtItem AppendItem(const wxDataViewExtItem& parent,
 		const wxString& text,
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		wxClientData* data = NULL);
-	ibDataViewItem PrependItem(const ibDataViewItem& parent,
+	wxDataViewExtItem PrependItem(const wxDataViewExtItem& parent,
 		const wxString& text,
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		wxClientData* data = NULL);
-	ibDataViewItem InsertItem(const ibDataViewItem& parent, const ibDataViewItem& previous,
+	wxDataViewExtItem InsertItem(const wxDataViewExtItem& parent, const wxDataViewExtItem& previous,
 		const wxString& text,
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		wxClientData* data = NULL);
 
-	ibDataViewItem PrependContainer(const ibDataViewItem& parent,
+	wxDataViewExtItem PrependContainer(const wxDataViewExtItem& parent,
 		const wxString& text,
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		const wxBitmapBundle& expanded = wxBitmapBundle(),
 		wxClientData* data = NULL);
-	ibDataViewItem AppendContainer(const ibDataViewItem& parent,
+	wxDataViewExtItem AppendContainer(const wxDataViewExtItem& parent,
 		const wxString& text,
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		const wxBitmapBundle& expanded = wxBitmapBundle(),
 		wxClientData* data = NULL);
-	ibDataViewItem InsertContainer(const ibDataViewItem& parent, const ibDataViewItem& previous,
+	wxDataViewExtItem InsertContainer(const wxDataViewExtItem& parent, const wxDataViewExtItem& previous,
 		const wxString& text,
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		const wxBitmapBundle& expanded = wxBitmapBundle(),
 		wxClientData* data = NULL);
 
-	ibDataViewItem GetNthChild(const ibDataViewItem& parent, unsigned int pos) const;
-	int GetChildCount(const ibDataViewItem& parent) const;
+	wxDataViewExtItem GetNthChild(const wxDataViewExtItem& parent, unsigned int pos) const;
+	int GetChildCount(const wxDataViewExtItem& parent) const;
 
-	void SetItemText(const ibDataViewItem& item, const wxString& text);
-	wxString GetItemText(const ibDataViewItem& item) const;
-	void SetItemIcon(const ibDataViewItem& item, const wxBitmapBundle& icon);
-	wxBitmapBundle GetItemBitmapBundle(const ibDataViewItem& item) const;
-	wxIcon GetItemIcon(const ibDataViewItem& item) const;
-	void SetItemExpandedIcon(const ibDataViewItem& item, const wxBitmapBundle& icon);
-	wxBitmapBundle GetItemExpandedBitmapBundle(const ibDataViewItem& item) const;
-	wxIcon GetItemExpandedIcon(const ibDataViewItem& item) const;
-	void SetItemData(const ibDataViewItem& item, wxClientData* data);
-	wxClientData* GetItemData(const ibDataViewItem& item) const;
+	void SetItemText(const wxDataViewExtItem& item, const wxString& text);
+	wxString GetItemText(const wxDataViewExtItem& item) const;
+	void SetItemIcon(const wxDataViewExtItem& item, const wxBitmapBundle& icon);
+	wxBitmapBundle GetItemBitmapBundle(const wxDataViewExtItem& item) const;
+	wxIcon GetItemIcon(const wxDataViewExtItem& item) const;
+	void SetItemExpandedIcon(const wxDataViewExtItem& item, const wxBitmapBundle& icon);
+	wxBitmapBundle GetItemExpandedBitmapBundle(const wxDataViewExtItem& item) const;
+	wxIcon GetItemExpandedIcon(const wxDataViewExtItem& item) const;
+	void SetItemData(const wxDataViewExtItem& item, wxClientData* data);
+	wxClientData* GetItemData(const wxDataViewExtItem& item) const;
 
-	void DeleteItem(const ibDataViewItem& item);
-	void DeleteChildren(const ibDataViewItem& item);
+	void DeleteItem(const wxDataViewExtItem& item);
+	void DeleteChildren(const wxDataViewExtItem& item);
 	void DeleteAllItems();
 
 	// implement base methods
 
 	virtual void GetValue(wxVariant& variant,
-		const ibDataViewItem& item, unsigned int col) const wxOVERRIDE;
+		const wxDataViewExtItem& item, unsigned int col) const wxOVERRIDE;
 	virtual bool SetValue(const wxVariant& variant,
-		const ibDataViewItem& item, unsigned int col) wxOVERRIDE;
-	virtual ibDataViewItem GetParent(const ibDataViewItem& item) const wxOVERRIDE;
-	virtual bool IsContainer(const ibDataViewItem& item) const wxOVERRIDE;
-	virtual unsigned int GetChildren(const ibDataViewItem& item, ibDataViewItemArray& children) const wxOVERRIDE;
+		const wxDataViewExtItem& item, unsigned int col) wxOVERRIDE;
+	virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& item) const wxOVERRIDE;
+	virtual bool IsContainer(const wxDataViewExtItem& item) const wxOVERRIDE;
+	virtual unsigned int GetChildren(const wxDataViewExtItem& item, wxDataViewExtItemArray& children) const wxOVERRIDE;
 
-	virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
+	virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
 		unsigned int column, bool ascending) const wxOVERRIDE;
 
 	virtual bool HasDefaultCompare() const wxOVERRIDE
@@ -1273,22 +1273,22 @@ public:
 		return true;
 	}
 
-	ibDataViewTreeStoreNode* FindNode(const ibDataViewItem& item) const;
-	ibDataViewTreeStoreContainerNode* FindContainerNode(const ibDataViewItem& item) const;
-	ibDataViewTreeStoreNode* GetRoot() const { return m_root; }
+	wxDataViewExtTreeStoreNode* FindNode(const wxDataViewExtItem& item) const;
+	wxDataViewExtTreeStoreContainerNode* FindContainerNode(const wxDataViewExtItem& item) const;
+	wxDataViewExtTreeStoreNode* GetRoot() const { return m_root; }
 
 public:
-	ibDataViewTreeStoreNode* m_root;
+	wxDataViewExtTreeStoreNode* m_root;
 };
 
 //-----------------------------------------------------------------------------
 
-class FRONTEND_API ibDataViewTreeCtrl : public ibDataViewCtrl,
+class FRONTEND_API wxDataViewExtTreeCtrl : public wxDataViewExtCtrl,
 	public wxWithImages
 {
 public:
-	ibDataViewTreeCtrl() {}
-	ibDataViewTreeCtrl(wxWindow* parent,
+	wxDataViewExtTreeCtrl() {}
+	wxDataViewExtTreeCtrl(wxWindow* parent,
 		wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
@@ -1305,80 +1305,80 @@ public:
 		long style = wxDV_NO_HEADER | wxDV_ROW_LINES,
 		const wxValidator& validator = wxDefaultValidator);
 
-	ibDataViewTreeStore* GetStore()
+	wxDataViewExtTreeStore* GetStore()
 	{
-		return (ibDataViewTreeStore*)GetModel();
+		return (wxDataViewExtTreeStore*)GetModel();
 	}
-	const ibDataViewTreeStore* GetStore() const
+	const wxDataViewExtTreeStore* GetStore() const
 	{
-		return (const ibDataViewTreeStore*)GetModel();
+		return (const wxDataViewExtTreeStore*)GetModel();
 	}
 
-	bool IsContainer(const ibDataViewItem& item) const
+	bool IsContainer(const wxDataViewExtItem& item) const
 	{
 		return GetStore()->IsContainer(item);
 	}
 
-	ibDataViewItem AppendItem(const ibDataViewItem& parent,
+	wxDataViewExtItem AppendItem(const wxDataViewExtItem& parent,
 		const wxString& text, int icon = NO_IMAGE, wxClientData* data = NULL);
-	ibDataViewItem PrependItem(const ibDataViewItem& parent,
+	wxDataViewExtItem PrependItem(const wxDataViewExtItem& parent,
 		const wxString& text, int icon = NO_IMAGE, wxClientData* data = NULL);
-	ibDataViewItem InsertItem(const ibDataViewItem& parent, const ibDataViewItem& previous,
+	wxDataViewExtItem InsertItem(const wxDataViewExtItem& parent, const wxDataViewExtItem& previous,
 		const wxString& text, int icon = NO_IMAGE, wxClientData* data = NULL);
 
-	ibDataViewItem PrependContainer(const ibDataViewItem& parent,
+	wxDataViewExtItem PrependContainer(const wxDataViewExtItem& parent,
 		const wxString& text, int icon = NO_IMAGE, int expanded = NO_IMAGE,
 		wxClientData* data = NULL);
-	ibDataViewItem AppendContainer(const ibDataViewItem& parent,
+	wxDataViewExtItem AppendContainer(const wxDataViewExtItem& parent,
 		const wxString& text, int icon = NO_IMAGE, int expanded = NO_IMAGE,
 		wxClientData* data = NULL);
-	ibDataViewItem InsertContainer(const ibDataViewItem& parent, const ibDataViewItem& previous,
+	wxDataViewExtItem InsertContainer(const wxDataViewExtItem& parent, const wxDataViewExtItem& previous,
 		const wxString& text, int icon = NO_IMAGE, int expanded = NO_IMAGE,
 		wxClientData* data = NULL);
 
-	ibDataViewItem GetNthChild(const ibDataViewItem& parent, unsigned int pos) const
+	wxDataViewExtItem GetNthChild(const wxDataViewExtItem& parent, unsigned int pos) const
 	{
 		return GetStore()->GetNthChild(parent, pos);
 	}
-	int GetChildCount(const ibDataViewItem& parent) const
+	int GetChildCount(const wxDataViewExtItem& parent) const
 	{
 		return GetStore()->GetChildCount(parent);
 	}
-	ibDataViewItem GetItemParent(ibDataViewItem item) const
+	wxDataViewExtItem GetItemParent(wxDataViewExtItem item) const
 	{
 		return GetStore()->GetParent(item);
 	}
 
-	void SetItemText(const ibDataViewItem& item, const wxString& text);
-	wxString GetItemText(const ibDataViewItem& item) const
+	void SetItemText(const wxDataViewExtItem& item, const wxString& text);
+	wxString GetItemText(const wxDataViewExtItem& item) const
 	{
 		return GetStore()->GetItemText(item);
 	}
-	void SetItemIcon(const ibDataViewItem& item, const wxBitmapBundle& icon);
-	wxIcon GetItemIcon(const ibDataViewItem& item) const
+	void SetItemIcon(const wxDataViewExtItem& item, const wxBitmapBundle& icon);
+	wxIcon GetItemIcon(const wxDataViewExtItem& item) const
 	{
 		return GetStore()->GetItemIcon(item);
 	}
-	void SetItemExpandedIcon(const ibDataViewItem& item, const wxBitmapBundle& icon);
-	wxIcon GetItemExpandedIcon(const ibDataViewItem& item) const
+	void SetItemExpandedIcon(const wxDataViewExtItem& item, const wxBitmapBundle& icon);
+	wxIcon GetItemExpandedIcon(const wxDataViewExtItem& item) const
 	{
 		return GetStore()->GetItemExpandedIcon(item);
 	}
-	void SetItemData(const ibDataViewItem& item, wxClientData* data)
+	void SetItemData(const wxDataViewExtItem& item, wxClientData* data)
 	{
 		GetStore()->SetItemData(item, data);
 	}
-	wxClientData* GetItemData(const ibDataViewItem& item) const
+	wxClientData* GetItemData(const wxDataViewExtItem& item) const
 	{
 		return GetStore()->GetItemData(item);
 	}
 
-	void DeleteItem(const ibDataViewItem& item);
-	void DeleteChildren(const ibDataViewItem& item);
+	void DeleteItem(const wxDataViewExtItem& item);
+	void DeleteChildren(const wxDataViewExtItem& item);
 	void DeleteAllItems();
 
-	void OnExpanded(ibDataViewEvent& event);
-	void OnCollapsed(ibDataViewEvent& event);
+	void OnExpanded(wxDataViewExtEvent& event);
+	void OnCollapsed(wxDataViewExtEvent& event);
 	void OnSize(wxSizeEvent& event);
 
 protected:
@@ -1386,7 +1386,7 @@ protected:
 
 private:
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(ibDataViewTreeCtrl);
+	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxDataViewExtTreeCtrl);
 };
 
 // old wxEVT_COMMAND_* constants

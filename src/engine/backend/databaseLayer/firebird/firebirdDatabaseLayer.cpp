@@ -18,8 +18,8 @@
 #include <wx/regex.h>
 
 // ctor()
-ibDatabaseLayerFirebird::ibDatabaseLayerFirebird()
-	: ibDatabaseLayer()
+CFirebirdDatabaseLayer::CFirebirdDatabaseLayer()
+	: IDatabaseLayer()
 {
 	m_pDatabase = NULL;
 
@@ -30,7 +30,7 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird()
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceFirebird();
+	m_pInterface = new CFirebirdInterface();
 	
 	if (!m_pInterface->Init())
 	{
@@ -49,8 +49,8 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird()
 	m_strRole = wxEmptyString;
 }
 
-ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strDatabase)
-	: ibDatabaseLayer()
+CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase)
+	: IDatabaseLayer()
 {
 	m_pDatabase = NULL;
 
@@ -61,7 +61,7 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strDatabase)
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceFirebird();
+	m_pInterface = new CFirebirdInterface();
 	
 	if (!m_pInterface->Init())
 	{
@@ -81,8 +81,8 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strDatabase)
 	Open(strDatabase);
 }
 
-ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer()
+CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: IDatabaseLayer()
 {
 	m_pDatabase = NULL;
 
@@ -93,7 +93,7 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strDatabase, co
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceFirebird();
+	m_pInterface = new CFirebirdInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -111,8 +111,8 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strDatabase, co
 	Open(strDatabase);
 }
 
-ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer()
+CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: IDatabaseLayer()
 {
 	m_pDatabase = NULL;
 
@@ -123,7 +123,7 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strServer, cons
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceFirebird();
+	m_pInterface = new CFirebirdInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -141,8 +141,8 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strServer, cons
 	Open(strDatabase);
 }
 
-ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword, const wxString& strRole)
-	: ibDatabaseLayer()
+CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword, const wxString& strRole)
+	: IDatabaseLayer()
 {
 	m_pDatabase = NULL;
 
@@ -153,7 +153,7 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strServer, cons
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceFirebird();
+	m_pInterface = new CFirebirdInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -171,7 +171,7 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strServer, cons
 	Open(strDatabase);
 }
 
-ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const ibDatabaseLayerFirebird& src) 
+CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const CFirebirdDatabaseLayer& src) 
 {
 	m_pDatabase = NULL;
 
@@ -182,7 +182,7 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const ibDatabaseLayerFirebird& 
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new ibInterfaceFirebird();
+	m_pInterface = new CFirebirdInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -201,7 +201,7 @@ ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const ibDatabaseLayerFirebird& 
 }
 
 // dtor()
-ibDatabaseLayerFirebird::~ibDatabaseLayerFirebird()
+CFirebirdDatabaseLayer::~CFirebirdDatabaseLayer()
 {
 	Close();
 	ISC_STATUS_ARRAY* pStatus = (ISC_STATUS_ARRAY*)m_pStatus;
@@ -214,13 +214,13 @@ ibDatabaseLayerFirebird::~ibDatabaseLayerFirebird()
 }
 
 // open database
-bool ibDatabaseLayerFirebird::Open(const wxString& strDatabase)
+bool CFirebirdDatabaseLayer::Open(const wxString& strDatabase)
 {
 	m_strDatabase = strDatabase;
 	return Open();
 }
 
-bool ibDatabaseLayerFirebird::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool CFirebirdDatabaseLayer::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_strUser = strUser;
 	m_strPassword = strPassword;
@@ -228,7 +228,7 @@ bool ibDatabaseLayerFirebird::Open(const wxString& strDatabase, const wxString& 
 	return Open(strDatabase);
 }
 
-bool ibDatabaseLayerFirebird::Open(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool CFirebirdDatabaseLayer::Open(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_strServer = strServer;
 	m_strUser = strUser;
@@ -237,7 +237,7 @@ bool ibDatabaseLayerFirebird::Open(const wxString& strServer, const wxString& st
 	return Open(strDatabase);
 }
 
-bool ibDatabaseLayerFirebird::Open()
+bool CFirebirdDatabaseLayer::Open()
 {
 	ResetErrorCodes();
 
@@ -354,7 +354,7 @@ bool ibDatabaseLayerFirebird::Open()
 }
 
 // close database  
-bool ibDatabaseLayerFirebird::Close()
+bool CFirebirdDatabaseLayer::Close()
 {
 	CloseResultSets();
 	CloseStatements();
@@ -393,13 +393,13 @@ bool ibDatabaseLayerFirebird::Close()
 	return true;
 }
 
-bool ibDatabaseLayerFirebird::IsOpen()
+bool CFirebirdDatabaseLayer::IsOpen()
 {
 	return (m_pDatabase != NULL);
 }
 
 // transaction support
-void ibDatabaseLayerFirebird::BeginTransaction()
+void CFirebirdDatabaseLayer::BeginTransaction()
 {
 	ResetErrorCodes();
 
@@ -436,7 +436,7 @@ void ibDatabaseLayerFirebird::BeginTransaction()
 	}
 }
 
-void ibDatabaseLayerFirebird::Commit()
+void CFirebirdDatabaseLayer::Commit()
 {
 	ResetErrorCodes();
 
@@ -463,7 +463,7 @@ void ibDatabaseLayerFirebird::Commit()
 	}
 }
 
-void ibDatabaseLayerFirebird::RollBack()
+void CFirebirdDatabaseLayer::RollBack()
 {
 	ResetErrorCodes();
 
@@ -490,13 +490,13 @@ void ibDatabaseLayerFirebird::RollBack()
 	}
 }
 
-bool ibDatabaseLayerFirebird::IsActiveTransaction()
+bool CFirebirdDatabaseLayer::IsActiveTransaction()
 {
 	return m_pDatabase && m_fbNode->m_pTransaction;
 }
 
 // query database
-int ibDatabaseLayerFirebird::DoRunQuery(const wxString& strQuery, bool bParseQuery)
+int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 {
 	ResetErrorCodes();
 	if (m_pDatabase != NULL)
@@ -580,7 +580,7 @@ int ibDatabaseLayerFirebird::DoRunQuery(const wxString& strQuery, bool bParseQue
 	}
 }
 
-ibDatabaseResultSet* ibDatabaseLayerFirebird::DoRunQueryWithResults(const wxString& strQuery)
+IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString& strQuery)
 {
 	ResetErrorCodes();
 	if (m_pDatabase != NULL)
@@ -737,7 +737,7 @@ ibDatabaseResultSet* ibDatabaseLayerFirebird::DoRunQueryWithResults(const wxStri
 			}
 
 			// Create the result set object
-			ibDatabaseResultSetFirebird* pResultSet = new ibDatabaseResultSetFirebird(m_pInterface, m_pDatabase, pQueryTransaction, pStatement, pOutputSqlda, true, bManageTransaction);
+			CFirebirdResultSet* pResultSet = new CFirebirdResultSet(m_pInterface, m_pDatabase, pQueryTransaction, pStatement, pOutputSqlda, true, bManageTransaction);
 			pResultSet->SetEncoding(GetEncoding());
 			if (pResultSet->GetErrorCode() != DATABASE_LAYER_OK)
 			{
@@ -757,7 +757,7 @@ ibDatabaseResultSet* ibDatabaseLayerFirebird::DoRunQueryWithResults(const wxStri
 					delete pResultSet;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 				}
-				catch (ibDatabaseLayerException& e)
+				catch (DatabaseLayerException& e)
 				{
 				}
 #endif
@@ -784,7 +784,7 @@ ibDatabaseResultSet* ibDatabaseLayerFirebird::DoRunQueryWithResults(const wxStri
 					delete pResultSet;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 				}
-				catch (ibDatabaseLayerException& e)
+				catch (DatabaseLayerException& e)
 				{
 				}
 #endif
@@ -808,11 +808,11 @@ ibDatabaseResultSet* ibDatabaseLayerFirebird::DoRunQueryWithResults(const wxStri
 	}
 }
 
-ibPreparedStatement* ibDatabaseLayerFirebird::DoPrepareStatement(const wxString& strQuery)
+IPreparedStatement* CFirebirdDatabaseLayer::DoPrepareStatement(const wxString& strQuery)
 {
 	ResetErrorCodes();
 
-	ibPreparedStatementFirebird* pStatement = ibPreparedStatementFirebird::CreateStatement(m_pInterface, m_pDatabase, m_fbNode->m_pTransaction, strQuery, GetEncoding());
+	CFirebirdPreparedStatement* pStatement = CFirebirdPreparedStatement::CreateStatement(m_pInterface, m_pDatabase, m_fbNode->m_pTransaction, strQuery, GetEncoding());
 	if (pStatement && (pStatement->GetErrorCode() != DATABASE_LAYER_OK))
 	{
 		SetErrorCode(pStatement->GetErrorCode());
@@ -827,14 +827,14 @@ ibPreparedStatement* ibDatabaseLayerFirebird::DoPrepareStatement(const wxString&
 	return pStatement;
 }
 
-bool ibDatabaseLayerFirebird::TableExists(const wxString& table)
+bool CFirebirdDatabaseLayer::TableExists(const wxString& table)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = NULL;
-	ibDatabaseResultSet* pResult = NULL;
+	IPreparedStatement* pStatement = NULL;
+	IDatabaseResultSet* pResult = NULL;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -860,7 +860,7 @@ bool ibDatabaseLayerFirebird::TableExists(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -893,14 +893,14 @@ bool ibDatabaseLayerFirebird::TableExists(const wxString& table)
 	return bReturn;
 	}
 
-bool ibDatabaseLayerFirebird::ViewExists(const wxString& view)
+bool CFirebirdDatabaseLayer::ViewExists(const wxString& view)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = NULL;
-	ibDatabaseResultSet* pResult = NULL;
+	IPreparedStatement* pStatement = NULL;
+	IDatabaseResultSet* pResult = NULL;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -926,7 +926,7 @@ bool ibDatabaseLayerFirebird::ViewExists(const wxString& view)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -959,11 +959,11 @@ bool ibDatabaseLayerFirebird::ViewExists(const wxString& view)
 	return bReturn;
 	}
 
-wxArrayString ibDatabaseLayerFirebird::GetTables()
+wxArrayString CFirebirdDatabaseLayer::GetTables()
 {
 	wxArrayString returnArray;
 
-	ibDatabaseResultSet* pResult = NULL;
+	IDatabaseResultSet* pResult = NULL;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -977,7 +977,7 @@ wxArrayString ibDatabaseLayerFirebird::GetTables()
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -998,11 +998,11 @@ wxArrayString ibDatabaseLayerFirebird::GetTables()
 	return returnArray;
 	}
 
-wxArrayString ibDatabaseLayerFirebird::GetViews()
+wxArrayString CFirebirdDatabaseLayer::GetViews()
 {
 	wxArrayString returnArray;
 
-	ibDatabaseResultSet* pResult = NULL;
+	IDatabaseResultSet* pResult = NULL;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -1016,7 +1016,7 @@ wxArrayString ibDatabaseLayerFirebird::GetViews()
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -1037,14 +1037,14 @@ wxArrayString ibDatabaseLayerFirebird::GetViews()
 	return returnArray;
 	}
 
-wxArrayString ibDatabaseLayerFirebird::GetColumns(const wxString& table)
+wxArrayString CFirebirdDatabaseLayer::GetColumns(const wxString& table)
 {
 	// Initialize variables
 	wxArrayString returnArray;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	ibPreparedStatement* pStatement = NULL;
-	ibDatabaseResultSet* pResult = NULL;
+	IPreparedStatement* pStatement = NULL;
+	IDatabaseResultSet* pResult = NULL;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -1067,7 +1067,7 @@ wxArrayString ibDatabaseLayerFirebird::GetColumns(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (ibDatabaseLayerException& e)
+	catch (DatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -1100,15 +1100,15 @@ wxArrayString ibDatabaseLayerFirebird::GetColumns(const wxString& table)
 	return returnArray;
 	}
 
-int ibDatabaseLayerFirebird::TranslateErrorCode(int nCode)
+int CFirebirdDatabaseLayer::TranslateErrorCode(int nCode)
 {
-	// Ultimately, this will probably be a map of Firebird database error code values to ibDatabaseLayer values
+	// Ultimately, this will probably be a map of Firebird database error code values to IDatabaseLayer values
 	// For now though, we'll just return the original error code
 	return nCode;
 }
 
-//wxString ibDatabaseLayerFirebird::TranslateErrorCodeToString(ibInterfaceFirebird* pInterface, int nCode, ISC_STATUS_ARRAY status)
-wxString ibDatabaseLayerFirebird::TranslateErrorCodeToString(ibInterfaceFirebird* pInterface, int nCode, void* status)
+//wxString CFirebirdDatabaseLayer::TranslateErrorCodeToString(CFirebirdInterface* pInterface, int nCode, ISC_STATUS_ARRAY status)
+wxString CFirebirdDatabaseLayer::TranslateErrorCodeToString(CFirebirdInterface* pInterface, int nCode, void* status)
 {
 	char szError[512];
 	wxString strReturn;
@@ -1130,33 +1130,33 @@ wxString ibDatabaseLayerFirebird::TranslateErrorCodeToString(ibInterfaceFirebird
 	else
 	{
 		pInterface->GetIscSqlInterprete()(nCode, szError, sizeof(szError));
-		wxCharBuffer systemEncoding = wxLocale::GetSystemEncodingName().mb_str();
-		strReturn = ibDatabaseStringConverter::ConvertFromUnicodeStream(szError, (const char*)systemEncoding);
+		wxCharBuffer systemEncoding = wxLocale::GetSystemEncodingName().mb_str(*wxConvCurrent);
+		strReturn = CDatabaseStringConverter::ConvertFromUnicodeStream(szError, (const char*)systemEncoding);
 	}
 
 	return strReturn;
 }
 
-void ibDatabaseLayerFirebird::InterpretErrorCodes()
+void CFirebirdDatabaseLayer::InterpretErrorCodes()
 {
-	//wxLogDebug(wxT("ibDatabaseLayerFirebird::InterpretErrorCodes()"));
+	//wxLogDebug(wxT("CFirebirdDatabaseLayer::InterpretErrorCodes()"));
 
 	long nSqlCode = m_pInterface->GetIscSqlcode()(*(ISC_STATUS_ARRAY*)m_pStatus);
-	SetErrorMessage(ibDatabaseLayerFirebird::TranslateErrorCodeToString(m_pInterface, nSqlCode, *(ISC_STATUS_ARRAY*)m_pStatus));
+	SetErrorMessage(CFirebirdDatabaseLayer::TranslateErrorCodeToString(m_pInterface, nSqlCode, *(ISC_STATUS_ARRAY*)m_pStatus));
 	if (nSqlCode < -900)  // Error codes less than -900 indicate that it wasn't a SQL error but an ibase system error
 	{
-		SetErrorCode(ibDatabaseLayerFirebird::TranslateErrorCode(*((ISC_STATUS_ARRAY*)m_pStatus)[1]));
+		SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(*((ISC_STATUS_ARRAY*)m_pStatus)[1]));
 	}
 	else
 	{
-		SetErrorCode(ibDatabaseLayerFirebird::TranslateErrorCode(nSqlCode));
+		SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(nSqlCode));
 	}
 }
 
-bool ibDatabaseLayerFirebird::IsAvailable()
+bool CFirebirdDatabaseLayer::IsAvailable()
 {
 	bool bAvailable = false;
-	ibInterfaceFirebird* pInterface = new ibInterfaceFirebird();
+	CFirebirdInterface* pInterface = new CFirebirdInterface();
 	bAvailable = pInterface && pInterface->Init();
 	wxDELETE(pInterface);
 	return bAvailable;

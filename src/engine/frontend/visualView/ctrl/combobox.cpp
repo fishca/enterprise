@@ -2,17 +2,17 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueComboBox, ibValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueComboBox, IValueWindow)
 
 //****************************************************************************
 //*                             ComboBox                                     *
 //****************************************************************************
 
-ibValueComboBox::ibValueComboBox() : ibValueWindow()
+CValueComboBox::CValueComboBox() : IValueWindow()
 {
 }
 
-wxObject* ibValueComboBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueComboBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxComboBox* combobox = new wxComboBox(wxparent, wxID_ANY,
 		wxEmptyString, 
@@ -22,11 +22,11 @@ wxObject* ibValueComboBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 	return combobox;
 }
 
-void ibValueComboBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueComboBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 }
 
-void ibValueComboBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueComboBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxComboBox* combobox = dynamic_cast<wxComboBox*>(wxobject);
 
@@ -36,7 +36,7 @@ void ibValueComboBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(combobox);
 }
 
-void ibValueComboBox::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueComboBox::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 }
 
@@ -44,12 +44,12 @@ void ibValueComboBox::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 //*								 Data		                        *
 //*******************************************************************
 
-bool ibValueComboBox::LoadData(ibReaderMemory& reader)
+bool CValueComboBox::LoadData(CMemoryReader& reader)
 {
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueComboBox::SaveData(ibWriterMemory& writer)
+bool CValueComboBox::SaveData(CMemoryWriter& writer)
 {
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }

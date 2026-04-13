@@ -4,16 +4,16 @@
 #include "commonObject.h"
 #include "accumulationRegisterEnum.h"
 
-class ibValueMetaObjectAccumulationRegister : public ibValueMetaObjectRegisterData {
-	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectAccumulationRegister);
+class CValueMetaObjectAccumulationRegister : public IValueMetaObjectRegisterData {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectAccumulationRegister);
 private:
 	enum
 	{
 		eFormList = 2,
 	};
 
-	virtual ibFormTypeList GetFormType() const override {
-		ibFormTypeList formList;
+	virtual CFormTypeList GetFormType() const override {
+		CFormTypeList formList;
 		formList.AppendItem(wxT("FormList"), _("Form list"), eFormList);
 		return formList;
 	}
@@ -25,29 +25,29 @@ private:
 	};
 
 	//private:
-		//ibValueMetaObjectAttributePredefined* m_attributibRecordType = ibValueMetaObjectCompositeData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, ibValueEnumAccumulationRegisterRecordType::CreateDefEnumValue());
+		//CValueMetaObjectAttributePredefined* m_attributeRecordType = IValueMetaObjectCompositeData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue());
 
 public:
 
-	ibValueMetaObjectAttributePredefined* GetRegisterRecordType() const {
-		return m_propertyAttributibRecordType->GetMetaObject();
+	CValueMetaObjectAttributePredefined* GetRegisterRecordType() const {
+		return m_propertyAttributeRecordType->GetMetaObject();
 	}
 
-	bool IsRegisterRecordType(const ibMetaID& id) const {
-		return id == (*m_propertyAttributibRecordType)->GetMetaID();
+	bool IsRegisterRecordType(const meta_identifier_t& id) const {
+		return id == (*m_propertyAttributeRecordType)->GetMetaID();
 	}
 
 	///////////////////////////////////////////////////////////////////
 
-	ibRegisterType GetRegisterType() const {
+	eRegisterType GetRegisterType() const {
 		return m_propertyRegisterType->GetValueAsEnum();
 	}
 
-	wxString GetRegisterTableNameDB(ibRegisterType rType) const {
+	wxString GetRegisterTableNameDB(eRegisterType rType) const {
 		wxString className = GetClassName();
 		wxASSERT(m_metaId != 0);
 
-		if (rType == ibRegisterType::eBalances) {
+		if (rType == eRegisterType::eBalances) {
 			return wxString::Format("%s%i_T",
 				className, GetMetaID());
 		}
@@ -62,21 +62,21 @@ public:
 
 	///////////////////////////////////////////////////////////////////
 
-	bool CreateAndUpdateBalancesTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
-	bool CreateAndUpdateTurnoverTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
+	bool CreateAndUpdateBalancesTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
+	bool CreateAndUpdateTurnoverTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
 
 	///////////////////////////////////////////////////////////////////
 
-	ibValueMetaObjectAccumulationRegister();
-	virtual ~ibValueMetaObjectAccumulationRegister();
+	CValueMetaObjectAccumulationRegister();
+	virtual ~CValueMetaObjectAccumulationRegister();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//events: 
-	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
-	virtual bool OnLoadMetaObject(ibMetaData* metaData);
+	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
+	virtual bool OnLoadMetaObject(IMetaData* metaData);
 	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
@@ -91,8 +91,8 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 
-	virtual void OnCreateFormObject(ibValueMetaObjectFormBase* metaForm);
-	virtual void OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm);
+	virtual void OnCreateFormObject(IValueMetaObjectForm* metaForm);
+	virtual void OnRemoveMetaForm(IValueMetaObjectForm* metaForm);
 
 	//has record manager 
 	virtual bool HasRecordManager() const { return false; }
@@ -102,15 +102,15 @@ public:
 	virtual bool HasRecorder() const { return true; }
 
 	//get module object in compose object 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	//create associate value 
-	virtual ibValueMetaObjectFormBase* GetDefaultFormByID(const ibFormID& id) const;
+	virtual IValueMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullUniqueKey);
+	virtual IBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
 #pragma endregion
 
 	//prepare menu for item
@@ -118,23 +118,23 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 
 	//create and update table 
-	virtual bool CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
 
 	/**
 	* Property events
 	*/
-	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
 protected:
 
 	//get default attributes
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefined(std::vector<IValueMetaObjectAttribute*>& array) const {
 
-		if (GetRegisterType() == ibRegisterType::eBalances) {
+		if (GetRegisterType() == eRegisterType::eBalances) {
 			array = {
 				m_propertyAttributeLineActive->GetMetaObject(),
 				m_propertyAttributePeriod->GetMetaObject(),
-				m_propertyAttributibRecordType->GetMetaObject(),
+				m_propertyAttributeRecordType->GetMetaObject(),
 				m_propertyAttributeRecorder->GetMetaObject(),
 				m_propertyAttributeLineNumber->GetMetaObject()
 			};
@@ -152,27 +152,27 @@ protected:
 
 	//get dimension keys 
 	virtual bool FillArrayObjectByDimention(
-		std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+		std::vector<IValueMetaObjectAttribute*>& array) const {
 		array = { m_propertyAttributeRecorder->GetMetaObject() };
 		return true;
 	}
 
 	//create manager
-	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
+	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create record set
-	virtual ibValueRecordSetObject* CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey);
+	virtual IValueRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
 
 	//create object data with meta form
-	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
+	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
 
 	//load & save metaData from DB 
-	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 private:
 
-	bool FillFormList(ibPropertyList* prop) {
+	bool FillFormList(CPropertyList* prop) {
 		for (auto object : GetFormArrayObject()) {
 			if (!object->IsAllowed()) continue;
 			if (eFormList == object->GetTypeForm()) {
@@ -188,32 +188,32 @@ private:
 		return true;
 	}
 
-	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModuleObject = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("RecordSetModule"), _("Record set module"));
-	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyModuleManager = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categoryContext, wxT("RecordSetModule"), _("Record set module"));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
 
-	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
-	ibPropertyList* m_propertyDefFormList = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &ibValueMetaObjectAccumulationRegister::FillFormList);
-	ibPropertyCategory* m_categoryData = ibPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
-	ibPropertyEnum<ibValueEnumAccumulationRegisterType>* m_propertyRegisterType = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumAccumulationRegisterType>>(m_categoryData, wxT("RegisterType"), _("Register type"), ibRegisterType::eBalances);
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &CValueMetaObjectAccumulationRegister::FillFormList);
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
+	CPropertyEnum<CValueEnumAccumulationRegisterType>* m_propertyRegisterType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumAccumulationRegisterType>>(m_categoryData, wxT("RegisterType"), _("Register type"), eRegisterType::eBalances);
 
-	ibPropertyInnerAttribute<>* m_propertyAttributibRecordType = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryCommon, ibValueMetaObjectCompositeData::CreateSpecialType(wxT("RecordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, ibValueEnumAccumulationRegisterRecordType::CreateDefEnumValue()));
+	CPropertyInnerAttribute<>* m_propertyAttributeRecordType = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateSpecialType(wxT("RecordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue()));
 
-	friend class ibMetaData;
+	friend class IMetaData;
 };
 
 //********************************************************************************************
 //*                                      Object                                              *
 //********************************************************************************************
 
-class ibValueRecordSetObjectAccumulationRegister : public ibValueRecordSetObject {
+class CValueRecordSetObjectAccumulationRegister : public IValueRecordSetObject {
 public:
-	ibValueRecordSetObjectAccumulationRegister(ibValueMetaObjectAccumulationRegister* metaObject, const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) :
-		ibValueRecordSetObject(metaObject, uniqueKey)
+	CValueRecordSetObjectAccumulationRegister(CValueMetaObjectAccumulationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
+		IValueRecordSetObject(metaObject, uniqueKey)
 	{
 	}
 
-	ibValueRecordSetObjectAccumulationRegister(const ibValueRecordSetObjectAccumulationRegister& source) :
-		ibValueRecordSetObject(source)
+	CValueRecordSetObjectAccumulationRegister(const CValueRecordSetObjectAccumulationRegister& source) :
+		IValueRecordSetObject(source)
 	{
 	}
 
@@ -234,10 +234,10 @@ public:
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
 
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 };
 
 #endif 

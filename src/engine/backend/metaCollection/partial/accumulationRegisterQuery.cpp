@@ -5,9 +5,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
+bool CValueMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
-	wxString tableName = GetRegisterTableNameDB(ibRegisterType::eBalances);
+	wxString tableName = GetRegisterTableNameDB(eRegisterType::eBalances);
 
 	int retCode = DATABASE_LAYER_QUERY_RESULT_ERROR;
 
@@ -39,14 +39,14 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(ibMet
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		ibValueMetaObjectRegisterData* dstValue = nullptr;
+		IValueMetaObjectRegisterData* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 			if (!UpdateCurrentRecords(tableName, dstValue))
 				return false;
 			//dimensions from dst 
 			for (const auto object : dstValue->GetDimentionArrayObject()) {
-				ibValueMetaObject* foundedMeta =
-					ibValueMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessDimension(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -65,8 +65,8 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(ibMet
 
 			//resources from dst 
 			for (const auto object : dstValue->GetResourceArrayObject()) {
-				ibValueMetaObject* foundedMeta =
-					ibValueMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessResource(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -94,9 +94,9 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(ibMet
 	return true;
 }
 
-bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
+bool CValueMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
-	wxString tableName = GetRegisterTableNameDB(ibRegisterType::eTurnovers);
+	wxString tableName = GetRegisterTableNameDB(eRegisterType::eTurnovers);
 
 	int retCode = DATABASE_LAYER_QUERY_RESULT_ERROR;
 
@@ -130,14 +130,14 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(ibMet
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		ibValueMetaObjectRegisterData* dstValue = nullptr;
+		IValueMetaObjectRegisterData* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 			if (!UpdateCurrentRecords(tableName, dstValue))
 				return false;
 			//dimensions from dst 
 			for (const auto object : dstValue->GetDimentionArrayObject()) {
-				ibValueMetaObject* foundedMeta =
-					ibValueMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessDimension(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -156,8 +156,8 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(ibMet
 
 			//resources from dst 
 			for (const auto object : dstValue->GetResourceArrayObject()) {
-				ibValueMetaObject* foundedMeta =
-					ibValueMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessResource(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -187,33 +187,33 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(ibMet
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
+bool CValueMetaObjectAccumulationRegister::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
-	ibValueMetaObjectAccumulationRegister* dstValue = nullptr; int tableBalancesFlags = flags, tableTurnoverFlags = flags;
+	CValueMetaObjectAccumulationRegister* dstValue = nullptr; int tableBalancesFlags = flags, tableTurnoverFlags = flags;
 
 	if (srcMetaObject != nullptr &&
 		srcMetaObject->ConvertToValue(dstValue)) {
-		ibRegisterType dstRegType = dstValue->GetRegisterType();
+		eRegisterType dstRegType = dstValue->GetRegisterType();
 		if (dstRegType != GetRegisterType()
-			&& GetRegisterType() == ibRegisterType::eBalances) {
+			&& GetRegisterType() == eRegisterType::eBalances) {
 			tableBalancesFlags = createMetaTable;
 			tableTurnoverFlags = deleteMetaTable;
 		}
 		else if (dstRegType != GetRegisterType()
-			&& GetRegisterType() == ibRegisterType::eTurnovers) {
+			&& GetRegisterType() == eRegisterType::eTurnovers) {
 			tableBalancesFlags = deleteMetaTable;
 			tableTurnoverFlags = createMetaTable;
 		}
-		else if (GetRegisterType() == ibRegisterType::eTurnovers) {
+		else if (GetRegisterType() == eRegisterType::eTurnovers) {
 			tableBalancesFlags = defaultFlag;
 		}
-		else if (GetRegisterType() == ibRegisterType::eBalances) {
+		else if (GetRegisterType() == eRegisterType::eBalances) {
 			tableTurnoverFlags = defaultFlag;
 		}
 	}
 	else if (srcMetaObject == nullptr
 		&& flags == createMetaTable) {
-		if (GetRegisterType() == ibRegisterType::eBalances) {
+		if (GetRegisterType() == eRegisterType::eBalances) {
 			tableBalancesFlags = createMetaTable;
 			tableTurnoverFlags = defaultFlag;
 		}
@@ -224,7 +224,7 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateTableDB(ibMetaDataCon
 	}
 	else if (srcMetaObject == nullptr
 		&& flags == deleteMetaTable) {
-		if (GetRegisterType() == ibRegisterType::eBalances) {
+		if (GetRegisterType() == eRegisterType::eBalances) {
 			tableBalancesFlags = deleteMetaTable;
 			tableTurnoverFlags = defaultFlag;
 		}
@@ -235,14 +235,14 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateTableDB(ibMetaDataCon
 	}
 
 	//if (tableBalancesFlags != defaultFlag
-	//	&& !ibValueMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(srcMetaData, srcMetaObject, tableBalancesFlags))
+	//	&& !CValueMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(srcMetaData, srcMetaObject, tableBalancesFlags))
 	//	return false;
 
 	//if (tableTurnoverFlags != defaultFlag
-	//	&& !ibValueMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(srcMetaData, srcMetaObject, tableTurnoverFlags))
+	//	&& !CValueMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(srcMetaData, srcMetaObject, tableTurnoverFlags))
 	//	return false;
 
-	return ibValueMetaObjectRegisterData::CreateAndUpdateTableDB(
+	return IValueMetaObjectRegisterData::CreateAndUpdateTableDB(
 		srcMetaData,
 		srcMetaObject,
 		flags
@@ -251,26 +251,26 @@ bool ibValueMetaObjectAccumulationRegister::CreateAndUpdateTableDB(ibMetaDataCon
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibValueRecordSetObjectAccumulationRegister::SaveVirtualTable()
+bool CValueRecordSetObjectAccumulationRegister::SaveVirtualTable()
 {
-	/*ibValueMetaObjectAccumulationRegister* metaObject = nullptr;
+	/*CValueMetaObjectAccumulationRegister* metaObject = nullptr;
 
 	if (!m_metaObject->ConvertToValue(metaObject))
 		return false;
 
-	ibValueMetaObjectAttributePredefined* attributePeriod = metaObject->GetRegisterPeriod();
+	CValueMetaObjectAttributePredefined* attributePeriod = metaObject->GetRegisterPeriod();
 	wxASSERT(attributePeriod);
 
 	wxString tableName = metaObject->GetRegisterTableNameDB(); bool firstUpdate = true;
-	wxString queryText = "UPDATE OR INSERT INTO " + tableName + "(" + ibValueMetaObjectAttributeBase::GetSQLFieldName(attributePeriod);
+	wxString queryText = "UPDATE OR INSERT INTO " + tableName + "(" + IValueMetaObjectAttribute::GetSQLFieldName(attributePeriod);
 
 	for (const auto object : metaObject->GetDimentionArrayObject()) {
-		queryText += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(attribute);
+		queryText += "," + IValueMetaObjectAttribute::GetSQLFieldName(attribute);
 	}
 
 	queryText += ") VALUES ("; bool firstInsert = true;
 
-	unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(attributePeriod);
+	unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(attributePeriod);
 	for (unsigned int i = 0; i < fieldCount; i++) {
 		queryText += (firstInsert ? "?" : ",?");
 		if (firstInsert) {
@@ -279,20 +279,20 @@ bool ibValueRecordSetObjectAccumulationRegister::SaveVirtualTable()
 	}
 
 	for (const auto object : metaObject->GetDimentionArrayObject()) {
-		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(attribute); i++) {
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(attribute); i++) {
 			queryText += ",?";
 		}
 	}
 
-	queryText += ") MATCHING ( " + ibValueMetaObjectAttributeBase::GetSQLFieldName(attributePeriod);
+	queryText += ") MATCHING ( " + IValueMetaObjectAttribute::GetSQLFieldName(attributePeriod);
 
 	for (const auto object : metaObject->GetDimentionArrayObject()) {
-		queryText += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(attribute);
+		queryText += "," + IValueMetaObjectAttribute::GetSQLFieldName(attribute);
 	}
 
 	queryText += ");";
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
 
 	if (statement == nullptr)
 		return false;
@@ -306,7 +306,7 @@ bool ibValueRecordSetObjectAccumulationRegister::SaveVirtualTable()
 
 		int position = 1;
 
-		ibValueMetaObjectAttributeBase::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			attributePeriod,
 			objectValue.at(attributePeriod->GetMetaID()),
 			statement,
@@ -316,7 +316,7 @@ bool ibValueRecordSetObjectAccumulationRegister::SaveVirtualTable()
 		for (const auto object : metaObject->GetDimentionArrayObject()) {
 			auto foundedKey = m_keyValues.find(attribute->GetMetaID());
 			if (foundedKey != m_keyValues.end()) {
-				ibValueMetaObjectAttributeBase::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					attribute,
 					foundedKey->second,
 					statement,
@@ -324,7 +324,7 @@ bool ibValueRecordSetObjectAccumulationRegister::SaveVirtualTable()
 				);
 			}
 			else {
-				ibValueMetaObjectAttributeBase::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					attribute,
 					objectValue.at(attribute->GetMetaID()),
 					statement,
@@ -341,41 +341,41 @@ bool ibValueRecordSetObjectAccumulationRegister::SaveVirtualTable()
 	return true;
 }
 
-bool ibValueRecordSetObjectAccumulationRegister::DeleteVirtualTable()
+bool CValueRecordSetObjectAccumulationRegister::DeleteVirtualTable()
 {
-	/*ibValueMetaObjectAccumulationRegister* metaObject = nullptr;
+	/*CValueMetaObjectAccumulationRegister* metaObject = nullptr;
 
 	if (!m_metaObject->ConvertToValue(metaObject))
 		return false;
 
-	ibValueMetaObjectAttributePredefined* attributePeriod = metaObject->GetRegisterPeriod();
+	CValueMetaObjectAttributePredefined* attributePeriod = metaObject->GetRegisterPeriod();
 	wxASSERT(attributePeriod);
 
 	wxString tableName = metaObject->GetRegisterTableNameDB();
 	wxString queryText = "DELETE FROM " + tableName; bool firstWhere = true;
 
 	for (const auto object : metaObject->GetDimentionArrayObject()) {
-		if (!ibValueRecordSetObject::FindKeyValue(attribute->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(attribute->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attribute);
+			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute);
 		if (firstWhere) {
 			firstWhere = false;
 		}
 	}
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
+	IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 
 	if (statement == nullptr)
 		return false;
 
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
-		if (!ibValueRecordSetObject::FindKeyValue(attribute->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(attribute->GetMetaID()))
 			continue;
-		ibValueMetaObjectAttributeBase::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			attribute,
 			m_keyValues.at(attribute->GetMetaID()),
 			statement,

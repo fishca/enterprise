@@ -7,15 +7,15 @@
  * Watch control. This is the base class for the tree controls used to display
  * the results of evaluating expressions.
  */
-class ibWatchCtrl : public ibTreeListCtrl
+class CWatchCtrl : public wxTreeListExtCtrl
 {
 
 public:
 
-	ibWatchCtrl(wxWindow *parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
+	CWatchCtrl(wxWindow *parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
 		long style = wxTR_HIDE_ROOT | wxTR_FULL_ROW_HIGHLIGHT | wxTR_ROW_LINES | wxTR_HAS_BUTTONS, const wxValidator &validator = wxDefaultValidator, const wxString& name = "");
 
-	virtual ~ibWatchCtrl();
+	virtual ~CWatchCtrl();
 
 	/**
 	 * Sets the font used to display values.

@@ -4,42 +4,42 @@
 #include "objCtor.h"
 
 //const-object class
-class ibCtorMetaValueTypeConstantObject :
-	public ibCtorMetaValueType {
+class CMetaValueConstantObjectTypeCtor :
+	public IMetaValueTypeCtor {
 public:
 
-	ibCtorMetaValueTypeConstantObject(ibValueMetaObjectConstant* recordRef) : ibCtorMetaValueType(), m_metaObject(recordRef) {
+	CMetaValueConstantObjectTypeCtor(CValueMetaObjectConstant* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("C_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
 
-	wxString ibCtorMetaValueTypeConstantObject::GetClassName() const {
+	wxString CMetaValueConstantObjectTypeCtor::GetClassName() const {
 		return m_metaObject->GetClassName() + prefixObject +
 			m_metaObject->GetName();
 	}
 
-	virtual ibClassID ibCtorMetaValueTypeConstantObject::GetClassType() const { return m_classType; }
+	virtual class_identifier_t CMetaValueConstantObjectTypeCtor::GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
-	virtual ibValue* CreateObject() const;
-	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Object; }
+	virtual CValue* CreateObject() const;
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_Object; }
 
 protected:
-	ibClassID m_classType;
-	ibValueMetaObjectConstant* m_metaObject;
+	class_identifier_t m_classType;
+	CValueMetaObjectConstant* m_metaObject;
 };
 
 #define registerConstObject()\
-	m_metaData->RegisterCtor(new ibCtorMetaValueTypeConstantObject(this))
+	m_metaData->RegisterCtor(new CMetaValueConstantObjectTypeCtor(this))
 #define unregisterConstObject()\
 	m_metaData->UnRegisterCtor(generate_class_name(prefixObject))
 
 //const-manager class 
-class ibCtorMetaValueTypeConstantManager :
-	public ibCtorMetaValueType {
+class CMetaValueConstManagerTypeCtor :
+	public IMetaValueTypeCtor {
 public:
 
-	ibCtorMetaValueTypeConstantManager(class ibValueMetaObjectConstant* recordRef) : ibCtorMetaValueType(), m_metaObject(recordRef) {
+	CMetaValueConstManagerTypeCtor(class CValueMetaObjectConstant* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("G_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -48,19 +48,19 @@ public:
 		return m_metaObject->GetClassName() + prefixManager + m_metaObject->GetName();
 	}
 
-	virtual ibClassID GetClassType() const { return m_classType; }
+	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
-	virtual ibValue* CreateObject() const;
-	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Manager; }
+	virtual CValue* CreateObject() const;
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_Manager; }
 
 protected:
-	ibClassID m_classType;
-	ibValueMetaObjectConstant* m_metaObject;
+	class_identifier_t m_classType;
+	CValueMetaObjectConstant* m_metaObject;
 };
 
 #define registerConstManager()\
-	m_metaData->RegisterCtor(new ibCtorMetaValueTypeConstantManager(this))
+	m_metaData->RegisterCtor(new CMetaValueConstManagerTypeCtor(this))
 #define unregisterConstManager()\
 	m_metaData->UnRegisterCtor(generate_class_name(prefixManager))
 

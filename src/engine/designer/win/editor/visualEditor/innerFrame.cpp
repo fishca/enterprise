@@ -10,7 +10,7 @@
 
 DEFINE_EVENT_TYPE(wxEVT_INNER_FRAME_RESIZED)
 
-class ibInnerFrame::TitleBar : public wxPanel
+class CInnerFrame::TitleBar : public wxPanel
 {
 	wxDECLARE_EVENT_TABLE();
 
@@ -48,12 +48,12 @@ public:
 };
 
 
-BEGIN_EVENT_TABLE(ibInnerFrame::TitleBar, wxPanel)
-EVT_LEFT_DOWN(ibInnerFrame::TitleBar::OnLeftClick)
-EVT_PAINT(ibInnerFrame::TitleBar::OnPaint)
+BEGIN_EVENT_TABLE(CInnerFrame::TitleBar, wxPanel)
+EVT_LEFT_DOWN(CInnerFrame::TitleBar::OnLeftClick)
+EVT_PAINT(CInnerFrame::TitleBar::OnPaint)
 END_EVENT_TABLE()
 
-ibInnerFrame::TitleBar::TitleBar(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style)
+CInnerFrame::TitleBar::TitleBar(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style)
 	:
 	wxPanel(parent, id, pos, size, 0),
 	m_minimize(minimize_xpm),
@@ -77,12 +77,12 @@ ibInnerFrame::TitleBar::TitleBar(wxWindow *parent, wxWindowID id, const wxPoint 
 	SetMinSize(wxSize(100, 19));
 }
 
-void ibInnerFrame::TitleBar::OnLeftClick(wxMouseEvent &event)
+void CInnerFrame::TitleBar::OnLeftClick(wxMouseEvent &event)
 {
 	GetParent()->GetEventHandler()->ProcessEvent(event);
 }
 
-void ibInnerFrame::TitleBar::OnPaint(wxPaintEvent&)
+void CInnerFrame::TitleBar::OnPaint(wxPaintEvent&)
 {
 	wxPaintDC dc(this);
 	wxBufferedDC bdc(&dc, GetClientSize());
@@ -90,7 +90,7 @@ void ibInnerFrame::TitleBar::OnPaint(wxPaintEvent&)
 }
 
 
-void ibInnerFrame::TitleBar::DrawTitleBar(wxDC &dc)
+void CInnerFrame::TitleBar::DrawTitleBar(wxDC &dc)
 {
 	static const int margin = 2;
 
@@ -217,13 +217,13 @@ void ibInnerFrame::TitleBar::DrawTitleBar(wxDC &dc)
 
 //////////////////////////////////////////////////////////////////////////////
 
-BEGIN_EVENT_TABLE(ibInnerFrame, wxPanel)
-EVT_MOTION(ibInnerFrame::OnMouseMotion)
-EVT_LEFT_DOWN(ibInnerFrame::OnLeftDown)
-EVT_LEFT_UP(ibInnerFrame::OnLeftUp)
+BEGIN_EVENT_TABLE(CInnerFrame, wxPanel)
+EVT_MOTION(CInnerFrame::OnMouseMotion)
+EVT_LEFT_DOWN(CInnerFrame::OnLeftDown)
+EVT_LEFT_UP(CInnerFrame::OnLeftUp)
 END_EVENT_TABLE()
 
-ibInnerFrame::ibInnerFrame(wxWindow *parent, wxWindowID id,
+CInnerFrame::CInnerFrame(wxWindow *parent, wxWindowID id,
 	const wxPoint &pos, const wxSize &size, long style)
 #ifdef __WXGTK__
 	: wxPanel(parent, id, pos, size, wxNO_BORDER | wxFULL_REPAINT_ON_RESIZE)
@@ -263,7 +263,7 @@ ibInnerFrame::ibInnerFrame(wxWindow *parent, wxWindowID id,
 	}
 }
 
-wxSize ibInnerFrame::DoGetBestSize() const
+wxSize CInnerFrame::DoGetBestSize() const
 {
 	wxSize best;
 	best = m_titleBar->GetBestSize();
@@ -278,7 +278,7 @@ wxSize ibInnerFrame::DoGetBestSize() const
 	return best;
 }
 
-void ibInnerFrame::OnMouseMotion(wxMouseEvent& e)
+void CInnerFrame::OnMouseMotion(wxMouseEvent& e)
 {
 	if (m_sizing != NONE)
 	{
@@ -358,7 +358,7 @@ void ibInnerFrame::OnMouseMotion(wxMouseEvent& e)
 	}
 }
 
-void ibInnerFrame::OnLeftDown(wxMouseEvent& e)
+void CInnerFrame::OnLeftDown(wxMouseEvent& e)
 {
 	if (m_sizing == NONE)
 	{
@@ -379,7 +379,7 @@ void ibInnerFrame::OnLeftDown(wxMouseEvent& e)
 	}
 }
 
-void ibInnerFrame::OnLeftUp(wxMouseEvent&)
+void CInnerFrame::OnLeftUp(wxMouseEvent&)
 {
 	if (m_sizing != NONE)
 	{
@@ -423,14 +423,14 @@ void ibInnerFrame::OnLeftUp(wxMouseEvent&)
 	}
 }
 
-void ibInnerFrame::ShowTitleBar(bool show)
+void CInnerFrame::ShowTitleBar(bool show)
 {
 	m_titleBar->Show(show);
 	m_minSize = (show ? m_baseMinSize : wxSize(10, 10));
 	Layout();
 }
 
-void ibInnerFrame::SetToBaseSize()
+void CInnerFrame::SetToBaseSize()
 {
 	if (m_titleBar->IsShown())
 	{
@@ -442,22 +442,22 @@ void ibInnerFrame::SetToBaseSize()
 	}
 }
 
-bool ibInnerFrame::IsTitleBarShown()
+bool CInnerFrame::IsTitleBarShown()
 {
 	return m_titleBar->IsShown();
 }
 
-void ibInnerFrame::SetTitle(const wxString &title)
+void CInnerFrame::SetTitle(const wxString &title)
 {
 	m_titleBar->SetTitle(title);
 }
 
-wxString ibInnerFrame::GetTitle()
+wxString CInnerFrame::GetTitle()
 {
 	return m_titleBar->GetTitle();
 }
 
-void ibInnerFrame::SetTitleStyle(long style)
+void CInnerFrame::SetTitleStyle(long style)
 {
 	m_titleBar->SetStyle(style);
 }

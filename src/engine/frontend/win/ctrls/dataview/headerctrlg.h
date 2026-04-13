@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Name:        wx/headerctrl.h
-// Purpose:     ibHeaderGenericCtrlBase class: interface of ibHeaderGenericCtrl
+// Purpose:     wxHeaderGenericCtrlBase class: interface of wxHeaderGenericCtrl
 // Author:      Vadim Zeitlin
 // Created:     2008-12-01
 // Copyright:   (c) 2008 Vadim Zeitlin <vadim@wxwidgets.org>
@@ -23,7 +23,7 @@
 // notice that the classes in this header are defined in the core library even
 // although currently they're only used by wxGrid which is in wxAdv because we
 // plan to use it in wxListCtrl which is in core too in the future
-class ibHeaderGenericCtrlEvent;
+class wxHeaderGenericCtrlEvent;
 
 #include "frontend/frontend.h"
 
@@ -47,32 +47,32 @@ enum
 	wxHD_DEFAULT_STYLE = wxHD_ALLOW_REORDER
 };
 
-extern const char ibHeaderGenericCtrlNameStr[];
+extern const char wxHeaderGenericCtrlNameStr[];
 
 // ----------------------------------------------------------------------------
-// ibHeaderGenericCtrlBase defines the interface of a header control
+// wxHeaderGenericCtrlBase defines the interface of a header control
 // ----------------------------------------------------------------------------
 
-class ibHeaderGenericCtrlBase : public wxControl
+class wxHeaderGenericCtrlBase : public wxControl
 {
 public:
 	/*
 		Derived classes must provide default ctor as well as a ctor and
 		Create() function with the following signatures:
 
-	ibHeaderGenericCtrl(wxWindow *parent,
+	wxHeaderGenericCtrl(wxWindow *parent,
 				 wxWindowID winid = wxID_ANY,
 				 const wxPoint& pos = wxDefaultPosition,
 				 const wxSize& size = wxDefaultSize,
 				 long style = wxHD_DEFAULT_STYLE,
-				 const wxString& name = wxASCII_STR(ibHeaderGenericCtrlNameStr));
+				 const wxString& name = wxASCII_STR(wxHeaderGenericCtrlNameStr));
 
 	bool Create(wxWindow *parent,
 				wxWindowID winid = wxID_ANY,
 				const wxPoint& pos = wxDefaultPosition,
 				const wxSize& size = wxDefaultSize,
 				long style = wxHD_DEFAULT_STYLE,
-				const wxString& name = wxASCII_STR(ibHeaderGenericCtrlNameStr));
+				const wxString& name = wxASCII_STR(wxHeaderGenericCtrlNameStr));
 	 */
 
 	 // column-related methods
@@ -239,32 +239,32 @@ private:
 
 
 	// event handlers
-	void OnSeparatorDClick(ibHeaderGenericCtrlEvent& event);
+	void OnSeparatorDClick(wxHeaderGenericCtrlEvent& event);
 #if wxUSE_MENUS
-	void OnRClick(ibHeaderGenericCtrlEvent& event);
+	void OnRClick(wxHeaderGenericCtrlEvent& event);
 #endif // wxUSE_MENUS
 
 	wxDECLARE_EVENT_TABLE();
 };
 
 // ----------------------------------------------------------------------------
-// ibHeaderGenericCtrl
+// wxHeaderGenericCtrl
 // ----------------------------------------------------------------------------
 
-class ibHeaderGenericCtrl : public ibHeaderGenericCtrlBase
+class wxHeaderGenericCtrl : public wxHeaderGenericCtrlBase
 {
 public:
-	ibHeaderGenericCtrl()
+	wxHeaderGenericCtrl()
 	{
 		Init();
 	}
 
-	ibHeaderGenericCtrl(wxWindow* parent,
+	wxHeaderGenericCtrl(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxHD_DEFAULT_STYLE,
-		const wxString& name = wxASCII_STR(ibHeaderGenericCtrlNameStr))
+		const wxString& name = wxASCII_STR(wxHeaderGenericCtrlNameStr))
 	{
 		Init();
 
@@ -276,9 +276,9 @@ public:
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxHD_DEFAULT_STYLE,
-		const wxString& name = wxASCII_STR(ibHeaderGenericCtrlNameStr));
+		const wxString& name = wxASCII_STR(wxHeaderGenericCtrlNameStr));
 
-	virtual ~ibHeaderGenericCtrl();
+	virtual ~wxHeaderGenericCtrl();
 
 	void SetColumnHeight(int point) 
 	{ 
@@ -389,6 +389,9 @@ private:
 	// clear any overlaid markers
 	void ClearMarkers();
 
+	// pos physical
+	int m_xPhysical;
+
 	//number of column height point
 	unsigned int m_numHeight;
 
@@ -423,26 +426,26 @@ private:
 	bool m_wasSeparatorDClick;
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_NO_COPY_CLASS(ibHeaderGenericCtrl);
+	wxDECLARE_NO_COPY_CLASS(wxHeaderGenericCtrl);
 };
 
 // ----------------------------------------------------------------------------
-// ibHeaderGenericCtrlSimple: concrete header control which can be used standalone
+// wxHeaderGenericCtrlSimple: concrete header control which can be used standalone
 // ----------------------------------------------------------------------------
 
-class ibHeaderGenericCtrlSimple : public ibHeaderGenericCtrl
+class wxHeaderGenericCtrlSimple : public wxHeaderGenericCtrl
 {
 public:
 	// control creation
 	// ----------------
 
-	ibHeaderGenericCtrlSimple() { Init(); }
-	ibHeaderGenericCtrlSimple(wxWindow* parent,
+	wxHeaderGenericCtrlSimple() { Init(); }
+	wxHeaderGenericCtrlSimple(wxWindow* parent,
 		wxWindowID winid = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxHD_DEFAULT_STYLE,
-		const wxString& name = wxASCII_STR(ibHeaderGenericCtrlNameStr))
+		const wxString& name = wxASCII_STR(wxHeaderGenericCtrlNameStr))
 	{
 		Init();
 
@@ -520,7 +523,7 @@ protected:
 		return -1;
 	}
 
-	void OnHeaderResizing(ibHeaderGenericCtrlEvent& evt);
+	void OnHeaderResizing(wxHeaderGenericCtrlEvent& evt);
 
 private:
 	// functions implementing our public API
@@ -547,18 +550,18 @@ private:
 	unsigned int m_sortKey;
 
 
-	wxDECLARE_NO_COPY_CLASS(ibHeaderGenericCtrlSimple);
+	wxDECLARE_NO_COPY_CLASS(wxHeaderGenericCtrlSimple);
 	wxDECLARE_EVENT_TABLE();
 };
 
 // ----------------------------------------------------------------------------
-// ibHeaderGenericCtrl events
+// wxHeaderGenericCtrl events
 // ----------------------------------------------------------------------------
 
-class ibHeaderGenericCtrlEvent : public wxNotifyEvent
+class wxHeaderGenericCtrlEvent : public wxNotifyEvent
 {
 public:
-	ibHeaderGenericCtrlEvent(wxEventType commandType = wxEVT_NULL, int winid = 0)
+	wxHeaderGenericCtrlEvent(wxEventType commandType = wxEVT_NULL, int winid = 0)
 		: wxNotifyEvent(commandType, winid),
 		m_col(-1),
 		m_width(0),
@@ -566,7 +569,7 @@ public:
 	{
 	}
 
-	ibHeaderGenericCtrlEvent(const ibHeaderGenericCtrlEvent& event)
+	wxHeaderGenericCtrlEvent(const wxHeaderGenericCtrlEvent& event)
 		: wxNotifyEvent(event),
 		m_col(event.m_col),
 		m_width(event.m_width),
@@ -586,7 +589,7 @@ public:
 	unsigned int GetNewOrder() const { return m_order; }
 	void SetNewOrder(unsigned int order) { m_order = order; }
 
-	virtual wxEvent* Clone() const wxOVERRIDE { return new ibHeaderGenericCtrlEvent(*this); }
+	virtual wxEvent* Clone() const wxOVERRIDE { return new wxHeaderGenericCtrlEvent(*this); }
 
 protected:
 	// the column affected by the event
@@ -600,36 +603,36 @@ protected:
 
 private:
 
-	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(ibHeaderGenericCtrlEvent);
+	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxHeaderGenericCtrlEvent);
 };
 
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_CLICK, ibHeaderGenericCtrlEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_RIGHT_CLICK, ibHeaderGenericCtrlEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_MIDDLE_CLICK, ibHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_CLICK, wxHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_RIGHT_CLICK, wxHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_MIDDLE_CLICK, wxHeaderGenericCtrlEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_DCLICK, ibHeaderGenericCtrlEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_RIGHT_DCLICK, ibHeaderGenericCtrlEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_MIDDLE_DCLICK, ibHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_DCLICK, wxHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_RIGHT_DCLICK, wxHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_MIDDLE_DCLICK, wxHeaderGenericCtrlEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_SEPARATOR_DCLICK, ibHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_SEPARATOR_DCLICK, wxHeaderGenericCtrlEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_BEGIN_RESIZE, ibHeaderGenericCtrlEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_RESIZING, ibHeaderGenericCtrlEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_END_RESIZE, ibHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_BEGIN_RESIZE, wxHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_RESIZING, wxHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_END_RESIZE, wxHeaderGenericCtrlEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_BEGIN_REORDER, ibHeaderGenericCtrlEvent);
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_END_REORDER, ibHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_BEGIN_REORDER, wxHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_END_REORDER, wxHeaderGenericCtrlEvent);
 
-wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_DRAGGING_CANCELLED, ibHeaderGenericCtrlEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_HEADER_DRAGGING_CANCELLED, wxHeaderGenericCtrlEvent);
 
-typedef void (wxEvtHandler::* ibHeaderGenericCtrlEventFunction)(ibHeaderGenericCtrlEvent&);
+typedef void (wxEvtHandler::* wxHeaderGenericCtrlEventFunction)(wxHeaderGenericCtrlEvent&);
 
-#define ibHeaderGenericCtrlEventHandler(func) \
-    wxEVENT_HANDLER_CAST(ibHeaderGenericCtrlEventFunction, func)
+#define wxHeaderGenericCtrlEventHandler(func) \
+    wxEVENT_HANDLER_CAST(wxHeaderGenericCtrlEventFunction, func)
 
 #define wx__DECLARE_HEADER_EVT(evt, id, fn) \
-    wx__DECLARE_EVT1(wxEVT_HEADER_ ## evt, id, ibHeaderGenericCtrlEventHandler(fn))
+    wx__DECLARE_EVT1(wxEVT_HEADER_ ## evt, id, wxHeaderGenericCtrlEventHandler(fn))
 
 #define EVT_HEADER_CLICK(id, fn) wx__DECLARE_HEADER_EVT(CLICK, id, fn)
 #define EVT_HEADER_RIGHT_CLICK(id, fn) wx__DECLARE_HEADER_EVT(RIGHT_CLICK, id, fn)

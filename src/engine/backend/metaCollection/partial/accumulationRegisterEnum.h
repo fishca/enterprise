@@ -1,45 +1,45 @@
 #ifndef _ACCUMULATION_REGISTER_ENUM_H__
 #define _ACCUMULATION_REGISTER_ENUM_H__
 
-enum ibRegisterType {
+enum eRegisterType {
 	eBalances,
 	eTurnovers
 };
 
-enum ibRecordType {
+enum eRecordType {
 	eExpense,
 	eReceipt
 };
 
 #pragma region enumeration
 #include "backend/compiler/enumUnit.h"
-class ibValueEnumAccumulationRegisterType : public ibValueEnumeration<ibRegisterType> {
-	wxDECLARE_DYNAMIC_CLASS(ibValueEnumAccumulationRegisterType);
+class CValueEnumAccumulationRegisterType : public IEnumeration<eRegisterType> {
+	wxDECLARE_DYNAMIC_CLASS(CValueEnumAccumulationRegisterType);
 public:
-	ibValueEnumAccumulationRegisterType() : ibValueEnumeration() {}
-	//ibValueEnumAccumulationRegisterType(ibRegisterType mode) : ibValueEnumeration(mode) {}
+	CValueEnumAccumulationRegisterType() : IEnumeration() {}
+	//CValueEnumAccumulationRegisterType(eRegisterType mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(ibRegisterType::eBalances, wxT("Balances"), _("Balances"));
-		AddEnumeration(ibRegisterType::eTurnovers, wxT("Turnovers"), _("Turnovers"));
+		AddEnumeration(eRegisterType::eBalances, wxT("Balances"), _("Balances"));
+		AddEnumeration(eRegisterType::eTurnovers, wxT("Turnovers"), _("Turnovers"));
 	}
 };
-class ibValueEnumAccumulationRegisterRecordType : public ibValueEnumeration<ibRecordType> {
-	wxDECLARE_DYNAMIC_CLASS(ibValueEnumAccumulationRegisterRecordType);
+class CValueEnumAccumulationRegisterRecordType : public IEnumeration<eRecordType> {
+	wxDECLARE_DYNAMIC_CLASS(CValueEnumAccumulationRegisterRecordType);
 public:
-	static ibValue CreateDefEnumValue() {
-		return ibValue::CreateEnumObject<ibValueEnumAccumulationRegisterRecordType>(ibRecordType::eExpense);
+	static CValue CreateDefEnumValue() {
+		return CValue::CreateEnumObject<CValueEnumAccumulationRegisterRecordType>(eRecordType::eExpense);
 	}
 
-	ibValueEnumAccumulationRegisterRecordType() : ibValueEnumeration() {}
-	//ibValueEnumAccumulationRegisterRecordType(ibRecordType recordType) : ibValueEnumeration(recordType) {}
+	CValueEnumAccumulationRegisterRecordType() : IEnumeration() {}
+	//CValueEnumAccumulationRegisterRecordType(eRecordType recordType) : IEnumeration(recordType) {}
 
 	virtual void CreateEnumeration() {
 		AddEnumeration(eExpense, wxT("Expense"), _("Expense"));
 		AddEnumeration(eReceipt, wxT("Receipt"), _("Receipt"));
 	}
 };
-const ibClassID g_enumRecordTypeCLSID = string_to_clsid("EN_RETP");
+const class_identifier_t g_enumRecordTypeCLSID = string_to_clsid("EN_RETP");
 #pragma endregion 
 
 #endif

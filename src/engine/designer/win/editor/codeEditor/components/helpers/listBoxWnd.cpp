@@ -2,7 +2,7 @@
 
 #define EXTENT_TEST wxT(" `~!@#$%^&*()-_=+\\|[]{};:\"\'<,>.?/1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-ibListBox::ibListBox(wxWindow* parent, ibListBoxVisualData* v, int ht)
+COESListBox::COESListBox(wxWindow* parent, CListBoxVisualData* v, int ht)
 	:wxSystemThemedControl<wxVListBox>(),
 	m_visualData(v), m_maxStrWidth(0), m_currentRow(wxNOT_FOUND),
 	m_aveCharWidth(8), m_textHeight(ht), m_itemHeight(ht),
@@ -17,13 +17,13 @@ ibListBox::ibListBox(wxWindow* parent, ibListBoxVisualData* v, int ht)
 
 	SetBackgroundColour(m_visualData->GetBgColour());
 
-	Bind(wxEVT_SYS_COLOUR_CHANGED, &ibListBox::OnSysColourChanged, this);
+	Bind(wxEVT_SYS_COLOUR_CHANGED, &COESListBox::OnSysColourChanged, this);
 
 	if (m_visualData->HasListCtrlAppearance())
 	{
 		EnableSystemTheme();
-		Bind(wxEVT_MOTION, &ibListBox::OnMouseMotion, this);
-		Bind(wxEVT_LEAVE_WINDOW, &ibListBox::OnMouseLeaveWindow, this);
+		Bind(wxEVT_MOTION, &COESListBox::OnMouseMotion, this);
+		Bind(wxEVT_LEAVE_WINDOW, &COESListBox::OnMouseLeaveWindow, this);
 
 #ifdef __WXMSW__
 		// On MSW when using wxRendererNative to draw items in list control
@@ -34,22 +34,22 @@ ibListBox::ibListBox(wxWindow* parent, ibListBoxVisualData* v, int ht)
 	}
 }
 
-bool ibListBox::AcceptsFocus() const
+bool COESListBox::AcceptsFocus() const
 {
 	return false;
 }
 
 // Do nothing in response to an attempt to set focus.
-void ibListBox::SetFocus()
+void COESListBox::SetFocus()
 {
 }
 
-void ibListBox::SetContainerBorderSize(int s)
+void COESListBox::SetContainerBorderSize(int s)
 {
 	m_borderSize = s;
 }
 
-void ibListBox::SetListBoxFont(wxFont &font)
+void COESListBox::SetListBoxFont(wxFont &font)
 {
 	SetFont(font);
 	int w;
@@ -57,12 +57,12 @@ void ibListBox::SetListBoxFont(wxFont &font)
 	RecalculateItemHeight();
 }
 
-void ibListBox::SetAverageCharWidth(int width)
+void COESListBox::SetAverageCharWidth(int width)
 {
 	m_aveCharWidth = width;
 }
 
-wxRect ibListBox::GetDesiredRect() const
+wxRect COESListBox::GetDesiredRect() const
 {
 	int maxw = m_maxStrWidth * m_aveCharWidth;
 	int maxh;
@@ -97,12 +97,12 @@ wxRect ibListBox::GetDesiredRect() const
 	return wxRect(0, 0, maxw, maxh);
 }
 
-int ibListBox::CaretFromEdge() const
+int COESListBox::CaretFromEdge() const
 {
 	return m_borderSize + TextBoxFromClientEdge() + m_textBoxToTextGap;
 }
 
-void ibListBox::Clear()
+void COESListBox::Clear()
 {
 	m_imageAreaWidth = 0;
 	m_imageAreaHeight = 0;
@@ -110,28 +110,28 @@ void ibListBox::Clear()
 	m_imageNos.clear();
 }
 
-void ibListBox::Append(wxString &s, int type)
+void COESListBox::Append(wxString &s, int type)
 {
 	AppendHelper(s, type);
 	AccountForBitmap(type, true);
 }
 
-int ibListBox::Length() const
+int COESListBox::Length() const
 {
 	return GetItemCount();
 }
 
-void ibListBox::Select(int n)
+void COESListBox::Select(int n)
 {
 	SetSelection(n);
 }
 
-wxString ibListBox::GetValue(int n) const
+wxString COESListBox::GetValue(int n) const
 {
 	return m_labels[n];
 }
 
-void ibListBox::AppendHelper(const wxString& text, int type)
+void COESListBox::AppendHelper(const wxString& text, int type)
 {
 	m_maxStrWidth = wxMax(m_maxStrWidth, text.length());
 	m_labels.push_back(text);
@@ -139,7 +139,7 @@ void ibListBox::AppendHelper(const wxString& text, int type)
 	SetItemCount(m_labels.size());
 }
 
-void ibListBox::AccountForBitmap(int type, bool recalculateItemHeight)
+void COESListBox::AccountForBitmap(int type, bool recalculateItemHeight)
 {
 	const int oldHeight = m_imageAreaHeight;
 	const wxBitmap* bmp = m_visualData->GetImage(type);
@@ -157,19 +157,19 @@ void ibListBox::AccountForBitmap(int type, bool recalculateItemHeight)
 		RecalculateItemHeight();
 }
 
-void ibListBox::RecalculateItemHeight()
+void COESListBox::RecalculateItemHeight()
 {
 	m_itemHeight = wxMax(m_textHeight + 2 * m_textExtraVerticalPadding,
 		m_imageAreaHeight + 2 * m_imagePadding);
 	m_textTopGap = (m_itemHeight - m_textHeight) / 2;
 }
 
-int ibListBox::TextBoxFromClientEdge() const
+int COESListBox::TextBoxFromClientEdge() const
 {
 	return (m_imageAreaWidth == 0 ? 0 : m_imageAreaWidth + 2 * m_imagePadding);
 }
 
-void ibListBox::OnSysColourChanged(wxSysColourChangedEvent& WXUNUSED(event))
+void COESListBox::OnSysColourChanged(wxSysColourChangedEvent& WXUNUSED(event))
 {
 	m_visualData->ComputeColours();
 	GetParent()->SetOwnBackgroundColour(m_visualData->GetBgColour());
@@ -177,7 +177,7 @@ void ibListBox::OnSysColourChanged(wxSysColourChangedEvent& WXUNUSED(event))
 	GetParent()->Refresh();
 }
 
-void ibListBox::OnMouseLeaveWindow(wxMouseEvent& event)
+void COESListBox::OnMouseLeaveWindow(wxMouseEvent& event)
 {
 	const int old = m_currentRow;
 	m_currentRow = wxNOT_FOUND;
@@ -188,7 +188,7 @@ void ibListBox::OnMouseLeaveWindow(wxMouseEvent& event)
 	event.Skip();
 }
 
-void ibListBox::OnMouseMotion(wxMouseEvent& event)
+void COESListBox::OnMouseMotion(wxMouseEvent& event)
 {
 	const int old = m_currentRow;
 	m_currentRow = VirtualHitTest(event.GetY());
@@ -205,7 +205,7 @@ void ibListBox::OnMouseMotion(wxMouseEvent& event)
 	event.Skip();
 }
 
-wxCoord ibListBox::OnMeasureItem(size_t WXUNUSED(n)) const
+wxCoord COESListBox::OnMeasureItem(size_t WXUNUSED(n)) const
 {
 	return static_cast<wxCoord>(m_itemHeight);
 }
@@ -234,7 +234,7 @@ wxCoord ibListBox::OnMeasureItem(size_t WXUNUSED(n)) const
 //       x = m_imagePadding + m_imageAreaWidth + m_imagePadding.
 // Text is drawn at x + m_textBoxToTextGap and centered vertically.
 
-void ibListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const
+void COESListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const
 {
 	wxString label;
 	int imageNo = -1;
@@ -270,7 +270,7 @@ void ibListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const
 	}
 }
 
-void ibListBox::OnDrawBackground(wxDC &dc, const wxRect &rect, size_t n) const
+void COESListBox::OnDrawBackground(wxDC &dc, const wxRect &rect, size_t n) const
 {
 	if (IsSelected(n))
 	{
@@ -298,13 +298,13 @@ void ibListBox::OnDrawBackground(wxDC &dc, const wxRect &rect, size_t n) const
 		else
 		{
 			wxRendererNative::GetDefault().DrawItemSelectionRect(
-				const_cast<ibListBox*>(this), dc, selectionRect,
+				const_cast<COESListBox*>(this), dc, selectionRect,
 				wxCONTROL_SELECTED | wxCONTROL_FOCUSED);
 		}
 
 		if (!m_visualData->HasListCtrlAppearance())
 			wxRendererNative::GetDefault().DrawFocusRect(
-				const_cast<ibListBox*>(this), dc, selectionRect);
+				const_cast<COESListBox*>(this), dc, selectionRect);
 	}
 	else if (static_cast<int>(n) == m_currentRow)
 	{
@@ -319,7 +319,7 @@ void ibListBox::OnDrawBackground(wxDC &dc, const wxRect &rect, size_t n) const
 		else
 		{
 			wxRendererNative::GetDefault().DrawItemSelectionRect(
-				const_cast<ibListBox*>(this), dc, rect,
+				const_cast<COESListBox*>(this), dc, rect,
 				wxCONTROL_CURRENT | wxCONTROL_FOCUSED);
 		}
 	}

@@ -1,29 +1,26 @@
 #include "propertyBoolean.h"
 
-//get property for grid	
-wxObject* (*ibPropertyBoolean::ms_propertyBoolean)(const wxString&, const wxString&, const bool&) = nullptr;
-
 //base property for "bool"
-bool ibPropertyBoolean::SetDataValue(const ibValue& varPropVal)
+bool CPropertyBoolean::SetDataValue(const CValue& varPropVal)
 {
 	SetValue(varPropVal.GetBoolean());
 	return true;
 }
 
-bool ibPropertyBoolean::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyBoolean::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibPropertyBoolean::GetValueAsBoolean();
+	pvarPropVal = CPropertyBoolean::GetValueAsBoolean();
 	return true;
 }
 
-bool ibPropertyBoolean::LoadData(ibReaderMemory& reader)
+bool CPropertyBoolean::LoadData(CMemoryReader& reader)
 {
 	SetValue(reader.r_u8());
 	return true;
 }
 
-bool ibPropertyBoolean::SaveData(ibWriterMemory& writer)
+bool CPropertyBoolean::SaveData(CMemoryWriter& writer)
 {
-	writer.w_u8(ibPropertyBoolean::GetValueAsBoolean());
+	writer.w_u8(CPropertyBoolean::GetValueAsBoolean());
 	return true;
 }

@@ -10,8 +10,8 @@
 #include "mainFrame/metaTree/treeConfiguration.h"
 #include "backend/metadataDataProcessor.h"
  
-class ibDataProcessorTree : public ibMetaDataTree {
-	wxDECLARE_DYNAMIC_CLASS(ibDataProcessorTree);
+class CDataProcessorTree : public IMetaDataTree {
+	wxDECLARE_DYNAMIC_CLASS(CDataProcessorTree);
 
 private:
 
@@ -33,7 +33,7 @@ private:
 		while (parentItem != nullptr) {
 			wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 			if (item != nullptr) {
-				ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
+				CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 				if (item_clsid != nullptr) return parentItem;
 			}
 			parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
@@ -41,25 +41,25 @@ private:
 		return wxTreeItemId(nullptr);
 	}
 
-	ibClassID GetClassIdentifier() const {
+	class_identifier_t GetClassIdentifier() const {
 		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(GetSelectionIdentifier());
 		if (item != nullptr) {
-			ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
+			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) return item_clsid->m_clsid;
 		}
 		return 0;
 	}
 
-	ibValueMetaObject* GetMetaIdentifier() const {
+	IValueMetaObject* GetMetaIdentifier() const {
 		wxTreeItemId parentItem = GetSelectionIdentifier();
 		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 		if (item != nullptr) {
-			ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
+			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) {
 				while (parentItem != nullptr) {
 					wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 					if (item != nullptr) {
-						ibValueMetaObject* parent = GetMetaObject(parentItem);
+						IValueMetaObject* parent = GetMetaObject(parentItem);
 						if (parent != nullptr) return parent;
 					}
 					parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
@@ -92,12 +92,12 @@ protected:
 
 	wxButton* m_buttonModule;
 
-	class ibDataProcessorTreeCtrl : public wxTreeCtrl {
-		wxDECLARE_DYNAMIC_CLASS(ibMetadataTree);
+	class CDataProcessorTreeCtrl : public wxTreeCtrl {
+		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
 	private:
 
-		ibDataProcessorTree* m_ownerTree;
-		ibMetaView* m_metaView;
+		CDataProcessorTree* m_ownerTree;
+		CMetaView* m_metaView;
 
 	public:
 
@@ -112,9 +112,9 @@ protected:
 			wxTreeCtrl::Update();
 		}
 
-		ibDataProcessorTreeCtrl();
-		ibDataProcessorTreeCtrl(wxWindow* parentWnd, ibDataProcessorTree* ownerWnd);
-		virtual ~ibDataProcessorTreeCtrl();
+		CDataProcessorTreeCtrl();
+		CDataProcessorTreeCtrl(wxWindow* parentWnd, CDataProcessorTree* ownerWnd);
+		virtual ~CDataProcessorTreeCtrl();
 
 		// this function is called to compare 2 items and should return -1, 0
 		// or +1 if the first item is less than, equal to or greater than the
@@ -123,12 +123,12 @@ protected:
 		virtual int OnCompareItems(const wxTreeItemId& item1,
 			const wxTreeItemId& item2) {
 			int ret = wxStrcmp(GetItemText(item1), GetItemText(item2));
-			ibTreeDataMetaItem* data1 = dynamic_cast<ibTreeDataMetaItem*>(GetItemData(item1));
-			ibTreeDataMetaItem* data2 = dynamic_cast<ibTreeDataMetaItem*>(GetItemData(item2));
+			CTreeDataMetaItem* data1 = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item1));
+			CTreeDataMetaItem* data2 = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item2));
 			if (data1 != nullptr && data2 != nullptr && ret > 0) {
-				ibValueMetaObject* metaObject1 = data1->m_metaObject;
-				ibValueMetaObject* metaObject2 = data2->m_metaObject;
-				ibValueMetaObject* parent = metaObject1->GetParent();
+				IValueMetaObject* metaObject1 = data1->m_metaObject;
+				IValueMetaObject* metaObject2 = data2->m_metaObject;
+				IValueMetaObject* parent = metaObject1->GetParent();
 				wxASSERT(parent);
 				return parent->ChangeChildPosition(metaObject2,
 					parent->GetChildPosition(metaObject1)
@@ -176,13 +176,13 @@ protected:
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	ibDataProcessorTreeCtrl* m_metaTreeCtrl;
-	ibMetaDataDataProcessor* m_metaData;
+	CDataProcessorTreeCtrl* m_metaTreeCtrl;
+	CMetaDataDataProcessor* m_metaData;
 
 private:
 
-	wxTreeItemId AppendRootItem(const ibClassID& clsid, const wxString& name = wxEmptyString) const {
-		const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
+	wxTreeItemId AppendRootItem(const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
@@ -195,8 +195,8 @@ private:
 	}
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const ibClassID& clsid, const wxString& name = wxEmptyString) const {
-		const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
+		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
@@ -209,7 +209,7 @@ private:
 	}
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const ibClassID& clsid, ibValueMetaObject* metaObject) const {
+		const class_identifier_t& clsid, IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -221,7 +221,7 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		ibValueMetaObject* metaObject) const {
+		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -234,10 +234,10 @@ private:
 
 	void ActivateItem(const wxTreeItemId& item);
 
-	ibValueMetaObject* NewItem(const ibClassID& clsid, ibValueMetaObject* parent, bool runObject = true);
-	ibValueMetaObject* CreateItem(bool showValue = true);
+	IValueMetaObject* NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool runObject = true);
+	IValueMetaObject* CreateItem(bool showValue = true);
 
-	wxTreeItemId FillItem(ibValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
+	wxTreeItemId FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
 
 	void EditItem();
 	void RemoveItem();
@@ -258,17 +258,17 @@ private:
 
 	void FillData();
 
-	ibValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
+	IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
 		if (!item.IsOk())
 			return nullptr;
-		ibTreeDataMetaItem* data =
-			dynamic_cast<ibTreeDataMetaItem*>(m_metaTreeCtrl->GetItemData(item));
+		CTreeDataMetaItem* data =
+			dynamic_cast<CTreeDataMetaItem*>(m_metaTreeCtrl->GetItemData(item));
 		if (data == nullptr)
 			return nullptr;
 		return data->m_metaObject;
 	}
 
-	void UpdateToolbar(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& item);
 
 public:
 
@@ -276,19 +276,19 @@ public:
 
 public:
 
-	bool RenameMetaObject(ibValueMetaObject* obj, const wxString& sNewName);
+	bool RenameMetaObject(IValueMetaObject* obj, const wxString& sNewName);
 
 public:
 
-	virtual ibMetaData* GetMetaData() const { return m_metaData; }
+	virtual IMetaData* GetMetaData() const { return m_metaData; }
 
-	ibDataProcessorTree() { }
-	ibDataProcessorTree(ibMetaDocument* docParent, wxWindow* parent, wxWindowID id = wxID_ANY);
-	virtual ~ibDataProcessorTree();
+	CDataProcessorTree() { }
+	CDataProcessorTree(CMetaDocument* docParent, wxWindow* parent, wxWindowID id = wxID_ANY);
+	virtual ~CDataProcessorTree();
 	
 	void InitTree();
 
-	bool Load(ibMetaDataDataProcessor* metaData);
+	bool Load(CMetaDataDataProcessor* metaData);
 	bool Save();
 
 	void ActivateTree();

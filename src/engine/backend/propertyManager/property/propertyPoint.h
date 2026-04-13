@@ -2,9 +2,10 @@
 #define __PROPERTY_POINT_H__
 
 #include "backend/propertyManager/propertyObject.h"
+#include "backend/propertyManager/property/advprop/advpropPoint.h"
 
 //base property for "size"
-class BACKEND_API ibPropertyPoint : public ibProperty {
+class BACKEND_API CPropertyPoint : public IProperty {
 	wxVariant CreateVariantData(const wxPoint& val) const {
 		wxVariant newValue;
 		newValue << val;
@@ -18,43 +19,37 @@ public:
 		return point;
 	}
 	wxString GetValueAsString() const { return typeConv::PointToString(GetValueAsPoint()); }
-
-	void SetValue(const wxPoint& val) { ibProperty::SetValue(CreateVariantData(val)); }
+	
+	void SetValue(const wxPoint& val) { IProperty::SetValue(CreateVariantData(val)); }
 	void SetValue(const wxString& val) { SetValue(typeConv::StringToPoint(val)); }
 
-	ibPropertyPoint(ibPropertyCategory* cat, const wxString& name, const wxPoint& p = wxDefaultPosition)
-		: ibProperty(cat, name, CreateVariantData(p))
+	CPropertyPoint(CPropertyCategory* cat, const wxString& name, const wxPoint &p = wxDefaultPosition)
+		: IProperty(cat, name, CreateVariantData(p))
 	{
 	}
 
-	ibPropertyPoint(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxPoint& p = wxDefaultPosition)
-		: ibProperty(cat, name, label, CreateVariantData(p))
+	CPropertyPoint(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxPoint& p = wxDefaultPosition)
+		: IProperty(cat, name, label, CreateVariantData(p))
 	{
 	}
 
-	ibPropertyPoint(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxPoint& p = wxDefaultPosition)
-		: ibProperty(cat, name, label, helpString, CreateVariantData(p))
+	CPropertyPoint(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxPoint& p = wxDefaultPosition)
+		: IProperty(cat, name, label, helpString, CreateVariantData(p))
 	{
 	}
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const {
-		if (ms_propertyPoint != nullptr)
-			return ms_propertyPoint(m_propLabel, m_propName, GetValueAsPoint());
-		return nullptr;
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxPGPointProperty(m_propLabel, m_propName, GetValueAsPoint());
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const ibValue& varPropVal);
-	virtual bool GetDataValue(ibValue& pvarPropVal) const;
+	virtual bool SetDataValue(const CValue& varPropVal);
+	virtual bool GetDataValue(CValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer);
-
-public:
-
-	static wxObject* (*ms_propertyPoint)(const wxString&, const wxString&, const wxPoint&);
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer);
 };
 
 #endif

@@ -6,20 +6,20 @@
 #include "valueEvent.h"
 
 //////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueEvent, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueActionEvent, ibValueEvent);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEvent, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueActionEvent, CValueEvent);
 
-ibValueEvent::ibValueEvent() :
-	ibValue(ibValueTypes::TYPE_VALUE), m_eventName(wxEmptyString)
+CValueEvent::CValueEvent() :
+	CValue(eValueTypes::TYPE_VALUE), m_eventName(wxEmptyString)
 {
 }
 
-ibValueEvent::ibValueEvent(const wxString& eventName) :
-	ibValue(ibValueTypes::TYPE_VALUE), m_eventName(eventName)
+CValueEvent::CValueEvent(const wxString& eventName) :
+	CValue(eValueTypes::TYPE_VALUE), m_eventName(eventName)
 {
 }
 
-bool ibValueEvent::Init(ibValue** paParams, const long lSizeArray)
+bool CValueEvent::Init(CValue** paParams, const long lSizeArray)
 {
 	if (lSizeArray < 1)
 		return false;
@@ -27,13 +27,13 @@ bool ibValueEvent::Init(ibValue** paParams, const long lSizeArray)
 	return true;
 }
 
-ibValueActionEvent::ibValueActionEvent()
-	: ibValueEvent()
+CValueActionEvent::CValueActionEvent()
+	: CValueEvent()
 {
 }
 
-ibValueActionEvent::ibValueActionEvent(const wxString& eventName, ibActionID eventId)
-	: ibValueEvent(eventName), m_eventId(eventId)
+CValueActionEvent::CValueActionEvent(const wxString& eventName, action_identifier_t eventId)
+	: CValueEvent(eventName), m_eventId(eventId)
 {
 }
 
@@ -41,5 +41,5 @@ ibValueActionEvent::ibValueActionEvent(const wxString& eventName, ibActionID eve
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(ibValueEvent, "Event", string_to_clsid("SY_EVENT"));
-SYSTEM_TYPE_REGISTER(ibValueActionEvent, "ActionEvent", string_to_clsid("SY_ATEVT"));
+VALUE_TYPE_REGISTER(CValueEvent, "Event", string_to_clsid("SY_EVENT"));
+SYSTEM_TYPE_REGISTER(CValueActionEvent, "ActionEvent", string_to_clsid("SY_ATEVT"));

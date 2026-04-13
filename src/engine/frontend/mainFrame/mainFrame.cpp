@@ -20,9 +20,9 @@
 //*                                 mainFrame                                       *
 //***********************************************************************************
 
-ibFrontendDocMDIFrame* ibFrontendDocMDIFrame::s_instance = nullptr;
+CFrontendDocMDIFrame* CFrontendDocMDIFrame::s_instance = nullptr;
 
-void ibFrontendDocMDIFrame::InitFrame(ibFrontendDocMDIFrame* frame)
+void CFrontendDocMDIFrame::InitFrame(CFrontendDocMDIFrame* frame)
 {
 	if (s_instance == nullptr && frame != nullptr) {
 		s_instance = frame;
@@ -30,9 +30,9 @@ void ibFrontendDocMDIFrame::InitFrame(ibFrontendDocMDIFrame* frame)
 	}
 }
 
-bool ibFrontendDocMDIFrame::ShowFrame()
+bool CFrontendDocMDIFrame::ShowFrame()
 {
-	if (s_instance != nullptr && !s_instance->IsShown() && !ibApplicationData::IsForceExit()) {
+	if (s_instance != nullptr && !s_instance->IsShown() && !CApplicationData::IsForceExit()) {
 
 		s_instance->CreateGUI();
 
@@ -52,7 +52,7 @@ bool ibFrontendDocMDIFrame::ShowFrame()
 	return false;
 }
 
-void ibFrontendDocMDIFrame::DestroyFrame()
+void CFrontendDocMDIFrame::DestroyFrame()
 {
 	if (s_instance != nullptr) {
 		s_instance->Destroy();
@@ -63,7 +63,7 @@ void ibFrontendDocMDIFrame::DestroyFrame()
 //*                                 Constructor                                     *
 //***********************************************************************************
 
-ibFrontendDocMDIFrame::ibFrontendDocMDIFrame(const wxString& title,
+CFrontendDocMDIFrame::CFrontendDocMDIFrame(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size,
 	long style,
@@ -76,7 +76,7 @@ ibFrontendDocMDIFrame::ibFrontendDocMDIFrame(const wxString& title,
 
 #include "backend/compiler/value.h"
 
-bool ibFrontendDocMDIFrame::Create(const wxString& title,
+bool CFrontendDocMDIFrame::Create(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size,
 	long style,
@@ -87,8 +87,8 @@ bool ibFrontendDocMDIFrame::Create(const wxString& title,
 
 	m_docManager = nullptr;
 
-	this->Bind(wxEVT_MENU, &ibFrontendDocMDIFrame::OnExit, this, wxID_EXIT);
-	this->Bind(wxEVT_CLOSE_WINDOW, &ibFrontendDocMDIFrame::OnCloseWindow, this);
+	this->Bind(wxEVT_MENU, &CFrontendDocMDIFrame::OnExit, this, wxID_EXIT);
+	this->Bind(wxEVT_CLOSE_WINDOW, &CFrontendDocMDIFrame::OnCloseWindow, this);
 
 	this->SetArtProvider(new wxAuiLunaTabArt());
 
@@ -100,10 +100,10 @@ bool ibFrontendDocMDIFrame::Create(const wxString& title,
 	return true;
 }
 
-wxWindow* ibFrontendDocMDIFrame::CreateChildFrame(ibMetaView* view, const wxPoint& pos, const wxSize& size, long style)
+wxWindow* CFrontendDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, const wxSize& size, long style)
 {
 	// create a child valueForm of appropriate class for the current mode
-	ibMetaDocument* document = view->GetDocument();
+	CMetaDocument* document = view->GetDocument();
 
 	if ((style & wxCREATE_SDI_FRAME) != 0) {
 
@@ -117,7 +117,7 @@ wxWindow* ibFrontendDocMDIFrame::CreateChildFrame(ibMetaView* view, const wxPoin
 			}
 		}
 
-		ibDialogDocChildFrame* subframe = new ibDialogDocChildFrame(document, view, parent, wxID_ANY, document->GetTitle(), pos, size, style & ~wxCREATE_SDI_FRAME);
+		CDialogDocChildFrame* subframe = new CDialogDocChildFrame(document, view, parent, wxID_ANY, document->GetTitle(), pos, size, style & ~wxCREATE_SDI_FRAME);
 		subframe->SetIcon(document->GetIcon());
 		subframe->SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
 		subframe->Center();
@@ -130,7 +130,7 @@ wxWindow* ibFrontendDocMDIFrame::CreateChildFrame(ibMetaView* view, const wxPoin
 	return subframe;
 }
 
-void ibFrontendDocMDIFrame::RefreshFrame()
+void CFrontendDocMDIFrame::RefreshFrame()
 {
 	if (m_docManager != nullptr) {
 		for (auto& doc : m_docManager->GetDocumentsVector())
@@ -140,12 +140,12 @@ void ibFrontendDocMDIFrame::RefreshFrame()
 	Refresh();
 }
 
-void ibFrontendDocMDIFrame::RaiseFrame()
+void CFrontendDocMDIFrame::RaiseFrame()
 {
-	if (!m_callRaiseFrame && ibFrontendDocMDIFrame::IsFocusable()) {
+	if (!m_callRaiseFrame && CFrontendDocMDIFrame::IsFocusable()) {
 		CallAfter([&]() {
-			if (!ibApplicationData::IsForceExit())
-				ibFrontendDocMDIFrame::Raise();
+			if (!CApplicationData::IsForceExit())
+				CFrontendDocMDIFrame::Raise();
 			m_callRaiseFrame = false;
 			}
 		);
@@ -154,7 +154,7 @@ void ibFrontendDocMDIFrame::RaiseFrame()
 }
 
 #if wxUSE_MENUS
-void ibFrontendDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
+void CFrontendDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
 {
 	if (m_pMyMenuBar == nullptr) {
 
@@ -169,7 +169,7 @@ void ibFrontendDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
 }
 #endif // wxUSE_MENUS
 
-wxAuiMDIClientWindow* ibFrontendDocMDIFrame::OnCreateClient()
+wxAuiMDIClientWindow* CFrontendDocMDIFrame::OnCreateClient()
 {
 	class wxAuiMDIClientWindowImpl : public wxAuiMDIClientWindow {
 	public:
@@ -191,7 +191,7 @@ wxAuiMDIClientWindow* ibFrontendDocMDIFrame::OnCreateClient()
 }
 
 // bring window to front
-void ibFrontendDocMDIFrame::Raise()
+void CFrontendDocMDIFrame::Raise()
 {
 #if __WXMSW__
 	// Simulate a key press
@@ -202,7 +202,7 @@ void ibFrontendDocMDIFrame::Raise()
 	wxAuiMDIParentFrame::Raise();
 }
 
-bool ibFrontendDocMDIFrame::Destroy()
+bool CFrontendDocMDIFrame::Destroy()
 {
 	wxAuiMDIClientWindow* client_window = GetClientWindow();
 	wxCHECK_MSG(client_window, false, wxS("Missing MDI Client Window"));
@@ -225,7 +225,7 @@ bool ibFrontendDocMDIFrame::Destroy()
 		wxAuiMDIParentFrame::Destroy();
 }
 
-ibFrontendDocMDIFrame::~ibFrontendDocMDIFrame()
+CFrontendDocMDIFrame::~CFrontendDocMDIFrame()
 {
 	if (s_instance == this) s_instance = nullptr;
 
@@ -233,7 +233,7 @@ ibFrontendDocMDIFrame::~ibFrontendDocMDIFrame()
 	m_mgr.UnInit();
 }
 
-void ibFrontendDocMDIFrame::UpdateFrameManager()
+void CFrontendDocMDIFrame::UpdateFrameManager()
 {
 	unsigned int view_count = 0;
 
@@ -262,12 +262,12 @@ void ibFrontendDocMDIFrame::UpdateFrameManager()
 //*                                    System                                    *
 //********************************************************************************
 
-void ibFrontendDocMDIFrame::OnExit(wxCommandEvent& WXUNUSED(event))
+void CFrontendDocMDIFrame::OnExit(wxCommandEvent& WXUNUSED(event))
 {
 	this->Close();
 }
 
-void ibFrontendDocMDIFrame::OnCloseWindow(wxCloseEvent& event)
+void CFrontendDocMDIFrame::OnCloseWindow(wxCloseEvent& event)
 {
 	bool allowClose = event.CanVeto() ? AllowClose() : true;
 	// The user decided not to close finally, abort.

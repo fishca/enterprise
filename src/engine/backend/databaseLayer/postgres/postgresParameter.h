@@ -17,21 +17,21 @@
 
 
 
-class ibDatabaseParameterPostgres : public ibDatabaseStringConverter
+class CPostgresParameter : public CDatabaseStringConverter
 {
 public:
 	// ctor
-	ibDatabaseParameterPostgres();
-	ibDatabaseParameterPostgres(const wxString& strValue);
-	ibDatabaseParameterPostgres(int nValue);
-	ibDatabaseParameterPostgres(double dblValue);
-	ibDatabaseParameterPostgres(const ibNumber &dblValue);
-	ibDatabaseParameterPostgres(bool bValue);
-	ibDatabaseParameterPostgres(const wxDateTime& dateValue);
-	ibDatabaseParameterPostgres(const void* pData, long nDataLength);
+	CPostgresParameter();
+	CPostgresParameter(const wxString& strValue);
+	CPostgresParameter(int nValue);
+	CPostgresParameter(double dblValue);
+	CPostgresParameter(const number_t &dblValue);
+	CPostgresParameter(bool bValue);
+	CPostgresParameter(const wxDateTime& dateValue);
+	CPostgresParameter(const void* pData, long nDataLength);
 
 	// dtor
-	virtual ~ibDatabaseParameterPostgres() { }
+	virtual ~CPostgresParameter() { }
 
 	enum {
 		PARAM_STRING = 0,

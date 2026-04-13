@@ -3,72 +3,72 @@
 
 #include "backend/compiler/value.h"
 
-class BACKEND_API ibValueDatabaseLayer : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueDatabaseLayer);
+class BACKEND_API CValueDatabaseLayer : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueDatabaseLayer);
 public:
 
-	ibValueDatabaseLayer();
-	virtual ~ibValueDatabaseLayer();
+	CValueDatabaseLayer();
+	virtual ~CValueDatabaseLayer();
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return &m_methodHelper;
 	}
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);       //function call
-	virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray);       //procudre call
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);       //function call
+	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);       //procudre call
 
 private:
-	static ibValueMethodHelper m_methodHelper;
+	static CMethodHelper m_methodHelper;
 };
 
-class BACKEND_API ibValuePreparedStatement : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValuePreparedStatement);
+class BACKEND_API CValuePreparedStatement : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValuePreparedStatement);
 public:
 
-	ibValuePreparedStatement(class ibPreparedStatement* preparedStatement = nullptr);
-	virtual ~ibValuePreparedStatement();
+	CValuePreparedStatement(class IPreparedStatement* preparedStatement = nullptr);
+	virtual ~CValuePreparedStatement();
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return &m_methodHelper;
 	}
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);       //function call
-	virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray);       //procudre call
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);       //function call
+	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);       //procudre call
 
 private:
-	class ibPreparedStatement* m_preparedStatement;
-	static ibValueMethodHelper m_methodHelper;
+	class IPreparedStatement* m_preparedStatement;
+	static CMethodHelper m_methodHelper;
 };
 
-class BACKEND_API ibValueResultSet : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueResultSet);
+class BACKEND_API CValueResultSet : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueResultSet);
 public:
 
-	ibValueResultSet(class ibDatabaseResultSet* resultSet = nullptr);
-	virtual ~ibValueResultSet();
+	CValueResultSet(class IDatabaseResultSet* resultSet = nullptr);
+	virtual ~CValueResultSet();
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);       //function call
-	virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray);       //procudre call
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);       //function call
+	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);       //procudre call
 
 private:
-	class ibDatabaseResultSet* m_resultSet;
-	ibValueMethodHelper* m_methodHelper;
+	class IDatabaseResultSet* m_resultSet;
+	CMethodHelper* m_methodHelper;
 };
 
 #endif

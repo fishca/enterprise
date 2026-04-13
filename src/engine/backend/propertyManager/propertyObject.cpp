@@ -10,21 +10,21 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-bool ibBackendProperty::IsEditable() const
+bool IBackendCellField::IsEditable() const
 {
 	return m_owner ? m_owner->IsEditable() : false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void ibProperty::InitProperty(ibPropertyCategory* cat, const wxVariant& value)
+void IProperty::InitProperty(CPropertyCategory* cat, const wxVariant& value)
 {
 	m_owner->AddProperty(this);
 	if (cat != nullptr) cat->AddProperty(this);
 	DoSetValue(value);
 }
 
-void ibEvent::InitEvent(ibPropertyCategory* cat, const wxVariant& value)
+void IEvent::InitEvent(CPropertyCategory* cat, const wxVariant& value)
 {
 	m_owner->AddEvent(this);
 	if (cat != nullptr) cat->AddEvent(this);
@@ -33,7 +33,7 @@ void ibEvent::InitEvent(ibPropertyCategory* cat, const wxVariant& value)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool ibProperty::PasteData(ibReaderMemory& reader)
+bool IProperty::PasteData(CMemoryReader& reader)
 {
 	return LoadData(reader);
 }
@@ -42,7 +42,7 @@ bool ibProperty::PasteData(ibReaderMemory& reader)
 
 #include "backend/backend_mainFrame.h"
 
-ibPropertyObject::~ibPropertyObject()
+IPropertyObject::~IPropertyObject()
 {
 	wxDELETE(m_category);
 
@@ -52,26 +52,26 @@ ibPropertyObject::~ibPropertyObject()
 	for (auto& event : m_events)
 		wxDELETE(event.second);
 
-	ibPropertyObject* pobj(this);
+	IPropertyObject* pobj(this);
 
 	if (backend_mainFrame != nullptr && pobj == backend_mainFrame->GetProperty()) {
 		backend_mainFrame->SetProperty(nullptr);
 	}
 
-	//LogDebug(wxT("delete ibPropertyObject"));
+	//LogDebug(wxT("delete IPropertyObject"));
 }
 
-wxString ibPropertyObject::GetIndentString(int indent) const
+wxString IPropertyObject::GetIndentString(int indent) const
 {
 	wxString s;
 	for (int i = 0; i < indent; i++) s += wxT(" ");
 	return s;
 }
 
-ibProperty* ibPropertyObject::GetProperty(const wxString& nameParam) const
+IProperty* IPropertyObject::GetProperty(const wxString& nameParam) const
 {
-	std::map<wxString, ibProperty*>::const_iterator it = std::find_if(m_properties.begin(), m_properties.end(),
-		[nameParam](const std::pair<wxString, ibProperty*>& pair) {
+	std::map<wxString, IProperty*>::const_iterator it = std::find_if(m_properties.begin(), m_properties.end(),
+		[nameParam](const std::pair<wxString, IProperty*>& pair) {
 			return stringUtils::CompareString(nameParam, pair.first);
 		}
 	);
@@ -79,19 +79,19 @@ ibProperty* ibPropertyObject::GetProperty(const wxString& nameParam) const
 	if (it != m_properties.end())
 		return it->second;
 
-	//LogDebug(wxT("[ibPropertyObject::GetProperty] ibProperty %s not found!"),name.c_str());
+	//LogDebug(wxT("[IPropertyObject::GetProperty] IProperty %s not found!"),name.c_str());
 	  // este aserto falla siempre que se crea un sizerItem
 	  // assert(false);
 
 	return nullptr;
 }
 
-ibProperty* ibPropertyObject::GetProperty(unsigned int idx) const
+IProperty* IPropertyObject::GetProperty(unsigned int idx) const
 {
 	assert(idx < m_properties.size());
 
 	if (idx < m_properties.size()) {
-		std::map<wxString, ibProperty*>::const_iterator iterator = m_properties.begin();
+		std::map<wxString, IProperty*>::const_iterator iterator = m_properties.begin();
 		std::advance(iterator, idx);
 		return iterator->second;
 	}
@@ -99,10 +99,10 @@ ibProperty* ibPropertyObject::GetProperty(unsigned int idx) const
 	return nullptr;
 }
 
-ibEvent* ibPropertyObject::GetEvent(const wxString& nameParam) const
+IEvent* IPropertyObject::GetEvent(const wxString& nameParam) const
 {
-	std::map<wxString, ibEvent*>::const_iterator it = std::find_if(m_events.begin(), m_events.end(),
-		[nameParam](const std::pair<wxString, ibEvent*>& pair) {
+	std::map<wxString, IEvent*>::const_iterator it = std::find_if(m_events.begin(), m_events.end(),
+		[nameParam](const std::pair<wxString, IEvent*>& pair) {
 			return stringUtils::CompareString(nameParam, pair.first);
 		}
 	);
@@ -110,15 +110,15 @@ ibEvent* ibPropertyObject::GetEvent(const wxString& nameParam) const
 	if (it != m_events.end())
 		return it->second;
 
-	//LogDebug("[ibPropertyObject::GetEvent] ibEvent " + name + " not found!");
+	//LogDebug("[IPropertyObject::GetEvent] IEvent " + name + " not found!");
 	return nullptr;
 }
 
-ibEvent* ibPropertyObject::GetEvent(unsigned int idx) const
+IEvent* IPropertyObject::GetEvent(unsigned int idx) const
 {
 	assert(idx < m_events.size());
 
-	std::map<wxString, ibEvent*>::const_iterator it = m_events.begin();
+	std::map<wxString, IEvent*>::const_iterator it = m_events.begin();
 	unsigned int i = 0;
 	while (i < idx && it != m_events.end()) {
 		i++; it++;
@@ -130,20 +130,20 @@ ibEvent* ibPropertyObject::GetEvent(unsigned int idx) const
 	return nullptr;
 }
 
-void ibPropertyObject::AddProperty(ibProperty* prop)
+void IPropertyObject::AddProperty(IProperty* prop)
 {
-	m_properties.emplace(std::map<wxString, ibProperty*>::value_type(prop->GetName(), prop));
+	m_properties.emplace(std::map<wxString, IProperty*>::value_type(prop->GetName(), prop));
 }
 
-void ibPropertyObject::AddEvent(ibEvent* event)
+void IPropertyObject::AddEvent(IEvent* event)
 {
-	m_events.emplace(std::map<wxString, ibEvent*>::value_type(event->GetName(), event));
+	m_events.emplace(std::map<wxString, IEvent*>::value_type(event->GetName(), event));
 }
 
-unsigned int ibPropertyObject::GetPropertyIndex(const wxString& nameParam) const {
+unsigned int IPropertyObject::GetPropertyIndex(const wxString& nameParam) const {
 	return std::distance(m_properties.begin(),
 		std::find_if(m_properties.begin(), m_properties.end(),
-			[nameParam](const  std::pair<wxString, ibProperty*>& pair) {
+			[nameParam](const  std::pair<wxString, IProperty*>& pair) {
 				return stringUtils::CompareString(nameParam, pair.first);
 			}
 		)
@@ -152,26 +152,26 @@ unsigned int ibPropertyObject::GetPropertyIndex(const wxString& nameParam) const
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool ibPropertyObject::PasteProperty(ibReaderMemory& reader)
+bool IPropertyObject::PasteProperty(CMemoryReader& reader)
 {
-	std::shared_ptr <ibReaderMemory>propReader(reader.open_chunk(propBlock));
+	std::shared_ptr <CMemoryReader>propReader(reader.open_chunk(propBlock));
 	if (propReader != nullptr) {
 		for (u64 iter_pos = 0; ; iter_pos++) {
-			std::shared_ptr <ibReaderMemory>propDataReader(propReader->open_chunk(iter_pos));
+			std::shared_ptr <CMemoryReader>propDataReader(propReader->open_chunk(iter_pos));
 			if (propDataReader == nullptr)
 				break;
-			ibProperty* prop = GetProperty(propDataReader->r_stringZ());
+			IProperty* prop = GetProperty(propDataReader->r_stringZ());
 			if (prop != nullptr && !prop->PasteData(*propDataReader))
 				return false;
 		}
 	}
-	std::shared_ptr <ibReaderMemory>eventReader(reader.open_chunk(eventBlock));
+	std::shared_ptr <CMemoryReader>eventReader(reader.open_chunk(eventBlock));
 	if (eventReader != nullptr) {
 		for (u64 iter_pos = 0; ; iter_pos++) {
-			std::shared_ptr <ibReaderMemory>eventDataReader(eventReader->open_chunk(iter_pos));
+			std::shared_ptr <CMemoryReader>eventDataReader(eventReader->open_chunk(iter_pos));
 			if (eventDataReader == nullptr)
 				break;
-			ibEvent* event = GetEvent(eventDataReader->r_stringZ());
+			IEvent* event = GetEvent(eventDataReader->r_stringZ());
 			if (event != nullptr && !event->PasteData(*eventDataReader))
 				return false;
 		};
@@ -180,13 +180,13 @@ bool ibPropertyObject::PasteProperty(ibReaderMemory& reader)
 	return true;
 }
 
-bool ibPropertyObject::CopyProperty(ibWriterMemory& writer) const
+bool IPropertyObject::CopyProperty(CMemoryWriter& writer) const
 {
-	ibWriterMemory propWritter;
+	CMemoryWriter propWritter;
 	for (unsigned int idx = 0; idx < GetPropertyCount(); idx++) {
-		ibProperty* prop = GetProperty(idx);
+		IProperty* prop = GetProperty(idx);
 		wxASSERT(prop);
-		ibWriterMemory propDataWritter;
+		CMemoryWriter propDataWritter;
 		propDataWritter.w_stringZ(prop->GetName());
 		if (!prop->CopyData(propDataWritter))
 			return false;
@@ -195,11 +195,11 @@ bool ibPropertyObject::CopyProperty(ibWriterMemory& writer) const
 
 	writer.w_chunk(propBlock, propWritter.pointer(), propWritter.size());
 
-	ibWriterMemory eventWritter;
+	CMemoryWriter eventWritter;
 	for (unsigned int idx = 0; idx < GetEventCount(); idx++) {
-		ibEvent* event = GetEvent(idx);
+		IEvent* event = GetEvent(idx);
 		wxASSERT(event);
-		ibWriterMemory eventDataWritter;
+		CMemoryWriter eventDataWritter;
 		eventDataWritter.w_stringZ(event->GetName());
 		if (!event->CopyData(eventDataWritter))
 			return false;
@@ -212,17 +212,17 @@ bool ibPropertyObject::CopyProperty(ibWriterMemory& writer) const
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibPropertyCategory::AddProperty(ibProperty* property)
+void CPropertyCategory::AddProperty(IProperty* property)
 {
 	m_properties.emplace_back(property->GetName());
 }
 
-void ibPropertyCategory::AddEvent(ibEvent* event)
+void CPropertyCategory::AddEvent(IEvent* event)
 {
 	m_events.emplace_back(event->GetName());
 }
 
-void ibPropertyCategory::AddCategory(ibPropertyCategory* cat)
+void CPropertyCategory::AddCategory(CPropertyCategory* cat)
 {
 	m_categories.emplace_back(cat);
 }

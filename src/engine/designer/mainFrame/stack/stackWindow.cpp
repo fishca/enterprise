@@ -6,15 +6,15 @@
 #include "stackWindow.h"
 #include "backend/debugger/debugClient.h"
 
-wxBEGIN_EVENT_TABLE(ibStackWindow, wxPanel)
-EVT_SIZE(ibStackWindow::OnSize)
+wxBEGIN_EVENT_TABLE(CStackWindow, wxPanel)
+EVT_SIZE(CStackWindow::OnSize)
 wxEND_EVENT_TABLE()
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-ibStackWindow::ibStackWindow(wxWindow* parent, int id) :
+CStackWindow::CStackWindow(wxWindow* parent, int id) :
 	wxPanel(parent, id), m_treeCtrl(new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT))
 {
 	m_columnSize[0] = 0.09f;
@@ -24,12 +24,12 @@ ibStackWindow::ibStackWindow(wxWindow* parent, int id) :
 	ClearAndCreate();
 	GetSizer()->Add(m_treeCtrl, 1, wxEXPAND);
 
-	m_treeCtrl->Bind(wxEVT_LIST_ITEM_ACTIVATED, &ibStackWindow::OnItemSelected, this);
+	m_treeCtrl->Bind(wxEVT_LIST_ITEM_ACTIVATED, &CStackWindow::OnItemSelected, this);
 }
 
 static bool s_initialize = false;
 
-void ibStackWindow::SetStack(const ibStackData& stackData)
+void CStackWindow::SetStack(const CStackData& stackData)
 {
 	ClearAndCreate();
 
@@ -47,7 +47,7 @@ void ibStackWindow::SetStack(const ibStackData& stackData)
 	}
 }
 
-void ibStackWindow::UpdateColumnSizes()
+void CStackWindow::UpdateColumnSizes()
 {
 	// We subtract two off of the size to avoid generating scroll bars on the window.
 	int totalSize = GetClientSize().x - 2;
@@ -60,7 +60,7 @@ void ibStackWindow::UpdateColumnSizes()
 	}
 }
 
-void ibStackWindow::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) const
+void CStackWindow::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) const
 {
 	int fixedSize = 0;
 
@@ -86,7 +86,7 @@ void ibStackWindow::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) 
 	columnSize[s_numColumns - 1] = totalSize;
 }
 
-void ibStackWindow::OnItemSelected(wxListEvent& event)
+void CStackWindow::OnItemSelected(wxListEvent& event)
 {
 	if (s_initialize)
 		return;
@@ -98,13 +98,13 @@ void ibStackWindow::OnItemSelected(wxListEvent& event)
 	event.Skip();
 }
 
-void ibStackWindow::OnSize(wxSizeEvent& event)
+void CStackWindow::OnSize(wxSizeEvent& event)
 {
 	UpdateColumnSizes();
 	event.Skip();
 }
 
-void ibStackWindow::ClearAndCreate()
+void CStackWindow::ClearAndCreate()
 {
 	m_treeCtrl->ClearAll();
 	m_treeCtrl->AppendColumn(_("Line"), wxLIST_FORMAT_LEFT, 100);
@@ -115,14 +115,14 @@ void ibStackWindow::ClearAndCreate()
 
 #include "mainFrame/mainFrameDesigner.h"
 
-ibStackWindow* ibStackWindow::GetStackWindow()
+CStackWindow* CStackWindow::GetStackWindow()
 {
-	if (ibFrontendDocMDIFrame::GetFrame())
+	if (CFrontendDocMDIFrame::GetFrame())
 		return mainFrame->GetStackWindow();
 	return nullptr; 
 }
 
-ibStackWindow::~ibStackWindow()
+CStackWindow::~CStackWindow()
 {
-	m_treeCtrl->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &ibStackWindow::OnItemSelected, this);
+	m_treeCtrl->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &CStackWindow::OnItemSelected, this);
 }

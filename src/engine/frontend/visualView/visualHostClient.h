@@ -7,20 +7,20 @@
 #include "frontend/visualView/ctrl/sizer.h"
 #include "frontend/visualView/ctrl/widgets.h"
 
-class ibVisualHostClient : public ibVisualHost {
+class CVisualClientHost : public IVisualHost {
 public:
 
 	// ctor
-	ibVisualHostClient(ibFormVisualDocument* document, ibValueForm* valueForm, wxWindow* parent);
-	virtual ~ibVisualHostClient();
+	CVisualClientHost(CFormVisualDocument* document, CValueForm* valueForm, wxWindow* parent);
+	virtual ~CVisualClientHost();
 
 	virtual bool IsShownHost() const { return m_valueForm->IsShown(); }
 
-	virtual ibValueForm* GetValueForm() const { return m_valueForm; }
-	virtual void SetValueForm(ibValueForm* valueForm) { m_valueForm = valueForm; }
+	virtual CValueForm* GetValueForm() const { return m_valueForm; }
+	virtual void SetValueForm(CValueForm* valueForm) { m_valueForm = valueForm; }
 
-	virtual wxWindow* GetParentBackgroundWindow() const { return const_cast<ibVisualHostClient*>(this); }
-	virtual wxWindow* GetBackgroundWindow() const { return const_cast<ibVisualHostClient*>(this); }
+	virtual wxWindow* GetParentBackgroundWindow() const { return const_cast<CVisualClientHost*>(this); }
+	virtual wxWindow* GetBackgroundWindow() const { return const_cast<CVisualClientHost*>(this); }
 
 	virtual void OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event);
 
@@ -41,48 +41,41 @@ protected:
 
 	bool m_dataViewSizeChanged;
 	wxSize m_dataViewSize;
-	ibValuePtr<ibValueForm> m_valueForm;
-	ibFormVisualDocument* m_document;
+	CValuePtr<CValueForm> m_valueForm;
+	CFormVisualDocument* m_document;
 };
 
 //********************************************************************************************
 //*                                  Visual Document & View                                  *
 //********************************************************************************************
 
-class FRONTEND_API ibFormVisualEditView : public ibMetaView {
+class FRONTEND_API CFormVisualEditView : public CMetaView {
 public:
 
-	ibFormVisualEditView() : m_visualHost(nullptr) {}
-	virtual ~ibFormVisualEditView();
+	CFormVisualEditView() : m_visualHost(nullptr) {}
+	virtual ~CFormVisualEditView();
 
 	virtual wxPrintout* OnCreatePrintout() override;
 
-	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint = nullptr) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
 	virtual void OnClosingDocument() override;
 
-	ibVisualHostClient* GetVisualHost() const { return m_visualHost; }
+	CVisualClientHost* GetVisualHost() const { return m_visualHost; }
 
 private:
-	ibVisualHostClient* m_visualHost;
+	CVisualClientHost* m_visualHost;
 };
 
-class FRONTEND_API ibFormVisualCommandProcessor : public wxCommandProcessor {
-
-public:
-	virtual bool CanUndo() const { return false; }
-	virtual bool CanRedo() const { return false; }
-};
-
-class FRONTEND_API ibFormVisualDocument : public ibMetaDataDocument {
+class FRONTEND_API CFormVisualDocument : public IMetaDataDocument {
 public:
 
-	ibFormVisualDocument(ibValueForm* valueForm);
-	virtual ~ibFormVisualDocument();
+	CFormVisualDocument(CValueForm* valueForm);
+	virtual ~CFormVisualDocument();
 
-	virtual class ibMetaData* GetMetaData() const;
+	virtual class IMetaData* GetMetaData() const;
 
 	virtual bool IsVisualDemonstrationDoc() const { return false; }
 
@@ -96,42 +89,49 @@ public:
 	virtual bool Save() override;
 	virtual bool SaveAs() override { return true; }
 
-	virtual void SetDocParent(ibMetaDocument* docParent) override;
+	virtual void SetDocParent(CMetaDocument* docParent) override;
 
-	ibFormVisualEditView* GetFirstView() const;
-	ibValueForm* GetValueForm() const;
-	const ibUniqueKey& GetFormKey() const;
-	bool CompareFormKey(const ibUniqueKey& formKey) const;
+	CFormVisualEditView* GetFirstView() const;
+	CValueForm* GetValueForm() const;
+	const CUniqueKey& GetFormKey() const;
+	bool CompareFormKey(const CUniqueKey& formKey) const;
 
-	static ibUniqueKey CreateFormUniqueKey(const ibBackendControlFrame* ownerControl,
-		const ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid);
+	static CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
-	static ibValueForm* FindFormByUniqueKey(const ibBackendControlFrame* ownerControl,
-		const ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid);
+	static CValueForm* FindFormByUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
-	static ibValueForm* FindFormByUniqueKey(const ibUniqueKey& guid);
-	static ibValueForm* FindFormByControlUniqueKey(const ibUniqueKey& guid);
-	static ibValueForm* FindFormBySourceUniqueKey(const ibUniqueKey& guid);
+	static CValueForm* FindFormByUniqueKey(const CUniqueKey& guid);
+	static CValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid);
+	static CValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid);
 
-	static ibFormVisualDocument* FindDocByUniqueKey(const ibUniqueKey& guid);
+	static CFormVisualDocument* FindDocByUniqueKey(const CUniqueKey& guid);
 
-	static bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid);
+	static bool UpdateFormUniqueKey(const CUniquePairKey& guid);
 
 protected:
-	virtual ibMetaView* DoCreateView();
+	virtual CMetaView* DoCreateView();
 private:
-	ibValuePtr<ibValueForm> m_valueForm;
+	CValuePtr<CValueForm> m_valueForm;
 };
 
-class FRONTEND_API ibFormVisualDocumentDemo : public ibFormVisualDocument {
+class FRONTEND_API CFormVisualDemoDocument : public CFormVisualDocument {
 public:
 
-	ibFormVisualDocumentDemo(ibValueForm* valueForm) :
-		ibFormVisualDocument(valueForm)
+	CFormVisualDemoDocument(CValueForm* valueForm) :
+		CFormVisualDocument(valueForm)
 	{
 	}
 
 	virtual bool IsVisualDemonstrationDoc() const { return true; }
+};
+
+class FRONTEND_API CFormVisualCommandProcessor : public wxCommandProcessor {
+
+public:
+	virtual bool CanUndo() const { return false; }
+	virtual bool CanRedo() const { return false; }
 };
 
 #endif

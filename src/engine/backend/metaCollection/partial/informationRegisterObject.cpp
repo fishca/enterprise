@@ -8,49 +8,49 @@
 
 #include "backend/backend_mainFrame.h"
 
-bool ibValueRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clearTable)
+bool CValueRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clearTable)
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
-		if (!ibBackendException::IsEvalMode())
+		if (!CBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Write()) {
-				ibBackendAccessException::Error();
+				CBackendAccessException::Error();
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				db_query_active_transaction.BeginTransaction();
 
 				{
-					ibValue cancel = false;
+					CValue cancel = false;
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!SaveData(replace, clearTable)) {
 					db_query_active_transaction.RollBackTransaction();
-					ibBackendCoreException::Error(_("Failed to write object in db!"));
+					CBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
 
 				{
-					ibValue cancel = false;
+					CValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -65,49 +65,49 @@ bool ibValueRecordSetObjectInformationRegister::WriteRecordSet(bool replace, boo
 	return true;
 }
 
-bool ibValueRecordSetObjectInformationRegister::DeleteRecordSet()
+bool CValueRecordSetObjectInformationRegister::DeleteRecordSet()
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
-		if (!ibBackendException::IsEvalMode())
+		if (!CBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Delete()) {
-				ibBackendAccessException::Error();
+				CBackendAccessException::Error();
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				db_query_active_transaction.BeginTransaction();
 
 				{
-					ibValue cancel = false;
+					CValue cancel = false;
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
 					db_query_active_transaction.RollBackTransaction();
-					ibBackendCoreException::Error(_("Failed to write object in db!"));
+					CBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
 
 				{
-					ibValue cancel = false;
+					CValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -124,17 +124,17 @@ bool ibValueRecordSetObjectInformationRegister::DeleteRecordSet()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ibSourceExplorer ibValueRecordManagerObjectInformationRegister::GetSourceExplorer() const
+CSourceExplorer CValueRecordManagerObjectInformationRegister::GetSourceExplorer() const
 {
-	ibSourceExplorer srcHelper(
+	CSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);
 
-	ibValueMetaObjectInformationRegister* metaRef = nullptr;
+	CValueMetaObjectInformationRegister* metaRef = nullptr;
 
 	if (m_metaObject->ConvertToValue(metaRef)) {
-		if (metaRef->GetPeriodicity() != ibPeriodicity::eNonPeriodic) {
+		if (metaRef->GetPeriodicity() != ePeriodicity::eNonPeriodic) {
 			srcHelper.AppendSource(metaRef->GetRegisterPeriod());
 		}
 	}
@@ -155,9 +155,9 @@ ibSourceExplorer ibValueRecordManagerObjectInformationRegister::GetSourceExplore
 }
 
 #pragma region _form_builder_h_
-void ibValueRecordManagerObjectInformationRegister::ShowFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
+void CValueRecordManagerObjectInformationRegister::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
-	ibBackendValueForm* const foundedForm = GetForm();
+	IBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm && foundedForm->IsShown()) {
 		foundedForm->ActivateForm();
@@ -165,7 +165,7 @@ void ibValueRecordManagerObjectInformationRegister::ShowFormValue(const wxString
 	}
 
 	//if form is not initialized then generate  
-	ibBackendValueForm* const valueForm =
+	IBackendValueForm* const valueForm =
 		GetFormValue(strFormName, ownerControl);
 
 	if (valueForm != nullptr) {
@@ -174,15 +174,15 @@ void ibValueRecordManagerObjectInformationRegister::ShowFormValue(const wxString
 	}
 }
 
-ibBackendValueForm* ibValueRecordManagerObjectInformationRegister::GetFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
+IBackendValueForm* CValueRecordManagerObjectInformationRegister::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
-	ibBackendValueForm* const foundedForm = GetForm();
+	IBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm == nullptr) {
 
-		ibBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			ibValueMetaObjectInformationRegister::eFormRecord,
+			CValueMetaObjectInformationRegister::eFormRecord,
 			ownerControl,
 			this,
 			m_objGuid
@@ -198,34 +198,34 @@ ibBackendValueForm* ibValueRecordManagerObjectInformationRegister::GetFormValue(
 }
 #pragma endregion
 
-bool ibValueRecordManagerObjectInformationRegister::WriteRegister(bool replace)
+bool CValueRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
-		if (!ibBackendException::IsEvalMode())
+		if (!CBackendException::IsEvalMode())
 		{
-			ibTransactionGuard db_query_active_transaction = db_query;
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				db_query_active_transaction.BeginTransaction();
 
-				bool newObject = ibValueRecordManagerObjectInformationRegister::IsNewObject();
+				bool newObject = CValueRecordManagerObjectInformationRegister::IsNewObject();
 
 				if (!SaveData()) {
 					db_query_active_transaction.RollBackTransaction();
-					ibBackendCoreException::Error(_("failed to save object in db!"));
+					CBackendCoreException::Error(_("failed to save object in db!"));
 					return false;
 				}
 
-				ibBackendValueForm::UpdateFormUniqueKey(m_objGuid);
+				IBackendValueForm::UpdateFormUniqueKey(m_objGuid);
 
 				db_query_active_transaction.CommitTransaction();
 
-				ibBackendValueForm* const valueForm = GetForm();
+				IBackendValueForm* const valueForm = GetForm();
 
 				if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetValue());
 				else if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
@@ -238,26 +238,26 @@ bool ibValueRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 	return true;
 }
 
-bool ibValueRecordManagerObjectInformationRegister::DeleteRegister()
+bool CValueRecordManagerObjectInformationRegister::DeleteRegister()
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
-		if (!ibBackendException::IsEvalMode())
+		if (!CBackendException::IsEvalMode())
 		{
-			ibTransactionGuard db_query_active_transaction = db_query;
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				ibBackendValueForm* const valueForm = GetForm();
+				IBackendValueForm* const valueForm = GetForm();
 				{
 					db_query_active_transaction.BeginTransaction();
 
 					if (!DeleteData()) {
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to delete object in db!"));
+						CBackendCoreException::Error(_("Failed to delete object in db!"));
 						return false;
 					}
 
@@ -310,7 +310,7 @@ enum prop
 //*                              Support methods                             *
 //****************************************************************************
 
-void ibValueRecordSetObjectInformationRegister::PrepareNames() const
+void CValueRecordSetObjectInformationRegister::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -329,7 +329,7 @@ void ibValueRecordSetObjectInformationRegister::PrepareNames() const
 	m_methodHelper->AppendProp(wxT("Filter"), true, false, prop::eFilter, wxNOT_FOUND);
 }
 
-void ibValueRecordManagerObjectInformationRegister::PrepareNames() const
+void CValueRecordManagerObjectInformationRegister::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -359,14 +359,14 @@ void ibValueRecordManagerObjectInformationRegister::PrepareNames() const
 	}
 }
 
-bool ibValueRecordManagerObjectInformationRegister::SetPropVal(const long lPropNum, const ibValue& varPropVal)       //setting attribute
+bool CValueRecordManagerObjectInformationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)       //setting attribute
 {
 	return SetValueByMetaID(
 		m_methodHelper->GetPropData(lPropNum), varPropVal
 	);
 }
 
-bool ibValueRecordManagerObjectInformationRegister::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueRecordManagerObjectInformationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	return GetValueByMetaID(
 		m_methodHelper->GetPropData(lPropNum), pvarPropVal
@@ -375,12 +375,12 @@ bool ibValueRecordManagerObjectInformationRegister::GetPropVal(const long lPropN
 
 //////////////////////////////////////////////////////////////////////////
 
-bool ibValueRecordSetObjectInformationRegister::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueRecordSetObjectInformationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool ibValueRecordSetObjectInformationRegister::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueRecordSetObjectInformationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -395,24 +395,24 @@ bool ibValueRecordSetObjectInformationRegister::GetPropVal(const long lPropNum, 
 	return false;
 }
 
-bool ibValueRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	ibMetaData* metaData = m_metaObject->GetMetaData();
+	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 
 	switch (lMethodNum)
 	{
 	case recordSet::enAdd:
-		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case recordSet::enCount:
 		pvarRetValue = (unsigned int)GetRowCount();
 		return true;
 	case recordSet::enClear:
-		ibValueModelTableBase::Clear();
+		IValueTable::Clear();
 		return true;
 	case recordSet::enLoad:
-		LoadDataFromTable(paParams[0]->ConvertToType<ibValueModelTableBase>());
+		LoadDataFromTable(paParams[0]->ConvertToType<IValueTable>());
 		return true;
 	case recordSet::enUnload:
 		pvarRetValue = SaveDataToTable();
@@ -440,7 +440,7 @@ bool ibValueRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum
 	return false;
 }
 
-bool ibValueRecordManagerObjectInformationRegister::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueRecordManagerObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -468,7 +468,7 @@ bool ibValueRecordManagerObjectInformationRegister::CallAsFunc(const long lMetho
 	case recordManager::enGetFormRecord:
 		pvarRetValue = GetFormValue(
 			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
 		);
 		return true;
 	case enGetTemplate:

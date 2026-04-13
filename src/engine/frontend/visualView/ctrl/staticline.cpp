@@ -2,17 +2,17 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueStaticLine, ibValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueStaticLine, IValueWindow)
 
 //****************************************************************************
 //*                             StaticLine                                   *
 //****************************************************************************
 
-ibValueStaticLine::ibValueStaticLine() : ibValueWindow()
+CValueStaticLine::CValueStaticLine() : IValueWindow()
 {
 }
 
-wxObject* ibValueStaticLine::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueStaticLine::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxStaticLine* staticline = new wxStaticLine(wxparent, wxID_ANY,
 		wxDefaultPosition,
@@ -23,11 +23,11 @@ wxObject* ibValueStaticLine::Create(wxWindow* wxparent, ibVisualHost* visualHost
 	return staticline;
 }
 
-void ibValueStaticLine::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueStaticLine::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 }
 
-void ibValueStaticLine::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueStaticLine::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxStaticLine* staticline = dynamic_cast<wxStaticLine*>(wxobject);
 
@@ -48,11 +48,11 @@ void ibValueStaticLine::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(staticline);
 }
 
-void ibValueStaticLine::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void CValueStaticLine::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
 }
 
-void ibValueStaticLine::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueStaticLine::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 }
 
@@ -60,20 +60,20 @@ void ibValueStaticLine::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 //*                             Property                            *
 //*******************************************************************
 
-bool ibValueStaticLine::LoadData(ibReaderMemory& reader)
+bool CValueStaticLine::LoadData(CMemoryReader& reader)
 {
 	m_propertyOrient->SetValue(reader.r_s32());
-	return ibValueWindow::LoadData(reader);
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueStaticLine::SaveData(ibWriterMemory& writer)
+bool CValueStaticLine::SaveData(CMemoryWriter& writer)
 {
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());
-	return ibValueWindow::SaveData(writer);
+	return IValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueStaticLine, "Staticline", "Widget", string_to_clsid("CT_STLI"));
+CONTROL_TYPE_REGISTER(CValueStaticLine, "Staticline", "Widget", string_to_clsid("CT_STLI"));

@@ -5,13 +5,13 @@ enum
 	MENU_ADD_COLUMN = 1000
 };
 
-void ibValueModelTableBox::PrepareDefaultMenu(wxMenu *menu)
+void CValueTableBox::PrepareDefaultMenu(wxMenu *menu)
 {
-	menu->Append(MENU_ADD_COLUMN, _("Add column\tInsert"))->SetBitmap(ibValueModelTableBoxColumn::GetIconGroup());
+	menu->Append(MENU_ADD_COLUMN, _("Add column\tInsert"))->SetBitmap(CValueTableBoxColumn::GetIconGroup());
 	menu->AppendSeparator();
 }
 
-void ibValueModelTableBox::ExecuteMenu(ibVisualHost *visualHost, int id)
+void CValueTableBox::ExecuteMenu(IVisualHost *visualHost, int id)
 {
 	switch (id)
 	{

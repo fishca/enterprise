@@ -1,51 +1,47 @@
 #include "propertyRecord.h"
 #include "backend/propertyManager/property/variant/variantRecord.h"
 
-wxObject* (*ibPropertyRecord::ms_propertyRecord)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
-
-////////////////////////////////////////////////////////////////////
-
-wxVariantData* ibPropertyRecord::CreateVariantData(ibPropertyObject* property, const ibMetaDescription& typeDesc) const
+wxVariantData* CPropertyRecord::CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc) const
 {
-	const ibValueMetaObjectGenericData* propFactory = dynamic_cast<const ibValueMetaObjectGenericData*>(property);
+	const IValueMetaObjectGenericData* propFactory = dynamic_cast<const IValueMetaObjectGenericData*>(property);
 	if (propFactory == nullptr)
 		return nullptr;
-	return new ibVariantDataRecord(propFactory, typeDesc);
+	return new wxVariantDataRecord(propFactory, typeDesc);
 }
 
-ibMetaDescription& ibPropertyRecord::GetValueAsMetaDesc() const {
-	return get_cell_variant<ibVariantDataRecord>()->GetMetaDesc();
+CMetaDescription& CPropertyRecord::GetValueAsMetaDesc() const {
+	return get_cell_variant<wxVariantDataRecord>()->GetMetaDesc();
 }
 
-ibMetaDescription& ibPropertyRecord::GetValueAsMetaDesc(const wxVariant& val) const {
-	return get_cell_variant<ibVariantDataRecord>(val)->GetMetaDesc();
+CMetaDescription& CPropertyRecord::GetValueAsMetaDesc(const wxVariant& val) const {
+	return get_cell_variant<wxVariantDataRecord>(val)->GetMetaDesc();
 }
 
-void ibPropertyRecord::SetValue(const ibMetaDescription& val)
+void CPropertyRecord::SetValue(const CMetaDescription& val)
 {
 	m_propValue = CreateVariantData(m_owner, val);
 }
 
 //base property for "record"
-bool ibPropertyRecord::SetDataValue(const ibValue& varPropVal)
+bool CPropertyRecord::SetDataValue(const CValue& varPropVal)
 {
 	return false;
 }
 
-bool ibPropertyRecord::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyRecord::GetDataValue(CValue& pvarPropVal) const
 {
-	const ibVariantDataRecord* gen = get_cell_variant<ibVariantDataRecord>();
+	const wxVariantDataRecord* gen = get_cell_variant<wxVariantDataRecord>();
 	wxASSERT(gen);
 	pvarPropVal = gen->GetDataValue();
 	return true;
 }
 
-bool ibPropertyRecord::LoadData(ibReaderMemory& reader)
+bool CPropertyRecord::LoadData(CMemoryReader& reader)
 {
-	return ibMetaDescriptionMemory::LoadData(reader, GetValueAsMetaDesc());
+	return CMetaDescriptionMemory::LoadData(reader, GetValueAsMetaDesc());
 }
 
-bool ibPropertyRecord::SaveData(ibWriterMemory& writer)
+bool CPropertyRecord::SaveData(CMemoryWriter& writer)
 {
-	return ibMetaDescriptionMemory::SaveData(writer, GetValueAsMetaDesc());
+	return CMetaDescriptionMemory::SaveData(writer, GetValueAsMetaDesc());
 }

@@ -5,43 +5,43 @@
 #include "mainFrame/metaTree/treeConfiguration.h"
 
 // The view using a standard wxTextCtrl to show its contents
-class ibMetadataEditView : public ibMetaView {
+class CMetadataEditView : public CMetaView {
 public:
 
-	ibMetadataEditView() : ibMetaView() {}
+	CMetadataEditView() : CMetaView() {}
 
-	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
-	ibMetadataTree* GetMetaTree() const {  return m_metaTree; }
+	CMetadataTree* GetMetaTree() const {  return m_metaTree; }
 
 protected:
 
-	ibMetadataTree* m_metaTree;
+	CMetadataTree* m_metaTree;
 
-	wxDECLARE_DYNAMIC_CLASS(ibMetadataEditView);
+	wxDECLARE_DYNAMIC_CLASS(CMetadataEditView);
 };
 
 // ----------------------------------------------------------------------------
-// ibMetadataDocument: wxDocument and wxTextCtrl married
+// CMetadataDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-class ibMetadataBrowserDocument : public ibMetaDocument {
+class CMetadataBrowserDocument : public CMetaDocument {
 	
-	virtual ibMetaView* DoCreateView() {
-		return new ibMetadataEditView(); 
+	virtual CMetaView* DoCreateView() {
+		return new CMetadataEditView(); 
 	}
 
 public:
 	
-	ibMetadataBrowserDocument(ibMetaDataConfigurationBase* metaData = nullptr) :
-		ibMetaDocument(), m_metaData(metaData) { m_childDoc = false; }
+	CMetadataBrowserDocument(IMetaDataConfiguration* metaData = nullptr) : 
+		CMetaDocument(), m_metaData(metaData) { m_childDoc = false; }
 	
 	virtual wxIcon GetIcon() const {
 		if (m_metaData != nullptr) {
-			ibValueMetaObject* metaObject = m_metaData->GetCommonMetaObject();
+			IValueMetaObject* metaObject = m_metaData->GetCommonMetaObject();
 			wxASSERT(metaObject);
 			return metaObject->GetIcon();
 		}
@@ -53,26 +53,26 @@ public:
 
 	virtual void Modify(bool mod) override {}
 
-	virtual ibMetadataTree* GetMetaTree() const;
+	virtual CMetadataTree* GetMetaTree() const;
 
 protected:
 
-	ibMetaDataConfigurationBase* m_metaData;
+	IMetaDataConfiguration* m_metaData;
 
-	wxDECLARE_NO_COPY_CLASS(ibMetadataBrowserDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibMetadataBrowserDocument);
+	wxDECLARE_NO_COPY_CLASS(CMetadataBrowserDocument);
+	wxDECLARE_DYNAMIC_CLASS(CMetadataBrowserDocument);
 };
 
-class ibMetadataFilibDocument : public ibMetadataBrowserDocument {
+class CMetadataFileDocument : public CMetadataBrowserDocument {
 
-	virtual ibMetaView* DoCreateView() {
-		return ibMetaDocument::DoCreateView();
+	virtual CMetaView* DoCreateView() {
+		return CMetaDocument::DoCreateView();
 	}
 
 public:
 
-	ibMetadataFilibDocument() : ibMetadataBrowserDocument() {}
-	virtual ~ibMetadataFilibDocument() { wxDELETE(m_metaData); }
+	CMetadataFileDocument() : CMetadataBrowserDocument() {}
+	virtual ~CMetadataFileDocument() { wxDELETE(m_metaData); }
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnCloseDocument() override;
@@ -85,8 +85,8 @@ protected:
 	virtual bool DoOpenDocument(const wxString& filename) override;
 	virtual bool DoSaveDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(ibMetadataFilibDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibMetadataFilibDocument);
+	wxDECLARE_NO_COPY_CLASS(CMetadataFileDocument);
+	wxDECLARE_DYNAMIC_CLASS(CMetadataFileDocument);
 };
 
 

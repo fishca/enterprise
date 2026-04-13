@@ -8,21 +8,21 @@
 #include "frontend/frontend.h"
 #include "backend/debugger/debugDefs.h"
 
-#define localWindow ibLocalWindow::GetLocalWindow()
+#define localWindow CLocalWindow::GetLocalWindow()
 
-class ibLocalWindow : public wxPanel {
+class CLocalWindow : public wxPanel {
 	wxListCtrl* m_treeCtrl;
 private:
-	ibLocalWindow(wxWindow* parent, int id = wxID_ANY);
-	friend class ibFrontendDocMDIFrameDesigner;
+	CLocalWindow(wxWindow* parent, int id = wxID_ANY);
+	friend class CFrontendDocMDIFrameDesigner;
 public:
 
-	virtual ~ibLocalWindow();
+	virtual ~CLocalWindow();
 
-	static ibLocalWindow* GetLocalWindow();
+	static CLocalWindow* GetLocalWindow();
 
 	void ClearAndCreate();
-	void SetLocalVariable(const ibLocalWindowData& locData);
+	void SetLocalVariable(const CLocalWindowData& locData);
 
 protected:
 

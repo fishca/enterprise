@@ -2,27 +2,27 @@
 #include "mysqlDatabaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
-ibPreparedStatementMySQL::ibPreparedStatementMySQL(ibInterfaceMySQL* pInterface)
-	: ibPreparedStatement()
+CMysqlPreparedStatement::CMysqlPreparedStatement(CMysqlInterface* pInterface)
+	: IPreparedStatement()
 {
 	m_pInterface = pInterface;
 	m_Statements.clear();
 }
 
-ibPreparedStatementMySQL::ibPreparedStatementMySQL(ibInterfaceMySQL* pInterface, MYSQL_STMT* pStatement)
-	: ibPreparedStatement()
+CMysqlPreparedStatement::CMysqlPreparedStatement(CMysqlInterface* pInterface, MYSQL_STMT* pStatement)
+	: IPreparedStatement()
 {
 	m_pInterface = pInterface;
 	AddPreparedStatement(pStatement);
 }
 
-ibPreparedStatementMySQL::~ibPreparedStatementMySQL()
+CMysqlPreparedStatement::~CMysqlPreparedStatement()
 {
 	Close();
 }
 
 
-void ibPreparedStatementMySQL::Close()
+void CMysqlPreparedStatement::Close()
 {
 	CloseResultSets();
 
@@ -34,7 +34,7 @@ void ibPreparedStatementMySQL::Close()
 	{
 		if ((*start) != nullptr)
 		{
-			ibPreparedStatementMySQLWrapper* pWrapper = (ibPreparedStatementMySQLWrapper*)(*start);
+			CMysqlPreparedStatementWrapper* pWrapper = (CMysqlPreparedStatementWrapper*)(*start);
 			wxDELETE(pWrapper);
 			(*start) = nullptr;
 		}
@@ -42,16 +42,16 @@ void ibPreparedStatementMySQL::Close()
 	}
 }
 
-void ibPreparedStatementMySQL::AddPreparedStatement(MYSQL_STMT* pStatement)
+void CMysqlPreparedStatement::AddPreparedStatement(MYSQL_STMT* pStatement)
 {
-	ibPreparedStatementMySQLWrapper* pStatementWrapper = new ibPreparedStatementMySQLWrapper(m_pInterface, pStatement);
+	CMysqlPreparedStatementWrapper* pStatementWrapper = new CMysqlPreparedStatementWrapper(m_pInterface, pStatement);
 	if (pStatementWrapper)
 		pStatementWrapper->SetEncoding(GetEncoding());
 	m_Statements.push_back(pStatementWrapper);
 }
 
 // get field
-void ibPreparedStatementMySQL::SetParamInt(int nPosition, int nValue)
+void CMysqlPreparedStatement::SetParamInt(int nPosition, int nValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -60,7 +60,7 @@ void ibPreparedStatementMySQL::SetParamInt(int nPosition, int nValue)
 	}
 }
 
-void ibPreparedStatementMySQL::SetParamDouble(int nPosition, double dblValue)
+void CMysqlPreparedStatement::SetParamDouble(int nPosition, double dblValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -69,7 +69,7 @@ void ibPreparedStatementMySQL::SetParamDouble(int nPosition, double dblValue)
 	}
 }
 
-void ibPreparedStatementMySQL::SetParamNumber(int nPosition, const ibNumber &numValue)
+void CMysqlPreparedStatement::SetParamNumber(int nPosition, const number_t &numValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -78,7 +78,7 @@ void ibPreparedStatementMySQL::SetParamNumber(int nPosition, const ibNumber &num
 	}
 }
 
-void ibPreparedStatementMySQL::SetParamString(int nPosition, const wxString& strValue)
+void CMysqlPreparedStatement::SetParamString(int nPosition, const wxString& strValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -87,7 +87,7 @@ void ibPreparedStatementMySQL::SetParamString(int nPosition, const wxString& str
 	}
 }
 
-void ibPreparedStatementMySQL::SetParamNull(int nPosition)
+void CMysqlPreparedStatement::SetParamNull(int nPosition)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -96,7 +96,7 @@ void ibPreparedStatementMySQL::SetParamNull(int nPosition)
 	}
 }
 
-void ibPreparedStatementMySQL::SetParamBlob(int nPosition, const void* pData, long nDataLength)
+void CMysqlPreparedStatement::SetParamBlob(int nPosition, const void* pData, long nDataLength)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -105,7 +105,7 @@ void ibPreparedStatementMySQL::SetParamBlob(int nPosition, const void* pData, lo
 	}
 }
 
-void ibPreparedStatementMySQL::SetParamDate(int nPosition, const wxDateTime& dateValue)
+void CMysqlPreparedStatement::SetParamDate(int nPosition, const wxDateTime& dateValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -114,7 +114,7 @@ void ibPreparedStatementMySQL::SetParamDate(int nPosition, const wxDateTime& dat
 	}
 }
 
-void ibPreparedStatementMySQL::SetParamBool(int nPosition, bool bValue)
+void CMysqlPreparedStatement::SetParamBool(int nPosition, bool bValue)
 {
 	int nIndex = FindStatementAndAdjustPositionIndex(&nPosition);
 	if (nIndex > -1)
@@ -123,7 +123,7 @@ void ibPreparedStatementMySQL::SetParamBool(int nPosition, bool bValue)
 	}
 }
 
-int ibPreparedStatementMySQL::GetParameterCount()
+int CMysqlPreparedStatement::GetParameterCount()
 {
 	MysqlStatementWrapperArray::iterator start = m_Statements.begin();
 	MysqlStatementWrapperArray::iterator stop = m_Statements.end();
@@ -131,13 +131,13 @@ int ibPreparedStatementMySQL::GetParameterCount()
 	int nParameters = 0;
 	while (start != stop)
 	{
-		nParameters += ((ibPreparedStatementMySQLWrapper*)(*start))->GetParameterCount();
+		nParameters += ((CMysqlPreparedStatementWrapper*)(*start))->GetParameterCount();
 		start++;
 	}
 	return nParameters;
 }
 
-int ibPreparedStatementMySQL::RunQuery()
+int CMysqlPreparedStatement::RunQuery()
 {
 	MysqlStatementWrapperArray::iterator start = m_Statements.begin();
 	MysqlStatementWrapperArray::iterator stop = m_Statements.end();
@@ -145,11 +145,11 @@ int ibPreparedStatementMySQL::RunQuery()
 	int nRows = -1;
 	while (start != stop)
 	{
-		nRows = ((ibPreparedStatementMySQLWrapper*)(*start))->DoRunQuery();
-		if (((ibPreparedStatementMySQLWrapper*)(*start))->GetErrorCode() != DATABASE_LAYER_OK)
+		nRows = ((CMysqlPreparedStatementWrapper*)(*start))->DoRunQuery();
+		if (((CMysqlPreparedStatementWrapper*)(*start))->GetErrorCode() != DATABASE_LAYER_OK)
 		{
-			SetErrorCode(((ibPreparedStatementMySQLWrapper*)(*start))->GetErrorCode());
-			SetErrorMessage(((ibPreparedStatementMySQLWrapper*)(*start))->GetErrorMessage());
+			SetErrorCode(((CMysqlPreparedStatementWrapper*)(*start))->GetErrorCode());
+			SetErrorMessage(((CMysqlPreparedStatementWrapper*)(*start))->GetErrorMessage());
 			ThrowDatabaseException();
 			return DATABASE_LAYER_QUERY_RESULT_ERROR;
 		}
@@ -158,13 +158,13 @@ int ibPreparedStatementMySQL::RunQuery()
 	return nRows;
 }
 
-ibDatabaseResultSet* ibPreparedStatementMySQL::RunQueryWithResults()
+IDatabaseResultSet* CMysqlPreparedStatement::RunQueryWithResults()
 {
 	if (m_Statements.size() > 0)
 	{
 		for (unsigned int i = 0; i < (m_Statements.size() - 1); i++)
 		{
-			ibPreparedStatementMySQLWrapper* pStatement = m_Statements[i];
+			CMysqlPreparedStatementWrapper* pStatement = m_Statements[i];
 			pStatement->DoRunQuery();
 			if (pStatement->GetErrorCode() != DATABASE_LAYER_OK)
 			{
@@ -175,8 +175,8 @@ ibDatabaseResultSet* ibPreparedStatementMySQL::RunQueryWithResults()
 			}
 		}
 
-		ibPreparedStatementMySQLWrapper* pLastStatement = m_Statements[m_Statements.size() - 1];
-		ibDatabaseResultSet* pResults = pLastStatement->DoRunQueryWithResults();
+		CMysqlPreparedStatementWrapper* pLastStatement = m_Statements[m_Statements.size() - 1];
+		IDatabaseResultSet* pResults = pLastStatement->DoRunQueryWithResults();
 		if (pLastStatement->GetErrorCode() != DATABASE_LAYER_OK)
 		{
 			SetErrorCode(pLastStatement->GetErrorCode());
@@ -190,7 +190,7 @@ ibDatabaseResultSet* ibPreparedStatementMySQL::RunQueryWithResults()
 		return nullptr;
 }
 
-int ibPreparedStatementMySQL::FindStatementAndAdjustPositionIndex(int* pPosition)
+int CMysqlPreparedStatement::FindStatementAndAdjustPositionIndex(int* pPosition)
 {
 	if (m_Statements.size() == 0)
 		return 0;

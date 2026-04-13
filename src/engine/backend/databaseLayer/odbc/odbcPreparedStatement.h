@@ -22,20 +22,20 @@
 #include <sql.h>
 
 WX_DEFINE_ARRAY_PTR(SQLHSTMT, StatementVector);
-WX_DEFINE_ARRAY_PTR(ibDatabaseParameterODBC*, ArrayOfODBCParameters);
+WX_DEFINE_ARRAY_PTR(COdbcParameter*, ArrayOfOdbcParameters);
 
-class ibDatabaseResultSet;
+class IDatabaseResultSet;
 
-class ibPreparedStatementODBC : public ibPreparedStatement
+class COdbcPreparedStatement : public IPreparedStatement
 {
 public:
 	// ctor
-	ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC);
-	ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC, SQLHSTMT sqlStatementHandle);
-	ibPreparedStatementODBC(ibInterfaceODBC* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC, StatementVector statements);
+	COdbcPreparedStatement(COdbcInterface* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC);
+	COdbcPreparedStatement(COdbcInterface* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC, SQLHSTMT sqlStatementHandle);
+	COdbcPreparedStatement(COdbcInterface* pInterface, SQLHENV sqlEnvHandle, SQLHDBC sqlHDBC, StatementVector statements);
 
 	// dtor
-	virtual ~ibPreparedStatementODBC();
+	virtual ~COdbcPreparedStatement();
 
 	virtual void Close();
 
@@ -44,7 +44,7 @@ public:
 	// get field
 	virtual void SetParamInt(int nPosition, int nValue);
 	virtual void SetParamDouble(int nPosition, double dblValue);
-	virtual void SetParamNumber(int nPosition, const ibNumber& dblValue);
+	virtual void SetParamNumber(int nPosition, const number_t& dblValue);
 	virtual void SetParamString(int nPosition, const wxString& strValue);
 	virtual void SetParamNull(int nPosition);
 	virtual void SetParamBlob(int nPosition, const void* pData, long nDataLength);
@@ -53,8 +53,8 @@ public:
 	virtual int GetParameterCount();
 
 	virtual int RunQuery();
-	virtual ibDatabaseResultSet* RunQueryWithResults();
-	virtual ibDatabaseResultSet* RunQueryWithResults(bool bLogForCleanup);
+	virtual IDatabaseResultSet* RunQueryWithResults();
+	virtual IDatabaseResultSet* RunQueryWithResults(bool bLogForCleanup);
 
 	SQLHSTMT GetLastStatement() { return (m_Statements.size() > 0) ? m_Statements[m_Statements.size() - 1] : nullptr; }
 	void SetOneTimer(bool bOneTimer = true) { m_bOneTimeStatement = bOneTimer; }
@@ -63,18 +63,18 @@ private:
 	void InterpretErrorCodes(long nCode, SQLHSTMT stmth_ptr = nullptr);
 	void FreeParameters();
 	void BindParameters();
-	void SetParam(int nPosition, ibDatabaseParameterODBC* pParameter);
+	void SetParam(int nPosition, COdbcParameter* pParameter);
 
 
 	int FindStatementAndAdjustPositionIndex(int* pPosition);
 
-	bool m_bOneTimeStatement; // Flag to indicate that statement ownership should be handed off to any generated ODBCResultSets
+	bool m_bOneTimeStatement; // Flag to indicate that statement ownership should be handed off to any generated OdbcResultSets
 	SQLHENV m_sqlEnvHandle;
 	SQLHDBC m_sqlHDBC;
 	StatementVector m_Statements;
 
-	ArrayOfODBCParameters m_Parameters;
-	ibInterfaceODBC* m_pInterface;
+	ArrayOfOdbcParameters m_Parameters;
+	COdbcInterface* m_pInterface;
 };
 
 #endif // __ODBC_PREPARED_STATEMENT_H__

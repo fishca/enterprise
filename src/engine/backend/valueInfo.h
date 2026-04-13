@@ -4,43 +4,43 @@
 #include "backend/uniqueKey.h"
 
 //reference data
-struct ibReference {
+struct reference_t {
 
-	ibReference(const ibMetaID& id, const ibGuidImpl& guid) : m_id(id), m_guid(guid) {}
+	reference_t(const meta_identifier_t& id, const guid_t& guid) : m_id(id), m_guid(guid) {}
 
-	ibGuidImpl m_guid;
-	ibMetaID m_id; // id of metadata 
+	guid_t m_guid;
+	meta_identifier_t m_id; // id of metadata 
 };
+
+#define reference_size_t int(sizeof(reference_t))
 
 ///////////////////
 
-class ibValueDataObject {
+class IValueDataObject {
 public:
 
-	ibValueDataObject(const ibGuid& objGuid = wxNullGuid, bool newObject = true) : m_objGuid(objGuid), m_newObject(newObject) {}
+	IValueDataObject(const CGuid& objGuid = wxNullGuid, bool newObject = true) : m_objGuid(objGuid), m_newObject(newObject) {}
 
 	//support source set/get data 
-	virtual bool SetValueByMetaID(const ibMetaID& id, const ibValue& varMetaVal) { return false; }
-	virtual bool GetValueByMetaID(const ibMetaID& id, ibValue& pvarMetaVal) const { return false; }
+	virtual bool SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal) { return false; }
+	virtual bool GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const { return false; }
 
 	//get unique identifier 
-	virtual ibUniqueKey GetGuid() const { return m_objGuid; }
+	virtual CUniqueKey GetGuid() const { return m_objGuid; }
 
 	//is new object?
 	virtual bool IsNewObject() const { return m_newObject; }
 
 	//get metaData from object 
-	virtual class ibValueMetaObjectRecordData* GetMetaObject() const = 0;
+	virtual class IValueMetaObjectRecordData* GetMetaObject() const = 0;
 
 	//set modify 
 	virtual void Modify(bool mod) {}
 
 protected:
 	bool m_newObject;
-	ibMetaValueArray m_listObjectValue;
-	ibGuid m_objGuid;
+	valueArray_t m_listObjectValue;
+	CGuid m_objGuid;
 };
-
-#define reference_size_t int(sizeof(ibReference))
 
 #endif

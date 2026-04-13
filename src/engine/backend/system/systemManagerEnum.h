@@ -4,75 +4,75 @@
 #include "systemEnum.h"
 #include "backend/compiler/enumUnit.h"
 
-class ibValuibStatusMessage : public ibValueEnumeration<ibStatusMessage> {
-	wxDECLARE_DYNAMIC_CLASS(ibValuibStatusMessage);
+class CValueStatusMessage : public IEnumeration<eStatusMessage> {
+	wxDECLARE_DYNAMIC_CLASS(CValueStatusMessage);
 public:
-	ibValuibStatusMessage() : ibValueEnumeration() {}
-	//ibValuibStatusMessage(ibStatusMessage status) : ibValueEnumeration(status) {}
+	CValueStatusMessage() : IEnumeration() {}
+	//CValueStatusMessage(eStatusMessage status) : IEnumeration(status) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(ibStatusMessage::ibStatusMessage_Information, wxT("Information"), _("Information"));
-		AddEnumeration(ibStatusMessage::ibStatusMessage_Warning, wxT("Warning"), _("Warning"));
-		AddEnumeration(ibStatusMessage::ibStatusMessage_Error, wxT("Error"), _("Error"));
+		AddEnumeration(eStatusMessage::eStatusMessage_Information, wxT("Information"), _("Information"));
+		AddEnumeration(eStatusMessage::eStatusMessage_Warning, wxT("Warning"), _("Warning"));
+		AddEnumeration(eStatusMessage::eStatusMessage_Error, wxT("Error"), _("Error"));
 	}
 };
 
-class ibValuibQuestionMode : public ibValueEnumeration<ibQuestionMode> {
-	wxDECLARE_DYNAMIC_CLASS(ibValuibQuestionMode);
+class CValueQuestionMode : public IEnumeration<eQuestionMode> {
+	wxDECLARE_DYNAMIC_CLASS(CValueQuestionMode);
 public:
-	ibValuibQuestionMode() : ibValueEnumeration() {}
-	//ibValuibQuestionMode(ibQuestionMode mode) : ibValueEnumeration(mode) {}
+	CValueQuestionMode() : IEnumeration() {}
+	//CValueQuestionMode(eQuestionMode mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(ibQuestionMode::ibQuestionMode_YesNo, wxT("YesNo"), _("Yes or no"));
-		AddEnumeration(ibQuestionMode::ibQuestionMode_YesNoCancel, wxT("YesNoCancel"), _("Yes or no or cancel"));
-		AddEnumeration(ibQuestionMode::ibQuestionMode_OK, wxT("Ok"), _("Ok"));
-		AddEnumeration(ibQuestionMode::ibQuestionMode_OKCancel, wxT("OkCancel"), _("Ok or cancel"));
+		AddEnumeration(eQuestionMode::eQuestionMode_YesNo, wxT("YesNo"), _("Yes or no"));
+		AddEnumeration(eQuestionMode::eQuestionMode_YesNoCancel, wxT("YesNoCancel"), _("Yes or no or cancel"));
+		AddEnumeration(eQuestionMode::eQuestionMode_OK, wxT("Ok"), _("Ok"));
+		AddEnumeration(eQuestionMode::eQuestionMode_OKCancel, wxT("OkCancel"), _("Ok or cancel"));
 	}
 };
 
-class ibValuibQuestionReturnCode : public ibValueEnumeration<ibQuestionReturnCode> {
-	wxDECLARE_DYNAMIC_CLASS(ibValuibQuestionReturnCode);
+class CValueQuestionReturnCode : public IEnumeration<eQuestionReturnCode> {
+	wxDECLARE_DYNAMIC_CLASS(CValueQuestionReturnCode);
 public:
-	ibValuibQuestionReturnCode() : ibValueEnumeration() {}
-	//ibValuibQuestionReturnCode(ibQuestionReturnCode code) : ibValueEnumeration(code) {}
+	CValueQuestionReturnCode() : IEnumeration() {}
+	//CValueQuestionReturnCode(eQuestionReturnCode code) : IEnumeration(code) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_Yes, wxT("Yes"), _("Yes"));
-		AddEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_No, wxT("No"), _("Yes"));
-		AddEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_OK, wxT("Ok"), _("Ok"));
-		AddEnumeration(ibQuestionReturnCode::ibQuestionReturnCode_Cancel, wxT("Cancel"), _("Cancel"));
+		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_Yes, wxT("Yes"), _("Yes"));
+		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_No, wxT("No"), _("Yes"));
+		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_OK, wxT("Ok"), _("Ok"));
+		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_Cancel, wxT("Cancel"), _("Cancel"));
 	}
 };
 
-class ibValuibRoundMode : public ibValueEnumeration<ibRoundMode> {
-	wxDECLARE_DYNAMIC_CLASS(ibValuibQuestionReturnCode);
+class CValueRoundMode : public IEnumeration<eRoundMode> {
+	wxDECLARE_DYNAMIC_CLASS(CValueQuestionReturnCode);
 public:
-	ibValuibRoundMode() : ibValueEnumeration() {}
-	//ibValuibRoundMode(ibRoundMode mode) : ibValueEnumeration(mode) {}
+	CValueRoundMode() : IEnumeration() {}
+	//CValueRoundMode(eRoundMode mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(ibRoundMode::ibRoundMode_Round15as10, wxT("Round15as10"), _("Round 15 as 10"));
-		AddEnumeration(ibRoundMode::ibRoundMode_Round15as20, wxT("Round15as20"), _("Round 15 as 20"));
+		AddEnumeration(eRoundMode::eRoundMode_Round15as10, wxT("Round15as10"), _("Round 15 as 10"));
+		AddEnumeration(eRoundMode::eRoundMode_Round15as20, wxT("Round15as20"), _("Round 15 as 20"));
 	}
 };
 
-class ibValueChars : public ibValueEnumeration<ibChars> {
-	wxDECLARE_DYNAMIC_CLASS(ibValueChars);
+class CValueChars : public IEnumeration<enChars> {
+	wxDECLARE_DYNAMIC_CLASS(CValueChars);
 public:
-	ibValueChars() : ibValueEnumeration() {}
-	//ibValueChars(ibChars c) : ibValueEnumeration(c) {}
+	CValueChars() : IEnumeration() {}
+	//CValueChars(enChars c) : IEnumeration(c) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(ibChars::eCR, wxT("CR"));
-		AddEnumeration(ibChars::eFF, wxT("FF"));
-		AddEnumeration(ibChars::eLF, wxT("LF"));
-		AddEnumeration(ibChars::eNBSp, wxT("NBSp"));
-		AddEnumeration(ibChars::eTab, wxT("Tab"));
-		AddEnumeration(ibChars::eVTab, wxT("VTab"));
+		AddEnumeration(enChars::eCR, wxT("CR"));
+		AddEnumeration(enChars::eFF, wxT("FF"));
+		AddEnumeration(enChars::eLF, wxT("LF"));
+		AddEnumeration(enChars::eNBSp, wxT("NBSp"));
+		AddEnumeration(enChars::eTab, wxT("Tab"));
+		AddEnumeration(enChars::eVTab, wxT("VTab"));
 	}
 
-	virtual wxString GetDescription(ibChars val) const {
+	virtual wxString GetDescription(enChars val) const {
 		return (char)val;
 	}
 };

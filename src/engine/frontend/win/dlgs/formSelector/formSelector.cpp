@@ -8,29 +8,29 @@
 #include "backend/metaCollection/partial/commonObject.h"
 #include "frontend/mainFrame/mainFrame.h"
 
-ibDialogSelectTypeForm::ibDialogSelectTypeForm(ibValueMetaObject* metaValue, ibValueMetaObjectFormBase* metaObject)
-	: wxDialog(ibFrontendDocMDIFrame::GetFrame(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(480, 320), wxDEFAULT_DIALOG_STYLE | wxDIALOG_ADAPTATION_ANY_SIZER), m_metaObject(metaObject)
+CDialogSelectTypeForm::CDialogSelectTypeForm(IValueMetaObject* metaValue, IValueMetaObjectForm* metaObject)
+	: wxDialog(CFrontendDocMDIFrame::GetFrame(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(480, 320), wxDEFAULT_DIALOG_STYLE | wxDIALOG_ADAPTATION_ANY_SIZER), m_metaObject(metaObject)
 {
 	SetTitle(metaValue->GetSynonym() + _(" form wizard"));
 }
 
-ibDialogSelectTypeForm::~ibDialogSelectTypeForm()
+CDialogSelectTypeForm::~CDialogSelectTypeForm()
 {
 }
 
-void ibDialogSelectTypeForm::CreateSelector()
+void CDialogSelectTypeForm::CreateSelector()
 {
 	wxBoxSizer* bSizerMain = new wxBoxSizer(wxVERTICAL);
 	wxStaticBoxSizer* sbSizerMain = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Select form type")), wxVERTICAL);
 
 	for (auto choice : m_listChoice) {
 		wxRadioButton* radioButton = new wxRadioButton(sbSizerMain->GetStaticBox(), choice.m_value, choice.m_label, wxDefaultPosition, wxDefaultSize);
-		radioButton->Connect(wxEVT_RADIOBUTTON, wxCommandEventHandler(ibDialogSelectTypeForm::OnFormTypeChanged), nullptr, this);
+		radioButton->Connect(wxEVT_RADIOBUTTON, wxCommandEventHandler(CDialogSelectTypeForm::OnFormTypeChanged), nullptr, this);
 		sbSizerMain->Add(radioButton, 1, wxALL | wxEXPAND, 5);
 	}
 
 	wxRadioButton* radioButton = new wxRadioButton(sbSizerMain->GetStaticBox(), defaultFormType, _("Generic form"), wxDefaultPosition, wxDefaultSize);
-	radioButton->Connect(wxEVT_RADIOBUTTON, wxCommandEventHandler(ibDialogSelectTypeForm::OnFormTypeChanged), nullptr, this);
+	radioButton->Connect(wxEVT_RADIOBUTTON, wxCommandEventHandler(CDialogSelectTypeForm::OnFormTypeChanged), nullptr, this);
 	sbSizerMain->Add(radioButton, 1, wxALL | wxEXPAND, 5);
 
 	bSizerMain->Add(sbSizerMain, 1, wxEXPAND, 5);
@@ -57,7 +57,7 @@ void ibDialogSelectTypeForm::CreateSelector()
 	wxBoxSizer* bSizerRight = new wxBoxSizer(wxVERTICAL);
 
 	m_textCtrlName = new wxTextCtrl(this, wxID_ANY, m_metaObject->GetName(), wxDefaultPosition, wxDefaultSize, 0);
-	m_textCtrlName->Connect(wxEVT_TEXT, wxCommandEventHandler(ibDialogSelectTypeForm::OnTextEnter), nullptr, this);
+	m_textCtrlName->Connect(wxEVT_TEXT, wxCommandEventHandler(CDialogSelectTypeForm::OnTextEnter), nullptr, this);
 	bSizerRight->Add(m_textCtrlName, 0, wxALL | wxEXPAND, 1);
 
 	m_textCtrlSynonym = new wxTextCtrl(this, wxID_ANY, m_metaObject->GetSynonym(), wxDefaultPosition, wxDefaultSize, 0);
@@ -72,12 +72,12 @@ void ibDialogSelectTypeForm::CreateSelector()
 	wxBoxSizer* bSizerBottom = new wxBoxSizer(wxHORIZONTAL);
 
 	m_sdbSizerOK = new wxButton(this, wxID_ANY, _("OK"), wxDefaultPosition, wxDefaultSize, 0);
-	m_sdbSizerOK->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibDialogSelectTypeForm::OnButtonOk), nullptr, this);
+	m_sdbSizerOK->Connect(wxEVT_BUTTON, wxCommandEventHandler(CDialogSelectTypeForm::OnButtonOk), nullptr, this);
 
 	bSizerBottom->Add(m_sdbSizerOK, 0, wxALL, 5);
 
 	m_sdbSizerCancel = new wxButton(this, wxID_ANY, _("Cancel"), wxDefaultPosition, wxDefaultSize, 0);
-	m_sdbSizerCancel->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibDialogSelectTypeForm::OnButtonCancel), nullptr, this);
+	m_sdbSizerCancel->Connect(wxEVT_BUTTON, wxCommandEventHandler(CDialogSelectTypeForm::OnButtonCancel), nullptr, this);
 	bSizerBottom->Add(m_sdbSizerCancel, 0, wxALL, 5);
 
 	bSizerMain->Add(bSizerBottom, 0, wxEXPAND, 5);
@@ -86,7 +86,7 @@ void ibDialogSelectTypeForm::CreateSelector()
 	wxDialog::Layout();
 }
 
-void ibDialogSelectTypeForm::OnTextEnter(wxCommandEvent& event)
+void CDialogSelectTypeForm::OnTextEnter(wxCommandEvent& event)
 {
 	wxString systemName =
 		m_textCtrlName->GetValue();
@@ -103,7 +103,7 @@ void ibDialogSelectTypeForm::OnTextEnter(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibDialogSelectTypeForm::OnButtonOk(wxCommandEvent& event)
+void CDialogSelectTypeForm::OnButtonOk(wxCommandEvent& event)
 {
 	m_metaObject->SetName(m_textCtrlName->GetValue());
 	m_metaObject->SetSynonym(m_textCtrlSynonym->GetValue());
@@ -113,7 +113,7 @@ void ibDialogSelectTypeForm::OnButtonOk(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibDialogSelectTypeForm::OnButtonCancel(wxCommandEvent& event)
+void CDialogSelectTypeForm::OnButtonCancel(wxCommandEvent& event)
 {
 	EndModal(wxNOT_FOUND);
 	event.Skip();
@@ -121,9 +121,9 @@ void ibDialogSelectTypeForm::OnButtonCancel(wxCommandEvent& event)
 
 #include "backend/metaData.h"
 
-void ibDialogSelectTypeForm::OnFormTypeChanged(wxCommandEvent& event)
+void CDialogSelectTypeForm::OnFormTypeChanged(wxCommandEvent& event)
 {
-	ibMetaData* metaData = m_metaObject->GetMetaData();
+	IMetaData* metaData = m_metaObject->GetMetaData();
 
 	unsigned int choice = event.GetId();
 	auto founded_choice = std::find_if(m_listChoice.begin(), m_listChoice.end(),

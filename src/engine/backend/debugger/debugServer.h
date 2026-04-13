@@ -6,18 +6,18 @@
 #include <wx/thread.h>
 #include <wx/socket.h>
 
-struct ibRunContext;
+struct CRunContext;
 
-#define debugServer           (ibDebuggerServer::Get())
-#define debugServerInit(f)    (ibDebuggerServer::Initialize(f))
-#define debugServerDestroy()  (ibDebuggerServer::Destroy())
+#define debugServer           (CDebuggerServer::Get())
+#define debugServerInit(f)    (CDebuggerServer::Initialize(f))
+#define debugServerDestroy()  (CDebuggerServer::Destroy())
 
 #include "backend/backend_core.h"
 #include "debugDefs.h"
 
-class BACKEND_API ibDebuggerServer {
+class BACKEND_API CDebuggerServer {
 
-	class BACKEND_API ibDebuggerServerConnection : public wxThread {
+	class BACKEND_API CDebuggerServerConnection : public wxThread {
 	public:
 
 		bool IsConnected() const {
@@ -38,8 +38,8 @@ class BACKEND_API ibDebuggerServer {
 
 		ConnectionType GetConnectionType() const { return m_connectionType; }
 
-		ibDebuggerServerConnection(const wxString& hostName, unsigned short startPort);
-		virtual ~ibDebuggerServerConnection();
+		CDebuggerServerConnection(const wxString& hostName, unsigned short startPort);
+		virtual ~CDebuggerServerConnection();
 
 		// entry point for the thread - called by Run() and executes in the context
 		// of this thread.
@@ -70,15 +70,15 @@ class BACKEND_API ibDebuggerServer {
 		wxSocketServer* m_socketServer;
 		wxSocketBase* m_socket;
 
-		friend class ibDebuggerServer;
+		friend class CDebuggerServer;
 	};
 
-	ibDebuggerServer();
+	CDebuggerServer();
 
 public:
 
-	virtual ~ibDebuggerServer();
-	static ibDebuggerServer* Get() { return ms_debugServer; }
+	virtual ~CDebuggerServer();
+	static CDebuggerServer* Get() { return ms_debugServer; }
 
 	// Force the static appData instance to Init()
 	static void Initialize(const int flags);
@@ -94,14 +94,14 @@ public:
 	bool CreateServer(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort, bool wait = false);
 	void ShutdownServer();
 
-	void EnterDebugger(ibRunContext* runContext, const struct ibByteUnit& byteCode, long& numPrevLine);
+	void EnterDebugger(CRunContext* runContext, const struct CByteUnit& byteCode, long& numPrevLine);
 	void SendErrorToClient(const wxString& strFileName, const wxString& strDocPath, unsigned int numLine, const wxString& strErrorMessage);
 
 	bool IsDebugLooped() const { return m_bDebugLoop; }
 
 protected:
 
-	void SetConnectSocket(ibDebuggerServerConnection* socketConnectionThread) {
+	void SetConnectSocket(CDebuggerServerConnection* socketConnectionThread) {
 		m_socketConnectionThread = socketConnectionThread;
 	}
 
@@ -116,7 +116,7 @@ protected:
 	void ClearCollectionBreakpoint();
 
 	//main loop
-	inline void DoDebugLoop(const wxString& strDocPath, const wxString& strModuleName, int numLine, ibRunContext* runContext);
+	inline void DoDebugLoop(const wxString& strDocPath, const wxString& strModuleName, int numLine, CRunContext* runContext);
 
 	//special functions:
 	inline void SendExpressions();
@@ -129,7 +129,7 @@ protected:
 
 private:
 
-	static ibDebuggerServer* ms_debugServer;
+	static CDebuggerServer* ms_debugServer;
 
 	bool		m_bUseDebug;
 	bool		m_bDoLoop;
@@ -146,12 +146,12 @@ private:
 	std::map <unsigned int, wxString> m_listExpression;
 #endif 
 
-	ibDebuggerServerConnection* m_socketConnectionThread;
-	ibRunContext* m_runContext;
+	CDebuggerServerConnection* m_socketConnectionThread;
+	CRunContext* m_runContext;
 
 	wxCriticalSection m_clearBreakpointsCS;
 
-	friend class ibBackendException;
+	friend class CBackendException;
 };
 
 #endif // __DEBUGGER_CLIENT_H__

@@ -3,11 +3,11 @@
 
 #include "backend/metaCollection/metaObject.h"
 
-class BACKEND_API ibValueMetaObjectEnum : public ibValueMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectEnum);
+class BACKEND_API CValueMetaObjectEnum : public IValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectEnum);
 public:
 
-	ibGuid GetGuid() const {
+	CGuid GetGuid() const {
 		return m_metaGuid;
 	}
 
@@ -16,8 +16,8 @@ public:
 	static wxIcon GetIconGroup();
 
 	//load & save metaData from DB 
-	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 };
 
 #endif

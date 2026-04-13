@@ -17,19 +17,19 @@
 #include "backend/databaseLayer/databaseLayerDef.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-class ibPreparedStatement;
+class IPreparedStatement;
 
-class BACKEND_API ibDatabaseLayerSQLite : public ibDatabaseLayer
+class BACKEND_API CSqliteDatabaseLayer : public IDatabaseLayer
 {
 public:
 	// ctor()
-	ibDatabaseLayerSQLite();
-	ibDatabaseLayerSQLite(const wxString& strDatabase, bool mustExist = false);
-	ibDatabaseLayerSQLite(void* pDatabase) { m_pDatabase = pDatabase; }
-	ibDatabaseLayerSQLite(const ibDatabaseLayerSQLite& src);
+	CSqliteDatabaseLayer();
+	CSqliteDatabaseLayer(const wxString& strDatabase, bool mustExist = false);
+	CSqliteDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
+	CSqliteDatabaseLayer(const CSqliteDatabaseLayer& src);
 
 	// dtor()
-	virtual ~ibDatabaseLayerSQLite();
+	virtual ~CSqliteDatabaseLayer();
 
 	// open database
 	virtual bool Open(const wxString& strDatabase);
@@ -42,7 +42,7 @@ public:
 	virtual bool IsOpen();
 
 	/// clone database  
-	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerSQLite(*this); }
+	virtual IDatabaseLayer* Clone() { return new CSqliteDatabaseLayer(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();
@@ -68,11 +68,11 @@ protected:
 
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
-	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
+	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
 
-	// ibPreparedStatement support
-	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
-	ibPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bLogForCleanup);
+	// IPreparedStatement support
+	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+	IPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bLogForCleanup);
 
 private:
 

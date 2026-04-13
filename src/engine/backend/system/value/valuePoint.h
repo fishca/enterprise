@@ -3,9 +3,9 @@
 
 #include "backend/compiler/value.h"
 
-class BACKEND_API ibValuePoint : public ibValue
+class BACKEND_API CValuePoint : public CValue
 {
-	wxDECLARE_DYNAMIC_CLASS(ibValuePoint);
+	wxDECLARE_DYNAMIC_CLASS(CValuePoint);
 
 public:
 
@@ -13,11 +13,11 @@ public:
 
 public:
 
-	ibValuePoint();
-	ibValuePoint(const wxPoint& point);
-	virtual ~ibValuePoint() {}
+	CValuePoint();
+	CValuePoint(const wxPoint& point);
+	virtual ~CValuePoint() {}
 
-	virtual bool Init(ibValue** paParams, const long lSizeArray);
+	virtual bool Init(CValue** paParams, const long lSizeArray);
 	virtual wxString GetString() const {
 		return typeConv::PointToString(m_point); 
 	}
@@ -27,12 +27,12 @@ public:
 		return m_point == wxDefaultPosition;
 	}
 
-	static ibValueMethodHelper m_methodHelper;
+	static CMethodHelper m_methodHelper;
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return &m_methodHelper;
 	}

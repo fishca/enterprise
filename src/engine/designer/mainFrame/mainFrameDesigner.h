@@ -52,34 +52,34 @@ enum {
 	wxID_APPLICATION_CONNECTION,
 };
 
-#define mainFrame	(ibFrontendDocMDIFrameDesigner::GetFrame())
+#define mainFrame	(CFrontendDocMDIFrameDesigner::GetFrame())
 
-class ibFrontendDocMDIFrameDesigner : public ibFrontendDocMDIFrame {
+class CFrontendDocMDIFrameDesigner : public CFrontendDocMDIFrame {
 public:
 
-	static ibFrontendDocMDIFrameDesigner* GetFrame();
+	static CFrontendDocMDIFrameDesigner* GetFrame();
 
-	ibFrontendDocMDIFrameDesigner(const wxString& title = _("Designer"),
+	CFrontendDocMDIFrameDesigner(const wxString& title = _("Designer"),
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
 
-	virtual ~ibFrontendDocMDIFrameDesigner();
+	virtual ~CFrontendDocMDIFrameDesigner();
 
-	void Message(const wxString& strMessage, ibStatusMessage status) { m_outputWindow->SharedOutput(strMessage, status); }
+	void Message(const wxString& strMessage, eStatusMessage status) { m_outputWindow->SharedOutput(strMessage, status); }
 	void ClearMessage() { m_outputWindow->ClearAll(); }
 
 	void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const {
-		m_outputWindow->SharedOutput(strErrorMessage, ibStatusMessage::ibStatusMessage_Error, strFileName, strDocPath, line);
+		m_outputWindow->SharedOutput(strErrorMessage, eStatusMessage::eStatusMessage_Error, strFileName, strDocPath, line);
 	}
 
 	virtual void CreateGUI() override;
 	virtual void Modify(bool modify) override;
 	virtual bool IsModified() const override;
 
-	ibOutputWindow* GetOutputWindow() const { return m_outputWindow; }
-	ibStackWindow* GetStackWindow() const { return m_stackWindow; }
-	ibWatchWindow* GetWatchWindow() const { return m_watchWindow; }
-	ibLocalWindow* GetLocalWindow() const { return m_localWindow; }
+	COutputWindow* GetOutputWindow() const { return m_outputWindow; }
+	CStackWindow* GetStackWindow() const { return m_stackWindow; }
+	CWatchWindow* GetWatchWindow() const { return m_watchWindow; }
+	CLocalWindow* GetLocalWindow() const { return m_localWindow; }
 
 	void LoadOptions();
 	void SaveOptions();
@@ -94,8 +94,8 @@ public:
 	virtual bool Show(bool show = true) override;
 
 public:
-	virtual void OnInitializeConfiguration(enum ibConfigType cfg);
-	virtual void OnDestroyConfiguration(enum ibConfigType cfg);
+	virtual void OnInitializeConfiguration(enum eConfigType cfg);
+	virtual void OnDestroyConfiguration(enum eConfigType cfg);
 protected:
 
 	void InitializeDefaultMenu();
@@ -150,11 +150,11 @@ private:
 	wxMenu* m_menuAdministration;
 	wxMenu* m_menuHelp;
 
-	ibMetadataTree* m_metaWindow;
+	CMetadataTree* m_metaWindow;
 
-	ibOutputWindow* m_outputWindow;
-	ibStackWindow* m_stackWindow;
-	ibWatchWindow* m_watchWindow;
-	ibLocalWindow* m_localWindow;
+	COutputWindow* m_outputWindow;
+	CStackWindow* m_stackWindow;
+	CWatchWindow* m_watchWindow;
+	CLocalWindow* m_localWindow;
 };
 #endif 

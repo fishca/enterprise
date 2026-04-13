@@ -4,29 +4,29 @@
 //*                            IntrfaceObject                           *
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectInterface, ibValueMetaObject);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectInterface, IValueMetaObject);
 
 //***********************************************************************
 //*                           Metamodule                                *
 //***********************************************************************
 
-ibValueMetaObjectInterface::ibValueMetaObjectInterface(const wxString& name, const wxString& synonym, const wxString& comment) :
-	ibValueMetaObject(name, synonym, comment)
+CValueMetaObjectInterface::CValueMetaObjectInterface(const wxString& name, const wxString& synonym, const wxString& comment) :
+	IValueMetaObject(name, synonym, comment)
 {
 }
 
 #include "backend/metadata.h"
 
-bool ibValueMetaObjectInterface::GetInterfaceItemArrayObject(ibInterfaceCommandSection cmdSection,
-	std::vector<ibValueMetaObject*>& array) const
+bool CValueMetaObjectInterface::GetInterfaceItemArrayObject(EInterfaceCommandSection cmdSection,
+	std::vector<IValueMetaObject*>& array) const
 {
 	for (const auto object : m_metaData->GetAnyArrayObject()) {
 
-		const ibInterfaceCommandSection& object_type = object->GetCommandSection();
+		const EInterfaceCommandSection& object_type = object->GetCommandSection();
 
 		//create + list 
-		if (object->IsSetInterface(m_metaId) && ((ibInterfaceCommandSection_Combined == object_type &&
-			(cmdSection == ibInterfaceCommandSection::ibInterfaceCommandSection_Default || cmdSection == ibInterfaceCommandSection::ibInterfaceCommandSection_Create)) || cmdSection == object_type))
+		if (object->IsSetInterface(m_metaId) && ((EInterfaceCommandSection_Combined == object_type &&
+			(cmdSection == EInterfaceCommandSection::EInterfaceCommandSection_Default || cmdSection == EInterfaceCommandSection::EInterfaceCommandSection_Create)) || cmdSection == object_type))
 		{
 			array.emplace_back(object);
 		}
@@ -35,12 +35,12 @@ bool ibValueMetaObjectInterface::GetInterfaceItemArrayObject(ibInterfaceCommandS
 	return array.size() > 0;
 }
 
-bool ibValueMetaObjectInterface::LoadData(ibReaderMemory& reader)
+bool CValueMetaObjectInterface::LoadData(CMemoryReader& reader)
 {
 	return m_propertyPicture->LoadData(reader);
 }
 
-bool ibValueMetaObjectInterface::SaveData(ibWriterMemory& writer)
+bool CValueMetaObjectInterface::SaveData(CMemoryWriter& writer)
 {
 	return m_propertyPicture->SaveData(writer);
 }
@@ -49,4 +49,4 @@ bool ibValueMetaObjectInterface::SaveData(ibWriterMemory& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(ibValueMetaObjectInterface, "Interface", g_metaInterfaceCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectInterface, "Interface", g_metaInterfaceCLSID);

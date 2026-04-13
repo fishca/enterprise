@@ -1,32 +1,30 @@
 #include "propertyPoint.h"
 #include "backend/system/value/valuePoint.h"
 
-wxObject* (*ibPropertyPoint::ms_propertyPoint)(const wxString&,const wxString&,const wxPoint&) = nullptr;
-
 //base property for "point"
-bool ibPropertyPoint::SetDataValue(const ibValue& varPropVal)
+bool CPropertyPoint::SetDataValue(const CValue& varPropVal)
 {
-	ibValuePoint* valuePoint = varPropVal.ConvertToType<ibValuePoint>();
+	CValuePoint* valuePoint = varPropVal.ConvertToType<CValuePoint>();
 	if (valuePoint == nullptr)
 		return false;
 	SetValue(valuePoint->m_point);
 	return true;
 }
 
-bool ibPropertyPoint::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyPoint::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibValue::CreateObjectValue<ibValuePoint>(GetValueAsPoint());
+	pvarPropVal = CValue::CreateObjectValue<CValuePoint>(GetValueAsPoint());
 	return true;
 }
 
-bool ibPropertyPoint::LoadData(ibReaderMemory& reader)
+bool CPropertyPoint::LoadData(CMemoryReader& reader)
 {
-	ibPropertyPoint::SetValue(reader.r_stringZ());
+	CPropertyPoint::SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool ibPropertyPoint::SaveData(ibWriterMemory& writer)
+bool CPropertyPoint::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(ibPropertyPoint::GetValueAsString());
+	writer.w_stringZ(CPropertyPoint::GetValueAsString());
 	return true;
 }

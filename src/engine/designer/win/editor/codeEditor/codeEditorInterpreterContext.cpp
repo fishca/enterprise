@@ -9,7 +9,7 @@
  * Поиск переменной в хэш массиве
  * Возвращает 1 - если переменная найдена
  */
-bool CPrecompileContext::FindVariable(const wxString& strName, ibValue& vContext, bool bContext)
+bool CPrecompileContext::FindVariable(const wxString& strName, CValue& vContext, bool bContext)
 {
 	if (bContext)
 	{
@@ -31,7 +31,7 @@ bool CPrecompileContext::FindVariable(const wxString& strName, ibValue& vContext
  * Поиск переменной в хэш массиве
  * Возвращает 1 - если переменная найдена
  */
-bool CPrecompileContext::FindFunction(const wxString& strName, ibValue& vContext, bool bContext)
+bool CPrecompileContext::FindFunction(const wxString& strName, CValue& vContext, bool bContext)
 {
 	if (bContext)
 	{
@@ -59,12 +59,12 @@ void CPrecompileContext::RemoveVariable(const wxString& strName)
 
 /**
  * Добавляет новую переменную в список
- * Возвращает добавленную переменную в виде ibParamValue
+ * Возвращает добавленную переменную в виде CParamValue
  */
-ibParamValue CPrecompileContext::AddVariable(const wxString& paramName, const wxString& paramType, bool bExport, bool bTempVar, const ibValue& valVar)
+CParamValue CPrecompileContext::AddVariable(const wxString& paramName, const wxString& paramType, bool bExport, bool bTempVar, const CValue& valVar)
 {
 	if (FindVariable(paramName)) //было объявление + повторное объявление = ошибка
-		return ibParamValue();
+		return CParamValue();
 
 	CPrecompileVariable currentVar;
 	currentVar.bContext = false;
@@ -78,13 +78,13 @@ ibParamValue CPrecompileContext::AddVariable(const wxString& paramName, const wx
 
 	cVariables[stringUtils::MakeUpper(paramName)] = currentVar;
 
-	ibParamValue paramValue;
+	CParamValue paramValue;
 	paramValue.m_paramType = paramType;
 	paramValue.m_paramObject = valVar;
 	return paramValue;
 }
 
-void CPrecompileContext::SetVariable(const wxString& strVarName, const ibValue& valVar)
+void CPrecompileContext::SetVariable(const wxString& strVarName, const CValue& valVar)
 {
 	if (FindVariable(strVarName)) {
 		cVariables[stringUtils::MakeUpper(strVarName)].m_valObject = valVar; 
@@ -96,10 +96,10 @@ void CPrecompileContext::SetVariable(const wxString& strVarName, const ibValue& 
  * Поиск определения переменной, начиная с текущего контекста до всех родительских
  * Если требуемой переменной нет, то создается новое определение переменной
  */
-ibParamValue CPrecompileContext::GetVariable(const wxString& strName, bool bFindInParent, bool bCheckError, const ibValue& valVar)
+CParamValue CPrecompileContext::GetVariable(const wxString& strName, bool bFindInParent, bool bCheckError, const CValue& valVar)
 {
 	int numCanUseLocalInParent = nFindLocalInParent;
-	ibParamValue Variable;
+	CParamValue Variable;
 	Variable.m_paramName = stringUtils::MakeUpper(strName);
 	if (!FindVariable(strName)) {
 		if (bFindInParent) {//ищем в родительских контекстах(модулях)
@@ -109,7 +109,7 @@ ibParamValue CPrecompileContext::GetVariable(const wxString& strName, bool bFind
 			while (pCurContext) {
 				nParentNumber++;
 				if (nParentNumber > MAX_OBJECTS_LEVEL) {
-					ibValueSystemFunction::Message(pCurContext->pModule->GetModuleName());
+					CSystemFunction::Message(pCurContext->pModule->GetModuleName());
 					if (nParentNumber > 2 * MAX_OBJECTS_LEVEL)
 						break;
 				}

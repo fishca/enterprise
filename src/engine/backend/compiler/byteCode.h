@@ -5,40 +5,40 @@
 
 //*******************************************************************************
 
-class BACKEND_API ibCompileCode;
+class BACKEND_API CCompileCode;
 
 //*******************************************************************************
 
-struct ibParamRunUnit {
+struct CParamRunUnit {
 	wxLongLong_t m_numArray = 0;
 	wxLongLong_t m_numIndex = 0;
 };
 
-struct ibParamUnit : ibParamRunUnit {
+struct CParamUnit : CParamRunUnit {
 	wxString	 m_strType;			//variable type in English notation (in case of explicit typing)
 };
 
 //storing one program step
-struct ibByteUnit {
+struct CByteUnit {
 
 	short		 m_numOper = 0;			//instruction code
 	unsigned int m_numString = 0;		//source text number (for error output)
 	unsigned int m_numLine = 0;			//source line number (for breakpoints)
 
 	//parameters for instructions:
-	ibParamRunUnit	 m_param1;
-	ibParamRunUnit	 m_param2;
-	ibParamRunUnit	 m_param3;
-	ibParamRunUnit	 m_param4;			 // - used for optimization
+	CParamRunUnit	 m_param1;
+	CParamRunUnit	 m_param2;
+	CParamRunUnit	 m_param3;
+	CParamRunUnit	 m_param4;			 // - used for optimization
 
 	wxString	 m_strModuleName;	 // module name (since it is possible to include connections from different modules)
 	wxString	 m_strDocPath; 	 	 // unique path to the document
 	wxString	 m_strFileName; 	 // path to the file (if external processing)
 };
 
-struct ibByteCode {
+struct CByteCode {
 
-	struct ibByteFunction {
+	struct CByteFunction {
 
 		operator long() const { return m_lCodeLine; }
 
@@ -49,7 +49,7 @@ struct ibByteCode {
 
 public:
 
-	void SetModule(ibCompileCode* compileCode) { m_compileModule = compileCode; }
+	void SetModule(CCompileCode* compileCode) { m_compileModule = compileCode; }
 
 	long FindMethod(const wxString& strMethodName) const;
 	long FindExportMethod(const wxString& strMethodName) const;
@@ -96,22 +96,22 @@ public:
 	}
 
 	//Attributes:
-	ibByteCode* m_parent = nullptr; //Parent bytecode (for checking)
+	CByteCode* m_parent = nullptr; //Parent bytecode (for checking)
 	bool m_bCompile = false; //indication of successful compilation
-	ibCompileCode* m_compileModule = nullptr;
+	CCompileCode* m_compileModule = nullptr;
 	long m_lVarCount = 0; // number of local variables in the module
 	long m_lStartModule = 0; // beginning of the module start position
 	wxString m_strModuleName;//name of the executable module to which the bytecode belongs
 
 	//list of external and context variables
-	std::vector <ibValue*> m_listExternValue;
-	std::vector <ibByteUnit> m_listCode;//executable code of the module
-	std::vector <ibValue> m_listConst;//list of module constants
+	std::vector <CValue*> m_listExternValue;
+	std::vector <CByteUnit> m_listCode;//executable code of the module
+	std::vector <CValue> m_listConst;//list of module constants
 
 	std::map<wxString, long> m_listVar; //list of module variables
-	std::map<wxString, ibByteFunction> m_listFunc; //list of module functions and procedures
+	std::map<wxString, CByteFunction> m_listFunc; //list of module functions and procedures
 	std::map<wxString, long> m_listExportVar; //list of module export variables
-	std::map<wxString, ibByteFunction> m_listExportFunc; //list of module export functions and procedures
+	std::map<wxString, CByteFunction> m_listExportFunc; //list of module export functions and procedures
 };
 
 #endif // !_BYTE_CODE_H__

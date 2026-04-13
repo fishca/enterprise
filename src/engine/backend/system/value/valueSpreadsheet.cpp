@@ -5,7 +5,7 @@
 
 #include "backend/system/value/valueMap.h"
 
-void ibValueSpreadsheetDocumentBorder::PrepareNames() const
+void CValueSpreadsheetDocumentBorder::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
@@ -14,22 +14,22 @@ void ibValueSpreadsheetDocumentBorder::PrepareNames() const
 	m_methodHelper.AppendProp(wxT("Width"));
 }
 
-bool ibValueSpreadsheetDocumentBorder::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueSpreadsheetDocumentBorder::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
 #include "valueColour.h"
 
-bool ibValueSpreadsheetDocumentBorder::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueSpreadsheetDocumentBorder::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
 	case enPropStyle:
-		pvarPropVal = ibValue::CreateEnumObject<ibValueEnumSpreadsheetBorder>(m_style);
+		pvarPropVal = CValue::CreateEnumObject<CValueEnumSpreadsheetBorder>(m_style);
 		return true;
 	case enPropColour:
-		pvarPropVal = ibValue::CreateAndPrepareValueRef<ibValueColour>(m_colour);
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueColour>(m_colour);
 		return true;
 	case enPropWidth:
 		pvarPropVal = m_width;
@@ -39,8 +39,8 @@ bool ibValueSpreadsheetDocumentBorder::GetPropVal(const long lPropNum, ibValue& 
 	return false;
 }
 
-class ibValueSpreadsheetDocumentRange :
-	public ibValue {
+class CValueSpreadsheetDocumentRange :
+	public CValue {
 
 	enum
 	{
@@ -51,13 +51,13 @@ class ibValueSpreadsheetDocumentRange :
 
 public:
 
-	ibValueSpreadsheetDocumentRange() : ibValue(ibValueTypes::TYPE_VALUE), m_label(), m_start(-1), m_end(-1) {}
-	ibValueSpreadsheetDocumentRange(const wxString& label, int start, int end) : ibValue(ibValueTypes::TYPE_VALUE), m_label(label), m_start(start), m_end(end) {}
+	CValueSpreadsheetDocumentRange() : CValue(eValueTypes::TYPE_VALUE), m_label(), m_start(-1), m_end(-1) {}
+	CValueSpreadsheetDocumentRange(const wxString& label, int start, int end) : CValue(eValueTypes::TYPE_VALUE), m_label(label), m_start(start), m_end(end) {}
 
 	virtual bool IsEmpty() const { return false; }
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal) { return false; }
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal) {
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal) { return false; }
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal) {
 
 		switch (lPropNum)
 		{
@@ -75,7 +75,7 @@ public:
 		return false;
 	}
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return &m_methodHelper;
 	}
@@ -92,40 +92,40 @@ private:
 	const wxString m_label;
 	const int m_start, m_end;
 
-	static ibValueMethodHelper m_methodHelper;
+	static CMethodHelper m_methodHelper;
 
-	wxDECLARE_DYNAMIC_CLASS(ibValueSpreadsheetDocumentRange);
+	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheetDocumentRange);
 };
 
-class ibValueSpreadsheetDocumentAreaCollection :
-	public ibValueStructure {
+class CValueSpreadsheetDocumentAreaCollection :
+	public CValueStructure {
 
 public:
 
-	ibValueSpreadsheetDocumentAreaCollection() :
-		ibValueStructure(true)
+	CValueSpreadsheetDocumentAreaCollection() :
+		CValueStructure(true)
 	{
 	}
 
-	ibValueSpreadsheetDocumentAreaCollection(const wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadsheetDoc) :
-		ibValueStructure(true), m_spreadsheetDoc(spreadsheetDoc)
+	CValueSpreadsheetDocumentAreaCollection(const wxObjectDataPtr<CBackendSpreadsheetObject>& spreadsheetDoc) :
+		CValueStructure(true), m_spreadsheetDoc(spreadsheetDoc)
 	{
 		for (int idx = 0; idx < spreadsheetDoc->GetSpreadsheetDesc().GetAreaNumberRows(); idx++) {
-			const ibSpreadsheetAreaDescription* area = spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByIdx(idx);
+			const CSpreadsheetAreaDescription* area = spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByIdx(idx);
 			if (area == nullptr)
 				continue;
-			ibValueStructure::Insert(area->m_label,
-				ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocumentRange>(area->m_label, area->m_start, area->m_end));
+			CValueStructure::Insert(area->m_label,
+				CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocumentRange>(area->m_label, area->m_start, area->m_end));
 		}
 	}
 
 private:
 
-	wxObjectDataPtr<ibBackendSpreadsheetObject> m_spreadsheetDoc;
-	wxDECLARE_DYNAMIC_CLASS(ibValueSpreadsheetDocumentAreaCollection);
+	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetDoc;
+	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheetDocumentAreaCollection);
 };
 
-class ibValueSpreadsheetDocumentParameterCollection : public ibValue {
+class CValueSpreadsheetDocumentParameterCollection : public CValue {
 
 	enum
 	{
@@ -176,31 +176,31 @@ class ibValueSpreadsheetDocumentParameterCollection : public ibValue {
 
 public:
 
-	ibValueSpreadsheetDocumentParameterCollection() :
-		ibValue(ibValueTypes::TYPE_VALUE), m_methodHelper(nullptr)
+	CValueSpreadsheetDocumentParameterCollection() :
+		CValue(eValueTypes::TYPE_VALUE), m_methodHelper(nullptr)
 	{
 	}
 
-	ibValueSpreadsheetDocumentParameterCollection(const wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadsheetDoc) :
-		ibValue(ibValueTypes::TYPE_VALUE), m_spreadsheetDoc(spreadsheetDoc), m_methodHelper(new ibValueMethodHelper)
+	CValueSpreadsheetDocumentParameterCollection(const wxObjectDataPtr<CBackendSpreadsheetObject>& spreadsheetDoc) :
+		CValue(eValueTypes::TYPE_VALUE), m_spreadsheetDoc(spreadsheetDoc), m_methodHelper(new CMethodHelper)
 	{
 	}
 
-	virtual ~ibValueSpreadsheetDocumentParameterCollection() { wxDELETE(m_methodHelper); }
+	virtual ~CValueSpreadsheetDocumentParameterCollection() { wxDELETE(m_methodHelper); }
 
 	virtual bool IsEmpty() const { return false; }
 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal) {
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal) {
 		m_spreadsheetDoc->SetParameter(m_methodHelper->GetPropName(lPropNum), varPropVal);
 		return true;
 	}
 
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal) {
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal) {
 		m_spreadsheetDoc->GetParameter(m_methodHelper->GetPropName(lPropNum), pvarPropVal);
 		return true;
 	}
 
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray) {
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray) {
 
 		switch (lMethodNum)
 		{
@@ -215,13 +215,13 @@ public:
 		return false;
 	}
 
-	virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray) {
+	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray) {
 
 		switch (lMethodNum)
 		{
 		case enFill:
 		{
-			ibValueMethodHelper* methodHelper = paParams[0]->GetPMethods();
+			CMethodHelper* methodHelper = paParams[0]->GetPMethods();
 			if (methodHelper != nullptr) {
 				for (int lPropPos = 0; lPropPos < m_methodHelper->GetNProps(); lPropPos++) {
 					if (lPropPos >= methodHelper->GetNProps())
@@ -230,7 +230,7 @@ public:
 					long lPropNum = methodHelper->FindProp(strPropName);
 					if (lPropNum == wxNOT_FOUND)
 						continue;
-					ibValue pvarRetValue;
+					CValue pvarRetValue;
 					paParams[0]->GetPropVal(lPropNum, pvarRetValue);
 					m_spreadsheetDoc->SetParameter(strPropName, pvarRetValue);
 				}
@@ -246,7 +246,7 @@ public:
 		return false;
 	}
 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
@@ -272,14 +272,14 @@ public:
 
 		for (int idx = 0; idx < m_spreadsheetDoc->GetSpreadsheetDesc().GetCellCount(); idx++) {
 
-			const ibSpreadsheetCellDescription* cell = m_spreadsheetDoc->GetSpreadsheetDesc().GetCellByIdx(idx);
+			const CSpreadsheetCellDescription* cell = m_spreadsheetDoc->GetSpreadsheetDesc().GetCellByIdx(idx);
 			if (cell == nullptr)
 				continue;
 
-			if (cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
+			if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
 				if (!cell->IsEmptyValue()) arrParameter.insert(cell->m_value);
 			}
-			else if (cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
+			else if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
 				if (!cell->IsEmptyValue()) for (auto s : ParseBrackets(cell->m_value)) if (!s.IsEmpty()) arrParameter.insert(s);
 			}
 
@@ -291,28 +291,28 @@ public:
 
 private:
 
-	wxObjectDataPtr<ibBackendSpreadsheetObject> m_spreadsheetDoc;
-	ibValueMethodHelper* m_methodHelper;
-	wxDECLARE_DYNAMIC_CLASS(ibValueSpreadsheetDocumentParameterCollection);
+	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetDoc;
+	CMethodHelper* m_methodHelper;
+	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheetDocumentParameterCollection);
 };
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueSpreadsheetDocumentRange, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueSpreadsheetDocumentAreaCollection, ibValueStructure);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueSpreadsheetDocumentParameterCollection, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueSpreadsheetDocumentRange, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueSpreadsheetDocumentAreaCollection, CValueStructure);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueSpreadsheetDocumentParameterCollection, CValue);
 
 #pragma endregion
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueSpreadsheetDocument, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueSpreadsheetDocument, CValue);
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumSpreadsheetOrient, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumSpreadsheetHorizontalAlignment, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumSpreadsheetVerticalAlignment, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumSpreadsheetFitMode, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumSpreadsheetBorder, ibValue);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumSpreadsheetFillType, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetOrient, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetHorizontalAlignment, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetVerticalAlignment, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetFitMode, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetBorder, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetFillType, CValue);
 
-ibValue::ibValueMethodHelper ibValueSpreadsheetDocument::m_methodHelper;
-ibValue::ibValueMethodHelper ibValueSpreadsheetDocumentRange::m_methodHelper;
+CValue::CMethodHelper CValueSpreadsheetDocument::m_methodHelper;
+CValue::CMethodHelper CValueSpreadsheetDocumentRange::m_methodHelper;
 
 enum
 {
@@ -339,7 +339,7 @@ enum
 	eJoin
 };
 
-void ibValueSpreadsheetDocument::PrepareNames() const
+void CValueSpreadsheetDocument::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
@@ -364,7 +364,7 @@ void ibValueSpreadsheetDocument::PrepareNames() const
 	m_methodHelper.AppendProc(wxT("Join"), 1, wxT("Join(spreadsheetDocument: table)"));
 }
 
-bool ibValueSpreadsheetDocument::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueSpreadsheetDocument::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	switch (lPropNum)
 	{
@@ -392,7 +392,7 @@ bool ibValueSpreadsheetDocument::SetPropVal(const long lPropNum, const ibValue& 
 	return false;
 }
 
-bool ibValueSpreadsheetDocument::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueSpreadsheetDocument::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -403,10 +403,10 @@ bool ibValueSpreadsheetDocument::GetPropVal(const long lPropNum, ibValue& pvarPr
 		pvarPropVal = m_spreadsheetDoc->GetRowFreeze();
 		return true;
 	case eAreas:
-		pvarPropVal = ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocumentAreaCollection>(m_spreadsheetDoc);
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocumentAreaCollection>(m_spreadsheetDoc);
 		return true;
 	case eParameters:
-		pvarPropVal = ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocumentParameterCollection>(m_spreadsheetDoc);
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocumentParameterCollection>(m_spreadsheetDoc);
 		return true;
 	case eReadOnly:
 		pvarPropVal = !m_spreadsheetDoc->IsEditable();
@@ -424,15 +424,15 @@ bool ibValueSpreadsheetDocument::GetPropVal(const long lPropNum, ibValue& pvarPr
 
 #include <wx/tokenzr.h>
 
-bool ibValueSpreadsheetDocument::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueSpreadsheetDocument::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	if (lMethodNum == eArea) {
 
-		const ibSpreadsheetCellDescription* cell = m_spreadsheetDoc->GetSpreadsheetDesc().GetCell(
+		const CSpreadsheetCellDescription* cell = m_spreadsheetDoc->GetSpreadsheetDesc().GetCell(
 			paParams[0]->GetInteger(), lSizeArray > 1 ? paParams[1]->GetInteger() : 0);
 
 		if (cell != nullptr) {
-			pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocumentArea>(
+			pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocumentArea>(
 				m_spreadsheetDoc, paParams[0]->GetInteger(), lSizeArray > 1 ? paParams[1]->GetInteger() : 0);
 			return true;
 		}
@@ -447,7 +447,7 @@ bool ibValueSpreadsheetDocument::CallAsFunc(const long lMethodNum, ibValue& pvar
 		else if (paParams[1]->GetInteger() > m_spreadsheetDoc->GetNumberCols())
 			return false;
 
-		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocument>(m_spreadsheetDoc->GetArea(
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>(m_spreadsheetDoc->GetArea(
 			paParams[0]->GetInteger(), paParams[1]->GetInteger(), lSizeArray > 2 ? paParams[2]->GetInteger() : -1, lSizeArray > 3 ? paParams[3]->GetInteger() : -1));
 
 		return true;
@@ -458,23 +458,23 @@ bool ibValueSpreadsheetDocument::CallAsFunc(const long lMethodNum, ibValue& pvar
 
 			wxStringTokenizer tkn(paParams[0]->GetString(), wxT("|"));
 
-			const ibSpreadsheetAreaDescription* r = m_spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByName(tkn.GetNextToken());
-			const ibSpreadsheetAreaDescription* c = m_spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByName(tkn.GetNextToken());
+			const CSpreadsheetAreaDescription* r = m_spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByName(tkn.GetNextToken());
+			const CSpreadsheetAreaDescription* c = m_spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByName(tkn.GetNextToken());
 
 			if (!r)
 				return false;
 
-			pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocument>(m_spreadsheetDoc->GetAreaByName(r->m_label, c ? c->m_label : wxT("")));
+			pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>(m_spreadsheetDoc->GetAreaByName(r->m_label, c ? c->m_label : wxT("")));
 			return true;
 		}
 
-		const ibSpreadsheetAreaDescription* r = m_spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByName(paParams[0]->GetString());
-		const ibSpreadsheetAreaDescription* c = m_spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByName(lSizeArray > 1 ? paParams[1]->GetString() : wxT(""));
+		const CSpreadsheetAreaDescription* r = m_spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByName(paParams[0]->GetString());
+		const CSpreadsheetAreaDescription* c = m_spreadsheetDoc->GetSpreadsheetDesc().GetRowAreaByName(lSizeArray > 1 ? paParams[1]->GetString() : wxT(""));
 
 		if (!r)
 			return false;
 
-		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocument>(m_spreadsheetDoc->GetAreaByName(
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>(m_spreadsheetDoc->GetAreaByName(
 			r->m_label, c ? c->m_label : wxT("")));
 
 		return true;
@@ -485,7 +485,7 @@ bool ibValueSpreadsheetDocument::CallAsFunc(const long lMethodNum, ibValue& pvar
 
 #include "backend/backend_exception.h"
 
-bool ibValueSpreadsheetDocument::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
+bool CValueSpreadsheetDocument::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
 {
 	if (lMethodNum == ePutHorizontalPageBreak) {
 		m_spreadsheetDoc->AddRowBrake(m_spreadsheetDoc->GetNumberRows());
@@ -501,26 +501,26 @@ bool ibValueSpreadsheetDocument::CallAsProc(const long lMethodNum, ibValue** paP
 	}
 	else if (lMethodNum == ePrint) {
 		if (backend_mainFrame != nullptr)
-			return backend_mainFrame->PrintSpreadsheetDocument(m_spreadsheetDoc, lSizeArray > 0 ? paParams[0]->GetBoolean() : false);
-		ibBackendCoreException::Error(_("Context functions are not available!"));
+			return backend_mainFrame->PrintSpreadSheetDocument(m_spreadsheetDoc, lSizeArray > 0 ? paParams[0]->GetBoolean() : false);
+		CBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
 	else if (lMethodNum == eShow) {
 		if (backend_mainFrame != nullptr)
-			return backend_mainFrame->ShowSpreadsheetDocument(paParams[0]->GetString(), m_spreadsheetDoc);
-		ibBackendCoreException::Error(_("Context functions are not available!"));
+			return backend_mainFrame->ShowSpreadSheetDocument(paParams[0]->GetString(), m_spreadsheetDoc);
+		CBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
 	else if (lMethodNum == ePut) {
-		ibValuePtr<ibValueSpreadsheetDocument> valueSpreadsheet =
-			paParams[0]->ConvertToType<ibValueSpreadsheetDocument>();
+		CValuePtr<CValueSpreadsheetDocument> valueSpreadsheet =
+			paParams[0]->ConvertToType<CValueSpreadsheetDocument>();
 		if (valueSpreadsheet)
 			m_spreadsheetDoc->PutArea(valueSpreadsheet->GetSpreadsheetDocument());
 		return true;
 	}
 	else if (lMethodNum == eJoin) {
-		ibValuePtr<ibValueSpreadsheetDocument> valueSpreadsheet =
-			paParams[0]->ConvertToType<ibValueSpreadsheetDocument>();
+		CValuePtr<CValueSpreadsheetDocument> valueSpreadsheet =
+			paParams[0]->ConvertToType<CValueSpreadsheetDocument>();
 		if (valueSpreadsheet)
 			m_spreadsheetDoc->JoinArea(valueSpreadsheet->GetSpreadsheetDocument());
 		return true;
@@ -533,14 +533,14 @@ bool ibValueSpreadsheetDocument::CallAsProc(const long lMethodNum, ibValue** paP
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(ibValueSpreadsheetDocument, "SpreadsheetDocument", string_to_clsid("VL_SPSTD"));
-SYSTEM_TYPE_REGISTER(ibValueSpreadsheetDocumentRange, "SpreadsheetAreaRange", string_to_clsid("SY_SPPRA"));
-SYSTEM_TYPE_REGISTER(ibValueSpreadsheetDocumentAreaCollection, "SpreadsheetAreaCollection", string_to_clsid("SY_SPAEA"));
-SYSTEM_TYPE_REGISTER(ibValueSpreadsheetDocumentParameterCollection, "SpreadsheetParameterCollection", string_to_clsid("SY_SPPRM"));
-ENUM_TYPE_REGISTER(ibValueEnumSpreadsheetOrient, "SpreadsheetOrient", string_to_clsid("EN_SORNT"));
-ENUM_TYPE_REGISTER(ibValueEnumSpreadsheetHorizontalAlignment, "SpreadsheetHorizontalAlignment", string_to_clsid("EN_SHOAL"));
-ENUM_TYPE_REGISTER(ibValueEnumSpreadsheetVerticalAlignment, "SpreadsheetVerticalAlignment", string_to_clsid("EN_SVEAL"));
-ENUM_TYPE_REGISTER(ibValueEnumSpreadsheetBorder, "SpreadsheetBorder", string_to_clsid("EN_SBORD"));
-ENUM_TYPE_REGISTER(ibValueEnumSpreadsheetFitMode, "SpreadsheetFitMode", string_to_clsid("EN_SFTMD"));
-ENUM_TYPE_REGISTER(ibValueEnumSpreadsheetFillType, "SpreadsheetTemplate", string_to_clsid("EN_SFTMP"));
+VALUE_TYPE_REGISTER(CValueSpreadsheetDocument, "SpreadsheetDocument", string_to_clsid("VL_SPSTD"));
+SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentRange, "SpreadsheetAreaRange", string_to_clsid("SY_SPPRA"));
+SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentAreaCollection, "SpreadsheetAreaCollection", string_to_clsid("SY_SPAEA"));
+SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentParameterCollection, "SpreadsheetParameterCollection", string_to_clsid("SY_SPPRM"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetOrient, "SpreadsheetOrient", string_to_clsid("EN_SORNT"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetHorizontalAlignment, "SpreadsheetHorizontalAlignment", string_to_clsid("EN_SHOAL"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetVerticalAlignment, "SpreadsheetVerticalAlignment", string_to_clsid("EN_SVEAL"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetBorder, "SpreadsheetBorder", string_to_clsid("EN_SBORD"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetFitMode, "SpreadsheetFitMode", string_to_clsid("EN_SFTMD"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetFillType, "SpreadsheetTemplate", string_to_clsid("EN_SFTMP"));
 

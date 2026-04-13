@@ -9,20 +9,20 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-ibValueRecordDataObjectDataProcessor::ibValueRecordDataObjectDataProcessor(ibValueMetaObjectDataProcessor* metaObject) :
-	ibValueRecordDataObjectExt(metaObject)
+CValueRecordDataObjectDataProcessor::CValueRecordDataObjectDataProcessor(CValueMetaObjectDataProcessor* metaObject) :
+	IValueRecordDataObjectExt(metaObject)
 {
 }
 
-ibValueRecordDataObjectDataProcessor::ibValueRecordDataObjectDataProcessor(const ibValueRecordDataObjectDataProcessor& source) :
-	ibValueRecordDataObjectExt(source)
+CValueRecordDataObjectDataProcessor::CValueRecordDataObjectDataProcessor(const CValueRecordDataObjectDataProcessor& source) :
+	IValueRecordDataObjectExt(source)
 {
 }
 
 #pragma region _form_builder_h_
-void ibValueRecordDataObjectDataProcessor::ShowFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
+void CValueRecordDataObjectDataProcessor::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
-	ibBackendValueForm* foundedForm = GetForm();
+	IBackendValueForm* foundedForm = GetForm();
 
 	if (foundedForm && foundedForm->IsShown()) {
 		foundedForm->ActivateForm();
@@ -30,7 +30,7 @@ void ibValueRecordDataObjectDataProcessor::ShowFormValue(const wxString& strForm
 	}
 
 	//if form is not initialized then generate  
-	ibBackendValueForm* const valueForm =
+	IBackendValueForm* const valueForm =
 		GetFormValue(strFormName, ownerControl);
 
 	if (valueForm != nullptr) {
@@ -39,15 +39,15 @@ void ibValueRecordDataObjectDataProcessor::ShowFormValue(const wxString& strForm
 	}
 }
 
-ibBackendValueForm* ibValueRecordDataObjectDataProcessor::GetFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
+IBackendValueForm* CValueRecordDataObjectDataProcessor::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
-	ibBackendValueForm* const foundedForm = GetForm();
+	IBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm == nullptr) {
 
-		ibBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			ibValueMetaObjectDataProcessor::eFormDataProcessor,
+			CValueMetaObjectDataProcessor::eFormDataProcessor,
 			ownerControl,
 			this,
 			m_objGuid

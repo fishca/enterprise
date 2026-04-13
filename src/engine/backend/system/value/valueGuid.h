@@ -3,19 +3,19 @@
 
 #include "backend/compiler/value.h"
 
-class BACKEND_API ibValueGuid : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueGuid);
+class BACKEND_API CValueGuid : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueGuid);
 public:
 
-	operator ibGuid() const {
+	operator CGuid() const {
 		return m_guid;
 	}
 
-	ibValueGuid();
-	ibValueGuid(const ibGuid &guid);
+	CValueGuid();
+	CValueGuid(const CGuid &guid);
 
 	virtual bool Init();
-	virtual bool Init(ibValue **paParams, const long lSizeArray);
+	virtual bool Init(CValue **paParams, const long lSizeArray);
 
 	virtual wxString GetString() const { 
 		return m_guid; 
@@ -27,17 +27,17 @@ public:
 	}
 
 	//operator '=='
-	virtual bool CompareValueEQ(const ibValue &cParam) const {
+	virtual bool CompareValueEQ(const CValue &cParam) const {
 		return m_guid == cParam.GetString(); 
 	}
 	
 	//operator '!='
-	virtual bool CompareValueNE(const ibValue &cParam) const { 
+	virtual bool CompareValueNE(const CValue &cParam) const { 
 		return m_guid != cParam.GetString(); 
 	}
 
 private:
-	ibGuid m_guid;
+	CGuid m_guid;
 };
 
 #endif // !_VALUEUUID_H__

@@ -1,33 +1,26 @@
 #include "propertyString.h"
 
-// get property for grid
-wxObject* (*ibPropertyStringBase::ms_propertyString)(const wxString&, const wxString&, const wxString&) = nullptr;
-wxObject* (*ibPropertyStringBase::ms_propertyUString)(const wxString&, const wxString&, const wxString&) = nullptr;
-wxObject* (*ibPropertyStringBase::ms_propertyUEString)(const wxString&, const wxString&, const wxString&) = nullptr;
-wxObject* (*ibPropertyStringBase::ms_propertyTString)(const ibPropertyObject*, const wxString&, const wxString&, const wxString&) = nullptr;
-wxObject* (*ibPropertyStringBase::ms_propertyMString)(const wxString&, const wxString&, const wxString&) = nullptr;
-
 //base property for "string"
-bool ibPropertyStringBase::SetDataValue(const ibValue& varPropVal)
+bool IPropertyString::SetDataValue(const CValue& varPropVal)
 {
-	ibPropertyStringBase::SetValue(varPropVal.GetString());
+	IPropertyString::SetValue(varPropVal.GetString());
 	return true;
 }
 
-bool ibPropertyStringBase::GetDataValue(ibValue& pvarPropVal) const
+bool IPropertyString::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibPropertyStringBase::GetValueAsString();
+	pvarPropVal = IPropertyString::GetValueAsString();
 	return true;
 }
 
-bool ibPropertyStringBase::LoadData(ibReaderMemory& reader)
+bool IPropertyString::LoadData(CMemoryReader& reader)
 {
-	ibPropertyStringBase::SetValue(reader.r_stringZ());
+	IPropertyString::SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool ibPropertyStringBase::SaveData(ibWriterMemory& writer)
+bool IPropertyString::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(ibPropertyStringBase::GetValueAsString());
+	writer.w_stringZ(IPropertyString::GetValueAsString());
 	return true;
 }

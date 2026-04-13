@@ -1,16 +1,16 @@
 #include "propertyString.h"
 
 //base property for "caption" - for translate 
-bool ibPropertyTString::SetDataValue(const ibValue& varPropVal)
+bool CPropertyTString::SetDataValue(const CValue& varPropVal)
 {
-	ibPropertyStringBase::SetValue(
-		ibBackendLocalization::CreateLocalizationRawLocText(varPropVal.GetString())
+	IPropertyString::SetValue(
+		CBackendLocalization::CreateLocalizationRawLocText(varPropVal.GetString())
 	);
 	return true;
 }
 
-bool ibPropertyTString::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyTString::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibPropertyTString::GetValueAsTranslateString();
+	pvarPropVal = CPropertyTString::GetValueAsTranslateString();
 	return true;
 }

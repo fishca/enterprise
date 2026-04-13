@@ -7,21 +7,21 @@
 #include "titleFrame.h"
 #include "frontend/visualView/ctrl/form.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibVisualEditorNotebook::ibVisualEditor, wxPanel);
+wxIMPLEMENT_DYNAMIC_CLASS(CVisualEditorNotebook::CVisualEditor, wxPanel);
 
-ibVisualEditorNotebook::ibVisualEditor::ibVisualEditor() :
+CVisualEditorNotebook::CVisualEditor::CVisualEditor() :
 	wxPanel(), m_visualEditor(nullptr)
 {
 }
 
-ibVisualEditorNotebook::ibVisualEditor::ibVisualEditor(ibMetaDocument* document, wxWindow* parent, int id) :
+CVisualEditorNotebook::CVisualEditor::CVisualEditor(CMetaDocument* document, wxWindow* parent, int id) :
 	wxPanel(parent, id),
-	m_document(document), m_visualEditor(nullptr), m_cmdProc(new ibCommandProcessor()), m_valueForm(nullptr)
+	m_document(document), m_visualEditor(nullptr), m_cmdProc(new CCommandProcessor()), m_valueForm(nullptr)
 {
 	CreateWideGui();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::CreateWideGui()
+void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
 {
 	wxWindow::Freeze();
 
@@ -34,11 +34,11 @@ void ibVisualEditorNotebook::ibVisualEditor::CreateWideGui()
 
 	wxASSERT(m_visualEditor == nullptr);
 
-	m_visualEditor = new ibVisualEditorHost(this, m_splitter);
-	m_objectTree = new ibVisualEditorObjectTree(this, m_splitter);
+	m_visualEditor = new CVisualEditorHost(this, m_splitter);
+	m_objectTree = new CVisualEditorObjectTree(this, m_splitter);
 
 	m_splitter->SplitHorizontally(m_visualEditor, 
-		ibPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), 200);
+		CPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), 200);
 
 	SetSizer(sizerMain);
 
@@ -55,7 +55,7 @@ void ibVisualEditorNotebook::ibVisualEditor::CreateWideGui()
 #include "frontend/docView/docView.h" 
 #include "frontend/mainFrame/mainFrame.h"
 
-void ibVisualEditorNotebook::ibVisualEditor::ActivateEditor()
+void CVisualEditorNotebook::CVisualEditor::ActivateEditor()
 {
 	objectInspector->SelectObject(GetSelectedObject());
 	SetFocus();
@@ -64,24 +64,24 @@ void ibVisualEditorNotebook::ibVisualEditor::ActivateEditor()
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/metadataConfiguration.h"
 
-bool ibVisualEditorNotebook::ibVisualEditor::LoadForm()
+bool CVisualEditorNotebook::CVisualEditor::LoadForm()
 {
 	if (m_document == nullptr)
 		return false;
 
-	const ibValueMetaObjectFormBase* creator = m_document->GetMetaObject()->ConvertToType<ibValueMetaObjectFormBase>();
+	const IValueMetaObjectForm* creator = m_document->GetMetaObject()->ConvertToType<IValueMetaObjectForm>();
 
 	if (creator == nullptr)
 		return false;
 
-	ibMetaData* metaData = creator->GetMetaData();
+	IMetaData* metaData = creator->GetMetaData();
 	wxASSERT(metaData);
 
-	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->FindCompileModule(creator, m_valueForm)) {
-		m_valueForm = new ibValueForm(creator, nullptr);
+		m_valueForm = new CValueForm(creator, nullptr);
 		if (!creator->LoadFormData(m_valueForm)) {
 			wxDELETE(m_valueForm);
 			return false;
@@ -103,9 +103,9 @@ bool ibVisualEditorNotebook::ibVisualEditor::LoadForm()
 	return true;
 }
 
-bool ibVisualEditorNotebook::ibVisualEditor::SaveForm()
+bool CVisualEditorNotebook::CVisualEditor::SaveForm()
 {
-	ibValueMetaObjectFormBase* creator = m_document->ConvertMetaObjectToType<ibValueMetaObjectFormBase>();
+	IValueMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectForm>();
 
 	// Create a std::string and copy your document data in to the string    
 	if (creator != nullptr) {
@@ -116,12 +116,12 @@ bool ibVisualEditorNotebook::ibVisualEditor::SaveForm()
 	return true;
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::TestForm()
+void CVisualEditorNotebook::CVisualEditor::TestForm()
 {
 	m_valueForm->ShowForm(m_document, false);
 }
 
-ibVisualEditorNotebook::ibVisualEditor::~ibVisualEditor()
+CVisualEditorNotebook::CVisualEditor::~CVisualEditor()
 {
 	m_visualEditor->Destroy();
 	m_objectTree->Destroy();

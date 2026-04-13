@@ -1,11 +1,11 @@
 #include "menuBar.h"
 
-ibPanelMenuBar::ibPanelMenuBar()
+CPanelMenuBar::CPanelMenuBar()
 {
 	m_sizer = nullptr;
 }
 
-ibPanelMenuBar::ibPanelMenuBar(wxWindow* parent, int id, const wxPoint& pos, const wxSize& size, long style, const wxString& name) :
+CPanelMenuBar::CPanelMenuBar(wxWindow* parent, int id, const wxPoint& pos, const wxSize& size, long style, const wxString& name) :
 	wxPanel(parent, id, pos, size, style, name)
 {
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -16,7 +16,7 @@ ibPanelMenuBar::ibPanelMenuBar(wxWindow* parent, int id, const wxPoint& pos, con
 	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 }
 
-ibPanelMenuBar::~ibPanelMenuBar()
+CPanelMenuBar::~CPanelMenuBar()
 {
 	while (!m_menus.empty()) {
 		wxMenu* menu = m_menus[0];
@@ -36,32 +36,32 @@ ibPanelMenuBar::~ibPanelMenuBar()
 	}
 }
 
-void ibPanelMenuBar::AppendMenu(wxMenu* menu, const wxString& name)
+void CPanelMenuBar::AppendMenu(wxMenu* menu, const wxString& name)
 {
 	wxStaticText* st = new wxStaticText(this, wxID_ANY, name);
-	st->PushEventHandler(new ibMenuEvtHandler(st, menu));
+	st->PushEventHandler(new CMenuEvtHandler(st, menu));
 	m_sizer->Add(st, 0, wxALIGN_LEFT | wxRIGHT | wxLEFT, 5);
 	Layout();
 	m_menus.push_back(menu);
 }
 
-wxMenu* ibPanelMenuBar::Remove(int /*i*/)
+wxMenu* CPanelMenuBar::Remove(int /*i*/)
 {
-	return nullptr;  // TODO: Implementar ibPanelMenuBar::Remove
+	return nullptr;  // TODO: Implementar CPanelMenuBar::Remove
 }
 
-wxBEGIN_EVENT_TABLE(ibMenuEvtHandler, wxEvtHandler)
-EVT_LEFT_DOWN(ibMenuEvtHandler::OnMouseEvent)
+wxBEGIN_EVENT_TABLE(CMenuEvtHandler, wxEvtHandler)
+EVT_LEFT_DOWN(CMenuEvtHandler::OnMouseEvent)
 wxEND_EVENT_TABLE()
 
-ibMenuEvtHandler::ibMenuEvtHandler(wxStaticText* st, wxMenu* menu)
+CMenuEvtHandler::CMenuEvtHandler(wxStaticText* st, wxMenu* menu)
 {
 	wxASSERT(menu != nullptr && st != nullptr);
 	m_label = st;
 	m_menu = menu;
 }
 
-void ibMenuEvtHandler::OnMouseEvent(wxMouseEvent&)
+void CMenuEvtHandler::OnMouseEvent(wxMouseEvent&)
 {
 	m_label->PopupMenu(m_menu, 0, m_label->GetSize().y + 3);
 }

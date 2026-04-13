@@ -5,20 +5,20 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueToolBarItem, ibValueControl);
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueToolBarSeparator, ibValueControl);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueToolBarItem, IValueControl);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueToolBarSeparator, IValueControl);
 
 //***********************************************************************************
-//*                           ibValueToolBarItem                               *
+//*                           CValueToolBarItem                               *
 //***********************************************************************************
 
-ibValueToolBarItem::ibValueToolBarItem() : ibValueControl()
+CValueToolBarItem::CValueToolBarItem() : IValueControl()
 {
 }
 
-void ibValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(wxparent);
+	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(wxparent);
 	wxASSERT(toolbar);
 	wxAuiToolBarItem* toolItem = toolbar->AddTool(GetControlID(),
 		m_propertyTitle->GetValueAsTranslateString(),
@@ -50,16 +50,16 @@ void ibValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVis
 	toolbar->Update();
 }
 
-void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void CValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(wxparent);
+	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(wxparent);
 	wxASSERT(toolbar);
 
 	wxAuiToolBarItem* toolItem = toolbar->FindTool(GetControlID());
-	ibValueFrame* parentControl = GetParent(); int idx = wxNOT_FOUND;
+	IValueFrame* parentControl = GetParent(); int idx = wxNOT_FOUND;
 
 	for (unsigned int i = 0; i < parentControl->GetChildCount(); i++) {
-		ibValueFrame* child = parentControl->GetChild(i);
+		IValueFrame* child = parentControl->GetChild(i);
 		if (m_controlId == child->GetControlID()) {
 			idx = i;
 			break;
@@ -69,9 +69,9 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 	if (toolItem != nullptr)
 		toolbar->DestroyTool(GetControlID());
 
-	if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Auto) {
-		const ibActionCollection& collection = GetOwner()->GetActionArray();
-		if (GetItemRepresentation(collection) == ibRepresentation::ibRepresentation_PictureAndText) {
+	if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
+		const CActionCollection& collection = GetOwner()->GetActionArray();
+		if (GetItemRepresentation(collection) == enRepresentation::eRepresentation_PictureAndText) {
 			toolItem = toolbar->InsertTool(idx, GetControlID(),
 				GetItemCaption(collection),
 				GetItemPicture(collection),
@@ -82,7 +82,7 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 				wxobject
 			);
 		}
-		else if (GetItemRepresentation(collection) == ibRepresentation::ibRepresentation_Picture) {
+		else if (GetItemRepresentation(collection) == enRepresentation::eRepresentation_Picture) {
 			toolItem = toolbar->InsertTool(idx, GetControlID(),
 				wxEmptyString,
 				GetItemPicture(collection),
@@ -93,7 +93,7 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 				wxobject
 			);
 		}
-		else if (GetItemRepresentation(collection) == ibRepresentation::ibRepresentation_Text) {
+		else if (GetItemRepresentation(collection) == enRepresentation::eRepresentation_Text) {
 			toolItem = toolbar->InsertTool(idx, GetControlID(),
 				GetItemCaption(collection),
 				wxNullBitmap,
@@ -105,8 +105,8 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 			);
 		}
 	}
-	else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_PictureAndText) {
-		const ibActionCollection& collection = GetOwner()->GetActionArray();
+	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+		const CActionCollection& collection = GetOwner()->GetActionArray();
 		toolItem = toolbar->InsertTool(idx, GetControlID(),
 			GetItemCaption(collection),
 			GetItemPicture(collection),
@@ -117,8 +117,8 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 			wxobject
 		);
 	}
-	else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Picture) {
-		const ibActionCollection& collection = GetOwner()->GetActionArray();
+	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
+		const CActionCollection& collection = GetOwner()->GetActionArray();
 		toolItem = toolbar->InsertTool(idx, GetControlID(),
 			wxEmptyString,
 			GetItemPicture(collection),
@@ -129,8 +129,8 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 			wxobject
 		);
 	}
-	else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Text) {
-		const ibActionCollection& collection = GetOwner()->GetActionArray();
+	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
+		const CActionCollection& collection = GetOwner()->GetActionArray();
 		toolItem = toolbar->InsertTool(idx, GetControlID(),
 			GetItemCaption(collection),
 			wxNullBitmap,
@@ -164,9 +164,9 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 	toolbar->InvalidateBestSize();
 }
 
-void ibValueToolBarItem::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueToolBarItem::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
-	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
+	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 
 	toolbar->DestroyTool(GetControlID());
 
@@ -177,7 +177,7 @@ void ibValueToolBarItem::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 	toolbar->Update();
 }
 
-bool ibValueToolBarItem::CanDeleteControl() const
+bool CValueToolBarItem::CanDeleteControl() const
 {
 	unsigned int toolCount = 0;
 	for (unsigned int idx = 0; idx < m_parent->GetChildCount(); idx++) {
@@ -191,16 +191,16 @@ bool ibValueToolBarItem::CanDeleteControl() const
 }
 
 //***********************************************************************************
-//*                           ibValueToolBarSeparator                                *
+//*                           CValueToolBarSeparator                                *
 //***********************************************************************************
 
-ibValueToolBarSeparator::ibValueToolBarSeparator() : ibValueControl()
+CValueToolBarSeparator::CValueToolBarSeparator() : IValueControl()
 {
 }
 
-void ibValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
+	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	wxASSERT(toolbar);
 	wxAuiToolBarItem* toolItem = toolbar->AddSeparator();
 	toolItem->SetId(GetControlID());
@@ -212,17 +212,17 @@ void ibValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, 
 	toolbar->Update();
 }
 
-void ibValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void CValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
+	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	wxASSERT(toolbar);
 
 	wxAuiToolBarItem* toolItem = toolbar->FindTool(GetControlID());
-	ibValueFrame* m_parentControl = GetParent(); int idx = wxNOT_FOUND;
+	IValueFrame* m_parentControl = GetParent(); int idx = wxNOT_FOUND;
 
 	for (unsigned int i = 0; i < m_parentControl->GetChildCount(); i++)
 	{
-		ibValueFrame* child = m_parentControl->GetChild(i);
+		IValueFrame* child = m_parentControl->GetChild(i);
 		if (m_controlId == child->GetControlID()) { idx = i; break; }
 	}
 
@@ -236,13 +236,13 @@ void ibValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, 
 	toolbar->Update();
 }
 
-void ibValueToolBarSeparator::Cleanup(wxObject* obj, ibVisualHost* visualHost)
+void CValueToolBarSeparator::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
-	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
+	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	if (toolbar) toolbar->DestroyTool(GetControlID());
 }
 
-bool ibValueToolBarSeparator::CanDeleteControl() const
+bool CValueToolBarSeparator::CanDeleteControl() const
 {
 	return m_parent->GetChildCount() > 1;
 }
@@ -251,7 +251,7 @@ bool ibValueToolBarSeparator::CanDeleteControl() const
 //*                                  Data	                                       *
 //**********************************************************************************
 
-bool ibValueToolBarItem::LoadData(ibReaderMemory& reader)
+bool CValueToolBarItem::LoadData(CMemoryReader& reader)
 {
 	m_propertyTitle->LoadData(reader);
 	m_propertyPicture->LoadData(reader);
@@ -263,10 +263,10 @@ bool ibValueToolBarItem::LoadData(ibReaderMemory& reader)
 
 	//events 
 	m_eventAction->LoadData(reader);
-	return ibValueControl::LoadData(reader);
+	return IValueControl::LoadData(reader);
 }
 
-bool ibValueToolBarItem::SaveData(ibWriterMemory& writer)
+bool CValueToolBarItem::SaveData(CMemoryWriter& writer)
 {
 	m_propertyTitle->SaveData(writer);
 	m_propertyPicture->SaveData(writer);
@@ -278,22 +278,22 @@ bool ibValueToolBarItem::SaveData(ibWriterMemory& writer)
 
 	//events 
 	m_eventAction->SaveData(writer);
-	return ibValueControl::SaveData(writer);
+	return IValueControl::SaveData(writer);
 }
 
-bool ibValueToolBarSeparator::LoadData(ibReaderMemory& reader)
+bool CValueToolBarSeparator::LoadData(CMemoryReader& reader)
 {
-	return ibValueControl::LoadData(reader);
+	return IValueControl::LoadData(reader);
 }
 
-bool ibValueToolBarSeparator::SaveData(ibWriterMemory& writer)
+bool CValueToolBarSeparator::SaveData(CMemoryWriter& writer)
 {
-	return ibValueControl::SaveData(writer);
+	return IValueControl::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(ibValueToolBarItem, "Tool", "Tool", g_controlToolBarItemCLSID);
-S_CONTROL_TYPE_REGISTER(ibValueToolBarSeparator, "ToolSeparator", "Tool", g_controlToolBarSeparatorCLSID);
+S_CONTROL_TYPE_REGISTER(CValueToolBarItem, "Tool", "Tool", g_controlToolBarItemCLSID);
+S_CONTROL_TYPE_REGISTER(CValueToolBarSeparator, "ToolSeparator", "Tool", g_controlToolBarSeparatorCLSID);

@@ -17,14 +17,14 @@
 
 #include "engine/mysql.h"
 
-class ibResultSetMetaDataMySQL : public ibResultSetMetaData
+class CMysqlResultSetMetaData : public IResultSetMetaData
 {
 public:
 	// ctor
-	ibResultSetMetaDataMySQL(ibInterfaceMySQL* pInterface, MYSQL_RES* pMetaData);
+	CMysqlResultSetMetaData(CMysqlInterface* pInterface, MYSQL_RES* pMetaData);
 
 	// dtor
-	virtual ~ibResultSetMetaDataMySQL();
+	virtual ~CMysqlResultSetMetaData();
 
 	virtual int GetColumnType(int i);
 	virtual int GetColumnSize(int i);
@@ -34,7 +34,7 @@ public:
 private:
 	MYSQL_FIELD* GetColumn(int nField);
 
-	ibInterfaceMySQL* m_pInterface;
+	CMysqlInterface* m_pInterface;
 	MYSQL_RES* m_pMetaData;
 };
 

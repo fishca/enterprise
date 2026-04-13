@@ -20,7 +20,7 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API ibDialogConnection : public wxDialog {
+class FRONTEND_API CDialogConnection : public wxDialog {
 	wxStaticText* m_staticTextServer;
 	wxTextCtrl* m_textCtrlServer;
 	wxStaticText* m_staticTextPort;
@@ -34,7 +34,7 @@ class FRONTEND_API ibDialogConnection : public wxDialog {
 	wxButton* m_buttonTestConnection;
 	wxButton* m_buttonSaveConnection;
 public:
-	ibDialogConnection(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Connect to PostgreSQL"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxSYSTEM_MENU |  wxCLOSE_BOX |  wxCAPTION |  wxCLIP_CHILDREN | wxTAB_TRAVERSAL);
+	CDialogConnection(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Connect to PostgreSQL"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxSYSTEM_MENU |  wxCLOSE_BOX |  wxCAPTION |  wxCLIP_CHILDREN | wxTAB_TRAVERSAL);
 
 	void LoadConnectionData();
 	void SaveConnectionData();

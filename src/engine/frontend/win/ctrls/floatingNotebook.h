@@ -3,17 +3,15 @@
 
 #include <wx/aui/auibook.h>
 
-class ibFloatingNotebook :
-	public wxAuiNotebook {
-
+class wxFloatingNotebook : public wxAuiNotebook {
+	wxAuiManager* m_frameManager;
+	wxString m_paneName;
 public:
 
 	void SetNullSelection() {
-
 		size_t n = GetSelection();
 		if (n == wxNOT_FOUND)
 			return;
-
 		wxWindow* wnd = m_tabs.GetWindowFromIdx(n);
 		wxAuiTabCtrl* ctrl;
 		int ctrl_idx;
@@ -23,18 +21,15 @@ public:
 			else
 				ctrl->SetNoneActive();
 		}
-
 		wnd->Show(!wnd->IsShown());
 	}
 
-	ibFloatingNotebook(wxAuiManager* frameManager, const wxString& strPaneName,
+	wxFloatingNotebook(wxAuiManager* frameManager, const wxString& paneName,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxAUI_NB_DEFAULT_STYLE) :
-		wxAuiNotebook(frameManager->GetManagedWindow(), id, pos, size, style), m_strPaneName(strPaneName), m_frameManager(frameManager)
-	{
-		GetMainTabCtrl()->Bind(wxEVT_LEFT_DOWN, &ibFloatingNotebook::OnLeftDown, this);
+		wxAuiNotebook(frameManager->GetManagedWindow(), id, pos, size, style), m_paneName(paneName), m_frameManager(frameManager) {
 	}
 
 	template <class retWindow>
@@ -68,7 +63,6 @@ public:
 		m_tabs.InsertPage(page, info, page_idx);
 
 		wxAuiTabCtrl* active_tabctrl = GetActiveTabCtrl();
-
 		if (page_idx >= active_tabctrl->GetPageCount())
 			active_tabctrl->AddPage(page, info);
 		else
@@ -85,8 +79,9 @@ public:
 		if (m_curPage >= (int)page_idx)
 			m_curPage++;
 
-		if (select)
+		if (select) {
 			SetSelectionToWindow(page);
+		}
 
 		return true;
 	}
@@ -97,7 +92,7 @@ protected:
 		wxWindow* wnd = m_tabs.GetWindowFromIdx(n);
 		if (wnd == nullptr)
 			return m_curPage;
-		bool isShown = true; size_t sel_pane = n;
+		bool isShown = true; size_t sel_pane = n; 
 		if ((int)n == m_curPage) {
 			wxAuiTabCtrl* ctrl;
 			int ctrl_idx;
@@ -114,12 +109,12 @@ protected:
 			if (FindTab(wnd, &ctrl, &ctrl_idx)) {
 				m_curPage = sel_pane;
 				ctrl->SetActivePage(n);
-				isShown = true;
+				isShown = true;			
 			}
 			wnd->Show(true);
 		}
 
-		wxAuiPaneInfo& paneInfo = m_frameManager->GetPane(m_strPaneName);
+		wxAuiPaneInfo& paneInfo = m_frameManager->GetPane(m_paneName);
 		if (paneInfo.IsOk()) {
 			paneInfo.Resizable(isShown);
 			paneInfo.Layer(1);
@@ -137,35 +132,6 @@ protected:
 		m_frameManager->Update();
 		return wxAuiNotebook::DoModifySelection(sel_pane, events);
 	}
-
-	virtual wxSize DoGetBestSize() const {
-		size_t n = GetSelection();
-		if (n == wxNOT_FOUND)
-			return wxSize(0, 0);
-		return wxAuiNotebook::DoGetBestSize();
-	}
-
-private:
-
-	void OnLeftDown(wxMouseEvent& event)
-	{
-		wxAuiTabCtrl* active_tabctrl = GetMainTabCtrl();
-
-		auto const tabInfo =
-			active_tabctrl->TabHitTest(event.GetPosition());
-
-		int new_selection = tabInfo.pos;
-
-		if (new_selection != wxNOT_FOUND && new_selection == active_tabctrl->GetActivePage()) {
-			SetSelection(new_selection);
-			return;
-		}
-
-		event.Skip();
-	}
-
-	wxString m_strPaneName;
-	wxAuiManager* m_frameManager;
 };
 
 #endif

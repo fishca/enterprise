@@ -8,10 +8,10 @@
 
 #include <wx/propgrid/manager.h>
 
-void ibValueMetaObjectTableData::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
+void CValueMetaObjectTableData::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
 {
 	if (m_propertyUse == property) {
-		ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
+		IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
 		pg->HideProperty(pgProperty, metaObject == nullptr);
 	}
 }

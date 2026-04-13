@@ -1,6 +1,6 @@
 #include "gridEditor.h"
 
-bool ibGridEditor::AssociatibDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+bool CGridEditor::AssociateDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
 {
 	if (m_spreadsheetObject != doc) {
 
@@ -8,13 +8,13 @@ bool ibGridEditor::AssociatibDocument(const wxObjectDataPtr<ibBackendSpreadsheet
 			m_spreadsheetObject->RemoveNotifier(m_notifier);
 
 		m_spreadsheetObject = doc;
-		m_notifier = m_spreadsheetObject->AddNotifier<ibGenericSpreadsheetNotifier>(this);
+		m_notifier = m_spreadsheetObject->AddNotifier<CGenericSpreadsheetNotifier>(this);
 	}
 
 	return true;
 }
 
-bool ibGridEditor::GetActivibDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) const
+bool CGridEditor::GetActiveDocument(wxObjectDataPtr<CBackendSpreadsheetObject>& doc) const
 {
 	doc = m_spreadsheetObject;
 	return true;
@@ -22,37 +22,37 @@ bool ibGridEditor::GetActivibDocument(wxObjectDataPtr<ibBackendSpreadsheetObject
 
 #pragma region file
 
-bool ibGridEditor::LoadDocument(const ibSpreadsheetDescription& spreadsheetDesc)
+bool CGridEditor::LoadDocument(const CSpreadsheetDescription& spreadsheetDesc)
 {
 	if (!LoadSpreadsheet(spreadsheetDesc))
 		return false;
 
-	wxObjectDataPtr<ibBackendSpreadsheetObject> doc(
-		new ibBackendSpreadsheetObject(spreadsheetDesc));
+	wxObjectDataPtr<CBackendSpreadsheetObject> doc(
+		new CBackendSpreadsheetObject(spreadsheetDesc));
 
-	return AssociatibDocument(doc);
+	return AssociateDocument(doc);
 }
 
-bool ibGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+bool CGridEditor::LoadDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
 {
-	const ibSpreadsheetDescription& spreadsheetDesc = doc->GetSpreadsheetDesc();
+	const CSpreadsheetDescription& spreadsheetDesc = doc->GetSpreadsheetDesc();
 
 	if (!spreadsheetDesc.IsEmptySpreadsheet())
 	{
-		ibGrid::SetTable(
-			new ibGridEditorStringTable(spreadsheetDesc.GetNumberRows(), spreadsheetDesc.GetNumberCols()), true);
+		wxGridExt::SetTable(
+			new CGridEditorStringTable(spreadsheetDesc.GetNumberRows(), spreadsheetDesc.GetNumberCols()), true);
 
-		ibGrid::SetEvtHandlerEnabled(false);
+		wxGridExt::SetEvtHandlerEnabled(false);
 
 		for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
 
 			for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
 
-				const ibSpreadsheetCellDescription* cell = spreadsheetDesc.GetCell(row, col);
+				const CSpreadsheetCellDescription* cell = spreadsheetDesc.GetCell(row, col);
 				if (cell == nullptr)
 					continue;
 
-				ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+				wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 				attr->SetAlignment(cell->m_alignHorz, cell->m_alignVert);
 
 				if (cell->m_row_size >= 0 && cell->m_col_size >= 0)
@@ -68,7 +68,7 @@ bool ibGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 				attr->SetBorderTop(cell->m_borderAt[2].m_style, cell->m_borderAt[2].m_colour, cell->m_borderAt[2].m_width);
 				attr->SetBorderBottom(cell->m_borderAt[3].m_style, cell->m_borderAt[3].m_colour, cell->m_borderAt[3].m_width);
 
-				attr->SetFitMode(cell->m_fitMode == ibSpreadsheetCellDescription::ibFitMode::Mode_Overflow ? ibGridFitMode::Overflow() : ibGridFitMode::Clip());
+				attr->SetFitMode(cell->m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
 				attr->SetReadOnly(cell->m_isReadOnly);
 
 				wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType)));
@@ -80,13 +80,13 @@ bool ibGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 
 		for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberRows(); idx++) {
 
-			const ibSpreadsheetAreaDescription* area = spreadsheetDesc.GetRowAreaByIdx(idx);
+			const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetRowAreaByIdx(idx);
 
 			if (area == nullptr)
 				continue;
 
 			//adding a new section
-			ibGridCellArea entry;
+			wxGridExtCellArea entry;
 
 			entry.m_start = area->m_start;
 			entry.m_end = area->m_end;
@@ -99,13 +99,13 @@ bool ibGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 
 		for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberCols(); idx++) {
 
-			const ibSpreadsheetAreaDescription* area = spreadsheetDesc.GetColAreaByIdx(idx);
+			const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetColAreaByIdx(idx);
 
 			if (area == nullptr)
 				continue;
 
 			//adding a new section
-			ibGridCellArea entry;
+			wxGridExtCellArea entry;
 
 			entry.m_start = area->m_start;
 			entry.m_end = area->m_end;
@@ -125,61 +125,61 @@ bool ibGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 			m_colBrakeAt.push_back(spreadsheetDesc.GetColBrakeByIdx(idx));
 
 		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberRows(); idx++) {
-			const ibSpreadsheetRowSizeDescription* row_size = spreadsheetDesc.GetRowSizeByIdx(idx);
+			const CSpreadsheetRowSizeDescription* row_size = spreadsheetDesc.GetRowSizeByIdx(idx);
 			if (row_size == nullptr)
 				continue;
 
-			if ((int)row_size->m_row >= ibGrid::GetNumberRows())
-				ibGrid::AppendCols((int)row_size->m_row - ibGrid::GetNumberRows() + 1);
+			if ((int)row_size->m_row >= wxGridExt::GetNumberRows())
+				wxGridExt::AppendCols((int)row_size->m_row - wxGridExt::GetNumberRows() + 1);
 
-			ibGrid::SetRowSize(row_size->m_row, row_size->m_height, 1.0f, false);
+			wxGridExt::SetRowSize(row_size->m_row, row_size->m_height, 1.0f, false);
 		}
 
 		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberCols(); idx++) {
-			const ibSpreadsheetColSizeDescription* col_size = spreadsheetDesc.GetColSizeByIdx(idx);
+			const CSpreadsheetColSizeDescription* col_size = spreadsheetDesc.GetColSizeByIdx(idx);
 			if (col_size == nullptr)
 				continue;
 
-			if ((int)col_size->m_col >= ibGrid::GetNumberCols())
-				ibGrid::AppendCols((int)col_size->m_col - ibGrid::GetNumberCols() + 1);
+			if ((int)col_size->m_col >= wxGridExt::GetNumberCols())
+				wxGridExt::AppendCols((int)col_size->m_col - wxGridExt::GetNumberCols() + 1);
 
-			ibGrid::SetColSize(col_size->m_col, col_size->m_width, 1.0f, false);
+			wxGridExt::SetColSize(col_size->m_col, col_size->m_width, 1.0f, false);
 		}
 
 		FreezeTo(spreadsheetDesc.GetRowFreeze(), spreadsheetDesc.GetColFreeze());
 		EnableEditing(doc->IsEditable());
 
-		ibGrid::SetEvtHandlerEnabled(true);
+		wxGridExt::SetEvtHandlerEnabled(true);
 	}
 
-	return AssociatibDocument(doc);
+	return AssociateDocument(doc);
 }
 
-bool ibGridEditor::SaveDocument(ibSpreadsheetDescription& spreadsheetDesc) const
+bool CGridEditor::SaveDocument(CSpreadsheetDescription& spreadsheetDesc) const
 {
 	return SaveSpreadsheet(spreadsheetDesc);
 }
 
-bool ibGridEditor::SaveDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) const
+bool CGridEditor::SaveDocument(wxObjectDataPtr<CBackendSpreadsheetObject>& doc) const
 {
 	return SaveSpreadsheet(doc->GetSpreadsheetDesc());
 }
 
-void ibGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+void CGridEditor::PutDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
 {
-	ibGrid::SetEvtHandlerEnabled(false);
+	wxGridExt::SetEvtHandlerEnabled(false);
 
 	if (m_table == nullptr) {
-		ibGrid::SetTable(
-			new ibGridEditorStringTable, true);
+		wxGridExt::SetTable(
+			new CGridEditorStringTable, true);
 	}
 
 	const int maxRowBrake = GetMaxRowBrake();
 	const int maxColBrake = GetMaxColBrake();
 
-	ibGrid::AppendRows(doc->GetNumberRows());
+	wxGridExt::AppendRows(doc->GetNumberRows());
 	if (doc->GetNumberCols() > m_table->GetNumberCols())
-		ibGrid::AppendCols(doc->GetNumberCols() - m_table->GetNumberCols());
+		wxGridExt::AppendCols(doc->GetNumberCols() - m_table->GetNumberCols());
 
 	m_numRows = m_table->GetNumberRows();
 	m_numCols = m_table->GetNumberCols();
@@ -188,11 +188,11 @@ void ibGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>
 
 		for (int col = 0; col < doc->GetNumberCols(); col++) {
 
-			const ibSpreadsheetCellDescription* cell = doc->GetSpreadsheetDesc().GetCell(row, col);
+			const CSpreadsheetCellDescription* cell = doc->GetSpreadsheetDesc().GetCell(row, col);
 			if (cell == nullptr)
 				continue;
 
-			ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(maxRowBrake + row, col);
+			wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(maxRowBrake + row, col);
 			attr->SetAlignment(cell->m_alignHorz, cell->m_alignVert);
 
 			if (cell->m_row_size >= 0 && cell->m_col_size >= 0)
@@ -208,7 +208,7 @@ void ibGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>
 			attr->SetBorderTop(cell->m_borderAt[2].m_style, cell->m_borderAt[2].m_colour, cell->m_borderAt[2].m_width);
 			attr->SetBorderBottom(cell->m_borderAt[3].m_style, cell->m_borderAt[3].m_colour, cell->m_borderAt[3].m_width);
 
-			attr->SetFitMode(cell->m_fitMode == ibSpreadsheetCellDescription::ibFitMode::Mode_Overflow ? ibGridFitMode::Overflow() : ibGridFitMode::Clip());
+			attr->SetFitMode(cell->m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
 			attr->SetReadOnly(cell->m_isReadOnly);
 
 			wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType)));
@@ -227,25 +227,25 @@ void ibGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>
 	if (maxColBrake < doc->GetNumberCols())
 		SetColBrake(maxColBrake + doc->GetNumberCols());
 
-	ibGrid::EnableEditing(doc->IsEditable());
-	ibGrid::SetEvtHandlerEnabled(true);
+	wxGridExt::EnableEditing(doc->IsEditable());
+	wxGridExt::SetEvtHandlerEnabled(true);
 }
 
-void ibGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+void CGridEditor::JoinDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
 {
-	ibGrid::SetEvtHandlerEnabled(false);
+	wxGridExt::SetEvtHandlerEnabled(false);
 
 	if (m_table == nullptr) {
-		ibGrid::SetTable(
-			new ibGridEditorStringTable, true);
+		wxGridExt::SetTable(
+			new CGridEditorStringTable, true);
 	}
 
 	const int maxRowBrake = GetMaxRowBrake();
 	const int maxColBrake = GetMaxColBrake();
 
 	if (doc->GetNumberRows() > m_table->GetNumberRows())
-		ibGrid::AppendRows(doc->GetNumberRows() - m_table->GetNumberRows());
-	ibGrid::AppendCols(doc->GetNumberCols());
+		wxGridExt::AppendRows(doc->GetNumberRows() - m_table->GetNumberRows());
+	wxGridExt::AppendCols(doc->GetNumberCols());
 
 	m_numRows = m_table->GetNumberRows();
 	m_numCols = m_table->GetNumberCols();
@@ -254,11 +254,11 @@ void ibGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 
 		for (int col = 0; col < doc->GetNumberCols(); col++) {
 
-			const ibSpreadsheetCellDescription* cell = doc->GetSpreadsheetDesc().GetCell(row, col);
+			const CSpreadsheetCellDescription* cell = doc->GetSpreadsheetDesc().GetCell(row, col);
 			if (cell == nullptr)
 				continue;
 
-			ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, maxColBrake + col);
+			wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, maxColBrake + col);
 			attr->SetAlignment(cell->m_alignHorz, cell->m_alignVert);
 
 			if (cell->m_row_size >= 0 && cell->m_col_size >= 0)
@@ -274,7 +274,7 @@ void ibGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 			attr->SetBorderTop(cell->m_borderAt[2].m_style, cell->m_borderAt[2].m_colour, cell->m_borderAt[2].m_width);
 			attr->SetBorderBottom(cell->m_borderAt[3].m_style, cell->m_borderAt[3].m_colour, cell->m_borderAt[3].m_width);
 
-			attr->SetFitMode(cell->m_fitMode == ibSpreadsheetCellDescription::ibFitMode::Mode_Overflow ? ibGridFitMode::Overflow() : ibGridFitMode::Clip());
+			attr->SetFitMode(cell->m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
 			attr->SetReadOnly(cell->m_isReadOnly);
 
 			wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType)));
@@ -293,27 +293,27 @@ void ibGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 
 	SetColBrake(maxColBrake + doc->GetNumberCols());
 
-	ibGrid::SetEvtHandlerEnabled(true);
+	wxGridExt::SetEvtHandlerEnabled(true);
 }
 
-bool ibGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDesc)
+bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc)
 {
 	if (!spreadsheetDesc.IsEmptySpreadsheet())
 	{
-		ibGrid::SetTable(
-			new ibGridEditorStringTable(spreadsheetDesc.GetNumberRows(), spreadsheetDesc.GetNumberCols()), true);
+		wxGridExt::SetTable(
+			new CGridEditorStringTable(spreadsheetDesc.GetNumberRows(), spreadsheetDesc.GetNumberCols()), true);
 
-		ibGrid::SetEvtHandlerEnabled(false);
+		wxGridExt::SetEvtHandlerEnabled(false);
 
 		for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
 
 			for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
 
-				const ibSpreadsheetCellDescription* cell = spreadsheetDesc.GetCell(row, col);
+				const CSpreadsheetCellDescription* cell = spreadsheetDesc.GetCell(row, col);
 				if (cell == nullptr)
 					continue;
 
-				ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+				wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 				attr->SetAlignment(cell->m_alignHorz, cell->m_alignVert);
 
 				if (cell->m_row_size >= 0 && cell->m_col_size >= 0)
@@ -329,18 +329,18 @@ bool ibGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDe
 				attr->SetBorderTop(cell->m_borderAt[2].m_style, cell->m_borderAt[2].m_colour, cell->m_borderAt[2].m_width);
 				attr->SetBorderBottom(cell->m_borderAt[3].m_style, cell->m_borderAt[3].m_colour, cell->m_borderAt[3].m_width);
 
-				attr->SetFitMode(cell->m_fitMode == ibSpreadsheetCellDescription::ibFitMode::Mode_Overflow ? ibGridFitMode::Overflow() : ibGridFitMode::Clip());
+				attr->SetFitMode(cell->m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
 				attr->SetReadOnly(cell->m_isReadOnly);
 
-				if (cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrText) {
+				if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrText) {
 					wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(cell->m_value));
 					m_table->SetValueAsCustom(row, col, s_strTypeTextOrString, ptr.get());
 				}
-				else if (cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
+				else if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
 					wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(cell->m_value));
 					m_table->SetValueAsCustom(row, col, s_strTypeTemplate, ptr.get());
 				}
-				else if (cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
+				else if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
 					wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(cell->m_value));
 					m_table->SetValueAsCustom(row, col, s_strTypeParameter, ptr.get());
 				}
@@ -351,13 +351,13 @@ bool ibGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDe
 
 		for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberRows(); idx++) {
 
-			const ibSpreadsheetAreaDescription* area = spreadsheetDesc.GetRowAreaByIdx(idx);
+			const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetRowAreaByIdx(idx);
 
 			if (area == nullptr)
 				continue;
 
 			//adding a new section
-			ibGridCellArea entry;
+			wxGridExtCellArea entry;
 
 			entry.m_start = area->m_start;
 			entry.m_end = area->m_end;
@@ -370,13 +370,13 @@ bool ibGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDe
 
 		for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberCols(); idx++) {
 
-			const ibSpreadsheetAreaDescription* area = spreadsheetDesc.GetColAreaByIdx(idx);
+			const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetColAreaByIdx(idx);
 
 			if (area == nullptr)
 				continue;
 
 			//adding a new section
-			ibGridCellArea entry;
+			wxGridExtCellArea entry;
 
 			entry.m_start = area->m_start;
 			entry.m_end = area->m_end;
@@ -396,36 +396,36 @@ bool ibGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDe
 			m_colBrakeAt.push_back(spreadsheetDesc.GetColBrakeByIdx(idx));
 
 		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberRows(); idx++) {
-			const ibSpreadsheetRowSizeDescription* row_size = spreadsheetDesc.GetRowSizeByIdx(idx);
+			const CSpreadsheetRowSizeDescription* row_size = spreadsheetDesc.GetRowSizeByIdx(idx);
 			if (row_size == nullptr)
 				continue;
 
-			if ((int)row_size->m_row >= ibGrid::GetNumberRows())
-				ibGrid::AppendCols((int)row_size->m_row - ibGrid::GetNumberRows() + 1);
+			if ((int)row_size->m_row >= wxGridExt::GetNumberRows())
+				wxGridExt::AppendCols((int)row_size->m_row - wxGridExt::GetNumberRows() + 1);
 
-			ibGrid::SetRowSize((int)row_size->m_row, row_size->m_height, 1.0f, false);
+			wxGridExt::SetRowSize((int)row_size->m_row, row_size->m_height, 1.0f, false);
 		}
 
 		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberCols(); idx++) {
-			const ibSpreadsheetColSizeDescription* col_size = spreadsheetDesc.GetColSizeByIdx(idx);
+			const CSpreadsheetColSizeDescription* col_size = spreadsheetDesc.GetColSizeByIdx(idx);
 			if (col_size == nullptr)
 				continue;
 
-			if ((int)col_size->m_col >= ibGrid::GetNumberCols())
-				ibGrid::AppendCols((int)col_size->m_col - ibGrid::GetNumberCols() + 1);
+			if ((int)col_size->m_col >= wxGridExt::GetNumberCols())
+				wxGridExt::AppendCols((int)col_size->m_col - wxGridExt::GetNumberCols() + 1);
 
-			ibGrid::SetColSize(col_size->m_col, col_size->m_width, 1.0f, false);
+			wxGridExt::SetColSize(col_size->m_col, col_size->m_width, 1.0f, false);
 		}
 
 		FreezeTo(spreadsheetDesc.GetRowFreeze(), spreadsheetDesc.GetColFreeze());
 
-		ibGrid::SetEvtHandlerEnabled(true);
+		wxGridExt::SetEvtHandlerEnabled(true);
 	}
 
 	return true;
 }
 
-bool ibGridEditor::SaveSpreadsheet(ibSpreadsheetDescription& spreadsheetDesc) const
+bool CGridEditor::SaveSpreadsheet(CSpreadsheetDescription& spreadsheetDesc) const
 {
 	spreadsheetDesc = m_spreadsheetObject->GetSpreadsheetDesc();
 	return true;

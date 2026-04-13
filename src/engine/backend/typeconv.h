@@ -812,13 +812,13 @@ namespace typeConv
 		return result;
 	}
 
-	inline ibNumber StringToNumber(const wxString& str) {
-		ibNumber out;
+	inline number_t StringToNumber(const wxString& str) {
+		number_t out;
 		out.FromString(str.ToStdWstring());
 		return out;
 	}
 
-	inline wxString NumberToString(const ibNumber& val) {
+	inline wxString NumberToString(const number_t& val) {
 		wxString convert;
 		convert << val.ToString();
 		return convert;

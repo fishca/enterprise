@@ -15,11 +15,11 @@
 #include "backend/databaseLayer/resultSetMetaData.h"
 #include "engine/sqlite3.h"
 
-class ibResultSetMetaDataSQLite : public ibResultSetMetaData
+class CSqliteResultSetMetaData : public IResultSetMetaData
 {
 public:
   // ctor
-  ibResultSetMetaDataSQLite(sqlite3_stmt* pStmt);
+  CSqliteResultSetMetaData(sqlite3_stmt* pStmt);
 
   virtual int GetColumnType(int i);
   virtual int GetColumnSize(int i);

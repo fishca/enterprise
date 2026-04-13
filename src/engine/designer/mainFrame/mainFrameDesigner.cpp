@@ -16,11 +16,11 @@
 
 ///////////////////////////////////////////////////////////////////
 
-ibFrontendDocMDIFrameDesigner* ibFrontendDocMDIFrameDesigner::GetFrame() {
-	ibFrontendDocMDIFrame* instance = ibFrontendDocMDIFrame::GetFrame();
+CFrontendDocMDIFrameDesigner* CFrontendDocMDIFrameDesigner::GetFrame() {
+	CFrontendDocMDIFrame* instance = CFrontendDocMDIFrame::GetFrame();
 	if (instance != nullptr) {
-		ibFrontendDocMDIFrameDesigner* designer_instance =
-			dynamic_cast<ibFrontendDocMDIFrameDesigner*>(instance);
+		CFrontendDocMDIFrameDesigner* designer_instance =
+			dynamic_cast<CFrontendDocMDIFrameDesigner*>(instance);
 		wxASSERT(designer_instance);
 		return designer_instance;
 	}
@@ -29,33 +29,33 @@ ibFrontendDocMDIFrameDesigner* ibFrontendDocMDIFrameDesigner::GetFrame() {
 
 ///////////////////////////////////////////////////////////////////
 
-ibFrontendDocMDIFrameDesigner::ibFrontendDocMDIFrameDesigner(const wxString& title,
+CFrontendDocMDIFrameDesigner::CFrontendDocMDIFrameDesigner(const wxString& title,
 	const wxPoint& pos,
-	const wxSize& size) : ibFrontendDocMDIFrame(title, pos, size),
+	const wxSize& size) : CFrontendDocMDIFrame(title, pos, size),
 
 	m_metaWindow(nullptr),
 
-	m_outputWindow(new ibOutputWindow(this, wxID_ANY)),
-	m_localWindow(new ibLocalWindow(this, wxID_ANY)),
-	m_stackWindow(new ibStackWindow(this, wxID_ANY)),
-	m_watchWindow(new ibWatchWindow(this, wxID_ANY))
+	m_outputWindow(new COutputWindow(this, wxID_ANY)),
+	m_localWindow(new CLocalWindow(this, wxID_ANY)),
+	m_stackWindow(new CStackWindow(this, wxID_ANY)),
+	m_watchWindow(new CWatchWindow(this, wxID_ANY))
 {
-	m_docManager = new ibMetaDocManagerDesigner;
+	m_docManager = new CDesignerDocManager;
 }
 
-ibFrontendDocMDIFrameDesigner::~ibFrontendDocMDIFrameDesigner()
+CFrontendDocMDIFrameDesigner::~CFrontendDocMDIFrameDesigner()
 {
 	wxDELETE(m_docManager);
 }
 
-void ibFrontendDocMDIFrameDesigner::CreateGUI()
+void CFrontendDocMDIFrameDesigner::CreateGUI()
 {
 	CreateWideGui();
 }
 
 static bool s_setModify = false, s_modified = false;
 
-void ibFrontendDocMDIFrameDesigner::Modify(bool modify)
+void CFrontendDocMDIFrameDesigner::Modify(bool modify)
 {
 	wxAuiPaneInfo& paneInfo = m_mgr.GetPane(wxAUI_PANE_METADATA);
 
@@ -88,12 +88,12 @@ void ibFrontendDocMDIFrameDesigner::Modify(bool modify)
 	}
 }
 
-bool ibFrontendDocMDIFrameDesigner::IsModified() const
+bool CFrontendDocMDIFrameDesigner::IsModified() const
 {
 	return s_modified;
 }
 
-void ibFrontendDocMDIFrameDesigner::LoadOptions()
+void CFrontendDocMDIFrameDesigner::LoadOptions()
 {
 	// Disable logging since it's ok if the options file is not there.
 	wxLogNull logNo;
@@ -147,7 +147,7 @@ void ibFrontendDocMDIFrameDesigner::LoadOptions()
 	UpdateEditorOptions();
 }
 
-void ibFrontendDocMDIFrameDesigner::SaveOptions()
+void CFrontendDocMDIFrameDesigner::SaveOptions()
 {
 	// Disable logging since it's ok if the options file saving isn't successful.
 	wxLogNull logNo;
@@ -177,7 +177,7 @@ void ibFrontendDocMDIFrameDesigner::SaveOptions()
 }
 
 #pragma region debugger 
-void ibFrontendDocMDIFrameDesigner::Debugger_OnSessionStart()
+void CFrontendDocMDIFrameDesigner::Debugger_OnSessionStart()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_INTO, true);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_OVER, true);
@@ -187,7 +187,7 @@ void ibFrontendDocMDIFrameDesigner::Debugger_OnSessionStart()
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, false);
 }
 
-void ibFrontendDocMDIFrameDesigner::Debugger_OnSessionEnd()
+void CFrontendDocMDIFrameDesigner::Debugger_OnSessionEnd()
 {
 	if (!debugClient->HasConnections()) {
 		m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_INTO, false);
@@ -199,25 +199,25 @@ void ibFrontendDocMDIFrameDesigner::Debugger_OnSessionEnd()
 	}
 }
 
-void ibFrontendDocMDIFrameDesigner::Debugger_OnEnterLoop()
+void CFrontendDocMDIFrameDesigner::Debugger_OnEnterLoop()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_PAUSE, false);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, true);
 }
 
-void ibFrontendDocMDIFrameDesigner::Debugger_OnLeaveLoop()
+void CFrontendDocMDIFrameDesigner::Debugger_OnLeaveLoop()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_PAUSE, true);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, false);
 }
 #pragma endregion 
 
-bool ibFrontendDocMDIFrameDesigner::Show(bool show)
+bool CFrontendDocMDIFrameDesigner::Show(bool show)
 {
 	if (show && !m_metaWindow->Load())
 		return false;
 
-	bool ret = ibFrontendDocMDIFrame::Show(show);
+	bool ret = CFrontendDocMDIFrame::Show(show);
 	if (ret) {
 		if (!outputWindow->IsEmpty()) {
 			outputWindow->SetFocus();
@@ -230,21 +230,21 @@ bool ibFrontendDocMDIFrameDesigner::Show(bool show)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibFrontendDocMDIFrameDesigner::OnInitializeConfiguration(ibConfigType cfg)
+void CFrontendDocMDIFrameDesigner::OnInitializeConfiguration(eConfigType cfg)
 {
-	ibDebuggerClientBridge::SetDebuggerClientBridge(new ibDebuggerClientBridgeDesigner);
+	IDebuggerClientBridge::SetDebuggerClientBridge(new CDebuggerClientBridge);
 }
 
-void ibFrontendDocMDIFrameDesigner::OnDestroyConfiguration(ibConfigType cfg)
+void CFrontendDocMDIFrameDesigner::OnDestroyConfiguration(eConfigType cfg)
 {
-	ibDebuggerClientBridge::SetDebuggerClientBridge(nullptr);
+	IDebuggerClientBridge::SetDebuggerClientBridge(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "backend/metadataConfiguration.h"
 
-bool ibFrontendDocMDIFrameDesigner::AllowRun() const
+bool CFrontendDocMDIFrameDesigner::AllowRun() const
 {
 	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
 		return true;
@@ -252,7 +252,7 @@ bool ibFrontendDocMDIFrameDesigner::AllowRun() const
 	return false;
 }
 
-bool ibFrontendDocMDIFrameDesigner::AllowClose() const
+bool CFrontendDocMDIFrameDesigner::AllowClose() const
 {
 	if (activeMetaData != nullptr) {
 

@@ -5,16 +5,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibPropertyObject;
+class BACKEND_API IPropertyObject;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibProperty;
-class BACKEND_API ibEvent;
+class BACKEND_API IProperty;
+class BACKEND_API IEvent;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibMetaData;
+class BACKEND_API IMetaData;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -27,16 +27,16 @@ class BACKEND_API ibMetaData;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibPropertyCategory final {
+class BACKEND_API CPropertyCategory final {
 public:
 
-	~ibPropertyCategory() {
+	~CPropertyCategory() {
 		for (auto& category : m_categories) wxDELETE(category);
 	}
 
-	void AddProperty(ibProperty* property);
-	void AddEvent(ibEvent* event);
-	void AddCategory(ibPropertyCategory* cat);
+	void AddProperty(IProperty* property);
+	void AddEvent(IEvent* event);
+	void AddCategory(CPropertyCategory* cat);
 
 	wxString GetName() const { return m_catName; }
 	wxString GetLabel() const { return (m_catLabel.IsEmpty()) ? m_catName : m_catLabel; }
@@ -52,29 +52,29 @@ public:
 		return wxEmptyString;
 	}
 
-	ibPropertyCategory* GetCategory(unsigned int index) const {
+	CPropertyCategory* GetCategory(unsigned int index) const {
 		if (index < m_categories.size()) return m_categories[index];
-		return new ibPropertyCategory(m_owner);
+		return new CPropertyCategory(m_owner);
 	}
 
-	ibPropertyObject* GetPropertyObject() const { return m_owner; }
+	IPropertyObject* GetPropertyObject() const { return m_owner; }
 
 	unsigned int GetPropertyCount() const { return m_properties.size(); }
 	unsigned int GetEventCount() const { return m_events.size(); }
 	unsigned int GetCategoryCount() const { return m_categories.size(); }
 
-	friend class ibPropertyObject;
+	friend class IPropertyObject;
 
 private:
 
-	ibPropertyCategory(ibPropertyObject* object) :
+	CPropertyCategory(IPropertyObject* object) :
 		m_catName(propertyDefName),
 		m_catLabel(propertyDefLabel),
 		m_catHelp(wxEmptyString),
 		m_owner(object)
 	{
 	}
-	ibPropertyCategory(const wxString& name, ibPropertyObject* object, ibPropertyCategory* ownerCat = nullptr) :
+	CPropertyCategory(const wxString& name, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
 		m_catName(name),
 		m_catLabel(wxEmptyString),
 		m_catHelp(wxEmptyString),
@@ -82,7 +82,7 @@ private:
 	{
 		if (ownerCat != nullptr) ownerCat->AddCategory(this);
 	}
-	ibPropertyCategory(const wxString& name, const wxString& label, ibPropertyObject* object, ibPropertyCategory* ownerCat = nullptr) :
+	CPropertyCategory(const wxString& name, const wxString& label, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
 		m_catName(name),
 		m_catLabel(label),
 		m_catHelp(wxEmptyString),
@@ -90,7 +90,7 @@ private:
 	{
 		if (ownerCat != nullptr) ownerCat->AddCategory(this);
 	}
-	ibPropertyCategory(const wxString& name, const wxString& label, const wxString& helpString, ibPropertyObject* object, ibPropertyCategory* ownerCat = nullptr) :
+	CPropertyCategory(const wxString& name, const wxString& label, const wxString& helpString, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
 		m_catName(name),
 		m_catLabel(label),
 		m_catHelp(helpString),
@@ -104,16 +104,16 @@ private:
 	wxString m_catHelp;
 	std::vector<wxString> m_properties;
 	std::vector<wxString> m_events;
-	std::vector< ibPropertyCategory* > m_categories;
-	ibPropertyObject* m_owner;
+	std::vector< CPropertyCategory* > m_categories;
+	IPropertyObject* m_owner;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibBackendProperty {
+class BACKEND_API IBackendCellField {
 protected:
 
-	ibBackendProperty(ibPropertyCategory* cat, const wxString& name,
+	IBackendCellField(CPropertyCategory* cat, const wxString& name,
 		const wxVariant& value) :
 		m_propName(name),
 		m_propLabel(name),
@@ -121,7 +121,7 @@ protected:
 		m_owner(cat->GetPropertyObject())
 	{
 	}
-	ibBackendProperty(ibPropertyCategory* cat, const wxString& name,
+	IBackendCellField(CPropertyCategory* cat, const wxString& name,
 		const wxString& label, const wxVariant& value) :
 		m_propName(name),
 		m_propLabel(label.IsEmpty() ? name : label),
@@ -129,7 +129,7 @@ protected:
 		m_owner(cat->GetPropertyObject())
 	{
 	}
-	ibBackendProperty(ibPropertyCategory* cat, const wxString& name,
+	IBackendCellField(CPropertyCategory* cat, const wxString& name,
 		const wxString& label, const wxString& helpString, const wxVariant& value) :
 		m_propName(name),
 		m_propLabel(label.IsEmpty() ? name : label),
@@ -139,14 +139,14 @@ protected:
 	}
 
 public:
-	virtual ~ibBackendProperty() {}
+	virtual ~IBackendCellField() {}
 public:
 
 	bool IsEditable() const;
 
 	////////////////////
 
-	ibPropertyObject* GetPropertyObject() const { return m_owner; }
+	IPropertyObject* GetPropertyObject() const { return m_owner; }
 
 	////////////////////
 
@@ -165,7 +165,7 @@ public:
 	void SetValue(const wxVariant& val) { DoSetValue(val); }
 	////////////////////
 
-	ibBackendProperty& operator =(const wxVariant& val) {
+	IBackendCellField& operator =(const wxVariant& val) {
 		SetValue(val);
 		return *this;
 	}
@@ -190,20 +190,20 @@ public:
 	virtual bool IsEmptyProperty() const { return false; }
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const = 0;
+	virtual wxPGProperty* GetPGProperty() const = 0;
 	virtual void RefreshPGProperty(wxPGProperty* pg) {};
 
 	//load & save object in control 
-	virtual bool LoadData(ibReaderMemory& reader) = 0;
-	virtual bool SaveData(ibWriterMemory& writer) = 0;
+	virtual bool LoadData(CMemoryReader& reader) = 0;
+	virtual bool SaveData(CMemoryWriter& writer) = 0;
 
 	//copy & paste object in control 
-	virtual bool PasteData(ibReaderMemory& reader) { return LoadData(reader); }
-	virtual bool CopyData(ibWriterMemory& writer) { return SaveData(writer); }
+	virtual bool PasteData(CMemoryReader& reader) { return LoadData(reader); }
+	virtual bool CopyData(CMemoryWriter& writer) { return SaveData(writer); }
 
 	//Set/Get property data
-	virtual bool SetDataValue(const ibValue& varPropVal) = 0;
-	virtual bool GetDataValue(ibValue& pvarPropVal) const = 0;
+	virtual bool SetDataValue(const CValue& varPropVal) = 0;
+	virtual bool GetDataValue(CValue& pvarPropVal) const = 0;
 
 protected:
 	virtual void DoSetValue(const wxVariant& val) { m_propValue = val; }
@@ -212,29 +212,29 @@ protected:
 	wxString        m_propName;
 	wxString		m_propLabel;
 	wxString		m_propHelp;
-	ibPropertyObject* m_owner; // pointer to the owner object
+	IPropertyObject* m_owner; // pointer to the owner object
 	wxVariant       m_propValue;
 };
 
-class BACKEND_API ibProperty : public ibBackendProperty {
-	void InitProperty(ibPropertyCategory* cat, const wxVariant& value = wxNullVariant);
+class BACKEND_API IProperty : public IBackendCellField {
+	void InitProperty(CPropertyCategory* cat, const wxVariant& value = wxNullVariant);
 protected:
-	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxVariant& value) : ibBackendProperty(cat, name, value) { InitProperty(cat, value); }
-	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : ibBackendProperty(cat, name, label, value) { InitProperty(cat, value); }
-	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : ibBackendProperty(cat, name, label, helpString, value) { InitProperty(cat, value); }
+	IProperty(CPropertyCategory* cat, const wxString& name, const wxVariant& value) : IBackendCellField(cat, name, value) { InitProperty(cat, value); }
+	IProperty(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : IBackendCellField(cat, name, label, value) { InitProperty(cat, value); }
+	IProperty(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : IBackendCellField(cat, name, label, helpString, value) { InitProperty(cat, value); }
 public:
-	virtual bool PasteData(ibReaderMemory& reader);
+	virtual bool PasteData(CMemoryReader& reader);
 };
 
-class BACKEND_API ibEvent : public ibBackendProperty {
-	void InitEvent(ibPropertyCategory* cat, const wxVariant& value = wxNullVariant);
+class BACKEND_API IEvent : public IBackendCellField {
+	void InitEvent(CPropertyCategory* cat, const wxVariant& value = wxNullVariant);
 protected:
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxVariant& value) : ibBackendProperty(cat, name, value) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : ibBackendProperty(cat, name, label, value) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : ibBackendProperty(cat, name, label, helpString, value) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args, const wxVariant& value) : ibBackendProperty(cat, name, value), m_args(args) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args, const wxVariant& value) : ibBackendProperty(cat, name, label, value), m_args(args) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args, const wxVariant& value) :ibBackendProperty(cat, name, label, helpString, value), m_args(args) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxVariant& value) : IBackendCellField(cat, name, value) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : IBackendCellField(cat, name, label, value) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : IBackendCellField(cat, name, label, helpString, value) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxArrayString& args, const wxVariant& value) : IBackendCellField(cat, name, value), m_args(args) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args, const wxVariant& value) : IBackendCellField(cat, name, label, value), m_args(args) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args, const wxVariant& value) :IBackendCellField(cat, name, label, helpString, value), m_args(args) { InitEvent(cat, value); }
 public:
 	const wxArrayString& GetArgs() const { return m_args; }
 protected:
@@ -247,44 +247,44 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibPropertyObject {
+class BACKEND_API IPropertyObject {
 protected:
 
 	template <typename typeProp, typename... Args>
-	inline typeProp* CreateProperty(ibPropertyCategory* cat, Args&&... args) {
+	inline typeProp* CreateProperty(CPropertyCategory* cat, Args&&... args) {
 		return new typeProp(cat, std::forward<Args>(args)...);
 	}
 	template <typename typeEvent, typename... Args>
-	inline typeEvent* CreateEvent(ibPropertyCategory* cat, Args&&... args) {
+	inline typeEvent* CreateEvent(CPropertyCategory* cat, Args&&... args) {
 		return new typeEvent(cat, std::forward<Args>(args)...);
 	}
-	inline ibPropertyCategory* CreatePropertyCategory(const wxString& catName) {
-		return new ibPropertyCategory(catName, this, m_category);
+	inline CPropertyCategory* CreatePropertyCategory(const wxString& catName) {
+		return new CPropertyCategory(catName, this, m_category);
 	}
-	inline ibPropertyCategory* CreatePropertyCategory(const wxString& catName, const wxString& catLabel) {
-		return new ibPropertyCategory(catName, catLabel, this, m_category);
+	inline CPropertyCategory* CreatePropertyCategory(const wxString& catName, const wxString& catLabel) {
+		return new CPropertyCategory(catName, catLabel, this, m_category);
 	}
-	inline ibPropertyCategory* CreatePropertyCategory(const wxString& catName, const wxString& catLabel, const wxString& catHelp) {
-		return new ibPropertyCategory(catName, catLabel, catHelp, this, m_category);
+	inline CPropertyCategory* CreatePropertyCategory(const wxString& catName, const wxString& catLabel, const wxString& catHelp) {
+		return new CPropertyCategory(catName, catLabel, catHelp, this, m_category);
 	}
-	inline ibPropertyCategory* CreatePropertyCategory(ibPropertyCategory* ownerCat, const wxString& catName) {
-		return new ibPropertyCategory(catName, this, ownerCat);
+	inline CPropertyCategory* CreatePropertyCategory(CPropertyCategory* ownerCat, const wxString& catName) {
+		return new CPropertyCategory(catName, this, ownerCat);
 	}
-	inline ibPropertyCategory* CreatePropertyCategory(ibPropertyCategory* ownerCat, const wxString& catName, const wxString& catLabel) {
-		return new ibPropertyCategory(catName, catLabel, this, ownerCat);
+	inline CPropertyCategory* CreatePropertyCategory(CPropertyCategory* ownerCat, const wxString& catName, const wxString& catLabel) {
+		return new CPropertyCategory(catName, catLabel, this, ownerCat);
 	}
-	inline ibPropertyCategory* CreatePropertyCategory(ibPropertyCategory* ownerCat, const wxString& catName, const wxString& catLabel, const wxString& catHelp) {
-		return new ibPropertyCategory(catName, catLabel, catHelp, this, ownerCat);
+	inline CPropertyCategory* CreatePropertyCategory(CPropertyCategory* ownerCat, const wxString& catName, const wxString& catLabel, const wxString& catHelp) {
+		return new CPropertyCategory(catName, catLabel, catHelp, this, ownerCat);
 	}
 
 protected:
 
 	wxString GetIndentString(int indent) const; // obtiene la cadena con el indentado
 
-	ibPropertyObject() /*: m_parent(nullptr)*/ { m_category = new ibPropertyCategory(this); }
+	IPropertyObject() /*: m_parent(nullptr)*/ { m_category = new CPropertyCategory(this); }
 
-	friend class ibProperty;
-	friend class ibEvent;
+	friend class IProperty;
+	friend class IEvent;
 
 	/**
 	* Añade una propiedad al objeto.
@@ -293,12 +293,12 @@ protected:
 	* instancia del objeto.
 	* Los objetos siempre se crearán a través del registro de descriptores.
 	*/
-	void AddProperty(ibProperty* property);
-	void AddEvent(ibEvent* event);
+	void AddProperty(IProperty* property);
+	void AddEvent(IEvent* event);
 
 public:
 
-	virtual ~ibPropertyObject();
+	virtual ~IPropertyObject();
 
 	/**
 	* Obtiene el nombre del objeto.
@@ -310,10 +310,10 @@ public:
 	virtual wxString GetClassName() const = 0;
 
 	/// Gets the owner object
-	virtual ibPropertyObject* GetOwner() const { return nullptr; }
+	virtual IPropertyObject* GetOwner() const { return nullptr; }
 
 	/// Gets the metadata object
-	virtual ibMetaData* GetMetaData() const { return nullptr; }
+	virtual IMetaData* GetMetaData() const { return nullptr; }
 
 	/**
 	* Obtiene la propiedad identificada por el nombre.
@@ -321,8 +321,8 @@ public:
 	* @note Notar que no existe el método SetProperty, ya que la modificación
 	*       se hace a través de la referencia.
 	*/
-	ibProperty* GetProperty(const wxString& nameParam) const;
-	ibEvent* GetEvent(const wxString& nameParam) const;
+	IProperty* GetProperty(const wxString& nameParam) const;
+	IEvent* GetEvent(const wxString& nameParam) const;
 
 	/**
 	* Obtiene el número de propiedades del objeto.
@@ -330,15 +330,15 @@ public:
 	unsigned int GetPropertyCount() const { return (unsigned int)m_properties.size(); }
 	unsigned int GetEventCount() const { return m_events.size(); }
 
-	ibProperty* GetProperty(unsigned int idx) const; // throws ...;
-	ibEvent* GetEvent(unsigned int idx) const; // throws ...;
+	IProperty* GetProperty(unsigned int idx) const; // throws ...;
+	IEvent* GetEvent(unsigned int idx) const; // throws ...;
 
 	/**
 	* Obtiene el número de hijos del objeto.
 	*/
 	unsigned int GetPropertyIndex(const wxString& nameParam) const;
 
-	ibProperty* GetPropertyByIndex(unsigned int idx) const {
+	IProperty* GetPropertyByIndex(unsigned int idx) const {
 		if (m_properties.size() < idx)
 			return nullptr;
 		auto properties_iterator = m_properties.begin();
@@ -359,68 +359,68 @@ public:
 	virtual int GetComponentType() const { return COMPONENT_TYPE_ABSTRACT; }
 
 	/**
-	* ibProperty events
+	* IProperty events
 	*/
 	virtual void OnPropertyCreated() {}
-	virtual void OnPropertyCreated(ibProperty* property) {}
-	virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, ibProperty* property) {}
-	virtual void OnPropertySelected(ibProperty* property) {}
-	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue) { return true; }
-	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue) {}
+	virtual void OnPropertyCreated(IProperty* property) {}
+	virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IProperty* property) {}
+	virtual void OnPropertySelected(IProperty* property) {}
+	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue) { return true; }
+	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue) {}
 
 	/**
-	* ibEvent events
+	* IEvent events
 	*/
 	virtual void OnEventCreated() {}
-	virtual void OnEventCreated(ibEvent* event) {}
-	virtual void OnEventRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, ibEvent* event) {}
-	virtual void OnEventSelected(ibEvent* event) {}
-	virtual bool OnEventChanging(ibEvent* event, const wxVariant& newValue) { return true; }
-	virtual void OnEventChanged(ibEvent* property, const wxVariant& oldValue, const wxVariant& newValue) {}
+	virtual void OnEventCreated(IEvent* event) {}
+	virtual void OnEventRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IEvent* event) {}
+	virtual void OnEventSelected(IEvent* event) {}
+	virtual bool OnEventChanging(IEvent* event, const wxVariant& newValue) { return true; }
+	virtual void OnEventChanged(IEvent* property, const wxVariant& oldValue, const wxVariant& newValue) {}
 
 	/**
 	* Comprueba si el tipo es derivado del que se pasa como parámetro.
 	*/
 
-	ibPropertyCategory* GetCategory() const { return m_category; }
+	CPropertyCategory* GetCategory() const { return m_category; }
 	virtual bool IsEditable() const = 0;
 
 protected:
 
 	//copy & paste property 
-	bool CopyProperty(ibWriterMemory& writer) const;
-	bool PasteProperty(ibReaderMemory& reader);
+	bool CopyProperty(CMemoryWriter& writer) const;
+	bool PasteProperty(CMemoryReader& reader);
 
-	ibPropertyCategory* m_category;
+	CPropertyCategory* m_category;
 
 private:
 
-	std::map<wxString, ibProperty*> m_properties;
-	std::map<wxString, ibEvent*> m_events;
+	std::map<wxString, IProperty*> m_properties;
+	std::map<wxString, IEvent*> m_events;
 };
 
 template <typename T>
-class ibPropertyObjectHelper : public ibPropertyObject {
-	void RemovePropertyObject(const ibPropertyObject* obj) {
+class IPropertyObjectHelper : public IPropertyObject {
+	void RemovePropertyObject(const IPropertyObject* obj) {
 		std::vector< propertyType* >::iterator it = m_children.begin();
 		while (it != m_children.end() && *it != obj) it++;
 		if (it != m_children.end()) m_children.erase(it);
 	}
 protected:
-	ibPropertyObjectHelper() : m_parent(nullptr) {}
+	IPropertyObjectHelper() : m_parent(nullptr) {}
 public:
 
 	using propertyType = typename T;
 	using vectorType = typename std::vector<propertyType*>;
 
-	virtual ~ibPropertyObjectHelper() {
+	virtual ~IPropertyObjectHelper() {
 		// remove the reference in the parent
 		if (m_parent != nullptr) m_parent->RemovePropertyObject(this);
 		for (auto& child : m_children) child->SetParent(nullptr);
 	}
 
 	/// Gets the owner object
-	virtual ibPropertyObjectHelper* GetOwner() const { return GetParent(); }
+	virtual IPropertyObjectHelper* GetOwner() const { return GetParent(); }
 
 	// Gets the parent object
 	propertyType* GetParent() const { return m_parent; }

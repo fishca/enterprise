@@ -1,32 +1,30 @@
 #include "propertySize.h"
 #include "backend/system/value/valueSize.h"
 
-wxObject* (*ibPropertySize::ms_propertySize)(const wxString&, const wxString&, const wxSize&) = nullptr;
-
 //base property for "size"
-bool ibPropertySize::SetDataValue(const ibValue& varPropVal)
+bool CPropertySize::SetDataValue(const CValue& varPropVal)
 {
-	ibValueSize* valueSize = varPropVal.ConvertToType<ibValueSize>();
+	CValueSize* valueSize = varPropVal.ConvertToType<CValueSize>();
 	if (valueSize == nullptr)
 		return false;
 	SetValue(valueSize->m_size);
 	return true;
 }
 
-bool ibPropertySize::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertySize::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibValue::CreateObjectValue <ibValueSize>(GetValueAsSize());
+	pvarPropVal = CValue::CreateObjectValue <CValueSize>(GetValueAsSize());
 	return true;
 }
 
-bool ibPropertySize::LoadData(ibReaderMemory& reader)
+bool CPropertySize::LoadData(CMemoryReader& reader)
 {
-	ibPropertySize::SetValue(reader.r_stringZ());
+	CPropertySize::SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool ibPropertySize::SaveData(ibWriterMemory& writer)
+bool CPropertySize::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(ibPropertySize::GetValueAsString());
+	writer.w_stringZ(CPropertySize::GetValueAsString());
 	return true;
 }

@@ -6,17 +6,17 @@
 #include "metaObject.h"
 #include "backend/metaData.h"
 
-void ibValueMetaObject::OnPropertyCreated(ibProperty* property)
+void IValueMetaObject::OnPropertyCreated(IProperty* property)
 {
 }
 
-void ibValueMetaObject::OnPropertySelected(ibProperty* property)
+void IValueMetaObject::OnPropertySelected(IProperty* property)
 {
 }
 
-bool ibValueMetaObject::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
+bool IValueMetaObject::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
 {
-	ibBackendMetadataTree* metadataTree = m_metaData->GetMetaTree();
+	IBackendMetadataTree* metadataTree = m_metaData->GetMetaTree();
 	if (m_propertyName == property && metadataTree != nullptr)
 		return metadataTree->RenameMetaObject(this, newValue.GetString());
 	else if (m_propertyName == property)
@@ -27,10 +27,10 @@ bool ibValueMetaObject::OnPropertyChanging(ibProperty* property, const wxVariant
 
 #include "backend/backend_mainFrame.h"
 
-void ibValueMetaObject::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void IValueMetaObject::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_propertyName == property) m_propertySynonym->SetValue(stringUtils::GenerateSynonym(newValue));
 	wxASSERT(m_metaData);
-	const ibBackendMetadataTree* metadataTree = m_metaData->GetMetaTree();
+	const IBackendMetadataTree* metadataTree = m_metaData->GetMetaTree();
 	if (backend_mainFrame && metadataTree != nullptr) backend_mainFrame->RefreshFrame();
 }

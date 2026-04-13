@@ -8,15 +8,15 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectCatalog, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectCatalog, CValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectCatalog::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+CValueMetaObjectCommonModule* CValueManagerDataObjectCatalog::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
 
 #include "reference/reference.h"
 
-ibValueReferenceDataObject* ibValueManagerDataObjectCatalog::EmptyRef() const
+CValueReferenceDataObject* CValueManagerDataObjectCatalog::EmptyRef() const
 {
-	return ibValueReferenceDataObject::Create(m_metaObject);
+	return CValueReferenceDataObject::Create(m_metaObject);
 }
 
 enum Func {
@@ -32,9 +32,9 @@ enum Func {
 	eEmptyRef
 };
 
-void ibValueManagerDataObjectCatalog::PrepareNames() const
+void CValueManagerDataObjectCatalog::PrepareNames() const
 {
-	ibValueManagerDataObjectPredefined::PrepareNames();
+	IValueManagerDataObjectPredefined::PrepareNames();
 
 	m_methodHelper->AppendFunc(wxT("CreateElement"), wxT("CreateElement()"));
 	m_methodHelper->AppendFunc(wxT("CreateGroup"), wxT("CreateGroup()"));
@@ -50,18 +50,18 @@ void ibValueManagerDataObjectCatalog::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool ibValueManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
 	case eCreateElement:
-		pvarRetValue = m_metaObject->CreateObjectValue(ibObjectMode::OBJECT_ITEM);
+		pvarRetValue = m_metaObject->CreateObjectValue(eObjectMode::OBJECT_ITEM);
 		return true;
 	case eCreateGroup:
-		pvarRetValue = m_metaObject->CreateObjectValue(ibObjectMode::OBJECT_FOLDER);
+		pvarRetValue = m_metaObject->CreateObjectValue(eObjectMode::OBJECT_FOLDER);
 		return true;
 	case eSelect:
-		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueSelectorRecordDataObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSelectorRecordDataObject>(m_metaObject);
 		return true;
 	case eFindByCode:
 		pvarRetValue = FindByCode(*paParams[0]);
@@ -70,24 +70,24 @@ bool ibValueManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, ibValue&
 		pvarRetValue = FindByDescription(*paParams[0]);
 		return true;
 	case eGetForm: {
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetGenericForm(lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetListForm: {
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetListForm(lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetSelectForm: {
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetSelectForm(lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetTemplate:
@@ -98,5 +98,5 @@ bool ibValueManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, ibValue&
 		return true;
 	}
 
-	return ibValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+	return IValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }

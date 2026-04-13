@@ -15,12 +15,12 @@
 #include "value.h"
 
 //List of keywords
-struct ibKeyWords {
+struct ÑKeyWords {
 	wxString m_strKeyWord;
 	wxString m_strShortDescription;
 };
 
-extern BACKEND_API struct ibKeyWords s_listKeyWord[];
+extern BACKEND_API struct ÑKeyWords s_listKeyWord[];
 
 enum {
 	LEXEM_ADD = 0,
@@ -28,11 +28,27 @@ enum {
 	LEXEM_IGNORE,
 };
 
+//Function properties:
+enum {
+	RETURN_NONE = 0,//no return (module code)
+	RETURN_PROCEDURE,//return from procedure
+	RETURN_FUNCTION,//return from function
+};
+
+//variable flags (specified with a negative value in the nArray attribute of the bytecode)
+enum {
+	DEF_VAR_SKIP = -1,// missing parameter
+	DEF_VAR_DEFAULT = -2,//default parameter
+	DEF_VAR_TEMP = -3,//flag of a temporary local variable
+	DEF_VAR_NORET = -7,//function (procedure) does not return values
+	DEF_VAR_CONST = 1000,//loading constants
+};
+
 //definitions
 #define UTF8_LEXEM_TRANSLATE 
 
 //storing one primitive from the source code
-struct ibLexem {
+struct CLexem {
 
 	//lexem type:
 	short m_lexType;
@@ -40,7 +56,7 @@ struct ibLexem {
 	//lexem content:
 	short m_numData;			// keyword number (KEYWORD) or delimiter symbol (DELIMITER)
 	wxString m_strData;			// or identifier name (variable, function, etc.)
-	ibValue m_valData;			// value, if it is a constant or real identifier name
+	CValue m_valData;			// value, if it is a constant or real identifier name
 
 	//additional information:
 	wxString m_strModuleName;	// module name (since it is possible to include connections from different modules)
@@ -62,9 +78,9 @@ public:
 			return 1;
 		else if (m_lexType == IDENTIFIER)
 			return m_strData.length();
-		else if (m_lexType == CONSTANT && m_valData.GetType() == ibValueTypes::TYPE_DATE)
+		else if (m_lexType == CONSTANT && m_valData.GetType() == eValueTypes::TYPE_DATE)
 			return m_strData.length() + 2;
-		else if (m_lexType == CONSTANT && m_valData.GetType() == ibValueTypes::TYPE_STRING)
+		else if (m_lexType == CONSTANT && m_valData.GetType() == eValueTypes::TYPE_STRING)
 			return m_strData.length() + 2;
 		else if (m_lexType == CONSTANT)
 			return m_strData.length();
@@ -77,7 +93,7 @@ public:
 	unsigned int EndPos() const { return m_numString + GetLength(); }
 
 	//Constructor:
-	ibLexem() :
+	CLexem() :
 		m_lexType(0),
 		m_numData(0),
 		m_numLine(0),
@@ -90,7 +106,7 @@ public:
 	{
 	}
 
-	ibLexem(const ibLexem& src) :
+	CLexem(const CLexem& src) :
 		m_lexType(src.m_lexType),
 		m_numData(src.m_numData),
 		m_numLine(src.m_numLine),
@@ -108,7 +124,7 @@ public:
 	{
 	}
 
-	ibLexem(ibLexem&& src) :
+	CLexem(CLexem&& src) :
 		m_lexType(src.m_lexType),
 		m_numData(src.m_numData),
 		m_numLine(src.m_numLine),
@@ -133,7 +149,7 @@ public:
 #endif
 	}
 
-	ibLexem& operator =(const ibLexem& src)
+	CLexem& operator =(const CLexem& src)
 	{
 		m_lexType = src.m_lexType;
 		m_numData = src.m_numData;
@@ -153,7 +169,7 @@ public:
 		return *this;
 	}
 
-	ibLexem& operator =(ibLexem&& src)
+	CLexem& operator =(CLexem&& src)
 	{
 		m_lexType = src.m_lexType;
 		m_numData = src.m_numData;
@@ -178,48 +194,48 @@ public:
 	}
 };
 
-typedef std::vector<ibLexem> ibLexemList;
+typedef std::vector<CLexem> CLexemList;
 
 /***************************************************
-ibTranslateCode-stage of source code parsing
+CTranslateCode-stage of source code parsing
 The entry point is the Load() and TranslateModule() procedures.
 The first procedure initializes variables and loads
 the text of the executable code, the second procedure performs translation
 (parsing the code). As a result, an array of "raw" bytecode in the cByteCode variable is filled in the class structure.
 ****************************************************/
 
-class BACKEND_API ibTranslateCode {
+class BACKEND_API CTranslateCode {
 
 	//class for storing user definitions
-	class ibDefineCollection {
+	class CDefineCollection {
 	public:
-		ibDefineCollection() : m_parentDefine(nullptr) {};
-		~ibDefineCollection() { Clear(); }
+		CDefineCollection() : m_parentDefine(nullptr) {};
+		~CDefineCollection() { Clear(); }
 
 		void Clear() { m_defineList.clear(); }
-		void SetParent(ibDefineCollection* parent) { m_parentDefine = parent; }
+		void SetParent(CDefineCollection* parent) { m_parentDefine = parent; }
 
 		void RemoveDef(const wxString& strName);
 		bool HasDefine(const wxString& strName) const;
-		ibLexemList* GetDefine(const wxString& strName);
-		void SetDefine(const wxString& strName, ibLexemList*);
+		CLexemList* GetDefine(const wxString& strName);
+		void SetDefine(const wxString& strName, CLexemList*);
 		void SetDefine(const wxString& strName, const wxString& strValue);
 
 	private:
 
-		std::map<wxString, ibLexemList*> m_defineList;//contains arrays of lexemes	
-		ibDefineCollection* m_parentDefine;
+		std::map<wxString, CLexemList*> m_defineList;//contains arrays of lexemes	
+		CDefineCollection* m_parentDefine;
 	};
 
-	static ibDefineCollection ms_listDefine;
+	static CDefineCollection ms_listDefine;
 
 public:
 
-	ibTranslateCode();
-	ibTranslateCode(const wxString& strModuleName, const wxString& strDocPath);
-	ibTranslateCode(const wxString& strFileName);
+	CTranslateCode();
+	CTranslateCode(const wxString& strModuleName, const wxString& strDocPath);
+	CTranslateCode(const wxString& strFileName);
 
-	virtual ~ibTranslateCode();
+	virtual ~CTranslateCode();
 
 	bool HasDefine(const wxString& strName) const {
 		if (m_defineList != nullptr)
@@ -230,10 +246,10 @@ public:
 	//methods:
 	void Load(const wxString& strCode);
 
-	void AppendModule(ibTranslateCode* module);
-	void RemoveModule(ibTranslateCode* module);
+	void AppendModule(CTranslateCode* module);
+	void RemoveModule(CTranslateCode* module);
 
-	virtual void OnSetParent(ibTranslateCode* setParent);
+	virtual void OnSetParent(CTranslateCode* setParent);
 
 	virtual void Clear();
 	void ClearLexem() { m_listLexem.resize(0); } // resetting and free data to reuse an object
@@ -365,13 +381,13 @@ protected:
 	size_t CalcAllocSize() const;
 
 	//current lexem
-	ibLexem m_current_lex;
+	CLexem m_current_lex;
 
 	//methods and variables for text parsing
-	std::vector<ibTranslateCode*> m_listTranslateCode;
+	std::vector<CTranslateCode*> m_listTranslateCode;
 
 	//Support for "defines":
-	ibDefineCollection* m_defineList;
+	CDefineCollection* m_defineList;
 
 	bool m_bAutoDeleteDefList;
 	int m_nModePreparing;
@@ -393,10 +409,10 @@ protected:
 #endif // UTF8_LEXEM_TRANSLATE
 
 	//intermediate array with lexemes:
-	std::vector<ibLexem> m_listLexem;
+	std::vector<CLexem> m_listLexem;
 };
 
 //empty lexem  
-extern BACKEND_API const ibLexem gs_nullLexem;
+extern BACKEND_API const CLexem gs_nullLexem;
 
 #endif

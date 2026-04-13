@@ -8,7 +8,7 @@
 #include "listBoxVisualData.h"
 
 //----------------------------------------------------------------------
-// ibOESPopupWindow
+// COESPopupWindow
 
 #if defined(__WXOSX_COCOA__) || defined(__WXMSW__) || defined(__WXGTK__)
 #define wxOES_POPUP_IS_CUSTOM 1
@@ -16,17 +16,17 @@
 #define wxOES_POPUP_IS_CUSTOM 0
 #endif
 
-// Define the base class used for ibOESPopupWindow.
+// Define the base class used for COESPopupWindow.
 #ifdef __WXOSX_COCOA__
 
 #include <wx/nonownedwnd.h>
 #define wxOES_POPUP_IS_FRAME 0
 
-class ibOESPopupBase :public wxNonOwnedWindow
+class COESPopupBase :public wxNonOwnedWindow
 {
 public:
-	ibOESPopupBase(wxWindow*);
-	virtual ~ibOESPopupBase();
+	COESPopupBase(wxWindow*);
+	virtual ~COESPopupBase();
 	virtual bool Show(bool show = true) override;
 
 protected:
@@ -49,12 +49,12 @@ private:
 #include <wx/popupwin.h>
 #define wxOES_POPUP_IS_FRAME 0
 
-class ibOESPopupBase : public wxPopupWindow
+class COESPopupBase : public wxPopupWindow
 {
 public:
-	ibOESPopupBase(wxWindow*);
+	COESPopupBase(wxWindow*);
 #ifdef __WXGTK__
-	virtual ~ibOESPopupBase();
+	virtual ~COESPopupBase();
 #elif defined(__WXMSW__)
 	virtual bool Show(bool show = true) override;
 	virtual bool MSWHandleMessage(WXLRESULT *result, WXUINT message,
@@ -68,10 +68,10 @@ public:
 #include <wx/valueForm.h>
 #define wxOES_POPUP_IS_FRAME 1
 
-class ibOESPopupBase :public wxFrame
+class COESPopupBase :public wxFrame
 {
 public:
-	ibOESPopupBase(wxWindow*);
+	COESPopupBase(wxWindow*);
 #ifdef __WXMSW__
 	virtual bool Show(bool show = true) override;
 	virtual bool MSWHandleMessage(WXLRESULT *result, WXUINT message,
@@ -85,11 +85,11 @@ public:
 
 #endif // __WXOSX_COCOA__
 
-class ibOESPopupWindow : public ibOESPopupBase
+class COESPopupWindow : public COESPopupBase
 {
 public:
-	ibOESPopupWindow(wxWindow*);
-	virtual ~ibOESPopupWindow();
+	COESPopupWindow(wxWindow*);
+	virtual ~COESPopupWindow();
 	virtual bool Destroy() override;
 	virtual bool AcceptsFocus() const override;
 
@@ -108,16 +108,16 @@ private:
 	wxWindow* m_tlw;
 };
 
-// A popup window to place the ibListBox upon
-class ibOESListBoxWin : public ibOESPopupWindow
+// A popup window to place the COESListBox upon
+class COESListBoxWin : public COESPopupWindow
 {
-	ibListBox *m_listBox;
+	COESListBox *m_listBox;
 
 
 public:
 
-	ibOESListBoxWin(wxWindow*, ibListBoxVisualData *, int);
-	ibListBox *GetListBox() const {
+	COESListBoxWin(wxWindow*, CListBoxVisualData *, int);
+	COESListBox *GetListBox() const {
 		return m_listBox; 
 	}
 
@@ -127,7 +127,7 @@ protected:
 
 private:
 
-	ibListBoxVisualData* m_visualData;
+	CListBoxVisualData* m_visualData;
 };
 
 

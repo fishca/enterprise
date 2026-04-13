@@ -5,17 +5,17 @@
 
 /**
  */
-class ibAutoComplete
+class CAutoComplete
 {
 	bool active;
 
-	struct ibKeywordElement {
+	struct keywordElement_t {
 		short m_type;
 		wxString m_name;
 		wxString m_shortDescription;
 	};
 
-	enum
+	enum 
 	{
 		eVariable = 0,
 		eExportVariable,
@@ -25,7 +25,7 @@ class ibAutoComplete
 		eExportFunction,
 	};
 
-	std::vector<ibKeywordElement> m_aKeywords;
+	std::vector< keywordElement_t> m_aKeywords;
 
 public:
 
@@ -34,11 +34,11 @@ public:
 
 	wxString strCurrentWord;
 
-	ibOESListBoxWin* lb;
-	ibListBoxVisualData* m_visualData;
-	wxStyledTextCtrl* m_owner;
+	COESListBoxWin *lb;
+	CListBoxVisualData* m_visualData;
+	wxStyledTextCtrl *m_owner;
 
-	wxEvtHandler* m_evtHandler;
+	wxEvtHandler *m_evtHandler;
 
 	/// Should autocompletion be canceled if editor's currentPos <= startPos?
 	bool cancelAtStartPos;
@@ -52,18 +52,18 @@ public:
 	 */
 	int autoSort;
 
-	ibAutoComplete(wxStyledTextCtrl* textCtrl);
-	virtual ~ibAutoComplete();
+	CAutoComplete(wxStyledTextCtrl *textCtrl);
+	virtual ~CAutoComplete();
 
 	/// Is the auto completion list displayed?
 	bool Active() const;
 
 	/// Display the auto completion list positioned to be near a character position
-	void Start(const wxString& strCurrentWord, int position,
+	void Start(const wxString &strCurrentWord, int position,
 		int startLen_, int lineHeight);
 
 	/// The append string contains a sequence of words separated by the separator character
-	void Append(short type, const wxString& strName, const wxString& sDescription);
+	void Append(short type, const wxString &strName, const wxString &sDescription);
 
 	/// Return the position of the currently selected list item
 	int GetSelection() const;
@@ -71,7 +71,7 @@ public:
 	/// Return the value of an item in the list
 	wxString GetValue(int item) const;
 
-	void Show(const wxPoint& position);
+	void Show(const wxPoint &position);
 	void Cancel();
 
 	/// Move the current list element by delta, scrolling appropriately
@@ -92,7 +92,7 @@ protected:
 	void OnSelection(wxCommandEvent& event);
 	void OnKeyDown(wxKeyEvent& event);
 	void OnMouseMotion(wxMouseEvent& event);
-
+	
 	void OnProcessFocus(wxFocusEvent& event);
 	void OnProcessChildFocus(wxChildFocusEvent& event);
 	void OnProcessSize(wxSizeEvent& event);

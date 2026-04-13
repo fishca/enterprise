@@ -9,37 +9,37 @@
 
 static const int ID_TIMER_SCAN = wxScrolledWindow::NewControlId();
 
-wxBEGIN_EVENT_TABLE(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost, wxScrolledWindow)
-EVT_INNER_FRAME_RESIZED(wxID_ANY, ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnResizeBackPanel)
+wxBEGIN_EVENT_TABLE(CVisualEditorNotebook::CVisualEditor::CVisualEditorHost, wxScrolledWindow)
+EVT_INNER_FRAME_RESIZED(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnResizeBackPanel)
 wxEND_EVENT_TABLE()
 
-ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::ibVisualEditorHost(ibVisualEditor* handler, wxWindow* parent, wxWindowID id) :
-	ibVisualHost(parent, id, wxDefaultPosition, wxDefaultSize),
+CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::CVisualEditorHost(CVisualEditor* handler, wxWindow* parent, wxWindowID id) :
+	IVisualHost(parent, id, wxDefaultPosition, wxDefaultSize),
 	m_formHandler(handler),
 	m_stopSelectedEvent(false),
 	m_stopModifiedEvent(false)
 {
-	ibVisualHost::SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
+	IVisualHost::SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
 
 	SetOwnBackgroundColour(wxColour(192, 192, 192));
 
-	m_back = new ibDesignerWindow(this, wxID_ANY, wxPoint(10, 10));
-	m_back->GetEventHandler()->Connect(wxID_ANY, wxEVT_LEFT_DOWN, wxMouseEventHandler(ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnClickBackPanel), nullptr, this);
+	m_back = new CDesignerWindow(this, wxID_ANY, wxPoint(10, 10));
+	m_back->GetEventHandler()->Connect(wxID_ANY, wxEVT_LEFT_DOWN, wxMouseEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnClickBackPanel), nullptr, this);
 }
 
-ibValueForm* ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::GetValueForm() const
+CValueForm* CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::GetValueForm() const
 {
 	return m_formHandler->GetValueForm();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetValueForm(ibValueForm* valueForm)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetValueForm(CValueForm* valueForm)
 {
 	m_formHandler->SetValueForm(valueForm);
 }
 
-ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::~ibVisualEditorHost()
+CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::~CVisualEditorHost()
 {
-	ibValueForm* valueForm = m_formHandler->GetValueForm();
+	CValueForm* valueForm = m_formHandler->GetValueForm();
 	if (valueForm != nullptr)
 		ClearControl(valueForm, true);
 
@@ -49,7 +49,7 @@ ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::~ibVisualEditorHost(
 	DestroyChildren();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnClickBackPanel(wxMouseEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnClickBackPanel(wxMouseEvent& event)
 {
 	if (m_formHandler->GetValueForm()) {
 		m_formHandler->SelectObject(m_formHandler->GetValueForm());
@@ -58,12 +58,12 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnClickBackPane
 	event.Skip();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnResizeBackPanel(wxCommandEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnResizeBackPanel(wxCommandEvent& event)
 {
-	ibValueForm* valueForm = m_formHandler->GetValueForm();
+	CValueForm* valueForm = m_formHandler->GetValueForm();
 
 	if (valueForm) {
-		//ibProperty*prop(valueForm->GetProperty(wxT("size")));
+		//IProperty*prop(valueForm->GetProperty(wxT("size")));
 		//m_formHandler->ModifyProperty(prop, typeConv::SizeToString(m_back->GetSize()));
 		m_formHandler->SelectObject(valueForm, true);
 	}
@@ -71,17 +71,17 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnResizeBackPan
 	event.Skip();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::PreventOnSelected(bool prevent)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::PreventOnSelected(bool prevent)
 {
 	m_stopSelectedEvent = prevent;
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::PreventOnModified(bool prevent)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::PreventOnModified(bool prevent)
 {
 	m_stopModifiedEvent = prevent;
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event)
 {
 	if (event.GetEventType() == wxEVT_LEFT_DOWN) {
 		OnLeftClickFromApp(currentWindow);
@@ -91,13 +91,13 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnClickFromApp(
 	}
 }
 
-bool ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnLeftClickFromApp(wxWindow* currentWindow)
+bool CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnLeftClickFromApp(wxWindow* currentWindow)
 {
 	wxWindow* wnd = currentWindow;
 	while (wnd != nullptr) {
-		ibValueFrame* founded = GetObjectBase(wnd);
+		IValueFrame* founded = GetObjectBase(wnd);
 		if (founded != nullptr) {
-			ibValueFrame* oldObj = m_formHandler->GetSelectedObject();
+			IValueFrame* oldObj = m_formHandler->GetSelectedObject();
 			wxASSERT(oldObj);
 			if (founded != oldObj->GetParent())
 				m_formHandler->SelectObject(founded);
@@ -109,16 +109,16 @@ bool ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnLeftClickFrom
 	return true;
 }
 
-bool ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnRightClickFromApp(wxWindow* currentWindow, wxMouseEvent& event)
+bool CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnRightClickFromApp(wxWindow* currentWindow, wxMouseEvent& event)
 {
 	wxWindow* wnd = currentWindow;
 	while (wnd != nullptr) {
-		ibValueFrame* founded = GetObjectBase(wnd);
+		IValueFrame* founded = GetObjectBase(wnd);
 		if (founded != nullptr) {
 			if (founded != m_formHandler->GetSelectedObject()) {
 				m_formHandler->SelectObject(founded);
 			}
-			ibVisualEditorItemPopupMenu* menu = new ibVisualEditorItemPopupMenu(m_formHandler, currentWindow, founded);
+			CVisualEditorItemPopupMenu* menu = new CVisualEditorItemPopupMenu(m_formHandler, currentWindow, founded);
 			menu->UpdateUI(menu);
 			currentWindow->PopupMenu(menu, event.GetPosition());
 			break;
@@ -128,9 +128,9 @@ bool ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnRightClickFro
 	return true;
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetObjectSelect(ibValueFrame* obj)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IValueFrame* obj)
 {
-	// Get the ibValueFrame from the event
+	// Get the IValueFrame from the event
 	if (obj == nullptr) {
 		// Strange...
 		wxLogDebug(wxT("The event object is nullptr - why?"));
@@ -138,7 +138,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetObjectSelect
 	}
 
 	// highlight parent toolbar instead of its children
-	ibValueFrame* toolbar = obj->FindNearAncestor(wxT("toolbar"));
+	IValueFrame* toolbar = obj->FindNearAncestor(wxT("toolbar"));
 	if (toolbar != nullptr)
 		obj = toolbar;
 
@@ -166,17 +166,17 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetObjectSelect
 		item = nullptr;
 	}
 	else if (obj->GetClassName() == wxT("NotebookPage")) {
-		ibValueFrame* parent = obj->GetParent();
+		IValueFrame* parent = obj->GetParent();
 		item = m_baseObjects.at(parent);
 	}
 	else if (obj->GetClassName() == wxT("TableboxColumn")) {
-		ibValueFrame* parent = obj->GetParent();
+		IValueFrame* parent = obj->GetParent();
 		item = m_baseObjects.at(parent);
 	}
 
 	// Fire selection event in plugin for all parents
 	if (!m_stopSelectedEvent) {
-		ibValueFrame* parent = obj->GetParent();
+		IValueFrame* parent = obj->GetParent();
 		while (parent != nullptr) {
 			auto parentIt = m_baseObjects.find(parent);
 			if (parentIt != m_baseObjects.end()) {
@@ -190,7 +190,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetObjectSelect
 
 	// Look for the active panel - this is where the boxes will be drawn during OnPaint
 	// This is the closest parent of type COMPONENT_TYPE_WINDOW
-	ibValueFrame* nextParent = obj->GetParent();
+	IValueFrame* nextParent = obj->GetParent();
 	while (nextParent != nullptr) {
 		if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
 			if (item == nullptr) {
@@ -242,7 +242,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetObjectSelect
 	// Find the first COMPONENT_TYPE_WINDOW or COMPONENT_TYPE_SIZER
 	// If it is a sizer, save it
 	wxSizer* sizer = nullptr;
-	ibValueFrame* nextObj = obj;
+	IValueFrame* nextObj = obj;
 	while (nextObj != nullptr) {
 		if (nextObj->GetComponentType() == COMPONENT_TYPE_SIZER ||
 			nextObj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
@@ -264,7 +264,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetObjectSelect
 	m_back->Refresh();
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::ScrollToObject(ibValueFrame* obj)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::ScrollToObject(IValueFrame* obj)
 {
 	// Make sure this is a visible object
 	auto it = m_baseObjects.find(obj);
@@ -372,7 +372,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::ScrollToObject(
 
 /////////////////////////////////////////////////////////////////////////////////
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::UpdateHostSize()
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::UpdateHostSize()
 {
 	// --- Set sizer properties
 	if (m_back != nullptr) {
@@ -383,14 +383,14 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::UpdateHostSize(
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetCaption(const wxString& strCaption)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetCaption(const wxString& strCaption)
 {
-	const ibValueForm* handler = m_formHandler->GetValueForm();
+	const CValueForm* handler = m_formHandler->GetValueForm();
 	if (strCaption.IsEmpty()) {
-		const ibSourceDataObject* srcObject = handler->GetSourceObject();
+		const ISourceDataObject* srcObject = handler->GetSourceObject();
 		if (srcObject != nullptr) {
-			const ibValueMetaObjectFormBase* metaFormObject = handler->GetFormMetaObject();
-			const ibValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
+			const IValueMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
+			const IValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
 			if (genericObject != nullptr) {
 				m_back->SetTitle(genericObject->GetSynonym() + wxT(": ") + metaFormObject->GetSynonym());
 			}
@@ -399,7 +399,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetCaption(cons
 			}
 		}
 		else {
-			const ibValueMetaObjectFormBase* metaFormObject = handler->GetFormMetaObject();
+			const IValueMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
 			if (metaFormObject != nullptr) m_back->SetTitle(metaFormObject->GetSynonym());
 		}
 	}
@@ -411,7 +411,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetCaption(cons
 	m_back->ShowTitleBar(true);
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetOrientation(int orient)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetOrientation(int orient)
 {
 	const wxWindow* backgroundWindow = GetBackgroundWindow();
 	wxASSERT(backgroundWindow);
@@ -422,14 +422,14 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::SetOrientation(
 
 /////////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_CLASS(ibDesignerWindow, ibInnerFrame);
+wxIMPLEMENT_CLASS(CDesignerWindow, CInnerFrame);
 
-wxBEGIN_EVENT_TABLE(ibDesignerWindow, ibInnerFrame)
-EVT_PAINT(ibDesignerWindow::OnPaint)
+wxBEGIN_EVENT_TABLE(CDesignerWindow, CInnerFrame)
+EVT_PAINT(CDesignerWindow::OnPaint)
 wxEND_EVENT_TABLE()
 
-ibDesignerWindow::ibDesignerWindow(wxWindow* parent, int id, const wxPoint& pos, const wxSize& size, long style, const wxString& /*name*/)
-	: ibInnerFrame(parent, id, pos, size, style)
+CDesignerWindow::CDesignerWindow(wxWindow* parent, int id, const wxPoint& pos, const wxSize& size, long style, const wxString& /*name*/)
+	: CInnerFrame(parent, id, pos, size, style)
 {
 	ShowTitleBar(false);
 	SetGrid(10, 10);
@@ -440,22 +440,22 @@ ibDesignerWindow::ibDesignerWindow(wxWindow* parent, int id, const wxPoint& pos,
 
 	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 	GetFrameContentPanel()->PushEventHandler(
-		new ibHighlightPaintHandler(GetFrameContentPanel())
+		new CHighlightPaintHandler(GetFrameContentPanel())
 	);
 }
 
-ibDesignerWindow::~ibDesignerWindow()
+CDesignerWindow::~CDesignerWindow()
 {
 	GetFrameContentPanel()->PopEventHandler(true);
 }
 
-void ibDesignerWindow::SetGrid(int x, int y)
+void CDesignerWindow::SetGrid(int x, int y)
 {
 	m_x = x;
 	m_y = y;
 }
 
-void ibDesignerWindow::OnPaint(wxPaintEvent& event)
+void CDesignerWindow::OnPaint(wxPaintEvent& event)
 {
 	// This paint event helps draw the selection boxes
 	// when they extend beyond the edges of the content panel
@@ -470,14 +470,14 @@ void ibDesignerWindow::OnPaint(wxPaintEvent& event)
 	event.Skip();
 }
 
-void ibDesignerWindow::DrawRectangle(wxDC& dc, const wxPoint& point, const wxSize& size, ibValueFrame* object)
+void CDesignerWindow::DrawRectangle(wxDC& dc, const wxPoint& point, const wxSize& size, IValueFrame* object)
 {
 	int min = (object->GetObjectTypeName() == wxT("sizer") ? 0 : 1);
 
 	int border = 0, flag = 0;
 
 	if (object->IsSubclassOf(wxT("sizerItem"))) {
-		ibValueSizerItem* sizerItem = wxDynamicCast(object->GetParent(), ibValueSizerItem);
+		CValueSizerItem* sizerItem = wxDynamicCast(object->GetParent(), CValueSizerItem);
 		if (sizerItem != nullptr) {
 			border = sizerItem->GetBorder(); flag = sizerItem->GetFlagBorder();
 		}
@@ -497,10 +497,10 @@ void ibDesignerWindow::DrawRectangle(wxDC& dc, const wxPoint& point, const wxSiz
 		size.y + topBorder + bottomBorder);
 }
 
-void ibDesignerWindow::HighlightSelection(wxDC& dc)
+void CDesignerWindow::HighlightSelection(wxDC& dc)
 {
 	wxSize size;
-	ibValueFrame* object = m_selObj;
+	IValueFrame* object = m_selObj;
 
 	if (m_selSizer != nullptr) {
 		wxScrolledWindow* scrolwin = wxDynamicCast(m_selSizer->GetContainingWindow(), wxScrolledWindow);
@@ -569,19 +569,19 @@ void ibDesignerWindow::HighlightSelection(wxDC& dc)
 	}
 }
 
-BEGIN_EVENT_TABLE(ibDesignerWindow::ibHighlightPaintHandler, wxEvtHandler)
-EVT_PAINT(ibDesignerWindow::ibHighlightPaintHandler::OnPaint)
+BEGIN_EVENT_TABLE(CDesignerWindow::CHighlightPaintHandler, wxEvtHandler)
+EVT_PAINT(CDesignerWindow::CHighlightPaintHandler::OnPaint)
 END_EVENT_TABLE()
 
-ibDesignerWindow::ibHighlightPaintHandler::ibHighlightPaintHandler(wxWindow* win) : m_dsgnWin(win)
+CDesignerWindow::CHighlightPaintHandler::CHighlightPaintHandler(wxWindow* win) : m_dsgnWin(win)
 {
 }
 
-void ibDesignerWindow::ibHighlightPaintHandler::OnPaint(wxPaintEvent& event)
+void CDesignerWindow::CHighlightPaintHandler::OnPaint(wxPaintEvent& event)
 {
 	wxWindow* aux = m_dsgnWin;
-	while (!aux->IsKindOf(CLASSINFO(ibDesignerWindow))) aux = aux->GetParent();
-	ibDesignerWindow* dsgnWin = (ibDesignerWindow*)aux;
+	while (!aux->IsKindOf(CLASSINFO(CDesignerWindow))) aux = aux->GetParent();
+	CDesignerWindow* dsgnWin = (CDesignerWindow*)aux;
 
 	if (dsgnWin->GetActivePanel() == m_dsgnWin) {
 		wxPaintDC dc(m_dsgnWin);

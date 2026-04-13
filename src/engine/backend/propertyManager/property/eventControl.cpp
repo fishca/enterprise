@@ -1,32 +1,29 @@
 #include "eventControl.h"
 #include "backend/system/value/valueEvent.h"
 
-// get property for grid
-wxObject* (*ibEventControl::ms_propertyEvent)(const wxString&, const wxString&, const wxString&) = nullptr;
-
 //base property for "event"
-bool ibEventControl::SetDataValue(const ibValue& varPropVal)
+bool CEventControl::SetDataValue(const CValue& varPropVal)
 {
-	ibValueEvent* event = varPropVal.ConvertToType<ibValueEvent>();
+	CValueEvent* event = varPropVal.ConvertToType<CValueEvent>();
 	if (event == nullptr) return false;
 	m_propValue = event->GetString();
 	return true;
 }
 
-bool ibEventControl::GetDataValue(ibValue& pvarPropVal) const
+bool CEventControl::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibValue::CreateObjectValue<ibValueEvent>(m_propValue);
+	pvarPropVal = CValue::CreateObjectValue<CValueEvent>(m_propValue);
 	return true;
 }
 
-bool ibEventControl::LoadData(ibReaderMemory& reader)
+bool CEventControl::LoadData(CMemoryReader& reader)
 {
 	m_propName = reader.r_stringZ();
 	m_propValue = reader.r_stringZ();
 	return true;
 }
 
-bool ibEventControl::SaveData(ibWriterMemory& writer)
+bool CEventControl::SaveData(CMemoryWriter& writer)
 {
 	writer.w_stringZ(m_propName);
 	writer.w_stringZ(m_propValue.GetString());

@@ -6,21 +6,21 @@
 #include "mainApp.h"
 #include "backend/appData.h"
 
-bool ibAppLauncher::OnInit()
+bool CLauncherApp::OnInit()
 {
 	if (m_launcher)
 		return false;
 	
-	ibApplicationData::CreateAppDataEnv(ibRunMode::eLAUNCHER_MODE);
-	m_launcher = new ibFrameLauncher(nullptr, wxID_ANY);
+	CApplicationData::CreateAppDataEnv(eRunMode::eLAUNCHER_MODE);
+	m_launcher = new CFrameLauncher(nullptr, wxID_ANY);
 
 	return wxApp::OnInit() && m_launcher->Show();
 }
 
-int ibAppLauncher::OnExit()
+int CLauncherApp::OnExit()
 {
-	ibApplicationData::DestroyAppDataEnv();
+	CApplicationData::DestroyAppDataEnv();
 	return wxApp::OnExit();
 }
 
-wxIMPLEMENT_APP(ibAppLauncher);
+wxIMPLEMENT_APP(CLauncherApp);

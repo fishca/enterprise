@@ -4,14 +4,14 @@
 //*                            RoleObject                               *
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectRole, ibValueMetaObject);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectRole, IValueMetaObject);
 
 //***********************************************************************
 //*                           Metamodule                                *
 //***********************************************************************
 
-ibValueMetaObjectRole::ibValueMetaObjectRole(const wxString& name, const wxString& synonym, const wxString& comment) :
-	ibValueMetaObject(name, synonym, comment)
+CValueMetaObjectRole::CValueMetaObjectRole(const wxString& name, const wxString& synonym, const wxString& comment) :
+	IValueMetaObject(name, synonym, comment)
 {
 }
 
@@ -19,23 +19,23 @@ ibValueMetaObjectRole::ibValueMetaObjectRole(const wxString& name, const wxStrin
 //*                             event object                            *
 //***********************************************************************
 
-bool ibValueMetaObjectRole::OnCreateMetaObject(ibMetaData* metaData, int flags)
+bool CValueMetaObjectRole::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	return ibValueMetaObject::OnCreateMetaObject(metaData, flags);
+	return IValueMetaObject::OnCreateMetaObject(metaData, flags);
 }
 
-bool ibValueMetaObjectRole::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectRole::OnBeforeRunMetaObject(int flags)
 {
-	return ibValueMetaObject::OnBeforeRunMetaObject(flags);
+	return IValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool ibValueMetaObjectRole::OnAfterCloseMetaObject()
+bool CValueMetaObjectRole::OnAfterCloseMetaObject()
 {
-	return ibValueMetaObject::OnAfterCloseMetaObject();
+	return IValueMetaObject::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(ibValueMetaObjectRole, "Role", g_metaRoleCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectRole, "Role", g_metaRoleCLSID);

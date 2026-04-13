@@ -14,13 +14,13 @@
 
 #include "postgresParameter.h"
 
-WX_DECLARE_OBJARRAY(ibDatabaseParameterPostgres, ArrayOfPostgresParameters);
+WX_DECLARE_OBJARRAY(CPostgresParameter, ArrayOfPostgresParameters);
 
-class ibPreparedStatementPostgresParameterCollection
+class CPostgresPreparedStatementParameterCollection
 {
 public:
 	// dtor
-	virtual ~ibPreparedStatementPostgresParameterCollection();
+	virtual ~CPostgresPreparedStatementParameterCollection();
 
 	int GetSize();
 	char** GetParamValues();
@@ -29,13 +29,13 @@ public:
 
 	void SetParam(int nPosition, int nValue);
 	void SetParam(int nPosition, double dblValue);
-	void SetParam(int nPosition, const ibNumber& strValue);
+	void SetParam(int nPosition, const number_t& strValue);
 	void SetParam(int nPosition, const wxString& strValue);
 	void SetParam(int nPosition);
 	void SetParam(int nPosition, const void* pData, long nDataLength);
 	void SetParam(int nPosition, const wxDateTime& dateValue);
 	void SetParam(int nPosition, bool bValue);
-	void SetParam(int nPosition, ibDatabaseParameterPostgres& Parameter);
+	void SetParam(int nPosition, CPostgresParameter& Parameter);
 
 private:
 	ArrayOfPostgresParameters m_Parameters;

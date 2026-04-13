@@ -3,7 +3,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
-#include "backend/utils/md5.hpp"
+#include "backend/utils/wxmd5.hpp"
 #include "backend/appData.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,13 +15,13 @@
 #define config_name       wxT("sys.database")
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-inline wxString GetCommonConfigTable(ibConfigType cfg_type) {
+inline wxString GetCommonConfigTable(eConfigType cfg_type) {
 
 	switch (cfg_type)
 	{
-	case ibConfigType::ibConfigType_Load:
+	case eConfigType::eConfigType_Load:
 		return config_table;
-	case ibConfigType::ibConfigType_Load_And_Save:
+	case eConfigType::eConfigType_Load_And_Save:
 		return config_save_table;
 	}
 
@@ -32,17 +32,17 @@ inline wxString GetCommonConfigTable(ibConfigType cfg_type) {
 //*                                          ConfigMetadata                                        *
 //**************************************************************************************************
 
-bool ibMetaDataConfiguration::LoadDatabase(int flags)
+bool CMetaDataConfiguration::LoadDatabase(int flags)
 {
 	//close if opened
-	if (ibMetaDataConfiguration::IsConfigOpen()) {
+	if (CMetaDataConfiguration::IsConfigOpen()) {
 		if (!CloseDatabase(forceCloseFlag)) {
 			return false;
 		}
 	}
 
 	// load config
-	ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT binary_data, file_guid FROM %s; ", GetCommonConfigTable(GetConfigType()));
+	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT binary_data, file_guid FROM %s; ", GetCommonConfigTable(GetConfigType()));
 	if (resultSet == nullptr)
 		return false;
 
@@ -57,7 +57,7 @@ bool ibMetaDataConfiguration::LoadDatabase(int flags)
 
 		wxMemoryBuffer binaryData;
 		resultSet->GetResultBlob(wxT("binary_data"), binaryData);
-		ibReaderMemory metaReader(binaryData.GetData(), binaryData.GetBufSize());
+		CMemoryReader metaReader(binaryData.GetData(), binaryData.GetBufSize());
 
 		//check is file empty
 		if (metaReader.eof())
@@ -74,7 +74,7 @@ bool ibMetaDataConfiguration::LoadDatabase(int flags)
 		m_configNew = false;
 
 		m_metaGuid = resultSet->GetResultString(wxT("file_guid"));
-		m_md5Hash = ibMD5::ComputeMd5(wxBase64Encode(binaryData.GetData(), binaryData.GetDataLen()));
+		m_md5Hash = wxMD5::ComputeMd5(wxBase64Encode(binaryData.GetData(), binaryData.GetDataLen()));
 	}
 
 	db_query->CloseResultSet(resultSet);
@@ -89,7 +89,7 @@ bool ibMetaDataConfiguration::LoadDatabase(int flags)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibMetaDataConfigurationStorage::OnBeforeSaveDatabase(int flags)
+bool CMetaDataConfigurationStorage::OnBeforeSaveDatabase(int flags)
 {
 	if (db_query->IsActiveTransaction())
 		return false;
@@ -103,7 +103,7 @@ bool ibMetaDataConfigurationStorage::OnBeforeSaveDatabase(int flags)
 	return db_query->IsActiveTransaction();
 }
 
-bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
+bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 {
 	if (!db_query->IsActiveTransaction())
 		return false;
@@ -120,7 +120,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 #endif
 		}
 
-		ibValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+		IValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 		wxASSERT(commonObject);
 
 		for (unsigned int idx = 0; idx < commonObject->GetChildCount(); idx++) {
@@ -128,7 +128,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			auto child = commonObject->GetChild(idx);
 			if (!commonObject->FilterChild(child->GetClassType()))
 				continue;
-			ibValueMetaObject* foundedMeta =
+			IValueMetaObject* foundedMeta =
 				m_commonObject->FindAnyObjectByFilter(child->GetGuid());
 			if (foundedMeta == nullptr) {
 				bool ret = child->DeleteMetaTable(this);
@@ -147,7 +147,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 
 			s_restructureInfo.AppendInfo(_("Create new database"));
 
-			if (!ibValueMetaObjectConstant::DeleteConstantSQLTable()) {
+			if (!CValueMetaObjectConstant::DeleteConstantSQLTable()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 				db_query->RollBack(); return false;
 #else 
@@ -155,7 +155,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 #endif
 			}
 
-			if (!ibValueMetaObjectConfiguration::ExecuteSystemSQLCommand()) {
+			if (!CValueMetaObjectConfiguration::ExecuteSystemSQLCommand()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 				db_query->RollBack(); return false;
 #else 
@@ -164,7 +164,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			}
 
 			//create & update tables sql
-			if (!ibValueMetaObjectConstant::CreateConstantSQLTable()) {
+			if (!CValueMetaObjectConstant::CreateConstantSQLTable()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 				db_query->RollBack(); return false;
 #else 
@@ -178,7 +178,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			auto child = m_commonObject->GetChild(idx);
 			if (!m_commonObject->FilterChild(child->GetClassType()))
 				continue;
-			ibValueMetaObject* foundedMeta =
+			IValueMetaObject* foundedMeta =
 				commonObject->FindAnyObjectByFilter(child->GetGuid());
 			wxASSERT(child);
 			bool ret = true;
@@ -201,7 +201,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 	}
 
 	//common data
-	ibWriterMemory writerData;
+	CMemoryWriter writerData;
 
 	//Save header info 
 	if (!SaveHeader(writerData)) {
@@ -221,7 +221,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 #endif
 	}
 
-	ibPreparedStatement* prepStatement = nullptr;
+	IPreparedStatement* prepStatement = nullptr;
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 		prepStatement = db_query->PrepareStatement("INSERT INTO %s (file_name, binary_data, file_guid) VALUES(?, ?, ?)"
 			"ON CONFLICT (file_name) DO UPDATE SET file_name = EXCLUDED.file_name, binary_data = EXCLUDED.binary_data, file_guid = EXCLUDED.file_guid; ", config_save_table);
@@ -250,7 +250,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 #endif
 	}
 
-	m_md5Hash = ibMD5::ComputeMd5(
+	m_md5Hash = wxMD5::ComputeMd5(
 		wxBase64Encode(writerData.pointer(), writerData.size())
 	);
 
@@ -267,7 +267,7 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 	return db_query->IsActiveTransaction();
 }
 
-bool ibMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags)
+bool CMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags)
 {
 	if (roolback) {
 
@@ -292,15 +292,15 @@ bool ibMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flag
 
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
 
-				ibRestructureInfo restructureInfo;
+				CRestructureInfo restructureInfo;
 
-				ibValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+				IValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 				wxASSERT(commonObject);
 				for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
 					auto child = m_commonObject->GetChild(idx);
 					if (!m_commonObject->FilterChild(child->GetClassType()))
 						continue;
-					ibValueMetaObject* foundedMeta =
+					IValueMetaObject* foundedMeta =
 						commonObject->FindAnyObjectByFilter(child->GetGuid());
 					wxASSERT(child);
 					if (foundedMeta == nullptr) {
@@ -359,7 +359,7 @@ bool ibMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flag
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibMetaDataConfigurationStorage::ReCreateDatabase()
+bool CMetaDataConfigurationStorage::ReCreateDatabase()
 {
 	if (!m_configMetadata)
 		return false;
@@ -368,7 +368,7 @@ bool ibMetaDataConfigurationStorage::ReCreateDatabase()
 	db_query->BeginTransaction();
 #endif
 
-	ibValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+	IValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	for (unsigned int idx = 0; idx < commonObject->GetChildCount(); idx++) {
@@ -377,7 +377,7 @@ bool ibMetaDataConfigurationStorage::ReCreateDatabase()
 		if (!commonObject->FilterChild(child->GetClassType()))
 			continue;
 
-		ibValueMetaObject* foundedMeta =
+		IValueMetaObject* foundedMeta =
 			m_commonObject->FindAnyObjectByFilter(child->GetGuid());
 
 		bool ret = child->DeleteMetaTable(this) &&
@@ -406,7 +406,7 @@ bool ibMetaDataConfigurationStorage::ReCreateDatabase()
 			if (!commonObject->FilterChild(child->GetClassType()))
 				continue;
 
-			ibValueMetaObject* foundedMeta =
+			IValueMetaObject* foundedMeta =
 				m_commonObject->FindAnyObjectByFilter(child->GetGuid());
 
 			bool ret = (foundedMeta != nullptr && foundedMeta->CreateMetaTable(this, repairMetaTable));
@@ -429,7 +429,7 @@ bool ibMetaDataConfigurationStorage::ReCreateDatabase()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibMetaDataConfigurationStorage::SaveDatabase(int flags)
+bool CMetaDataConfigurationStorage::SaveDatabase(int flags)
 {
 	if (OnBeforeSaveDatabase(flags)) {
 		bool succes = OnSaveDatabase(flags);
@@ -440,13 +440,13 @@ bool ibMetaDataConfigurationStorage::SaveDatabase(int flags)
 	return false;
 }
 
-bool ibMetaDataConfigurationStorage::RollbackDatabase()
+bool CMetaDataConfigurationStorage::RollbackDatabase()
 {
 	bool hasError = db_query->RunQuery("DELETE FROM %s;", config_save_table) == DATABASE_LAYER_QUERY_RESULT_ERROR;
 	hasError = hasError || db_query->RunQuery("INSERT INTO %s SELECT * FROM %s;", config_save_table, config_table) == DATABASE_LAYER_QUERY_RESULT_ERROR;
 	if (hasError) return false;
 	//close data 
-	if (ibMetaDataConfiguration::IsConfigOpen()) {
+	if (CMetaDataConfiguration::IsConfigOpen()) {
 		if (!CloseDatabase(forceCloseFlag)) {
 			wxASSERT_MSG(false, "CloseDatabase() == false");
 			return false;
@@ -466,14 +466,14 @@ bool ibMetaDataConfigurationStorage::RollbackDatabase()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool ibMetaDataConfigurationStorage::TableAlreadyCreated()
+bool CMetaDataConfigurationStorage::TableAlreadyCreated()
 {
 	return db_query->TableExists(config_table) &&
 		db_query->TableExists(config_save_table) &&
 		db_query->TableExists(sequence_table);
 }
 
-void ibMetaDataConfigurationStorage::CreateConfigTable() {
+void CMetaDataConfigurationStorage::CreateConfigTable() {
 
 	//db for enterprise - TODO
 	if (!db_query->TableExists(config_table)) {
@@ -495,7 +495,7 @@ void ibMetaDataConfigurationStorage::CreateConfigTable() {
 	}
 }
 
-void ibMetaDataConfigurationStorage::CreateConfigSaveTable() {
+void CMetaDataConfigurationStorage::CreateConfigSaveTable() {
 
 	//db for designer 
 	if (!db_query->TableExists(config_save_table)) {
@@ -517,7 +517,7 @@ void ibMetaDataConfigurationStorage::CreateConfigSaveTable() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibMetaDataConfigurationStorage::CreateConfigSequence()
+void CMetaDataConfigurationStorage::CreateConfigSequence()
 {
 	if (!db_query->TableExists(sequence_table)) {
 
@@ -547,23 +547,23 @@ void ibMetaDataConfigurationStorage::CreateConfigSequence()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibMetaDataConfigurationStorage::ResetSequence()
+void CMetaDataConfigurationStorage::ResetSequence()
 {
 	if (db_query->TableExists(sequence_table))
 		db_query->RunQuery(wxT("delete from %s;"), sequence_table);
 }
 
-bool ibMetaDataConfigurationStorage::LoadSequenceFromBuffer(const ibReaderMemory& reader)
+bool CMetaDataConfigurationStorage::LoadSequenceFromBuffer(const CMemoryReader& reader)
 {
 	if (!db_query->TableExists(sequence_table))
 		return false;
 
 	u64 seq_idx = 0;
-	ibReaderMemory* seqReaderPrev = nullptr;
+	CMemoryReader* seqReaderPrev = nullptr;
 
 	while (true) {
 
-		ibReaderMemory* seqReader = reader.open_chunk_iterator(seq_idx, seqReaderPrev);
+		CMemoryReader* seqReader = reader.open_chunk_iterator(seq_idx, seqReaderPrev);
 
 		if (seqReader == nullptr)
 			break;
@@ -602,13 +602,13 @@ bool ibMetaDataConfigurationStorage::LoadSequenceFromBuffer(const ibReaderMemory
 	return true;
 }
 
-bool ibMetaDataConfigurationStorage::SaveSequenceToBuffer(ibWriterMemory& writer)
+bool CMetaDataConfigurationStorage::SaveSequenceToBuffer(CMemoryWriter& writer)
 {
 	if (!db_query->TableExists(sequence_table))
 		return false;
 
 	// save sequence 
-	ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults(wxT("select * FROM %s;"), sequence_table);
+	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(wxT("select * FROM %s;"), sequence_table);
 
 	if (resultSet == nullptr)
 		return false;
@@ -617,7 +617,7 @@ bool ibMetaDataConfigurationStorage::SaveSequenceToBuffer(ibWriterMemory& writer
 
 	while (resultSet->Next()) {
 
-		ibWriterMemory seqWriter;
+		CMemoryWriter seqWriter;
 		seqWriter.w_u32(resultSet->GetResultInt(wxT("interval")));
 		seqWriter.w_stringZ(resultSet->GetResultString(wxT("meta_guid")));
 		seqWriter.w_stringZ(resultSet->GetResultString(wxT("prefix")));

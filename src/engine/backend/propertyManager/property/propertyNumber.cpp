@@ -1,55 +1,48 @@
 #include "propertyNumber.h"
 #include "backend/propertyManager/property/variant/variantNumber.h"
 
-//get property for grid 
-wxObject* (*ibPropertyNumber::ms_propertyNumber)(const wxString&, const wxString&, const ibNumber&) = nullptr;
-wxObject* (*ibPropertyInteger::ms_propertyInteger)(const wxString&, const wxString&, const int&) = nullptr;
-wxObject* (*ibPropertyUInteger::ms_propertyUInteger)(const wxString&, const wxString&, const unsigned int&) = nullptr;
-
-////////////////////////////////////////////////////////////////////////
-
-wxVariantData* ibPropertyNumber::CreateVariantData(const ibNumber& val)
+wxVariantData* CPropertyNumber::CreateVariantData(const number_t& val)
 {
-	return new ibVariantDataNumber(val);
+	return new wxVariantDataNumber(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-ibNumber& ibPropertyNumber::GetValueAsNumber() const
+number_t& CPropertyNumber::GetValueAsNumber() const
 {
-	return get_cell_variant<ibVariantDataNumber>()->GetNumber();
+	return get_cell_variant<wxVariantDataNumber>()->GetNumber();
 }
 
-void ibPropertyNumber::SetValue(const ibNumber& val)
+void CPropertyNumber::SetValue(const number_t& val)
 {
 	m_propValue = CreateVariantData(val);
 }
 
 //base property for "number"
-bool ibPropertyNumber::SetDataValue(const ibValue& varPropVal)
+bool CPropertyNumber::SetDataValue(const CValue& varPropVal)
 {
 	SetValue(varPropVal.GetNumber());
 	return true;
 }
 
-bool ibPropertyNumber::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyNumber::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibPropertyNumber::GetValueAsNumber();
+	pvarPropVal = CPropertyNumber::GetValueAsNumber();
 	return true;
 }
 
-bool ibPropertyNumber::LoadData(ibReaderMemory& reader)
+bool CPropertyNumber::LoadData(CMemoryReader& reader)
 {
-	ibNumber& value = GetValueAsNumber();
+	number_t& value = GetValueAsNumber();
 	reader.r(&value.exponent, sizeof(value.exponent));
 	reader.r(&value.mantissa, sizeof(value.mantissa));
 	reader.r(&value.info, sizeof(value.info));
 	return true;
 }
 
-bool ibPropertyNumber::SaveData(ibWriterMemory& writer)
+bool CPropertyNumber::SaveData(CMemoryWriter& writer)
 {
-	const ibNumber& value = GetValueAsNumber();
+	const number_t& value = GetValueAsNumber();
 	writer.w(&value.exponent, sizeof(value.exponent));
 	writer.w(&value.mantissa, sizeof(value.mantissa));
 	writer.w(&value.info, sizeof(value.info));

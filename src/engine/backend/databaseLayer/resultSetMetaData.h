@@ -15,7 +15,7 @@
 #include "databaseLayerDef.h"
 #include "databaseStringConverter.h"
 
-class BACKEND_API ibResultSetMetaData : public ibDatabaseStringConverter
+class BACKEND_API IResultSetMetaData : public CDatabaseStringConverter
 {
 public:
 

@@ -3,12 +3,12 @@
 
 #include "frame.h"
 
-class FRONTEND_API ibValueControl : public ibValueFrame {
-	wxDECLARE_ABSTRACT_CLASS(ibValueControl);
+class FRONTEND_API IValueControl : public IValueFrame {
+	wxDECLARE_ABSTRACT_CLASS(IValueControl);
 public:
 
-	ibValueControl();
-	virtual ~ibValueControl();
+	IValueControl();
+	virtual ~IValueControl();
 
 	/**
 	* Support control name
@@ -26,17 +26,17 @@ public:
 	/**
 	* Property events
 	*/
-	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue);
-	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
+	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
 	/**
 	* Support form
 	*/
-	virtual ibValueForm* GetOwnerForm() const {
+	virtual CValueForm* GetOwnerForm() const {
 		return m_formOwner;
 	}
 
-	virtual void SetOwnerForm(ibValueForm* ownerForm);
+	virtual void SetOwnerForm(CValueForm* ownerForm);
 
 	// allow getting value in control
 	virtual bool HasValueInControl() const { return false; }
@@ -44,13 +44,13 @@ public:
 	/*
 	* Get/set value in control
 	*/
-	virtual bool SetControlValue(const ibValue& varControlVal = ibValue()) { return false; }
-	virtual bool GetControlValue(ibValue& pvarControlVal) const {
+	virtual bool SetControlValue(const CValue& varControlVal = CValue()) { return false; }
+	virtual bool GetControlValue(CValue& pvarControlVal) const {
 		return false;
 	}
 
 	//get metaData
-	virtual ibMetaData* GetMetaData() const override;
+	virtual IMetaData* GetMetaData() const override;
 
 	/**
 	* Can delete object
@@ -60,19 +60,19 @@ public:
 	}
 
 	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const;
+	virtual CProcUnit* GetFormProcUnit() const;
 
 	/**
 	* Get type form
 	*/
-	virtual ibFormID GetTypeForm() const;
+	virtual form_identifier_t GetTypeForm() const;
 
 protected:
 	
 	//frame owner 
-	ibValueForm* m_formOwner;
+	CValueForm* m_formOwner;
 
-	ibPropertyUString* m_propertyName = ibPropertyObject::CreateProperty<ibPropertyUString>(m_category, wxT("Name"), _("Name"), _("Object name"), wxT(""));
+	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_category, wxT("Name"), _("Name"), _("Object name"), wxT(""));
 };
 
 #endif // !_BASE_H_

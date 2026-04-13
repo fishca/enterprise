@@ -2,19 +2,19 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueResultSet, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueResultSet, CValue);
 
 enum
 {
 	eNext,
 };
 
-ibValueResultSet::ibValueResultSet(ibDatabaseResultSet* resultSet)
-	: ibValue(ibValueTypes::TYPE_VALUE), m_resultSet(resultSet), m_methodHelper(new ibValueMethodHelper)
+CValueResultSet::CValueResultSet(IDatabaseResultSet* resultSet)
+	: CValue(eValueTypes::TYPE_VALUE), m_resultSet(resultSet), m_methodHelper(new CMethodHelper)
 {
 }
 
-ibValueResultSet::~ibValueResultSet()
+CValueResultSet::~CValueResultSet()
 {
 	if (m_resultSet != nullptr)
 		db_query->CloseResultSet(m_resultSet);
@@ -22,13 +22,13 @@ ibValueResultSet::~ibValueResultSet()
 	wxDELETE(m_methodHelper);
 }
 
-void ibValueResultSet::PrepareNames() const
+void CValueResultSet::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc(wxT("Next"), wxT("Next()"));
 
 	if (m_resultSet != nullptr) {
-		ibResultSetMetaData* resultSetMetaData = m_resultSet->GetMetaData();
+		IResultSetMetaData* resultSetMetaData = m_resultSet->GetMetaData();
 		if (resultSetMetaData == nullptr)
 			return;
 		for (int idx = 1; idx <= resultSetMetaData->GetColumnCount(); idx++)
@@ -36,28 +36,28 @@ void ibValueResultSet::PrepareNames() const
 	}
 }
 
-bool ibValueResultSet::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueResultSet::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool ibValueResultSet::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueResultSet::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
-	ibResultSetMetaData* resultSetMetaData = m_resultSet->GetMetaData();
+	IResultSetMetaData* resultSetMetaData = m_resultSet->GetMetaData();
 	if (resultSetMetaData != nullptr) {
 
 		const int columnFld = m_methodHelper->GetPropData(lPropNum);
 		const int columnType = resultSetMetaData->GetColumnType(columnFld);
 		
-		if (columnType == ibResultSetMetaData::COLUMN_NULL)
-			pvarPropVal = ibValue::CreateObject(g_valueNullCLSID);
-		else if (columnType == ibResultSetMetaData::COLUMN_BOOL)
+		if (columnType == IResultSetMetaData::COLUMN_NULL)
+			pvarPropVal = CValue::CreateObject(g_valueNullCLSID);
+		else if (columnType == IResultSetMetaData::COLUMN_BOOL)
 			pvarPropVal = m_resultSet->GetResultBool(columnFld);
-		else if (columnType == ibResultSetMetaData::COLUMN_INTEGER || columnType == ibResultSetMetaData::COLUMN_DOUBLE)
+		else if (columnType == IResultSetMetaData::COLUMN_INTEGER || columnType == IResultSetMetaData::COLUMN_DOUBLE)
 			pvarPropVal = m_resultSet->GetResultNumber(columnFld);
-		else if (columnType == ibResultSetMetaData::COLUMN_DATE)
+		else if (columnType == IResultSetMetaData::COLUMN_DATE)
 			pvarPropVal = m_resultSet->GetResultDate(columnFld);
-		else if (columnType == ibResultSetMetaData::COLUMN_STRING)
+		else if (columnType == IResultSetMetaData::COLUMN_STRING)
 			pvarPropVal = m_resultSet->GetResultString(columnFld);
 
 		return true;
@@ -66,7 +66,7 @@ bool ibValueResultSet::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 	return false;
 }
 
-bool ibValueResultSet::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray) //function call
+bool CValueResultSet::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray) //function call
 {
 	if (m_resultSet != nullptr && lMethodNum == eNext) {
 		pvarRetValue = m_resultSet->Next();
@@ -76,7 +76,7 @@ bool ibValueResultSet::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, 
 	return false;
 }
 
-bool ibValueResultSet::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray) //procudre call
+bool CValueResultSet::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray) //procudre call
 {
 	return false;
 }
@@ -85,4 +85,4 @@ bool ibValueResultSet::CallAsProc(const long lMethodNum, ibValue** paParams, con
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(ibValueResultSet, "DatabaseResultSet", string_to_clsid("VL_DBRS"));
+SYSTEM_TYPE_REGISTER(CValueResultSet, "DatabaseResultSet", string_to_clsid("VL_DBRS"));

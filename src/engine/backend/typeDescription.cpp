@@ -3,27 +3,27 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-bool ibTypeDescriptionMemory::LoadData(ibReaderMemory& reader, ibTypeDescription& typeDesc)
+bool CTypeDescriptionMemory::LoadData(CMemoryReader& reader, CTypeDescription& typeDesc)
 {
 	typeDesc.ClearMetaType();
 	unsigned int count = reader.r_u32();
 	for (unsigned int i = 0; i < count; i++) 
 		typeDesc.m_listTypeClass.emplace_back(reader.r_u64());
-	reader.r(&typeDesc.m_typeData, sizeof(ibTypeDescription::ibTypeData));
+	reader.r(&typeDesc.m_typeData, sizeof(CTypeDescription::CTypeData));
 	return true;
 }
 
-bool ibTypeDescriptionMemory::SaveData(ibWriterMemory& writer, ibTypeDescription& typeDesc)
+bool CTypeDescriptionMemory::SaveData(CMemoryWriter& writer, CTypeDescription& typeDesc)
 {
 	writer.w_u32(typeDesc.m_listTypeClass.size());
 	for (auto clsid : typeDesc.m_listTypeClass) writer.w_u64(clsid);
-	writer.w(&typeDesc.m_typeData, sizeof(ibTypeDescription::ibTypeData));
+	writer.w(&typeDesc.m_typeData, sizeof(CTypeDescription::CTypeData));
 	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-bool ibMetaDescriptionMemory::LoadData(ibReaderMemory& reader, ibMetaDescription& metaDesc)
+bool CMetaDescriptionMemory::LoadData(CMemoryReader& reader, CMetaDescription& metaDesc)
 {
 	unsigned int count = reader.r_u32();
 	for (unsigned int i = 0; i < count; i++) 
@@ -31,7 +31,7 @@ bool ibMetaDescriptionMemory::LoadData(ibReaderMemory& reader, ibMetaDescription
 	return true;
 }
 
-bool ibMetaDescriptionMemory::SaveData(ibWriterMemory& writer, ibMetaDescription& metaDesc)
+bool CMetaDescriptionMemory::SaveData(CMemoryWriter& writer, CMetaDescription& metaDesc)
 {
 	writer.w_u32(metaDesc.m_listMetaClass.size());
 	for (auto id : metaDesc.m_listMetaClass) writer.w_u32(id);	

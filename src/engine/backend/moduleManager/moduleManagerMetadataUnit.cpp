@@ -8,15 +8,15 @@
 
 #include "backend/system/value/valueMap.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModuleManager::ibValueMetadataUnit, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueModuleManager::CValueMetadataUnit, CValue);
 
-ibValueModuleManager::ibValueMetadataUnit::ibValueMetadataUnit(ibMetaData* metaData) :
-	ibValue(ibValueTypes::TYPE_VALUE, true),
-	m_methodHelper(new ibValueMethodHelper()), m_metaData(metaData)
+IValueModuleManager::CValueMetadataUnit::CValueMetadataUnit(IMetaData* metaData) :
+	CValue(eValueTypes::TYPE_VALUE, true),
+	m_methodHelper(new CMethodHelper()), m_metaData(metaData)
 {
 }
 
-ibValueModuleManager::ibValueMetadataUnit::~ibValueMetadataUnit()
+IValueModuleManager::CValueMetadataUnit::~CValueMetadataUnit()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -36,7 +36,7 @@ enum
 	enAccumulationRegisters,
 };
 
-void ibValueModuleManager::ibValueMetadataUnit::PrepareNames() const
+void IValueModuleManager::CValueMetadataUnit::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendProp("CommonModules", true, false, g_metaCommonModuleCLSID);
@@ -56,14 +56,14 @@ void ibValueModuleManager::ibValueMetadataUnit::PrepareNames() const
 //*                              Override attribute                          *
 //****************************************************************************
 
-bool ibValueModuleManager::ibValueMetadataUnit::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool IValueModuleManager::CValueMetadataUnit::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool ibValueModuleManager::ibValueMetadataUnit::GetPropVal(const long lPropNum, ibValue& pvarPropVal)//attribute value
+bool IValueModuleManager::CValueMetadataUnit::GetPropVal(const long lPropNum, CValue& pvarPropVal)//attribute value
 {
-	ibValueStructure* valStruct = ibValue::CreateAndPrepareValueRef<ibValueStructure>();
+	CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	switch (lPropNum)
 	{
 	case enCommonModules: {

@@ -2,53 +2,49 @@
 #define __PROPERTY_TEMPLATE_H__
 
 #include "backend/propertyManager/propertyObject.h"
+#include "backend/propertyManager/property/advprop/advpropHyperLink.h"
+
 #include "backend/spreadsheetDescription.h"
 
 //base property for "spreadsheet"
-class BACKEND_API ibPropertySpreadsheet : public ibProperty {
-	wxVariantData* CreateVariantData(const ibSpreadsheetDescription& val = ibSpreadsheetDescription());
+class BACKEND_API CPropertySpreadsheet : public IProperty {
+	wxVariantData* CreateVariantData(const CSpreadsheetDescription& val = CSpreadsheetDescription());
 public:
 
 #pragma region _value_
-	ibSpreadsheetDescription& GetValueAsSpreadsheetDesc() const;
-	void SetValue(const ibSpreadsheetDescription& val);
+	CSpreadsheetDescription& GetValueAsSpreadsheetDesc() const;
+	void SetValue(const CSpreadsheetDescription& val);
 #pragma endregion 
 
-	ibPropertySpreadsheet(ibPropertyCategory* cat, const wxString& name)
-		: ibProperty(cat, name, CreateVariantData())
+	CPropertySpreadsheet(CPropertyCategory* cat, const wxString& name)
+		: IProperty(cat, name, CreateVariantData())
 	{
 	}
 
-	ibPropertySpreadsheet(ibPropertyCategory* cat, const wxString& name, const wxString& label)
-		: ibProperty(cat, name, label, CreateVariantData())
+	CPropertySpreadsheet(CPropertyCategory* cat, const wxString& name, const wxString& label)
+		: IProperty(cat, name, label, CreateVariantData())
 	{
 	}
 
-	ibPropertySpreadsheet(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
-		: ibProperty(cat, name, label, helpString, CreateVariantData())
+	CPropertySpreadsheet(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
+		: IProperty(cat, name, label, helpString, CreateVariantData())
 	{
 	}
 
 	virtual bool IsEmptyProperty() const;
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const {
-		if (ms_propertySpreadsheet != nullptr)
-			return ms_propertySpreadsheet(m_owner, m_propLabel, m_propName, m_propValue);
-		return nullptr;
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxPGHyperLinkProperty(m_owner, m_propLabel, m_propName, m_propValue);
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const ibValue& varPropVal);
-	virtual bool GetDataValue(ibValue& pvarPropVal) const;
+	virtual bool SetDataValue(const CValue& varPropVal);
+	virtual bool GetDataValue(CValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer);
-
-public:
-
-	static wxObject* (*ms_propertySpreadsheet)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&);
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer);
 };
 
 #endif

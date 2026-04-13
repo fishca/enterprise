@@ -29,12 +29,12 @@ static char* s_staticbox_sizer_xpm[] = {
 	"  XXXXXXXXXXXX  "
 };
 
-wxIcon ibValueStaticBoxSizer::GetIcon() const
+wxIcon CValueStaticBoxSizer::GetIcon() const
 {
 	return wxIcon(s_staticbox_sizer_xpm);
 }
 
-wxIcon ibValueStaticBoxSizer::GetIconGroup()
+wxIcon CValueStaticBoxSizer::GetIconGroup()
 {
 	return wxIcon(s_staticbox_sizer_xpm);
 }

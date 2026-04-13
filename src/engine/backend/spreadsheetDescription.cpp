@@ -14,7 +14,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibSpreadsheetCellDescriptionMemory::LoadData(ibReaderMemory& reader, ibSpreadsheetCellDescription& spreadsheetCellDesc)
+bool CSpreadsheetCellDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheetCellDescription& spreadsheetCellDesc)
 {
 	spreadsheetCellDesc.m_value = reader.r_stringZ();
 
@@ -45,16 +45,16 @@ bool ibSpreadsheetCellDescriptionMemory::LoadData(ibReaderMemory& reader, ibSpre
 	spreadsheetCellDesc.m_row_size = reader.r_s32();
 	spreadsheetCellDesc.m_col_size = reader.r_s32();
 
-	spreadsheetCellDesc.m_fitMode = static_cast<ibSpreadsheetCellDescription::ibFitMode>(reader.r_s32());
+	spreadsheetCellDesc.m_fitMode = static_cast<CSpreadsheetCellDescription::EFitMode>(reader.r_s32());
 	spreadsheetCellDesc.m_isReadOnly = reader.r_u8();
 
-	spreadsheetCellDesc.m_fillSetType = static_cast<ibSpreadsheetFillType>(reader.r_s32());
+	spreadsheetCellDesc.m_fillSetType = static_cast<enSpreadsheetFillType>(reader.r_s32());
 
 	spreadsheetCellDesc.m_detailsParameter = reader.r_stringZ();
 	return true;
 }
 
-bool ibSpreadsheetCellDescriptionMemory::SaveData(ibWriterMemory& writer, const ibSpreadsheetCellDescription& spreadsheetCellDesc)
+bool CSpreadsheetCellDescriptionMemory::SaveData(CMemoryWriter& writer, const CSpreadsheetCellDescription& spreadsheetCellDesc)
 {
 	writer.w_stringZ(spreadsheetCellDesc.m_value);
 
@@ -96,19 +96,19 @@ bool ibSpreadsheetCellDescriptionMemory::SaveData(ibWriterMemory& writer, const 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ibSpreadsheetDescriptionMemory::LoadData(ibReaderMemory& reader, ibSpreadsheetDescription& spreadsheetDesc)
+bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheetDescription& spreadsheetDesc)
 {
 	wxMemoryBuffer mainBuffer;
 	if (!reader.r_chunk(grid_block, mainBuffer))
 		return false;
 
-	ibReaderMemory mainReader(mainBuffer);
+	CMemoryReader mainReader(mainBuffer);
 
 	wxMemoryBuffer headerBuffer;
 	if (!mainReader.r_chunk(main_block, headerBuffer))
 		return false;
 
-	ibReaderMemory headerReader(headerBuffer);
+	CMemoryReader headerReader(headerBuffer);
 	if (headerReader.r_u64() != cell_sign)
 		return false;
 
@@ -116,7 +116,7 @@ bool ibSpreadsheetDescriptionMemory::LoadData(ibReaderMemory& reader, ibSpreadsh
 	if (!mainReader.r_chunk(cell_block, cellBuffer))
 		return false;
 
-	ibReaderMemory cellReader(cellBuffer);
+	CMemoryReader cellReader(cellBuffer);
 
 	{
 		const size_t capacity = cellReader.r_u64();
@@ -127,7 +127,7 @@ bool ibSpreadsheetDescriptionMemory::LoadData(ibReaderMemory& reader, ibSpreadsh
 			int row = cellReader.r_s32();
 			int col = cellReader.r_s32();
 
-			ibSpreadsheetCellDescriptionMemory::LoadData(cellReader,
+			CSpreadsheetCellDescriptionMemory::LoadData(cellReader,
 				*spreadsheetDesc.GetOrCreateCell(row, col));
 		}
 	}
@@ -136,7 +136,7 @@ bool ibSpreadsheetDescriptionMemory::LoadData(ibReaderMemory& reader, ibSpreadsh
 	if (!mainReader.r_chunk(area_block, areaBuffer))
 		return false;
 
-	ibReaderMemory areaReader(areaBuffer);
+	CMemoryReader areaReader(areaBuffer);
 
 	{
 		const size_t capacity = areaReader.r_u64();
@@ -167,7 +167,7 @@ bool ibSpreadsheetDescriptionMemory::LoadData(ibReaderMemory& reader, ibSpreadsh
 	if (!mainReader.r_chunk(data_block, dataBuffer))
 		return false;
 
-	ibReaderMemory dataReader(dataBuffer);
+	CMemoryReader dataReader(dataBuffer);
 
 	{
 		const size_t capacity = dataReader.r_u64();
@@ -197,38 +197,38 @@ bool ibSpreadsheetDescriptionMemory::LoadData(ibReaderMemory& reader, ibSpreadsh
 	return true;
 }
 
-bool ibSpreadsheetDescriptionMemory::SaveData(ibWriterMemory& writer, const ibSpreadsheetDescription& spreadsheetDesc)
+bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, const CSpreadsheetDescription& spreadsheetDesc)
 {
-	ibWriterMemory mainWriter;
+	CMemoryWriter mainWriter;
 
-	ibWriterMemory headerWriter;
+	CMemoryWriter headerWriter;
 	headerWriter.w_u64(cell_sign); //sign
 	headerWriter.w_u64(0); //reserved
 	mainWriter.w_chunk(main_block, headerWriter.buffer());
 
-	ibWriterMemory cellWriter;
+	CMemoryWriter cellWriter;
 	cellWriter.w_u64(spreadsheetDesc.GetCellCount());
 
 	for (int idx = 0; idx < spreadsheetDesc.GetCellCount(); idx++) {
 
-		const ibSpreadsheetCellDescription* cell = spreadsheetDesc.GetCellByIdx(idx);
+		const CSpreadsheetCellDescription* cell = spreadsheetDesc.GetCellByIdx(idx);
 
 		cellWriter.w_s32(cell->m_row);
 		cellWriter.w_s32(cell->m_col);
 
-		ibSpreadsheetCellDescriptionMemory::SaveData(cellWriter,
+		CSpreadsheetCellDescriptionMemory::SaveData(cellWriter,
 			*spreadsheetDesc.GetCellByIdx(idx));
 	}
 
 	mainWriter.w_chunk(cell_block, cellWriter.buffer());
 
-	ibWriterMemory areaWriter;
+	CMemoryWriter areaWriter;
 
 	areaWriter.w_u64(spreadsheetDesc.GetAreaNumberRows());
 
 	for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberRows(); idx++)
 	{
-		const ibSpreadsheetAreaDescription* area = spreadsheetDesc.GetRowAreaByIdx(idx);
+		const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetRowAreaByIdx(idx);
 
 		areaWriter.w_stringZ(area->m_label);
 		areaWriter.w_s32(area->m_start);
@@ -239,7 +239,7 @@ bool ibSpreadsheetDescriptionMemory::SaveData(ibWriterMemory& writer, const ibSp
 
 	for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberCols(); idx++)
 	{
-		const ibSpreadsheetAreaDescription* area = spreadsheetDesc.GetColAreaByIdx(idx);
+		const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetColAreaByIdx(idx);
 
 		areaWriter.w_stringZ(area->m_label);
 		areaWriter.w_s32(area->m_start);
@@ -248,7 +248,7 @@ bool ibSpreadsheetDescriptionMemory::SaveData(ibWriterMemory& writer, const ibSp
 
 	mainWriter.w_chunk(area_block, areaWriter.buffer());
 
-	ibWriterMemory dataWriter;
+	CMemoryWriter dataWriter;
 
 	dataWriter.w_u64(spreadsheetDesc.GetBrakeNumberRows());
 	for (int idx = 0; idx < spreadsheetDesc.GetBrakeNumberRows(); idx++) dataWriter.w_s32(spreadsheetDesc.GetRowBrakeByIdx(idx));
@@ -258,14 +258,14 @@ bool ibSpreadsheetDescriptionMemory::SaveData(ibWriterMemory& writer, const ibSp
 
 	dataWriter.w_u64(spreadsheetDesc.GetSizeNumberRows());
 	for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberRows(); idx++) {
-		const ibSpreadsheetRowSizeDescription* desc = spreadsheetDesc.GetRowSizeByIdx(idx);
+		const CSpreadsheetRowSizeDescription* desc = spreadsheetDesc.GetRowSizeByIdx(idx);
 		dataWriter.w_s32(desc->m_row);
 		dataWriter.w_s32(desc->m_height);
 	}
 
 	dataWriter.w_u64(spreadsheetDesc.GetSizeNumberCols());
 	for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberCols(); idx++) {
-		const ibSpreadsheetColSizeDescription* desc = spreadsheetDesc.GetColSizeByIdx(idx);
+		const CSpreadsheetColSizeDescription* desc = spreadsheetDesc.GetColSizeByIdx(idx);
 		dataWriter.w_s32(desc->m_col);
 		dataWriter.w_s32(desc->m_width);
 	}

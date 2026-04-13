@@ -10,7 +10,7 @@
 //*                         metaData													  * 
 //*****************************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectConfiguration, ibValueMetaObject);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectConfiguration, IValueMetaObject);
 
 //*****************************************************************************************
 //*                                  MetadataObject                                       *
@@ -18,10 +18,10 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectConfiguration, ibValueMetaObject);
 
 #include "backend/metaCollection/metaLanguageObject.h"
 
-wxString ibValueMetaObjectConfiguration::GetLangCode() const
+wxString CValueMetaObjectConfiguration::GetLangCode() const
 {
-	const ibValueMetaObjectLanguage* language =
-		FindAnyObjectByFilter<ibValueMetaObjectLanguage>(GetLanguage());
+	const CValueMetaObjectLanguage* language =
+		FindAnyObjectByFilter<CValueMetaObjectLanguage>(GetLanguage());
 
 	if (language != nullptr)
 		return language->GetLangCode();
@@ -29,44 +29,40 @@ wxString ibValueMetaObjectConfiguration::GetLangCode() const
 	return wxT("");
 }
 
-ibValueMetaObjectConfiguration::ibValueMetaObjectConfiguration() : ibValueMetaObject(configurationDefaultName)
+CValueMetaObjectConfiguration::CValueMetaObjectConfiguration() : IValueMetaObject(configurationDefaultName)
 {
 	//set default proc
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("BeforeStart"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("OnStart"), ibContentHelper::eProcedureHelper);
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("BeforeExit"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("OnExit"), ibContentHelper::eProcedureHelper);
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("BeforeStart"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("OnStart"), eContentHelper::eProcedureHelper);
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("BeforeExit"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("OnExit"), eContentHelper::eProcedureHelper);
 
 	//set def metaid
 	m_metaId = defaultMetaID;
 }
 
-ibValueMetaObjectConfiguration::~ibValueMetaObjectConfiguration()
+CValueMetaObjectConfiguration::~CValueMetaObjectConfiguration()
 {
 }
 
-bool ibValueMetaObjectConfiguration::LoadData(ibReaderMemory& dataReader)
+bool CValueMetaObjectConfiguration::LoadData(CMemoryReader& dataReader)
 {
 	m_propertyVersion->SetValue(dataReader.r_s32());
 
 	m_propertyDefRole->LoadData(dataReader);
 	m_propertyDefLanguage->LoadData(dataReader);
-	(*m_propertyModuleConfiguration)->LoadMeta(dataReader);
-	m_propertySyntax->LoadData(dataReader);
 
-	return true;
+	return (*m_propertyModuleConfiguration)->LoadMeta(dataReader);
 }
 
-bool ibValueMetaObjectConfiguration::SaveData(ibWriterMemory& dataWritter)
+bool CValueMetaObjectConfiguration::SaveData(CMemoryWriter& dataWritter)
 {
 	dataWritter.w_s32(m_propertyVersion->GetValueAsInteger());
 
 	m_propertyDefRole->SaveData(dataWritter);
 	m_propertyDefLanguage->SaveData(dataWritter);
-	(*m_propertyModuleConfiguration)->SaveMeta(dataWritter);
-	m_propertySyntax->SaveData(dataWritter);
 
-	return true;
+	return (*m_propertyModuleConfiguration)->SaveMeta(dataWritter);
 }
 
 //***********************************************************************
@@ -75,25 +71,25 @@ bool ibValueMetaObjectConfiguration::SaveData(ibWriterMemory& dataWritter)
 
 #include "backend/metaData.h"
 
-bool ibValueMetaObjectConfiguration::OnCreateMetaObject(ibMetaData* metaData, int flags)
+bool CValueMetaObjectConfiguration::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
 	if (!(*m_propertyModuleConfiguration)->OnCreateMetaObject(metaData, flags)) {
 		return false;
 	}
 
-	return ibValueMetaObject::OnCreateMetaObject(metaData, flags);
+	return IValueMetaObject::OnCreateMetaObject(metaData, flags);
 }
 
-bool ibValueMetaObjectConfiguration::OnLoadMetaObject(ibMetaData* metaData)
+bool CValueMetaObjectConfiguration::OnLoadMetaObject(IMetaData* metaData)
 {
 	if (!(*m_propertyModuleConfiguration)->OnLoadMetaObject(metaData)) {
 		return false;
 	}
 
-	return ibValueMetaObject::OnLoadMetaObject(metaData);
+	return IValueMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool ibValueMetaObjectConfiguration::OnSaveMetaObject(int flags)
+bool CValueMetaObjectConfiguration::OnSaveMetaObject(int flags)
 {
 	if (!(*m_propertyModuleConfiguration)->OnSaveMetaObject(flags)) {
 		return false;
@@ -104,49 +100,48 @@ bool ibValueMetaObjectConfiguration::OnSaveMetaObject(int flags)
 		return false;
 	}
 
-	return ibValueMetaObject::OnSaveMetaObject(flags);
+	return IValueMetaObject::OnSaveMetaObject(flags);
 }
 
-bool ibValueMetaObjectConfiguration::OnDeleteMetaObject()
+bool CValueMetaObjectConfiguration::OnDeleteMetaObject()
 {
 	if (!(*m_propertyModuleConfiguration)->OnDeleteMetaObject()) {
 		return false;
 	}
 
-	return ibValueMetaObject::OnDeleteMetaObject();
+	return IValueMetaObject::OnDeleteMetaObject();
 }
 
-bool ibValueMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
 {
 	if (!(*m_propertyModuleConfiguration)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->AddCompileModule(m_propertyModuleConfiguration->GetMetaObject(), moduleManager))
 		return false;
 
-	ibCompileCode::SetCodeStyle(m_propertySyntax->GetValueAsEnum());
-	return ibValueMetaObject::OnBeforeRunMetaObject(flags);
+	return IValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool ibValueMetaObjectConfiguration::OnAfterCloseMetaObject()
+bool CValueMetaObjectConfiguration::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertyModuleConfiguration)->OnAfterCloseMetaObject())
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->RemoveCompileModule(m_propertyModuleConfiguration->GetMetaObject()))
 		return false;
 
-	return ibValueMetaObject::OnAfterCloseMetaObject();
+	return IValueMetaObject::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(ibValueMetaObjectConfiguration, "CommonMetadata", g_metaCommonMetadataCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectConfiguration, "CommonMetadata", g_metaCommonMetadataCLSID);

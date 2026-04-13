@@ -2,49 +2,43 @@
 #define __PROPERTY_TYPE_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/backend_type.h"
+#include "backend/propertyManager/property/advprop/advpropType.h"
 
 //base property for "type"
-class BACKEND_API ibPropertyType : public ibProperty {
-	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibValueTypes type) const;
-	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibClassID& clsid) const;
-	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibTypeDescription& typeDesc) const;
+class BACKEND_API CPropertyType : public IProperty {
+	wxVariantData* CreateVariantData(IPropertyObject *property, const eValueTypes type) const;
+	wxVariantData* CreateVariantData(IPropertyObject* property, const class_identifier_t& clsid) const;
+	wxVariantData* CreateVariantData(IPropertyObject* property, const CTypeDescription& typeDesc) const;
 public:
 
-	ibTypeDescription& GetValueAsTypeDesc() const;
-	void SetValue(const ibTypeDescription& val);
+	CTypeDescription& GetValueAsTypeDesc() const;
+	void SetValue(const CTypeDescription& val);
 
-	ibPropertyType(ibPropertyCategory* cat, const wxString& name, const ibValueTypes type) : ibProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), type)) {}
-	ibPropertyType(ibPropertyCategory* cat, const wxString& name, const ibClassID& clsid) : ibProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), clsid)) {}
-	ibPropertyType(ibPropertyCategory* cat, const wxString& name, const wxString& label, const ibValueTypes type) : ibProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), type)) {}
+	CPropertyType(CPropertyCategory* cat, const wxString& name, const eValueTypes type) : IProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), type)) {}
+	CPropertyType(CPropertyCategory* cat, const wxString& name, const class_identifier_t& clsid) : IProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), clsid)) {}
+	CPropertyType(CPropertyCategory* cat, const wxString& name, const wxString& label, const eValueTypes type) : IProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), type)) {}
 
-	ibPropertyType(ibPropertyCategory* cat, const wxString& name, const wxString& label, const ibClassID& clsid) : ibProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), clsid)) {}
-	ibPropertyType(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const ibValueTypes type) : ibProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), type)) {}
-	ibPropertyType(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const ibClassID& clsid) : ibProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), clsid)) {}
+	CPropertyType(CPropertyCategory* cat, const wxString& name, const wxString& label, const class_identifier_t& clsid) : IProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), clsid)) {}
+	CPropertyType(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const eValueTypes type) : IProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), type)) {}
+	CPropertyType(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const class_identifier_t& clsid) : IProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), clsid)) {}
 
 	virtual bool IsEmptyProperty() const { return !GetValueAsTypeDesc().IsOk(); }
 
 	//get property for grid 
-	virtual wxObject* GetPGProperty() const {
-		if (ms_propertyType != nullptr)
-			return ms_propertyType(m_owner, GetFilterDataType(), m_propLabel, m_propName, m_propValue);
-		return nullptr;
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxPGTypeProperty(m_owner, GetFilterDataType(), m_propLabel, m_propName, m_propValue);
 	}
 
 	//set/get property data
-	virtual bool SetDataValue(const ibValue& varPropVal);
-	virtual bool GetDataValue(ibValue& pvarPropVal) const;
+	virtual bool SetDataValue(const CValue& varPropVal);
+	virtual bool GetDataValue(CValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer);
-
-public:
-
-	static wxObject* (*ms_propertyType)(ibPropertyObject*, ibSelectorDataType, const wxString&, const wxString&, const wxVariant&);
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer);
 
 protected:
-	ibSelectorDataType GetFilterDataType() const;
+	eSelectorDataType GetFilterDataType() const;
 };
 
 #endif

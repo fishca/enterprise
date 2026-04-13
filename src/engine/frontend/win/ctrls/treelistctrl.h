@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
 // Name:        treelistctrl.h
-// Purpose:     ibTreeListCtrl class
+// Purpose:     wxTreeListExtCtrl class
 // Created:     01/02/97
 // Author:      Robert Roebling
 // Maintainer:  Ronan Chartois (pgriddev)
@@ -27,9 +27,9 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API ibTreeListItem;
-class FRONTEND_API ibTreeListHeaderWindow;
-class FRONTEND_API ibTreeListMainWindow;
+class FRONTEND_API wxTreeListItem;
+class FRONTEND_API wxTreeListHeaderWindow;
+class FRONTEND_API wxTreeListMainWindow;
 
 #define wxTR_COLUMN_LINES 0x1000 // put border around items
 #define wxTR_VIRTUAL      0x4000 // The application provides items text on demand.
@@ -49,10 +49,10 @@ enum {
 	DEFAULT_COL_WIDTH = 100
 };
 
-class ibTreeListColumnInfo : public wxObject {
+class wxTreeListColumnInfo : public wxObject {
 
 public:
-	ibTreeListColumnInfo(const wxString &text = wxEmptyString,
+	wxTreeListColumnInfo(const wxString &text = wxEmptyString,
 		int width = DEFAULT_COL_WIDTH,
 		int flag = wxALIGN_LEFT,
 		int image = -1,
@@ -67,7 +67,7 @@ public:
 		m_edit = edit;
 	}
 
-	ibTreeListColumnInfo(const ibTreeListColumnInfo& other) : m_text(other.m_text)
+	wxTreeListColumnInfo(const wxTreeListColumnInfo& other) : m_text(other.m_text)
 	{
 		m_width = other.m_width;
 		m_flag = other.m_flag;
@@ -77,32 +77,32 @@ public:
 		m_edit = other.m_edit;
 	}
 
-	~ibTreeListColumnInfo() {}
+	~wxTreeListColumnInfo() {}
 
 	// get/set
 	wxString GetText() const { return m_text; }
-	ibTreeListColumnInfo& SetText(const wxString& text) { m_text = text; return *this; }
+	wxTreeListColumnInfo& SetText(const wxString& text) { m_text = text; return *this; }
 
 	int GetWidth() const { return m_shown ? m_width : 0; }
-	ibTreeListColumnInfo& SetWidth(int width) { m_width = width; return *this; }
+	wxTreeListColumnInfo& SetWidth(int width) { m_width = width; return *this; }
 
 	int GetAlignment() const { return m_flag; }
-	ibTreeListColumnInfo& SetAlignment(int flag) { m_flag = flag; return *this; }
+	wxTreeListColumnInfo& SetAlignment(int flag) { m_flag = flag; return *this; }
 
 	int GetImage() const { return m_image; }
-	ibTreeListColumnInfo& SetImage(int image) { m_image = image; return *this; }
+	wxTreeListColumnInfo& SetImage(int image) { m_image = image; return *this; }
 
 	int GetSelectedImage() const { return m_selected_image; }
-	ibTreeListColumnInfo& SetSelectedImage(int image) { m_selected_image = image; return *this; }
+	wxTreeListColumnInfo& SetSelectedImage(int image) { m_selected_image = image; return *this; }
 
 	bool IsEditable() const { return m_edit; }
-	ibTreeListColumnInfo& SetEditable(bool edit)
+	wxTreeListColumnInfo& SetEditable(bool edit)
 	{
 		m_edit = edit; return *this;
 	}
 
 	bool IsShown() const { return m_shown; }
-	ibTreeListColumnInfo& SetShown(bool shown) { m_shown = shown; return *this; }
+	wxTreeListColumnInfo& SetShown(bool shown) { m_shown = shown; return *this; }
 
 private:
 	wxString m_text;
@@ -115,7 +115,7 @@ private:
 };
 
 //----------------------------------------------------------------------------
-// ibTreeListCtrl - the multicolumn tree control
+// wxTreeListExtCtrl - the multicolumn tree control
 //----------------------------------------------------------------------------
 
 // modes for navigation
@@ -131,40 +131,40 @@ const int wxTL_MODE_FIND_NOCASE = 0x0020;
 
 // additional flag for HitTest
 const int wxTREE_HITTEST_ONITEMCOLUMN = 0x2000;
-extern const wxChar* ibTreeListCtrlNameStr;
+extern const wxChar* wxTreeListExtCtrlNameStr;
 
-class FRONTEND_API ibTreeListCtrl : public wxControl
+class FRONTEND_API wxTreeListExtCtrl : public wxControl
 {
-	friend class ibTreeListHeaderWindow;
-	friend class ibTreeListMainWindow;
-	friend class ibTreeListItem;
+	friend class wxTreeListHeaderWindow;
+	friend class wxTreeListMainWindow;
+	friend class wxTreeListItem;
 public:
 
 	// ---------- creation ----------
 
-	ibTreeListCtrl()
+	wxTreeListExtCtrl()
 		: m_header_win(0), m_main_win(0), m_headerHeight(0)
 	{}
 
-	ibTreeListCtrl(wxWindow *parent, wxWindowID id = -1,
+	wxTreeListExtCtrl(wxWindow *parent, wxWindowID id = -1,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxTR_DEFAULT_STYLE,
 		const wxValidator &validator = wxDefaultValidator,
-		const wxString& name = ibTreeListCtrlNameStr)
+		const wxString& name = wxTreeListExtCtrlNameStr)
 		: m_header_win(0), m_main_win(0), m_headerHeight(0)
 	{
 		Create(parent, id, pos, size, style, validator, name);
 	}
 
-	virtual ~ibTreeListCtrl() {}
+	virtual ~wxTreeListExtCtrl() {}
 
 	bool Create(wxWindow *parent, wxWindowID id = -1,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxTR_DEFAULT_STYLE,
 		const wxValidator &validator = wxDefaultValidator,
-		const wxString& name = ibTreeListCtrlNameStr);
+		const wxString& name = wxTreeListExtCtrlNameStr);
 
 	void Refresh(bool erase = TRUE, const wxRect* rect = nullptr);
 	void SetFocus();
@@ -221,9 +221,9 @@ public:
 		int image = -1,
 		bool shown = true,
 		bool edit = false) {
-		AddColumn(ibTreeListColumnInfo(text, width, flag, image, shown, edit));
+		AddColumn(wxTreeListColumnInfo(text, width, flag, image, shown, edit));
 	}
-	void AddColumn(const ibTreeListColumnInfo& colInfo);
+	void AddColumn(const wxTreeListColumnInfo& colInfo);
 
 	// inserts a column before the given one
 	void InsertColumn(int before,
@@ -234,9 +234,9 @@ public:
 		bool shown = true,
 		bool edit = false) {
 		InsertColumn(before,
-			ibTreeListColumnInfo(text, width, flag, image, shown, edit));
+			wxTreeListColumnInfo(text, width, flag, image, shown, edit));
 	}
-	void InsertColumn(int before, const ibTreeListColumnInfo& colInfo);
+	void InsertColumn(int before, const wxTreeListColumnInfo& colInfo);
 
 	// deletes the given column - does not delete the corresponding column
 	void RemoveColumn(int column);
@@ -248,9 +248,9 @@ public:
 	void SetMainColumn(int column);
 	int GetMainColumn() const;
 
-	void SetColumn(int column, const ibTreeListColumnInfo& colInfo);
-	ibTreeListColumnInfo GetColumn(int column);
-	const ibTreeListColumnInfo& GetColumn(int column) const;
+	void SetColumn(int column, const wxTreeListColumnInfo& colInfo);
+	wxTreeListColumnInfo GetColumn(int column);
+	const wxTreeListColumnInfo& GetColumn(int column) const;
 
 	void SetColumnText(int column, const wxString& text);
 	wxString GetColumnText(int column) const;
@@ -554,18 +554,18 @@ public:
 
 protected:
 	// header window, responsible for column visualization and manipulation
-	ibTreeListHeaderWindow* GetHeaderWindow() const
+	wxTreeListHeaderWindow* GetHeaderWindow() const
 	{
 		return m_header_win;
 	}
-	ibTreeListHeaderWindow* m_header_win;  // future cleanup: make private or remove GetHeaderWindow()
+	wxTreeListHeaderWindow* m_header_win;  // future cleanup: make private or remove GetHeaderWindow()
 
 	// main window, the "true" tree ctrl
-	ibTreeListMainWindow* GetMainWindow() const
+	wxTreeListMainWindow* GetMainWindow() const
 	{
 		return m_main_win;
 	}
-	ibTreeListMainWindow* m_main_win;  // future cleanup: make private or remove GetMainWindow()
+	wxTreeListMainWindow* m_main_win;  // future cleanup: make private or remove GetMainWindow()
 
 	int GetHeaderHeight() const { return m_headerHeight; }
 
@@ -577,7 +577,7 @@ private:
 	int m_headerHeight;
 
 	DECLARE_EVENT_TABLE()
-	DECLARE_DYNAMIC_CLASS(ibTreeListCtrl)
+	DECLARE_DYNAMIC_CLASS(wxTreeListExtCtrl)
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -4,51 +4,51 @@
 
 #define sign_dataReport 0x2355F6421261D
 
-class BACKEND_API ibMetaDataReport :
-	public ibMetaData {
+class BACKEND_API CMetaDataReport :
+	public IMetaData {
 public:
 
-	ibMetaDataReport();
-	ibMetaDataReport(ibMetaData* metaData, ibValueMetaObjectReport* report = nullptr);
-	virtual ~ibMetaDataReport();
+	CMetaDataReport();
+	CMetaDataReport(IMetaData* metaData, CValueMetaObjectReport* report = nullptr);
+	virtual ~CMetaDataReport();
 
-	virtual ibValueMetaObjectReport* GetReport() const { return m_commonObject; }
-	virtual ibValueModuleManagerExternalReport* GetModuleManager() const { return m_moduleManager; }
+	virtual CValueMetaObjectReport* GetReport() const { return m_commonObject; }
+	virtual CValueModuleManagerExternalReport* GetModuleManager() const { return m_moduleManager; }
 
-	virtual void SetVersion(const ibVersionID& version) { m_version = version; }
-	virtual ibVersionID GetVersion() const { return m_version; }
+	virtual void SetVersion(const version_identifier_t& version) { m_version = version; }
+	virtual version_identifier_t GetVersion() const { return m_version; }
 
 	virtual wxString GetFileName() const { return m_fullPath; }
 
 	//runtime support:
-	virtual ibValue* CreateObjectRef(const ibClassID& clsid, ibValue** paParams = nullptr, const long lSizeArray = 0) const;
-	virtual ibValue* CreateObjectRef(const wxString& className, ibValue** paParams = nullptr, const long lSizeArray = 0) const {
+	virtual CValue* CreateObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) const;
+	virtual CValue* CreateObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) const {
 		return CreateObjectRef(
 			GetIDObjectFromString(className), paParams, lSizeArray
 		);
 	}
 
 	virtual bool IsRegisterCtor(const wxString& className) const;
-	virtual bool IsRegisterCtor(const wxString& className, ibCtorObjectType objectType) const;
-	virtual bool IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, enum ibCtorObjectMetaType refType) const;
+	virtual bool IsRegisterCtor(const wxString& className, eCtorObjectType objectType) const;
+	virtual bool IsRegisterCtor(const wxString& className, eCtorObjectType objectType, enum eCtorMetaType refType) const;
 
-	virtual bool IsRegisterCtor(const ibClassID& clsid) const;
+	virtual bool IsRegisterCtor(const class_identifier_t& clsid) const;
 
-	virtual ibClassID GetIDObjectFromString(const wxString& className) const;
-	virtual wxString GetNameObjectFromID(const ibClassID& clsid, bool upper = false) const;
+	virtual class_identifier_t GetIDObjectFromString(const wxString& className) const;
+	virtual wxString GetNameObjectFromID(const class_identifier_t& clsid, bool upper = false) const;
 
-	virtual ibCtorMetaValueType* GetTypeCtor(const ibClassID& clsid) const;
-	virtual ibCtorMetaValueType* GetTypeCtor(const ibValueMetaObject* metaValue, enum ibCtorObjectMetaType refType) const;
+	virtual IMetaValueTypeCtor* GetTypeCtor(const class_identifier_t& clsid) const;
+	virtual IMetaValueTypeCtor* GetTypeCtor(const IValueMetaObject* metaValue, enum eCtorMetaType refType) const;
 
-	virtual ibCtorAbstractType* GetAvailableCtor(const wxString& className) const;
-	virtual ibCtorAbstractType* GetAvailableCtor(const ibClassID& clsid) const;
+	virtual IAbstractTypeCtor* GetAvailableCtor(const wxString& className) const;
+	virtual IAbstractTypeCtor* GetAvailableCtor(const class_identifier_t& clsid) const;
 
-	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType() const;
-	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType(const ibClassID& clsid, ibCtorObjectMetaType refType) const;
-	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType(enum ibCtorObjectMetaType refType) const;
+	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType() const;
+	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, eCtorMetaType refType) const;
+	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
 
 	//Get owner metadata 
-	virtual bool GetOwner(ibMetaData*& metaData) const;
+	virtual bool GetOwner(IMetaData*& metaData) const;
 
 	//factory version 
 	virtual unsigned int GetFactoryCountChanges() const {
@@ -72,7 +72,7 @@ public:
 	bool LoadFromFile(const wxString& strFileName);
 	bool SaveToFile(const wxString& strFileName);
 
-	virtual ibValueMetaObject* GetCommonMetaObject() const { return m_commonObject; }
+	virtual IValueMetaObject* GetCommonMetaObject() const { return m_commonObject; }
 
 	//start/exit module 
 	virtual bool StartMainModule() { return m_moduleManager ? m_moduleManager->StartMainModule() : false; }
@@ -81,30 +81,30 @@ public:
 protected:
 
 	//header loader/saver 
-	bool LoadHeader(ibReaderMemory& readerData);
-	bool SaveHeader(ibWriterMemory& writerData);
+	bool LoadHeader(CMemoryReader& readerData);
+	bool SaveHeader(CMemoryWriter& writerData);
 
 	//loader/saver/deleter: 
-	bool LoadCommonMetadata(const ibClassID& clsid, ibReaderMemory& readerData);
-	bool LoadChildMetadata(const ibClassID& clsid, ibReaderMemory& readerData, ibValueMetaObject* object);
-	bool SaveCommonMetadata(const ibClassID& clsid, ibWriterMemory& writerData, int flags = defaultFlag);
-	bool SaveChildMetadata(const ibClassID& clsid, ibWriterMemory& writerData, ibValueMetaObject* object, int flags = defaultFlag);
-	bool DeleteCommonMetadata(const ibClassID& clsid);
-	bool DeleteChildMetadata(const ibClassID& clsid, ibValueMetaObject* object);
+	bool LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData);
+	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IValueMetaObject* object);
+	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags = defaultFlag);
+	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, IValueMetaObject* object, int flags = defaultFlag);
+	bool DeleteCommonMetadata(const class_identifier_t& clsid);
+	bool DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object);
 
 	//run/close recursively:
-	bool RunChildMetadata(ibValueMetaObject* object, int flags, bool before);
-	bool CloseChildMetadata(ibValueMetaObject* object, int flags, bool before);
-	bool ClearChildMetadata(ibValueMetaObject* object);
+	bool RunChildMetadata(IValueMetaObject* object, int flags, bool before);
+	bool CloseChildMetadata(IValueMetaObject* object, int flags, bool before);
+	bool ClearChildMetadata(IValueMetaObject* object);
 
 private:
 
 	wxString m_fullPath;
 
-	ibMetaData* m_ownerMeta; //owner for saving/loading
-	ibValueModuleManagerExternalReport* m_moduleManager;
-	ibValueMetaObjectReport* m_commonObject; 	//common meta object
+	IMetaData* m_ownerMeta; //owner for saving/loading
+	CValueModuleManagerExternalReport* m_moduleManager;
+	CValueMetaObjectReport* m_commonObject; 	//common meta object
 	bool m_configOpened;
 
-	ibVersionID m_version;
+	version_identifier_t m_version;
 };

@@ -16,16 +16,16 @@
 #include "backend/guid.h"
 #include "frontend/frontend.h"
 
-class FRONTEND_API ibDialogActiveUser : public wxDialog {
+class FRONTEND_API CDialogActiveUser : public wxDialog {
 	wxListCtrl* m_activeTable;
 	std::shared_ptr<wxTimer> m_activeTableScanner;
-	ibGuid m_sessionArrayHash; 
+	CGuid m_sessionArrayHash; 
 public:
 
 	void RefreshActiveUserTable();
 
-	ibDialogActiveUser(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Active users"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(600, 250), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
-	virtual ~ibDialogActiveUser();
+	CDialogActiveUser(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Active users"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(600, 250), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+	virtual ~CDialogActiveUser();
 
 protected:
 	void OnIdleHandler(wxTimerEvent& event) { 

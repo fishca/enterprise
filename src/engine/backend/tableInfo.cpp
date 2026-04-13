@@ -5,45 +5,45 @@
 
 #include "tableInfo.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel, ibValue);
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelColumnCollection, ibValue);
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo, ibValue);
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelReturnLine, ibValue);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueModel, CValue);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueModel::IValueModelColumnCollection, CValue);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueModel::IValueModelColumnCollection::IValueModelColumnInfo, CValue);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueModel::IValueModelReturnLine, CValue);
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTableBase, ibValueModel);
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTreeBase, ibValueModel);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueTable, IValueModel);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueTree, IValueModel);
 
-ibValueModel::ibValueModel()
-	: ibValue(ibValueTypes::TYPE_VALUE),
+IValueModel::IValueModel()
+	: CValue(eValueTypes::TYPE_VALUE),
 	m_modelProvider(nullptr),
 	m_refreshModel(false)
 {
-	m_modelProvider = new ibDataViewModelProviderImpl(this);
+	m_modelProvider = new CDataViewModelProvider(this);
 	//m_modelProvider->IncRef(); // always one 
 }
 
-ibValueModel::~ibValueModel()
+IValueModel::~IValueModel()
 {
 	m_modelProvider->DecRef();
 }
 
-ibDataViewItem ibValueModel::GetSelection() const
+wxDataViewExtItem IValueModel::GetSelection() const
 {
 	if (m_modelProvider == nullptr)
-		return ibDataViewItem(nullptr);
+		return wxDataViewExtItem(nullptr);
 	return m_modelProvider->GetSelection();
 }
 
-void ibValueModel::RowValueStartEdit(const ibDataViewItem& item, unsigned int col)
+void IValueModel::RowValueStartEdit(const wxDataViewExtItem& item, unsigned int col)
 {
 	if (m_modelProvider == nullptr)
 		return;
 	m_modelProvider->StartEditing(item, col);
 }
 
-ibValueModel::ibActionCollection ibValueModel::GetActionCollection(const ibFormID& formType)
+IValueModel::CActionCollection IValueModel::GetActionCollection(const form_identifier_t& formType)
 {
-	ibActionCollection action(this);
+	CActionCollection action(this);
 
 	if (UseStandartCommand()) {
 		action.AddAction(wxT("Add"), _("Add"), g_picAddCLSID, true, eAddValue);
@@ -67,7 +67,7 @@ ibValueModel::ibActionCollection ibValueModel::GetActionCollection(const ibFormI
 	return action;
 }
 
-void ibValueModel::ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm)
+void IValueModel::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
 {
 	switch (lNumAction)
 	{
@@ -85,24 +85,24 @@ void ibValueModel::ExecuteAction(const ibActionID& lNumAction, ibBackendValueFor
 		break;
 	case eFilter:
 		if (ShowFilter()) {
-			CallRefreshModel(ibDataViewItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
+			CallRefreshModel(wxDataViewExtItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
 		}
 		break;
 	case eFilterByColumn:
 	{
-		const ibDataViewItem& item = GetSelection();
+		const wxDataViewExtItem& item = GetSelection();
 		if (!item.IsOk())
 			break;
 		if (m_modelProvider != nullptr) {
-			ibValue retValue; GetValueByMetaID(item, m_modelProvider->GetCurrentModelColumn(), retValue);
+			CValue retValue; GetValueByMetaID(item, m_modelProvider->GetCurrentModelColumn(), retValue);
 			m_filterRow.SetFilterByID(m_modelProvider->GetCurrentModelColumn(), retValue);
 		}
-		CallRefreshModel(ibDataViewItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
+		CallRefreshModel(wxDataViewExtItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
 		break;
 	}
 	case eFilterClear:
 		m_filterRow.ResetFilter();
-		CallRefreshModel(ibDataViewItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
+		CallRefreshModel(wxDataViewExtItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
 		break;
 	case eViewMode:
 		ShowViewMode();
@@ -112,14 +112,14 @@ void ibValueModel::ExecuteAction(const ibActionID& lNumAction, ibBackendValueFor
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-bool ibValueModel::ShowFilter()
+bool IValueModel::ShowFilter()
 {
 	if (m_modelProvider == nullptr)
 		return false;
 	return m_modelProvider->ShowFilter(m_filterRow);
 }
 
-bool ibValueModel::ShowViewMode()
+bool IValueModel::ShowViewMode()
 {
 	if (m_modelProvider == nullptr)
 		return false;
@@ -128,12 +128,12 @@ bool ibValueModel::ShowViewMode()
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo::ibValueModelColumnInfo() :
-	ibValue(ibValueTypes::TYPE_VALUE, true), m_methodHelper(new ibValueMethodHelper())
+IValueModel::IValueModelColumnCollection::IValueModelColumnInfo::IValueModelColumnInfo() :
+	CValue(eValueTypes::TYPE_VALUE, true), m_methodHelper(new CMethodHelper())
 {
 }
 
-ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo::~ibValueModelColumnInfo()
+IValueModel::IValueModelColumnCollection::IValueModelColumnInfo::~IValueModelColumnInfo()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -145,7 +145,7 @@ enum Prop {
 	enColumnWidth
 };
 
-void ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo::PrepareNames() const
+void IValueModel::IValueModelColumnCollection::IValueModelColumnInfo::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -155,7 +155,7 @@ void ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo::Prepare
 	m_methodHelper->AppendProp(wxT("Width"));
 }
 
-bool ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool IValueModel::IValueModelColumnCollection::IValueModelColumnInfo::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -163,7 +163,7 @@ bool ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo::GetProp
 		pvarPropVal = GetColumnName();
 		return true;
 	case enColumnTypes:
-		pvarPropVal = ibValue::CreateAndPrepareValueRef<ibValueTypeDescription>(GetColumnType());
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueTypeDescription>(GetColumnType());
 		return true;
 	case enColumnCaption:
 		pvarPropVal = GetColumnCaption();
@@ -176,10 +176,10 @@ bool ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo::GetProp
 	return false;
 }
 
-ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo* ibValueModel::ibValueModelColumnCollection::GetColumnByID(unsigned int col) const
+IValueModel::IValueModelColumnCollection::IValueModelColumnInfo* IValueModel::IValueModelColumnCollection::GetColumnByID(unsigned int col) const
 {
 	for (unsigned int idx = 0; idx < GetColumnCount(); idx++) {
-		ibValueModelColumnInfo* columnInfo = GetColumnInfo(idx);
+		IValueModelColumnInfo* columnInfo = GetColumnInfo(idx);
 		wxASSERT(columnInfo);
 		if (col == columnInfo->GetColumnID())
 			return columnInfo;
@@ -188,10 +188,10 @@ ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo* ibValueModel
 	return nullptr;
 }
 
-ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo* ibValueModel::ibValueModelColumnCollection::GetColumnByName(const wxString& colName) const
+IValueModel::IValueModelColumnCollection::IValueModelColumnInfo* IValueModel::IValueModelColumnCollection::GetColumnByName(const wxString& colName) const
 {
 	for (unsigned int idx = 0; idx < GetColumnCount(); idx++) {
-		ibValueModelColumnInfo* columnInfo = GetColumnInfo(idx);
+		IValueModelColumnInfo* columnInfo = GetColumnInfo(idx);
 		wxASSERT(columnInfo);
 		if (stringUtils::CompareString(colName, columnInfo->GetColumnName()))
 			return columnInfo;

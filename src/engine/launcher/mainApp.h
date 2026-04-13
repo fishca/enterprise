@@ -4,16 +4,16 @@
 #include <wx/app.h>
 #include "launcher.h"
 
-class ibAppLauncher :
+class CLauncherApp :
 	public wxApp {
 public:
 	virtual bool OnInit();
 	virtual int OnExit();
 
 private:
-	ibFrameLauncher* m_launcher = nullptr;
+	CFrameLauncher* m_launcher = nullptr;
 };
 
-wxDECLARE_APP(ibAppLauncher);
+wxDECLARE_APP(CLauncherApp);
 
 #endif 

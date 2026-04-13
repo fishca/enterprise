@@ -26,12 +26,12 @@ static char* s_boxSizer_xpm[] = {
 	"                "
 };
 
-wxIcon ibValueBoxSizer::GetIcon() const
+wxIcon CValueBoxSizer::GetIcon() const
 {
 	return wxIcon(s_boxSizer_xpm);
 }
 
-wxIcon ibValueBoxSizer::GetIconGroup()
+wxIcon CValueBoxSizer::GetIconGroup()
 {
 	return wxIcon(s_boxSizer_xpm);
 }

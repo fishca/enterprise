@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 // Name:        src/generic/gridsel.cpp
-// Purpose:     ibGridSelection
+// Purpose:     wxGridExtSelection
 // Author:      Stefan Neis
 // Modified by:
 // Created:     20/02/1999
@@ -39,19 +39,19 @@ namespace
 WX_DEFINE_SORTED_ARRAY_CMP_INT(int, CompareInts, wxIntSortedArray);
 
 
-ibGridSelection::ibGridSelection(ibGrid* grid,
-	ibGrid::ibGridSelectionModes sel)
+wxGridExtSelection::wxGridExtSelection(wxGridExt* grid,
+	wxGridExt::wxGridExtSelectionModes sel)
 {
 	m_grid = grid;
 	m_selectionMode = sel;
 }
 
-bool ibGridSelection::IsSelection()
+bool wxGridExtSelection::IsSelection()
 {
 	return !m_selection.empty();
 }
 
-void ibGridSelection::EndSelecting()
+void wxGridExtSelection::EndSelecting()
 {
 	// It's possible that nothing was selected finally, e.g. the mouse could
 	// have been dragged around only to return to the starting cell, just don't
@@ -60,8 +60,8 @@ void ibGridSelection::EndSelecting()
 		return;
 
 	// Send RANGE_SELECTED event for the last modified block.
-	const ibGridBlockCoords& block = m_selection.back();
-	ibGridRangeSelectEvent gridEvt(m_grid->GetId(),
+	const wxGridExtBlockCoords& block = m_selection.back();
+	wxGridExtRangeSelectEvent gridEvt(m_grid->GetId(),
 		wxEVT_GRID_RANGE_SELECTED,
 		m_grid,
 		block.GetTopLeft(),
@@ -71,7 +71,7 @@ void ibGridSelection::EndSelecting()
 	m_grid->GetEventHandler()->ProcessEvent(gridEvt);
 }
 
-void ibGridSelection::CancelSelecting()
+void wxGridExtSelection::CancelSelecting()
 {
 	// It's possible that nothing was selected finally, e.g. the mouse could
 	// have been dragged around only to return to the starting cell, just don't
@@ -79,13 +79,13 @@ void ibGridSelection::CancelSelecting()
 	if (!IsSelection())
 		return;
 
-	const ibGridBlockCoords& block = m_selection.back();
+	const wxGridExtBlockCoords& block = m_selection.back();
 	m_grid->RefreshBlock(block.GetTopLeft(), block.GetBottomRight());
 	m_selection.pop_back();
 }
 
 
-bool ibGridSelection::IsInSelection(int row, int col) const
+bool wxGridExtSelection::IsInSelection(int row, int col) const
 {
 	// Check whether the given cell is contained in one of the selected blocks.
 	//
@@ -97,7 +97,7 @@ bool ibGridSelection::IsInSelection(int row, int col) const
 	const size_t count = m_selection.size();
 	for (size_t n = 0; n < count; n++)
 	{
-		if (m_selection[n].Contains(ibGridCellCoords(row, col)))
+		if (m_selection[n].Contains(wxGridExtCellCoords(row, col)))
 			return true;
 	}
 
@@ -105,24 +105,24 @@ bool ibGridSelection::IsInSelection(int row, int col) const
 }
 
 // Change the selection mode
-void ibGridSelection::SetSelectionMode(ibGrid::ibGridSelectionModes selmode)
+void wxGridExtSelection::SetSelectionMode(wxGridExt::wxGridExtSelectionModes selmode)
 {
 	// if selection mode is unchanged return immediately
 	if (selmode == m_selectionMode)
 		return;
 
-	if (selmode == ibGrid::ibGridSelectNone)
+	if (selmode == wxGridExt::wxGridExtSelectNone)
 	{
 		ClearSelection();
 		m_selectionMode = selmode;
 		return;
 	}
 
-	if (m_selectionMode != ibGrid::ibGridSelectCells)
+	if (m_selectionMode != wxGridExt::wxGridExtSelectCells)
 	{
 		// if changing form row to column selection
 		// or vice versa, clear the selection.
-		if (selmode != ibGrid::ibGridSelectCells)
+		if (selmode != wxGridExt::wxGridExtSelectCells)
 			ClearSelection();
 
 		m_selectionMode = selmode;
@@ -137,7 +137,7 @@ void ibGridSelection::SetSelectionMode(ibGrid::ibGridSelectionModes selmode)
 		for (size_t n = m_selection.size(); n > 0; )
 		{
 			n--;
-			const ibGridBlockCoords& block = m_selection[n];
+			const wxGridExtBlockCoords& block = m_selection[n];
 			const int topRow = block.GetTopRow();
 			const int leftCol = block.GetLeftCol();
 			const int bottomRow = block.GetBottomRow();
@@ -146,20 +146,20 @@ void ibGridSelection::SetSelectionMode(ibGrid::ibGridSelectionModes selmode)
 			bool valid = false;
 			switch (selmode)
 			{
-			case ibGrid::ibGridSelectCells:
-			case ibGrid::ibGridSelectNone:
+			case wxGridExt::wxGridExtSelectCells:
+			case wxGridExt::wxGridExtSelectNone:
 				wxFAIL_MSG("unreachable");
 				break;
 
-			case ibGrid::ibGridSelectRows:
+			case wxGridExt::wxGridExtSelectRows:
 				valid = leftCol == 0 && rightCol == lastCol;
 				break;
 
-			case ibGrid::ibGridSelectColumns:
+			case wxGridExt::wxGridExtSelectColumns:
 				valid = topRow == 0 && bottomRow == lastRow;
 				break;
 
-			case ibGrid::ibGridSelectRowsOrColumns:
+			case wxGridExt::wxGridExtSelectRowsOrColumns:
 				valid = (leftCol == 0 && rightCol == lastCol) ||
 					(topRow == 0 && bottomRow == lastRow);
 				break;
@@ -179,27 +179,27 @@ void ibGridSelection::SetSelectionMode(ibGrid::ibGridSelectionModes selmode)
 	}
 }
 
-void ibGridSelection::SelectRow(int row, const wxKeyboardState& kbd)
+void wxGridExtSelection::SelectRow(int row, const wxKeyboardState& kbd)
 {
-	if (m_selectionMode == ibGrid::ibGridSelectColumns ||
-		m_selectionMode == ibGrid::ibGridSelectNone)
+	if (m_selectionMode == wxGridExt::wxGridExtSelectColumns ||
+		m_selectionMode == wxGridExt::wxGridExtSelectNone)
 		return;
 
-	Select(ibGridBlockCoords(row, 0, row, m_grid->GetNumberCols() - 1),
+	Select(wxGridExtBlockCoords(row, 0, row, m_grid->GetNumberCols() - 1),
 		kbd, wxEVT_GRID_RANGE_SELECTED);
 }
 
-void ibGridSelection::SelectCol(int col, const wxKeyboardState& kbd)
+void wxGridExtSelection::SelectCol(int col, const wxKeyboardState& kbd)
 {
-	if (m_selectionMode == ibGrid::ibGridSelectRows ||
-		m_selectionMode == ibGrid::ibGridSelectNone)
+	if (m_selectionMode == wxGridExt::wxGridExtSelectRows ||
+		m_selectionMode == wxGridExt::wxGridExtSelectNone)
 		return;
 
-	Select(ibGridBlockCoords(0, col, m_grid->GetNumberRows() - 1, col),
+	Select(wxGridExtBlockCoords(0, col, m_grid->GetNumberRows() - 1, col),
 		kbd, wxEVT_GRID_RANGE_SELECTED);
 }
 
-void ibGridSelection::SelectBlock(int topRow, int leftCol,
+void wxGridExtSelection::SelectBlock(int topRow, int leftCol,
 	int bottomRow, int rightCol,
 	const wxKeyboardState& kbd,
 	wxEventType eventType)
@@ -208,24 +208,24 @@ void ibGridSelection::SelectBlock(int topRow, int leftCol,
 	int allowed = -1;
 	switch (m_selectionMode)
 	{
-	case ibGrid::ibGridSelectCells:
+	case wxGridExt::wxGridExtSelectCells:
 		// In this mode arbitrary blocks can be selected.
 		allowed = 1;
 		break;
 
-	case ibGrid::ibGridSelectRows:
+	case wxGridExt::wxGridExtSelectRows:
 		leftCol = 0;
 		rightCol = m_grid->GetNumberCols() - 1;
 		allowed = 1;
 		break;
 
-	case ibGrid::ibGridSelectColumns:
+	case wxGridExt::wxGridExtSelectColumns:
 		topRow = 0;
 		bottomRow = m_grid->GetNumberRows() - 1;
 		allowed = 1;
 		break;
 
-	case ibGrid::ibGridSelectRowsOrColumns:
+	case wxGridExt::wxGridExtSelectRowsOrColumns:
 		// Arbitrary block selection doesn't make sense for this mode, as
 		// we could only select the entire grid, which wouldn't be useful,
 		// but we do allow selecting blocks that are already composed of
@@ -238,7 +238,7 @@ void ibGridSelection::SelectBlock(int topRow, int leftCol,
 			allowed = 0;
 		break;
 
-	case ibGrid::ibGridSelectNone:
+	case wxGridExt::wxGridExtSelectNone:
 		allowed = 0;
 		break;
 	}
@@ -247,12 +247,12 @@ void ibGridSelection::SelectBlock(int topRow, int leftCol,
 	if (!allowed)
 		return;
 
-	Select(ibGridBlockCoords(topRow, leftCol, bottomRow, rightCol).Canonicalize(),
+	Select(wxGridExtBlockCoords(topRow, leftCol, bottomRow, rightCol).Canonicalize(),
 		kbd, eventType);
 }
 
 void
-ibGridSelection::SelectAll()
+wxGridExtSelection::SelectAll()
 {
 	// There is no need to refresh anything, as Select() will do it anyhow, and
 	// no need to generate any events, so do not call ClearSelection() here.
@@ -263,21 +263,21 @@ ibGridSelection::SelectAll()
 
 	if (numRows && numCols)
 	{
-		Select(ibGridBlockCoords(0, 0, numRows - 1, numCols - 1),
+		Select(wxGridExtBlockCoords(0, 0, numRows - 1, numCols - 1),
 			wxKeyboardState(), wxEVT_GRID_RANGE_SELECTED);
 	}
 }
 
 void
-ibGridSelection::DeselectBlock(const ibGridBlockCoords& block,
+wxGridExtSelection::DeselectBlock(const wxGridExtBlockCoords& block,
 	const wxKeyboardState& kbd,
 	wxEventType eventType)
 {
-	// In ibGridSelectNone mode, all blocks should already be deselected.
-	if (m_selectionMode == ibGrid::ibGridSelectNone)
+	// In wxGridExtSelectNone mode, all blocks should already be deselected.
+	if (m_selectionMode == wxGridExt::wxGridExtSelectNone)
 		return;
 
-	const ibGridBlockCoords canonicalizedBlock = block.Canonicalize();
+	const wxGridExtBlockCoords canonicalizedBlock = block.Canonicalize();
 
 	size_t count, n;
 
@@ -318,7 +318,7 @@ ibGridSelection::DeselectBlock(const ibGridBlockCoords& block,
 	count = m_selection.size();
 	for (n = 0; n < count; n++)
 	{
-		const ibGridBlockCoords& selBlock = m_selection[n];
+		const wxGridExtBlockCoords& selBlock = m_selection[n];
 
 		// Whether blocks intersect.
 		if (!m_selection[n].Intersects(canonicalizedBlock))
@@ -327,16 +327,16 @@ ibGridSelection::DeselectBlock(const ibGridBlockCoords& block,
 		int splitOrientation = -1;
 		switch (m_selectionMode)
 		{
-		case ibGrid::ibGridSelectRows:
+		case wxGridExt::wxGridExtSelectRows:
 			splitOrientation = wxHORIZONTAL;
 			break;
 
-		case ibGrid::ibGridSelectColumns:
+		case wxGridExt::wxGridExtSelectColumns:
 			splitOrientation = wxVERTICAL;
 			break;
 
-		case ibGrid::ibGridSelectCells:
-		case ibGrid::ibGridSelectRowsOrColumns:
+		case wxGridExt::wxGridExtSelectCells:
+		case wxGridExt::wxGridExtSelectRowsOrColumns:
 			if (selBlock.GetLeftCol() == 0 &&
 				selBlock.GetRightCol() == m_grid->GetNumberCols() - 1)
 				splitOrientation = wxHORIZONTAL;
@@ -344,14 +344,14 @@ ibGridSelection::DeselectBlock(const ibGridBlockCoords& block,
 				splitOrientation = wxVERTICAL;
 			break;
 
-		case ibGrid::ibGridSelectNone:
+		case wxGridExt::wxGridExtSelectNone:
 			wxFAIL_MSG("unreachable");
 			break;
 		}
 
 		wxASSERT_MSG(splitOrientation != -1, "unknown selection mode");
 
-		const ibGridBlockDiffResult result =
+		const wxGridExtBlockDiffResult result =
 			selBlock.Difference(canonicalizedBlock, splitOrientation);
 
 		// remove the block (note that selBlock, being a reference, is
@@ -362,18 +362,18 @@ ibGridSelection::DeselectBlock(const ibGridBlockCoords& block,
 
 		for (int i = 0; i < 2; ++i)
 		{
-			const ibGridBlockCoords& part = result.m_parts[i];
-			if (part != ibGridNoBlockCoords)
+			const wxGridExtBlockCoords& part = result.m_parts[i];
+			if (part != wxGridExtNoBlockCoords)
 				SelectBlockNoEvent(part);
 		}
 
 		for (int i = 2; i < 4; ++i)
 		{
-			const ibGridBlockCoords& part = result.m_parts[i];
-			if (part != ibGridNoBlockCoords)
+			const wxGridExtBlockCoords& part = result.m_parts[i];
+			if (part != wxGridExtNoBlockCoords)
 			{
 				// Add part[2] and part[3] only in the cells selection mode.
-				if (m_selectionMode == ibGrid::ibGridSelectCells)
+				if (m_selectionMode == wxGridExt::wxGridExtSelectCells)
 					SelectBlockNoEvent(part);
 				else
 					MergeOrAddBlock(refreshBlocks, part);
@@ -385,7 +385,7 @@ ibGridSelection::DeselectBlock(const ibGridBlockCoords& block,
 	count = refreshBlocks.size();
 	for (n = 0; n < count; n++)
 	{
-		const ibGridBlockCoords& refBlock = refreshBlocks[n];
+		const wxGridExtBlockCoords& refBlock = refreshBlocks[n];
 
 		if (!m_grid->GetBatchCount())
 		{
@@ -395,7 +395,7 @@ ibGridSelection::DeselectBlock(const ibGridBlockCoords& block,
 
 		if (eventType != wxEVT_NULL)
 		{
-			ibGridRangeSelectEvent gridEvt(m_grid->GetId(),
+			wxGridExtRangeSelectEvent gridEvt(m_grid->GetId(),
 				eventType,
 				m_grid,
 				refBlock.GetTopLeft(),
@@ -407,16 +407,16 @@ ibGridSelection::DeselectBlock(const ibGridBlockCoords& block,
 	}
 }
 
-void ibGridSelection::ClearSelection()
+void wxGridExtSelection::ClearSelection()
 {
 	size_t n;
-	ibGridCellCoords coords1, coords2;
+	wxGridExtCellCoords coords1, coords2;
 
 	// deselect all blocks and update the screen
 	while ((n = m_selection.size()) > 0)
 	{
 		n--;
-		const ibGridBlockCoords& block = m_selection[n];
+		const wxGridExtBlockCoords& block = m_selection[n];
 		coords1 = block.GetTopLeft();
 		coords2 = block.GetBottomRight();
 		m_selection.erase(m_selection.begin() + n);
@@ -433,11 +433,11 @@ void ibGridSelection::ClearSelection()
 	// One deselection event, indicating deselection of _all_ cells.
 	// (No finer grained events for each of the smaller regions
 	//  deselected above!)
-	ibGridRangeSelectEvent gridEvt(m_grid->GetId(),
+	wxGridExtRangeSelectEvent gridEvt(m_grid->GetId(),
 		wxEVT_GRID_RANGE_SELECTED,
 		m_grid,
-		ibGridCellCoords(0, 0),
-		ibGridCellCoords(
+		wxGridExtCellCoords(0, 0),
+		wxGridExtCellCoords(
 			m_grid->GetNumberRows() - 1,
 			m_grid->GetNumberCols() - 1),
 		false);
@@ -446,14 +446,14 @@ void ibGridSelection::ClearSelection()
 }
 
 
-void ibGridSelection::UpdateRows(size_t pos, int numRows)
+void wxGridExtSelection::UpdateRows(size_t pos, int numRows)
 {
 	size_t count = m_selection.size();
 	size_t n;
 
 	for (n = 0; n < count; n++)
 	{
-		ibGridBlockCoords& block = m_selection[n];
+		wxGridExtBlockCoords& block = m_selection[n];
 		wxCoord row1 = block.GetTopRow();
 		wxCoord row2 = block.GetBottomRow();
 
@@ -495,14 +495,14 @@ void ibGridSelection::UpdateRows(size_t pos, int numRows)
 }
 
 
-void ibGridSelection::UpdateCols(size_t pos, int numCols)
+void wxGridExtSelection::UpdateCols(size_t pos, int numCols)
 {
 	size_t count = m_selection.size();
 	size_t n;
 
 	for (n = 0; n < count; n++)
 	{
-		ibGridBlockCoords& block = m_selection[n];
+		wxGridExtBlockCoords& block = m_selection[n];
 		wxCoord col1 = block.GetLeftCol();
 		wxCoord col2 = block.GetRightCol();
 
@@ -543,15 +543,15 @@ void ibGridSelection::UpdateCols(size_t pos, int numCols)
 	}
 }
 
-bool ibGridSelection::ExtendCurrentBlock(const ibGridCellCoords& blockStart,
-	const ibGridCellCoords& blockEnd,
+bool wxGridExtSelection::ExtendCurrentBlock(const wxGridExtCellCoords& blockStart,
+	const wxGridExtCellCoords& blockEnd,
 	const wxKeyboardState& kbd,
 	wxEventType eventType)
 {
 	wxASSERT(blockStart.GetRow() != -1 && blockStart.GetCol() != -1 &&
 		blockEnd.GetRow() != -1 && blockEnd.GetCol() != -1);
 
-	if (m_selectionMode == ibGrid::ibGridSelectNone)
+	if (m_selectionMode == wxGridExt::wxGridExtSelectNone)
 		return false;
 
 	// If selection doesn't contain the current cell (which also covers the
@@ -565,8 +565,8 @@ bool ibGridSelection::ExtendCurrentBlock(const ibGridCellCoords& blockStart,
 		return true;
 	}
 
-	const ibGridBlockCoords& block = *m_selection.rbegin();
-	ibGridBlockCoords newBlock = block;
+	const wxGridExtBlockCoords& block = *m_selection.rbegin();
+	wxGridExtBlockCoords newBlock = block;
 
 	// Determine if we should try to extend the current block rows and/or
 	// columns at all.
@@ -575,24 +575,24 @@ bool ibGridSelection::ExtendCurrentBlock(const ibGridCellCoords& blockStart,
 
 	switch (m_selectionMode)
 	{
-	case ibGrid::ibGridSelectCells:
+	case wxGridExt::wxGridExtSelectCells:
 		// Nothing prevents us from doing it in this case.
 		canChangeRow =
 			canChangeCol = true;
 		break;
 
-	case ibGrid::ibGridSelectColumns:
+	case wxGridExt::wxGridExtSelectColumns:
 		// Rows are always fixed, so prevent us from ever selecting only
 		// part of a column in this case by leaving canChangeRow false.
 		canChangeCol = true;
 		break;
 
-	case ibGrid::ibGridSelectRows:
+	case wxGridExt::wxGridExtSelectRows:
 		// Same as above but mirrored.
 		canChangeRow = true;
 		break;
 
-	case ibGrid::ibGridSelectRowsOrColumns:
+	case wxGridExt::wxGridExtSelectRowsOrColumns:
 		// In this case we may only change component which is not fixed.
 		if (block.GetTopRow() != 0 ||
 			block.GetBottomRow() != m_grid->GetNumberRows() - 1)
@@ -613,7 +613,7 @@ bool ibGridSelection::ExtendCurrentBlock(const ibGridCellCoords& blockStart,
 		}
 		break;
 
-	case ibGrid::ibGridSelectNone:
+	case wxGridExt::wxGridExtSelectNone:
 		wxFAIL_MSG("unreachable");
 		break;
 	}
@@ -687,10 +687,10 @@ bool ibGridSelection::ExtendCurrentBlock(const ibGridCellCoords& blockStart,
 	// Update View.
 	if (!m_grid->GetBatchCount())
 	{
-		ibGridBlockDiffResult refreshBlocks = block.SymDifference(newBlock);
+		wxGridExtBlockDiffResult refreshBlocks = block.SymDifference(newBlock);
 		for (int i = 0; i < 4; ++i)
 		{
-			const ibGridBlockCoords& refreshBlock = refreshBlocks.m_parts[i];
+			const wxGridExtBlockCoords& refreshBlock = refreshBlocks.m_parts[i];
 
 			if (!refreshBlock)
 				continue;
@@ -704,7 +704,7 @@ bool ibGridSelection::ExtendCurrentBlock(const ibGridCellCoords& blockStart,
 	*m_selection.rbegin() = newBlock;
 
 	// Send Event.
-	ibGridRangeSelectEvent gridEvt(m_grid->GetId(),
+	wxGridExtRangeSelectEvent gridEvt(m_grid->GetId(),
 		eventType,
 		m_grid,
 		newBlock.GetTopLeft(),
@@ -716,9 +716,9 @@ bool ibGridSelection::ExtendCurrentBlock(const ibGridCellCoords& blockStart,
 	return true;
 }
 
-ibGridCellCoords ibGridSelection::GetExtensionAnchor() const
+wxGridExtCellCoords wxGridExtSelection::GetExtensionAnchor() const
 {
-	ibGridCellCoords coords = m_grid->m_currentCellCoords;
+	wxGridExtCellCoords coords = m_grid->m_currentCellCoords;
 
 	// If the current cell isn't selected (which also covers the special case
 	// of nothing being selected yet), we have to use it as anchor as we need
@@ -726,7 +726,7 @@ ibGridCellCoords ibGridSelection::GetExtensionAnchor() const
 	if (!IsInSelection(coords))
 		return coords;
 
-	const ibGridBlockCoords& block = *m_selection.rbegin();
+	const wxGridExtBlockCoords& block = *m_selection.rbegin();
 	if (block.GetTopRow() == coords.GetRow())
 		coords.SetRow(block.GetBottomRow());
 	else if (block.GetBottomRow() == coords.GetRow())
@@ -740,17 +740,17 @@ ibGridCellCoords ibGridSelection::GetExtensionAnchor() const
 	return coords;
 }
 
-ibGridCellCoordsArray ibGridSelection::GetCellSelection() const
+wxGridExtCellCoordsArray wxGridExtSelection::GetCellSelection() const
 {
-	if (m_selectionMode != ibGrid::ibGridSelectCells)
-		return ibGridCellCoordsArray();
+	if (m_selectionMode != wxGridExt::wxGridExtSelectCells)
+		return wxGridExtCellCoordsArray();
 
-	ibGridCellCoordsArray cells;
+	wxGridExtCellCoordsArray cells;
 	const size_t count = m_selection.size();
 	cells.reserve(count);
 	for (size_t n = 0; n < count; n++)
 	{
-		const ibGridBlockCoords& block = m_selection[n];
+		const wxGridExtBlockCoords& block = m_selection[n];
 		if (block.GetTopRow() == block.GetBottomRow() &&
 			block.GetLeftCol() == block.GetRightCol())
 		{
@@ -760,9 +760,9 @@ ibGridCellCoordsArray ibGridSelection::GetCellSelection() const
 	return cells;
 }
 
-ibGridCellCoordsArray ibGridSelection::GetBlockSelectionTopLeft() const
+wxGridExtCellCoordsArray wxGridExtSelection::GetBlockSelectionTopLeft() const
 {
-	ibGridCellCoordsArray coords;
+	wxGridExtCellCoordsArray coords;
 	const size_t count = m_selection.size();
 	coords.reserve(count);
 	for (size_t n = 0; n < count; n++)
@@ -772,9 +772,9 @@ ibGridCellCoordsArray ibGridSelection::GetBlockSelectionTopLeft() const
 	return coords;
 }
 
-ibGridCellCoordsArray ibGridSelection::GetBlockSelectionBottomRight() const
+wxGridExtCellCoordsArray wxGridExtSelection::GetBlockSelectionBottomRight() const
 {
-	ibGridCellCoordsArray coords;
+	wxGridExtCellCoordsArray coords;
 	const size_t count = m_selection.size();
 	coords.reserve(count);
 	for (size_t n = 0; n < count; n++)
@@ -791,17 +791,17 @@ ibGridCellCoordsArray ibGridSelection::GetBlockSelectionBottomRight() const
 // efficiently determine that a line is selected because all of its cells
 // were selected one by one. But this should work well enough in practice and
 // is, anyhow, the best we can do.
-wxArrayInt ibGridSelection::GetRowSelection() const
+wxArrayInt wxGridExtSelection::GetRowSelection() const
 {
-	if (m_selectionMode == ibGrid::ibGridSelectColumns ||
-		m_selectionMode == ibGrid::ibGridSelectNone)
+	if (m_selectionMode == wxGridExt::wxGridExtSelectColumns ||
+		m_selectionMode == wxGridExt::wxGridExtSelectNone)
 		return wxArrayInt();
 
 	wxIntSortedArray uniqueRows;
 	const size_t count = m_selection.size();
 	for (size_t n = 0; n < count; ++n)
 	{
-		const ibGridBlockCoords& block = m_selection[n];
+		const wxGridExtBlockCoords& block = m_selection[n];
 		if (block.GetLeftCol() == 0 &&
 			block.GetRightCol() == m_grid->GetNumberCols() - 1)
 		{
@@ -823,17 +823,17 @@ wxArrayInt ibGridSelection::GetRowSelection() const
 }
 
 // See comments for GetRowSelection().
-wxArrayInt ibGridSelection::GetColSelection() const
+wxArrayInt wxGridExtSelection::GetColSelection() const
 {
-	if (m_selectionMode == ibGrid::ibGridSelectRows ||
-		m_selectionMode == ibGrid::ibGridSelectNone)
+	if (m_selectionMode == wxGridExt::wxGridExtSelectRows ||
+		m_selectionMode == wxGridExt::wxGridExtSelectNone)
 		return wxArrayInt();
 
 	wxIntSortedArray uniqueCols;
 	const size_t count = m_selection.size();
 	for (size_t n = 0; n < count; ++n)
 	{
-		const ibGridBlockCoords& block = m_selection[n];
+		const wxGridExtBlockCoords& block = m_selection[n];
 		if (block.GetTopRow() == 0 &&
 			block.GetBottomRow() == m_grid->GetNumberRows() - 1)
 		{
@@ -855,7 +855,7 @@ wxArrayInt ibGridSelection::GetColSelection() const
 }
 
 void
-ibGridSelection::Select(const ibGridBlockCoords& block,
+wxGridExtSelection::Select(const wxGridExtBlockCoords& block,
 	const wxKeyboardState& kbd,
 	wxEventType eventType)
 {
@@ -873,7 +873,7 @@ ibGridSelection::Select(const ibGridBlockCoords& block,
 	// Send Event, if not disabled.
 	if (eventType != wxEVT_NULL)
 	{
-		ibGridRangeSelectEvent gridEvt(m_grid->GetId(),
+		wxGridExtRangeSelectEvent gridEvt(m_grid->GetId(),
 			eventType,
 			m_grid,
 			block.GetTopLeft(),
@@ -884,13 +884,13 @@ ibGridSelection::Select(const ibGridBlockCoords& block,
 	}
 }
 
-void ibGridSelection::MergeOrAddBlock(wxVectorGridBlockCoords& blocks,
-	const ibGridBlockCoords& newBlock)
+void wxGridExtSelection::MergeOrAddBlock(wxVectorGridBlockCoords& blocks,
+	const wxGridExtBlockCoords& newBlock)
 {
 	size_t count = blocks.size();
 	for (size_t n = 0; n < count; n++)
 	{
-		const ibGridBlockCoords& block = blocks[n];
+		const wxGridExtBlockCoords& block = blocks[n];
 
 		if (block.Contains(newBlock))
 			return;

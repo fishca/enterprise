@@ -5,34 +5,34 @@
 
 #include "visualHostClient.h"
 
-ibVisualHostClient::ibVisualHostClient(ibFormVisualDocument* document, ibValueForm* valueForm, wxWindow* parent) :
-	ibVisualHost(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize),
+CVisualClientHost::CVisualClientHost(CFormVisualDocument* document, CValueForm* valueForm, wxWindow* parent) :
+	IVisualHost(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize),
 	m_document(document),
 	m_valueForm(valueForm),
 	m_dataViewSize(wxDefaultSize),
 	m_dataViewSizeChanged(false)
 {
-	ibVisualHostClient::Bind(wxEVT_SIZE, &ibVisualHostClient::OnSize, this);
-	ibVisualHostClient::Bind(wxEVT_IDLE, &ibVisualHostClient::OnIdle, this);
+	CVisualClientHost::Bind(wxEVT_SIZE, &CVisualClientHost::OnSize, this);
+	CVisualClientHost::Bind(wxEVT_IDLE, &CVisualClientHost::OnIdle, this);
 }
 
-ibVisualHostClient::~ibVisualHostClient()
+CVisualClientHost::~CVisualClientHost()
 {
-	ibVisualHostClient::Unbind(wxEVT_SIZE, &ibVisualHostClient::OnSize, this);
-	ibVisualHostClient::Unbind(wxEVT_IDLE, &ibVisualHostClient::OnIdle, this);
+	CVisualClientHost::Unbind(wxEVT_SIZE, &CVisualClientHost::OnSize, this);
+	CVisualClientHost::Unbind(wxEVT_IDLE, &CVisualClientHost::OnIdle, this);
 
 	ClearControl(m_valueForm, true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 
-void ibVisualHostClient::OnSize(wxSizeEvent& event)
+void CVisualClientHost::OnSize(wxSizeEvent& event)
 {
 	m_dataViewSizeChanged = (m_dataViewSize != GetSize()) && (m_dataViewSize != wxDefaultSize);
 	event.Skip();
 }
 
-void ibVisualHostClient::OnIdle(wxIdleEvent& event)
+void CVisualClientHost::OnIdle(wxIdleEvent& event)
 {
 	if (m_dataViewSizeChanged)
 		m_valueForm->RefreshForm();
@@ -45,12 +45,12 @@ void ibVisualHostClient::OnIdle(wxIdleEvent& event)
 
 /////////////////////////////////////////////////////////////////////////////////
 
-void ibVisualHostClient::OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event)
+void CVisualClientHost::OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event)
 {
 	if (event.GetEventType() == wxEVT_LEFT_DOWN) {
 		wxWindow* wnd = currentWindow;
 		while (wnd != nullptr) {
-			ibValueFrame* founded = GetObjectBase(wnd);
+			IValueFrame* founded = GetObjectBase(wnd);
 			if (founded != nullptr) {
 				OnSelected(founded, wnd);
 				break;
@@ -62,16 +62,16 @@ void ibVisualHostClient::OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& e
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-void ibVisualHostClient::SetCaption(const wxString& strCaption)
+void CVisualClientHost::SetCaption(const wxString& strCaption)
 {
-	const ibValueForm* handler = m_document->GetValueForm();
+	const CValueForm* handler = m_document->GetValueForm();
 
 	if (m_document->IsVisualDemonstrationDoc()) {
 		if (strCaption.IsEmpty()) {
-			const ibSourceDataObject* srcObject = handler->GetSourceObject();
+			const ISourceDataObject* srcObject = handler->GetSourceObject();
 			if (srcObject != nullptr) {
-				const ibValueMetaObjectFormBase* creator = handler->GetFormMetaObject();
-				const ibValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
+				const IValueMetaObjectForm* creator = handler->GetFormMetaObject();
+				const IValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
 				if (genericObject != nullptr) {
 					m_document->SetTitle(genericObject->GetSynonym() + wxT(": ") + creator->GetSynonym());
 					m_document->SetFilename(genericObject->GetFileName(), true);
@@ -82,7 +82,7 @@ void ibVisualHostClient::SetCaption(const wxString& strCaption)
 				}
 			}
 			else {
-				const ibValueMetaObjectFormBase* creator = handler->GetFormMetaObject();
+				const IValueMetaObjectForm* creator = handler->GetFormMetaObject();
 				if (creator != nullptr) {
 					m_document->SetTitle(creator->GetSynonym());
 					m_document->SetFilename(creator->GetFileName(), true);
@@ -95,14 +95,14 @@ void ibVisualHostClient::SetCaption(const wxString& strCaption)
 		}
 	}
 	else if (strCaption.IsEmpty()) {
-		const ibSourceDataObject* srcObject = handler->GetSourceObject();
+		const ISourceDataObject* srcObject = handler->GetSourceObject();
 		if (srcObject != nullptr && !m_document->IsVisualDemonstrationDoc()) {
 			m_document->SetTitle(srcObject->GetSourceCaption());
-			const ibValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
+			const IValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
 			m_document->SetFilename(genericObject->GetFileName(), true);
 		}
 		else {
-			const ibValueMetaObjectFormBase* creator = handler->GetFormMetaObject();
+			const IValueMetaObjectForm* creator = handler->GetFormMetaObject();
 			if (creator != nullptr && !m_document->IsVisualDemonstrationDoc()) {
 				m_document->SetTitle(creator->GetSynonym());
 				m_document->SetFilename(creator->GetFileName(), true);
@@ -115,7 +115,7 @@ void ibVisualHostClient::SetCaption(const wxString& strCaption)
 	}
 }
 
-void ibVisualHostClient::SetOrientation(int orient)
+void CVisualClientHost::SetOrientation(int orient)
 {
 	const wxWindow* backgroundWindow = GetBackgroundWindow();
 	wxASSERT(backgroundWindow);

@@ -8,9 +8,9 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectAccumulationRegister, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectAccumulationRegister, CValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectAccumulationRegister::GetModuleManager() const
+CValueMetaObjectCommonModule* CValueManagerDataObjectAccumulationRegister::GetModuleManager() const
 {
 	return m_metaObject->GetModuleManager();
 }
@@ -26,9 +26,9 @@ enum Func {
 	eGetTemplate,
 };
 
-void ibValueManagerDataObjectAccumulationRegister::PrepareNames() const
+void CValueManagerDataObjectAccumulationRegister::PrepareNames() const
 {
-	ibValueManagerDataObject::PrepareNames();
+	IValueManagerDataObject::PrepareNames();
 
 	m_methodHelper->AppendFunc(wxT("CreateRecordSet"), wxT("CreateRecordSet()"));
 	m_methodHelper->AppendFunc(wxT("CreateRecordKey"), wxT("CreateRecordKey()"));
@@ -43,7 +43,7 @@ void ibValueManagerDataObjectAccumulationRegister::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool ibValueManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -51,31 +51,31 @@ bool ibValueManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethod
 		pvarRetValue = m_metaObject->CreateRecordSetObjectValue();
 		return true;
 	case eCreateRecordKey:
-		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueRecordKeyObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueRecordKeyObject>(m_metaObject);
 		return true;
 	case eBalance: pvarRetValue = lSizeArray > 1 ?
-		ibValueManagerDataObjectAccumulationRegister::Balance(*paParams[0], *paParams[1]) : ibValueManagerDataObjectAccumulationRegister::Balance(*paParams[0]);
+		CValueManagerDataObjectAccumulationRegister::Balance(*paParams[0], *paParams[1]) : CValueManagerDataObjectAccumulationRegister::Balance(*paParams[0]);
 		return true;
 	case eTurnover: pvarRetValue = lSizeArray > 2 ?
-		ibValueManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], paParams[1], paParams[2]) : ibValueManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], *paParams[1]);
+		CValueManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], paParams[1], paParams[2]) : CValueManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], *paParams[1]);
 		return true;
 	case eSelect:
-		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueSelectorRegisterDataObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSelectorRegisterDataObject>(m_metaObject);
 		return true;
 	case eGetForm:
 	{
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetGenericForm(paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetListForm:
 	{
-		ibValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr;
+		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetListForm(paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			guidVal ? ((ibGuid)*guidVal) : ibGuid());
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetTemplate:
@@ -83,5 +83,5 @@ bool ibValueManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethod
 		return true;
 	}
 
-	return ibValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+	return IValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }

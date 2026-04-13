@@ -8,16 +8,16 @@
 #include <algorithm>
 #include <assert.h>
 
-BEGIN_EVENT_TABLE(ibDialogKeyBinder, wxPanel)
-EVT_TREE_SEL_CHANGED(ibDialogKeyBinder::ID_CommandTree, ibDialogKeyBinder::OnCommandTreeSelectionChanged)
-EVT_BUTTON(ibDialogKeyBinder::ID_Add, ibDialogKeyBinder::OnAdd)
-EVT_BUTTON(ibDialogKeyBinder::ID_Remove, ibDialogKeyBinder::OnRemove)
-EVT_BUTTON(ibDialogKeyBinder::ID_RemoveAll, ibDialogKeyBinder::OnRemoveAll)
-EVT_LISTBOX(ibDialogKeyBinder::ID_ShortcutsList, ibDialogKeyBinder::OnShortcutsListItemSelected)
-EVT_TEXT(ibDialogKeyBinder::ID_KeyMonitor, ibDialogKeyBinder::OnKeyMonitorTextChanged)
+BEGIN_EVENT_TABLE(CKeyBinderDialog, wxPanel)
+EVT_TREE_SEL_CHANGED(CKeyBinderDialog::ID_CommandTree, CKeyBinderDialog::OnCommandTreeSelectionChanged)
+EVT_BUTTON(CKeyBinderDialog::ID_Add, CKeyBinderDialog::OnAdd)
+EVT_BUTTON(CKeyBinderDialog::ID_Remove, CKeyBinderDialog::OnRemove)
+EVT_BUTTON(CKeyBinderDialog::ID_RemoveAll, CKeyBinderDialog::OnRemoveAll)
+EVT_LISTBOX(CKeyBinderDialog::ID_ShortcutsList, CKeyBinderDialog::OnShortcutsListItemSelected)
+EVT_TEXT(CKeyBinderDialog::ID_KeyMonitor, CKeyBinderDialog::OnKeyMonitorTextChanged)
 END_EVENT_TABLE()
 
-ibDialogKeyBinder::ibDialogKeyBinder(wxWindow* parent, int id, wxPoint pos, wxSize size, int style)
+CKeyBinderDialog::CKeyBinderDialog(wxWindow* parent, int id, wxPoint pos, wxSize size, int style)
 	: wxPanel(parent, id, pos, size, style)
 {
 
@@ -73,7 +73,7 @@ ibDialogKeyBinder::ibDialogKeyBinder(wxWindow* parent, int id, wxPoint pos, wxSi
 	m_staticText3 = new wxStaticText(this, wxID_ANY, _("New:"), wxDefaultPosition, wxDefaultSize, 0);
 	fgSizer5->Add(m_staticText3, 0, wxALL, 5);
 
-	m_keyMonitorCtrl = new ibTextCtrlKeyMonitor(this, ID_KeyMonitor, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
+	m_keyMonitorCtrl = new CKeyMonitorTextCtrl(this, ID_KeyMonitor, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
 	fgSizer5->Add(m_keyMonitorCtrl, 0, wxALL | wxEXPAND, 5);
 
 	m_staticText4 = new wxStaticText(this, wxID_ANY, _("Currently Assigned:"), wxDefaultPosition, wxDefaultSize, 0);
@@ -109,12 +109,12 @@ ibDialogKeyBinder::ibDialogKeyBinder(wxWindow* parent, int id, wxPoint pos, wxSi
 
 }
 
-ibDialogKeyBinder::~ibDialogKeyBinder()
+CKeyBinderDialog::~CKeyBinderDialog()
 {
 	ClearVector(m_commands);
 }
 
-void ibDialogKeyBinder::Initialize()
+void CKeyBinderDialog::Initialize()
 {
 	// Add the commands to the tree.
 	wxTreeItemId root = m_commandTreeCtrl->AddRoot(_("Commands"));
@@ -152,7 +152,7 @@ void ibDialogKeyBinder::Initialize()
 
 }
 
-void ibDialogKeyBinder::OnCommandTreeSelectionChanged(wxTreeEvent& event)
+void CKeyBinderDialog::OnCommandTreeSelectionChanged(wxTreeEvent& event)
 {
 	m_shortcutsListCtrl->Clear();
 	m_descriptionCtrl->Clear();
@@ -163,11 +163,11 @@ void ibDialogKeyBinder::OnCommandTreeSelectionChanged(wxTreeEvent& event)
 	if (data != nullptr)
 	{
 
-		ibKeyBinder::Command* command = data->command;
+		CKeyBinder::Command* command = data->command;
 
 		for (unsigned int i = 0; i < command->keys.size(); ++i)
 		{
-			wxString text = ibKeyBinder::GetKeyBindingAsText(command->keys[i]);
+			wxString text = CKeyBinder::GetKeyBindingAsText(command->keys[i]);
 			m_shortcutsListCtrl->Append(text);
 		}
 
@@ -186,7 +186,7 @@ void ibDialogKeyBinder::OnCommandTreeSelectionChanged(wxTreeEvent& event)
 
 }
 
-void ibDialogKeyBinder::OnAdd(wxCommandEvent& event)
+void CKeyBinderDialog::OnAdd(wxCommandEvent& event)
 {
 	wxTreeItemId item = m_commandTreeCtrl->GetSelection();
 
@@ -197,14 +197,14 @@ void ibDialogKeyBinder::OnAdd(wxCommandEvent& event)
 
 		if (data != nullptr)
 		{
-			data->command->keys.push_back(ibKeyBinder::GetTextAsKeyBinding(m_keyMonitorCtrl->GetValue()));
+			data->command->keys.push_back(CKeyBinder::GetTextAsKeyBinding(m_keyMonitorCtrl->GetValue()));
 			m_shortcutsListCtrl->Append(m_keyMonitorCtrl->GetValue());
 			m_removeAllButton->Enable(true);
 		}
 	}
 }
 
-void ibDialogKeyBinder::OnRemove(wxCommandEvent& event)
+void CKeyBinderDialog::OnRemove(wxCommandEvent& event)
 {
 
 	wxTreeItemId item = m_commandTreeCtrl->GetSelection();
@@ -232,7 +232,7 @@ void ibDialogKeyBinder::OnRemove(wxCommandEvent& event)
 	}
 }
 
-void ibDialogKeyBinder::OnRemoveAll(wxCommandEvent& event)
+void CKeyBinderDialog::OnRemoveAll(wxCommandEvent& event)
 {
 	wxTreeItemId item = m_commandTreeCtrl->GetSelection();
 
@@ -254,17 +254,17 @@ void ibDialogKeyBinder::OnRemoveAll(wxCommandEvent& event)
 	}
 }
 
-void ibDialogKeyBinder::OnShortcutsListItemSelected(wxCommandEvent& event)
+void CKeyBinderDialog::OnShortcutsListItemSelected(wxCommandEvent& event)
 {
 	m_removeButton->Enable(m_shortcutsListCtrl->GetSelection() != wxNOT_FOUND);
 }
 
-void ibDialogKeyBinder::OnKeyMonitorTextChanged(wxCommandEvent& event)
+void CKeyBinderDialog::OnKeyMonitorTextChanged(wxCommandEvent& event)
 {
-	m_currentlyAssignedCtrl->SetValue(wxEmptyString);
+	m_currentlyAssignedCtrl->SetLabel(wxEmptyString);
 
 	// Find what the key is currently bound to (if anything).
-	ibKeyBinder::Key key = ibKeyBinder::GetTextAsKeyBinding(m_keyMonitorCtrl->GetValue());
+	CKeyBinder::Key key = CKeyBinder::GetTextAsKeyBinding(m_keyMonitorCtrl->GetValue());
 	m_addButton->Enable(key.code != 0);
 
 	for (unsigned int i = 0; i < m_commands.size(); ++i)
@@ -274,24 +274,24 @@ void ibDialogKeyBinder::OnKeyMonitorTextChanged(wxCommandEvent& event)
 			if (m_commands[i]->keys[j].code == key.code &&
 				m_commands[i]->keys[j].flags == key.flags)
 			{
-				m_currentlyAssignedCtrl->SetValue(m_commands[i]->name);
+				m_currentlyAssignedCtrl->SetLabel(m_commands[i]->name);
 				return;
 			}
 		}
 	}
 }
 
-void ibDialogKeyBinder::AddCommand(const ibKeyBinder::Command& command)
+void CKeyBinderDialog::AddCommand(const CKeyBinder::Command& command)
 {
-	m_commands.push_back(new ibKeyBinder::Command(command));
+	m_commands.push_back(new CKeyBinder::Command(command));
 }
 
-unsigned int ibDialogKeyBinder::GetNumCommands() const
+unsigned int CKeyBinderDialog::GetNumCommands() const
 {
 	return m_commands.size();
 }
 
-const ibKeyBinder::Command& ibDialogKeyBinder::GetCommand(unsigned int i) const
+const CKeyBinder::Command& CKeyBinderDialog::GetCommand(unsigned int i) const
 {
 	return *m_commands[i];
 }

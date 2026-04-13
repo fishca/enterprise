@@ -22,17 +22,17 @@
 #include "databaseResultSet.h"
 #include "preparedStatement.h"
 
-WX_DECLARE_HASH_SET(ibDatabaseResultSet*, wxPointerHash, wxPointerEqual, DatabaseResultSetHashSet);
-WX_DECLARE_HASH_SET(ibPreparedStatement*, wxPointerHash, wxPointerEqual, DatabaseStatementHashSet);
+WX_DECLARE_HASH_SET(IDatabaseResultSet*, wxPointerHash, wxPointerEqual, DatabaseResultSetHashSet);
+WX_DECLARE_HASH_SET(IPreparedStatement*, wxPointerHash, wxPointerEqual, DatabaseStatementHashSet);
 
-class BACKEND_API ibDatabaseLayer : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
+class BACKEND_API IDatabaseLayer : public CDatabaseErrorReporter, public CDatabaseStringConverter
 {
 public:
 	/// Constructor
-	ibDatabaseLayer();
+	IDatabaseLayer();
 
 	/// Destructor
-	virtual ~ibDatabaseLayer();
+	virtual ~IDatabaseLayer();
 
 	// Open database
 	virtual bool Open(const wxString& strDatabase) = 0;
@@ -44,7 +44,7 @@ public:
 	virtual bool IsOpen() = 0;
 
 	/// clone database  
-	virtual ibDatabaseLayer *Clone() = 0;
+	virtual IDatabaseLayer *Clone() = 0;
 
 	// transaction support
 	
@@ -67,11 +67,11 @@ public:
 		DoRunQueryWchar, DoRunQueryUtf8);
 
 	///  Run a select query on the database
-	WX_DEFINE_VARARG_FUNC(ibDatabaseResultSet*, RunQueryWithResults, 1, (const wxFormatString&),
+	WX_DEFINE_VARARG_FUNC(IDatabaseResultSet*, RunQueryWithResults, 1, (const wxFormatString&),
 		DoRunQueryWithResultsWchar, DoRunQueryWithResultsUtf8);
 
-	/// ibPreparedStatement support
-	WX_DEFINE_VARARG_FUNC(ibPreparedStatement*, PrepareStatement, 1, (const wxFormatString&),
+	/// IPreparedStatement support
+	WX_DEFINE_VARARG_FUNC(IPreparedStatement*, PrepareStatement, 1, (const wxFormatString&),
 		DoPrepareStatementWchar, DoPrepareStatementUtf8);
 
 	// function names more consistent with JDBC and wxSQLite3
@@ -82,16 +82,16 @@ public:
 		DoRunQueryWchar, DoRunQueryUtf8);
 
 	/// See RunQueryWithResults
-	WX_DEFINE_VARARG_FUNC(ibDatabaseResultSet*, ExecuteQuery, 1, (const wxFormatString&),
+	WX_DEFINE_VARARG_FUNC(IDatabaseResultSet*, ExecuteQuery, 1, (const wxFormatString&),
 		DoRunQueryWithResultsWchar, DoRunQueryWithResultsUtf8);
 
 	/// Close a result set returned by the database or a prepared statement previously
-	virtual bool CloseResultSet(ibDatabaseResultSet*& pResultSet);
+	virtual bool CloseResultSet(IDatabaseResultSet*& pResultSet);
 
-	// ibPreparedStatement support
+	// IPreparedStatement support
 
 	/// Close a prepared statement previously prepared by the database
-	virtual bool CloseStatement(ibPreparedStatement*& pStatement);
+	virtual bool CloseStatement(IPreparedStatement*& pStatement);
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	/// Check for the existence of a table by name
@@ -159,8 +159,8 @@ public:
 	/// Retrieve a single number value from a query
 	/// If multiple records are returned from the query, a DATABASE_LAYER_NON_UNIQUE_RESULTSET exception
 	///  is thrown unless bRequireUniqueResult is false
-	virtual ibNumber GetSingleResultNumber(const wxString& strSQL, int nField, bool bRequireUniqueResult = true);
-	virtual ibNumber GetSingleResultNumber(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult = true);
+	virtual number_t GetSingleResultNumber(const wxString& strSQL, int nField, bool bRequireUniqueResult = true);
+	virtual number_t GetSingleResultNumber(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult = true);
 
 	/// Retrieve all the values of one field in a result set
 	virtual wxArrayInt GetResultsArrayInt(const wxString& strSQL, int nField);
@@ -193,19 +193,19 @@ protected:
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQueries) = 0;
 
 	/// Run a select query on the database
-	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery) = 0;
+	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery) = 0;
 
 	// prepared statement support
 
 	/// Prepare a SQL statement which can be reused with different parameters
-	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery) = 0;
+	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery) = 0;
 	
 protected:
 
 	/// Add result set object pointer to the list for "garbage collection"
-	void LogResultSetForCleanup(ibDatabaseResultSet* pResultSet) { m_ResultSets.insert(pResultSet); }
+	void LogResultSetForCleanup(IDatabaseResultSet* pResultSet) { m_ResultSets.insert(pResultSet); }
 	/// Add prepared statement object pointer to the list for "garbage collection"
-	void LogStatementForCleanup(ibPreparedStatement* pStatement) { m_Statements.insert(pStatement); }
+	void LogStatementForCleanup(IPreparedStatement* pStatement) { m_Statements.insert(pStatement); }
 
 private:
 
@@ -216,7 +216,7 @@ private:
 	wxDateTime GetSingleResultDate(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult = true);
 	void* GetSingleResultBlob(const wxString& strSQL, const wxVariant* field, wxMemoryBuffer& buffer, bool bRequireUniqueResult = true);
 	double GetSingleResultDouble(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult = true);
-	ibNumber GetSingleResultNumber(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult = true);
+	number_t GetSingleResultNumber(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult = true);
 	wxArrayInt GetResultsArrayInt(const wxString& strSQL, const wxVariant* field);
 	wxArrayString GetResultsArrayString(const wxString& strSQL, const wxVariant* field);
 	wxArrayLong GetResultsArrayLong(const wxString& strSQL, const wxVariant* field);
@@ -230,13 +230,13 @@ private:
 
 #if !wxUSE_UTF8_LOCALE_ONLY
 	int DoRunQueryWchar(const wxChar* format, ...);
-	ibDatabaseResultSet* DoRunQueryWithResultsWchar(const wxChar* format, ...);
-	ibPreparedStatement* DoPrepareStatementWchar(const wxChar* format, ...);
+	IDatabaseResultSet* DoRunQueryWithResultsWchar(const wxChar* format, ...);
+	IPreparedStatement* DoPrepareStatementWchar(const wxChar* format, ...);
 #endif
 #if wxUSE_UNICODE_UTF8
 	int DoRunQueryUtf8(const wxChar* format, ...);
-	ibDatabaseResultSet* DoRunQueryWithResultsUtf8(const wxChar* format, ...);
-	ibPreparedStatement* DoPrepareStatementUtf8(const wxChar* format, ...);
+	IDatabaseResultSet* DoRunQueryWithResultsUtf8(const wxChar* format, ...);
+	IPreparedStatement* DoPrepareStatementUtf8(const wxChar* format, ...);
 #endif
 };
 

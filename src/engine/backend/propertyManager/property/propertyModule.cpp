@@ -3,49 +3,46 @@
 
 #define chunkForm 0x023456543
 
-// get property for grid
-wxObject* (*ibPropertyModule::ms_propertyModule)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
-
 ////////////////////////////////////////////////////////////////////////
 
-wxVariantData* ibPropertyModule::CreateVariantData()
+wxVariantData* CPropertyModule::CreateVariantData()
 {
-	return new ibVariantDataModule();
+	return new wxVariantDataModule();
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-wxString ibPropertyModule::GetValueAsString() const
+wxString CPropertyModule::GetValueAsString() const
 {
-	return get_cell_variant<ibVariantDataModule>()->GetModuleText();
+	return get_cell_variant<wxVariantDataModule>()->GetModuleText();
 }
 
-void ibPropertyModule::SetValue(const wxString& val)
+void CPropertyModule::SetValue(const wxString& val)
 {
-	get_cell_variant<ibVariantDataModule>()->SetModuleText(val);
+	get_cell_variant<wxVariantDataModule>()->SetModuleText(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 //base property for "module"
-bool ibPropertyModule::SetDataValue(const ibValue& varPropVal)
+bool CPropertyModule::SetDataValue(const CValue& varPropVal)
 {
 	return false;
 }
 
-bool ibPropertyModule::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyModule::GetDataValue(CValue& pvarPropVal) const
 {
 	pvarPropVal = GetName();
 	return true;
 }
 
-bool ibPropertyModule::LoadData(ibReaderMemory& reader)
+bool CPropertyModule::LoadData(CMemoryReader& reader)
 {
-	ibPropertyModule::SetValue(reader.r_stringZ());
+	CPropertyModule::SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool ibPropertyModule::SaveData(ibWriterMemory& writer)
+bool CPropertyModule::SaveData(CMemoryWriter& writer)
 {
 	writer.w_stringZ(GetValueAsString());
 	return true;

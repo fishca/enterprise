@@ -4,14 +4,14 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueGridBox, ibValueWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueGridBox, IValueWindow);
 
 //***********************************************************************************
 //*                                 Value Notebook                                  *
 //***********************************************************************************
 
-ibValueGridBox::ibValueGridBox() : ibValueWindow(), 
-m_valueSpreadsheet(ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocument>())
+CValueGridBox::CValueGridBox() : IValueWindow(), 
+m_valueSpreadsheet(CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>())
 {
 	//set default params
 	m_propertyMinSize->SetValue(wxSize(150, 50));
@@ -19,9 +19,9 @@ m_valueSpreadsheet(ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocument>
 
 #include "frontend/visualView/ctrl/form.h"
 
-wxObject* ibValueGridBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* CValueGridBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ibGridEditor* gridWindow = new ibGridEditor(nullptr, wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	CGridEditor* gridWindow = new CGridEditor(nullptr, wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
 	gridWindow->EnableProperty(!visualHost->IsDesignerHost());
 	gridWindow->EnableGridArea(false);
@@ -32,18 +32,18 @@ wxObject* ibValueGridBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 	return gridWindow;
 }
 
-void ibValueGridBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
+void CValueGridBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	ibGridEditor* gridWindow = dynamic_cast<ibGridEditor*>(wxobject);
+	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(wxobject);
 }
 
-void ibValueGridBox::OnSelected(wxObject* wxobject)
+void CValueGridBox::OnSelected(wxObject* wxobject)
 {
 }
 
-void ibValueGridBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueGridBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	ibGridEditor* gridWindow = dynamic_cast<ibGridEditor*>(wxobject);
+	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(wxobject);
 
 	if (gridWindow) {
 	}
@@ -51,7 +51,7 @@ void ibValueGridBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateWindow(gridWindow);
 }
 
-void ibValueGridBox::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
+void CValueGridBox::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 {
 }
 
@@ -59,9 +59,9 @@ void ibValueGridBox::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 
 #include "frontend/win/editor/gridEditor/gridPrintout.h"
 
-wxPrintout* ibValueGridBox::CreatePrintout() const
+wxPrintout* CValueGridBox::CreatePrintout() const
 {
-	ibGridEditor* gridWindow = dynamic_cast<ibGridEditor*>(GetWxObject());
+	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(GetWxObject());
 	if (gridWindow != nullptr)
 		return gridWindow->CreatePrintout();
 
@@ -72,16 +72,16 @@ wxPrintout* ibValueGridBox::CreatePrintout() const
 //*                                   Data										   *
 //**********************************************************************************
 
-bool ibValueGridBox::LoadData(ibReaderMemory& reader)
+bool CValueGridBox::LoadData(CMemoryReader& reader)
 {
-	ibSpreadsheetDescriptionMemory::LoadData(reader, m_valueSpreadsheet->GetSpreadsheetDesc());
-	return ibValueWindow::LoadData(reader);
+	CSpreadsheetDescriptionMemory::LoadData(reader, m_valueSpreadsheet->GetSpreadsheetDesc());
+	return IValueWindow::LoadData(reader);
 }
 
-bool ibValueGridBox::SaveData(ibWriterMemory& writer)
+bool CValueGridBox::SaveData(CMemoryWriter& writer)
 {
-	ibSpreadsheetDescriptionMemory::SaveData(writer, m_valueSpreadsheet->GetSpreadsheetDesc());
-	return ibValueWindow::SaveData(writer);
+	CSpreadsheetDescriptionMemory::SaveData(writer, m_valueSpreadsheet->GetSpreadsheetDesc());
+	return IValueWindow::SaveData(writer);
 }
 
 //***********************************************************************************
@@ -90,29 +90,29 @@ enum prop {
 	eGridValue,
 };
 
-void ibValueGridBox::PrepareNames() const
+void CValueGridBox::PrepareNames() const
 {
-	ibValueFrame::PrepareNames();
+	IValueFrame::PrepareNames();
 
 	m_methodHelper->AppendProp(wxT("Value"), eGridValue, eControl);
 }
 
-bool ibValueGridBox::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueGridBox::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum); bool refreshColumn = false;
 	if (lPropAlias == eControl) {
 		const long lPropData = m_methodHelper->GetPropData(lPropNum);
 		if (lPropData == eGridValue) {
-			ibGridEditor* gridWindow = dynamic_cast<ibGridEditor*>(GetWxObject());
-			m_valueSpreadsheet = varPropVal.ConvertToType<ibValueSpreadsheetDocument>();
+			CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(GetWxObject());
+			m_valueSpreadsheet = varPropVal.ConvertToType<CValueSpreadsheetDocument>();
 			if (gridWindow != nullptr) gridWindow->LoadDocument(m_valueSpreadsheet->GetSpreadsheetDesc());
 		}
 	}
 
-	return ibValueFrame::SetPropVal(lPropNum, varPropVal);
+	return IValueFrame::SetPropVal(lPropNum, varPropVal);
 }
 
-bool ibValueGridBox::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueGridBox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eControl) {
@@ -122,11 +122,11 @@ bool ibValueGridBox::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 			return true;
 		}
 	}
-	return ibValueFrame::GetPropVal(lPropNum, pvarPropVal);
+	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(ibValueGridBox, "Gridbox", "Container", string_to_clsid("CT_GRID"));
+CONTROL_TYPE_REGISTER(CValueGridBox, "Gridbox", "Container", string_to_clsid("CT_GRID"));

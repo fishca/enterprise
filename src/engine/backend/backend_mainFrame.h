@@ -6,61 +6,61 @@
 #include "backend/system/systemEnum.h"
 
 #define backend_mainFrame \
-	ibBackendDocMDIFrame::GetDocMDIFrame() \
+	IBackendDocMDIFrame::GetDocMDIFrame() \
 
-class BACKEND_API ibBackendDocMDIFrame {
+class BACKEND_API IBackendDocMDIFrame {
 protected:
-	ibBackendDocMDIFrame();
+	IBackendDocMDIFrame();
 public:
 
-	static ibBackendDocMDIFrame* GetDocMDIFrame();
+	static IBackendDocMDIFrame* GetDocMDIFrame();
 
-	virtual ~ibBackendDocMDIFrame();
+	virtual ~IBackendDocMDIFrame();
 	virtual wxFrame* GetFrameHandler() const = 0;
 
-	virtual class ibMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
+	virtual class IMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
 	virtual void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const {}
 
 #pragma region _frontend_call_h__
 
 	// Form support
-	virtual class ibBackendValueForm* ActiveWindow() const { return nullptr; }
-	virtual class ibBackendValueForm* CreateNewForm(const class ibValueMetaObjectFormBase* creator, class ibBackendControlFrame* ownerControl = nullptr,
-		class ibSourceDataObject* srcObject = nullptr, const ibUniqueKey& formGuid = wxNullUniqueKey) {
+	virtual class IBackendValueForm* ActiveWindow() const { return nullptr; }
+	virtual class IBackendValueForm* CreateNewForm(const class IValueMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
+		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) {
 		return nullptr;
 	}
 
-	virtual ibUniqueKey CreateFormUniqueKey(const ibBackendControlFrame* ownerControl,
-		const ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid) {
+	virtual CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid) {
 		return wxNullUniqueKey;
 	}
 
-	virtual class ibBackendValueForm* FindFormByUniqueKey(const ibBackendControlFrame* ownerControl,
-		const ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid) {
+	virtual class IBackendValueForm* FindFormByUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid) {
 		return nullptr;
 	}
 
-	virtual class ibBackendValueForm* FindFormByUniqueKey(const ibUniqueKey& guid) { return nullptr; }
-	virtual class ibBackendValueForm* FindFormByControlUniqueKey(const ibUniqueKey& guid) { return nullptr; }
-	virtual class ibBackendValueForm* FindFormBySourceUniqueKey(const ibUniqueKey& guid) { return nullptr; }
+	virtual class IBackendValueForm* FindFormByUniqueKey(const CUniqueKey& guid) { return nullptr; }
+	virtual class IBackendValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid) { return nullptr; }
+	virtual class IBackendValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid) { return nullptr; }
 
-	virtual bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid) { return nullptr; }
+	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) { return nullptr; }
 
 	// Grid support
-	virtual bool ShowSpreadsheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) { return false; }
-	virtual bool PrintSpreadsheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg = true) { return false; }
+	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<CBackendSpreadsheetObject>& doc) { return false; }
+	virtual bool PrintSpreadSheetDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, bool showPrintDlg = true) { return false; }
 
 #pragma endregion 
 
 #pragma region property
-	virtual class BACKEND_API ibPropertyObject* GetProperty() const { return nullptr; }
-	virtual bool SetProperty(class BACKEND_API ibPropertyObject* prop) { return false; }
+	virtual class BACKEND_API IPropertyObject* GetProperty() const { return nullptr; }
+	virtual bool SetProperty(class BACKEND_API IPropertyObject* prop) { return false; }
 #pragma endregion 
 
 	virtual void SetTitle(const wxString& strTitle) = 0;
 	virtual void SetStatusText(const wxString& strTitle, int number = 0) = 0;
 
-	virtual void Message(const wxString& strMessage, ibStatusMessage status) {}
+	virtual void Message(const wxString& strMessage, eStatusMessage status) {}
 	virtual void ClearMessage() {}
 
 	virtual void RefreshFrame() = 0;
@@ -69,10 +69,10 @@ public:
 	virtual bool AuthenticationUser(const wxString& userName, const wxString& userPassword) const { return false; }
 
 public:
-	virtual void OnInitializeConfiguration(enum ibConfigType cfg) {}
-	virtual void OnDestroyConfiguration(enum ibConfigType cfg) {}
+	virtual void OnInitializeConfiguration(enum eConfigType cfg) {}
+	virtual void OnDestroyConfiguration(enum eConfigType cfg) {}
 private:
-	static ibBackendDocMDIFrame* ms_mainFrame;
+	static IBackendDocMDIFrame* ms_mainFrame;
 };
 
 #endif

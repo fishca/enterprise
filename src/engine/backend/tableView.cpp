@@ -1,10 +1,10 @@
 #include "tableView.h"
 
 // ---------------------------------------------------------
-// ibDataViewItemAttr
+// wxDataViewExtItemAttr
 // ---------------------------------------------------------
 
-wxFont ibDataViewItemAttr::GetEffectiveFont(const wxFont& font) const
+wxFont wxDataViewExtItemAttr::GetEffectiveFont(const wxFont& font) const
 {
 	if (!HasFont())
 		return font;
@@ -21,10 +21,10 @@ wxFont ibDataViewItemAttr::GetEffectiveFont(const wxFont& font) const
 
 
 // ---------------------------------------------------------
-// ibDataViewModelNotifier
+// wxDataViewExtModelNotifier
 // ---------------------------------------------------------
 
-bool ibDataViewModelNotifier::ItemsAdded(const ibDataViewItem& parent, const ibDataViewItemArray& items)
+bool wxDataViewExtModelNotifier::ItemsAdded(const wxDataViewExtItem& parent, const wxDataViewExtItemArray& items)
 {
 	size_t count = items.GetCount();
 	size_t i;
@@ -34,7 +34,7 @@ bool ibDataViewModelNotifier::ItemsAdded(const ibDataViewItem& parent, const ibD
 	return true;
 }
 
-bool ibDataViewModelNotifier::ItemsDeleted(const ibDataViewItem& parent, const ibDataViewItemArray& items)
+bool wxDataViewExtModelNotifier::ItemsDeleted(const wxDataViewExtItem& parent, const wxDataViewExtItemArray& items)
 {
 	size_t count = items.GetCount();
 	size_t i;
@@ -44,7 +44,7 @@ bool ibDataViewModelNotifier::ItemsDeleted(const ibDataViewItem& parent, const i
 	return true;
 }
 
-bool ibDataViewModelNotifier::ItemsChanged(const ibDataViewItemArray& items)
+bool wxDataViewExtModelNotifier::ItemsChanged(const wxDataViewExtItemArray& items)
 {
 	size_t count = items.GetCount();
 	size_t i;
@@ -55,30 +55,30 @@ bool ibDataViewModelNotifier::ItemsChanged(const ibDataViewItemArray& items)
 }
 
 // ---------------------------------------------------------
-// ibDataViewModel
+// wxDataViewExtModel
 // ---------------------------------------------------------
 
-ibDataViewModel::ibDataViewModel()
+wxDataViewExtModel::wxDataViewExtModel()
 {
 }
 
-ibDataViewModel::~ibDataViewModel()
+wxDataViewExtModel::~wxDataViewExtModel()
 {
-	ibDataViewModelNotifiers::const_iterator iter;
+	wxDataViewExtModelNotifiers::const_iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
 		delete* iter;
 	}
 }
 
-bool ibDataViewModel::ItemAdded(const ibDataViewItem& parent, const ibDataViewItem& item)
+bool wxDataViewExtModel::ItemAdded(const wxDataViewExtItem& parent, const wxDataViewExtItem& item)
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->ItemAdded(parent, item))
 			ret = false;
 	}
@@ -86,14 +86,14 @@ bool ibDataViewModel::ItemAdded(const ibDataViewItem& parent, const ibDataViewIt
 	return ret;
 }
 
-bool ibDataViewModel::ItemDeleted(const ibDataViewItem& parent, const ibDataViewItem& item)
+bool wxDataViewExtModel::ItemDeleted(const wxDataViewExtItem& parent, const wxDataViewExtItem& item)
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->ItemDeleted(parent, item))
 			ret = false;
 	}
@@ -101,14 +101,14 @@ bool ibDataViewModel::ItemDeleted(const ibDataViewItem& parent, const ibDataView
 	return ret;
 }
 
-bool ibDataViewModel::ItemChanged(const ibDataViewItem& item)
+bool wxDataViewExtModel::ItemChanged(const wxDataViewExtItem& item)
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->ItemChanged(item))
 			ret = false;
 	}
@@ -116,14 +116,14 @@ bool ibDataViewModel::ItemChanged(const ibDataViewItem& item)
 	return ret;
 }
 
-bool ibDataViewModel::ItemsAdded(const ibDataViewItem& parent, const ibDataViewItemArray& items)
+bool wxDataViewExtModel::ItemsAdded(const wxDataViewExtItem& parent, const wxDataViewExtItemArray& items)
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->ItemsAdded(parent, items))
 			ret = false;
 	}
@@ -131,14 +131,14 @@ bool ibDataViewModel::ItemsAdded(const ibDataViewItem& parent, const ibDataViewI
 	return ret;
 }
 
-bool ibDataViewModel::ItemsDeleted(const ibDataViewItem& parent, const ibDataViewItemArray& items)
+bool wxDataViewExtModel::ItemsDeleted(const wxDataViewExtItem& parent, const wxDataViewExtItemArray& items)
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->ItemsDeleted(parent, items))
 			ret = false;
 	}
@@ -146,14 +146,14 @@ bool ibDataViewModel::ItemsDeleted(const ibDataViewItem& parent, const ibDataVie
 	return ret;
 }
 
-bool ibDataViewModel::ItemsChanged(const ibDataViewItemArray& items)
+bool wxDataViewExtModel::ItemsChanged(const wxDataViewExtItemArray& items)
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->ItemsChanged(items))
 			ret = false;
 	}
@@ -161,14 +161,14 @@ bool ibDataViewModel::ItemsChanged(const ibDataViewItemArray& items)
 	return ret;
 }
 
-bool ibDataViewModel::ValueChanged(const ibDataViewItem& item, unsigned int col)
+bool wxDataViewExtModel::ValueChanged(const wxDataViewExtItem& item, unsigned int col)
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->ValueChanged(item, col))
 			ret = false;
 	}
@@ -176,14 +176,14 @@ bool ibDataViewModel::ValueChanged(const ibDataViewItem& item, unsigned int col)
 	return ret;
 }
 
-bool ibDataViewModel::Cleared()
+bool wxDataViewExtModel::Cleared()
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->Cleared())
 			ret = false;
 	}
@@ -193,54 +193,54 @@ bool ibDataViewModel::Cleared()
 
 #pragma region __table_notifier__h__
 
-unsigned int ibDataViewModel::GetCurrentModelColumn(int view_id) const
+unsigned int wxDataViewExtModel::GetCurrentModelColumn(int view_id) const
 {
 	if (m_notifiers.size() > 0)
 		return m_notifiers[view_id]->GetCurrentModelColumn();
 	return 0;
 }
 
-void ibDataViewModel::StartEditing(const ibDataViewItem& item, unsigned int col, int view_id) const
+void wxDataViewExtModel::StartEditing(const wxDataViewExtItem& item, unsigned int col, int view_id) const
 {
 	if (m_notifiers.size() > 0)
 		m_notifiers[view_id]->StartEditing(item, col);
 }
 
-bool ibDataViewModel::ShowFilter(ibFilterRow& filter, int view_id)
+bool wxDataViewExtModel::ShowFilter(CFilterRow& filter, int view_id)
 {
 	if (m_notifiers.size() > 0)
 		return m_notifiers[view_id]->ShowFilter(filter);
 	return false;
 }
 
-bool ibDataViewModel::ShowViewMode(int view_id)
+bool wxDataViewExtModel::ShowViewMode(int view_id)
 {
 	if (m_notifiers.size() > 0)
 		return m_notifiers[view_id]->ShowViewMode();
 	return false;
 }
 
-void ibDataViewModel::Select(const ibDataViewItem& item, int view_id) const
+void wxDataViewExtModel::Select(const wxDataViewExtItem& item, int view_id) const
 {
 	if (m_notifiers.size() > 0)
 		return m_notifiers[view_id]->Select(item);
 }
 
-int ibDataViewModel::GetCountPerPage(int view_id) const
+int wxDataViewExtModel::GetCountPerPage(int view_id) const
 {
 	if (m_notifiers.size() > 0)
 		return m_notifiers[view_id]->GetCountPerPage();
 	return 0;
 }
 
-ibDataViewItem ibDataViewModel::GetSelection(int view_id) const
+wxDataViewExtItem wxDataViewExtModel::GetSelection(int view_id) const
 {
 	if (m_notifiers.size() > 0)
 		return m_notifiers[view_id]->GetSelection();
-	return ibDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
-int ibDataViewModel::GetSelections(ibDataViewItemArray& sel, int view_id) const
+int wxDataViewExtModel::GetSelections(wxDataViewExtItemArray& sel, int view_id) const
 {
 	if (m_notifiers.size() > 0)
 		return m_notifiers[view_id]->GetSelections(sel);
@@ -249,14 +249,14 @@ int ibDataViewModel::GetSelections(ibDataViewItemArray& sel, int view_id) const
 
 #pragma endregion 
 
-bool ibDataViewModel::BeforeReset()
+bool wxDataViewExtModel::BeforeReset()
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->BeforeReset())
 			ret = false;
 	}
@@ -264,14 +264,14 @@ bool ibDataViewModel::BeforeReset()
 	return ret;
 }
 
-bool ibDataViewModel::AfterReset()
+bool wxDataViewExtModel::AfterReset()
 {
 	bool ret = true;
 
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		if (!notifier->AfterReset())
 			ret = false;
 	}
@@ -279,25 +279,25 @@ bool ibDataViewModel::AfterReset()
 	return ret;
 }
 
-void ibDataViewModel::Resort()
+void wxDataViewExtModel::Resort()
 {
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
-		ibDataViewModelNotifier* notifier = *iter;
+		wxDataViewExtModelNotifier* notifier = *iter;
 		notifier->Resort();
 	}
 }
 
-void ibDataViewModel::AddNotifier(ibDataViewModelNotifier* notifier)
+void wxDataViewExtModel::AddNotifier(wxDataViewExtModelNotifier* notifier)
 {
 	m_notifiers.push_back(notifier);
 	notifier->SetOwner(this);
 }
 
-void ibDataViewModel::RemoveNotifier(ibDataViewModelNotifier* notifier)
+void wxDataViewExtModel::RemoveNotifier(wxDataViewExtModelNotifier* notifier)
 {
-	ibDataViewModelNotifiers::iterator iter;
+	wxDataViewExtModelNotifiers::iterator iter;
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
 		if (*iter == notifier)
@@ -313,7 +313,7 @@ void ibDataViewModel::RemoveNotifier(ibDataViewModelNotifier* notifier)
 	wxFAIL_MSG(wxS("Removing non-registered notifier"));
 }
 
-int ibDataViewModel::Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
+int wxDataViewExtModel::Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
 	unsigned int column, bool ascending) const
 {
 	wxVariant value1, value2;

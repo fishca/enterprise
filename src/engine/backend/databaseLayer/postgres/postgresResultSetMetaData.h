@@ -17,14 +17,14 @@
 #include "postgresInterface.h"
 #include "engine/libpq-fe.h"
 
-class ibResultSetMetaDataPostgres : public ibResultSetMetaData
+class PostgresResultSetMetaData : public IResultSetMetaData
 {
 public:
 	// ctor
-	ibResultSetMetaDataPostgres(ibInterfacePostgres* pInterface, PGresult* pResult);
+	PostgresResultSetMetaData(CPostgresInterface* pInterface, PGresult* pResult);
 
 	// dtor
-	virtual ~ibResultSetMetaDataPostgres() { }
+	virtual ~PostgresResultSetMetaData() { }
 
 	virtual int GetColumnType(int i);
 	virtual int GetColumnSize(int i);
@@ -32,7 +32,7 @@ public:
 	virtual int GetColumnCount();
 
 private:
-	ibInterfacePostgres* m_pInterface;
+	CPostgresInterface* m_pInterface;
 	PGresult* m_pResult;
 };
 

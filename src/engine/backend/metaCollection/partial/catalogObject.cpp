@@ -16,29 +16,29 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-ibValueRecordDataObjectCatalog::ibValueRecordDataObjectCatalog(ibValueMetaObjectCatalog* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
-	ibValueRecordDataObjectHierarchyRef(metaObject, objGuid, objMode)
+CValueRecordDataObjectCatalog::CValueRecordDataObjectCatalog(CValueMetaObjectCatalog* metaObject, const CGuid& objGuid, eObjectMode objMode) :
+	IValueRecordDataObjectHierarchyRef(metaObject, objGuid, objMode)
 {
 }
 
-ibValueRecordDataObjectCatalog::ibValueRecordDataObjectCatalog(const ibValueRecordDataObjectCatalog& source) :
-	ibValueRecordDataObjectHierarchyRef(source)
+CValueRecordDataObjectCatalog::CValueRecordDataObjectCatalog(const CValueRecordDataObjectCatalog& source) :
+	IValueRecordDataObjectHierarchyRef(source)
 {
 }
 
-ibSourceExplorer ibValueRecordDataObjectCatalog::GetSourceExplorer() const
+CSourceExplorer CValueRecordDataObjectCatalog::GetSourceExplorer() const
 {
-	ibSourceExplorer srcHelper(
+	CSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);
 
-	ibValueMetaObjectCatalog* metaRef = nullptr;
+	CValueMetaObjectCatalog* metaRef = nullptr;
 
 	if (m_metaObject->ConvertToValue(metaRef)) {
 		srcHelper.AppendSource(metaRef->GetDataCode(), false);
 		srcHelper.AppendSource(metaRef->GetDataDescription());
-		ibValueMetaObjectAttributePredefined* defOwner = metaRef->GetCatalogOwner();
+		CValueMetaObjectAttributePredefined* defOwner = metaRef->GetCatalogOwner();
 		if (defOwner != nullptr && defOwner->GetClsidCount() > 0) {
 			srcHelper.AppendSource(metaRef->GetCatalogOwner());
 		}
@@ -46,18 +46,18 @@ ibSourceExplorer ibValueRecordDataObjectCatalog::GetSourceExplorer() const
 	}
 
 	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
-		ibItemMode attrUse = object->GetItemMode();
-		if (m_objMode == ibObjectMode::OBJECT_ITEM) {
-			if (attrUse == ibItemMode::ibItemMode_Item
-				|| attrUse == ibItemMode::ibItemMode_Folder_Item) {
+		eItemMode attrUse = object->GetItemMode();
+		if (m_objMode == eObjectMode::OBJECT_ITEM) {
+			if (attrUse == eItemMode::eItemMode_Item
+				|| attrUse == eItemMode::eItemMode_Folder_Item) {
 				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
 					srcHelper.AppendSource(object);
 				}
 			}
 		}
 		else {
-			if (attrUse == ibItemMode::ibItemMode_Folder ||
-				attrUse == ibItemMode::ibItemMode_Folder_Item) {
+			if (attrUse == eItemMode::eItemMode_Folder ||
+				attrUse == eItemMode::eItemMode_Folder_Item) {
 				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
 					srcHelper.AppendSource(object);
 				}
@@ -66,16 +66,16 @@ ibSourceExplorer ibValueRecordDataObjectCatalog::GetSourceExplorer() const
 	}
 
 	for (const auto object : m_metaObject->GetTableArrayObject()) {
-		ibItemMode tableUse = object->GetTableUse();
-		if (m_objMode == ibObjectMode::OBJECT_ITEM) {
-			if (tableUse == ibItemMode::ibItemMode_Item
-				|| tableUse == ibItemMode::ibItemMode_Folder_Item) {
+		eItemMode tableUse = object->GetTableUse();
+		if (m_objMode == eObjectMode::OBJECT_ITEM) {
+			if (tableUse == eItemMode::eItemMode_Item
+				|| tableUse == eItemMode::eItemMode_Folder_Item) {
 				srcHelper.AppendSource(object);
 			}
 		}
 		else {
-			if (tableUse == ibItemMode::ibItemMode_Folder ||
-				tableUse == ibItemMode::ibItemMode_Folder_Item) {
+			if (tableUse == eItemMode::eItemMode_Folder ||
+				tableUse == eItemMode::eItemMode_Folder_Item) {
 				srcHelper.AppendSource(object);
 			}
 		}
@@ -85,9 +85,9 @@ ibSourceExplorer ibValueRecordDataObjectCatalog::GetSourceExplorer() const
 }
 
 #pragma region _form_builder_h_
-void ibValueRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
+void CValueRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
-	ibBackendValueForm* const foundedForm = GetForm();
+	IBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm && foundedForm->IsShown()) {
 		foundedForm->ActivateForm();
@@ -95,7 +95,7 @@ void ibValueRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, 
 	}
 
 	//if form is not initialized then generate  
-	ibBackendValueForm* const valueForm =
+	IBackendValueForm* const valueForm =
 		GetFormValue(strFormName, ownerControl);
 
 	if (valueForm != nullptr) {	
@@ -104,15 +104,15 @@ void ibValueRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, 
 	}
 }
 
-ibBackendValueForm* ibValueRecordDataObjectCatalog::GetFormValue(const wxString& strFormName, ibBackendControlFrame* ownerControl)
+IBackendValueForm* CValueRecordDataObjectCatalog::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
-	ibBackendValueForm* const foundedForm = GetForm();
+	IBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm == nullptr) {
 
-		ibBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			m_objMode == ibObjectMode::OBJECT_ITEM ? ibValueMetaObjectCatalog::eFormObject : ibValueMetaObjectCatalog::eFormFolder,
+			m_objMode == eObjectMode::OBJECT_ITEM ? CValueMetaObjectCatalog::eFormObject : CValueMetaObjectCatalog::eFormFolder,
 			ownerControl,
 			this,
 			m_objGuid
@@ -134,67 +134,67 @@ ibBackendValueForm* ibValueRecordDataObjectCatalog::GetFormValue(const wxString&
 
 #include "backend/backend_mainFrame.h"
 
-bool ibValueRecordDataObjectCatalog::WriteObject()
+bool CValueRecordDataObjectCatalog::WriteObject()
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
-		if (!ibBackendException::IsEvalMode()) 
+		if (!CBackendException::IsEvalMode()) 
 		{
 			if (!m_metaObject->AccessRight_Write()) {
-				ibBackendAccessException::Error();
+				CBackendAccessException::Error();
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				ibBackendValueForm* const valueForm = GetForm();
+				IBackendValueForm* const valueForm = GetForm();
 				{
 					db_query_active_transaction.BeginTransaction();
 
 					{
-						ibValue cancel = false;
+						CValue cancel = false;
 						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							ibBackendCoreException::Error(_("Failed to write object in db!"));
+							CBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 					}
 
-					bool newObject = ibValueRecordDataObjectCatalog::IsNewObject();
+					bool newObject = CValueRecordDataObjectCatalog::IsNewObject();
 					bool generateUniqueIdentifier = false;
 					
 					if (!IsSetUniqueIdentifier()) {
-						ibValue prefix = "", standartProcessing = true;
+						CValue prefix = "", standartProcessing = true;
 						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
 							generateUniqueIdentifier = 
-								ibValueRecordDataObjectCatalog::GenerateUniqueIdentifier(prefix.GetString());
+								CValueRecordDataObjectCatalog::GenerateUniqueIdentifier(prefix.GetString());
 						}
 					}
 
 					if (!SaveData()) {
 						if (generateUniqueIdentifier)
-							ibValueRecordDataObjectCatalog::ResetUniqueIdentifier();
+							CValueRecordDataObjectCatalog::ResetUniqueIdentifier();
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 
 					{
-						ibValue cancel = false;
+						CValue cancel = false;
 						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
-								ibValueRecordDataObjectCatalog::ResetUniqueIdentifier();
+								CValueRecordDataObjectCatalog::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							ibBackendCoreException::Error(_("Failed to write object in db!"));
+							CBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 					}
@@ -212,62 +212,62 @@ bool ibValueRecordDataObjectCatalog::WriteObject()
 	return true;
 }
 
-bool ibValueRecordDataObjectCatalog::DeleteObject()
+bool CValueRecordDataObjectCatalog::DeleteObject()
 {
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			ibBackendCoreException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
-		if (!ibBackendException::IsEvalMode())
+		if (!CBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Delete()) {
-				ibBackendAccessException::Error();
+				CBackendAccessException::Error();
 				return false;
 			}
 
-			const ibValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
+			const IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
 			wxASSERT(valueMetaObject);
 
-			const ibGuid& objGuid = GetGuid();
+			const CGuid& objGuid = GetGuid();
 			const auto predefinedValue =
 				valueMetaObject->FindPredefinedValue(objGuid);
 
 			if (predefinedValue != nullptr) {
-				ibBackendCoreException::Error(_("Attempting to delete a predefined element!"));
+				CBackendCoreException::Error(_("Attempting to delete a predefined element!"));
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				ibBackendValueForm* const valueForm = GetForm();
+				IBackendValueForm* const valueForm = GetForm();
 				{
 					db_query_active_transaction.BeginTransaction();
 
 					{
-						ibValue cancel = false;
+						CValue cancel = false;
 						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							ibBackendCoreException::Error(_("Failed to delete object in db!"));
+							CBackendCoreException::Error(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
 					if (!DeleteData()) {
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to delete object in db!")); 
+						CBackendCoreException::Error(_("Failed to delete object in db!")); 
 						return false;
 					}
 
 					{
-						ibValue cancel = false;
+						CValue cancel = false;
 						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							ibBackendCoreException::Error(_("Failed to delete object in db!")); 
+							CBackendCoreException::Error(_("Failed to delete object in db!")); 
 							return false;
 						}
 					}
@@ -299,7 +299,7 @@ enum Func {
 //*                              Support methods                             *
 //****************************************************************************
 
-void ibValueRecordDataObjectCatalog::PrepareNames() const
+void CValueRecordDataObjectCatalog::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -348,7 +348,7 @@ void ibValueRecordDataObjectCatalog::PrepareNames() const
 		);
 	}
 	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
+		CByteCode* byteCode = m_procUnit->GetByteCode();
 		if (byteCode != nullptr) {
 			for (auto exportFunction : byteCode->m_listExportFunc) {
 				m_methodHelper->AppendMethod(
@@ -370,7 +370,7 @@ void ibValueRecordDataObjectCatalog::PrepareNames() const
 	}
 }
 
-bool ibValueRecordDataObjectCatalog::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool CValueRecordDataObjectCatalog::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -390,7 +390,7 @@ bool ibValueRecordDataObjectCatalog::SetPropVal(const long lPropNum, const ibVal
 	return false;
 }
 
-bool ibValueRecordDataObjectCatalog::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool CValueRecordDataObjectCatalog::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -419,7 +419,7 @@ bool ibValueRecordDataObjectCatalog::GetPropVal(const long lPropNum, ibValue& pv
 	return false;
 }
 
-bool ibValueRecordDataObjectCatalog::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool CValueRecordDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -444,7 +444,7 @@ bool ibValueRecordDataObjectCatalog::CallAsFunc(const long lMethodNum, ibValue& 
 	case Func::enGetForm:
 		pvarRetValue = GetFormValue(
 			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
-			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
 		);
 		return true;
 	case Func::enGetTemplate:
@@ -455,7 +455,7 @@ bool ibValueRecordDataObjectCatalog::CallAsFunc(const long lMethodNum, ibValue& 
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return IModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

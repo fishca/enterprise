@@ -8,45 +8,45 @@
 #include "backend/compiler/value.h"
 ///////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibMetaData;
+class BACKEND_API IMetaData;
 
-class BACKEND_API ibValueMetaObject;
-class BACKEND_API ibValueMetaObjectAttributeBase;
-class BACKEND_API ibValueMetaObjectGenericData;
-class BACKEND_API ibValueMetaObjectTableData;
+class BACKEND_API IValueMetaObject;
+class BACKEND_API IValueMetaObjectAttribute;
+class BACKEND_API IValueMetaObjectGenericData;
+class BACKEND_API CValueMetaObjectTableData;
 
-class BACKEND_API ibSourceDataObject;
+class BACKEND_API ISourceDataObject;
 
 ///////////////////////////////////////////////////////////////////////////
-class FRONTEND_API ibControlFrame;
+class FRONTEND_API IControlFrame;
 ///////////////////////////////////////////////////////////////////////////
 
 #include "backend/srcObject.h"
 
-class FRONTEND_API ibTypeControlFactory : public ibBackendTypeSourceFactory {
+class FRONTEND_API ITypeControlFactory : public IBackendTypeSourceFactory {
 public:
 
 	//////////////////////////////////////////////////
-	virtual ibValueMetaObjectAttributeBase* GetSourceAttributeObject() const = 0;
+	virtual IValueMetaObjectAttribute* GetSourceAttributeObject() const = 0;
 	//////////////////////////////////////////////////
 
-	static bool SimpleChoice(ibControlFrame* ownerValue, const ibClassID& clsid, wxWindow* parent);
+	static bool SimpleChoice(IControlFrame* ownerValue, const class_identifier_t& clsid, wxWindow* parent);
 
-	static bool QuickChoice(ibControlFrame* ownerValue, const ibClassID& clsid, wxWindow* parent);
-	static void QuickChoice(ibControlFrame* controlValue, ibValue& newValue, wxWindow* parent, const wxString& strData);
+	static bool QuickChoice(IControlFrame* ownerValue, const class_identifier_t& clsid, wxWindow* parent);
+	static void QuickChoice(IControlFrame* controlValue, CValue& newValue, wxWindow* parent, const wxString& strData);
 
-	static ibClassID ShowSelectType(ibMetaData* metadata, const ibTypeDescription& typeDescription);
+	static class_identifier_t ShowSelectType(IMetaData* metadata, const CTypeDescription& typeDescription);
 
 	//////////////////////////////////////////////////
 
-	enum ibSelectMode GetSelectMode() const;
+	enum eSelectMode GetSelectMode() const;
 	
 	//Create value by selected type
-	virtual ibValue CreateValue() const;
-	virtual ibValue* CreateValueRef() const;
+	virtual CValue CreateValue() const;
+	virtual CValue* CreateValueRef() const;
 
 	//Get data type 
-	virtual ibClassID GetDataType() const;
+	virtual class_identifier_t GetDataType() const;
 };
 
 #endif

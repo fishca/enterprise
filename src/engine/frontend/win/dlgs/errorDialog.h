@@ -20,18 +20,18 @@
 #include "frontend/mainFrame/settings/editorsettings.h"
 #include "frontend/mainFrame/settings/fontcolorsettings.h"
 
-class FRONTEND_API ibDialogError : public wxDialog {
+class FRONTEND_API CDialogError : public wxDialog {
 public:
 
 	//Editor setting 
-	void SetEditorSettings(const ibEditorSettings& settings);
+	void SetEditorSettings(const CEditorSettings& settings);
 	//Font setting 
-	void SetFontColorSettings(const ibFontColorSettings& settings);
+	void SetFontColorSettings(const CFontColorSettings& settings);
 
-	ibDialogError(class ibFrontendDocMDIFrame* parent, wxWindowID id = wxID_ANY,
+	CDialogError(class CFrontendDocMDIFrame* parent, wxWindowID id = wxID_ANY,
 		const wxString& title = _("Critical failure"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxCAPTION | wxSYSTEM_MENU | wxCLOSE_BOX | wxSTAY_ON_TOP);
 
-	virtual ~ibDialogError();
+	virtual ~CDialogError();
 
 	void SetErrorMessage(const wxString& strError) {
 		m_errorOutput->SetReadOnly(false);

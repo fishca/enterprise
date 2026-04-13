@@ -4,30 +4,30 @@
 #include "backend/compiler/value.h"
 #include "backend/backend_type.h"
 
-class BACKEND_API ibValueType : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueType);
+class BACKEND_API CValueType : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueType);
 public:
 
-	ibClassID GetOwnerTypeClass() const { return m_clsid; }
-	ibTypeDescription GetOwnerTypeDescription() const { return ibTypeDescription(GetOwnerTypeClass()); }
+	class_identifier_t GetOwnerTypeClass() const { return m_clsid; }
+	CTypeDescription GetOwnerTypeDescription() const { return CTypeDescription(GetOwnerTypeClass()); }
 
-	ibValueType(const ibClassID& clsid = 0);
-	ibValueType(const ibValue& cObject);
-	ibValueType(const ibValueType& typeObject);
+	CValueType(const class_identifier_t& clsid = 0);
+	CValueType(const CValue& cObject);
+	CValueType(const CValueType& typeObject);
 
-	ibValueType(const wxString& typeName);
+	CValueType(const wxString& typeName);
 
 	virtual bool IsEmpty() const { return false; }
 
-	virtual bool CompareValueEQ(const ibValue& cParam) const {
-		const ibValueType* rValue = CastValue<ibValueType>(cParam);
+	virtual bool CompareValueEQ(const CValue& cParam) const {
+		const CValueType* rValue = CastValue<CValueType>(cParam);
 		wxASSERT(rValue);
 		return m_clsid == rValue->m_clsid;
 	}
 
 	//operator '!='
-	virtual bool CompareValueNE(const ibValue& cParam) const {
-		const ibValueType* rValue = CastValue<ibValueType>(cParam);
+	virtual bool CompareValueNE(const CValue& cParam) const {
+		const CValueType* rValue = CastValue<CValueType>(cParam);
 		wxASSERT(rValue);
 		return m_clsid != rValue->m_clsid;
 	}
@@ -35,108 +35,108 @@ public:
 	virtual wxString GetString() const;
 
 private:
-	ibClassID m_clsid;
+	class_identifier_t m_clsid;
 };
 
-class BACKEND_API ibValueQualifierNumber : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueQualifierNumber);
+class BACKEND_API CValueQualifierNumber : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueQualifierNumber);
 public:
-	ibQualifierNumber m_qNumber;
+	CQualifierNumber m_qNumber;
 public:
 
-	ibValueQualifierNumber() : ibValue(ibValueTypes::TYPE_VALUE, true) {}
-	ibValueQualifierNumber(unsigned char precision, unsigned char scale) : ibValue(ibValueTypes::TYPE_VALUE, true),
+	CValueQualifierNumber() : CValue(eValueTypes::TYPE_VALUE, true) {}
+	CValueQualifierNumber(unsigned char precision, unsigned char scale) : CValue(eValueTypes::TYPE_VALUE, true),
 		m_qNumber(precision, scale)
 	{
 	}
 
-	operator ibQualifierNumber() const { return m_qNumber; }
+	operator CQualifierNumber() const { return m_qNumber; }
 };
 
-class BACKEND_API ibValueQualifierDate : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueQualifierDate);
+class BACKEND_API CValueQualifierDate : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueQualifierDate);
 public:
-	ibQualifierDate m_qDate;
+	CQualifierDate m_qDate;
 public:
 
-	ibValueQualifierDate() : ibValue(ibValueTypes::TYPE_VALUE, true) {}
-	ibValueQualifierDate(ibDateFractions dateTime) : ibValue(ibValueTypes::TYPE_VALUE, true),
+	CValueQualifierDate() : CValue(eValueTypes::TYPE_VALUE, true) {}
+	CValueQualifierDate(eDateFractions dateTime) : CValue(eValueTypes::TYPE_VALUE, true),
 		m_qDate(dateTime)
 	{
 	}
 
-	operator ibQualifierDate() const { return m_qDate; }
+	operator CQualifierDate() const { return m_qDate; }
 };
 
-class BACKEND_API ibValueQualifierString : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueQualifierString);
+class BACKEND_API CValueQualifierString : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CValueQualifierString);
 public:
-	ibQualifierString m_qString;
+	CQualifierString m_qString;
 public:
 
-	ibValueQualifierString() : ibValue(ibValueTypes::TYPE_VALUE, true) {}
-	ibValueQualifierString(unsigned short length) : ibValue(ibValueTypes::TYPE_VALUE, true),
+	CValueQualifierString() : CValue(eValueTypes::TYPE_VALUE, true) {}
+	CValueQualifierString(unsigned short length) : CValue(eValueTypes::TYPE_VALUE, true),
 		m_qString(length)
 	{
 	}
 
-	operator ibQualifierString() const { return m_qString; }
+	operator CQualifierString() const { return m_qString; }
 };
 
-class BACKEND_API ibValueTypeDescription : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibValueTypeDescription);
+class BACKEND_API CValueTypeDescription : public CValue {
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(CValueTypeDescription);
 private:
-	ibValueMethodHelper* m_methodHelper;
+	CMethodHelper* m_methodHelper;
 public:
-	ibTypeDescription m_typeDesc;
+	CTypeDescription m_typeDesc;
 public:
 
 	// these methods need to be overridden in your aggregate objects:
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
 	virtual void PrepareNames() const;
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
 public:
 
-	static ibValue AdjustValue(const ibTypeDescription& typeDescription,
-		class ibMetaData* metaData = nullptr);
+	static CValue AdjustValue(const CTypeDescription& typeDescription,
+		class IMetaData* metaData = nullptr);
 
-	static ibValue AdjustValue(const ibTypeDescription& typeDescription, const ibValue& varValue,
-		class ibMetaData* metaData = nullptr);
+	static CValue AdjustValue(const CTypeDescription& typeDescription, const CValue& varValue,
+		class IMetaData* metaData = nullptr);
 
-	ibValueTypeDescription();
+	CValueTypeDescription();
 
-	ibValueTypeDescription(class ibValueType* valueType);
-	ibValueTypeDescription(class ibValueType* valueType,
-		ibValueQualifierNumber* qNumber, ibValueQualifierDate* qDate, ibValueQualifierString* qString);
+	CValueTypeDescription(class CValueType* valueType);
+	CValueTypeDescription(class CValueType* valueType,
+		CValueQualifierNumber* qNumber, CValueQualifierDate* qDate, CValueQualifierString* qString);
 
-	ibValueTypeDescription(const ibTypeDescription& typeDescription);
+	CValueTypeDescription(const CTypeDescription& typeDescription);
 
-	ibValueTypeDescription(const std::vector<ibClassID>& array);
-	ibValueTypeDescription(const std::vector<ibClassID>& array,
-		ibValueQualifierNumber* qNumber, ibValueQualifierDate* qDate, ibValueQualifierString* qString);
+	CValueTypeDescription(const std::vector<class_identifier_t>& array);
+	CValueTypeDescription(const std::vector<class_identifier_t>& array,
+		CValueQualifierNumber* qNumber, CValueQualifierDate* qDate, CValueQualifierString* qString);
 
-	virtual ~ibValueTypeDescription();
+	virtual ~CValueTypeDescription();
 
 	virtual bool Init() { return false; }
-	virtual bool Init(ibValue** paParams, const long lSizeArray);
+	virtual bool Init(CValue** paParams, const long lSizeArray);
 
 public:
 
-	operator ibTypeDescription() const { return GetTypeDesc(); }
+	operator CTypeDescription() const { return GetTypeDesc(); }
 
-	const std::vector<ibClassID>& GetClsidList() { return m_typeDesc.GetClsidList(); }
-	const ibTypeDescription& GetTypeDesc() const { return m_typeDesc; }
+	const std::vector<class_identifier_t>& GetClsidList() { return m_typeDesc.GetClsidList(); }
+	const CTypeDescription& GetTypeDesc() const { return m_typeDesc; }
 
 public:
 
-	bool ContainType(const ibValue& cType) const;
-	ibValue AdjustValue() const;
-	ibValue AdjustValue(const ibValue& varValue) const;
-	ibValue Types() const;
+	bool ContainType(const CValue& cType) const;
+	CValue AdjustValue() const;
+	CValue AdjustValue(const CValue& varValue) const;
+	CValue Types() const;
 };
 
 #endif

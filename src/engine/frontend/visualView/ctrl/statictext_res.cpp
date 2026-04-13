@@ -41,12 +41,12 @@ static char* s_static_text_xpm[] = {
 	"                "
 };
 
-wxIcon ibValueStaticText::GetIcon() const
+wxIcon CValueStaticText::GetIcon() const
 {
 	return wxIcon(s_static_text_xpm);
 }
 
-wxIcon ibValueStaticText::GetIconGroup()
+wxIcon CValueStaticText::GetIconGroup()
 {
 	return wxIcon(s_static_text_xpm);
 }

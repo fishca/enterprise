@@ -4,16 +4,16 @@
 #include "backend/uniqueKey.h"
 
 ///////////////////////////////////////////////////
-class BACKEND_API ibBackendValueForm;
+class BACKEND_API IBackendValueForm;
 ///////////////////////////////////////////////////
 
-class BACKEND_API ibBackendMetaDocument {
+class BACKEND_API IBackendMetaDocument {
 public:
-	virtual ~ibBackendMetaDocument() {}
-	virtual const class ibValueMetaObject* GetMetaObject() const = 0;
+	virtual ~IBackendMetaDocument() {}
+	virtual const class IValueMetaObject* GetMetaObject() const = 0;
 };
 
-class BACKEND_API ibBackendControlFrame {
+class BACKEND_API IBackendControlFrame {
 public:
 #if !wxUSE_EXTENDED_RTTI
 	virtual wxClassInfo* GetClassInfo() const;
@@ -22,46 +22,46 @@ public:
 	// for compatibility reasons, but shouldn't be accessed directly.
 	static wxClassInfo ms_classInfo;
 #endif
-	virtual ~ibBackendControlFrame() {}
+	virtual ~IBackendControlFrame() {}
 
-	virtual bool GetControlValue(ibValue& pvarControlVal) const = 0;
-	virtual ibGuid GetControlGuid() const = 0;
+	virtual bool GetControlValue(CValue& pvarControlVal) const = 0;
+	virtual CGuid GetControlGuid() const = 0;
 
-	virtual ibBackendValueForm* GetBackendForm() const { return nullptr; }
+	virtual IBackendValueForm* GetBackendForm() const { return nullptr; }
 
 	// Get reference class 
-	virtual ibClassID GetClassType() const = 0;
+	virtual class_identifier_t GetClassType() const = 0;
 
 	// Counter reference
 	virtual void ControlIncrRef() = 0;
 	virtual void ControlDecrRef() = 0;
 };
 
-class BACKEND_API ibBackendValueForm : public ibBackendValue {
+class BACKEND_API IBackendValueForm : public IBackendValue {
 public:
 
 #pragma region _frontend_call_h__
 
 	// Form entry creator 
-	static ibBackendValueForm* CreateNewForm(const class ibValueMetaObjectFormBase* creator = nullptr, ibBackendControlFrame* ownerControl = nullptr,
-		class ibSourceDataObject* srcObject = nullptr, const ibUniqueKey& formGuid = wxNullUniqueKey);
+	static IBackendValueForm* CreateNewForm(const class IValueMetaObjectForm* creator = nullptr, IBackendControlFrame* ownerControl = nullptr,
+		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
 
-	static ibUniqueKey CreateFormUniqueKey(ibBackendControlFrame* ownerControl,
-		ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid);
+	static CUniqueKey CreateFormUniqueKey(IBackendControlFrame* ownerControl,
+		ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
-	static ibBackendValueForm* FindFormByUniqueKey(ibBackendControlFrame* ownerControl,
-		ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid);
+	static IBackendValueForm* FindFormByUniqueKey(IBackendControlFrame* ownerControl,
+		ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
-	static ibBackendValueForm* FindFormByUniqueKey(const ibUniqueKey& guid);
-	static ibBackendValueForm* FindFormByControlUniqueKey(const ibUniqueKey& guid);
-	static ibBackendValueForm* FindFormBySourceUniqueKey(const ibUniqueKey& guid);
+	static IBackendValueForm* FindFormByUniqueKey(const CUniqueKey& guid);
+	static IBackendValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid);
+	static IBackendValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid);
 
-	static bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid);
+	static bool UpdateFormUniqueKey(const CUniquePairKey& guid);
 
 #pragma endregion 
 
 	///////////////////////////////////////////////////////////////////////////
-	virtual ~ibBackendValueForm() {}
+	virtual ~IBackendValueForm() {}
 	///////////////////////////////////////////////////////////////////////////
 
 	virtual bool LoadForm(const wxMemoryBuffer& formData) = 0;
@@ -69,20 +69,20 @@ public:
 
 	///////////////////////////////////////////////////////////////////////////
 
-	virtual ibSourceDataObject* GetSourceObject() const = 0;
-	virtual const ibValueMetaObjectFormBase* GetFormMetaObject() const = 0;
+	virtual ISourceDataObject* GetSourceObject() const = 0;
+	virtual const IValueMetaObjectForm* GetFormMetaObject() const = 0;
 
 	///////////////////////////////////////////////////////////////////////////
 
-	virtual void BuildForm(const ibFormID& formType) = 0;
+	virtual void BuildForm(const form_identifier_t& formType) = 0;
 	virtual bool InitializeFormModule() = 0;
 
 	//notify
-	virtual void NotifyCreate(const ibValue& vCreated) = 0;
-	virtual void NotifyChange(const ibValue& vChanged) = 0;
-	virtual void NotifyDelete(const ibValue& vChanged) = 0;
+	virtual void NotifyCreate(const CValue& vCreated) = 0;
+	virtual void NotifyChange(const CValue& vChanged) = 0;
+	virtual void NotifyDelete(const CValue& vChanged) = 0;
 
-	virtual void NotifyChoice(ibValue& vSelected) = 0;
+	virtual void NotifyChoice(CValue& vSelected) = 0;
 
 	//form event
 	virtual void ActivateForm() = 0;
@@ -90,8 +90,8 @@ public:
 	virtual bool CloseForm(bool force = false) = 0;
 	virtual void HelpForm() = 0;
 
-	virtual bool GenerateForm(class ibValueRecordDataObjectRef* obj) const = 0;
-	virtual void ShowForm(ibBackendMetaDocument* doc = nullptr, bool createContext = true) = 0;
+	virtual bool GenerateForm(class IValueRecordDataObjectRef* obj) const = 0;
+	virtual void ShowForm(IBackendMetaDocument* doc = nullptr, bool createContext = true) = 0;
 
 	//set & get modify 
 	virtual void Modify(bool modify = true) = 0;
@@ -110,10 +110,10 @@ public:
 
 namespace formWrapper {
 	namespace inl {
-		inline ibValue* cast_value(ibBackendControlFrame* form) {
-			return dynamic_cast<ibValue*>(form);
+		inline CValue* cast_value(IBackendControlFrame* form) {
+			return dynamic_cast<CValue*>(form);
 		}
-		inline ibValue* cast_value(ibBackendValue* form) {
+		inline CValue* cast_value(IBackendValue* form) {
 			return form ? form->GetImplValueRef() : nullptr;
 		}
 	}

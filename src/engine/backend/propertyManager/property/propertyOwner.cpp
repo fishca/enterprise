@@ -1,47 +1,43 @@
 #include "propertyOwner.h"
 #include "backend/propertyManager/property/variant/variantOwner.h"
 
-wxObject* (*ibPropertyOwner::ms_propertyOwner)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
-
-////////////////////////////////////////////////////////////////
-
-wxVariantData* ibPropertyOwner::CreateVariantData(ibPropertyObject* property, const ibMetaDescription& typeDesc) const
+wxVariantData* CPropertyOwner::CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc) const
 {
-	const ibValueMetaObjectGenericData* propFactory = dynamic_cast<const ibValueMetaObjectGenericData*>(property);
-	if (propFactory == nullptr)
-		return nullptr;
-	return new ibVariantDataOwner(propFactory, typeDesc);
+    const IValueMetaObjectGenericData* propFactory = dynamic_cast<const IValueMetaObjectGenericData*>(property);
+    if (propFactory == nullptr)
+        return nullptr;
+    return new wxVariantDataOwner(propFactory, typeDesc);
 }
 
-ibMetaDescription& ibPropertyOwner::GetValueAsMetaDesc() const {
-	return get_cell_variant<ibVariantDataOwner>()->GetMetaDesc();
+CMetaDescription& CPropertyOwner::GetValueAsMetaDesc() const {
+    return get_cell_variant<wxVariantDataOwner>()->GetMetaDesc();
 }
 
-void ibPropertyOwner::SetValue(const ibMetaDescription& val)
+void CPropertyOwner::SetValue(const CMetaDescription& val)
 {
-	m_propValue = CreateVariantData(m_owner, val);
+    m_propValue = CreateVariantData(m_owner, val);
 }
 
 //base property for "owner"
-bool ibPropertyOwner::SetDataValue(const ibValue& varPropVal)
+bool CPropertyOwner::SetDataValue(const CValue& varPropVal)
 {
-	return false;
+    return false;
 }
 
-bool ibPropertyOwner::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertyOwner::GetDataValue(CValue& pvarPropVal) const
 {
-	const ibVariantDataOwner* owner = get_cell_variant<ibVariantDataOwner>();
-	wxASSERT(owner);
-	pvarPropVal = owner->GetDataValue();
-	return true;
+    const wxVariantDataOwner* owner = get_cell_variant<wxVariantDataOwner>();
+    wxASSERT(owner);  
+    pvarPropVal = owner->GetDataValue();
+    return true;
 }
 
-bool ibPropertyOwner::LoadData(ibReaderMemory& reader)
+bool CPropertyOwner::LoadData(CMemoryReader& reader)
 {
-	return ibMetaDescriptionMemory::LoadData(reader, GetValueAsMetaDesc());
+    return CMetaDescriptionMemory::LoadData(reader, GetValueAsMetaDesc());
 }
 
-bool ibPropertyOwner::SaveData(ibWriterMemory& writer)
+bool CPropertyOwner::SaveData(CMemoryWriter& writer)
 {
-	return ibMetaDescriptionMemory::SaveData(writer, GetValueAsMetaDesc());
+    return CMetaDescriptionMemory::SaveData(writer, GetValueAsMetaDesc());
 }

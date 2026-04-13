@@ -3,18 +3,18 @@
 
 #include "backend/compiler/value.h"
 
-enum ibPictureType
+enum EPictureType
 {
 	eFromBackend = 1,
 	eFromConfiguration,
 	eFromFile,
 };
 
-struct ibExternalPictureDescription {
+struct CExternalPictureDescription {
 
 	bool IsEmptyPicture() const { return m_height == 0 && m_width == 0; }
 
-	bool operator ==(const ibExternalPictureDescription& rhs) const {
+	bool operator ==(const CExternalPictureDescription& rhs) const {
 		return m_img_buffer == rhs.m_img_buffer
 			&& m_width == rhs.m_width
 			&& m_height == rhs.m_height;
@@ -26,23 +26,23 @@ struct ibExternalPictureDescription {
 	unsigned int m_width = 0, m_height = 0;
 };
 
-class BACKEND_API ibExternalPictureDescriptionMemory {
+class BACKEND_API CExternalPictureDescriptionMemory {
 public:
 	//load & save object in control 
-	static bool LoadData(class ibReaderMemory& reader, ibExternalPictureDescription& pictureDesc);
-	static bool SaveData(class ibWriterMemory& writer, ibExternalPictureDescription& pictureDesc);
+	static bool LoadData(class CMemoryReader& reader, CExternalPictureDescription& pictureDesc);
+	static bool SaveData(class CMemoryWriter& writer, CExternalPictureDescription& pictureDesc);
 };
 
-struct ibPictureDescription {
+struct CPictureDescription {
 
-	ibPictureType m_type;
+	EPictureType m_type;
 
-	ibPictureDescription() : m_type(eFromBackend) {}
-	ibPictureDescription(const ibPictureID& id) : m_type(eFromBackend), m_class_identifier(id) {}
-	ibPictureDescription(const ibGuid& id) : m_type(eFromConfiguration), m_meta_guid(id) {}
-	ibPictureDescription(const ibExternalPictureDescription& data) : m_type(eFromFile), m_img_data(data) {}
+	CPictureDescription() : m_type(eFromBackend) {}
+	CPictureDescription(const picture_identifier_t& id) : m_type(eFromBackend), m_class_identifier(id) {}
+	CPictureDescription(const CGuid& id) : m_type(eFromConfiguration), m_meta_guid(id) {}
+	CPictureDescription(const CExternalPictureDescription& data) : m_type(eFromFile), m_img_data(data) {}
 	
-	~ibPictureDescription() {}
+	~CPictureDescription() {}
 
 	bool IsEmptyPicture() const {
 		if (m_type == eFromBackend)
@@ -54,7 +54,7 @@ struct ibPictureDescription {
 		return true;
 	}
 
-	bool operator ==(const ibPictureDescription& rhs) const
+	bool operator ==(const CPictureDescription& rhs) const
 	{
 		if (m_type == rhs.m_type) {
 			if (m_type == eFromBackend) {
@@ -73,27 +73,27 @@ struct ibPictureDescription {
 		return false;
 	}
 
-	ibPictureID m_class_identifier = 0;
-	ibGuid m_meta_guid;
-	ibExternalPictureDescription m_img_data;
+	picture_identifier_t m_class_identifier = 0;
+	CGuid m_meta_guid;
+	CExternalPictureDescription m_img_data;
 };
 
-class BACKEND_API ibPictureDescriptionMemory {
+class BACKEND_API CPictureDescriptionMemory {
 public:
 	//load & save object in control 
-	static bool LoadData(class ibReaderMemory& reader, ibPictureDescription& pictureDesc);
-	static bool SaveData(class ibWriterMemory& writer, ibPictureDescription& pictureDesc);
+	static bool LoadData(class CMemoryReader& reader, CPictureDescription& pictureDesc);
+	static bool SaveData(class CMemoryWriter& writer, CPictureDescription& pictureDesc);
 };
 
 // Initialize with XPM data
 extern BACKEND_API bool RegisterBackendPicture(const wxString name,
-	const ibPictureID& id, const char* const* data);
+	const picture_identifier_t& id, const char* const* data);
 
 // Initialize with Base-64 + PNG data
 extern BACKEND_API bool RegisterBackendPicture(const wxString name,
-	const ibPictureID& id, const wxString& base64);
+	const picture_identifier_t& id, const wxString& base64);
 
 // Initialize with BMP
 extern BACKEND_API bool RegisterBackendPicture(const wxString name,
-	const ibPictureID& id, const wxBitmap& bitmap);
+	const picture_identifier_t& id, const wxBitmap& bitmap);
 #endif 

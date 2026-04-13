@@ -3,26 +3,26 @@
 
 #include "enumeration.h"
 
-class ibValueManagerDataObjectEnumeration :
-	public ibValueManagerDataObject {
+class CValueManagerDataObjectEnumeration :
+	public IValueManagerDataObject {
 public:
 
-	ibValueManagerDataObjectEnumeration(ibValueMetaObjectEnumeration* metaObject = nullptr) : m_metaObject(metaObject) {}
-	virtual ~ibValueManagerDataObjectEnumeration() {}
+	CValueManagerDataObjectEnumeration(CValueMetaObjectEnumeration* metaObject = nullptr) : m_metaObject(metaObject) {}
+	virtual ~CValueManagerDataObjectEnumeration() {}
 
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const;
-	virtual ibValueMetaObjectEnumeration* GetMetaObject() const { return m_metaObject; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual CValueMetaObjectEnumeration* GetMetaObject() const { return m_metaObject; }
 
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
 
-	virtual bool SetPropVal(const long lPropNum, ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
 protected:
-	ibValueMetaObjectEnumeration* m_metaObject;
+	CValueMetaObjectEnumeration* m_metaObject;
 private:
-	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectEnumeration);
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectEnumeration);
 };
 
 #endif 

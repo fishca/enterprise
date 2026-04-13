@@ -6,13 +6,13 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
 // ctor()
-ibDatabaseLayerODBC::ibDatabaseLayerODBC()
-	: ibDatabaseLayer()
+COdbcDatabaseLayer::COdbcDatabaseLayer()
+	: IDatabaseLayer()
 {
 	m_bIsConnected = false;
 	ResetErrorCodes();
 
-	m_pInterface = new ibInterfaceODBC();
+	m_pInterface = new COdbcInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -57,12 +57,12 @@ ibDatabaseLayerODBC::ibDatabaseLayerODBC()
 #endif
 }
 
-ibDatabaseLayerODBC::ibDatabaseLayerODBC(const ibDatabaseLayerODBC& src)
+COdbcDatabaseLayer::COdbcDatabaseLayer(const COdbcDatabaseLayer& src)
 {
 	m_bIsConnected = false;
 	ResetErrorCodes();
 
-	m_pInterface = new ibInterfaceODBC();
+	m_pInterface = new COdbcInterface();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -107,7 +107,7 @@ ibDatabaseLayerODBC::ibDatabaseLayerODBC(const ibDatabaseLayerODBC& src)
 #endif
 }
 
-ibDatabaseLayerODBC::~ibDatabaseLayerODBC()
+COdbcDatabaseLayer::~COdbcDatabaseLayer()
 {
 	Close();
 
@@ -128,7 +128,7 @@ ibDatabaseLayerODBC::~ibDatabaseLayerODBC()
 	wxDELETE(m_pInterface);
 }
 
-bool ibDatabaseLayerODBC::Open()
+bool COdbcDatabaseLayer::Open()
 {
 	ResetErrorCodes();
 
@@ -191,7 +191,7 @@ bool ibDatabaseLayerODBC::Open()
 	return true;
 }
 
-bool ibDatabaseLayerODBC::Open(const wxString& strConnection)
+bool COdbcDatabaseLayer::Open(const wxString& strConnection)
 {
 	m_strDSN = wxEmptyString;
 	m_strUser = wxEmptyString;
@@ -206,7 +206,7 @@ bool ibDatabaseLayerODBC::Open(const wxString& strConnection)
 }
 
 #if wxUSE_GUI
-bool ibDatabaseLayerODBC::Open(const wxString& strConnection, bool bPromptForInfo, wxWindow* parent)
+bool COdbcDatabaseLayer::Open(const wxString& strConnection, bool bPromptForInfo, wxWindow* parent)
 {
 	m_strConnection = strConnection;
 	m_bPrompt = bPromptForInfo;
@@ -219,7 +219,7 @@ bool ibDatabaseLayerODBC::Open(const wxString& strConnection, bool bPromptForInf
 }
 #endif
 
-bool ibDatabaseLayerODBC::Open(const wxString& strDSN, const wxString& strUser, const wxString& strPassword)
+bool COdbcDatabaseLayer::Open(const wxString& strDSN, const wxString& strUser, const wxString& strPassword)
 {
 	m_strDSN = strDSN;
 	m_strUser = strUser;
@@ -233,7 +233,7 @@ bool ibDatabaseLayerODBC::Open(const wxString& strDSN, const wxString& strUser, 
 	return Open();
 }
 
-bool ibDatabaseLayerODBC::Close()
+bool COdbcDatabaseLayer::Close()
 {
 	ResetErrorCodes();
 
@@ -255,12 +255,12 @@ bool ibDatabaseLayerODBC::Close()
 	return true;
 }
 
-bool ibDatabaseLayerODBC::IsOpen()
+bool COdbcDatabaseLayer::IsOpen()
 {
 	return m_bIsConnected;
 }
 
-void ibDatabaseLayerODBC::BeginTransaction()
+void COdbcDatabaseLayer::BeginTransaction()
 {
 	ResetErrorCodes();
 
@@ -272,7 +272,7 @@ void ibDatabaseLayerODBC::BeginTransaction()
 	}
 }
 
-void ibDatabaseLayerODBC::Commit()
+void COdbcDatabaseLayer::Commit()
 {
 	ResetErrorCodes();
 
@@ -291,7 +291,7 @@ void ibDatabaseLayerODBC::Commit()
 	}
 }
 
-void ibDatabaseLayerODBC::RollBack()
+void COdbcDatabaseLayer::RollBack()
 {
 	ResetErrorCodes();
 
@@ -310,17 +310,17 @@ void ibDatabaseLayerODBC::RollBack()
 	}
 }
 
-bool ibDatabaseLayerODBC::IsActiveTransaction()
+bool COdbcDatabaseLayer::IsActiveTransaction()
 {
 	return false;
 }
 
-int ibDatabaseLayerODBC::DoRunQuery(const wxString& strQuery, bool bParseQuery)
+int COdbcDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 {
 	ResetErrorCodes();
 
 	//wxPrintf("Running: '%s'\n", strQuery.c_str());
-	ibPreparedStatementODBC* pStatement = (ibPreparedStatementODBC*)DoPrepareStatement(strQuery, bParseQuery);
+	COdbcPreparedStatement* pStatement = (COdbcPreparedStatement*)DoPrepareStatement(strQuery, bParseQuery);
 
 	if (pStatement)
 	{
@@ -343,18 +343,18 @@ int ibDatabaseLayerODBC::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 		return DATABASE_LAYER_QUERY_RESULT_ERROR;
 }
 
-ibDatabaseResultSet* ibDatabaseLayerODBC::DoRunQueryWithResults(const wxString& strQuery)
+IDatabaseResultSet* COdbcDatabaseLayer::DoRunQueryWithResults(const wxString& strQuery)
 {
 	ResetErrorCodes();
 
-	ibPreparedStatementODBC* pStatement = (ibPreparedStatementODBC*)DoPrepareStatement(strQuery, true);
+	COdbcPreparedStatement* pStatement = (COdbcPreparedStatement*)DoPrepareStatement(strQuery, true);
 
 	if (pStatement)
 	{
 		try
 		{
 			pStatement->SetOneTimer(true);
-			ibDatabaseResultSet* pResults = pStatement->RunQueryWithResults(false /*false for "Don't log this result set for cleanup*/);
+			IDatabaseResultSet* pResults = pStatement->RunQueryWithResults(false /*false for "Don't log this result set for cleanup*/);
 			LogResultSetForCleanup(pResults);
 			return pResults;
 		}
@@ -371,7 +371,7 @@ ibDatabaseResultSet* ibDatabaseLayerODBC::DoRunQueryWithResults(const wxString& 
 		return nullptr;
 }
 
-void* ibDatabaseLayerODBC::allocStmth()
+void* COdbcDatabaseLayer::allocStmth()
 {
 	ResetErrorCodes();
 
@@ -386,14 +386,14 @@ void* ibDatabaseLayerODBC::allocStmth()
 	return handle;
 }
 
-ibPreparedStatement* ibDatabaseLayerODBC::DoPrepareStatement(const wxString& strQuery)
+IPreparedStatement* COdbcDatabaseLayer::DoPrepareStatement(const wxString& strQuery)
 {
-	ibPreparedStatement* pStatement = DoPrepareStatement(strQuery, true);
+	IPreparedStatement* pStatement = DoPrepareStatement(strQuery, true);
 	LogStatementForCleanup(pStatement);
 	return pStatement;
 }
 
-ibPreparedStatement* ibDatabaseLayerODBC::DoPrepareStatement(const wxString& strQuery, bool bParseQuery)
+IPreparedStatement* COdbcDatabaseLayer::DoPrepareStatement(const wxString& strQuery, bool bParseQuery)
 {
 	ResetErrorCodes();
 
@@ -403,7 +403,7 @@ ibPreparedStatement* ibDatabaseLayerODBC::DoPrepareStatement(const wxString& str
 	else
 		QueryArray.push_back(strQuery);
 
-	ibPreparedStatementODBC* pReturnStatement = new ibPreparedStatementODBC(m_pInterface, (SQLHENV)m_sqlEnvHandle, (SQLHDBC)m_sqlHDBC);
+	COdbcPreparedStatement* pReturnStatement = new COdbcPreparedStatement(m_pInterface, (SQLHENV)m_sqlEnvHandle, (SQLHDBC)m_sqlHDBC);
 
 	if (pReturnStatement)
 		pReturnStatement->SetEncoding(GetEncoding());
@@ -434,7 +434,7 @@ ibPreparedStatement* ibDatabaseLayerODBC::DoPrepareStatement(const wxString& str
 	return pReturnStatement;
 }
 
-bool ibDatabaseLayerODBC::TableExists(const wxString& table)
+bool COdbcDatabaseLayer::TableExists(const wxString& table)
 {
 	bool bReturn = false;
 	// Use SQLTables
@@ -466,7 +466,7 @@ bool ibDatabaseLayerODBC::TableExists(const wxString& table)
 	return bReturn;
 }
 
-bool ibDatabaseLayerODBC::ViewExists(const wxString& view)
+bool COdbcDatabaseLayer::ViewExists(const wxString& view)
 {
 	bool bReturn = false;
 	// Use SQLTables
@@ -498,7 +498,7 @@ bool ibDatabaseLayerODBC::ViewExists(const wxString& view)
 	return bReturn;
 }
 
-wxArrayString ibDatabaseLayerODBC::GetTables()
+wxArrayString COdbcDatabaseLayer::GetTables()
 {
 	wxArrayString returnArray;
 	SQLHSTMT pStatement = allocStmth();
@@ -553,7 +553,7 @@ wxArrayString ibDatabaseLayerODBC::GetTables()
 	return returnArray;
 }
 
-wxArrayString ibDatabaseLayerODBC::GetViews()
+wxArrayString COdbcDatabaseLayer::GetViews()
 {
 	wxArrayString returnArray;
 	SQLHSTMT pStatement = allocStmth();
@@ -609,7 +609,7 @@ wxArrayString ibDatabaseLayerODBC::GetViews()
 	return returnArray;
 }
 
-wxArrayString ibDatabaseLayerODBC::GetColumns(const wxString& table)
+wxArrayString COdbcDatabaseLayer::GetColumns(const wxString& table)
 {
 	wxArrayString returnArray;
 	// Use SQLColumns
@@ -665,10 +665,10 @@ wxArrayString ibDatabaseLayerODBC::GetColumns(const wxString& table)
 	return returnArray;
 }
 
-//void ibDatabaseLayerODBC::InterpretErrorCodes( long nCode, SQLHSTMT stmth_ptr )
-void ibDatabaseLayerODBC::InterpretErrorCodes(long nCode, void* stmth_ptr)
+//void COdbcDatabaseLayer::InterpretErrorCodes( long nCode, SQLHSTMT stmth_ptr )
+void COdbcDatabaseLayer::InterpretErrorCodes(long nCode, void* stmth_ptr)
 {
-	wxLogDebug(wxT("ibDatabaseLayerODBC::InterpretErrorCodes()\n"));
+	wxLogDebug(wxT("COdbcDatabaseLayer::InterpretErrorCodes()\n"));
 
 	//if ((nCode != SQL_SUCCESS) ) // && (nCode != SQL_SUCCESS_WITH_INFO))
 	{
@@ -693,10 +693,10 @@ void ibDatabaseLayerODBC::InterpretErrorCodes(long nCode, void* stmth_ptr)
 	}
 }
 
-bool ibDatabaseLayerODBC::IsAvailable()
+bool COdbcDatabaseLayer::IsAvailable()
 {
 	bool bAvailable = false;
-	ibInterfaceODBC* pInterface = new ibInterfaceODBC();
+	COdbcInterface* pInterface = new COdbcInterface();
 	bAvailable = pInterface && pInterface->Init();
 	wxDELETE(pInterface);
 	return bAvailable;

@@ -20,11 +20,11 @@ enum
 	idcmdClear = 17,
 };
 
-wxBEGIN_EVENT_TABLE(ibOutputWindow, wxStyledTextCtrl)
-EVT_LEFT_DCLICK(ibOutputWindow::OnDoubleClick)
-EVT_KEY_DOWN(ibOutputWindow::OnKeyDown)
-EVT_CONTEXT_MENU(ibOutputWindow::OnContextMenu)
-EVT_MENU(idcmdClear, ibOutputWindow::OnClearOutput)
+wxBEGIN_EVENT_TABLE(COutputWindow, wxStyledTextCtrl)
+EVT_LEFT_DCLICK(COutputWindow::OnDoubleClick)
+EVT_KEY_DOWN(COutputWindow::OnKeyDown)
+EVT_CONTEXT_MENU(COutputWindow::OnContextMenu)
+EVT_MENU(idcmdClear, COutputWindow::OnClearOutput)
 wxEND_EVENT_TABLE()
 
 #define DEF_LINENUMBER_ID 0
@@ -32,7 +32,7 @@ wxEND_EVENT_TABLE()
 
 #include "mainFrame/mainFrameDesigner.h"
 
-ibOutputWindow::ibOutputWindow(ibFrontendDocMDIFrame* parent, wxWindowID winid)
+COutputWindow::COutputWindow(CFrontendDocMDIFrame* parent, wxWindowID winid)
 	: wxStyledTextCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
 {
 	// initialize styles
@@ -45,9 +45,9 @@ ibOutputWindow::ibOutputWindow(ibFrontendDocMDIFrame* parent, wxWindowID winid)
 	for (int margin = 0; margin < GetMarginCount(); margin++)
 		SetMarginCursor(margin, wxSTC_CURSORARROW);
 
-	MarkerDefine(ibStatusMessage_Information, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxBLACK);
-	MarkerDefine(ibStatusMessage_Warning, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxYELLOW);
-	MarkerDefine(ibStatusMessage_Error, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxRED);
+	MarkerDefine(eStatusMessage_Information, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxBLACK);
+	MarkerDefine(eStatusMessage_Warning, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxYELLOW);
+	MarkerDefine(eStatusMessage_Error, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxRED);
 
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'A', idcmdSelectAll);
@@ -62,16 +62,16 @@ ibOutputWindow::ibOutputWindow(ibFrontendDocMDIFrame* parent, wxWindowID winid)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ibOutputWindow* ibOutputWindow::GetOutputWindow()
+COutputWindow* COutputWindow::GetOutputWindow()
 {
-	if (ibFrontendDocMDIFrameDesigner::GetFrame())
+	if (CFrontendDocMDIFrameDesigner::GetFrame())
 		return mainFrame->GetOutputWindow();
 	return nullptr; 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void ibOutputWindow::SetFontColorSettings(const ibFontColorSettings& settings)
+void COutputWindow::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -80,10 +80,10 @@ void ibOutputWindow::SetFontColorSettings(const ibFontColorSettings& settings)
 	StyleClearAll();
 	StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	SetSelForeground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).foreColor);
-	SetSelBackground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).backColor);
+	SetSelForeground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).foreColor);
+	SetSelBackground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).backColor);
 
-	font = settings.GetFont(ibFontColorSettings::DisplayItem_Default);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Default);
 
 	StyleSetFont(wxSTC_C_DEFAULT, font);
 	StyleSetFont(wxSTC_C_IDENTIFIER, font);
@@ -102,33 +102,33 @@ void ibOutputWindow::SetFontColorSettings(const ibFontColorSettings& settings)
 	SetEditable(false);
 }
 
-void ibOutputWindow::OutputMessage(const wxString& strMessage,
+void COutputWindow::OutputMessage(const wxString& strMessage,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(strMessage, ibStatusMessage::ibStatusMessage_Information,
+	SharedOutput(strMessage, eStatusMessage::eStatusMessage_Information,
 		strFileName, strDocPath, currLine);
 }
 
-void ibOutputWindow::OutputWarning(const wxString& strMessage,
+void COutputWindow::OutputWarning(const wxString& strMessage,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(strMessage, ibStatusMessage::ibStatusMessage_Warning,
+	SharedOutput(strMessage, eStatusMessage::eStatusMessage_Warning,
 		strFileName, strDocPath,
 		currLine);
 }
 
-void ibOutputWindow::OutputError(const wxString& strMessage,
+void COutputWindow::OutputError(const wxString& strMessage,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(strMessage, ibStatusMessage::ibStatusMessage_Error,
+	SharedOutput(strMessage, eStatusMessage::eStatusMessage_Error,
 		strFileName, strDocPath,
 		currLine);
 }
 
-void ibOutputWindow::SharedOutput(const wxString& strMessage, ibStatusMessage status,
+void COutputWindow::SharedOutput(const wxString& strMessage, eStatusMessage status,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
@@ -175,7 +175,7 @@ void ibOutputWindow::SharedOutput(const wxString& strMessage, ibStatusMessage st
 	mainFrame->Update();
 }
 
-int ibOutputWindow::GetCurrentLine() const
+int COutputWindow::GetCurrentLine() const
 {
 	long pos = GetInsertionPoint();
 
@@ -188,7 +188,7 @@ int ibOutputWindow::GetCurrentLine() const
 #include "frontend/docView/docManager.h"
 #include "backend/metadataConfiguration.h"
 
-void ibOutputWindow::OnDoubleClick(wxMouseEvent& event)
+void COutputWindow::OnDoubleClick(wxMouseEvent& event)
 {
 	wxTextCoord col, row;
 	HitTest(event.GetPosition(), &col, &row);
@@ -200,26 +200,26 @@ void ibOutputWindow::OnDoubleClick(wxMouseEvent& event)
 			auto code = pair.second;
 
 			if (code.m_fileName.IsEmpty()) {
-				ibBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
+				IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
 				wxASSERT(metaTree);
 				metaTree->EditModule(code.m_docPath, code.m_currLine, false);
 			}
 
 			if (!code.m_fileName.IsEmpty()) {
-				ibMetaDataDocument* foundedDoc = dynamic_cast<ibMetaDataDocument*>(
+				IMetaDataDocument* foundedDoc = dynamic_cast<IMetaDataDocument*>(
 					docManager->FindDocumentByPath(code.m_fileName)
 					);
 
 				if (foundedDoc == nullptr) {
-					foundedDoc = dynamic_cast<ibMetaDataDocument*>(
+					foundedDoc = dynamic_cast<IMetaDataDocument*>(
 						docManager->CreateDocument(code.m_fileName, wxDOC_SILENT)
 						);
 				}
 
 				if (foundedDoc != nullptr) {
-					ibMetaData* metadata = foundedDoc->GetMetaData();
+					IMetaData* metadata = foundedDoc->GetMetaData();
 					wxASSERT(metadata);
-					ibBackendMetadataTree* metaTree = metadata->GetMetaTree();
+					IBackendMetadataTree* metaTree = metadata->GetMetaTree();
 					wxASSERT(metaTree);
 					metaTree->EditModule(code.m_docPath, code.m_currLine, false);
 				}
@@ -231,7 +231,7 @@ void ibOutputWindow::OnDoubleClick(wxMouseEvent& event)
 	event.Skip();
 }
 
-void ibOutputWindow::OnContextMenu(wxContextMenuEvent& event)
+void COutputWindow::OnContextMenu(wxContextMenuEvent& event)
 {
 	wxPoint pt = event.GetPosition();
 	ScreenToClient(&pt.x, &pt.y);
@@ -255,7 +255,7 @@ void ibOutputWindow::OnContextMenu(wxContextMenuEvent& event)
 	//event.Skip();
 }
 
-void ibOutputWindow::OnClearOutput(wxCommandEvent& event)
+void COutputWindow::OnClearOutput(wxCommandEvent& event)
 {
 	m_listCodeInfo.clear();
 
@@ -266,7 +266,7 @@ void ibOutputWindow::OnClearOutput(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibOutputWindow::OnKeyDown(wxKeyEvent& event)
+void COutputWindow::OnKeyDown(wxKeyEvent& event)
 {
 	event.Skip();
 }

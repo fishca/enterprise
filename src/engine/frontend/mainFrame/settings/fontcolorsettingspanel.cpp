@@ -7,19 +7,19 @@
 #include "fontcolorsettingspanel.h"
 #include "staticTextEx.h"
 
-BEGIN_EVENT_TABLE(ibPanelFontColorSettings, wxPanel)
-EVT_BUTTON(ibPanelFontColorSettings::ID_SelectFont, ibPanelFontColorSettings::OnSelectFont)
-EVT_BUTTON(ibPanelFontColorSettings::ID_ResetToDefaults, ibPanelFontColorSettings::OnResetToDefaults)
-EVT_LISTBOX(ibPanelFontColorSettings::ID_DisplayItemsList, ibPanelFontColorSettings::OnDisplayItemsListItemSelected)
-EVT_CHOICE(ibPanelFontColorSettings::ID_ForeColorChoice, ibPanelFontColorSettings::OnForeColorChoiceItemSelected)
-EVT_CHOICE(ibPanelFontColorSettings::ID_BackColorChoice, ibPanelFontColorSettings::OnBackColorChoiceItemSelected)
-EVT_BUTTON(ibPanelFontColorSettings::ID_ForeColorCustom, ibPanelFontColorSettings::OnForeColorCustom)
-EVT_BUTTON(ibPanelFontColorSettings::ID_BackColorCustom, ibPanelFontColorSettings::OnBackColorCustom)
-EVT_CHECKBOX(ibPanelFontColorSettings::ID_BoldCheck, ibPanelFontColorSettings::OnBoldCheck)
-EVT_CHECKBOX(ibPanelFontColorSettings::ID_ItalicCheck, ibPanelFontColorSettings::OnItalicCheck)
+BEGIN_EVENT_TABLE(CFontColorSettingsPanel, wxPanel)
+EVT_BUTTON(CFontColorSettingsPanel::ID_SelectFont, CFontColorSettingsPanel::OnSelectFont)
+EVT_BUTTON(CFontColorSettingsPanel::ID_ResetToDefaults, CFontColorSettingsPanel::OnResetToDefaults)
+EVT_LISTBOX(CFontColorSettingsPanel::ID_DisplayItemsList, CFontColorSettingsPanel::OnDisplayItemsListItemSelected)
+EVT_CHOICE(CFontColorSettingsPanel::ID_ForeColorChoice, CFontColorSettingsPanel::OnForeColorChoiceItemSelected)
+EVT_CHOICE(CFontColorSettingsPanel::ID_BackColorChoice, CFontColorSettingsPanel::OnBackColorChoiceItemSelected)
+EVT_BUTTON(CFontColorSettingsPanel::ID_ForeColorCustom, CFontColorSettingsPanel::OnForeColorCustom)
+EVT_BUTTON(CFontColorSettingsPanel::ID_BackColorCustom, CFontColorSettingsPanel::OnBackColorCustom)
+EVT_CHECKBOX(CFontColorSettingsPanel::ID_BoldCheck, CFontColorSettingsPanel::OnBoldCheck)
+EVT_CHECKBOX(CFontColorSettingsPanel::ID_ItalicCheck, CFontColorSettingsPanel::OnItalicCheck)
 END_EVENT_TABLE()
 
-const wxString ibPanelFontColorSettings::s_defaultColorName[] =
+const wxString CFontColorSettingsPanel::s_defaultColorName[] =
 {
 	_("Black"),
 	_("White"),
@@ -39,7 +39,7 @@ const wxString ibPanelFontColorSettings::s_defaultColorName[] =
 	_("Cyan")
 };
 
-const wxColour ibPanelFontColorSettings::s_defaultColor[] =
+const wxColour CFontColorSettingsPanel::s_defaultColor[] =
 {
 	wxColour(0x00, 0x00, 0x00),     // Black
 	wxColour(0xFF, 0xFF, 0xFF),     // White
@@ -59,7 +59,7 @@ const wxColour ibPanelFontColorSettings::s_defaultColor[] =
 	wxColour(0x00, 0xFF, 0xFF),     // Cyan
 };
 
-ibPanelFontColorSettings::ibPanelFontColorSettings(wxWindow* parent, int id, wxPoint pos, wxSize size, int style) : wxPanel(parent, id, pos, size, style)
+CFontColorSettingsPanel::CFontColorSettingsPanel(wxWindow* parent, int id, wxPoint pos, wxSize size, int style) : wxPanel(parent, id, pos, size, style)
 {
 
 	wxFlexGridSizer* fgSizer6;
@@ -162,7 +162,7 @@ ibPanelFontColorSettings::ibPanelFontColorSettings(wxWindow* parent, int id, wxP
 	m_staticText10 = new wxStaticText(this, wxID_ANY, _("Sample:"), wxDefaultPosition, wxDefaultSize, 0);
 	bSizer7->Add(m_staticText10, 0, wxALL, 5);
 
-	m_previewPanel = new ibStaticTextEx(this, wxID_ANY, wxT("AaBbCcDdXxYyZz"), wxDefaultPosition, wxSize(-1, 80), wxSUNKEN_BORDER | wxALIGN_CENTRE);
+	m_previewPanel = new CStaticTextEx(this, wxID_ANY, wxT("AaBbCcDdXxYyZz"), wxDefaultPosition, wxSize(-1, 80), wxSUNKEN_BORDER | wxALIGN_CENTRE);
 	m_previewPanel->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
 	bSizer7->Add(m_previewPanel, 1, wxEXPAND | wxALL, 5);
@@ -177,7 +177,7 @@ ibPanelFontColorSettings::ibPanelFontColorSettings(wxWindow* parent, int id, wxP
 
 }
 
-void ibPanelFontColorSettings::Initialize()
+void CFontColorSettingsPanel::Initialize()
 {
 
 	for (unsigned int i = 0; i < m_settings.GetNumDisplayItems(); ++i)
@@ -192,17 +192,17 @@ void ibPanelFontColorSettings::Initialize()
 
 }
 
-void ibPanelFontColorSettings::SetSettings(const ibFontColorSettings& settings)
+void CFontColorSettingsPanel::SetSettings(const CFontColorSettings& settings)
 {
 	m_settings = settings;
 }
 
-const ibFontColorSettings& ibPanelFontColorSettings::GetSettings() const
+const CFontColorSettings& CFontColorSettingsPanel::GetSettings() const
 {
 	return m_settings;
 }
 
-void ibPanelFontColorSettings::OnSelectFont(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnSelectFont(wxCommandEvent& event)
 {
 
 	wxFontData fontData;
@@ -221,25 +221,25 @@ void ibPanelFontColorSettings::OnSelectFont(wxCommandEvent& event)
 
 }
 
-void ibPanelFontColorSettings::OnResetToDefaults(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnResetToDefaults(wxCommandEvent& event)
 {
 
-	m_settings = ibFontColorSettings();
+	m_settings = CFontColorSettings();
 
 	UpdateSelectFontTextCtrl();
 	UpdatePreview();
 
 }
 
-void ibPanelFontColorSettings::OnDisplayItemsListItemSelected(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnDisplayItemsListItemSelected(wxCommandEvent& event)
 {
 	UpdatePreview();
 }
 
-void ibPanelFontColorSettings::OnForeColorChoiceItemSelected(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnForeColorChoiceItemSelected(wxCommandEvent& event)
 {
 
-	ibFontColorSettings::DisplayItem item = static_cast<ibFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
+	CFontColorSettings::DisplayItem item = static_cast<CFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
 
 	int selection = m_foreColorChoice->GetSelection();
 
@@ -247,7 +247,7 @@ void ibPanelFontColorSettings::OnForeColorChoiceItemSelected(wxCommandEvent& eve
 	{
 
 		// Update the settings.
-		ibFontColorSettings::Colors colors = m_settings.GetColors(item);
+		CFontColorSettings::Colors colors = m_settings.GetColors(item);
 		colors.foreColor = s_defaultColor[selection];
 		m_settings.SetColors(item, colors);
 
@@ -257,10 +257,10 @@ void ibPanelFontColorSettings::OnForeColorChoiceItemSelected(wxCommandEvent& eve
 
 }
 
-void ibPanelFontColorSettings::OnBackColorChoiceItemSelected(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnBackColorChoiceItemSelected(wxCommandEvent& event)
 {
 
-	ibFontColorSettings::DisplayItem item = static_cast<ibFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
+	CFontColorSettings::DisplayItem item = static_cast<CFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
 
 	int selection = m_backColorChoice->GetSelection();
 
@@ -268,7 +268,7 @@ void ibPanelFontColorSettings::OnBackColorChoiceItemSelected(wxCommandEvent& eve
 	{
 
 		// Update the settings.
-		ibFontColorSettings::Colors colors = m_settings.GetColors(item);
+		CFontColorSettings::Colors colors = m_settings.GetColors(item);
 		colors.backColor = s_defaultColor[selection];
 		m_settings.SetColors(item, colors);
 
@@ -278,11 +278,11 @@ void ibPanelFontColorSettings::OnBackColorChoiceItemSelected(wxCommandEvent& eve
 
 }
 
-void ibPanelFontColorSettings::OnForeColorCustom(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnForeColorCustom(wxCommandEvent& event)
 {
 
-	ibFontColorSettings::DisplayItem item = static_cast<ibFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
-	ibFontColorSettings::Colors colors = m_settings.GetColors(item);
+	CFontColorSettings::DisplayItem item = static_cast<CFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
+	CFontColorSettings::Colors colors = m_settings.GetColors(item);
 
 	colors.foreColor = wxGetColourFromUser(this, colors.foreColor);
 
@@ -294,11 +294,11 @@ void ibPanelFontColorSettings::OnForeColorCustom(wxCommandEvent& event)
 
 }
 
-void ibPanelFontColorSettings::OnBackColorCustom(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnBackColorCustom(wxCommandEvent& event)
 {
 
-	ibFontColorSettings::DisplayItem item = static_cast<ibFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
-	ibFontColorSettings::Colors colors = m_settings.GetColors(item);
+	CFontColorSettings::DisplayItem item = static_cast<CFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
+	CFontColorSettings::Colors colors = m_settings.GetColors(item);
 
 	colors.backColor = wxGetColourFromUser(this, colors.backColor);
 
@@ -310,11 +310,11 @@ void ibPanelFontColorSettings::OnBackColorCustom(wxCommandEvent& event)
 
 }
 
-void ibPanelFontColorSettings::OnBoldCheck(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnBoldCheck(wxCommandEvent& event)
 {
 
-	ibFontColorSettings::DisplayItem item = static_cast<ibFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
-	ibFontColorSettings::Colors colors = m_settings.GetColors(item);
+	CFontColorSettings::DisplayItem item = static_cast<CFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
+	CFontColorSettings::Colors colors = m_settings.GetColors(item);
 
 	colors.bold = m_boldCheck->GetValue();
 	m_settings.SetColors(item, colors);
@@ -323,11 +323,11 @@ void ibPanelFontColorSettings::OnBoldCheck(wxCommandEvent& event)
 
 }
 
-void ibPanelFontColorSettings::OnItalicCheck(wxCommandEvent& event)
+void CFontColorSettingsPanel::OnItalicCheck(wxCommandEvent& event)
 {
 
-	ibFontColorSettings::DisplayItem item = static_cast<ibFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
-	ibFontColorSettings::Colors colors = m_settings.GetColors(item);
+	CFontColorSettings::DisplayItem item = static_cast<CFontColorSettings::DisplayItem>(m_displayItemsListBox->GetSelection());
+	CFontColorSettings::Colors colors = m_settings.GetColors(item);
 
 	colors.italic = m_italicCheck->GetValue();
 	m_settings.SetColors(item, colors);
@@ -336,7 +336,7 @@ void ibPanelFontColorSettings::OnItalicCheck(wxCommandEvent& event)
 
 }
 
-void ibPanelFontColorSettings::UpdateSelectFontTextCtrl()
+void CFontColorSettingsPanel::UpdateSelectFontTextCtrl()
 {
 
 	wxString text;
@@ -350,7 +350,7 @@ void ibPanelFontColorSettings::UpdateSelectFontTextCtrl()
 
 }
 
-void ibPanelFontColorSettings::UpdatePreview()
+void CFontColorSettingsPanel::UpdatePreview()
 {
 	if (m_settings.GetFont().IsOk())
 	{
@@ -360,7 +360,7 @@ void ibPanelFontColorSettings::UpdatePreview()
 	int selection = m_displayItemsListBox->GetSelection();
 	assert(selection != wxNOT_FOUND);
 
-	ibFontColorSettings::DisplayItem item = static_cast<ibFontColorSettings::DisplayItem>(selection);
+	CFontColorSettings::DisplayItem item = static_cast<CFontColorSettings::DisplayItem>(selection);
 
 	m_previewPanel->SetFont(m_settings.GetFont(item));
 	m_previewPanel->SetForegroundColour(m_settings.GetColors(item).foreColor);
@@ -380,7 +380,7 @@ void ibPanelFontColorSettings::UpdatePreview()
 
 }
 
-unsigned int ibPanelFontColorSettings::GetMatchingDefaultColor(const wxColor& color) const
+unsigned int CFontColorSettingsPanel::GetMatchingDefaultColor(const wxColor& color) const
 {
 	for (unsigned int i = 0; i < s_numDefaultColors; ++i)
 	{
@@ -392,7 +392,7 @@ unsigned int ibPanelFontColorSettings::GetMatchingDefaultColor(const wxColor& co
 	return -1;
 }
 
-void ibPanelFontColorSettings::SetColorSelection(wxChoice* colorChoice, unsigned int index)
+void CFontColorSettingsPanel::SetColorSelection(wxChoice* colorChoice, unsigned int index)
 {
 
 	const wxString customString = "Custom";

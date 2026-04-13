@@ -4,15 +4,15 @@
 #include "mainFrame/mainFrameDesigner.h"
 #include "frontend/docView/docManager.h"
 
-class ibMetaDocManagerDesigner : public ibMetaDocManager {
+class CDesignerDocManager : public CMetaDocManager {
 public:
-	ibMetaDocManagerDesigner();
+	CDesignerDocManager();
 protected:
 
 	void OnUpdateSaveMetadata(wxUpdateUIEvent& event);
 
-	wxDECLARE_DYNAMIC_CLASS(ibMetaDocManagerDesigner);
-	wxDECLARE_NO_COPY_CLASS(ibMetaDocManagerDesigner);
+	wxDECLARE_DYNAMIC_CLASS(CDesignerDocManager);
+	wxDECLARE_NO_COPY_CLASS(CDesignerDocManager);
 
 	wxDECLARE_EVENT_TABLE();
 };

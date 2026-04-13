@@ -4,37 +4,37 @@
 #include <sqlext.h>
 
 // ctor
-ibDatabaseParameterODBC::ibDatabaseParameterODBC() : m_nParameterType(ibDatabaseParameterODBC::PARAM_NULL)
+COdbcParameter::COdbcParameter() : m_nParameterType(COdbcParameter::PARAM_NULL)
 {
 	m_nBufferLength = SQL_NULL_DATA;
 }
 
-ibDatabaseParameterODBC::ibDatabaseParameterODBC(const wxString& strValue) : m_nParameterType(ibDatabaseParameterODBC::PARAM_STRING), m_strValue(strValue)
+COdbcParameter::COdbcParameter(const wxString& strValue) : m_nParameterType(COdbcParameter::PARAM_STRING), m_strValue(strValue)
 {
 	m_nBufferLength = GetEncodedStreamLength(m_strValue);
 }
 
-ibDatabaseParameterODBC::ibDatabaseParameterODBC(const ibNumber& dblValue) : m_nParameterType(ibDatabaseParameterODBC::PARAM_NUMBER), m_numValue(dblValue)
+COdbcParameter::COdbcParameter(const number_t& dblValue) : m_nParameterType(COdbcParameter::PARAM_NUMBER), m_numValue(dblValue)
 {
 	m_nBufferLength = 0;
 }
 
-ibDatabaseParameterODBC::ibDatabaseParameterODBC(int nValue) : m_nParameterType(ibDatabaseParameterODBC::PARAM_INT), m_nValue(nValue)
+COdbcParameter::COdbcParameter(int nValue) : m_nParameterType(COdbcParameter::PARAM_INT), m_nValue(nValue)
 {
 	m_nBufferLength = 0;
 }
 
-ibDatabaseParameterODBC::ibDatabaseParameterODBC(double dblValue) : m_nParameterType(ibDatabaseParameterODBC::PARAM_DOUBLE), m_dblValue(dblValue)
+COdbcParameter::COdbcParameter(double dblValue) : m_nParameterType(COdbcParameter::PARAM_DOUBLE), m_dblValue(dblValue)
 {
 	m_nBufferLength = 0;
 }
 
-ibDatabaseParameterODBC::ibDatabaseParameterODBC(bool bValue) : m_nParameterType(ibDatabaseParameterODBC::PARAM_BOOL), m_bValue(bValue)
+COdbcParameter::COdbcParameter(bool bValue) : m_nParameterType(COdbcParameter::PARAM_BOOL), m_bValue(bValue)
 {
 	m_nBufferLength = 0;
 }
 
-ibDatabaseParameterODBC::ibDatabaseParameterODBC(const wxDateTime& dateValue) : m_nParameterType(ibDatabaseParameterODBC::PARAM_DATETIME)
+COdbcParameter::COdbcParameter(const wxDateTime& dateValue) : m_nParameterType(COdbcParameter::PARAM_DATETIME)
 {
 	m_DateValue.year = dateValue.GetYear();
 	m_DateValue.month = dateValue.GetMonth() + 1;
@@ -48,66 +48,66 @@ ibDatabaseParameterODBC::ibDatabaseParameterODBC(const wxDateTime& dateValue) : 
 	m_nBufferLength = 0;
 }
 
-ibDatabaseParameterODBC::ibDatabaseParameterODBC(const void* pData, long nDataLength)
+COdbcParameter::COdbcParameter(const void* pData, long nDataLength)
 {
-	m_nParameterType = ibDatabaseParameterODBC::PARAM_BLOB;
+	m_nParameterType = COdbcParameter::PARAM_BLOB;
 	void* pBuffer = m_BufferValue.GetWriteBuf(nDataLength);
 	memcpy(pBuffer, pData, nDataLength);
 	m_nBufferLength = nDataLength;
 }
 
 
-long ibDatabaseParameterODBC::GetDataLength()
+long COdbcParameter::GetDataLength()
 {
-	if (m_nParameterType == ibDatabaseParameterODBC::PARAM_NULL) return 0;
+	if (m_nParameterType == COdbcParameter::PARAM_NULL) return 0;
 	else return m_nBufferLength;
 }
 
 #ifdef _WIN64
-SQLLEN* ibDatabaseParameterODBC::GetDataLengthPointer()
+SQLLEN* COdbcParameter::GetDataLengthPointer()
 {
-	if (m_nParameterType == ibDatabaseParameterODBC::PARAM_NULL) return &m_nBufferLength;
+	if (m_nParameterType == COdbcParameter::PARAM_NULL) return &m_nBufferLength;
 	else return nullptr;
 }
 #else
-long* ibDatabaseParameterODBC::GetDataLengthPointer()
+long* COdbcParameter::GetDataLengthPointer()
 {
-	if (m_nParameterType == ibDatabaseParameterODBC::PARAM_NULL) return &m_nBufferLength;
+	if (m_nParameterType == COdbcParameter::PARAM_NULL) return &m_nBufferLength;
 	else return nullptr;
 }
 #endif
 
-void* ibDatabaseParameterODBC::GetDataPtr()
+void* COdbcParameter::GetDataPtr()
 {
 	const void *pReturn = nullptr;
 
 	switch (m_nParameterType)
 	{
-	case ibDatabaseParameterODBC::PARAM_STRING:
+	case COdbcParameter::PARAM_STRING:
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		//wxPrintf(_("Parameter: '%s'\n"), m_strValue.c_str());
 		//pReturn = m_strValue.c_str();
 		break;
-	case ibDatabaseParameterODBC::PARAM_INT:
+	case COdbcParameter::PARAM_INT:
 		pReturn = &m_nValue;
 		break;
-	case ibDatabaseParameterODBC::PARAM_DOUBLE:
+	case COdbcParameter::PARAM_DOUBLE:
 		pReturn = &m_dblValue;
 		break;
-	case ibDatabaseParameterODBC::PARAM_NUMBER:
+	case COdbcParameter::PARAM_NUMBER:
 		pReturn = &m_numValue;
 		break;
-	case ibDatabaseParameterODBC::PARAM_DATETIME:
+	case COdbcParameter::PARAM_DATETIME:
 		pReturn = &m_DateValue;
 		break;
-	case ibDatabaseParameterODBC::PARAM_BOOL:
+	case COdbcParameter::PARAM_BOOL:
 		pReturn = &m_bValue;
 		break;
-	case ibDatabaseParameterODBC::PARAM_BLOB:
+	case COdbcParameter::PARAM_BLOB:
 		pReturn = m_BufferValue.GetData();
 		break;
-	case ibDatabaseParameterODBC::PARAM_NULL:
+	case COdbcParameter::PARAM_NULL:
 		pReturn = nullptr;
 		break;
 	default:
@@ -117,34 +117,34 @@ void* ibDatabaseParameterODBC::GetDataPtr()
 	return (void*)pReturn;
 }
 
-SQLSMALLINT ibDatabaseParameterODBC::GetValueType()
+SQLSMALLINT COdbcParameter::GetValueType()
 {
 	SQLSMALLINT nReturn = SQL_C_LONG;
 
 	switch (m_nParameterType)
 	{
-	case ibDatabaseParameterODBC::PARAM_STRING:
+	case COdbcParameter::PARAM_STRING:
 		nReturn = SQL_C_CHAR;
 		break;
-	case ibDatabaseParameterODBC::PARAM_INT:
+	case COdbcParameter::PARAM_INT:
 		nReturn = SQL_C_LONG;
 		break;
-	case ibDatabaseParameterODBC::PARAM_DOUBLE:
+	case COdbcParameter::PARAM_DOUBLE:
 		nReturn = SQL_C_DOUBLE;
 		break;
-	case ibDatabaseParameterODBC::PARAM_NUMBER:
+	case COdbcParameter::PARAM_NUMBER:
 		nReturn = SQL_C_NUMERIC;
 		break;
-	case ibDatabaseParameterODBC::PARAM_DATETIME:
+	case COdbcParameter::PARAM_DATETIME:
 		nReturn = SQL_C_TYPE_TIMESTAMP;
 		break;
-	case ibDatabaseParameterODBC::PARAM_BOOL:
+	case COdbcParameter::PARAM_BOOL:
 		nReturn = SQL_C_LONG;
 		break;
-	case ibDatabaseParameterODBC::PARAM_BLOB:
+	case COdbcParameter::PARAM_BLOB:
 		nReturn = SQL_C_BINARY;
 		break;
-	case ibDatabaseParameterODBC::PARAM_NULL:
+	case COdbcParameter::PARAM_NULL:
 		nReturn = SQL_C_CHAR;
 		break;
 	default:
@@ -154,34 +154,34 @@ SQLSMALLINT ibDatabaseParameterODBC::GetValueType()
 	return nReturn;
 }
 
-SQLSMALLINT ibDatabaseParameterODBC::GetParameterType()
+SQLSMALLINT COdbcParameter::GetParameterType()
 {
 	SQLSMALLINT nReturn = SQL_INTEGER;
 
 	switch (m_nParameterType)
 	{
-	case ibDatabaseParameterODBC::PARAM_STRING:
+	case COdbcParameter::PARAM_STRING:
 		nReturn = SQL_VARCHAR;
 		break;
-	case ibDatabaseParameterODBC::PARAM_INT:
+	case COdbcParameter::PARAM_INT:
 		nReturn = SQL_INTEGER;
 		break;
-	case ibDatabaseParameterODBC::PARAM_DOUBLE:
+	case COdbcParameter::PARAM_DOUBLE:
 		nReturn = SQL_DOUBLE;
 		break;
-	case ibDatabaseParameterODBC::PARAM_NUMBER:
+	case COdbcParameter::PARAM_NUMBER:
 		nReturn = SQL_C_NUMERIC;
 		break;
-	case ibDatabaseParameterODBC::PARAM_DATETIME:
+	case COdbcParameter::PARAM_DATETIME:
 		nReturn = SQL_TIMESTAMP;
 		break;
-	case ibDatabaseParameterODBC::PARAM_BOOL:
+	case COdbcParameter::PARAM_BOOL:
 		nReturn = SQL_INTEGER;
 		break;
-	case ibDatabaseParameterODBC::PARAM_BLOB:
+	case COdbcParameter::PARAM_BLOB:
 		nReturn = SQL_BINARY;
 		break;
-	case ibDatabaseParameterODBC::PARAM_NULL:
+	case COdbcParameter::PARAM_NULL:
 		nReturn = SQL_NULL_DATA;
 		break;
 	default:
@@ -192,30 +192,30 @@ SQLSMALLINT ibDatabaseParameterODBC::GetParameterType()
 
 }
 
-bool ibDatabaseParameterODBC::IsBinary()
+bool COdbcParameter::IsBinary()
 {
-	return (ibDatabaseParameterODBC::PARAM_BLOB == m_nParameterType);
+	return (COdbcParameter::PARAM_BLOB == m_nParameterType);
 }
 
-SQLSMALLINT ibDatabaseParameterODBC::GetDecimalDigits()
+SQLSMALLINT COdbcParameter::GetDecimalDigits()
 {
 	// either decimal_digits or 0 (date, bool, int)
 	SQLSMALLINT nReturn = 0;
 
 	switch (m_nParameterType)
 	{
-	case ibDatabaseParameterODBC::PARAM_STRING:
-	case ibDatabaseParameterODBC::PARAM_BLOB:
-	case ibDatabaseParameterODBC::PARAM_INT:
-	case ibDatabaseParameterODBC::PARAM_DATETIME:
-	case ibDatabaseParameterODBC::PARAM_BOOL:
-	case ibDatabaseParameterODBC::PARAM_NULL:
+	case COdbcParameter::PARAM_STRING:
+	case COdbcParameter::PARAM_BLOB:
+	case COdbcParameter::PARAM_INT:
+	case COdbcParameter::PARAM_DATETIME:
+	case COdbcParameter::PARAM_BOOL:
+	case COdbcParameter::PARAM_NULL:
 		nReturn = 0;
 		break;
-	case ibDatabaseParameterODBC::PARAM_DOUBLE:
+	case COdbcParameter::PARAM_DOUBLE:
 		nReturn = 11;
 		break;
-	case ibDatabaseParameterODBC::PARAM_NUMBER:
+	case COdbcParameter::PARAM_NUMBER:
 		nReturn = 20;
 		break;
 	default:
@@ -225,20 +225,20 @@ SQLSMALLINT ibDatabaseParameterODBC::GetDecimalDigits()
 	return nReturn;
 }
 
-SQLUINTEGER ibDatabaseParameterODBC::GetColumnSize()
+SQLUINTEGER COdbcParameter::GetColumnSize()
 {
 	SQLUINTEGER nReturn = 0;
 
 	switch (m_nParameterType)
 	{
-	case ibDatabaseParameterODBC::PARAM_STRING:
-	case ibDatabaseParameterODBC::PARAM_BLOB: nReturn = m_nBufferLength; break;
-	case ibDatabaseParameterODBC::PARAM_INT:
-	case ibDatabaseParameterODBC::PARAM_DOUBLE:
-	case ibDatabaseParameterODBC::PARAM_NUMBER:
-	case ibDatabaseParameterODBC::PARAM_BOOL:
-	case ibDatabaseParameterODBC::PARAM_NULL: nReturn = 0; break;
-	case ibDatabaseParameterODBC::PARAM_DATETIME: nReturn = 19; break;
+	case COdbcParameter::PARAM_STRING:
+	case COdbcParameter::PARAM_BLOB: nReturn = m_nBufferLength; break;
+	case COdbcParameter::PARAM_INT:
+	case COdbcParameter::PARAM_DOUBLE:
+	case COdbcParameter::PARAM_NUMBER:
+	case COdbcParameter::PARAM_BOOL:
+	case COdbcParameter::PARAM_NULL: nReturn = 0; break;
+	case COdbcParameter::PARAM_DATETIME: nReturn = 19; break;
 	default: nReturn = 0; break;
 	};
 
@@ -246,12 +246,12 @@ SQLUINTEGER ibDatabaseParameterODBC::GetColumnSize()
 }
 
 #ifdef _WIN64
-SQLLEN* ibDatabaseParameterODBC::GetParameterLengthPtr()
+SQLLEN* COdbcParameter::GetParameterLengthPtr()
 {
 	return &m_nBufferLength;
 }
 #else
-SQLINTEGER* ibDatabaseParameterODBC::GetParameterLengthPtr()
+SQLINTEGER* COdbcParameter::GetParameterLengthPtr()
 {
 	return &m_nBufferLength;
 }

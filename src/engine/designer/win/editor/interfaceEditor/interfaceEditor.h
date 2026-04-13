@@ -9,7 +9,7 @@
 #include "frontend/win/theme/luna_toolbarart.h"
 #include "frontend/win/ctrls/checktree.h"
 
-class ibInterfaceEditor : public wxWindow {
+class CInterfaceEditor : public wxWindow {
 
 	wxTreeItemId m_treeMETADATA;
 	wxTreeItemId m_treeCOMMON; //special tree
@@ -25,16 +25,16 @@ class ibInterfaceEditor : public wxWindow {
 	wxTreeItemId m_treeINFORMATION_REGISTERS;
 	wxTreeItemId m_treeACCUMULATION_REGISTERS;
 
-	ibValueMetaObject* m_metaInterface;
+	IValueMetaObject* m_metaInterface;
 
 	class wxTreeItemMetaData : public wxTreeItemData {
-		ibInterfaceObject* m_metaObject; //тип элемента
+		IInterfaceObject* m_metaObject; //тип элемента
 	public:
-		wxTreeItemMetaData(ibInterfaceObject* metaObject) : m_metaObject(metaObject) {}
-		ibInterfaceObject* GetMetaObject() const { return m_metaObject; }
+		wxTreeItemMetaData(IInterfaceObject* metaObject) : m_metaObject(metaObject) {}
+		IInterfaceObject* GetMetaObject() const { return m_metaObject; }
 	};
 
-	ibCheckTree* m_interfaceCtrl;
+	wxCheckTree* m_interfaceCtrl;
 
 protected:
 
@@ -43,8 +43,8 @@ protected:
 private:
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const ibClassID& clsid, const wxString& name = wxEmptyString) const {
-		const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
+		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_interfaceCtrl->GetImageList();
 		wxASSERT(imageList);
@@ -53,15 +53,15 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		ibValueMetaObject* metaObject) const {
+		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_interfaceCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
 		wxTreeItemId createItem = m_interfaceCtrl->AppendItem(parent, metaObject->GetName(), imageIndex, imageIndex, new wxTreeItemMetaData(metaObject));
 		m_interfaceCtrl->SetItemState(createItem,
 			metaObject->IsSetInterface(m_metaInterface->GetMetaID()) ?
-			metaObject->IsEditable() ? ibCheckTree::CHECKED : ibCheckTree::CHECKED_DISABLED :
-			metaObject->IsEditable() ? ibCheckTree::UNCHECKED : ibCheckTree::UNCHECKED_DISABLED
+			metaObject->IsEditable() ? wxCheckTree::CHECKED : wxCheckTree::CHECKED_DISABLED :
+			metaObject->IsEditable() ? wxCheckTree::UNCHECKED : wxCheckTree::UNCHECKED_DISABLED
 		);
 
 		return createItem;
@@ -83,9 +83,9 @@ public:
 		m_interfaceCtrl->Enable(!readOnly);
 	}
 
-	ibInterfaceEditor(wxWindow* parent,
+	CInterfaceEditor(wxWindow* parent,
 		wxWindowID winid = wxID_ANY,
-		ibValueMetaObject* metaObject = nullptr
+		IValueMetaObject* metaObject = nullptr
 	);
 };
 

@@ -1,32 +1,30 @@
 #include "propertySpreadsheet.h"
 #include "backend/propertyManager/property/variant/variantSpreadsheet.h"
 
-wxObject* (*ibPropertySpreadsheet::ms_propertySpreadsheet)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
-
 ////////////////////////////////////////////////////////////////////////
 
-wxVariantData* ibPropertySpreadsheet::CreateVariantData(const ibSpreadsheetDescription& val)
+wxVariantData* CPropertySpreadsheet::CreateVariantData(const CSpreadsheetDescription& val)
 {
-	return new ibVariantDataSpreadsheet(val);
+	return new wxVariantDataSpreadsheet(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-ibSpreadsheetDescription& ibPropertySpreadsheet::GetValueAsSpreadsheetDesc() const
+CSpreadsheetDescription& CPropertySpreadsheet::GetValueAsSpreadsheetDesc() const
 {
-	return get_cell_variant<ibVariantDataSpreadsheet>()->GetSpreadsheetDesc();
+	return get_cell_variant<wxVariantDataSpreadsheet>()->GetSpreadsheetDesc();
 }
 
-void ibPropertySpreadsheet::SetValue(const ibSpreadsheetDescription& val)
+void CPropertySpreadsheet::SetValue(const CSpreadsheetDescription& val)
 {
 	m_propValue = CreateVariantData(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-bool ibPropertySpreadsheet::IsEmptyProperty() const
+bool CPropertySpreadsheet::IsEmptyProperty() const
 {
-	return get_cell_variant<ibVariantDataSpreadsheet>()->IsEmptySpreadsheet();
+	return get_cell_variant<wxVariantDataSpreadsheet>()->IsEmptySpreadsheet();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -34,9 +32,9 @@ bool ibPropertySpreadsheet::IsEmptyProperty() const
 #include "backend/system/value/valueSpreadsheet.h"
 
 //base property for "template"
-bool ibPropertySpreadsheet::SetDataValue(const ibValue& varPropVal)
+bool CPropertySpreadsheet::SetDataValue(const CValue& varPropVal)
 {
-	ibValueSpreadsheetDocument* valueType = varPropVal.ConvertToType<ibValueSpreadsheetDocument>();
+	CValueSpreadsheetDocument* valueType = varPropVal.ConvertToType<CValueSpreadsheetDocument>();
 	if (valueType != nullptr) {
 		SetValue(valueType->GetSpreadsheetDesc());
 		return true;
@@ -44,18 +42,18 @@ bool ibPropertySpreadsheet::SetDataValue(const ibValue& varPropVal)
 	return false;
 }
 
-bool ibPropertySpreadsheet::GetDataValue(ibValue& pvarPropVal) const
+bool CPropertySpreadsheet::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = ibValue::CreateObjectValue<ibValueSpreadsheetDocument>(GetValueAsSpreadsheetDesc());
+	pvarPropVal = CValue::CreateObjectValue<CValueSpreadsheetDocument>(GetValueAsSpreadsheetDesc());
 	return true;
 }
 
-bool ibPropertySpreadsheet::LoadData(ibReaderMemory& reader)
+bool CPropertySpreadsheet::LoadData(CMemoryReader& reader)
 {
-	return ibSpreadsheetDescriptionMemory::LoadData(reader, GetValueAsSpreadsheetDesc());
+	return CSpreadsheetDescriptionMemory::LoadData(reader, GetValueAsSpreadsheetDesc());
 }
 
-bool ibPropertySpreadsheet::SaveData(ibWriterMemory& writer)
+bool CPropertySpreadsheet::SaveData(CMemoryWriter& writer)
 {
-	return ibSpreadsheetDescriptionMemory::SaveData(writer, GetValueAsSpreadsheetDesc());
+	return CSpreadsheetDescriptionMemory::SaveData(writer, GetValueAsSpreadsheetDesc());
 }

@@ -1,29 +1,29 @@
 #include "commonObject.h"
 
-void ibValueMetaObjectRecordDataMutableRef::OnPropertyCreated(ibProperty* property)
+void IValueMetaObjectRecordDataMutableRef::OnPropertyCreated(IProperty* property)
 {
-	ibValueMetaObjectRecordDataRef::OnPropertyCreated(property);
+	IValueMetaObjectRecordDataRef::OnPropertyCreated(property);
 }
 
 #include <wx/propgrid/manager.h>
 
-void ibValueMetaObjectRecordDataMutableRef::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
+void IValueMetaObjectRecordDataMutableRef::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
 {
 	if (m_propertyQuickChoice == property) { pg->HideProperty(pgProperty, true); }
 }
 
-bool ibValueMetaObjectRecordDataMutableRef::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
+bool IValueMetaObjectRecordDataMutableRef::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
 {
-	return ibValueMetaObjectRecordDataRef::OnPropertyChanging(property, newValue);
+	return IValueMetaObjectRecordDataRef::OnPropertyChanging(property, newValue);
 }
 
-void ibValueMetaObjectRecordDataMutableRef::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void IValueMetaObjectRecordDataMutableRef::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	ibValueMetaObjectRecordDataRef::OnPropertyChanged(property, oldValue, newValue);
+	IValueMetaObjectRecordDataRef::OnPropertyChanged(property, oldValue, newValue);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibValueMetaObjectRecordDataHierarchyMutableRef::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
+void IValueMetaObjectRecordDataHierarchyMutableRef::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
 {
 }

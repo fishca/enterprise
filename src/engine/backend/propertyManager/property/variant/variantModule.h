@@ -3,7 +3,7 @@
 
 #include "backend/backend_core.h"
 
-class BACKEND_API ibVariantDataModule : public wxVariantData {
+class BACKEND_API wxVariantDataModule : public wxVariantData {
 	wxString MakeString() const;
 public:
 
@@ -11,10 +11,10 @@ public:
 	void SetModuleText(const wxString& moduleText) { m_moduleData = moduleText; }
 	wxString GetModuleText() const { return m_moduleData; }
 
-	ibVariantDataModule(const wxString& moduleData = wxEmptyString) : m_moduleData(moduleData) {}
+	wxVariantDataModule(const wxString& moduleData = wxEmptyString) : m_moduleData(moduleData) {}
 
 	virtual bool Eq(wxVariantData& data) const {
-		ibVariantDataModule* srcData = dynamic_cast<ibVariantDataModule*>(&data);
+		wxVariantDataModule* srcData = dynamic_cast<wxVariantDataModule*>(&data);
 		if (srcData != nullptr) {
 			return m_moduleData == srcData->GetModuleText();
 		}
@@ -33,7 +33,7 @@ public:
 		return true;
 	}
 
-	virtual wxString GetType() const { return wxT("ibVariantDataModule"); }
+	virtual wxString GetType() const { return wxT("wxVariantDataModule"); }
 
 protected:
 	wxString m_moduleData;

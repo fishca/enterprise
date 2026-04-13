@@ -6,19 +6,19 @@
 #include "mainApp.h"
 #include "classCheckerWnd.h"
 
-bool ibAppClassChecker::OnInit()
+bool CMainApp::OnInit()
 {
 	wxDateTime::SetCountry(wxDateTime::Country::USA);
 
 	m_locale.AddCatalogLookupPathPrefix(_T("lang"));
 	m_locale.AddCatalog(m_locale.GetCanonicalName());
 
-	ibFrameClassChecker *launcherWnd = 
-		new ibFrameClassChecker(nullptr, wxID_ANY);
+	CFrameClassChecker *launcherWnd = 
+		new CFrameClassChecker(nullptr, wxID_ANY);
 	launcherWnd->Show();
 
 	return m_locale.Init(wxLANGUAGE_ENGLISH);
 }
 
 
-wxIMPLEMENT_APP(ibAppClassChecker);   
+wxIMPLEMENT_APP(CMainApp);   

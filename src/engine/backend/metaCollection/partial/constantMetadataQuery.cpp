@@ -12,17 +12,17 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool ibValueMetaObjectConstant::CreateConstantSQLTable()
+bool CValueMetaObjectConstant::CreateConstantSQLTable()
 {
 	s_restructureInfo.AppendWarning(_("Create constant table"));
 
 	//create constats 	
-	if (!db_query->TableExists(ibValueMetaObjectConstant::GetTableNameDB())) {
+	if (!db_query->TableExists(CValueMetaObjectConstant::GetTableNameDB())) {
 
-		int retCode = db_query->RunQuery("CREATE TABLE %s (RECORD_KEY CHAR DEFAULT '6' PRIMARY KEY);", ibValueMetaObjectConstant::GetTableNameDB());
+		int retCode = db_query->RunQuery("CREATE TABLE %s (RECORD_KEY CHAR DEFAULT '6' PRIMARY KEY);", CValueMetaObjectConstant::GetTableNameDB());
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
-		//retCode = db_query->RunQuery("INSERT INTO %s (RECORD_KEY) VALUES ('6');", ibValueMetaObjectConstant::GetTableNameDB());
+		//retCode = db_query->RunQuery("INSERT INTO %s (RECORD_KEY) VALUES ('6');", CValueMetaObjectConstant::GetTableNameDB());
 		//if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
 		//	return false;
 		//}
@@ -31,14 +31,14 @@ bool ibValueMetaObjectConstant::CreateConstantSQLTable()
 	return db_query->IsOpen();
 }
 
-bool ibValueMetaObjectConstant::DeleteConstantSQLTable()
+bool CValueMetaObjectConstant::DeleteConstantSQLTable()
 {
 	s_restructureInfo.AppendWarning("Create new database");
 
 	//create constats 	
-	if (db_query->TableExists(ibValueMetaObjectConstant::GetTableNameDB())) {
+	if (db_query->TableExists(CValueMetaObjectConstant::GetTableNameDB())) {
 
-		int retCode = db_query->RunQuery("DROP TABLE %s;", ibValueMetaObjectConstant::GetTableNameDB());
+		int retCode = db_query->RunQuery("DROP TABLE %s;", CValueMetaObjectConstant::GetTableNameDB());
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
 	}
@@ -48,7 +48,7 @@ bool ibValueMetaObjectConstant::DeleteConstantSQLTable()
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-int ibValueMetaObjectConstant::ProcessAttribute(const wxString& tableName, ibValueMetaObjectAttributeBase* srcAttr, ibValueMetaObjectAttributeBase* dstAttr)
+int CValueMetaObjectConstant::ProcessAttribute(const wxString& tableName, IValueMetaObjectAttribute* srcAttr, IValueMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -64,10 +64,10 @@ int ibValueMetaObjectConstant::ProcessAttribute(const wxString& tableName, ibVal
 		s_restructureInfo.AppendInfo(_("Removed constant ") + dstAttr->GetFullName());
 	}
 
-	return ibValueMetaObjectAttributeBase::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-bool ibValueMetaObjectConstant::CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
+bool CValueMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB();
 	const wxString& fieldName = GetFieldNameDB();
@@ -96,7 +96,7 @@ bool ibValueMetaObjectConstant::CreateAndUpdateTableDB(ibMetaDataConfiguration* 
 	}
 	else if ((flags & updateMetaTable) != 0) {
 		//if src is null then delete
-		ibValueMetaObjectConstant* dstValue = nullptr;
+		CValueMetaObjectConstant* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 			retCode = ProcessAttribute(tableName, this, dstValue);
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
@@ -106,7 +106,7 @@ bool ibValueMetaObjectConstant::CreateAndUpdateTableDB(ibMetaDataConfiguration* 
 	}
 	else if ((flags & deleteMetaTable) != 0) {
 		//if src is null then delete
-		ibValueMetaObjectConstant* dstValue = nullptr;
+		CValueMetaObjectConstant* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 			retCode = ProcessAttribute(tableName, nullptr, dstValue);
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
@@ -123,35 +123,35 @@ bool ibValueMetaObjectConstant::CreateAndUpdateTableDB(ibMetaDataConfiguration* 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool ibValueMetaObjectConstant::LoadTableData(const ibReaderMemory& reader)
+bool CValueMetaObjectConstant::LoadTableData(const CMemoryReader& reader)
 {
 	wxString sqlText = "";
 
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 		sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-		for (unsigned int idx = 0; idx < ibValueMetaObjectAttributeBase::GetSQLFieldCount(this); idx++) {
+		for (unsigned int idx = 0; idx < IValueMetaObjectAttribute::GetSQLFieldCount(this); idx++) {
 			sqlText += "?,";
 		}
 		sqlText += "'6')";
 		sqlText += " ON CONFLICT (RECORD_KEY) ";
-		sqlText += " DO UPDATE SET " + ibValueMetaObjectAttributeBase::GetExcludeSQLFieldName(this) + ";";
+		sqlText += " DO UPDATE SET " + IValueMetaObjectAttribute::GetExcludeSQLFieldName(this) + ";";
 	}
 	else {
 		sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-		for (unsigned int idx = 0; idx < ibValueMetaObjectAttributeBase::GetSQLFieldCount(this); idx++) {
+		for (unsigned int idx = 0; idx < IValueMetaObjectAttribute::GetSQLFieldCount(this); idx++) {
 			sqlText += "?,";
 		}
 		sqlText += "'6') MATCHING(RECORD_KEY);";
 	}
 
-	ibPreparedStatement* dbPreparedStatement =
-		db_query->PrepareStatement(sqlText, GetTableNameDB(), ibValueMetaObjectAttributeBase::GetSQLFieldName(this));
+	IPreparedStatement* dbPreparedStatement =
+		db_query->PrepareStatement(sqlText, GetTableNameDB(), IValueMetaObjectAttribute::GetSQLFieldName(this));
 
 	if (dbPreparedStatement == nullptr)
 		return false;
 
 	if (reader.r_u8())
-		ibValueMetaObjectAttributeBase::SetBinaryData(this, reader, dbPreparedStatement);
+		IValueMetaObjectAttribute::SetBinaryData(this, reader, dbPreparedStatement);
 	
 	dbPreparedStatement->RunQuery();
 	dbPreparedStatement->Close();
@@ -160,18 +160,18 @@ bool ibValueMetaObjectConstant::LoadTableData(const ibReaderMemory& reader)
 
 #include "backend/objCtor.h"
 
-bool ibValueMetaObjectConstant::SaveTableData(ibWriterMemory& writer) const
+bool CValueMetaObjectConstant::SaveTableData(CMemoryWriter& writer) const
 {
 	const wxString& fieldName = GetFieldNameDB();
-	ibDatabaseResultSet* dbResultSet =
-		db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), ibValueMetaObjectConstant::GetTableNameDB());
+	IDatabaseResultSet* dbResultSet =
+		db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), CValueMetaObjectConstant::GetTableNameDB());
 
 	if (dbResultSet == nullptr)
 		return false;
 
 	if (dbResultSet->Next()) {
 		writer.w_u8(true);
-		ibValueMetaObjectAttributeBase::GetBinaryData(this, writer, dbResultSet);
+		IValueMetaObjectAttribute::GetBinaryData(this, writer, dbResultSet);
 	}
 	else {
 		writer.w_u8(false);

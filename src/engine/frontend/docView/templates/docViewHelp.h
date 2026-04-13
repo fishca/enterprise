@@ -11,18 +11,18 @@
 #include <wx/fdrepdlg.h>
 
 // The view using a standard wxTextCtrl to show its contents
-class FRONTEND_API ibHelpEditView : public ibMetaView {
+class FRONTEND_API CHelpEditView : public CMetaView {
 public:
 	
-	ibHelpEditView() : ibMetaView(), m_textEditor(nullptr) {}
+	CHelpEditView() : CMetaView(), m_textEditor(nullptr) {}
 
-	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
 	virtual wxPrintout* OnCreatePrintout() override;
 
-	ibTextEditor* GetText() const { return m_textEditor; }
+	CTextEditor* GetText() const { return m_textEditor; }
 
 private:
 
@@ -32,45 +32,45 @@ private:
 
 	void OnFind(wxFindDialogEvent& event);
 
-	ibTextEditor* m_textEditor;
+	CTextEditor* m_textEditor;
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(ibHelpEditView);
+	wxDECLARE_DYNAMIC_CLASS(CHelpEditView);
 };
 
 // ----------------------------------------------------------------------------
-// ibHelpDocument: wxDocument and wxTextCtrl married
+// IHelpDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
 #include "backend/metaCollection/metaModuleObject.h"
 
-class FRONTEND_API ibHelpDocument : public ibMetaDocument
+class FRONTEND_API IHelpDocument : public CMetaDocument
 {
 public:
 
 	virtual wxIcon GetIcon() const {
-		return ibBackendPicture::GetPictureAsIcon(g_metaCommonModuleCLSID);
+		return CBackendPicture::GetPictureAsIcon(g_metaCommonModuleCLSID);
 	}
 
-	ibHelpDocument() : ibMetaDocument() { m_childDoc = false; }
+	IHelpDocument() : CMetaDocument() { m_childDoc = false; }
 
 	virtual wxCommandProcessor* OnCreateCommandProcessor() override;
-	virtual ibTextEditor* GetTextCtrl() const;
+	virtual CTextEditor* GetTextCtrl() const;
 
 protected:
-	wxDECLARE_NO_COPY_CLASS(ibHelpDocument);
-	wxDECLARE_ABSTRACT_CLASS(ibHelpDocument);
+	wxDECLARE_NO_COPY_CLASS(IHelpDocument);
+	wxDECLARE_ABSTRACT_CLASS(IHelpDocument);
 };
 
 // ----------------------------------------------------------------------------
 // A very simple text document class
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API ibHelpFilibDocument : public ibHelpDocument
+class FRONTEND_API CHelpFileDocument : public IHelpDocument
 {
 public:
 	
-	ibHelpFilibDocument() : ibHelpDocument(), m_loadFromFile(false) {}
+	CHelpFileDocument() : IHelpDocument(), m_loadFromFile(false) {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnNewDocument() override {
@@ -100,8 +100,8 @@ protected:
 
 	bool m_loadFromFile;
 
-	wxDECLARE_NO_COPY_CLASS(ibHelpFilibDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibHelpFilibDocument);
+	wxDECLARE_NO_COPY_CLASS(CHelpFileDocument);
+	wxDECLARE_DYNAMIC_CLASS(CHelpFileDocument);
 };
 
 #endif

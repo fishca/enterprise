@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
 // Name:        wx/generic/grideditors.h
-// Purpose:     ibGridCellEditorEvtHandler and ibGrid editors
+// Purpose:     wxGridExtCellEditorEvtHandler and wxGridExt editors
 // Author:      Michael Bedward (based on code by Julian Smart, Robin Dunn)
 // Modified by: Santiago Palacios
 // Created:     1/08/1999
@@ -17,10 +17,10 @@
 
 #include <wx/scopedptr.h>
 
-class ibGridCellEditorEvtHandler : public wxEvtHandler
+class wxGridExtCellEditorEvtHandler : public wxEvtHandler
 {
 public:
-	ibGridCellEditorEvtHandler(ibGrid* grid, ibGridCellEditor* editor)
+	wxGridExtCellEditorEvtHandler(wxGridExt* grid, wxGridExtCellEditor* editor)
 		: m_grid(grid),
 		m_editor(editor),
 		m_inSetFocus(false)
@@ -36,32 +36,32 @@ public:
 	void SetInSetFocus(bool inSetFocus) { m_inSetFocus = inSetFocus; }
 
 private:
-	ibGrid* m_grid;
-	ibGridCellEditor* m_editor;
+	wxGridExt* m_grid;
+	wxGridExtCellEditor* m_editor;
 
 	// Work around the fact that a focus kill event can be sent to
 	// a combobox within a set focus event.
 	bool                m_inSetFocus;
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(ibGridCellEditorEvtHandler);
-	wxDECLARE_NO_COPY_CLASS(ibGridCellEditorEvtHandler);
+	wxDECLARE_DYNAMIC_CLASS(wxGridExtCellEditorEvtHandler);
+	wxDECLARE_NO_COPY_CLASS(wxGridExtCellEditorEvtHandler);
 };
 
 
 #if wxUSE_TEXTCTRL
 
 // the editor for string/text data
-class FRONTEND_API ibGridCellTextEditor : public ibGridCellEditor
+class FRONTEND_API wxGridExtCellTextEditor : public wxGridExtCellEditor
 {
 public:
-	explicit ibGridCellTextEditor(size_t maxChars = 0)
-		: ibGridCellEditor(),
+	explicit wxGridExtCellTextEditor(size_t maxChars = 0)
+		: wxGridExtCellEditor(),
 		m_maxChars(maxChars)
 	{
 	}
 
-	ibGridCellTextEditor(const ibGridCellTextEditor& other);
+	wxGridExtCellTextEditor(const wxGridExtCellTextEditor& other);
 
 	virtual void Create(wxWindow* parent,
 		wxWindowID id,
@@ -69,10 +69,10 @@ public:
 	virtual void SetSize(const wxRect& rect) wxOVERRIDE;
 
 	virtual bool IsAcceptedKey(wxKeyEvent& event) wxOVERRIDE;
-	virtual void BeginEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
-	virtual bool EndEdit(int row, int col, const ibGrid* grid,
+	virtual void BeginEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
+	virtual bool EndEdit(int row, int col, const wxGridExt* grid,
 		const wxString& oldval, wxString* newval) wxOVERRIDE;
-	virtual void ApplyEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
+	virtual void ApplyEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
 
 	virtual void Reset() wxOVERRIDE;
 	virtual void StartingKey(wxKeyEvent& event) wxOVERRIDE;
@@ -84,9 +84,9 @@ public:
 	virtual void SetValidator(const wxValidator& validator);
 #endif
 
-	virtual ibGridCellEditor* Clone() const wxOVERRIDE
+	virtual wxGridExtCellEditor* Clone() const wxOVERRIDE
 	{
-		return new ibGridCellTextEditor(*this);
+		return new wxGridExtCellTextEditor(*this);
 	}
 
 	// added GetValue so we can get the value which is in the control
@@ -110,21 +110,21 @@ private:
 };
 
 // the editor for numeric (long) data
-class FRONTEND_API ibGridCellNumberEditor : public ibGridCellTextEditor
+class FRONTEND_API wxGridExtCellNumberEditor : public wxGridExtCellTextEditor
 {
 public:
 	// allows to specify the range - if min == max == -1, no range checking is
 	// done
-	explicit ibGridCellNumberEditor(int min = -1, int max = -1)
-		: ibGridCellTextEditor(),
+	explicit wxGridExtCellNumberEditor(int min = -1, int max = -1)
+		: wxGridExtCellTextEditor(),
 		m_min(min),
 		m_max(max),
 		m_value(0L)
 	{
 	}
 
-	ibGridCellNumberEditor(const ibGridCellNumberEditor& other)
-		: ibGridCellTextEditor(other),
+	wxGridExtCellNumberEditor(const wxGridExtCellNumberEditor& other)
+		: wxGridExtCellTextEditor(other),
 		m_min(other.m_min),
 		m_max(other.m_max),
 		m_value(other.m_value)
@@ -138,10 +138,10 @@ public:
 	virtual void SetSize(const wxRect& rect) wxOVERRIDE;
 
 	virtual bool IsAcceptedKey(wxKeyEvent& event) wxOVERRIDE;
-	virtual void BeginEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
-	virtual bool EndEdit(int row, int col, const ibGrid* grid,
+	virtual void BeginEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
+	virtual bool EndEdit(int row, int col, const wxGridExt* grid,
 		const wxString& oldval, wxString* newval) wxOVERRIDE;
-	virtual void ApplyEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
+	virtual void ApplyEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
 
 	virtual void Reset() wxOVERRIDE;
 	virtual void StartingKey(wxKeyEvent& event) wxOVERRIDE;
@@ -149,9 +149,9 @@ public:
 	// parameters string format is "min,max"
 	virtual void SetParameters(const wxString& params) wxOVERRIDE;
 
-	virtual ibGridCellEditor* Clone() const wxOVERRIDE
+	virtual wxGridExtCellEditor* Clone() const wxOVERRIDE
 	{
-		return new ibGridCellNumberEditor(*this);
+		return new wxGridExtCellNumberEditor(*this);
 	}
 
 	// added GetValue so we can get the value which is in the control
@@ -186,7 +186,7 @@ private:
 };
 
 
-enum ibGridCellFloatFormat
+enum wxGridExtCellFloatFormat
 {
 	// Decimal floating point (%f)
 	wxGRID_FLOAT_FORMAT_FIXED = 0x0010,
@@ -211,13 +211,13 @@ enum ibGridCellFloatFormat
 };
 
 // the editor for floating point numbers (double) data
-class FRONTEND_API ibGridCellFloatEditor : public ibGridCellTextEditor
+class FRONTEND_API wxGridExtCellFloatEditor : public wxGridExtCellTextEditor
 {
 public:
-	explicit ibGridCellFloatEditor(int width = -1,
+	explicit wxGridExtCellFloatEditor(int width = -1,
 		int precision = -1,
 		int format = wxGRID_FLOAT_FORMAT_DEFAULT)
-		: ibGridCellTextEditor(),
+		: wxGridExtCellTextEditor(),
 		m_width(width),
 		m_precision(precision),
 		m_value(0.0),
@@ -225,8 +225,8 @@ public:
 	{
 	}
 
-	ibGridCellFloatEditor(const ibGridCellFloatEditor& other)
-		: ibGridCellTextEditor(other),
+	wxGridExtCellFloatEditor(const wxGridExtCellFloatEditor& other)
+		: wxGridExtCellTextEditor(other),
 		m_width(other.m_width),
 		m_precision(other.m_precision),
 		m_value(other.m_value),
@@ -240,17 +240,17 @@ public:
 		wxEvtHandler* evtHandler) wxOVERRIDE;
 
 	virtual bool IsAcceptedKey(wxKeyEvent& event) wxOVERRIDE;
-	virtual void BeginEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
-	virtual bool EndEdit(int row, int col, const ibGrid* grid,
+	virtual void BeginEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
+	virtual bool EndEdit(int row, int col, const wxGridExt* grid,
 		const wxString& oldval, wxString* newval) wxOVERRIDE;
-	virtual void ApplyEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
+	virtual void ApplyEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
 
 	virtual void Reset() wxOVERRIDE;
 	virtual void StartingKey(wxKeyEvent& event) wxOVERRIDE;
 
-	virtual ibGridCellEditor* Clone() const wxOVERRIDE
+	virtual wxGridExtCellEditor* Clone() const wxOVERRIDE
 	{
-		return new ibGridCellFloatEditor(*this);
+		return new wxGridExtCellFloatEditor(*this);
 	}
 
 	// parameters string format is "width[,precision[,format]]"
@@ -275,45 +275,45 @@ private:
 #if wxUSE_CHECKBOX
 
 // the editor for boolean data
-class FRONTEND_API ibGridCellBoolEditor : public ibGridCellEditor
+class FRONTEND_API wxGridExtCellBoolEditor : public wxGridExtCellEditor
 {
 public:
-	ibGridCellBoolEditor()
-		: ibGridCellEditor()
+	wxGridExtCellBoolEditor()
+		: wxGridExtCellEditor()
 	{
 	}
 
-	ibGridCellBoolEditor(const ibGridCellBoolEditor& other)
-		: ibGridCellEditor(other),
+	wxGridExtCellBoolEditor(const wxGridExtCellBoolEditor& other)
+		: wxGridExtCellEditor(other),
 		m_value(other.m_value)
 	{
 	}
 
-	virtual ibGridActivationResult
-		TryActivate(int row, int col, ibGrid* grid,
-			const ibGridActivationSource& actSource) wxOVERRIDE;
-	virtual void DoActivate(int row, int col, ibGrid* grid) wxOVERRIDE;
+	virtual wxGridExtActivationResult
+		TryActivate(int row, int col, wxGridExt* grid,
+			const wxGridExtActivationSource& actSource) wxOVERRIDE;
+	virtual void DoActivate(int row, int col, wxGridExt* grid) wxOVERRIDE;
 
 	virtual void Create(wxWindow* parent,
 		wxWindowID id,
 		wxEvtHandler* evtHandler) wxOVERRIDE;
 
 	virtual void SetSize(const wxRect& rect) wxOVERRIDE;
-	virtual void Show(bool show, ibGridCellAttr* attr = NULL, float scale = 1.0f) wxOVERRIDE;
+	virtual void Show(bool show, wxGridExtCellAttr* attr = NULL, float scale = 1.0f) wxOVERRIDE;
 
 	virtual bool IsAcceptedKey(wxKeyEvent& event) wxOVERRIDE;
-	virtual void BeginEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
-	virtual bool EndEdit(int row, int col, const ibGrid* grid,
+	virtual void BeginEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
+	virtual bool EndEdit(int row, int col, const wxGridExt* grid,
 		const wxString& oldval, wxString* newval) wxOVERRIDE;
-	virtual void ApplyEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
+	virtual void ApplyEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
 
 	virtual void Reset() wxOVERRIDE;
 	virtual void StartingClick() wxOVERRIDE;
 	virtual void StartingKey(wxKeyEvent& event) wxOVERRIDE;
 
-	virtual ibGridCellEditor* Clone() const wxOVERRIDE
+	virtual wxGridExtCellEditor* Clone() const wxOVERRIDE
 	{
-		return new ibGridCellBoolEditor(*this);
+		return new wxGridExtCellBoolEditor(*this);
 	}
 
 	// added GetValue so we can get the value which is in the control, see
@@ -334,8 +334,8 @@ protected:
 
 private:
 	// These functions modify or use m_value.
-	void SetValueFromGrid(int row, int col, ibGrid* grid);
-	void SetGridFromValue(int row, int col, ibGrid* grid) const;
+	void SetValueFromGrid(int row, int col, wxGridExt* grid);
+	void SetGridFromValue(int row, int col, wxGridExt* grid) const;
 
 	wxString GetStringValue() const { return GetStringValue(m_value); }
 
@@ -352,23 +352,23 @@ private:
 #if wxUSE_COMBOBOX
 
 // the editor for string data allowing to choose from the list of strings
-class ibGridCellChoiceEditor : public ibGridCellEditor
+class wxGridExtCellChoiceEditor : public wxGridExtCellEditor
 {
 public:
 	// if !allowOthers, user can't type a string not in choices array
-	explicit ibGridCellChoiceEditor(size_t count = 0,
+	explicit wxGridExtCellChoiceEditor(size_t count = 0,
 		const wxString choices[] = NULL,
 		bool allowOthers = false);
-	explicit ibGridCellChoiceEditor(const wxArrayString& choices,
+	explicit wxGridExtCellChoiceEditor(const wxArrayString& choices,
 		bool allowOthers = false)
-		: ibGridCellEditor(),
+		: wxGridExtCellEditor(),
 		m_choices(choices),
 		m_allowOthers(allowOthers)
 	{
 	}
 
-	ibGridCellChoiceEditor(const ibGridCellChoiceEditor& other)
-		: ibGridCellEditor(other),
+	wxGridExtCellChoiceEditor(const wxGridExtCellChoiceEditor& other)
+		: wxGridExtCellEditor(other),
 		m_value(other.m_value),
 		m_choices(other.m_choices),
 		m_allowOthers(other.m_allowOthers)
@@ -381,19 +381,19 @@ public:
 
 	virtual void SetSize(const wxRect& rect) wxOVERRIDE;
 
-	virtual void BeginEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
-	virtual bool EndEdit(int row, int col, const ibGrid* grid,
+	virtual void BeginEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
+	virtual bool EndEdit(int row, int col, const wxGridExt* grid,
 		const wxString& oldval, wxString* newval) wxOVERRIDE;
-	virtual void ApplyEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
+	virtual void ApplyEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
 
 	virtual void Reset() wxOVERRIDE;
 
 	// parameters string format is "item1[,item2[...,itemN]]"
 	virtual void SetParameters(const wxString& params) wxOVERRIDE;
 
-	virtual ibGridCellEditor* Clone() const wxOVERRIDE
+	virtual wxGridExtCellEditor* Clone() const wxOVERRIDE
 	{
-		return new ibGridCellChoiceEditor(*this);
+		return new wxGridExtCellChoiceEditor(*this);
 	}
 
 	// added GetValue so we can get the value which is in the control
@@ -413,28 +413,28 @@ protected:
 
 #if wxUSE_COMBOBOX
 
-class FRONTEND_API ibGridCellEnumEditor : public ibGridCellChoiceEditor
+class FRONTEND_API wxGridExtCellEnumEditor : public wxGridExtCellChoiceEditor
 {
 public:
-	explicit ibGridCellEnumEditor(const wxString& choices = wxString());
+	explicit wxGridExtCellEnumEditor(const wxString& choices = wxString());
 
-	ibGridCellEnumEditor(const ibGridCellEnumEditor& other)
-		: ibGridCellChoiceEditor(other),
+	wxGridExtCellEnumEditor(const wxGridExtCellEnumEditor& other)
+		: wxGridExtCellChoiceEditor(other),
 		m_index(other.m_index)
 	{
 	}
 
-	virtual ~ibGridCellEnumEditor() {}
+	virtual ~wxGridExtCellEnumEditor() {}
 
-	virtual ibGridCellEditor* Clone() const wxOVERRIDE
+	virtual wxGridExtCellEditor* Clone() const wxOVERRIDE
 	{
-		return new ibGridCellEnumEditor(*this);
+		return new wxGridExtCellEnumEditor(*this);
 	}
 
-	virtual void BeginEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
-	virtual bool EndEdit(int row, int col, const ibGrid* grid,
+	virtual void BeginEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
+	virtual bool EndEdit(int row, int col, const wxGridExt* grid,
 		const wxString& oldval, wxString* newval) wxOVERRIDE;
-	virtual void ApplyEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
+	virtual void ApplyEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
 
 private:
 	long m_index;
@@ -442,16 +442,16 @@ private:
 
 #endif // wxUSE_COMBOBOX
 
-class FRONTEND_API ibGridCellAutoWrapStringEditor : public ibGridCellTextEditor
+class FRONTEND_API wxGridExtCellAutoWrapStringEditor : public wxGridExtCellTextEditor
 {
 public:
-	ibGridCellAutoWrapStringEditor()
-		: ibGridCellTextEditor()
+	wxGridExtCellAutoWrapStringEditor()
+		: wxGridExtCellTextEditor()
 	{
 	}
 
-	ibGridCellAutoWrapStringEditor(const ibGridCellAutoWrapStringEditor& other)
-		: ibGridCellTextEditor(other)
+	wxGridExtCellAutoWrapStringEditor(const wxGridExtCellAutoWrapStringEditor& other)
+		: wxGridExtCellTextEditor(other)
 	{
 	}
 
@@ -459,21 +459,21 @@ public:
 		wxWindowID id,
 		wxEvtHandler* evtHandler) wxOVERRIDE;
 
-	virtual ibGridCellEditor* Clone() const wxOVERRIDE
+	virtual wxGridExtCellEditor* Clone() const wxOVERRIDE
 	{
-		return new ibGridCellAutoWrapStringEditor(*this);
+		return new wxGridExtCellAutoWrapStringEditor(*this);
 	}
 };
 
 #if wxUSE_DATEPICKCTRL
 
-class FRONTEND_API ibGridCellDateEditor : public ibGridCellEditor
+class FRONTEND_API wxGridExtCellDateEditor : public wxGridExtCellEditor
 {
 public:
-	explicit ibGridCellDateEditor(const wxString& format = wxString());
+	explicit wxGridExtCellDateEditor(const wxString& format = wxString());
 
-	ibGridCellDateEditor(const ibGridCellDateEditor& other)
-		: ibGridCellEditor(other),
+	wxGridExtCellDateEditor(const wxGridExtCellDateEditor& other)
+		: wxGridExtCellEditor(other),
 		m_value(other.m_value),
 		m_format(other.m_format)
 	{
@@ -487,16 +487,16 @@ public:
 
 	virtual void SetSize(const wxRect& rect) wxOVERRIDE;
 
-	virtual void BeginEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
-	virtual bool EndEdit(int row, int col, const ibGrid* grid,
+	virtual void BeginEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
+	virtual bool EndEdit(int row, int col, const wxGridExt* grid,
 		const wxString& oldval, wxString* newval) wxOVERRIDE;
-	virtual void ApplyEdit(int row, int col, ibGrid* grid) wxOVERRIDE;
+	virtual void ApplyEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;
 
 	virtual void Reset() wxOVERRIDE;
 
-	virtual ibGridCellEditor* Clone() const wxOVERRIDE
+	virtual wxGridExtCellEditor* Clone() const wxOVERRIDE
 	{
-		return new ibGridCellDateEditor(*this);
+		return new wxGridExtCellDateEditor(*this);
 	}
 
 	virtual wxString GetValue() const wxOVERRIDE;

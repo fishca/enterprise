@@ -238,6 +238,38 @@ The 11 business object types and their C++ classes:
 
 ---
 
+## Configuration Text Format
+
+OES supports exporting and importing configuration metadata in text formats (XML and JSON), enabling Git VCS, AI-powered configuration generation, and human-readable editing.
+
+### XML (OES-XML-2.0)
+
+- **File:** `src/engine/backend/metadataConfigurationXML.cpp`
+- **Export:** `ibMetaDataConfigurationBase::SaveConfigToXML(const wxString& fileName)`
+- **Import:** `ibMetaDataConfigurationBase::LoadConfigFromXML(const wxString& fileName)`
+- **Designer menu:** Configuration → Export/Import configuration to/from XML
+- **Full round-trip:** Export → Import preserves all metadata
+
+### JSON (OES-JSON-1.0)
+
+- **File:** `src/engine/backend/metadataConfigurationJSON.cpp`
+- **Library:** nlohmann/json v3.11.3 (`src/3rdparty/nlohmann/json.hpp`, MIT, header-only)
+- **Export:** `ibMetaDataConfigurationBase::SaveConfigToJSON(const wxString& fileName)`
+- **Import:** `ibMetaDataConfigurationBase::LoadConfigFromJSON(const wxString& fileName)`
+- **Designer menu:** Configuration → Export/Import configuration to/from JSON
+
+### What is serialized
+
+All 11 business object types with: attributes (full type qualifiers), tabular sections, forms (base64 + module code), object/manager modules, predefined values, default form assignments, MetaDescription bindings (Owner, Generation, RegisterRecord, ChartOfCharacteristicTypes, ChartOfAccounts), QuickChoice, WriteMode, Periodicity, RegisterType, dimensions, resources, enum values. CLSID stored as u64 numeric values.
+
+### ibValue Serialization
+
+`src/engine/backend/compiler/valueSerialization.cpp` — `DoSerialize`/`DoDeserialize` for primitive types (Boolean, Number, String, Date). Used for client-server data exchange.
+
+`src/engine/backend/metadataSerialization.cpp` — `ibMetaData::Serialize`/`Deserialize` wraps values in OES Serialize format: `S: OES Serialize;;;C:<classType>;;;L:<length>;;;D:<data>;;;E: OES Serialize;;;`
+
+---
+
 ## Compiler Quick Reference
 
 - **Opcodes:** 66, defined in `src/engine/backend/compiler/codeDef.h` as `OPER_*` enumerators

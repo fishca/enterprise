@@ -255,6 +255,27 @@ ibValue
 
 `ibMetaDataConfiguration::LoadDatabase()` / `SaveDatabase()` serialise the entire metadata tree to/from the system database using `ibReaderMemory` / `ibWriterMemory` binary streams. Each metadata class registers a `ibClassID` CLSID (e.g. `MD_CAT` for Catalog) used as a type discriminator during loading.
 
+### Text Format (XML / JSON)
+
+Configurations can be exported and imported in text formats for Git VCS, AI generation, and human editing:
+
+- **XML** (OES-XML-2.0): `metadataConfigurationXML.cpp` — `SaveConfigToXML()` / `LoadConfigFromXML()`
+- **JSON** (OES-JSON-1.0): `metadataConfigurationJSON.cpp` — `SaveConfigToJSON()` / `LoadConfigFromJSON()` using nlohmann/json
+
+Both formats support full round-trip serialization of all 11 metadata types with attributes, type qualifiers, tabular sections, forms, modules, predefined values, and all bindings.
+
+### Accounting Objects (Work in Progress)
+
+Three metadata types support double-entry bookkeeping. Core classes and designer integration are implemented; SQL DDL, runtime bindings, and Balance/Turnovers queries are under active development.
+
+| Type | CLSID | Purpose |
+|---|---|---|
+| ChartOfCharacteristicTypes (MD_CHRC) | Subconto type definitions — each element stores `ibTypeDescription` with allowed value types |
+| ChartOfAccounts (MD_CHOA) | Chart of accounts with AccountType (Active/Passive/AP), accounting signs, predefined SubcontoKinds tabular section |
+| AccountingRegister (MD_AREG) | Double-entry register with Account, RecordType (Debit/Credit), Subconto1-3, Balance/Turnovers/DrCrTurnovers |
+
+Bindings: AccountingRegister → ChartOfAccounts (via `ibPropertyChartOfAccounts`), ChartOfAccounts → ChartOfCharacteristicTypes (via `ibPropertyChartOfCharacteristicTypes`). Each binding has its own property class and advprop UI handler with CLSID-filtered selection dialog.
+
 ---
 
 ## Database Abstraction

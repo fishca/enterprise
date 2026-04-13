@@ -335,6 +335,9 @@
     <ClInclude Include="metaCollection\partial\chartOfAccounts.h">
       <Filter>metaCollection\partial</Filter>
     </ClInclude>
+    <ClInclude Include="metaCollection\partial\chartOfAccountsSubcontoTable.h">
+      <Filter>metaCollection\partial</Filter>
+    </ClInclude>
     <ClInclude Include="metaCollection\partial\chartOfAccountsEnum.h">
       <Filter>metaCollection\partial</Filter>
     </ClInclude>
@@ -1046,6 +1049,9 @@
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataProperty.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\chartOfAccountsSubcontoTable.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\chartOfAccountsObject.cpp">

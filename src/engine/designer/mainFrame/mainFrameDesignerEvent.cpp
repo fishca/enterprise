@@ -365,6 +365,37 @@ void ibFrontendDocMDIFrameDesigner::OnConfiguration(wxCommandEvent& event)
 			wxMessageBox(_("Failed to import configuration"), _("Error"), wxOK | wxICON_ERROR);
 		}
 	}
+	else if (wxID_DESIGNER_CONFIGURATION_EXPORT_JSON == event.GetId())
+	{
+		wxFileDialog saveFileDialog(this, _("Export configuration to JSON"), "", "",
+			wxT("JSON files (*.json)|*.json"), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+		if (saveFileDialog.ShowModal() == wxID_CANCEL)
+			return;
+
+		if (activeMetaData->SaveConfigToJSON(saveFileDialog.GetPath())) {
+			wxMessageBox(_("Configuration exported to: ") + saveFileDialog.GetPath());
+		}
+		else {
+			wxMessageBox(_("Failed to export configuration"), _("Error"), wxOK | wxICON_ERROR);
+		}
+	}
+	else if (wxID_DESIGNER_CONFIGURATION_IMPORT_JSON == event.GetId())
+	{
+		wxFileDialog openFileDialog(this, _("Import configuration from JSON"), "", "",
+			wxT("JSON files (*.json)|*.json"), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+		if (openFileDialog.ShowModal() == wxID_CANCEL)
+			return;
+
+		if (activeMetaData->LoadConfigFromJSON(openFileDialog.GetPath())) {
+			if (m_metaWindow->Load()) {
+				objectInspector->SelectObject(activeMetaData->GetCommonMetaObject());
+			}
+			wxMessageBox(_("Configuration imported from: ") + openFileDialog.GetPath());
+		}
+		else {
+			wxMessageBox(_("Failed to import configuration"), _("Error"), wxOK | wxICON_ERROR);
+		}
+	}
 }
 
 void ibFrontendDocMDIFrameDesigner::OnRunDebugCommand(wxCommandEvent& event)

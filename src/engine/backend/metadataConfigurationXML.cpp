@@ -694,7 +694,7 @@ void SaveChartOfAccountsToXML(wxXmlNode* xmlObj, ibValueMetaObjectChartOfAccount
 	xmlObj->AddChild(xmlDefForms);
 
 	// ChartOfCharacteristicTypes owner property
-	ibPropertyOwner* chrtProp = chart->GetChartOfCharacteristicTypes();
+	ibPropertyChartOfCharacteristicTypes* chrtProp = chart->GetChartOfCharacteristicTypes();
 	if (chrtProp != nullptr) {
 		SaveMetaDescriptionToXML(xmlObj, wxT("ChartOfCharacteristicTypes"), chrtProp->GetValueAsMetaDesc());
 	}

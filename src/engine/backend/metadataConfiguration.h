@@ -58,6 +58,10 @@ public:
 	virtual bool SaveConfigToXML(const wxString& strFileName);
 	virtual bool LoadConfigFromXML(const wxString& strFileName);
 
+	//load/save config to JSON text format
+	virtual bool SaveConfigToJSON(const wxString& strFileName);
+	virtual bool LoadConfigFromJSON(const wxString& strFileName);
+
 	//get common module 
 	virtual ibValueModuleManagerConfiguration* GetModuleManager() const = 0;
 	virtual ibValueMetaObjectConfiguration* GetCommonMetaObject() const = 0;

@@ -134,6 +134,13 @@ void ibFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE, _("Save configuration"));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
+	m_menuConfiguration->AppendSeparator();
+
+	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_EXPORT_XML, _("Export configuration to XML"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_IMPORT_XML, _("Import configuration from XML"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+
 	m_frameMenuBar->Append(m_menuConfiguration, _("Configuration"));
 	m_frameMenuBar->Append(m_menuDebug, _("Debug"));
 
@@ -166,7 +173,7 @@ void ibFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnRollbackConfiguration, this, wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE);
 	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnUpdateConfiguration, this, wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE);
 
-	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnConfiguration, this, wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnConfiguration, this, wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, wxID_DESIGNER_CONFIGURATION_IMPORT_XML);
 
 	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnStartDebug, this, wxID_DESIGNER_DEBUG_START);
 	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug, this, wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING);

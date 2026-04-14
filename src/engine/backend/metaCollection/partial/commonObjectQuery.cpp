@@ -1274,7 +1274,7 @@ bool ibValueRecordDataObjectRef::ReadData(const ibGuid& srcGuid)
 					ibValueMetaObjectAttributeBase::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 				}
 			}
-			for (const auto object : m_metaObject->GetTableArrayObject()) {
+			for (const auto object : m_metaObject->GetGenericTableArrayObject()) {
 				ibValueTabularSectionDataObjectRef* tabularSection = new ibValueTabularSectionDataObjectRef(this, object);
 				if (!tabularSection->LoadData(srcGuid)) succes = false;
 				m_listObjectValue.insert_or_assign(object->GetMetaID(), tabularSection);

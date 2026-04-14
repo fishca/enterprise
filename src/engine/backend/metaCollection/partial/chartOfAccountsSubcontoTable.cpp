@@ -24,6 +24,26 @@ ibValueMetaObjectSubcontoKindsTable::~ibValueMetaObjectSubcontoKindsTable()
 {
 }
 
+bool ibValueMetaObjectSubcontoKindsTable::LoadData(ibReaderMemory& dataReader)
+{
+	//load default attributes:
+	(*m_propertySubcontoKind)->LoadMeta(dataReader);
+	(*m_propertyOrder)->LoadMeta(dataReader);
+	(*m_propertySummaryOnly)->LoadMeta(dataReader);
+
+	return ibValueMetaObjectTableData::LoadData(dataReader);
+}
+
+bool ibValueMetaObjectSubcontoKindsTable::SaveData(ibWriterMemory& dataWritter)
+{
+	//save default attributes:
+	(*m_propertySubcontoKind)->SaveMeta(dataWritter);
+	(*m_propertyOrder)->SaveMeta(dataWritter);
+	(*m_propertySummaryOnly)->SaveMeta(dataWritter);
+
+	return ibValueMetaObjectTableData::SaveData(dataWritter);
+}
+
 bool ibValueMetaObjectSubcontoKindsTable::OnCreateMetaObject(ibMetaData* metaData, int flags)
 {
 	if (!ibValueMetaObjectTableData::OnCreateMetaObject(metaData, flags)) return false;
@@ -92,4 +112,4 @@ bool ibValueMetaObjectSubcontoKindsTable::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(ibValueMetaObjectSubcontoKindsTable, "SubcontoKindsTable", string_to_clsid("MD_SKTB"));
+METADATA_TYPE_REGISTER(ibValueMetaObjectSubcontoKindsTable, "SubcontoKindsTable", g_metaSubcontoKindsTableCLSID);

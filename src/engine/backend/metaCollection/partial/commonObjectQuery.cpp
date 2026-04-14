@@ -130,9 +130,6 @@ bool ibValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(ibMetaDataCon
 				object, nullptr);
 		}
 
-		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-			return false;
-
 		for (const auto object : GetTableArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;

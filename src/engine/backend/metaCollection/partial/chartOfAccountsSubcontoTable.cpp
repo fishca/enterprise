@@ -92,6 +92,4 @@ bool ibValueMetaObjectSubcontoKindsTable::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-const ibClassID g_metaSubcontoKindsTableCLSID = string_to_clsid("MD_SKTB");
-
-METADATA_TYPE_REGISTER(ibValueMetaObjectSubcontoKindsTable, "SubcontoKindsTable", g_metaSubcontoKindsTableCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectSubcontoKindsTable, "SubcontoKindsTable", string_to_clsid("MD_SKTB"));

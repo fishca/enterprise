@@ -34,9 +34,9 @@ public:
 
 protected:
 
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const override {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const override {
 		// Call base to get NumberLine
-		ibValueMetaObjectTableData::FillArrayObjectByPredefined(array);
+		ibValueMetaObjectTableData::FillArrayObjectByPredefinedAttribute(array);
 		// Add our predefined columns
 		array.push_back(m_propertySubcontoKind->GetMetaObject());
 		array.push_back(m_propertyOrder->GetMetaObject());

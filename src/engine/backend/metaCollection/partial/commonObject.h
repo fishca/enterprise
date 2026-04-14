@@ -296,13 +296,30 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 #pragma region __generic_h__
-
-	using ibValueMetaObjectCompositeData::GetGenericAttributeArrayObject;
+	
 	//attribute
+	std::vector<ibValueMetaObjectAttributeBase*> GetGenericAttributeArrayObject() const {
+		std::vector<ibValueMetaObjectAttributeBase*> array;
+		return GetGenericAttributeArrayObject(array);
+	}
+
 	virtual std::vector<ibValueMetaObjectAttributeBase*> GetGenericAttributeArrayObject(
 		std::vector<ibValueMetaObjectAttributeBase*>& array) const {
-		FillArrayObjectByPredefined(array);
+		FillArrayObjectByPredefinedAttribute(array);
 		FillArrayObjectByFilter<ibValueMetaObjectAttributeBase>(array, { g_metaAttributeCLSID });
+		return array;
+	}
+
+	//table 
+	std::vector<ibValueMetaObjectTableData*> GetGenericTableArrayObject() const {
+		std::vector<ibValueMetaObjectTableData*> array;
+		return GetGenericTableArrayObject(array);
+	}
+
+	virtual std::vector<ibValueMetaObjectTableData*> GetGenericTableArrayObject(
+		std::vector<ibValueMetaObjectTableData*>& array) const {
+		FillArrayObjectByPredefinedTable(array);
+		FillArrayObjectByFilter<ibValueMetaObjectTableData>(array, { g_metaTableCLSID });
 		return array;
 	}
 
@@ -313,7 +330,7 @@ public:
 	//any attribute
 	std::vector<ibValueMetaObjectAttributeBase*> GetAnyAttributeArrayObject(
 		std::vector<ibValueMetaObjectAttributeBase*> array = std::vector<ibValueMetaObjectAttributeBase*>()) const {
-		FillArrayObjectByPredefined(array);
+		FillArrayObjectByPredefinedAttribute(array);
 		FillArrayObjectByFilter<ibValueMetaObjectAttributeBase>(array, { g_metaAttributeCLSID });
 		return array;
 	}
@@ -364,6 +381,11 @@ public:
 #pragma endregion 
 
 protected:
+
+	virtual bool FillArrayObjectByPredefinedTable(
+		std::vector<ibValueMetaObjectTableData*>& array) const {
+		return false;
+	}
 
 	//get default form 
 	virtual ibBackendValueForm* GetFormByCommandType(ibInterfaceCommandType cmdType = ibInterfaceCommandType::ibInterfaceCommandType_Default) {
@@ -578,7 +600,7 @@ public:
 protected:
 
 	//predefined array 
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 		array = { m_propertyAttributeReference->GetMetaObject() };
 		return true;
 	}
@@ -665,7 +687,7 @@ public:
 protected:
 
 	//predefined array 
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 
 		array = {
 			m_propertyAttributeReference->GetMetaObject(),
@@ -899,7 +921,7 @@ protected:
 protected:
 
 	//predefined array 
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 
 		array = {
 			m_propertyAttributePredefined->GetMetaObject(),
@@ -975,7 +997,7 @@ public:
 	//attribute
 	virtual std::vector<ibValueMetaObjectAttributeBase*> GetGenericAttributeArrayObject(
 		std::vector<ibValueMetaObjectAttributeBase*>& array) const {
-		FillArrayObjectByPredefined(array);
+		FillArrayObjectByPredefinedAttribute(array);
 		FillArrayObjectByFilter<ibValueMetaObjectAttributeBase>(array, { g_metaDimensionCLSID, g_metaResourceCLSID, g_metaAttributeCLSID });
 		return array;
 	}
@@ -993,7 +1015,7 @@ public:
 	//any attribute
 	std::vector<ibValueMetaObjectAttributeBase*> GetAnyAttributeArrayObject(
 		std::vector<ibValueMetaObjectAttributeBase*> array = std::vector<ibValueMetaObjectAttributeBase*>()) const {
-		FillArrayObjectByPredefined(array);
+		FillArrayObjectByPredefinedAttribute(array);
 		FillArrayObjectByFilter<ibValueMetaObjectAttributeBase>(array, { g_metaDimensionCLSID, g_metaResourceCLSID, g_metaAttributeCLSID });
 		return array;
 	}
@@ -1124,7 +1146,7 @@ protected:
 	///////////////////////////////////////////////////////////////////
 
 	//get default attributes
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 		return false;
 	}
 

@@ -131,7 +131,7 @@ public:
 protected:
 
 	//get default attributes
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 		array = {
 			m_propertyAttributeLineActive->GetMetaObject(),
 			m_propertyAttributePeriod->GetMetaObject(),

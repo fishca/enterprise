@@ -119,6 +119,7 @@ public:
 		std::vector<ibValueMetaObjectAttributeBase*> array;
 		return GetGenericAttributeArrayObject(array);
 	}
+	
 	virtual std::vector<ibValueMetaObjectAttributeBase*> GetGenericAttributeArrayObject(
 		std::vector<ibValueMetaObjectAttributeBase*>& array) const = 0;
 
@@ -128,12 +129,12 @@ public:
 	//predefined 
 	std::vector<ibValueMetaObjectAttributeBase*> GetPredefinedAttributeArrayObject() const {
 		std::vector<ibValueMetaObjectAttributeBase*> array;
-		FillArrayObjectByPredefined(array);
+		FillArrayObjectByPredefinedAttribute(array);
 		return array;
 	}
 	std::vector<ibValueMetaObjectAttributeBase*> GetPredefinedAttributeArrayObject(
 		std::vector<ibValueMetaObjectAttributeBase*>& array) const {
-		FillArrayObjectByPredefined(array);
+		FillArrayObjectByPredefinedAttribute(array);
 		return array;
 	}
 
@@ -245,7 +246,7 @@ protected:
 		return ibValueMetaObject::CreateMetaObjectAndSetParent<ibValueMetaObjectAttributePredefined>(name, synonym, comment, clsid, descr, fillCheck, defValue, useItem, selectMode);
 	}
 
-	virtual bool FillArrayObjectByPredefined(
+	virtual bool FillArrayObjectByPredefinedAttribute(
 		std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 		return false;
 	}

@@ -49,6 +49,8 @@ public:
 	ibValueMetaObjectAttributePredefined* GetCurrency() const { return m_propertyAttributeCurrency->GetMetaObject(); }
 	ibValueMetaObjectAttributePredefined* GetMaxSubcontoCount() const { return m_propertyAttributeMaxSubcontoCount->GetMetaObject(); }
 
+	ibValueMetaObjectSubcontoKindsTable* GetSubcontoKindsTable() const { return m_propertySubcontoKindsTable->GetMetaObject(); }
+
 	// Chart of Characteristic Types binding (determines available subconto types)
 	ibPropertyChartOfCharacteristicTypes* GetChartOfCharacteristicTypes() const { return m_propertyChartOfCharacteristicTypes; }
 
@@ -114,7 +116,7 @@ public:
 protected:
 
 	//predefined array
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 		array = {
 			m_propertyAttributePredefined->GetMetaObject(),
 			m_propertyAttributeCode->GetMetaObject(),
@@ -129,6 +131,12 @@ protected:
 			m_propertyAttributeReference->GetMetaObject(),
 			m_propertyAttributeDeletionMark->GetMetaObject(),
 		};
+		return true;
+	}
+
+	virtual bool FillArrayObjectByPredefinedTable(
+		std::vector<ibValueMetaObjectTableData*>& array) const {
+		array = { m_propertySubcontoKindsTable->GetMetaObject() };
 		return true;
 	}
 

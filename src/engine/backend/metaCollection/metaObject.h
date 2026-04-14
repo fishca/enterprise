@@ -258,7 +258,7 @@ public:
 
 	//process choice 
 	virtual bool ProcessChoice(ibBackendControlFrame* ownerValue,
-		const wxString& strFormName, int selMode) {
+		const wxString& strFormName, enum ibSelectMode selMode) {
 		return true;
 	}
 

@@ -1359,7 +1359,7 @@ bool ibValueRecordDataObjectRef::SaveData()
 
 	//table parts
 	if (!hasError) {
-		for (const auto object : m_metaObject->GetTableArrayObject()) {
+		for (const auto object : m_metaObject->GetGenericTableArrayObject()) {
 			ibValueTabularSectionDataObjectBase* tabularSection = nullptr;
 			if (m_listObjectValue[object->GetMetaID()].ConvertToValue(tabularSection)) {
 				if (!tabularSection->SaveData()) {

@@ -653,6 +653,7 @@
     <ClInclude Include="propertyManager\property\propertyChartOfAccounts.h">
       <Filter>propertyManager\property</Filter>
     </ClInclude>
+    <ClInclude Include="characteristicCtor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1522,6 +1523,7 @@
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataQuery.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
+    <ClCompile Include="characteristicCtor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

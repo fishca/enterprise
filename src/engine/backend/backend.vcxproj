@@ -28,6 +28,7 @@
     <ClInclude Include="backend_mainFrame.h" />
     <ClInclude Include="backend_picture.h" />
     <ClInclude Include="backend_type.h" />
+    <ClInclude Include="characteristicCtor.h" />
     <ClInclude Include="constantCtor.h" />
     <ClInclude Include="moduleManager\globalContextManager.h" />
     <ClInclude Include="restructureInfo.h" />
@@ -274,6 +275,7 @@
     <ClCompile Include="backend_mainFrame.cpp" />
     <ClCompile Include="backend_picture.cpp" />
     <ClCompile Include="backend_localization.cpp" />
+    <ClCompile Include="characteristicCtor.cpp" />
     <ClCompile Include="compiler\valueSerialization.cpp" />
     <ClCompile Include="constantCtor.cpp" />
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataQuery.cpp" />

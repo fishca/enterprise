@@ -281,7 +281,7 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnReloadMetaObject()
 	return true;
 }
 
-#include "backend/objCtor.h"
+#include "backend/characteristicCtor.h"
 
 bool ibValueMetaObjectChartOfCharacteristicTypes::OnBeforeRunMetaObject(int flags)
 {
@@ -295,6 +295,7 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnBeforeRunMetaObject(int flag
 		return false;
 
 	registerSelection();
+	registerCharacteristic();
 
 	if (!ibValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeRunMetaObject(flags))
 		return false;
@@ -371,6 +372,7 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnAfterCloseMetaObject()
 		return false;
 
 	unregisterSelection();
+	unregisterCharacteristic();
 
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnAfterCloseMetaObject();
 }

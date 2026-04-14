@@ -52,6 +52,13 @@ void ibPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, c
 						choice.GetValue(), so->GetClassType()
 					);
 				}
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Characteristic)) {
+					auto metaObject = so->GetMetaObject();
+					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
+					m_valChoices.insert_or_assign(
+						choice.GetValue(), so->GetClassType()
+					);
+				}
 			}
 			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_List)) {
@@ -78,6 +85,13 @@ void ibPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, c
 					);
 				}
 				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_RecordManager)) {
+					auto metaObject = so->GetMetaObject();
+					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
+					m_valChoices.insert_or_assign(
+						choice.GetValue(), so->GetClassType()
+					);
+				}
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Characteristic)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
@@ -405,6 +419,34 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							}
 						}
 					}
+
+					if (so->GetClassType() == g_metaChartOfCharacteristicTypesCLSID) {
+
+						const int groupIcon = imageList->Add(so->GetClassIcon());
+						const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), wxT("Characteristic"),
+							groupIcon, groupIcon);
+
+						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Characteristic)) {
+							ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+							{
+								int icon = imageList->Add(registerData->GetIcon());
+								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
+								wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
+									icon, icon,
+									itemData);
+
+								if (data != nullptr) {
+									const ibTypeDescription& td = data->GetTypeDesc();
+									tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? ibCheckTree::CHECKED : ibCheckTree::CHECKED_DISABLED : allowEdit ? ibCheckTree::UNCHECKED : ibCheckTree::UNCHECKED_DISABLED);
+									tc->Check(newItem, td.ContainType(so->GetClassType()));
+								}
+								else {
+									tc->SetItemState(newItem, allowEdit ? ibCheckTree::UNCHECKED : ibCheckTree::UNCHECKED_DISABLED);
+									tc->Check(newItem, false);
+								}
+							}
+						}
+					}
 				}
 				else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 
@@ -434,6 +476,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 					}
 				}
 				else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
+					
 					if (so->GetClassType() != g_metaEnumerationCLSID) {
 
 						int groupIcon = imageList->Add(so->GetClassIcon());
@@ -461,6 +504,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							}
 						}
 					}
+					
 					if (so->GetClassType() != g_metaDataProcessorCLSID && so->GetClassType() != g_metaReportCLSID)
 					{
 						int groupIcon = imageList->Add(so->GetClassIcon());

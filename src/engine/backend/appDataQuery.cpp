@@ -212,8 +212,7 @@ bool ibApplicationData::ibApplicationDataSessionUpdater::VerifySessionUpdater() 
 						m_sessionArray.GetUserName(idx)
 					);
 				}
-				catch (const ibBackendException* err) {
-					ibBackendExceptionPtr guard(err);
+				catch (const ibBackendException&) {
 				}
 				return false;
 			}

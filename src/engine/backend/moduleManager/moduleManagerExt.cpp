@@ -87,8 +87,7 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 			//and run...
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const ibBackendException* err) {
-			ibBackendExceptionPtr guard(err);
+		catch (const ibBackendException&) {
 			return false;
 		};
 	}
@@ -295,8 +294,7 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 			m_compileModule->Compile();
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const ibBackendException* err) {
-			ibBackendExceptionPtr guard(err);
+		catch (const ibBackendException&) {
 			return false;
 		};
 	}

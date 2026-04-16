@@ -31,10 +31,9 @@ void ibValueModelTableBox::OnColumnClick(ibDataViewEvent& event)
 				try {
 					m_tableModel->CallRefreshModel(dataViewCtrl->GetTopItem(), dataViewCtrl->GetCountPerPage());
 				}
-				catch (const ibBackendException* err) {
-					ibBackendExceptionPtr guard(err);
+				catch (const ibBackendException&) {
 					dataViewCtrl->AssociateModel(nullptr);
-					throw(guard.release());
+					throw;
 				}
 
 				if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
@@ -308,10 +307,9 @@ void ibValueModelTableBox::OnIdle(wxIdleEvent& event)
 		try {
 			m_tableModel->CallRefreshModel(dataViewCtrl->GetTopItem(), dataViewCtrl->GetCountPerPage());
 		}
-		catch (const ibBackendException* err) {
-			ibBackendExceptionPtr guard(err);
+		catch (const ibBackendException&) {
 			dataViewCtrl->AssociateModel(nullptr);
-			throw(guard.release());
+			throw;
 		}
 
 		const ibValue& createdValue = m_formOwner->GetCreatedValue();

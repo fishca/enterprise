@@ -105,7 +105,7 @@ ibBackendException::ibBackendException(const wxString& strErrorDescription)
 
 #include "backend/metaCollection/metaModuleObject.h"
 
-void ibBackendException::ProcessError(const ibBackendException* err, const ibByteUnit& error)
+void ibBackendException::ProcessError(const ibBackendException& err, const ibByteUnit& error)
 {
 	const bool isEvalMode = ibBackendException::IsEvalMode();
 
@@ -113,7 +113,7 @@ void ibBackendException::ProcessError(const ibBackendException* err, const ibByt
 	const wxString& strModuleName = error.m_strModuleName;
 	const wxString& strDocPath = error.m_strDocPath;
 
-	if (err != nullptr && !err->m_errorHandled) {
+	if (!err.m_errorHandled) {
 
 		if (activeMetaData != nullptr) {
 
@@ -140,7 +140,7 @@ void ibBackendException::ProcessError(const ibBackendException* err, const ibByt
 			ibBackendException::ProcessExceptionError(strFileName,
 				strModuleName, strDocPath,
 				error.m_numString, isEvalMode ? error.m_numLine : error.m_numLine + 1,
-				strCodeError, wxNOT_FOUND, err->GetErrorDescription()
+				strCodeError, wxNOT_FOUND, err.GetErrorDescription()
 			);
 		}
 		else {
@@ -148,15 +148,17 @@ void ibBackendException::ProcessError(const ibBackendException* err, const ibByt
 			ibBackendException::ProcessExceptionError(strFileName,
 				strModuleName, strDocPath,
 				error.m_numString, error.m_numLine + 1,
-				wxEmptyString, wxNOT_FOUND, err->GetErrorDescription()
+				wxEmptyString, wxNOT_FOUND, err.GetErrorDescription()
 			);
 		}
 
-		err->m_errorHandled = true;
+		err.m_errorHandled = true;
 	}
 
-	//throw this exception
-	throw(err);
+	// Rethrow the in-flight exception — ProcessError is always called from a
+	// catch block in procUnit, so `throw;` keeps the same object propagating
+	// (preserving m_errorHandled) without allocating a new copy.
+	throw;
 }
 
 void ibBackendException::ProcessError(const wxString& strFileName,
@@ -332,7 +334,7 @@ void ibBackendCoreException::DoErrorWchar(const wxChar* format, ...)
 	const wxString& strErrorBuffer =
 		FormatV(format, args);
 
-	throw(new ibBackendCoreException(strErrorBuffer));
+	throw ibBackendCoreException(strErrorBuffer);
 }
 #endif
 
@@ -347,12 +349,12 @@ void ibBackendCoreException::DoErrorUtf8(const wxChar* format, ...)
 
 void ibBackendInterruptException::Error()
 {
-	throw(new ibBackendInterruptException);
+	throw ibBackendInterruptException();
 }
 
 void ibBackendAccessException::Error()
 {
-	throw(new ibBackendAccessException);
+	throw ibBackendAccessException();
 }
 
 #pragma endregion

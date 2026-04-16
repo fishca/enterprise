@@ -277,10 +277,9 @@ bool ibValueForm::InitializeFormModule()
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const ibBackendException* err) {
-				ibBackendExceptionPtr guard(err);
+			catch (const ibBackendException&) {
 				if (!appData->DesignerMode())
-					throw(guard.release());
+					throw;
 				return false;
 			};
 

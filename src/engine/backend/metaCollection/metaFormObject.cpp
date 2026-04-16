@@ -28,14 +28,12 @@ bool ibBackendCommandItem::ShowFormByCommandType(ibInterfaceCommandType cmdType)
 
 		valueForm->ShowForm();
 	}
-	catch (const ibBackendAccessException* err) {
-		ibBackendExceptionPtr guard(err);
+	catch (const ibBackendAccessException& err) {
 		wxDELETE(valueForm);
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 		return false;
 	}
-	catch (const ibBackendException* err) {
-		ibBackendExceptionPtr guard(err);
+	catch (const ibBackendException&) {
 		wxDELETE(valueForm);
 		return false;
 	}

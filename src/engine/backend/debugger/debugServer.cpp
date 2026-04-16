@@ -786,10 +786,9 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 							//count of attribute   
 							propCount = vAttribute.GetNProps();
 						}
-						catch (const ibBackendException* err) {
-							ibBackendExceptionPtr guard(err);
+						catch (const ibBackendException& err) {
 
-							wxString strErrorMessage = err->GetErrorDescription();
+							wxString strErrorMessage = err.GetErrorDescription();
 							strErrorMessage.Replace('\n', ' ');
 
 							//send attribute body

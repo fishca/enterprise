@@ -21,9 +21,8 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 	try {
 		PrepareLexem();
 	}
-	catch (const ibBackendException* err)
+	catch (const ibBackendException&)
 	{
-		ibBackendExceptionPtr guard(err);
 		return false;
 	};
 

@@ -51,10 +51,9 @@ bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataOb
 	try {
 		m_constValue = GetConstValue();
 	}
-	catch (const ibBackendException* err) {
-		ibBackendExceptionPtr guard(err);
+	catch (const ibBackendException&) {
 		if (!appData->DesignerMode())
-			throw(guard.release());
+			throw;
 		return false;
 	}
 
@@ -64,10 +63,9 @@ bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataOb
 		try {
 			m_compileModule->Compile();
 		}
-		catch (const ibBackendException* err) {
-			ibBackendExceptionPtr guard(err);
+		catch (const ibBackendException&) {
 			if (!appData->DesignerMode())
-				throw(guard.release());
+				throw;
 			return false;
 		};
 		m_procUnit->Execute(m_compileModule->m_cByteCode, true);

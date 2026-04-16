@@ -447,8 +447,8 @@ void ibValueListDataObjectRef::AddValue(unsigned int before)
 			if (dataValueObject != nullptr)
 				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (const ibBackendCoreException* err) {
-			ibValueSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException& err) {
+			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
 		}
@@ -468,8 +468,8 @@ void ibValueListDataObjectRef::CopyValue()
 			ibValuePtr<ibValueRecordDataObjectRef> dataValueObject(metaObject->CopyObjectValue(node->GetGuid()));
 			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (const ibBackendCoreException* err) {
-			ibValueSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException& err) {
+			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
 		}
@@ -489,8 +489,8 @@ void ibValueListDataObjectRef::EditValue()
 			ibValueRecordDataObjectRef* dataValueObject(metaObject->CreateObjectValue(node->GetGuid()));
 			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (const ibBackendCoreException* err) {
-			ibValueSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException& err) {
+			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
 		}
@@ -514,8 +514,8 @@ void ibValueListDataObjectRef::DeleteValue()
 			if (valueListForm != nullptr)
 				valueListForm->UpdateForm();
 		}
-		catch (const ibBackendCoreException* err) {
-			ibValueSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException& err) {
+			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
 		}
@@ -539,8 +539,8 @@ void ibValueListDataObjectRef::MarkAsDeleteValue()
 			if (valueListForm != nullptr)
 				valueListForm->UpdateForm();
 		}
-		catch (const ibBackendCoreException* err) {
-			ibValueSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException& err) {
+			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
 		}
@@ -562,8 +562,8 @@ void ibValueListDataObjectRef::ChooseValue(ibBackendValueForm* srcForm)
 			srcForm->NotifyChoice(selectedValue);
 		}
 	}
-	catch (const ibBackendCoreException* err) {
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException& err) {
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 	}
 	catch (...) {
 	}
@@ -751,8 +751,8 @@ void ibValueModelTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
 	}
-	catch (const ibBackendCoreException* err) {
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException& err) {
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 	}
 	catch (...) {
 	}
@@ -772,8 +772,8 @@ void ibValueModelTreeDataObjectFolderRef::CopyValue()
 		if (dataValueFolderObject != nullptr)
 			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
-	catch (const ibBackendCoreException* err) {
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException& err) {
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 	}
 	catch (...) {
 	}
@@ -792,8 +792,8 @@ void ibValueModelTreeDataObjectFolderRef::EditValue()
 		ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? ibObjectMode::OBJECT_FOLDER : ibObjectMode::OBJECT_ITEM, node->GetGuid()));
 		if (dataValueFolderObject != nullptr) dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
-	catch (const ibBackendCoreException* err) {
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException& err) {
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 	}
 	catch (...) {
 	}
@@ -815,8 +815,8 @@ void ibValueModelTreeDataObjectFolderRef::DeleteValue()
 		ibBackendValueForm* valueListForm = ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 		if (valueListForm != nullptr) valueListForm->UpdateForm();
 	}
-	catch (const ibBackendCoreException *err) {
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException& err) {
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 	}
 	catch (...) {
 	}
@@ -841,8 +841,8 @@ void ibValueModelTreeDataObjectFolderRef::MarkAsDeleteValue()
 			ibBackendValueForm* valueListForm = ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 			if (valueListForm != nullptr) valueListForm->UpdateForm();
 		}
-		catch (const ibBackendCoreException* err) {
-			ibValueSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException& err) {
+			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
 		}
@@ -870,8 +870,8 @@ void ibValueModelTreeDataObjectFolderRef::ChooseValue(ibBackendValueForm* srcFor
 		else if (m_listMode == LIST_ITEM_FOLDER)
 			srcForm->NotifyChoice(selectedValue);
 	}
-	catch (const ibBackendCoreException* err) {
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException& err) {
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 	}
 	catch (...) {
 	}
@@ -987,8 +987,8 @@ void ibValueListRegisterObject::AddValue(unsigned int before)
 			if (dataValueObject != nullptr)
 				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (const ibBackendCoreException* err) {
-			ibValueSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException& err) {
+			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
 		}
@@ -1006,8 +1006,8 @@ void ibValueListRegisterObject::CopyValue()
 				if (dataValueObject != nullptr)
 					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 			}
-			catch (const ibBackendCoreException* err) {
-				ibValueSystemFunction::Alert(err->GetErrorDescription());
+			catch (const ibBackendCoreException& err) {
+				ibValueSystemFunction::Alert(err.GetErrorDescription());
 			}
 			catch (...) {
 			}
@@ -1026,8 +1026,8 @@ void ibValueListRegisterObject::EditValue()
 				if (dataValueObject != nullptr)
 					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 			}
-			catch (const ibBackendCoreException* err) {
-				ibValueSystemFunction::Alert(err->GetErrorDescription());
+			catch (const ibBackendCoreException& err) {
+				ibValueSystemFunction::Alert(err.GetErrorDescription());
 			}
 			catch (...) {
 			}
@@ -1040,8 +1040,8 @@ void ibValueListRegisterObject::EditValue()
 					recorderVal.ShowValue();
 				}
 			}
-			catch (const ibBackendCoreException* err) {
-				ibValueSystemFunction::Alert(err->GetErrorDescription());
+			catch (const ibBackendCoreException& err) {
+				ibValueSystemFunction::Alert(err.GetErrorDescription());
 			}
 			catch (...) {
 			}
@@ -1062,8 +1062,8 @@ void ibValueListRegisterObject::DeleteValue()
 				ibBackendValueForm* valueListForm = ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 				if (valueListForm != nullptr) valueListForm->UpdateForm();
 			}
-			catch (const ibBackendCoreException* err) {
-				ibValueSystemFunction::Alert(err->GetErrorDescription());
+			catch (const ibBackendCoreException& err) {
+				ibValueSystemFunction::Alert(err.GetErrorDescription());
 			}
 			catch (...) {
 			}

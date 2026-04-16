@@ -16,9 +16,8 @@ void ibFrameCodeRunner::SyntaxCheckOnButtonClick(wxCommandEvent& event)
 		m_compileCode->Compile(m_codeEditor->GetText());;
 		ibFrameCodeRunner::AppendOutput(_("No syntax errors detected!"));
 	}
-	catch (const ibBackendException* err) {
-		ibBackendExceptionPtr guard(err);
-		ibFrameCodeRunner::AppendOutput(err->GetErrorDescription());
+	catch (const ibBackendException& err) {
+		ibFrameCodeRunner::AppendOutput(err.GetErrorDescription());
 	}
 
 	event.Skip();
@@ -30,9 +29,8 @@ void ibFrameCodeRunner::RunCodeOnButtonClick(wxCommandEvent& event)
 		m_compileCode->Compile(m_codeEditor->GetText());
 		m_procUnit->Execute(m_compileCode->m_cByteCode);
 	}
-	catch (const ibBackendException* err) {
-		ibBackendExceptionPtr guard(err);
-		ibFrameCodeRunner::AppendOutput(err->GetErrorDescription());
+	catch (const ibBackendException& err) {
+		ibFrameCodeRunner::AppendOutput(err.GetErrorDescription());
 	}
 	
 	event.Skip();

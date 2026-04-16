@@ -108,13 +108,11 @@ bool ibFormVisualDocument::Save()
 		success = sourceObject != nullptr ?
 			sourceObject->SaveModify() : true;
 	}
-	catch (const ibBackendAccessException* err) {
-		ibBackendExceptionPtr guard(err);
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendAccessException& err) {
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 		success = false;
 	}
-	catch (const ibBackendException* err) {
-		ibBackendExceptionPtr guard(err);
+	catch (const ibBackendException&) {
 		ibValueSystemFunction::Alert(_("An error occurred while trying to save the form!"));
 		success = false;
 	}

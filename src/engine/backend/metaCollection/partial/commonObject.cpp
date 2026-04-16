@@ -1766,10 +1766,9 @@ bool ibValueRecordDataObjectExt::InitializeObject()
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const ibBackendException* err) {
-				ibBackendExceptionPtr guard(err);
+			catch (const ibBackendException&) {
 				if (!appData->DesignerMode())
-					throw(guard.release());
+					throw;
 				return false;
 			};
 
@@ -1815,10 +1814,9 @@ bool ibValueRecordDataObjectExt::InitializeObject(ibValueRecordDataObjectExt* so
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const ibBackendException* err) {
-				ibBackendExceptionPtr guard(err);
+			catch (const ibBackendException&) {
 				if (!appData->DesignerMode())
-					throw(guard.release());
+					throw;
 				return false;
 			};
 
@@ -1897,10 +1895,9 @@ bool ibValueRecordDataObjectRef::InitializeObject(const ibGuid& copyGuid)
 		try {
 			m_compileModule->Compile();
 		}
-		catch (const ibBackendException* err) {
-			ibBackendExceptionPtr guard(err);
+		catch (const ibBackendException&) {
 			if (!appData->DesignerMode())
-				throw(guard.release());
+				throw;
 			return false;
 		};
 	}
@@ -1957,10 +1954,9 @@ bool ibValueRecordDataObjectRef::InitializeObject(ibValueRecordDataObjectRef* so
 		try {
 			m_compileModule->Compile();
 		}
-		catch (const ibBackendException* err) {
-			ibBackendExceptionPtr guard(err);
+		catch (const ibBackendException&) {
 			if (!appData->DesignerMode())
-				throw(guard.release());
+				throw;
 			return false;
 		};
 	}
@@ -2661,10 +2657,9 @@ bool ibValueRecordSetObject::InitializeObject(const ibValueRecordSetObject* sour
 		try {
 			m_compileModule->Compile();
 		}
-		catch (const ibBackendException* err) {
-			ibBackendExceptionPtr guard(err);
+		catch (const ibBackendException&) {
 			if (!appData->DesignerMode())
-				throw(guard.release());
+				throw;
 			return false;
 		};
 	}

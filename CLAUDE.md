@@ -75,24 +75,35 @@ The compiler is a single-pass recursive descent parser with a deferred-call-reso
 
 `backend.dll` has zero UI code. `frontend.dll` owns all wxWidgets code. Communication is through abstract C++ interfaces exported by `backend.dll`. This allows the backend to run headless (daemon, codeRunner, service mode).
 
-### 5. Throw-By-Pointer Exception Pattern
+### 5. Throw-By-Value Exception Pattern
 
-Exceptions in the backend use the throw-by-pointer idiom inherited from wxWidgets:
+Backend exceptions are thrown by value and caught by const reference, standard
+C++ style. `ibBackendException` has a virtual destructor so catching by the
+base class preserves the dynamic type for `dynamic_cast` and downstream
+re-catches.
 
 ```cpp
-// throw
-throw(new ibBackendInterruptException);
+// throw (usually through a static Error() helper that formats the message)
+ibBackendCoreException::Error(_("..."), arg);         // internally: throw ibBackendCoreException(msg);
+throw ibBackendInterruptException();
 
-// catch
-catch (const ibBackendException* err) {
-    // handle or rethrow
-    throw(err);
+// catch (generic)
+catch (const ibBackendException& err) {
+    wxLogMessage(err.GetErrorDescription());
+    // rethrow (same in-flight object, preserves m_errorHandled):
+    throw;
 }
+
+// catch (derived first, base second — order matters)
+catch (const ibBackendAccessException& err) { ... }
+catch (const ibBackendException& err)       { ... }
 ```
 
-This is intentional and matches `ibBackendException::ProcessError` which calls `throw(err)`. Do not change exceptions to throw-by-value unless you update all catch sites.
+`ibBackendException::ProcessError` is called from inside the procUnit catch
+block; it formats/dispatches the error and then uses bare `throw;` to
+propagate the same exception object.
 
-### 5. Metadata CLSID System
+### 6. Metadata CLSID System
 
 Every class in the metadata and value system is identified by a 7-character string CLSID encoded into a `ibClassID` integer via `string_to_clsid()`. Examples: `"VL_NUMB"` (number value), `"MD_CAT"` (Catalog), `"MD_DOC"` (Document). These appear in serialised configuration files and the database.
 

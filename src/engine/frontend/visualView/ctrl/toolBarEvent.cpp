@@ -53,12 +53,10 @@ void ibValueToolbar::OnTool(wxCommandEvent& event)
 							GetOwnerForm()
 						);
 					}
-					catch (const ibBackendAccessException* err) {
-						ibBackendExceptionPtr guard(err);
-						ibValueSystemFunction::Alert(err->GetErrorDescription());
+					catch (const ibBackendAccessException& err) {
+						ibValueSystemFunction::Alert(err.GetErrorDescription());
 					}
-					catch (const ibBackendException* err) {
-						ibBackendExceptionPtr guard(err);
+					catch (const ibBackendException&) {
 					}
 				}
 				else if (strAction.Length() > 0) {

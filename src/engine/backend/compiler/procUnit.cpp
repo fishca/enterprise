@@ -871,9 +871,9 @@ start_label:
 			lCodeLine++;
 		}
 	}
-	catch (const ibBackendInterruptException* err) {
+	catch (const ibBackendInterruptException& err) {
 
-		ibValueSystemFunction::Message(err->GetErrorDescription(),
+		ibValueSystemFunction::Message(err.GetErrorDescription(),
 			ibStatusMessage::ibStatusMessage_Error);
 
 		while (lCodeLine < lFinish) {
@@ -892,13 +892,7 @@ start_label:
 		s_errorPlace.Reset(); //Error is handled in this module - erase the error location
 
 	}
-	catch (const ibBackendException* err) {
-		// Own the exception pointer for paths that don't rethrow. On the goto
-		// branch below the bytecode-level try/except handles the error — the
-		// guard's destructor frees err as we unwind out of the catch. On the
-		// fall-through branch ProcessError rethrows, so we must release()
-		// first to hand ownership back to the new throw.
-		ibBackendExceptionPtr guard(err);
+	catch (const ibBackendException& err) {
 
 		const long trySize = tryList.size() - 1;
 		if (trySize >= 0) {
@@ -920,8 +914,8 @@ start_label:
 			s_errorPlace.m_errorLine = lCodeLine;
 		}
 
-		//show and throw error message
-		ibBackendException::ProcessError(guard.release(), m_pByteCode->m_listCode[lCodeLine]);
+		//show and throw error message (ProcessError rethrows via `throw;`)
+		ibBackendException::ProcessError(err, m_pByteCode->m_listCode[lCodeLine]);
 	}
 }
 
@@ -1290,8 +1284,7 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 	try {
 		runEvaluate->Execute(&runEvaluate->m_cCurContext, &pvarRetValue, bDelta);
 	}
-	catch (const ibBackendException* err) {
-		ibBackendExceptionPtr guard(err);
+	catch (const ibBackendException&) {
 		if (!isEvalMode) ibBackendException::SetEvalMode(false);
 		return false;
 	}

@@ -104,9 +104,8 @@ protected:
 
 public:
 
-	// Exceptions are allocated with `new` and thrown by pointer; catch sites
-	// must own the pointer (preferably via ibBackendExceptionPtr). A virtual
-	// destructor makes `delete base_ptr` well-defined when the real type is
+	// Thrown by value, caught by const reference. Virtual destructor keeps
+	// polymorphic dynamic-cast/catch-by-base behaviour well-defined across
 	// ibBackendCoreException / ibBackendInterruptException / ibBackendAccessException.
 	virtual ~ibBackendException() = default;
 
@@ -116,8 +115,8 @@ public:
 	//get error description
 	const wxString GetErrorDescription() const { return m_strErrorDescription; }
 
-	//error from proc unit/compile module 
-	static void ProcessError(const ibBackendException* err, const struct ibByteUnit& error);
+	//error from proc unit/compile module
+	static void ProcessError(const ibBackendException& err, const struct ibByteUnit& error);
 	static void ProcessError(const wxString& strFileName,
 		const wxString& strModuleName, const wxString& strDocPath,
 		const unsigned int currPos, const unsigned int currLine,
@@ -195,16 +194,5 @@ public:
 };
 
 #pragma endregion
-
-#include <memory>
-
-// RAII owner for pointers caught from OES throw-by-pointer exceptions.
-// Usage:
-//     catch (const ibBackendException* err) {
-//         ibBackendExceptionPtr guard(err);
-//         // ... handle or swallow ...
-//         // if rethrow needed: throw(guard.release());
-//     }
-using ibBackendExceptionPtr = std::unique_ptr<const ibBackendException>;
 
 #endif

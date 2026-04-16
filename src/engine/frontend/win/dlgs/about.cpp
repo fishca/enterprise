@@ -2,6 +2,7 @@
 
 #include "backend/metaCollection/metaObjectMetadata.h"
 #include "backend/appData.h"
+#include "backend/plugin/pluginManager.h"
 
 wxString strContributors =
 {
@@ -11,7 +12,7 @@ wxString strContributors =
 	wxT("And also everyone who was not mentioned here")
 };
 
-ibDialogAbout::ibDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _("About..."), wxDefaultPosition, wxSize(450, 400))
+ibDialogAbout::ibDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _("About..."), wxDefaultPosition, wxSize(600, 560))
 {
 	SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -104,6 +105,35 @@ ibDialogAbout::ibDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _(
 	infoSizer->Add(bSizer7, 0, wxEXPAND, 5);
 
 	mainSizer->Add(infoSizer, 0, wxEXPAND, 5);
+
+	// --- loaded plugins ---
+	if (ibPluginManager* pm = appData->GetPluginManager()) {
+		const auto& plugins = pm->Loaded();
+
+		wxStaticBoxSizer* pluginsSizer = new wxStaticBoxSizer(
+			new wxStaticBox(this, wxID_ANY, _("Plugins")), wxVERTICAL);
+
+		if (plugins.empty()) {
+			wxStaticText* empty = new wxStaticText(pluginsSizer->GetStaticBox(), wxID_ANY,
+				_("No plugins loaded"));
+			empty->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+			pluginsSizer->Add(empty, 0, wxALL, 5);
+		} else {
+			wxString text;
+			for (const auto& p : plugins) {
+				text << wxString::FromUTF8(p.m_info->name ? p.m_info->name : "?")
+					<< wxT("  ")
+					<< wxString::FromUTF8(p.m_info->version ? p.m_info->version : "")
+					<< wxT("\n");
+			}
+			wxTextCtrl* list = new wxTextCtrl(pluginsSizer->GetStaticBox(), wxID_ANY,
+				text, wxDefaultPosition, wxSize(-1, 60),
+				wxTE_MULTILINE | wxTE_READONLY | wxBORDER_SIMPLE);
+			pluginsSizer->Add(list, 1, wxALL | wxEXPAND, 5);
+		}
+
+		mainSizer->Add(pluginsSizer, 0, wxEXPAND, 5);
+	}
 
 	wxBoxSizer* bottomSizer = new wxBoxSizer(wxVERTICAL);
 

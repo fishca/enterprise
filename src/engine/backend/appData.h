@@ -2,6 +2,7 @@
 #define __APP_DATA_H__
 
 #include <atomic>
+#include <memory>
 
 #include "backend/backend_core.h"
 
@@ -281,6 +282,8 @@ public:
 
 	const ibApplicationDataSessionArray GetSessionArray() const { return m_sessionUpdater->GetSessionArray(); }
 
+	class ibPluginManager* GetPluginManager() const { return m_pluginManager.get(); }
+
 #pragma endregion 
 
 	const std::vector<ibApplicationDataUserInfo::ibApplicationDataUserRole>& GetUserRoleArray() const { return m_userInfo.m_roleArray; }
@@ -381,6 +384,7 @@ private:
 
 	std::shared_ptr<ibDatabaseLayer> m_db;
 	std::shared_ptr<ibApplicationDataSessionUpdater> m_sessionUpdater;
+	std::unique_ptr<class ibPluginManager> m_pluginManager;
 
 	bool m_connected_to_db = false;
 	bool m_created_metadata = false;

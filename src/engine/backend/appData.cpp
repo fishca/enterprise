@@ -6,6 +6,7 @@
 #include "backend/appData.h"
 
 #include "backend/utils/passwordHash.hpp"
+#include "backend/plugin/pluginManager.h"
 
 //databases
 #include "backend/databaseLayer/firebird/firebirdDatabaseLayer.h"
@@ -79,13 +80,22 @@ ibApplicationData::ibApplicationData(ibRunMode runMode) :
 	m_sessionGuid(wxNewUniqueGuid),
 	m_db(nullptr),
 	m_sessionUpdater(nullptr),
+	m_pluginManager(std::make_unique<ibPluginManager>()),
 	m_dbMode(ibDatabaseMode::eNONE),
 	m_locale_lang(wxLanguage::wxLANGUAGE_UNKNOWN)
 {
+	// Load everything under <exe-dir>/plugins that exports the OES plugin ABI.
+	// Launcher has no script/metadata subsystem so plugins have nothing to hook —
+	// skip it there to avoid paying the scan cost on every connection chooser.
+	if (runMode != eLAUNCHER_MODE)
+		m_pluginManager->LoadAll();
 }
 
 ibApplicationData::~ibApplicationData()
 {
+	// Explicit early unload so plugins see Destroy() while the host is still
+	// alive; also clears the vector before appData's other members die.
+	if (m_pluginManager) m_pluginManager->UnloadAll();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -51,15 +51,19 @@ bool ibDialogPredefinedEditor::ibDataViewPredefinedTreeStore::IsContainer(const 
 unsigned int ibDialogPredefinedEditor::ibDataViewPredefinedTreeStore::GetChildren(const ibDataViewItem& parent,
 	ibDataViewItemArray& array) const
 {
-	//if (!parent.IsOk())
-	//{
-	//	array.Add(ibDataViewItem((void*)1));
-	//	return 1;
-	//}
+	// Root-level request: return every predefined whose parent is null.
+	// Folder-level request: return predefineds whose GetPredefinedParent()
+	// matches the requested folder. Prior code returned the flat list for
+	// every call, which forced the tree to render everything at the root and
+	// never displayed folder nesting even though the backend stored it.
+	const ibPredefinedValueObject* parentObj = parent.IsOk()
+		? static_cast<const ibPredefinedValueObject*>(parent.GetID())
+		: nullptr;
 
-	for (auto object : m_valueMetaObjectHierarchy->GetPredefinedValueArray())
-	{
-		array.Add(ibDataViewItem(object.get()));
+	for (const auto& object : m_valueMetaObjectHierarchy->GetPredefinedValueArray()) {
+		const ibPredefinedValueObject* const itemParent = object->GetPredefinedParent().get();
+		if (itemParent == parentObj)
+			array.Add(ibDataViewItem(object.get()));
 	}
 
 	return array.Count();
@@ -167,7 +171,8 @@ void ibDialogPredefinedEditor::OnCommandMenu(wxCommandEvent& event)
 
 			ibDialogPredefinedItem dlg(this,
 				wxNewUniqueGuid,
-				predefined->GetPredefinedParentName(),
+				predefined->GetPredefinedParent(),
+				predefined->IsPredefinedFolder(),
 				predefined->GetPredefinedName(),
 				predefined->GetPredefinedCode(),
 				predefined->GetPredefinedDescription());
@@ -184,7 +189,8 @@ void ibDialogPredefinedEditor::OnCommandMenu(wxCommandEvent& event)
 
 			ibDialogPredefinedItem dlg(this,
 				predefined->GetPredefinedGuid(),
-				predefined->GetPredefinedParentName(),
+				predefined->GetPredefinedParent(),
+				predefined->IsPredefinedFolder(),
 				predefined->GetPredefinedName(),
 				predefined->GetPredefinedCode(),
 				predefined->GetPredefinedDescription());
@@ -219,13 +225,16 @@ void ibDialogPredefinedEditor::OnItemActivated(ibDataViewEvent& event)
 
 	ibDialogPredefinedItem dlg(this,
 		predefined->GetPredefinedGuid(),
-		predefined->GetPredefinedParentName(),
+		predefined->GetPredefinedParent(),
+		predefined->IsPredefinedFolder(),
 		predefined->GetPredefinedName(),
 		predefined->GetPredefinedCode(),
 		predefined->GetPredefinedDescription());
 
 	dlg.SetReadOnly(!m_tableModelStore->IsEnabled(selection, model_name));
-	dlg.ShowModal();
+
+	if (dlg.ShowModal() == wxID_OK)
+		m_tableModelStore->Cleared();
 
 	event.Skip();
 }

@@ -92,7 +92,9 @@ bool ibValueModuleManager::AddCommonModule(ibValueMetaObjectCommonModule* common
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const ibBackendException&) {
+			catch (const ibBackendException& err) {
+				wxLogWarning(_("Common module '%s' failed to compile: %s"),
+					commonModule->GetName(), err.GetErrorDescription());
 			};
 		}
 		return moduleValue->CreateCommonModule();
@@ -126,7 +128,9 @@ bool ibValueModuleManager::RenameCommonModule(ibValueMetaObjectCommonModule* com
 			m_compileModule->RemoveVariable(commonModule->GetName());
 			m_compileModule->Compile();
 		}
-		catch (const ibBackendException&) {
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("Rename of common module '%s' to '%s' left compile in failed state: %s"),
+				commonModule->GetName(), newName, err.GetErrorDescription());
 		};
 
 		m_listGlConstValue.insert_or_assign(newName, moduleValue);
@@ -269,7 +273,8 @@ bool ibValueModuleManagerConfiguration::CreateMainModule()
 			m_procUnit = new ibProcUnit;
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const ibBackendException&) {
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("Global module init failed: %s"), err.GetErrorDescription());
 			return false;
 		};
 	}

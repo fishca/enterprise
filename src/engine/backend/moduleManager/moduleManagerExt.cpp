@@ -87,7 +87,10 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 			//and run...
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const ibBackendException&) {
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("External module '%s' init failed: %s"),
+				m_objectValue ? m_objectValue->GetClassName() : wxString(wxEmptyString),
+				err.GetErrorDescription());
 			return false;
 		};
 	}
@@ -294,7 +297,10 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 			m_compileModule->Compile();
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const ibBackendException&) {
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("External module '%s' re-init failed: %s"),
+				m_objectValue ? m_objectValue->GetClassName() : wxString(wxEmptyString),
+				err.GetErrorDescription());
 			return false;
 		};
 	}

@@ -39,14 +39,15 @@ bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
 	if (!appData->DesignerMode()) {
 		try {
 			m_compileModule->Compile();
-			// у глобального модуля код исполняется в главном модуле! 
+			// у глобального модуля код исполняется в главном модуле!
 			if (!ibValueModuleUnit::IsGlobalModule()) {
 				m_procUnit = new ibProcUnit();
 				m_procUnit->SetParent(m_moduleManager->GetProcUnit());
 				m_procUnit->Execute(m_compileModule->m_cByteCode, false);
 			}
 		}
-		catch (const ibBackendException&) {
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("Common module init failed: %s"), err.GetErrorDescription());
 			return false;
 		};
 	}

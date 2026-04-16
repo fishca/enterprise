@@ -39,7 +39,41 @@
 //*                                              support error place                                           *
 //**************************************************************************************************************
 
-ibProcUnit* ibProcUnit::m_currentRunModule = nullptr;
+// Per-thread execution state. Kept as file-static thread_local and
+// accessed through ibProcUnit's static methods below, because MSVC C2492
+// forbids thread_local on class statics that inherit a DLL export.
+// Previous design was plain statics — multiple threads calling Execute
+// concurrently (main UI + background codeRunner + daemon tasks) stomped
+// on each other's call stack, error site, and recursion counter.
+static thread_local ibProcUnit* tl_currentRunModule = nullptr;
+static thread_local std::vector<ibRunContext*> tl_runContext;
+
+ibProcUnit* ibProcUnit::GetCurrentRunModule() { return tl_currentRunModule; }
+void ibProcUnit::SetCurrentRunModule(ibProcUnit* unit) { tl_currentRunModule = unit; }
+void ibProcUnit::ClearCurrentRunModule() { tl_currentRunModule = nullptr; }
+
+void ibProcUnit::AddRunContext(ibRunContext* runContext) { tl_runContext.push_back(runContext); }
+unsigned int ibProcUnit::GetCountRunContext() { return static_cast<unsigned int>(tl_runContext.size()); }
+
+ibRunContext* ibProcUnit::GetPrevRunContext() {
+	if (tl_runContext.size() < 2)
+		return nullptr;
+	return tl_runContext[tl_runContext.size() - 2];
+}
+
+ibRunContext* ibProcUnit::GetCurrentRunContext() {
+	if (tl_runContext.empty())
+		return nullptr;
+	return tl_runContext.back();
+}
+
+ibRunContext* ibProcUnit::GetRunContext(unsigned int idx) {
+	if (tl_runContext.size() < idx)
+		return nullptr;
+	return tl_runContext[idx];
+}
+
+void ibProcUnit::BackRunContext() { tl_runContext.pop_back(); }
 
 struct ibErrorPlace {
 
@@ -56,21 +90,20 @@ struct ibErrorPlace {
 	ibByteCode* m_skipByteCode = nullptr;
 };
 
-static ibErrorPlace s_errorPlace;
+static thread_local ibErrorPlace s_errorPlace;
 
 void ibProcUnit::Raise() {
 
-	s_errorPlace.Reset(); //initialize the error place	
+	s_errorPlace.Reset(); //initialize the error place
 	s_errorPlace.m_skipByteCode = ibProcUnit::GetCurrentByteCode(); //return back to the called module (if any)
 }
-
-std::vector <ibRunContext*> ibProcUnit::ms_runContext;
 
 //**************************************************************************************************************
 //*                                              stack support                                                 *
 //**************************************************************************************************************
 
-static short s_nRecCount = 0; //control looping
+// Per-thread recursion counter.
+static thread_local short s_nRecCount = 0; //control looping
 
 inline void BeginByteCode(ibRunContext* pCode) { ibProcUnit::AddRunContext(pCode); }
 inline bool EndByteCode()
@@ -530,7 +563,7 @@ start_label:
 
 			if (!ibBackendException::IsEvalMode()) {
 				pContext->m_lCurLine = lCodeLine;
-				m_currentRunModule = this;
+				SetCurrentRunModule(this);
 			}
 
 			//if force exit - terminate 

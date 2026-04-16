@@ -26,8 +26,8 @@ public:
 			wxDELETEA(m_ppArrayCode);
 		}
 
-		if (m_currentRunModule == this) {
-			m_currentRunModule = nullptr;
+		if (GetCurrentRunModule() == this) {
+			ClearCurrentRunModule();
 		}
 
 		m_numAutoDeleteParent = 0;
@@ -114,33 +114,18 @@ public:
 	bool GetPropVal(const wxString& strPropName, ibValue& pvarPropVal);
 	bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);//attribute value
 
-	//run module 
-	static ibProcUnit* GetCurrentRunModule() { return m_currentRunModule; }
-	static void ClearCurrentRunModule() { m_currentRunModule = nullptr; }
+	//run module — thread_local storage in procUnit.cpp
+	static ibProcUnit* GetCurrentRunModule();
+	static void SetCurrentRunModule(ibProcUnit* unit);
+	static void ClearCurrentRunModule();
 
-	//run context
-	static void AddRunContext(ibRunContext* runContext) { ms_runContext.push_back(runContext); }
-	static unsigned int GetCountRunContext() { return ms_runContext.size(); }
-
-	static ibRunContext* GetPrevRunContext() {
-		if (ms_runContext.size() < 2)
-			return nullptr;
-		return ms_runContext[ms_runContext.size() - 2];
-	}
-
-	static ibRunContext* GetCurrentRunContext() {
-		if (!ms_runContext.size())
-			return nullptr;
-		return ms_runContext.back();
-	}
-
-	static ibRunContext* GetRunContext(unsigned int idx) {
-		if (ms_runContext.size() < idx)
-			return nullptr;
-		return ms_runContext[idx];
-	}
-
-	static void BackRunContext() { ms_runContext.pop_back(); }
+	//run context — thread_local storage in procUnit.cpp
+	static void AddRunContext(ibRunContext* runContext);
+	static unsigned int GetCountRunContext();
+	static ibRunContext* GetPrevRunContext();
+	static ibRunContext* GetCurrentRunContext();
+	static ibRunContext* GetRunContext(unsigned int idx);
+	static void BackRunContext();
 
 	static ibByteCode* GetCurrentByteCode() {
 		const ibRunContext* runContext = GetCurrentRunContext();
@@ -160,13 +145,14 @@ protected:
 	ibProcUnit** m_ppArrayCode = {}; //pointers to arrays of executable modules (0 - current module, 1 and higher - parent modules)
 	std::vector <ibProcUnit*> m_procParent;
 
-	//static attributes
-	static ibProcUnit* m_currentRunModule;
+	// Per-thread state (m_currentRunModule, ms_runContext, s_nRecCount,
+	// s_errorPlace) lives as thread_local in procUnit.cpp. The storage
+	// cannot be declared `static thread_local` on an exported (BACKEND_API)
+	// class — MSVC C2492 forbids the combination. Access goes through the
+	// static inline/out-of-line methods below, each of which forwards to
+	// the file-scope thread_local in procUnit.cpp.
 
 	ibRunContext m_cCurContext;
-
-	//static attributes
-	static std::vector <ibRunContext*> ms_runContext; //list of executable module codes
 };
 
 class BACKEND_API ibProcUnitEvaluate : public ibProcUnit {

@@ -39,6 +39,8 @@ ibValueToolbar::ibValueToolbar() : ibValueWindow()
 wxObject* ibValueToolbar::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
 	ibAuiToolBar* toolbar = new ibAuiToolBar(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_NO_AUTORESIZE | wxAUI_TB_HORZ_TEXT | wxAUI_TB_OVERFLOW);
+	// Designer shows the full content extent; runtime collapses into overflow.
+	toolbar->SetDesignerMode(visualHost->IsDesignerHost());
 	toolbar->SetArtProvider(new wxAuiLunaToolBarArt());
 	toolbar->Bind(wxEVT_TOOL, &ibValueToolbar::OnTool, this);
 	toolbar->Bind(wxEVT_AUITOOLBAR_TOOL_DROPDOWN, &ibValueToolbar::OnToolDropDown, this);

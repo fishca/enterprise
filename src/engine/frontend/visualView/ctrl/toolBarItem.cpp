@@ -45,7 +45,7 @@ void ibValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVis
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 }
@@ -157,7 +157,7 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 
@@ -172,7 +172,7 @@ void ibValueToolBarItem::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 }
@@ -207,7 +207,7 @@ void ibValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, 
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 }
@@ -231,7 +231,7 @@ void ibValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, 
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 }

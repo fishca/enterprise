@@ -23,7 +23,7 @@ public:
 		}
 
 		if (m_ppArrayCode != nullptr) {
-			wxDELETE(m_ppArrayCode);
+			wxDELETEA(m_ppArrayCode);
 		}
 
 		if (m_currentRunModule == this) {

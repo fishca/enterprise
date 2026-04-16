@@ -787,6 +787,7 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 							propCount = vAttribute.GetNProps();
 						}
 						catch (const ibBackendException* err) {
+							ibBackendExceptionPtr guard(err);
 
 							wxString strErrorMessage = err->GetErrorDescription();
 							strErrorMessage.Replace('\n', ' ');
@@ -795,7 +796,7 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 							strPropValue = strErrorMessage;
 							strPropType = wxT("<error>");
 
-							//count of attribute   
+							//count of attribute
 							propCount = 0;
 						}
 

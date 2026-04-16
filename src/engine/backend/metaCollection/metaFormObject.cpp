@@ -29,11 +29,13 @@ bool ibBackendCommandItem::ShowFormByCommandType(ibInterfaceCommandType cmdType)
 		valueForm->ShowForm();
 	}
 	catch (const ibBackendAccessException* err) {
+		ibBackendExceptionPtr guard(err);
 		wxDELETE(valueForm);
 		ibValueSystemFunction::Alert(err->GetErrorDescription());
 		return false;
 	}
-	catch (const ibBackendException*) {
+	catch (const ibBackendException* err) {
+		ibBackendExceptionPtr guard(err);
 		wxDELETE(valueForm);
 		return false;
 	}

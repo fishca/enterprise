@@ -92,7 +92,8 @@ bool ibValueModuleManager::AddCommonModule(ibValueMetaObjectCommonModule* common
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const ibBackendException*) {
+			catch (const ibBackendException* err) {
+				ibBackendExceptionPtr guard(err);
 			};
 		}
 		return moduleValue->CreateCommonModule();
@@ -126,7 +127,8 @@ bool ibValueModuleManager::RenameCommonModule(ibValueMetaObjectCommonModule* com
 			m_compileModule->RemoveVariable(commonModule->GetName());
 			m_compileModule->Compile();
 		}
-		catch (const ibBackendException*) {
+		catch (const ibBackendException* err) {
+			ibBackendExceptionPtr guard(err);
 		};
 
 		m_listGlConstValue.insert_or_assign(newName, moduleValue);
@@ -269,7 +271,8 @@ bool ibValueModuleManagerConfiguration::CreateMainModule()
 			m_procUnit = new ibProcUnit;
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const ibBackendException*) {
+		catch (const ibBackendException* err) {
+			ibBackendExceptionPtr guard(err);
 			return false;
 		};
 	}

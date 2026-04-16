@@ -46,7 +46,8 @@ bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
 				m_procUnit->Execute(m_compileModule->m_cByteCode, false);
 			}
 		}
-		catch (const ibBackendException *){
+		catch (const ibBackendException* err) {
+			ibBackendExceptionPtr guard(err);
 			return false;
 		};
 	}

@@ -54,9 +54,11 @@ void ibValueToolbar::OnTool(wxCommandEvent& event)
 						);
 					}
 					catch (const ibBackendAccessException* err) {
+						ibBackendExceptionPtr guard(err);
 						ibValueSystemFunction::Alert(err->GetErrorDescription());
 					}
-					catch (const ibBackendException*) {
+					catch (const ibBackendException* err) {
+						ibBackendExceptionPtr guard(err);
 					}
 				}
 				else if (strAction.Length() > 0) {

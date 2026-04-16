@@ -104,6 +104,12 @@ protected:
 
 public:
 
+	// Exceptions are allocated with `new` and thrown by pointer; catch sites
+	// must own the pointer (preferably via ibBackendExceptionPtr). A virtual
+	// destructor makes `delete base_ptr` well-defined when the real type is
+	// ibBackendCoreException / ibBackendInterruptException / ibBackendAccessException.
+	virtual ~ibBackendException() = default;
+
 	WX_DEFINE_VARARG_FUNC(static wxString, Format, 1, (const wxFormatErrorString&),
 		DoFormatWchar, DoFormatUtf8);
 
@@ -188,6 +194,17 @@ public:
 	static void Error();
 };
 
-#pragma endregion 
+#pragma endregion
 
-#endif 
+#include <memory>
+
+// RAII owner for pointers caught from OES throw-by-pointer exceptions.
+// Usage:
+//     catch (const ibBackendException* err) {
+//         ibBackendExceptionPtr guard(err);
+//         // ... handle or swallow ...
+//         // if rethrow needed: throw(guard.release());
+//     }
+using ibBackendExceptionPtr = std::unique_ptr<const ibBackendException>;
+
+#endif

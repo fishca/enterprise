@@ -17,6 +17,7 @@ void ibFrameCodeRunner::SyntaxCheckOnButtonClick(wxCommandEvent& event)
 		ibFrameCodeRunner::AppendOutput(_("No syntax errors detected!"));
 	}
 	catch (const ibBackendException* err) {
+		ibBackendExceptionPtr guard(err);
 		ibFrameCodeRunner::AppendOutput(err->GetErrorDescription());
 	}
 
@@ -30,6 +31,7 @@ void ibFrameCodeRunner::RunCodeOnButtonClick(wxCommandEvent& event)
 		m_procUnit->Execute(m_compileCode->m_cByteCode);
 	}
 	catch (const ibBackendException* err) {
+		ibBackendExceptionPtr guard(err);
 		ibFrameCodeRunner::AppendOutput(err->GetErrorDescription());
 	}
 	

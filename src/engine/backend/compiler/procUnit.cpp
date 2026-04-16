@@ -893,6 +893,12 @@ start_label:
 
 	}
 	catch (const ibBackendException* err) {
+		// Own the exception pointer for paths that don't rethrow. On the goto
+		// branch below the bytecode-level try/except handles the error — the
+		// guard's destructor frees err as we unwind out of the catch. On the
+		// fall-through branch ProcessError rethrows, so we must release()
+		// first to hand ownership back to the new throw.
+		ibBackendExceptionPtr guard(err);
 
 		const long trySize = tryList.size() - 1;
 		if (trySize >= 0) {
@@ -915,7 +921,7 @@ start_label:
 		}
 
 		//show and throw error message
-		ibBackendException::ProcessError(err, m_pByteCode->m_listCode[lCodeLine]);
+		ibBackendException::ProcessError(guard.release(), m_pByteCode->m_listCode[lCodeLine]);
 	}
 }
 
@@ -1236,7 +1242,12 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 
 		ibProcUnitEvaluate* evalUnit = new ibProcUnitEvaluate;
 		if (!evalUnit->CompileExpression(pRunContext, pvarRetValue, *compileExpression, compileBlock)) {
-			//delete from memory
+			// If Execute inside CompileExpression got far enough to set m_pByteCode
+			// before throwing, ~ibProcUnitEvaluate would delete compileExpression
+			// through m_pByteCode->m_compileModule — and the explicit delete below
+			// would then double-free. Reset() nulls m_pByteCode (and releases any
+			// partial array allocations from Execute) so the destructor is a no-op.
+			evalUnit->Reset();
 			wxDELETE(evalUnit);
 			wxDELETE(compileExpression);
 			if (!isEvalMode) ibBackendException::SetEvalMode(false);
@@ -1279,7 +1290,8 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 	try {
 		runEvaluate->Execute(&runEvaluate->m_cCurContext, &pvarRetValue, bDelta);
 	}
-	catch (const ibBackendException*) {
+	catch (const ibBackendException* err) {
+		ibBackendExceptionPtr guard(err);
 		if (!isEvalMode) ibBackendException::SetEvalMode(false);
 		return false;
 	}

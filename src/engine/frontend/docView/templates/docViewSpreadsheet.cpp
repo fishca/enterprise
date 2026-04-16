@@ -22,8 +22,13 @@ enum
 	wxID_BORDER_BOTTOM,
 	wxID_BORDER_ALL,
 	wxID_BORDER_AROUND,
-	wxID_BORDER_NONE, 
-	wxID_EDITABLE
+	wxID_BORDER_NONE,
+	wxID_EDITABLE,
+
+	wxID_GROUP_ROW,
+	wxID_UNGROUP_ROW,
+	wxID_GROUP_COL,
+	wxID_UNGROUP_COL,
 };
 
 // ----------------------------------------------------------------------------
@@ -58,6 +63,10 @@ EVT_MENU(wxID_BORDER_ALL, ibSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDER_AROUND, ibSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDER_NONE, ibSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_EDITABLE, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_GROUP_ROW, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_UNGROUP_ROW, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_GROUP_COL, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_UNGROUP_COL, ibSpreadsheetEditView::OnMenuEvent)
 wxEND_EVENT_TABLE()
 
 bool ibSpreadsheetEditView::OnCreate(ibMetaDocument* doc, long flags)
@@ -139,6 +148,18 @@ wxMenuBar* ibSpreadsheetEditView::CreateMenuBar() const
 		menuItem = menu->AppendCheckItem(wxID_EDITABLE, _("Editable"));
 		menuItem->Enable(doc ? doc->IsEditable() : true);
 		menuItem->Check(m_gridEditor->IsEditable());
+
+		wxMenu* menuGroup = new wxMenu;
+		menuItem = menuGroup->Append(wxID_GROUP_ROW, _("Group rows"));
+		menuItem->Enable(m_gridEditor->IsEditable());
+		menuItem = menuGroup->Append(wxID_UNGROUP_ROW, _("Ungroup rows"));
+		menuItem->Enable(m_gridEditor->IsEditable());
+		menuGroup->AppendSeparator();
+		menuItem = menuGroup->Append(wxID_GROUP_COL, _("Group columns"));
+		menuItem->Enable(m_gridEditor->IsEditable());
+		menuItem = menuGroup->Append(wxID_UNGROUP_COL, _("Ungroup columns"));
+		menuItem->Enable(m_gridEditor->IsEditable());
+		menu->AppendSubMenu(menuGroup, _("Grouping"));
 
 		menuItem = menu->AppendSeparator();
 		menuItem = menu->Append(wxID_MERGE_CELL, _("Merge cells"));
@@ -223,6 +244,18 @@ void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 	{
 	case wxID_MERGE_CELL:
 		m_gridEditor->MergeCells();
+		break;
+	case wxID_GROUP_ROW:
+		m_gridEditor->GroupSelectedRows();
+		break;
+	case wxID_UNGROUP_ROW:
+		m_gridEditor->UngroupSelectedRows();
+		break;
+	case wxID_GROUP_COL:
+		m_gridEditor->GroupSelectedCols();
+		break;
+	case wxID_UNGROUP_COL:
+		m_gridEditor->UngroupSelectedCols();
 		break;
 	case wxID_AREA_ADD:
 		m_gridEditor->AddArea();
@@ -326,7 +359,7 @@ void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 
 wxIMPLEMENT_ABSTRACT_CLASS(ibSpreadsheetDocument, ibMetaDocument);
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetFilibDocument, ibSpreadsheetDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetFileDocument, ibSpreadsheetDocument);
 wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetEditDocument, ibSpreadsheetDocument);
 
 wxCommandProcessor* ibSpreadsheetDocument::OnCreateCommandProcessor()
@@ -341,10 +374,10 @@ ibGridEditor* ibSpreadsheetDocument::GetGridCtrl() const
 }
 
 // ----------------------------------------------------------------------------
-// ibSpreadsheetFilibDocument: wxDocument and wxGrid married
+// ibSpreadsheetFileDocument: wxDocument and wxGrid married
 // ----------------------------------------------------------------------------
 
-bool ibSpreadsheetFilibDocument::OnCreate(const wxString& path, long flags)
+bool ibSpreadsheetFileDocument::OnCreate(const wxString& path, long flags)
 {
 	if (!ibMetaDocument::OnCreate(path, flags))
 		return false;
@@ -354,7 +387,7 @@ bool ibSpreadsheetFilibDocument::OnCreate(const wxString& path, long flags)
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool ibSpreadsheetFilibDocument::DoOpenDocument(const wxString& filename)
+bool ibSpreadsheetFileDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_spreadSheetDocument->LoadFromFile(filename))
 		return false;
@@ -362,7 +395,7 @@ bool ibSpreadsheetFilibDocument::DoOpenDocument(const wxString& filename)
 	return GetGridCtrl()->LoadDocument(m_spreadSheetDocument->GetSpreadsheetDesc());
 }
 
-bool ibSpreadsheetFilibDocument::DoSaveDocument(const wxString& filename)
+bool ibSpreadsheetFileDocument::DoSaveDocument(const wxString& filename)
 {
 	if (!GetGridCtrl()->SaveDocument(m_spreadSheetDocument->GetSpreadsheetDesc()))
 		return false;

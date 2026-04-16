@@ -207,14 +207,14 @@ bool ibFrontendDocMDIFrame::UpdateFormUniqueKey(const ibUniqueKeyPair& guid)
 bool ibFrontendDocMDIFrame::ShowSpreadsheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument)
 {
 	class ibSpreadsheetMemoryDocument :
-		public ibSpreadsheetFilibDocument {
+		public ibSpreadsheetFileDocument {
 	public:
 
 		ibSpreadsheetMemoryDocument(const wxString& strTitle, const wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument) :
-			ibSpreadsheetFilibDocument(spreadSheetDocument)
+			ibSpreadsheetFileDocument(spreadSheetDocument)
 		{
-			ibSpreadsheetFilibDocument::SetTitle(strTitle);
-			ibSpreadsheetFilibDocument::SetFilename(strTitle);
+			ibSpreadsheetFileDocument::SetTitle(strTitle);
+			ibSpreadsheetFileDocument::SetFilename(strTitle);
 		}
 
 		virtual bool OnCreate(const wxString& path, long flags) override {

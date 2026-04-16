@@ -189,15 +189,27 @@ public:
 
 struct ibSpreadsheetAreaDescription {
 
-	ibSpreadsheetAreaDescription(const wxString& label, unsigned int start, unsigned int end) : m_label(label), m_start(start), m_end(end) {}
+	ibSpreadsheetAreaDescription(const wxString& label, unsigned int start, unsigned int end)
+		: m_label(label), m_start(start), m_end(end) {}
 
 	bool operator == (const ibSpreadsheetAreaDescription& rhs) const {
-		return m_label == rhs.m_label &&
-			m_start == rhs.m_start && m_end == rhs.m_end;
+		return m_label == rhs.m_label
+			&& m_start == rhs.m_start && m_end == rhs.m_end;
 	}
 
 	wxString m_label;
 	unsigned int m_start, m_end;
+};
+
+// Outline grouping description — orthogonal to labels.
+struct ibSpreadsheetGroupDescription {
+	ibSpreadsheetGroupDescription(unsigned int start, unsigned int end,
+		unsigned int level = 1, bool collapsed = false)
+		: m_start(start), m_end(end), m_level(level), m_collapsed(collapsed) {}
+
+	unsigned int m_start, m_end;
+	unsigned int m_level;
+	bool m_collapsed;
 };
 
 struct ibSpreadsheetRowSizeDescription
@@ -293,7 +305,7 @@ struct ibSpreadsheetDescription {
 	int GetBrakeNumberRows() const { return m_rowBrakeAt.size(); }
 	int GetBrakeNumberCols() const { return m_colBrakeAt.size(); }
 
-	//area 
+	//area
 	void AddRowArea(const wxString& strAreaName,
 		unsigned int start, unsigned int end) {
 		m_rowAreaAt.emplace_back(strAreaName, start, end);
@@ -378,6 +390,24 @@ struct ibSpreadsheetDescription {
 
 	int GetAreaNumberRows() const { return m_rowAreaAt.size(); }
 	int GetAreaNumberCols() const { return m_colAreaAt.size(); }
+
+	// ------ outline groups (independent of label areas) ------
+	void AddRowGroup(unsigned int start, unsigned int end, unsigned int level = 1, bool collapsed = false) {
+		m_rowGroupAt.emplace_back(start, end, level, collapsed);
+	}
+	void AddColGroup(unsigned int start, unsigned int end, unsigned int level = 1, bool collapsed = false) {
+		m_colGroupAt.emplace_back(start, end, level, collapsed);
+	}
+	int GetGroupNumberRows() const { return (int)m_rowGroupAt.size(); }
+	int GetGroupNumberCols() const { return (int)m_colGroupAt.size(); }
+	const ibSpreadsheetGroupDescription* GetRowGroupByIdx(size_t idx) const {
+		return idx < m_rowGroupAt.size() ? &m_rowGroupAt[idx] : nullptr;
+	}
+	const ibSpreadsheetGroupDescription* GetColGroupByIdx(size_t idx) const {
+		return idx < m_colGroupAt.size() ? &m_colGroupAt[idx] : nullptr;
+	}
+	void ClearRowGroups() { m_rowGroupAt.clear(); }
+	void ClearColGroups() { m_colGroupAt.clear(); }
 
 	// ------ grid dimensions
 	//
@@ -786,6 +816,9 @@ private:
 	//area 
 	std::vector<ibSpreadsheetAreaDescription> m_rowAreaAt;
 	std::vector<ibSpreadsheetAreaDescription> m_colAreaAt;
+
+	std::vector<ibSpreadsheetGroupDescription> m_rowGroupAt;
+	std::vector<ibSpreadsheetGroupDescription> m_colGroupAt;
 };
 
 class BACKEND_API ibSpreadsheetDescriptionMemory {

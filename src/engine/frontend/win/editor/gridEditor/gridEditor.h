@@ -68,13 +68,22 @@ class FRONTEND_API ibGridEditor : public ibGrid {
 		// ------ area value accessors
 		//
 		virtual void PutArea(
-			const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc) {
-			m_view->PutDocument(doc);
+			const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc,
+			unsigned int groupLevel = 0) override {
+			m_view->PutDocument(doc, groupLevel);
 		}
 
 		virtual void JoinArea(
-			const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc) {
-			m_view->JoinDocument(doc);
+			const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc,
+			unsigned int groupLevel = 0) override {
+			m_view->JoinDocument(doc, groupLevel);
+		}
+
+		virtual void RowAreaAdded(unsigned int start, unsigned int end, unsigned int level) override {
+			m_view->AppendRowOutlineGroup(start, end, level);
+		}
+		virtual void ColAreaAdded(unsigned int start, unsigned int end, unsigned int level) override {
+			m_view->AppendColOutlineGroup(start, end, level);
 		}
 
 	private:
@@ -491,8 +500,14 @@ public:
 
 #pragma endregion 
 
-	void PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
-	void JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
+	void PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, unsigned int groupLevel = 0);
+	void JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, unsigned int groupLevel = 0);
+
+	// Bridge called by the spreadsheet notifier when BeginGroup/EndGroup closes
+	// a block — mirrors the new area into m_rowAreaAt / m_colAreaAt so the
+	// outline pane repaints immediately.
+	void AppendRowOutlineGroup(unsigned int start, unsigned int end, unsigned int level);
+	void AppendColOutlineGroup(unsigned int start, unsigned int end, unsigned int level);
 
 	class ibGridEditorPrintout* CreatePrintout() const;
 
@@ -543,6 +558,13 @@ protected:
 	void OnShowCell(wxCommandEvent& event);
 
 	void OnProperties(wxCommandEvent& event);
+
+public:
+	// Public entry points used by ibSpreadsheetEditView menu items.
+	void GroupSelectedRows();
+	void UngroupSelectedRows();
+	void GroupSelectedCols();
+	void UngroupSelectedCols();
 
 	void OnScroll(wxScrollWinEvent& event);
 

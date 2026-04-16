@@ -1,4 +1,5 @@
 #include "gridEditor.h"
+#include "frontend/win/ctrls/grid/gridextprivate.h"
 
 bool ibGridEditor::AssociatibDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
 {
@@ -114,6 +115,20 @@ bool ibGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 			m_colAreaAt.push_back(entry);
 		}
 
+		// Outline groups from desc (independent of label areas).
+		m_rowGroupAt.clear();
+		for (int idx = 0; idx < spreadsheetDesc.GetGroupNumberRows(); idx++) {
+			const ibSpreadsheetGroupDescription* g = spreadsheetDesc.GetRowGroupByIdx(idx);
+			if (g == nullptr) continue;
+			AddRowGroup((int)g->m_start, (int)g->m_end, (int)g->m_level, g->m_collapsed);
+		}
+		m_colGroupAt.clear();
+		for (int idx = 0; idx < spreadsheetDesc.GetGroupNumberCols(); idx++) {
+			const ibSpreadsheetGroupDescription* g = spreadsheetDesc.GetColGroupByIdx(idx);
+			if (g == nullptr) continue;
+			AddColGroup((int)g->m_start, (int)g->m_end, (int)g->m_level, g->m_collapsed);
+		}
+
 		m_rowBrakeAt.Clear();
 
 		for (int idx = 0; idx < spreadsheetDesc.GetBrakeNumberRows(); idx++)
@@ -165,7 +180,7 @@ bool ibGridEditor::SaveDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc
 	return SaveSpreadsheet(doc->GetSpreadsheetDesc());
 }
 
-void ibGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+void ibGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, unsigned int groupLevel)
 {
 	ibGrid::SetEvtHandlerEnabled(false);
 
@@ -227,11 +242,17 @@ void ibGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>
 	if (maxColBrake < doc->GetNumberCols())
 		SetColBrake(maxColBrake + doc->GetNumberCols());
 
+	if (groupLevel > 0 && doc->GetNumberRows() > 0) {
+		AddRowGroup(maxRowBrake, maxRowBrake + doc->GetNumberRows() - 1, (int)groupLevel);
+		if (m_rowOutlineWin) m_rowOutlineWin->Refresh();
+		CalcDimensions();
+	}
+
 	ibGrid::EnableEditing(doc->IsEditable());
 	ibGrid::SetEvtHandlerEnabled(true);
 }
 
-void ibGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+void ibGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, unsigned int groupLevel)
 {
 	ibGrid::SetEvtHandlerEnabled(false);
 
@@ -293,7 +314,27 @@ void ibGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject
 
 	SetColBrake(maxColBrake + doc->GetNumberCols());
 
+	if (groupLevel > 0 && doc->GetNumberCols() > 0) {
+		AddColGroup(maxColBrake, maxColBrake + doc->GetNumberCols() - 1, (int)groupLevel);
+		if (m_colOutlineWin) m_colOutlineWin->Refresh();
+		CalcDimensions();
+	}
+
 	ibGrid::SetEvtHandlerEnabled(true);
+}
+
+void ibGridEditor::AppendRowOutlineGroup(unsigned int start, unsigned int end, unsigned int level)
+{
+	AddRowGroup((int)start, (int)end, (int)level);
+	if (m_rowOutlineWin) m_rowOutlineWin->Refresh();
+	CalcDimensions();
+}
+
+void ibGridEditor::AppendColOutlineGroup(unsigned int start, unsigned int end, unsigned int level)
+{
+	AddColGroup((int)start, (int)end, (int)level);
+	if (m_colOutlineWin) m_colOutlineWin->Refresh();
+	CalcDimensions();
 }
 
 bool ibGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDesc)
@@ -383,6 +424,20 @@ bool ibGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDe
 			entry.m_areaLabel = area->m_label;
 
 			m_colAreaAt.push_back(entry);
+		}
+
+		// Outline groups from desc (independent of label areas).
+		m_rowGroupAt.clear();
+		for (int idx = 0; idx < spreadsheetDesc.GetGroupNumberRows(); idx++) {
+			const ibSpreadsheetGroupDescription* g = spreadsheetDesc.GetRowGroupByIdx(idx);
+			if (g == nullptr) continue;
+			AddRowGroup((int)g->m_start, (int)g->m_end, (int)g->m_level, g->m_collapsed);
+		}
+		m_colGroupAt.clear();
+		for (int idx = 0; idx < spreadsheetDesc.GetGroupNumberCols(); idx++) {
+			const ibSpreadsheetGroupDescription* g = spreadsheetDesc.GetColGroupByIdx(idx);
+			if (g == nullptr) continue;
+			AddColGroup((int)g->m_start, (int)g->m_end, (int)g->m_level, g->m_collapsed);
 		}
 
 		m_rowBrakeAt.Clear();

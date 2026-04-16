@@ -381,6 +381,34 @@ public:
 	virtual bool IsFrozen() const wxOVERRIDE { return true; }
 };
 
+// Excel-style outline panes. Independent of the existing area windows:
+// visibility is driven purely by whether any m_rowAreaAt/m_colAreaAt entry
+// has m_level > 0. Row outline sits to the LEFT of the row label; col outline
+// sits ABOVE the col label.
+class ibGridRowOutlineWindow : public ibGridSubwindow
+{
+public:
+	ibGridRowOutlineWindow(ibGrid* parent) : ibGridSubwindow(parent) {}
+private:
+	void OnPaint(wxPaintEvent& event);
+	void OnMouseEvent(wxMouseEvent& event);
+	void OnMouseWheel(wxMouseEvent& event);
+	wxDECLARE_EVENT_TABLE();
+	wxDECLARE_NO_COPY_CLASS(ibGridRowOutlineWindow);
+};
+
+class ibGridColOutlineWindow : public ibGridSubwindow
+{
+public:
+	ibGridColOutlineWindow(ibGrid* parent) : ibGridSubwindow(parent) {}
+private:
+	void OnPaint(wxPaintEvent& event);
+	void OnMouseEvent(wxMouseEvent& event);
+	void OnMouseWheel(wxMouseEvent& event);
+	wxDECLARE_EVENT_TABLE();
+	wxDECLARE_NO_COPY_CLASS(ibGridColOutlineWindow);
+};
+
 class ibGridColLabelWindow : public ibGridSubwindow
 {
 public:
@@ -700,6 +728,13 @@ public:
 	// set cursor into the first visible cell of the given row or column
 	virtual void MakeLineCurrent(ibGrid* grid, int line) const = 0;
 
+	// ------ outline / grouping dispatch (row vs col lives in subclasses) ------
+	virtual int  GetOutlineMaxLevel(const ibGrid* grid) const = 0;
+	virtual wxRect GetOutlineButtonRect(const ibGrid* grid, int idx) const = 0;
+	virtual int  HitTestOutlineButton(const ibGrid* grid, const wxPoint& pt) const = 0;
+	virtual bool ToggleOutlineGroup(ibGrid* grid, int idx) const = 0;
+	virtual int  GetOutlineAreaCount(const ibGrid* grid) const = 0;
+	virtual void DrawOutline(ibGrid* grid, wxDC& dc) const = 0;
 
 	// This class is never used polymorphically but give it a virtual dtor
 	// anyhow to suppress g++ complaints about it
@@ -946,6 +981,19 @@ public:
 		grid->SetCurrentCell(line, grid->GetFirstFullyVisibleCol());
 	}
 
+	// ------ outline dispatch for rows ------
+	virtual int  GetOutlineMaxLevel(const ibGrid* grid) const wxOVERRIDE
+	{ return grid->GetMaxRowGroupLevel(); }
+	virtual wxRect GetOutlineButtonRect(const ibGrid* grid, int idx) const wxOVERRIDE
+	{ return grid->GetRowGroupButtonRect(idx); }
+	virtual int  HitTestOutlineButton(const ibGrid* grid, const wxPoint& pt) const wxOVERRIDE
+	{ return grid->HitTestRowOutlineButton(pt); }
+	virtual bool ToggleOutlineGroup(ibGrid* grid, int idx) const wxOVERRIDE
+	{ return grid->ToggleRowGroup(idx); }
+	virtual int  GetOutlineAreaCount(const ibGrid* grid) const wxOVERRIDE
+	{ return grid->GetRowGroupCount(); }
+	virtual void DrawOutline(ibGrid* grid, wxDC& dc) const wxOVERRIDE
+	{ grid->DrawRowOutline(dc); }
 };
 
 class ibGridColumnOperations : public ibGridOperations
@@ -1188,6 +1236,19 @@ public:
 		grid->SetCurrentCell(grid->GetFirstFullyVisibleRow(), line);
 	}
 
+	// ------ outline dispatch for columns ------
+	virtual int  GetOutlineMaxLevel(const ibGrid* grid) const wxOVERRIDE
+	{ return grid->GetMaxColGroupLevel(); }
+	virtual wxRect GetOutlineButtonRect(const ibGrid* grid, int idx) const wxOVERRIDE
+	{ return grid->GetColGroupButtonRect(idx); }
+	virtual int  HitTestOutlineButton(const ibGrid* grid, const wxPoint& pt) const wxOVERRIDE
+	{ return grid->HitTestColOutlineButton(pt); }
+	virtual bool ToggleOutlineGroup(ibGrid* grid, int idx) const wxOVERRIDE
+	{ return grid->ToggleColGroup(idx); }
+	virtual int  GetOutlineAreaCount(const ibGrid* grid) const wxOVERRIDE
+	{ return grid->GetColGroupCount(); }
+	virtual void DrawOutline(ibGrid* grid, wxDC& dc) const wxOVERRIDE
+	{ grid->DrawColOutline(dc); }
 };
 
 // This class abstracts the difference between operations going forward

@@ -69,10 +69,10 @@ private:
 // A very simple text document class
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API ibSpreadsheetFilibDocument : public ibSpreadsheetDocument {
+class FRONTEND_API ibSpreadsheetFileDocument : public ibSpreadsheetDocument {
 public:
 
-	ibSpreadsheetFilibDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument = wxObjectDataPtr<ibBackendSpreadsheetObject>(new ibBackendSpreadsheetObject)) : ibSpreadsheetDocument(), m_spreadSheetDocument(spreadSheetDocument) { m_childDoc = false; }
+	ibSpreadsheetFileDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument = wxObjectDataPtr<ibBackendSpreadsheetObject>(new ibBackendSpreadsheetObject)) : ibSpreadsheetDocument(), m_spreadSheetDocument(spreadSheetDocument) { m_childDoc = false; }
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnNewDocument() override {
@@ -104,8 +104,8 @@ protected:
 
 private:
 
-	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetFilibDocument);
-	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetFilibDocument);
+	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetFileDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetFileDocument);
 };
 
 class FRONTEND_API ibSpreadsheetEditDocument : public ibSpreadsheetDocument {

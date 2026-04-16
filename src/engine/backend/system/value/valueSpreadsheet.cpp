@@ -336,7 +336,11 @@ enum
 	ePrint,
 	eShow,
 	ePut,
-	eJoin
+	eJoin,
+	eBeginRowGroup,
+	eEndRowGroup,
+	eBeginColGroup,
+	eEndColGroup,
 };
 
 void ibValueSpreadsheetDocument::PrepareNames() const
@@ -360,8 +364,12 @@ void ibValueSpreadsheetDocument::PrepareNames() const
 	m_methodHelper.AppendProc(wxT("Clear"), wxT("Clear()"));
 	m_methodHelper.AppendProc(wxT("Print"), wxT("Print(bool: showPrintDlg = true)"));
 	m_methodHelper.AppendProc(wxT("Show"), 1, wxT("Show(string: title)"));
-	m_methodHelper.AppendProc(wxT("Put"), 1, wxT("Put(spreadsheetDocument: table)"));
-	m_methodHelper.AppendProc(wxT("Join"), 1, wxT("Join(spreadsheetDocument: table)"));
+	m_methodHelper.AppendProc(wxT("Put"), 2, wxT("Put(spreadsheetDocument: table, number: groupLevel = 0)"));
+	m_methodHelper.AppendProc(wxT("Join"), 2, wxT("Join(spreadsheetDocument: table, number: groupLevel = 0)"));
+	m_methodHelper.AppendProc(wxT("BeginRowGroup"), wxT("BeginRowGroup()"));
+	m_methodHelper.AppendProc(wxT("EndRowGroup"), wxT("EndRowGroup()"));
+	m_methodHelper.AppendProc(wxT("BeginColGroup"), wxT("BeginColGroup()"));
+	m_methodHelper.AppendProc(wxT("EndColGroup"), wxT("EndColGroup()"));
 }
 
 bool ibValueSpreadsheetDocument::SetPropVal(const long lPropNum, const ibValue& varPropVal)
@@ -514,17 +522,25 @@ bool ibValueSpreadsheetDocument::CallAsProc(const long lMethodNum, ibValue** paP
 	else if (lMethodNum == ePut) {
 		ibValuePtr<ibValueSpreadsheetDocument> valueSpreadsheet(
 			paParams[0]->ConvertToType<ibValueSpreadsheetDocument>());
+		const unsigned int groupLevel = (lSizeArray > 1)
+			? (unsigned int)wxMax(0, paParams[1]->GetInteger()) : 0u;
 		if (valueSpreadsheet)
-			m_spreadsheetDoc->PutArea(valueSpreadsheet->GetSpreadsheetDocument());
+			m_spreadsheetDoc->PutArea(valueSpreadsheet->GetSpreadsheetDocument(), groupLevel);
 		return true;
 	}
 	else if (lMethodNum == eJoin) {
 		ibValuePtr<ibValueSpreadsheetDocument> valueSpreadsheet(
 			paParams[0]->ConvertToType<ibValueSpreadsheetDocument>());
+		const unsigned int groupLevel = (lSizeArray > 1)
+			? (unsigned int)wxMax(0, paParams[1]->GetInteger()) : 0u;
 		if (valueSpreadsheet)
-			m_spreadsheetDoc->JoinArea(valueSpreadsheet->GetSpreadsheetDocument());
+			m_spreadsheetDoc->JoinArea(valueSpreadsheet->GetSpreadsheetDocument(), groupLevel);
 		return true;
 	}
+	else if (lMethodNum == eBeginRowGroup) { m_spreadsheetDoc->BeginRowGroup(); return true; }
+	else if (lMethodNum == eEndRowGroup)   { m_spreadsheetDoc->EndRowGroup();   return true; }
+	else if (lMethodNum == eBeginColGroup) { m_spreadsheetDoc->BeginColGroup(); return true; }
+	else if (lMethodNum == eEndColGroup)   { m_spreadsheetDoc->EndColGroup();   return true; }
 
 	return false;
 }

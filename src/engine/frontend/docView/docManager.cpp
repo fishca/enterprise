@@ -108,7 +108,7 @@ ibMetaDocManager::ibMetaDocManager()
 		_("Text document"), wxT("*.txt;*.text"), wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(ibTextFilibDocument), CLASSINFO(ibTextEditView), wxTEMPLATE_VISIBLE);
 
 	AddDocTemplate(g_metaTemplateCLSID,
-		_("Spreadsheet document"), wxT("*.oxl"), wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(ibSpreadsheetFilibDocument), CLASSINFO(ibSpreadsheetEditView), wxTEMPLATE_VISIBLE);
+		_("Spreadsheet document"), wxT("*.oxl"), wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(ibSpreadsheetFileDocument), CLASSINFO(ibSpreadsheetEditView), wxTEMPLATE_VISIBLE);
 
 	AddDocTemplate(g_metaInterfaceCLSID,
 		_("Help document"), wxT("*.hle"), wxT("hle"), _("Help Doc"), _("Help View"), CLASSINFO(ibHelpFilibDocument), CLASSINFO(ibHelpEditView), wxTEMPLATE_INVISIBLE);

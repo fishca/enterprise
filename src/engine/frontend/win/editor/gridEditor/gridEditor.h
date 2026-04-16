@@ -220,6 +220,19 @@ class FRONTEND_API ibGridEditor : public ibGrid {
 		}
 
 		virtual void GetValue(int row, int col, wxString& s) override {
+			// Paint passes on column scroll can request (row, col) pairs for
+			// cells that don't physically exist yet — the grid's visible-range
+			// cache is ahead of the table's actual storage when rows/cols are
+			// inserted. Base ibGridStringTable::GetValue already guards this
+			// via wxCHECK2_MSG; the override used to skip the check entirely
+			// and hit m_data[row][col] on a non-existing row, producing an
+			// assertion failure mid-scroll.
+			wxCHECK_RET((row >= 0 && row < GetNumberRows()) &&
+				(col >= 0 && col < GetNumberCols()),
+				wxT("invalid row or column index in ibGridEditorStringTable::GetValue"));
+			if (col >= static_cast<int>(m_data[row].GetCount()))
+				return; // logical column exists but this row isn't filled yet
+
 			const ibSpreadsheetFillType type = GetTypeString(row, col);
 			if (type == ibSpreadsheetFillType_StrText || type == ibSpreadsheetFillType_StrTemplate)
 				ibBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], s);
@@ -228,7 +241,19 @@ class FRONTEND_API ibGridEditor : public ibGrid {
 		}
 
 		virtual void SetValue(int row, int col, const wxString& s) override {
-			const wxString& value = m_data[row][col];
+			wxCHECK_RET((row >= 0 && row < GetNumberRows()) &&
+				(col >= 0 && col < GetNumberCols()),
+				wxT("invalid row or column index in ibGridEditorStringTable::SetValue"));
+
+			// m_data[row] may not yet have this column entry (row appended
+			// but column fill deferred). Treat the current value as empty
+			// in that case — the subsequent ibGridStringTable::SetValue path
+			// will expand the row via the base class's storage logic.
+			const wxString emptyValue;
+			const wxString& value = (col < static_cast<int>(m_data[row].GetCount()))
+				? m_data[row][col]
+				: emptyValue;
+
 			if (s != value) {
 				const ibSpreadsheetFillType type = GetTypeString(row, col);
 				if (type == ibSpreadsheetFillType_StrText || type == ibSpreadsheetFillType_StrTemplate) {
@@ -287,6 +312,16 @@ class FRONTEND_API ibGridEditor : public ibGrid {
 		}
 
 		virtual void* GetValueAsCustom(int row, int col, const wxString& typeName) {
+			// Same reasoning as GetValue/SetValue — renderer can hit this
+			// for cells that don't physically exist during an insert/scroll
+			// race. Return nullptr (empty string) instead of dereferencing
+			// out-of-bounds m_data[row][col].
+			wxCHECK_MSG((row >= 0 && row < GetNumberRows()) &&
+				(col >= 0 && col < GetNumberCols()),
+				nullptr,
+				wxT("invalid row or column index in ibGridEditorStringTable::GetValueAsCustom"));
+			if (col >= static_cast<int>(m_data[row].GetCount()))
+				return nullptr;
 
 			const ibSpreadsheetFillType typeFill = GetTypeString(row, col);
 			if (stringUtils::CompareString(typeName, s_strTypeTextOrString)) {

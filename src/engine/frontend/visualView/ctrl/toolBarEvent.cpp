@@ -42,6 +42,15 @@ void ibValueToolbar::OnTool(wxCommandEvent& event)
 			ibValueToolBarItem* foundedToolControl = dynamic_cast<ibValueToolBarItem*>(parentToolControl);
 			if (foundedToolControl != nullptr) {
 
+				// Snapshot the visual-editor pointer BEFORE the action. Both
+				// ExecuteAction (eDefActionAndClose → CloseForm) and CallAsEvent
+				// (arbitrary user script) can close the owner form, which destroys
+				// every child control including this toolbar — `this` becomes
+				// dangling. The old post-action `g_visualHostContext` check expanded
+				// to `this->FindVisualEditor()`, which dereferenced `this` to call
+				// GetOwnerForm() and crashed with an access violation.
+				ibFrontendVisualEditorNotebook* const visualEditor = g_visualHostContext;
+
 				const ibActionDescription& actionDesc = foundedToolControl->GetAction();
 				const wxString& strAction = actionDesc.GetCustomAction();
 
@@ -62,10 +71,11 @@ void ibValueToolbar::OnTool(wxCommandEvent& event)
 				else if (strAction.Length() > 0) {
 					CallAsEvent(strAction, parentToolControl->GetValue());
 				}
-			}
 
-			if (g_visualHostContext != nullptr) {
-				g_visualHostContext->SelectControl(parentToolControl);
+				// Use only the snapshot — never touch `this` after the action above.
+				if (visualEditor != nullptr) {
+					visualEditor->SelectControl(parentToolControl);
+				}
 			}
 		}
 	}

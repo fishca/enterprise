@@ -45,6 +45,9 @@ ibDebuggerServer::ibDebuggerServer() :
 
 ibDebuggerServer::~ibDebuggerServer()
 {
+	// Hard guarantee: worker thread is joined BEFORE the CV/mutex fields disappear.
+	// Safe to call twice — ShutdownServer already handles nullptr m_socketConnectionThread.
+	ShutdownServer();
 }
 
 bool ibDebuggerServer::CreateServer(const wxString& hostName, unsigned short startPort, bool wait)
@@ -52,13 +55,13 @@ bool ibDebuggerServer::CreateServer(const wxString& hostName, unsigned short sta
 	ShutdownServer();
 
 	m_socketConnectionThread = new ibDebuggerServerConnection(hostName, startPort);
+	// must be set BEFORE Run() — EntryClient reads m_waitConnection in the worker thread
+	m_socketConnectionThread->m_waitConnection = wait;
 
 	if (m_socketConnectionThread->Run() != wxTHREAD_NO_ERROR) {
 		ShutdownServer();
 		return false;
 	}
-
-	m_socketConnectionThread->m_waitConnection = wait;
 
 	if (wait) {
 
@@ -79,10 +82,30 @@ bool ibDebuggerServer::CreateServer(const wxString& hostName, unsigned short sta
 
 void ibDebuggerServer::ShutdownServer()
 {
-	if (m_socketConnectionThread != nullptr) {
-		m_socketConnectionThread->Delete();
-		m_socketConnectionThread = nullptr;
+	// Take a local copy + null the member FIRST so other threads observing
+	// m_socketConnectionThread (e.g. bytecode thread in DoDebugLoop) see null
+	// and stop touching it while we join.
+	ibDebuggerServerConnection* thread = m_socketConnectionThread;
+	if (thread == nullptr)
+		return;
+	m_socketConnectionThread = nullptr;
+
+	// Wake DoDebugLoop so the bytecode thread unblocks.
+	m_bUseDebug = false;
+	m_bDebugLoop = false;
+	m_debugLoopCV.notify_all();
+
+	// Self-join guard: if ShutdownServer is reached from the worker thread itself
+	// (e.g. CommandId_Destroy → ForceExit → ~ibDebuggerServer), Wait() would deadlock.
+	const bool isSelf = (wxThread::GetCurrentId() == thread->GetId());
+
+	thread->Delete();          // sets TestDestroy() flag
+	if (!isSelf) {
+		thread->Wait();        // block until worker actually exited
+		delete thread;
 	}
+	// When called from self, the thread will clean itself up when Entry() returns;
+	// we intentionally leak the wxThread object here to avoid UB on self-destruction.
 }
 
 #include "backend/system/value/valueOLE.h"
@@ -103,14 +126,17 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 {
 	m_runContext = runContext;
 
-	if (m_socketConnectionThread == nullptr || (!m_socketConnectionThread->IsConnected() || !m_socketConnectionThread->IsRunning())) {
+	// Snapshot the thread pointer once — ShutdownServer nulls m_socketConnectionThread
+	// from another thread and we must not deref the member twice with a concurrent null.
+	ibDebuggerServerConnection* const thread = m_socketConnectionThread;
+	if (thread == nullptr || !thread->IsConnected() || !thread->IsRunning()) {
 		ibDebuggerServer::ResetDebugger();
 		return;
 	}
 
 	m_numCurrentNumberStopContext = 0;
 
-	if (m_socketConnectionThread != nullptr && ConnectionType::ConnectionType_Debugger == m_socketConnectionThread->GetConnectionType()) {
+	if (ConnectionType::ConnectionType_Debugger == thread->GetConnectionType()) {
 
 		ibWriterMemory commandChannelEnterLoop;
 
@@ -140,24 +166,25 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 	ibValueOLE::CreateStreamForDispatch();
 #endif
 
-	//start debug loop
-	while (m_bDebugLoop) {
-
-		// there is no configurator or the connection was somehow lost
-		// thread was lost
-		if (m_socketConnectionThread == nullptr || (!m_socketConnectionThread->IsConnected() || !m_socketConnectionThread->IsRunning())) {
-			m_bUseDebug = m_bDebugLoop = false;
-			break;
-		}
-
-		wxMilliSleep(5);
+	// event-driven wait: woken immediately by Continue/StepInto/StepOver/Detach/Destroy.
+	// Connection loss is signalled via m_bDebugLoop=false from the socket worker's
+	// ResetDebugger path or ShutdownServer — no need to touch m_socketConnectionThread
+	// from here (avoids UAF race with ShutdownServer nulling/deleting it).
+	// 250ms wake-up is a safety tick only.
+	while (m_bDebugLoop.load(std::memory_order_acquire)) {
+		std::unique_lock<std::mutex> lock(m_debugLoopMutex);
+		m_debugLoopCV.wait_for(lock, std::chrono::milliseconds(250), [this]() {
+			return !m_bDebugLoop.load(std::memory_order_acquire);
+		});
 	}
 
 #ifdef __WXMSW__
 	ibValueOLE::ReleaseStreamForDispatch();
 #endif
 
-	if (m_socketConnectionThread != nullptr && ConnectionType::ConnectionType_Debugger == m_socketConnectionThread->GetConnectionType()) {
+	// Re-snapshot — the socket worker may have gone away during the pause.
+	if (ibDebuggerServerConnection* const leaveThread = m_socketConnectionThread;
+		leaveThread != nullptr && ConnectionType::ConnectionType_Debugger == leaveThread->GetConnectionType()) {
 
 		ibWriterMemory commandChannelLeaveLoop;
 
@@ -258,7 +285,7 @@ void ibDebuggerServer::SendExpressions()
 
 	ibValue vResult;
 
-	for (auto expression : m_listExpression) {
+	for (const auto& expression : m_listExpression) {
 		//header 
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
 		commandChannel.w_u64(expression.first);
@@ -294,7 +321,7 @@ void ibDebuggerServer::SendLocalVariables()
 	wxASSERT(compileContext);
 	commandChannel.w_u32(compileContext->m_listVariable.size());
 
-	for (auto variable : compileContext->m_listVariable) {
+	for (const auto& variable : compileContext->m_listVariable) {
 
 		const auto locRefVariable = variable.second;
 		const auto locRefValue = m_runContext->m_pRefLocVars[locRefVariable->m_numVariable];
@@ -321,7 +348,7 @@ void ibDebuggerServer::SendStack()
 	commandChannel.w_u16(CommandId_SetStack);
 	commandChannel.w_u32(ibProcUnit::GetCountRunContext());
 
-	for (unsigned int i = ibProcUnit::GetCountRunContext(); i > 0; i--) { //�������� ����� �����
+	for (unsigned int i = ibProcUnit::GetCountRunContext(); i > 0; i--) { // walk call stack top-down
 
 		ibRunContext* runContext = ibProcUnit::GetRunContext(i - 1);
 		ibByteCode* byteCode = runContext->GetByteCode();
@@ -395,7 +422,7 @@ void ibDebuggerServer::ibDebuggerServerConnection::Disconnect()
 }
 
 ibDebuggerServer::ibDebuggerServerConnection::ibDebuggerServerConnection(const wxString& strHostName, unsigned short numHostPort) :
-	wxThread(wxTHREAD_DETACHED), m_socket(nullptr), m_socketServer(nullptr),
+	wxThread(wxTHREAD_JOINABLE), m_socket(nullptr), m_socketServer(nullptr),
 	m_connectionType(ConnectionType::ConnectionType_Unknown),
 	m_strHostName(strHostName), m_numHostPort(numHostPort),
 	m_waitConnection(false), m_acceptConnection(false)
@@ -507,6 +534,16 @@ void ibDebuggerServer::ibDebuggerServerConnection::EntryClient()
 				m_socket = m_socketServer->Accept(false);
 			}
 
+			if (m_socket != nullptr) {
+				int flag = 1;
+				// disable Nagle for small debugger packets — drops step-command latency
+				m_socket->SetOption(IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+				// TCP keepalive so a hard-killed client (Task Manager) is detected in seconds,
+				// not hours. Without this the server thread sticks on WaitForRead and the whole
+				// debugger stays loaded in memory after the client process is gone.
+				m_socket->SetOption(SOL_SOCKET, SO_KEEPALIVE, &flag, sizeof(flag));
+			}
+
 			if (m_socket != nullptr || m_waitConnection)
 				break;
 		}
@@ -517,20 +554,30 @@ void ibDebuggerServer::ibDebuggerServerConnection::EntryClient()
 			if (m_socket != nullptr && m_socket->WaitForRead(0, waitDebuggerTimeout)) {
 				unsigned int length = 0;
 				m_socket->ReadMsg(&length, sizeof(unsigned int));
+				// short read on the length header — treat as disconnect, don't parse garbage
+				if (m_socket->LastCount() != sizeof(unsigned int))
+					break;
+				// Reject absurd packet sizes (protects against hostile/garbled client
+				// sending 0xFFFFFFFF → 4 GiB wxMemoryBuffer allocation attempt → terminate).
+				static const unsigned int kMaxDebugPacket = 16u * 1024u * 1024u; // 16 MiB
+				if (length > kMaxDebugPacket)
+					break;
 				if (m_socket && m_socket->WaitForRead(0, waitDebuggerTimeout)) {
 					wxMemoryBuffer bufferData(length);
 					m_socket->ReadMsg(bufferData.GetData(), length);
+					if (m_socket->LastCount() != length)
+						break;
 					if (length > 0) {
 #ifdef __WXMSW__
 						ibValueOLE::GetInterfaceAndReleaseStream();
 #endif
 #if _USE_NET_COMPRESSOR == 1
 						BYTE* dest = nullptr; unsigned int dest_sz = 0;
-						_decompressLZ(&dest, &dest_sz, bufferData.GetData(), bufferData.GetBufSize());
+						_decompressLZ(&dest, &dest_sz, bufferData.GetData(), length);
 						RecvCommand(dest, dest_sz); free(dest);
 #else
-						RecvCommand(bufferData.GetData(), bufferData.GetBufSize());
-#endif 
+						RecvCommand(bufferData.GetData(), length);
+#endif
 						length = 0;
 					}
 				}
@@ -592,13 +639,17 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 		m_connectionType = ConnectionType::ConnectionType_Debugger;
 	}
 	else if (commandFromClient == CommandId_SetArrayBreakpoint) {
+		// full-replace semantics: clear stale breakpoints so a reconnect cannot accumulate duplicates
+		ms_debugServer->m_listBreakpoint.clear();
 		unsigned int countBreakpoints = commandReader.r_u32();
-		//parse breakpoints 
+		//parse breakpoints
 		for (unsigned int i = 0; i < countBreakpoints; i++) {
 			unsigned int countBreakPoints = commandReader.r_u32();
 			wxString strModuleName; commandReader.r_stringZ(strModuleName);
+			auto& module_breakpoints = ms_debugServer->m_listBreakpoint[strModuleName];
+			module_breakpoints.reserve(module_breakpoints.size() + countBreakPoints);
 			for (unsigned int j = 0; j < countBreakPoints; j++) {
-				ms_debugServer->m_listBreakpoint[strModuleName].push_back(commandReader.r_u32());
+				module_breakpoints.push_back(commandReader.r_u32());
 			}
 		}
 		ms_debugServer->m_bUseDebug = true;
@@ -612,14 +663,14 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 
 		wxString strModuleName; commandReader.r_stringZ(strModuleName);
 		unsigned int line = commandReader.r_u32();
-		{
-			auto& module_breakpoint = ms_debugServer->m_listBreakpoint[strModuleName];
+		auto it = ms_debugServer->m_listBreakpoint.find(strModuleName);
+		if (it != ms_debugServer->m_listBreakpoint.end()) {
+			auto& module_breakpoint = it->second;
 			module_breakpoint.erase(
 				std::remove(module_breakpoint.begin(), module_breakpoint.end(), line), module_breakpoint.end());
+			if (module_breakpoint.empty())
+				ms_debugServer->m_listBreakpoint.erase(it);
 		}
-
-		if (ms_debugServer->m_listBreakpoint[strModuleName].size() == 0)
-			ms_debugServer->m_listBreakpoint.erase(strModuleName);
 	}
 	else if (commandFromClient == CommandId_AddExpression) {
 		wxString strExpression; commandReader.r_stringZ(strExpression);
@@ -847,17 +898,20 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 	else if (commandFromClient == CommandId_Continue) {
 		ms_debugServer->m_bDebugStopLine = false;
 		ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
+		ms_debugServer->m_debugLoopCV.notify_all();
 	}
 	else if (commandFromClient == CommandId_StepInto) {
 		if (ms_debugServer->IsDebugLooped()) {
 			ms_debugServer->m_bDebugStopLine = true;
 			ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
+			ms_debugServer->m_debugLoopCV.notify_all();
 		}
 	}
 	else if (commandFromClient == CommandId_StepOver) {
 		if (ms_debugServer->IsDebugLooped()) {
 			ms_debugServer->m_numCurrentNumberStopContext = ibProcUnit::GetCountRunContext();
 			ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
+			ms_debugServer->m_debugLoopCV.notify_all();
 		}
 	}
 	else if (commandFromClient == CommandId_Pause) {
@@ -868,6 +922,7 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 		ms_debugServer->m_bUseDebug =
 			ms_debugServer->m_bDebugLoop =
 			ms_debugServer->m_bDoLoop = false;
+		ms_debugServer->m_debugLoopCV.notify_all();
 
 		ibDebuggerServerConnection::Disconnect();
 	}
@@ -876,13 +931,12 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 		ms_debugServer->m_bUseDebug =
 			ms_debugServer->m_bDebugLoop =
 			ms_debugServer->m_bDoLoop = false;
+		ms_debugServer->m_debugLoopCV.notify_all();
 
 		ibDebuggerServerConnection::Disconnect();
 
-#ifdef __WXMSW__
-		::CoUninitialize();
-#endif // !_WXMSW		
-
+		// Note: CoUninitialize() is already done in Entry() epilogue (line ~472).
+		// Doing it again here would give a double-uninit on the worker thread.
 		ibApplicationData::ForceExit();
 	}
 	else if (commandFromClient == CommandId_DeleteAllBreakpoints) {

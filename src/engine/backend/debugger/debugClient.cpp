@@ -87,7 +87,7 @@ void ibDebuggerClient::InitializeModule(const wxString& strModuleName, unsigned 
 void ibDebuggerClient::PatchModule(const wxString& strModuleName, unsigned int line, int line_offset)
 {
 	auto breakpoint_iterator = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (breakpoint_iterator != m_listBreakpoint.end()) {
 
@@ -114,7 +114,7 @@ void ibDebuggerClient::PatchModule(const wxString& strModuleName, unsigned int l
 	}
 
 	auto module_offset_iterator = std::find_if(m_listOffsetBreakpoint.begin(), m_listOffsetBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (module_offset_iterator != m_listOffsetBreakpoint.end()) {
 
@@ -169,7 +169,7 @@ bool ibDebuggerClient::SaveModule(const wxString& strModuleName, unsigned int li
 {
 	//initialize breakpoint 
 	auto breakpoint_iterator = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (breakpoint_iterator != m_listBreakpoint.end()) {
 
@@ -189,7 +189,7 @@ bool ibDebuggerClient::SaveModule(const wxString& strModuleName, unsigned int li
 
 	//initialize offsets 
 	auto module_offset_iterator = std::find_if(m_listOffsetBreakpoint.begin(), m_listOffsetBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (module_offset_iterator != m_listOffsetBreakpoint.end()) {
 
@@ -224,12 +224,12 @@ bool ibDebuggerClient::SaveModule(const wxString& strModuleName, unsigned int li
 void ibDebuggerClient::RemoveModule(const wxString& strModuleName)
 {
 	auto breakpoint_iterator = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 	if (breakpoint_iterator != m_listBreakpoint.end())
 		m_listBreakpoint[breakpoint_iterator->first].clear();
 
 	auto module_offset_iterator = std::find_if(m_listOffsetBreakpoint.begin(), m_listOffsetBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 	if (module_offset_iterator != m_listOffsetBreakpoint.end())
 		m_listOffsetBreakpoint[module_offset_iterator->first].clear();
 }
@@ -331,6 +331,8 @@ bool ibDebuggerClient::RemoveBreakpoint(const wxString& strModuleName, unsigned 
 		locOffsetPrev = it->second;
 	}
 	std::map<unsigned int, int>::iterator itOffset = list_module_offset.find(startLine);
+	if (itOffset == list_module_offset.end())
+		return false;
 	std::map<unsigned int, int>& list_breakpoint = m_listBreakpoint[strModuleName];
 	std::map<unsigned int, int>::iterator breakpoint_iterator = list_breakpoint.find(itOffset->first);
 	unsigned int currLine = itOffset->first;
@@ -469,7 +471,7 @@ void ibDebuggerClient::EvaluateAutocomplete(const wxString& strFileName, const w
 std::vector<unsigned int> ibDebuggerClient::GetDebugList(const wxString& strModuleName)
 {
 	auto breakpoint_iterator = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (breakpoint_iterator == m_listBreakpoint.end())
 		return std::vector<unsigned int>();
@@ -582,6 +584,12 @@ void ibDebuggerClient::ibDebuggerClientConnection::EntryClient()
 
 		if (!TestDestroy() && connected) {
 
+			// disable Nagle — debugger protocol is bursty with tiny packets (step, eval, locals)
+			int flag = 1;
+			m_socketClient->SetOption(IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+			// keepalive — detect a crashed/killed server within seconds instead of hours
+			m_socketClient->SetOption(SOL_SOCKET, SO_KEEPALIVE, &flag, sizeof(flag));
+
 			///////////////////////////////////////////////////////////////////////
 			ibWriterMemory commandChannel;
 			commandChannel.w_u16(CommandId_VerifyConnection);
@@ -634,17 +642,26 @@ void ibDebuggerClient::ibDebuggerClientConnection::EntryClient()
 
 					if (m_socketClient != nullptr && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
 						m_socketClient->ReadMsg(&length, sizeof(unsigned int));
+						// short read on the length header — treat as disconnect
+						if (m_socketClient->LastCount() != sizeof(unsigned int))
+							break;
+						// guard against hostile/garbled server sending an absurd size
+						static const unsigned int kMaxDebugPacket = 16u * 1024u * 1024u;
+						if (length > kMaxDebugPacket)
+							break;
 						if (m_socketClient != nullptr && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
 							wxMemoryBuffer bufferData(length);
 							m_socketClient->ReadMsg(bufferData.GetData(), length);
+							if (m_socketClient->LastCount() != length)
+								break;
 							if (m_connectionType == ConnectionType::ConnectionType_Debugger && length > 0) {
 #if _USE_NET_COMPRESSOR == 1
 								BYTE* dest = nullptr; unsigned int dest_sz = 0;
-								_decompressLZ(&dest, &dest_sz, bufferData.GetData(), bufferData.GetBufSize());
+								_decompressLZ(&dest, &dest_sz, bufferData.GetData(), length);
 								RecvCommand(dest, dest_sz); free(dest);
 #else
-								RecvCommand(bufferData.GetData(), bufferData.GetBufSize());
-#endif 
+								RecvCommand(bufferData.GetData(), length);
+#endif
 								length = 0;
 							}
 						}
@@ -731,12 +748,12 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 		commandChannel.w_u32(ms_debugClient->m_listBreakpoint.size());
 
 		//send breakpoints 
-		for (auto breakpoint : ms_debugClient->m_listBreakpoint) {
+		for (const auto& breakpoint : ms_debugClient->m_listBreakpoint) {
 
 			commandChannel.w_u32(breakpoint.second.size());
 			commandChannel.w_stringZ(breakpoint.first);
 
-			for (auto line : breakpoint.second) {
+			for (const auto& line : breakpoint.second) {
 				commandChannel.w_u32(line.first);
 			}
 		}

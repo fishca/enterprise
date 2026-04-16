@@ -3,6 +3,9 @@
 
 #include <map>
 #include <queue>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
 #include <wx/thread.h>
 #include <wx/socket.h>
 
@@ -97,7 +100,7 @@ public:
 	void EnterDebugger(ibRunContext* runContext, const struct ibByteUnit& byteCode, long& numPrevLine);
 	void SendErrorToClient(const wxString& strFileName, const wxString& strDocPath, unsigned int numLine, const wxString& strErrorMessage);
 
-	bool IsDebugLooped() const { return m_bDebugLoop; }
+	bool IsDebugLooped() const { return m_bDebugLoop.load(std::memory_order_acquire); }
 
 protected:
 
@@ -108,7 +111,9 @@ protected:
 	void ResetDebugger() {
 
 		m_runContext = nullptr;
-		m_bUseDebug = m_bDebugLoop = false;
+		m_bUseDebug = false;
+		m_bDebugLoop = false;
+		m_debugLoopCV.notify_all();
 
 		ClearCollectionBreakpoint();
 	}
@@ -131,25 +136,30 @@ private:
 
 	static ibDebuggerServer* ms_debugServer;
 
-	bool		m_bUseDebug;
-	bool		m_bDoLoop;
-	bool		m_bDebugLoop;
-	bool		m_bDebugStopLine;
+	std::atomic<bool> m_bUseDebug;
+	std::atomic<bool> m_bDoLoop;
+	std::atomic<bool> m_bDebugLoop;
+	std::atomic<bool> m_bDebugStopLine;
 
 	unsigned int m_numCurrentNumberStopContext;
 
-	std::map<wxString, std::vector<unsigned int>> m_listBreakpoint; //list of points 
+	std::map<wxString, std::vector<unsigned int>> m_listBreakpoint; //list of points
 
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
 	std::map <unsigned long long, wxString> m_listExpression;
-#else 
+#else
 	std::map <unsigned int, wxString> m_listExpression;
-#endif 
+#endif
+
+	// CV/mutex must outlive the worker thread so its final notify_all is safe.
+	// Declared BEFORE m_socketConnectionThread so destruction order puts thread first.
+	std::mutex m_debugLoopMutex;
+	std::condition_variable m_debugLoopCV;
+
+	wxCriticalSection m_clearBreakpointsCS;
 
 	ibDebuggerServerConnection* m_socketConnectionThread;
 	ibRunContext* m_runContext;
-
-	wxCriticalSection m_clearBreakpointsCS;
 
 	friend class ibBackendException;
 };

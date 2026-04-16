@@ -47,6 +47,13 @@ ibDialogAuthentication::ibDialogAuthentication(wxWindow* parent, wxWindowID id, 
 
 	wxDialog::SetSizer(bSizer);
 	bSizer->SetSizeHints(this);
+
+	// Ensure the dialog is at least wide enough for the title bar text
+	// (localised titles may exceed the content width produced by SetSizeHints).
+	const wxSize minSize = FromDIP(wxSize(420, -1));
+	if (GetSize().x < minSize.x)
+		SetSize(minSize.x, GetSize().y);
+
 	wxDialog::Layout();
 
 	wxDialog::Centre(wxBOTH);

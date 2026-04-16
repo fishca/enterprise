@@ -326,9 +326,16 @@ void ibMetadataTree::ibMetaTreeCtrl::OnSetFocus(wxFocusEvent& event)
 				static_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
 
 			wxView* view = focus_child_win ? focus_child_win->GetView() : docManager->GetAnyUsableView();
+			// Do NOT gate this on `m_metaView == docManager->GetCurrentView()`:
+			// when the user opens a doc directly from the tree (double-click on
+			// a metadata item), the new doc becomes the current view before
+			// KILL_FOCUS fires. That guard then skipped re-activation, leaving
+			// the toolbar and menu of the newly-opened doc disabled (the tree's
+			// SET_FOCUS path had already cleared them via view->Activate(false)).
+			// wxDocManager::ActivateView(v, false) is a no-op when v is not the
+			// current view, so unconditionally calling it is safe.
 			if (m_ownerTree->m_docParent == nullptr &&
-				m_metaView != view &&
-				m_metaView == docManager->GetCurrentView()) {
+				m_metaView != view) {
 				m_metaView->Activate(false);
 				if (view != nullptr) view->Activate(true);
 			}

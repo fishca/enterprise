@@ -48,18 +48,19 @@ ibWatchWindow* ibWatchWindow::GetWatchWindow()
 void ibWatchWindow::SetVariable(const ibWatchWindowData& watchData)
 {
 	m_updating = true;
+	Freeze();
 
 	for (unsigned int i = 0; i < watchData.GetWatchCount(); i++) {
-		
+
 		const wxTreeItemId& item = watchData.GetItem(i);
-	
+
 		SetItemText(item, 1, watchData.GetValue(i));
 		SetItemText(item, 2, watchData.GetType(i));
 
-		//collapse childern items 
+		//collapse childern items
 		Collapse(item);
 
-		//delete children elements 
+		//delete children elements
 		DeleteChildren(item);
 
 		if (watchData.HasAttributes(i)) {
@@ -67,20 +68,19 @@ void ibWatchWindow::SetVariable(const ibWatchWindowData& watchData)
 		}
 	}
 
+	Thaw();
 	m_updating = false;
-
-	// update watch window 
-	mainFrame->Update();
 }
 
 void ibWatchWindow::SetExpanded(const ibWatchWindowData& watchData)
 {
 	const wxTreeItemId& item = watchData.GetItem();
 
-	//delete children elements 
-	DeleteChildren(item);
-
 	m_updating = true;
+	Freeze();
+
+	//delete children elements
+	DeleteChildren(item);
 
 	for (unsigned int i = 0; i < watchData.GetWatchCount(); i++) {
 
@@ -95,6 +95,7 @@ void ibWatchWindow::SetExpanded(const ibWatchWindowData& watchData)
 	}
 
 	Expand(item);
+	Thaw();
 	m_updating = false;
 }
 
@@ -114,12 +115,15 @@ void ibWatchWindow::UpdateItem(const wxTreeItemId& item)
 
 	SetItemFont(item, m_valueFont);
 
-	SetItemText(item, 1, wxEmptyString);
-	SetItemText(item, 2, wxEmptyString);
+	// Keep the previous value/type visible until the debugger replies with
+	// fresh data. Clearing them here caused the columns to blank out for the
+	// full round-trip, producing the "values disappear, then reappear" flicker.
 }
 
 void ibWatchWindow::UpdateItems()
 {
+	Freeze();
+
 	wxTreeItemIdValue cookie;
 	wxTreeItemId item = GetFirstChild(m_root, cookie);
 
@@ -127,6 +131,8 @@ void ibWatchWindow::UpdateItems()
 		UpdateItem(item);
 		item = GetNextSibling(item);
 	}
+
+	Thaw();
 }
 
 void ibWatchWindow::AddWatch(const wxString& expression)

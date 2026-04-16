@@ -584,6 +584,14 @@ void ibDebuggerServer::ibDebuggerServerConnection::EntryClient()
 			}
 		}
 
+		// Connection lost (client disconnected, process killed, keepalive timeout,
+		// malformed packet, etc.) — release any bytecode thread blocked in
+		// DoDebugLoop and disable further breakpoint traps. Without this the
+		// debuggee main thread stays parked in the CV wait forever, preventing
+		// enterprise.exe from shutting down.
+		if (ms_debugServer != nullptr)
+			ms_debugServer->ResetDebugger();
+
 		if (m_socket != nullptr)
 			m_socket->Destroy();
 

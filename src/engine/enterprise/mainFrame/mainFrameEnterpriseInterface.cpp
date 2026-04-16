@@ -497,7 +497,7 @@ class ibSubSystemWindow : public wxWindow {
 											df->SetClientObject(new ibScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Default));
 											df->Bind(wxEVT_BUTTON, &ibScrolledSubWindow::OnMenuItemClicked, wnd);
 
-											sizerSubSystemItem->Add(df, 0, wxEXPAND, FromDIP(5));
+											sizerSubSystemItem->Add(df, 0, wxEXPAND, df->FromDIP(5));
 
 											NextChildConstruct(sizerSubSystemItem, child, wnd);
 										}

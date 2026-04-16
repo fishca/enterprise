@@ -243,11 +243,11 @@ bool ibAutoComplete::CallEvent(wxEvent& event)
 wxBitmap ibAutoComplete::GetImageByType(short type) const
 {
 	if (type == eProcedure || type == eExportProcedure)
-		return wxArtProvider::GetBitmapBundle(wxART_PROCEDURE_RED, wxART_AUTOCOMPLETE);
+		return wxArtProvider::GetBitmapBundle(wxART_PROCEDURE_RED, wxART_AUTOCOMPLETE).GetBitmap(wxDefaultSize);
 	else if (type == eFunction || type == eExportFunction)
-		return wxArtProvider::GetBitmapBundle(wxART_FUNCTION_RED, wxART_AUTOCOMPLETE);
+		return wxArtProvider::GetBitmapBundle(wxART_FUNCTION_RED, wxART_AUTOCOMPLETE).GetBitmap(wxDefaultSize);
 	else if (type == eVariable || type == eExportVariable)
-		return wxArtProvider::GetBitmapBundle(wxART_VARIABLE_ALTERNATIVE, wxART_AUTOCOMPLETE);
+		return wxArtProvider::GetBitmapBundle(wxART_VARIABLE_ALTERNATIVE, wxART_AUTOCOMPLETE).GetBitmap(wxDefaultSize);
 	return wxNullBitmap;
 }
 

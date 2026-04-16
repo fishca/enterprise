@@ -1468,7 +1468,7 @@ void ibMetadataTree::InitTree()
 	//*                                      Common objects                                               *
 	//*****************************************************************************************************
 
-	const int imageCommonIndex = imageList->Add(wxArtProvider::GetBitmapBundle(wxART_COMMON_FOLDER, wxART_METATREE));
+	const int imageCommonIndex = imageList->Add(wxArtProvider::GetBitmapBundle(wxART_COMMON_FOLDER, wxART_METATREE).GetBitmap(wxDefaultSize));
 	m_treeCOMMON = m_metaTreeCtrl->AppendItem(m_treeMETADATA, commonName, imageCommonIndex, imageCommonIndex);
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////

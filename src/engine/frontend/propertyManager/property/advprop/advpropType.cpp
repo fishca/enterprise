@@ -599,7 +599,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			wxBoxSizer* stringSizer = new wxBoxSizer(wxHORIZONTAL);
 			wxStaticText* stSLength = new wxStaticText(dlg, wxID_ANY, _("Length:"), wxDefaultPosition, wxDefaultSize);
 			stSLength->Wrap(-1);
-			stringSizer->Add(stSLength, 0, wxALL, FromDIP(5));
+			stringSizer->Add(stSLength, 0, wxALL, dlg->FromDIP(5));
 
 			wxSpinCtrl* tcSLength = new wxSpinCtrl(dlg, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, MAX_LENGTH_STRING);
 			stringSizer->Add(tcSLength, 0, wxBOTTOM | wxRIGHT, 0);
@@ -615,12 +615,12 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			);
 
 			tcSLength->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
-			topsizer->Add(stringSizer, 0, 0, FromDIP(5));
+			topsizer->Add(stringSizer, 0, 0, dlg->FromDIP(5));
 
 			wxBoxSizer* dateSizer = new wxBoxSizer(wxHORIZONTAL);
 			wxStaticText* stDDateFormat = new wxStaticText(dlg, wxID_ANY, _("Date format:"), wxDefaultPosition, wxDefaultSize);
 			stDDateFormat->Wrap(-1);
-			dateSizer->Add(stDDateFormat, 0, wxALL, FromDIP(5));
+			dateSizer->Add(stDDateFormat, 0, wxALL, dlg->FromDIP(5));
 
 			wxArrayString cDDateFormatChoices; auto ch = dlgProp->GetDateTime();
 			for (unsigned int idx = 0; idx < ch.GetCount(); idx++) {
@@ -640,12 +640,12 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			);
 
 			cDDateFormat->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
-			topsizer->Add(dateSizer, 0, 0, FromDIP(5));
+			topsizer->Add(dateSizer, 0, 0, dlg->FromDIP(5));
 
 			wxBoxSizer* numberSizer = new wxBoxSizer(wxHORIZONTAL);
 			wxStaticText* stNLength = new wxStaticText(dlg, wxID_ANY, _("Length:"), wxDefaultPosition, wxDefaultSize);
 			stNLength->Wrap(-1);
-			numberSizer->Add(stNLength, 0, wxALL, FromDIP(5));
+			numberSizer->Add(stNLength, 0, wxALL, dlg->FromDIP(5));
 
 			wxSpinCtrl* tcNLength = new wxSpinCtrl(dlg, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, MAX_PRECISION_NUMBER);
 			numberSizer->Add(tcNLength, 0, wxBOTTOM | wxRIGHT, 0);
@@ -664,10 +664,10 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 
 			wxStaticText* stNScale = new wxStaticText(dlg, wxID_ANY, _("Scale:"), wxDefaultPosition, wxDefaultSize);
 			stNScale->Wrap(-1);
-			numberSizer->Add(stNScale, 0, wxTOP | wxBOTTOM | wxLEFT, FromDIP(5));
+			numberSizer->Add(stNScale, 0, wxTOP | wxBOTTOM | wxLEFT, dlg->FromDIP(5));
 
 			wxSpinCtrl* tcNScale = new wxSpinCtrl(dlg, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS);
-			numberSizer->Add(tcNScale, 0, wxRIGHT | wxLEFT, FromDIP(5));
+			numberSizer->Add(tcNScale, 0, wxRIGHT | wxLEFT, dlg->FromDIP(5));
 			tcNScale->SetValue(typeDesc.GetScale());
 
 			tcNScale->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED,
@@ -683,7 +683,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			);
 
 			tcNScale->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
-			topsizer->Add(numberSizer, 0, 0, FromDIP(5));
+			topsizer->Add(numberSizer, 0, 0, dlg->FromDIP(5));
 
 			tc->SetDoubleBuffered(true);
 

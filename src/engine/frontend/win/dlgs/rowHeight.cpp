@@ -9,7 +9,7 @@ ibDialogRowHeight::ibDialogRowHeight(ibGridEditor* parent, wxWindowID id, const 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* rowSizer = new wxBoxSizer(wxHORIZONTAL);
 	m_maximumRow = new wxCheckBox(this, wxID_ANY, _("Maximun row height"), wxDefaultPosition, wxDefaultSize, 0);
-	rowSizer->Add(m_maximumRow, 0, wxALL, 5);
+	rowSizer->Add(m_maximumRow, 0, wxALL, FromDIP(5));
 
 	int height = 0; 
 
@@ -28,8 +28,8 @@ ibDialogRowHeight::ibDialogRowHeight(ibGridEditor* parent, wxWindowID id, const 
 
 	m_spinCtrlHeight = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 999, height);
 	m_spinCtrlHeight->SetDigits(2);
-	rowSizer->Add(m_spinCtrlHeight, 0, 0, 5);
-	mainSizer->Add(rowSizer, 1, wxEXPAND, 5);
+	rowSizer->Add(m_spinCtrlHeight, 0, 0, FromDIP(5));
+	mainSizer->Add(rowSizer, 1, wxEXPAND, FromDIP(5));
 
 	m_sdbSizerBottom = new wxStdDialogButtonSizer();
 	m_sdbSizerBottomOK = new wxButton(this, wxID_OK);
@@ -38,7 +38,7 @@ ibDialogRowHeight::ibDialogRowHeight(ibGridEditor* parent, wxWindowID id, const 
 	m_sdbSizerBottom->AddButton(m_sdbSizerBottomCancel);
 	m_sdbSizerBottom->Realize();
 
-	mainSizer->Add(m_sdbSizerBottom, 1, wxEXPAND, 5);
+	mainSizer->Add(m_sdbSizerBottom, 1, wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(mainSizer);
 	wxDialog::Layout();

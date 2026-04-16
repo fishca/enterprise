@@ -6,8 +6,8 @@
 
 void ibVisualEditorNotebook::CreateVisualEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, long flags)
 {
-	wxAuiNotebook::AddPage(m_visualEditor, _("Designer"), false, wxArtProvider::GetBitmap(wxART_DESIGNER_PAGE, wxART_DOC_FORM));
-	wxAuiNotebook::AddPage(m_codeEditor, _("Code"), false, wxArtProvider::GetBitmap(wxART_CODE_PAGE, wxART_DOC_FORM));
+	wxAuiNotebook::AddPage(m_visualEditor, _("Designer"), false, wxArtProvider::GetBitmapBundle(wxART_DESIGNER_PAGE, wxART_DOC_FORM));
+	wxAuiNotebook::AddPage(m_codeEditor, _("Code"), false, wxArtProvider::GetBitmapBundle(wxART_CODE_PAGE, wxART_DOC_FORM));
 	m_visualEditor->SetReadOnly(flags == wxDOC_READONLY);
 	m_codeEditor->SetReadOnly(flags == wxDOC_READONLY);
 	wxAuiNotebook::SetSelection(wxNOTEBOOK_PAGE_DESIGNER);

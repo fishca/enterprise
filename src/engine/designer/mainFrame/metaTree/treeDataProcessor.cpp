@@ -27,23 +27,23 @@ ibDataProcessorTree::ibDataProcessorTree(ibMetaDocument* docParent, wxWindow* pa
 	m_nameCaption = new wxStaticText(this, wxID_ANY, _("Name"), wxDefaultPosition, wxDefaultSize, 0);
 	m_nameCaption->Wrap(-1);
 
-	bSizerCaption->Add(m_nameCaption, 0, wxALL, 5);
+	bSizerCaption->Add(m_nameCaption, 0, wxALL, FromDIP(5));
 
 	m_synonymCaption = new wxStaticText(this, wxID_ANY, _("Synonym"), wxDefaultPosition, wxDefaultSize, 0);
 	m_synonymCaption->Wrap(-1);
 
-	bSizerCaption->Add(m_synonymCaption, 0, wxALL, 5);
+	bSizerCaption->Add(m_synonymCaption, 0, wxALL, FromDIP(5));
 
 	m_commentCaption = new wxStaticText(this, wxID_ANY, _("Comment"), wxDefaultPosition, wxDefaultSize, 0);
 	m_commentCaption->Wrap(-1);
 
-	bSizerCaption->Add(m_commentCaption, 0, wxALL, 5);
+	bSizerCaption->Add(m_commentCaption, 0, wxALL, FromDIP(5));
 
 	m_defaultForm = new wxStaticText(this, wxID_ANY, _("Default form:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_defaultForm->Wrap(-1);
 
-	bSizerCaption->Add(m_defaultForm, 0, wxALL, 5);
-	bSizerHeader->Add(bSizerCaption, 0, wxEXPAND, 5);
+	bSizerCaption->Add(m_defaultForm, 0, wxALL, FromDIP(5));
+	bSizerHeader->Add(bSizerCaption, 0, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* bSizerValue = new wxBoxSizer(wxVERTICAL);
 
@@ -66,20 +66,20 @@ ibDataProcessorTree::ibDataProcessorTree(ibMetaDocument* docParent, wxWindow* pa
 	m_defaultFormValue->Connect(wxEVT_CHOICE, wxCommandEventHandler(ibDataProcessorTree::OnChoiceDefForm), nullptr, this);
 
 	bSizerValue->Add(m_defaultFormValue, 1, wxALL | wxEXPAND, 1);
-	bSizerHeader->Add(bSizerValue, 1, 0, 5);
-	bSizerMain->Add(bSizerHeader, 0, wxEXPAND, 5);
+	bSizerHeader->Add(bSizerValue, 1, 0, FromDIP(5));
+	bSizerMain->Add(bSizerHeader, 0, wxEXPAND, FromDIP(5));
 
 	wxStaticBoxSizer* sbSizerTree = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, wxT("")), wxVERTICAL);
 
 	m_metaTreeToolbar = new wxAuiToolBar(sbSizerTree->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)), _("New item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)), _("Edit item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_DELETE, _("Delete"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)), _("Delete item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmapBundle(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)), _("New item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmapBundle(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)), _("Edit item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DELETE, _("Delete"), wxArtProvider::GetBitmapBundle(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)), _("Delete item"));
 	m_metaTreeToolbar->AddSeparator();
-	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmap(wxART_UP, wxART_FRONTEND, wxSize(16, 16)), _("Up item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmap(wxART_DOWN, wxART_FRONTEND, wxSize(16, 16)), _("Down item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmapBundle(wxART_UP, wxART_FRONTEND, wxSize(16, 16)), _("Up item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmapBundle(wxART_DOWN, wxART_FRONTEND, wxSize(16, 16)), _("Down item"));
 	m_metaTreeToolbar->AddSeparator();
-	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmap(wxART_SORT, wxART_FRONTEND, wxSize(16, 16)), _("Sort item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmapBundle(wxART_SORT, wxART_FRONTEND, wxSize(16, 16)), _("Sort item"));
 	m_metaTreeToolbar->Realize();
 
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
@@ -104,7 +104,7 @@ ibDataProcessorTree::ibDataProcessorTree(ibMetaDocument* docParent, wxWindow* pa
 
 	sbSizerTree->Add(m_metaTreeCtrl, 1, wxALL | wxEXPAND, 0);
 
-	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, 5);
+	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, FromDIP(5));
 
 	ibMetaDataDataProcessor* metaData = ((ibDataProcessorFilibDocument*)docParent)->GetMetaData();
 	ibValueMetaObjectDataProcessor* commonMeta = metaData->GetDataProcessor();

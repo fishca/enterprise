@@ -7,8 +7,11 @@
 #include <wx/tglbtn.h>
 #include <wx/hyperlink.h>
 
-#define THEME_COLOUR_MAIN wxColour(255, 232, 166) 
-#define THEME_COLOUR_BORDER wxColour(41, 57, 85) 
+// Adaptive theme colors — follow the OS theme (light / dark / high contrast)
+// instead of the old hard-coded 1C-style beige+navy which clashed with
+// modern Windows themes and was unreadable on dark mode.
+#define THEME_COLOUR_MAIN    wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE)
+#define THEME_COLOUR_BORDER  wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)
 
 #include "backend/metadataConfiguration.h"
 #include "backend/metaCollection/metaInterfaceObject.h"
@@ -414,7 +417,7 @@ class ibSubSystemWindow : public wxWindow {
 					if (metaObject->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Default, array)) {
 
 						wxBoxSizer* sizerSubCommonSpacer = new wxBoxSizer(wxHORIZONTAL);
-						sizerSubCommonSpacer->Add(20, 0, 0, wxEXPAND, 5);
+						sizerSubCommonSpacer->Add(20, 0, 0, wxEXPAND, FromDIP(5));
 						wxBoxSizer* sizerSubCommonItem = new wxBoxSizer(wxVERTICAL);
 
 						for (const auto object : array) {
@@ -431,11 +434,11 @@ class ibSubSystemWindow : public wxWindow {
 							df->SetClientObject(new ibScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Default));
 							df->Bind(wxEVT_BUTTON, &ibScrolledSubWindow::OnMenuItemClicked, this);
 
-							sizerSubCommonItem->Add(df, 0, wxEXPAND, 5);
+							sizerSubCommonItem->Add(df, 0, wxEXPAND, FromDIP(5));
 						}
 
-						sizerSubCommonSpacer->Add(sizerSubCommonItem, 1, wxEXPAND, 5);
-						sizerLeft->Add(sizerSubCommonSpacer, 0, wxEXPAND, 5);
+						sizerSubCommonSpacer->Add(sizerSubCommonItem, 1, wxEXPAND, FromDIP(5));
+						sizerLeft->Add(sizerSubCommonSpacer, 0, wxEXPAND, FromDIP(5));
 					}
 				}
 
@@ -457,12 +460,12 @@ class ibSubSystemWindow : public wxWindow {
 						st->SetBackgroundColour(*wxWHITE);
 						st->SetForegroundColour(wxDefaultStypeFGColour);
 						st->Wrap(-1);
-						st->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+						st->SetFont([]{ wxFont f = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT); f.SetPointSize(f.GetPointSize() + 3); f.MakeBold(); return f; }());
 
-						sizerSubsystem->Add(st, 0, wxALL, 5);
+						sizerSubsystem->Add(st, 0, wxALL, FromDIP(5));
 
 						wxBoxSizer* sizerSubsystemSpacer = new wxBoxSizer(wxHORIZONTAL);
-						sizerSubsystemSpacer->Add(20, 0, 0, wxEXPAND, 5);
+						sizerSubsystemSpacer->Add(20, 0, 0, wxEXPAND, FromDIP(5));
 						wxBoxSizer* sizerSubSystemItem = new wxBoxSizer(wxVERTICAL);
 
 						struct CSubWindowConstructor {
@@ -494,7 +497,7 @@ class ibSubSystemWindow : public wxWindow {
 											df->SetClientObject(new ibScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Default));
 											df->Bind(wxEVT_BUTTON, &ibScrolledSubWindow::OnMenuItemClicked, wnd);
 
-											sizerSubSystemItem->Add(df, 0, wxEXPAND, 5);
+											sizerSubSystemItem->Add(df, 0, wxEXPAND, FromDIP(5));
 
 											NextChildConstruct(sizerSubSystemItem, child, wnd);
 										}
@@ -517,20 +520,20 @@ class ibSubSystemWindow : public wxWindow {
 							df->SetClientObject(new ibScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Default));
 							df->Bind(wxEVT_BUTTON, &ibScrolledSubWindow::OnMenuItemClicked, this);
 
-							sizerSubSystemItem->Add(df, 0, wxEXPAND, 5);
+							sizerSubSystemItem->Add(df, 0, wxEXPAND, FromDIP(5));
 						}
 
 						CSubWindowConstructor::NextChildConstruct(sizerSubSystemItem, child, this);
 
-						sizerSubsystemSpacer->Add(sizerSubSystemItem, 1, wxEXPAND, 5);
-						sizerSubsystem->Add(sizerSubsystemSpacer, 1, wxEXPAND, 5);
+						sizerSubsystemSpacer->Add(sizerSubSystemItem, 1, wxEXPAND, FromDIP(5));
+						sizerSubsystem->Add(sizerSubsystemSpacer, 1, wxEXPAND, FromDIP(5));
 
 						sizerLeft->Add(sizerSubsystem, 1, wxEXPAND, 0);
 					}
 				}
 
 				sizerMain->Add(sizerLeft, 0, 0, 0);
-				sizerMain->Add(50, 0, 0, wxEXPAND, 5);
+				sizerMain->Add(50, 0, 0, wxEXPAND, FromDIP(5));
 
 				wxBoxSizer* sizerRight = new wxBoxSizer(wxVERTICAL);
 
@@ -545,12 +548,12 @@ class ibSubSystemWindow : public wxWindow {
 						st_create->SetBackgroundColour(*wxWHITE);
 						st_create->SetForegroundColour(wxDefaultStypeFGColour);
 						st_create->Wrap(-1);
-						st_create->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+						st_create->SetFont([]{ wxFont f = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT); f.SetPointSize(f.GetPointSize() + 3); f.MakeBold(); return f; }());
 
-						sizerCreate->Add(st_create, 0, wxALL | wxEXPAND, 5);
+						sizerCreate->Add(st_create, 0, wxALL | wxEXPAND, FromDIP(5));
 
 						wxBoxSizer* sizerCreateSpacer = new wxBoxSizer(wxHORIZONTAL);
-						sizerCreateSpacer->Add(20, 0, 0, wxEXPAND, 5);
+						sizerCreateSpacer->Add(20, 0, 0, wxEXPAND, FromDIP(5));
 
 						wxBoxSizer* sizerCreateItem = new wxBoxSizer(wxVERTICAL);
 
@@ -569,12 +572,12 @@ class ibSubSystemWindow : public wxWindow {
 
 							df->Bind(wxEVT_BUTTON, &ibScrolledSubWindow::OnMenuItemClicked, this);
 
-							sizerCreateItem->Add(df, 0, wxEXPAND, 5);
+							sizerCreateItem->Add(df, 0, wxEXPAND, FromDIP(5));
 						}
 
-						sizerCreateSpacer->Add(sizerCreateItem, 1, wxEXPAND, 5);
-						sizerCreate->Add(sizerCreateSpacer, 1, wxEXPAND, 5);
-						sizerRight->Add(sizerCreate, 0, wxEXPAND, 5);
+						sizerCreateSpacer->Add(sizerCreateItem, 1, wxEXPAND, FromDIP(5));
+						sizerCreate->Add(sizerCreateSpacer, 1, wxEXPAND, FromDIP(5));
+						sizerRight->Add(sizerCreate, 0, wxEXPAND, FromDIP(5));
 					}
 				}
 
@@ -589,12 +592,12 @@ class ibSubSystemWindow : public wxWindow {
 						st_report->SetBackgroundColour(*wxWHITE);
 						st_report->SetForegroundColour(wxDefaultStypeFGColour);
 						st_report->Wrap(-1);
-						st_report->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+						st_report->SetFont([]{ wxFont f = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT); f.SetPointSize(f.GetPointSize() + 3); f.MakeBold(); return f; }());
 
-						sizerReport->Add(st_report, 0, wxALL | wxEXPAND, 5);
+						sizerReport->Add(st_report, 0, wxALL | wxEXPAND, FromDIP(5));
 
 						wxBoxSizer* sizerReportSpacer = new wxBoxSizer(wxHORIZONTAL);
-						sizerReportSpacer->Add(20, 0, 0, wxEXPAND, 5);
+						sizerReportSpacer->Add(20, 0, 0, wxEXPAND, FromDIP(5));
 
 						wxBoxSizer* sizerReportItem = new wxBoxSizer(wxVERTICAL);
 
@@ -613,13 +616,13 @@ class ibSubSystemWindow : public wxWindow {
 
 							df->Bind(wxEVT_BUTTON, &ibScrolledSubWindow::OnMenuItemClicked, this);
 
-							sizerReportItem->Add(df, 0, wxEXPAND, 5);
+							sizerReportItem->Add(df, 0, wxEXPAND, FromDIP(5));
 						}
 
-						sizerReportSpacer->Add(sizerReportItem, 1, wxEXPAND, 5);
-						sizerReport->Add(sizerReportSpacer, 1, wxEXPAND, 5);
+						sizerReportSpacer->Add(sizerReportItem, 1, wxEXPAND, FromDIP(5));
+						sizerReport->Add(sizerReportSpacer, 1, wxEXPAND, FromDIP(5));
 
-						sizerRight->Add(sizerReport, 0, wxEXPAND, 5);
+						sizerRight->Add(sizerReport, 0, wxEXPAND, FromDIP(5));
 					}
 				}
 
@@ -633,9 +636,9 @@ class ibSubSystemWindow : public wxWindow {
 						st_service->SetBackgroundColour(*wxWHITE);
 						st_service->SetForegroundColour(wxDefaultStypeFGColour);
 						st_service->Wrap(-1);
-						st_service->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+						st_service->SetFont([]{ wxFont f = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT); f.SetPointSize(f.GetPointSize() + 3); f.MakeBold(); return f; }());
 
-						sizerService->Add(st_service, 0, wxALL | wxEXPAND, 5);
+						sizerService->Add(st_service, 0, wxALL | wxEXPAND, FromDIP(5));
 
 						wxBoxSizer* sizerServiceSpacer = new wxBoxSizer(wxHORIZONTAL);
 						sizerServiceSpacer->Add(20, 0, 0, wxEXPAND, 1);
@@ -656,16 +659,16 @@ class ibSubSystemWindow : public wxWindow {
 
 							df->Bind(wxEVT_BUTTON, &ibScrolledSubWindow::OnMenuItemClicked, this);
 
-							sizerServiceItem->Add(df, 0, wxEXPAND, 5);
+							sizerServiceItem->Add(df, 0, wxEXPAND, FromDIP(5));
 						}
 
-						sizerServiceSpacer->Add(sizerServiceItem, 1, wxEXPAND, 5);
-						sizerService->Add(sizerServiceSpacer, 1, wxEXPAND, 5);
-						sizerRight->Add(sizerService, 0, wxEXPAND, 5);
+						sizerServiceSpacer->Add(sizerServiceItem, 1, wxEXPAND, FromDIP(5));
+						sizerService->Add(sizerServiceSpacer, 1, wxEXPAND, FromDIP(5));
+						sizerRight->Add(sizerService, 0, wxEXPAND, FromDIP(5));
 					}
 				}
 
-				sizerMain->Add(sizerRight, 0, 0, 5);
+				sizerMain->Add(sizerRight, 0, 0, FromDIP(5));
 
 				SetSizer(sizerMain);
 				Layout();
@@ -729,7 +732,7 @@ class ibSubSystemWindow : public wxWindow {
 			bSizer1->Add(m_staticLine, 0, wxEXPAND | wxALL, 0);
 
 			m_mainWindow = new ibScrolledSubWindow(this, wxID_ANY);
-			m_mainWindow->SetScrollRate(5, 5);
+			m_mainWindow->SetScrollRate(5, FromDIP(5));
 
 			m_mainWindow->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
 			//m_mainWindow->SetBackgroundColour(THEME_COLOUR_BORDER);

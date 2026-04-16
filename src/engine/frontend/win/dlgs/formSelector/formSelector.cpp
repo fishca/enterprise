@@ -9,9 +9,10 @@
 #include "frontend/mainFrame/mainFrame.h"
 
 ibDialogSelectTypeForm::ibDialogSelectTypeForm(ibValueMetaObject* metaValue, ibValueMetaObjectFormBase* metaObject)
-	: wxDialog(ibFrontendDocMDIFrame::GetFrame(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(480, 320), wxDEFAULT_DIALOG_STYLE | wxDIALOG_ADAPTATION_ANY_SIZER), m_metaObject(metaObject)
+	: wxDialog(ibFrontendDocMDIFrame::GetFrame(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxDIALOG_ADAPTATION_ANY_SIZER), m_metaObject(metaObject)
 {
 	SetTitle(metaValue->GetSynonym() + _(" form wizard"));
+	SetClientSize(FromDIP(wxSize(480, 320)));
 }
 
 ibDialogSelectTypeForm::~ibDialogSelectTypeForm()
@@ -26,14 +27,14 @@ void ibDialogSelectTypeForm::CreateSelector()
 	for (auto choice : m_listChoice) {
 		wxRadioButton* radioButton = new wxRadioButton(sbSizerMain->GetStaticBox(), choice.m_value, choice.m_label, wxDefaultPosition, wxDefaultSize);
 		radioButton->Connect(wxEVT_RADIOBUTTON, wxCommandEventHandler(ibDialogSelectTypeForm::OnFormTypeChanged), nullptr, this);
-		sbSizerMain->Add(radioButton, 1, wxALL | wxEXPAND, 5);
+		sbSizerMain->Add(radioButton, 1, wxALL | wxEXPAND, FromDIP(5));
 	}
 
 	wxRadioButton* radioButton = new wxRadioButton(sbSizerMain->GetStaticBox(), defaultFormType, _("Generic form"), wxDefaultPosition, wxDefaultSize);
 	radioButton->Connect(wxEVT_RADIOBUTTON, wxCommandEventHandler(ibDialogSelectTypeForm::OnFormTypeChanged), nullptr, this);
-	sbSizerMain->Add(radioButton, 1, wxALL | wxEXPAND, 5);
+	sbSizerMain->Add(radioButton, 1, wxALL | wxEXPAND, FromDIP(5));
 
-	bSizerMain->Add(sbSizerMain, 1, wxEXPAND, 5);
+	bSizerMain->Add(sbSizerMain, 1, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* bSizerHeader = new wxBoxSizer(wxHORIZONTAL);
 	wxBoxSizer* bSizerLeft = new wxBoxSizer(wxVERTICAL);
@@ -41,18 +42,18 @@ void ibDialogSelectTypeForm::CreateSelector()
 	m_staticTextName = new wxStaticText(this, wxID_ANY, _("Name"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextName->Wrap(-1);
 
-	bSizerLeft->Add(m_staticTextName, 0, wxALL, 5);
+	bSizerLeft->Add(m_staticTextName, 0, wxALL, FromDIP(5));
 
 	m_staticTextSynonym = new wxStaticText(this, wxID_ANY, _("Synonym"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextSynonym->Wrap(-1);
 
-	bSizerLeft->Add(m_staticTextSynonym, 0, wxALL, 5);
+	bSizerLeft->Add(m_staticTextSynonym, 0, wxALL, FromDIP(5));
 
 	m_staticTextComment = new wxStaticText(this, wxID_ANY, _("Comment"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextComment->Wrap(-1);
 
-	bSizerLeft->Add(m_staticTextComment, 0, wxALL, 5);
-	bSizerHeader->Add(bSizerLeft, 0, wxEXPAND, 5);
+	bSizerLeft->Add(m_staticTextComment, 0, wxALL, FromDIP(5));
+	bSizerHeader->Add(bSizerLeft, 0, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* bSizerRight = new wxBoxSizer(wxVERTICAL);
 
@@ -66,21 +67,21 @@ void ibDialogSelectTypeForm::CreateSelector()
 	m_textCtrlComment = new wxTextCtrl(this, wxID_ANY, m_metaObject->GetComment(), wxDefaultPosition, wxDefaultSize, 0);
 	bSizerRight->Add(m_textCtrlComment, 0, wxALL | wxEXPAND, 1);
 
-	bSizerHeader->Add(bSizerRight, 1, wxEXPAND, 5);
-	bSizerMain->Add(bSizerHeader, 1, wxEXPAND, 10);
+	bSizerHeader->Add(bSizerRight, 1, wxEXPAND, FromDIP(5));
+	bSizerMain->Add(bSizerHeader, 1, wxEXPAND, FromDIP(10));
 
 	wxBoxSizer* bSizerBottom = new wxBoxSizer(wxHORIZONTAL);
 
 	m_sdbSizerOK = new wxButton(this, wxID_ANY, _("OK"), wxDefaultPosition, wxDefaultSize, 0);
 	m_sdbSizerOK->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibDialogSelectTypeForm::OnButtonOk), nullptr, this);
 
-	bSizerBottom->Add(m_sdbSizerOK, 0, wxALL, 5);
+	bSizerBottom->Add(m_sdbSizerOK, 0, wxALL, FromDIP(5));
 
 	m_sdbSizerCancel = new wxButton(this, wxID_ANY, _("Cancel"), wxDefaultPosition, wxDefaultSize, 0);
 	m_sdbSizerCancel->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibDialogSelectTypeForm::OnButtonCancel), nullptr, this);
-	bSizerBottom->Add(m_sdbSizerCancel, 0, wxALL, 5);
+	bSizerBottom->Add(m_sdbSizerCancel, 0, wxALL, FromDIP(5));
 
-	bSizerMain->Add(bSizerBottom, 0, wxEXPAND, 5);
+	bSizerMain->Add(bSizerBottom, 0, wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(bSizerMain);
 	wxDialog::Layout();

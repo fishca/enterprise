@@ -476,22 +476,22 @@ ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::ibVisualEdi
 	wxMenuItem* item = nullptr;
 	
 	item = Append(MENU_CUT, _("Cut\tCtrl+X"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_CUT, wxART_MENU));
+	item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_CUT, wxART_MENU));
 	item = Append(MENU_COPY, _("Copy\tCtrl+C"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY, wxART_MENU));
+	item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_COPY, wxART_MENU));
 	item = Append(MENU_PASTE, _("Paste\tCtrl+V"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PASTE, wxART_MENU));
+	item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PASTE, wxART_MENU));
 	AppendSeparator();
 	item = Append(MENU_DELETE, _("Delete\tCtrl+D"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
+	item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DELETE, wxART_MENU));
 	AppendSeparator();
 	item = Append(MENU_MOVE_UP, _("Move Up\tAlt+Up"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU));
+	item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_GO_UP, wxART_MENU));
 	item = Append(MENU_MOVE_DOWN, _("Move Down\tAlt+Down"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU));
+	item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_GO_DOWN, wxART_MENU));
 	AppendSeparator();
 	item = Append(MENU_PROPERTIES, _("Properties"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
+	item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PROPERTY, wxART_SERVICE));
 }
 
 void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorItemPopupMenu::OnMenuEvent(wxCommandEvent& event)

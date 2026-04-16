@@ -58,7 +58,7 @@ ibDialogActiveUser::ibDialogActiveUser(wxWindow* parent, wxWindowID id, const wx
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
 	m_activeTable = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
-	mainSizer->Add(m_activeTable, 1, wxALL | wxEXPAND, 5);
+	mainSizer->Add(m_activeTable, 1, wxALL | wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(mainSizer);
 	wxDialog::Layout();

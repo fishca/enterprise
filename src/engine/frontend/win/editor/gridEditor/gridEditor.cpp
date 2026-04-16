@@ -271,40 +271,40 @@ void ibGridEditor::OnMouseRightDown(ibGridEvent& event)
 
 		wxMenuItem* item = nullptr; wxMenu menuPopup;
 		item = menuPopup.Append(wxID_COPY, _("Copy"));
-		item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY, wxART_MENU));
+		item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_COPY, wxART_MENU));
 		item = menuPopup.Append(wxID_PASTE, _("Paste"));
-		item->SetBitmap(wxArtProvider::GetBitmap(wxART_PASTE, wxART_MENU));
+		item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PASTE, wxART_MENU));
 
 		if (!ibGrid::CanEnableCellControl())
 			menuPopup.Enable(wxID_PASTE, false);
 
 		item = menuPopup.Append(wxID_DELETE, _("Delete"));
-		item->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
+		item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DELETE, wxART_MENU));
 
 		if (event.GetRow() == wxNOT_FOUND &&
 			event.GetCol() != wxNOT_FOUND) {
 			menuPopup.AppendSeparator();
 			item = menuPopup.Append(wxID_HIDE_CELL, _("Hide"));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_MINUS, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_MINUS, wxART_MENU));
 			item = menuPopup.Append(wxID_SHOW_CELL, _("Display"));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PLUS, wxART_MENU));
 			item = menuPopup.Append(wxID_COL_WIDTH, _("Column width..."));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_FULL_SCREEN, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_FULL_SCREEN, wxART_MENU));
 		}
 		else if (event.GetRow() != wxNOT_FOUND &&
 			event.GetCol() == wxNOT_FOUND) {
 			menuPopup.AppendSeparator();
 			item = menuPopup.Append(wxID_HIDE_CELL, _("Hide"));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_MINUS, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_MINUS, wxART_MENU));
 			item = menuPopup.Append(wxID_SHOW_CELL, _("Display"));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PLUS, wxART_MENU));
 			item = menuPopup.Append(wxID_ROW_HEIGHT, _("Row height..."));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_FULL_SCREEN, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_FULL_SCREEN, wxART_MENU));
 		}
 
 		menuPopup.AppendSeparator();
 		item = menuPopup.Append(wxID_PROPERTIES, _("Properties"));
-		item->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
+		item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PROPERTY, wxART_SERVICE));
 
 		// event.GetPosition() is in the coords of whichever sub-window (label,
 		// area, gridWin) fired the right-click, but PopupMenu expects coords

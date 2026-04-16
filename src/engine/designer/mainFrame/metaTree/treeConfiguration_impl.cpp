@@ -742,7 +742,7 @@ void ibMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId&
 		menuItem->Enable(!m_bReadOnly);
 		defaultMenu->AppendSeparator();
 		menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
+		menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PROPERTY, wxART_SERVICE));
 	}
 	else if (!metaObject && item != m_treeCOMMON) {
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
@@ -759,7 +759,7 @@ void ibMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId&
 	else if (item == m_treeMETADATA) {
 		defaultMenu->AppendSeparator();
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
+		menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PROPERTY, wxART_SERVICE));
 	}
 }
 
@@ -1468,7 +1468,7 @@ void ibMetadataTree::InitTree()
 	//*                                      Common objects                                               *
 	//*****************************************************************************************************
 
-	const int imageCommonIndex = imageList->Add(wxArtProvider::GetBitmap(wxART_COMMON_FOLDER, wxART_METATREE));
+	const int imageCommonIndex = imageList->Add(wxArtProvider::GetBitmapBundle(wxART_COMMON_FOLDER, wxART_METATREE));
 	m_treeCOMMON = m_metaTreeCtrl->AppendItem(m_treeMETADATA, commonName, imageCommonIndex, imageCommonIndex);
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -77,12 +77,12 @@ ibPanelFontColorSettings::ibPanelFontColorSettings(wxWindow* parent, int id, wxP
 	bSizer1 = new wxBoxSizer(wxVERTICAL);
 
 	m_staticText3 = new wxStaticText(this, wxID_ANY, _("Font:"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer1->Add(m_staticText3, 0, wxALL, 5);
+	bSizer1->Add(m_staticText3, 0, wxALL, FromDIP(5));
 
 	m_selectedFontTextCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
-	bSizer1->Add(m_selectedFontTextCtrl, 0, wxALL | wxEXPAND, 5);
+	bSizer1->Add(m_selectedFontTextCtrl, 0, wxALL | wxEXPAND, FromDIP(5));
 
-	fgSizer3->Add(bSizer1, 1, wxEXPAND, 5);
+	fgSizer3->Add(bSizer1, 1, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* bSizer2;
 	bSizer2 = new wxBoxSizer(wxVERTICAL);
@@ -90,11 +90,11 @@ ibPanelFontColorSettings::ibPanelFontColorSettings(wxWindow* parent, int id, wxP
 	bSizer2->Add(0, 0, 1, wxEXPAND, 0);
 
 	m_button6 = new wxButton(this, ID_SelectFont, _("Select..."), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer2->Add(m_button6, 0, wxALL, 5);
+	bSizer2->Add(m_button6, 0, wxALL, FromDIP(5));
 
-	fgSizer3->Add(bSizer2, 1, wxEXPAND, 5);
+	fgSizer3->Add(bSizer2, 1, wxEXPAND, FromDIP(5));
 
-	fgSizer6->Add(fgSizer3, 1, wxEXPAND, 5);
+	fgSizer6->Add(fgSizer3, 1, wxEXPAND, FromDIP(5));
 
 	wxFlexGridSizer* fgSizer8;
 	fgSizer8 = new wxFlexGridSizer(1, 2, 0, 0);
@@ -109,68 +109,68 @@ ibPanelFontColorSettings::ibPanelFontColorSettings(wxWindow* parent, int id, wxP
 	fgSizer10->SetFlexibleDirection(wxBOTH);
 
 	m_staticText9 = new wxStaticText(this, wxID_ANY, _("Display items:"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer10->Add(m_staticText9, 0, wxALL, 5);
+	fgSizer10->Add(m_staticText9, 0, wxALL, FromDIP(5));
 
 	m_displayItemsListBox = new wxListBox(this, ID_DisplayItemsList, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE);
-	fgSizer10->Add(m_displayItemsListBox, 1, wxALL | wxEXPAND, 5);
+	fgSizer10->Add(m_displayItemsListBox, 1, wxALL | wxEXPAND, FromDIP(5));
 
-	fgSizer8->Add(fgSizer10, 1, wxEXPAND, 5);
+	fgSizer8->Add(fgSizer10, 1, wxEXPAND, FromDIP(5));
 
 	wxFlexGridSizer* fgSizer13 = new wxFlexGridSizer(6, 2, 0, 0);
 	fgSizer13->AddGrowableCol(0);
 	fgSizer13->SetFlexibleDirection(wxBOTH);
 
 	m_staticText12 = new wxStaticText(this, wxID_ANY, _("Item foreground:"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer13->Add(m_staticText12, 0, wxALL, 5);
+	fgSizer13->Add(m_staticText12, 0, wxALL, FromDIP(5));
 
 	fgSizer13->Add(0, 0, 1, wxEXPAND, 0);
 
 	m_foreColorChoice = new wxChoice(this, ID_ForeColorChoice, wxDefaultPosition, wxDefaultSize, s_numDefaultColors, s_defaultColorName, 0);
-	fgSizer13->Add(m_foreColorChoice, 0, wxALL | wxEXPAND, 5);
+	fgSizer13->Add(m_foreColorChoice, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_button4 = new wxButton(this, ID_ForeColorCustom, _("Custom..."), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer13->Add(m_button4, 0, wxALL, 5);
+	fgSizer13->Add(m_button4, 0, wxALL, FromDIP(5));
 
 	m_staticText13 = new wxStaticText(this, wxID_ANY, _("Item background:"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer13->Add(m_staticText13, 0, wxALL, 5);
+	fgSizer13->Add(m_staticText13, 0, wxALL, FromDIP(5));
 
 	fgSizer13->Add(0, 0, 1, wxEXPAND, 0);
 
 	m_backColorChoice = new wxChoice(this, ID_BackColorChoice, wxDefaultPosition, wxDefaultSize, s_numDefaultColors, s_defaultColorName, 0);
-	fgSizer13->Add(m_backColorChoice, 0, wxALL | wxEXPAND, 5);
+	fgSizer13->Add(m_backColorChoice, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_button5 = new wxButton(this, ID_BackColorCustom, _("Custom..."), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer13->Add(m_button5, 0, wxALL, 5);
+	fgSizer13->Add(m_button5, 0, wxALL, FromDIP(5));
 
 	// Bold check box.
 	m_boldCheck = new wxCheckBox(this, ID_BoldCheck, _("Bold"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer13->Add(m_boldCheck, 0, wxALL, 5);
-	fgSizer13->Add(0, 0, wxALL, 5);
+	fgSizer13->Add(m_boldCheck, 0, wxALL, FromDIP(5));
+	fgSizer13->Add(0, 0, wxALL, FromDIP(5));
 
 	// Italic check box.
 	m_italicCheck = new wxCheckBox(this, ID_ItalicCheck, _("Italic"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer13->Add(m_italicCheck, 0, wxALL, 5);
-	fgSizer13->Add(0, 0, wxALL, 5);
+	fgSizer13->Add(m_italicCheck, 0, wxALL, FromDIP(5));
+	fgSizer13->Add(0, 0, wxALL, FromDIP(5));
 
-	fgSizer8->Add(fgSizer13, 1, wxEXPAND, 5);
+	fgSizer8->Add(fgSizer13, 1, wxEXPAND, FromDIP(5));
 
-	fgSizer6->Add(fgSizer8, 1, wxEXPAND, 5);
+	fgSizer6->Add(fgSizer8, 1, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* bSizer7;
 	bSizer7 = new wxBoxSizer(wxVERTICAL);
 
 	m_staticText10 = new wxStaticText(this, wxID_ANY, _("Sample:"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer7->Add(m_staticText10, 0, wxALL, 5);
+	bSizer7->Add(m_staticText10, 0, wxALL, FromDIP(5));
 
 	m_previewPanel = new ibStaticTextEx(this, wxID_ANY, wxT("AaBbCcDdXxYyZz"), wxDefaultPosition, wxSize(-1, 80), wxSUNKEN_BORDER | wxALIGN_CENTRE);
 	m_previewPanel->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
-	bSizer7->Add(m_previewPanel, 1, wxEXPAND | wxALL, 5);
+	bSizer7->Add(m_previewPanel, 1, wxEXPAND | wxALL, FromDIP(5));
 
-	fgSizer6->Add(bSizer7, 1, wxEXPAND, 5);
+	fgSizer6->Add(bSizer7, 1, wxEXPAND, FromDIP(5));
 
 	m_button51 = new wxButton(this, ID_ResetToDefaults, _("Reset to defaults"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer6->Add(m_button51, 0, wxALL, 5);
+	fgSizer6->Add(m_button51, 0, wxALL, FromDIP(5));
 
 	this->SetSizer(fgSizer6);
 	this->Layout();

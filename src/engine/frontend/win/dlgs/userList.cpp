@@ -118,7 +118,7 @@ ibDialogUserList::ibDialogUserList(wxWindow* parent, wxWindowID id, const wxStri
 
 	m_dataEditor->AssociateModel(new ibUserListModel);
 
-	sizerList->Add(m_dataEditor, 1, wxALL | wxEXPAND, 5);
+	sizerList->Add(m_dataEditor, 1, wxALL | wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(sizerList);
 	wxDialog::Layout();

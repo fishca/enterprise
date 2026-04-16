@@ -117,14 +117,14 @@ void ibFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 	wxMenuItem* menuItem = nullptr;
 	
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE, _("Open database configuration"));
-	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE, wxART_FRONTEND, wxSize(16, 16)));
+	menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DATABASE, wxART_FRONTEND, wxSize(16, 16)));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());	
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE, _("Rollback to database configuration"));
-	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE_ROOLBACK, wxART_FRONTEND, wxSize(16, 16)));
+	menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DATABASE_ROOLBACK, wxART_FRONTEND, wxSize(16, 16)));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database configuration"));
-	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE_APPLY, wxART_FRONTEND, wxSize(16, 16)));
+	menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DATABASE_APPLY, wxART_FRONTEND, wxSize(16, 16)));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
 	m_menuConfiguration->AppendSeparator();

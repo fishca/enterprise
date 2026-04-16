@@ -12,36 +12,41 @@ wxString strContributors =
 	wxT("And also everyone who was not mentioned here")
 };
 
-ibDialogAbout::ibDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _("About..."), wxDefaultPosition, wxSize(600, 560))
+ibDialogAbout::ibDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _("About..."), wxDefaultPosition, wxDefaultSize)
 {
 	SetSizeHints(wxDefaultSize, wxDefaultSize);
+	// DIP-aware — same logical size regardless of the display's scale factor.
+	SetClientSize(FromDIP(wxSize(600, 560)));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
 
+	// System font so the dialog looks native on each platform/theme; only
+	// derive size/weight/italic from it instead of hard-coding Arial.
+	const wxFont sysFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+	wxFont headerFont = sysFont; headerFont.SetPointSize(sysFont.GetPointSize() + 3); headerFont.MakeBold();
+	wxFont linkFont   = sysFont; linkFont.MakeItalic();
+
 	m_staticTextHeader = new wxStaticText(this, wxID_ANY, wxString::Format(wxT("Open enterprise solutions, build %i"), GetBuildId()), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL);
 	m_staticTextHeader->Wrap(-1);
-	m_staticTextHeader->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+	m_staticTextHeader->SetFont(headerFont);
 
 	topSizer->Add(m_staticTextHeader, 0, wxALL | wxEXPAND, 5);
 
 	m_staticTextFramework = new wxStaticText(this, wxID_ANY, wxT("a RAD tool powered by wxWidgets framework"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL);
 	m_staticTextFramework->Wrap(-1);
-	m_staticTextFramework->SetFont(wxFont(9, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Arial")));
 
 	topSizer->Add(m_staticTextFramework, 0, wxALL | wxEXPAND, 5);
 
 	m_staticTextCommunity = new wxStaticText(this, wxID_ANY, wxT("(c) 2026 OES community"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL);
 
 	m_staticTextCommunity->Wrap(-1);
-	m_staticTextCommunity->SetFont(wxFont(9, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxT("Arial")));
-	m_staticTextCommunity->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+	m_staticTextCommunity->SetFont(linkFont);
+	m_staticTextCommunity->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HOTLIGHT));
 	m_staticTextCommunity->SetCursor(wxCURSOR_HAND);
 
 	m_staticTextCommunity->Bind(wxEVT_LEFT_UP,
 		[](wxMouseEvent& event) { wxLaunchDefaultBrowser(wxT("https://github.com/open-enterprise-solutions/enterprise")); event.Skip(); });
-
-	m_staticTextCommunity->SetFont(wxFont(9, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Arial")));
 
 	topSizer->Add(m_staticTextCommunity, 0, wxALL | wxEXPAND, 5);
 
@@ -51,7 +56,6 @@ ibDialogAbout::ibDialogAbout(wxWindow* parent, int id) : wxDialog(parent, id, _(
 
 	m_staticTextThanks = new wxStaticText(this, wxID_ANY, wxT("Thanks"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL);
 	m_staticTextThanks->Wrap(-1);
-	m_staticTextThanks->SetFont(wxFont(9, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Arial")));
 
 	topSizer->Add(m_staticTextThanks, 0, wxALL | wxEXPAND, 5);
 

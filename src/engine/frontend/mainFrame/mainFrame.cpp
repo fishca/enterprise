@@ -36,7 +36,7 @@ bool ibFrontendDocMDIFrame::ShowFrame()
 
 		s_instance->CreateGUI();
 
-		s_instance->SetSize(800, 600);
+		s_instance->SetClientSize(s_instance->FromDIP(wxSize(800, 600)));
 		s_instance->SetFocus();
 
 		s_instance->Center();
@@ -178,7 +178,9 @@ wxAuiMDIClientWindow* ibFrontendDocMDIFrame::OnCreateClient()
 		wxAuiMDIClientWindowImpl() : wxAuiMDIClientWindow() {}
 		wxAuiMDIClientWindowImpl(wxAuiMDIParentFrame* parent, long style = 0) : wxAuiMDIClientWindow(parent, style) {
 #ifdef __WXOSX__
-			SetBackgroundColour(wxColour(68, 88, 123)); // THEME_COLOUR_MAIN
+			// Use the system background instead of the old hard-coded blue —
+			// respects dark/light mode.
+			SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_APPWORKSPACE));
 			SetBackgroundStyle(wxBG_STYLE_SYSTEM);
 			Bind(wxEVT_PAINT, &wxAuiMDIClientWindowImpl::OnPaint, this);
 			Bind(wxEVT_ERASE_BACKGROUND, &wxAuiMDIClientWindowImpl::OnEraseBackground, this);

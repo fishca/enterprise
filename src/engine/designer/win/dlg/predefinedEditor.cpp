@@ -119,7 +119,7 @@ void ibDialogPredefinedEditor::CreateDialogView()
 
 	m_tableEditor->AssociateModel(m_tableModelStore);
 
-	sizerList->Add(m_tableEditor, 1, wxALL | wxEXPAND, 5);
+	sizerList->Add(m_tableEditor, 1, wxALL | wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(sizerList);
 	wxDialog::Layout();

@@ -82,33 +82,33 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 
 	m_staticName = new wxStaticText(m_main, wxID_ANY, _("Name:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticName->Wrap(-1);
-	sizerLabel->Add(m_staticName, 0, wxALL, 9);
+	sizerLabel->Add(m_staticName, 0, wxALL, FromDIP(9));
 
 	m_staticFullName = new wxStaticText(m_main, wxID_ANY, _("Full name:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticFullName->Wrap(-1);
-	sizerLabel->Add(m_staticFullName, 0, wxALL, 9);
+	sizerLabel->Add(m_staticFullName, 0, wxALL, FromDIP(9));
 
-	sizerUserTop->Add(sizerLabel, 0, 0, 5);
+	sizerUserTop->Add(sizerLabel, 0, 0, FromDIP(5));
 
 	wxBoxSizer* sizerText = new wxBoxSizer(wxVERTICAL);
 	m_textName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-	sizerText->Add(m_textName, 0, wxALL | wxEXPAND, 5);
+	sizerText->Add(m_textName, 0, wxALL | wxEXPAND, FromDIP(5));
 	m_textFullName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	sizerText->Add(m_textFullName, 0, wxALL | wxEXPAND, 5);
-	sizerUserTop->Add(sizerText, 1, wxEXPAND, 5);
-	sizerUser->Add(sizerUserTop, 0, wxEXPAND, 5);
+	sizerText->Add(m_textFullName, 0, wxALL | wxEXPAND, FromDIP(5));
+	sizerUserTop->Add(sizerText, 1, wxEXPAND, FromDIP(5));
+	sizerUser->Add(sizerUserTop, 0, wxEXPAND, FromDIP(5));
 
 	m_staticline = new wxStaticLine(m_main, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
-	sizerUser->Add(m_staticline, 0, wxALL | wxEXPAND, 5);
+	sizerUser->Add(m_staticline, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* sizerUserBottom = new wxBoxSizer(wxHORIZONTAL);
 	m_staticPassword = new wxStaticText(m_main, wxID_ANY, _("Password:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticPassword->Wrap(-1);
-	sizerUserBottom->Add(m_staticPassword, 0, wxALL, 10);
+	sizerUserBottom->Add(m_staticPassword, 0, wxALL, FromDIP(10));
 	m_textPassword = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD);
-	sizerUserBottom->Add(m_textPassword, 1, wxALL, 5);
+	sizerUserBottom->Add(m_textPassword, 1, wxALL, FromDIP(5));
 
-	sizerUser->Add(sizerUserBottom, 1, wxEXPAND, 5);
+	sizerUser->Add(sizerUserBottom, 1, wxEXPAND, FromDIP(5));
 
 	m_main->SetSizer(sizerUser);
 	m_main->Layout();
@@ -155,20 +155,20 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 
 	m_choiceLanguage->SetSelection(0);
 
-	sizerLabels->Add(m_staticRole, 0, wxEXPAND, 5);
-	sizerLabels->Add(m_choiceRole, 1, wxEXPAND, 5);
-	sizerOther->Add(sizerLabels, 1, wxEXPAND, 5);
+	sizerLabels->Add(m_staticRole, 0, wxEXPAND, FromDIP(5));
+	sizerLabels->Add(m_choiceRole, 1, wxEXPAND, FromDIP(5));
+	sizerOther->Add(sizerLabels, 1, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* sizerChoice = new wxBoxSizer(wxVERTICAL);
 
-	sizerChoice->Add(m_staticLanguage, 0, wxEXPAND, 5);
-	sizerChoice->Add(m_choiceLanguage, 0, wxEXPAND, 5);
+	sizerChoice->Add(m_staticLanguage, 0, wxEXPAND, FromDIP(5));
+	sizerChoice->Add(m_choiceLanguage, 0, wxEXPAND, FromDIP(5));
 
-	sizerOther->Add(sizerChoice, 0, wxEXPAND, 5);
+	sizerOther->Add(sizerChoice, 0, wxEXPAND, FromDIP(5));
 	m_other->SetSizer(sizerOther);
 
 	m_mainNotebook->AddPage(m_other, _("Other"), true, wxNullBitmap);
-	mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, 5);
+	mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, FromDIP(5));
 
 	m_bottom = new wxStdDialogButtonSizer();
 	m_bottomOK = new wxButton(this, wxID_OK);
@@ -178,7 +178,7 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 	m_bottom->Realize();
 
 	m_mainNotebook->SetSelection(0);
-	mainSizer->Add(m_bottom, 0, wxEXPAND, 5);
+	mainSizer->Add(m_bottom, 0, wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(mainSizer);
 	wxDialog::Layout();

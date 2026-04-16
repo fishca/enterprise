@@ -21,7 +21,7 @@ ibDialogFunctionAll::ibDialogFunctionAll(wxWindow* parent, wxWindowID id, const 
 	wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
 	m_treeCtrlElements = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_SINGLE | wxTR_HIDE_ROOT | wxTR_TWIST_BUTTONS);
 	m_treeCtrlElements->SetDoubleBuffered(true);
-	bSizer->Add(m_treeCtrlElements, 1, wxALL | wxEXPAND, 5);
+	bSizer->Add(m_treeCtrlElements, 1, wxALL | wxEXPAND, FromDIP(5));
 
 	// Connect Events
 	m_treeCtrlElements->Connect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(ibDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick), nullptr, this);

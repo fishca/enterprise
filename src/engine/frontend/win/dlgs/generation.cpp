@@ -29,7 +29,7 @@ ibDialogGeneration::ibDialogGeneration(ibMetaData* metaData, const ibMetaDescrip
 
 	m_listData = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_HEADER | wxLC_SINGLE_SEL | wxLC_LIST);
 	m_listData->AppendColumn(wxT("type"), wxLIST_FORMAT_LEFT, 300);
-	mainSizer->Add(m_listData, 1, wxALL | wxEXPAND, 5);
+	mainSizer->Add(m_listData, 1, wxALL | wxEXPAND, FromDIP(5));
 
 	// Make an state image list containing small icons
 	m_listData->AssignImageList(
@@ -51,11 +51,11 @@ ibDialogGeneration::ibDialogGeneration(ibMetaData* metaData, const ibMetaDescrip
 
 	wxBoxSizer* buttonsSizer = new wxBoxSizer(wxVERTICAL);
 	m_buttonOk = new wxButton(this, wxID_OK, _("Ok"), wxDefaultPosition, wxDefaultSize, 0);
-	buttonsSizer->Add(m_buttonOk, 0, wxALL, 5);
+	buttonsSizer->Add(m_buttonOk, 0, wxALL, FromDIP(5));
 	m_buttonCancel = new wxButton(this, wxID_CANCEL, _("Cancel"), wxDefaultPosition, wxDefaultSize, 0);
-	buttonsSizer->Add(m_buttonCancel, 0, wxALL, 5);
+	buttonsSizer->Add(m_buttonCancel, 0, wxALL, FromDIP(5));
 
-	mainSizer->Add(buttonsSizer, 0, wxEXPAND, 5);
+	mainSizer->Add(buttonsSizer, 0, wxEXPAND, FromDIP(5));
 
 	wxIcon dlg_icon;
 	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picGenerateCLSID));

@@ -192,19 +192,19 @@ wxPrintout* ibSpreadsheetEditView::OnCreatePrintout()
 
 void ibSpreadsheetEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 {
-	toolbar->AddTool(wxID_MERGE_CELL, _("Merge cells"), wxArtProvider::GetBitmap(wxART_MERGE_CELL, wxART_DOC_TEMPLATE), _("Merge cells"), wxItemKind::wxITEM_NORMAL);
+	toolbar->AddTool(wxID_MERGE_CELL, _("Merge cells"), wxArtProvider::GetBitmapBundle(wxART_MERGE_CELL, wxART_DOC_TEMPLATE), _("Merge cells"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_MERGE_CELL, m_gridEditor->IsEditable());
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_AREA_ADD, _("Add area"), wxArtProvider::GetBitmap(wxART_ADD_SECTION, wxART_DOC_TEMPLATE), _("Add area"), wxItemKind::wxITEM_NORMAL);
+	toolbar->AddTool(wxID_AREA_ADD, _("Add area"), wxArtProvider::GetBitmapBundle(wxART_ADD_SECTION, wxART_DOC_TEMPLATE), _("Add area"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_AREA_ADD, m_gridEditor->IsEditable());
-	toolbar->AddTool(wxID_AREA_DELETE, _("Delete area"), wxArtProvider::GetBitmap(wxART_REMOVE_SECTION, wxART_DOC_TEMPLATE), _("Remove area"), wxItemKind::wxITEM_NORMAL);
+	toolbar->AddTool(wxID_AREA_DELETE, _("Delete area"), wxArtProvider::GetBitmapBundle(wxART_REMOVE_SECTION, wxART_DOC_TEMPLATE), _("Remove area"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_AREA_DELETE, m_gridEditor->IsEditable());
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_SHOW_CELL, _("Show cells"), wxArtProvider::GetBitmap(wxART_SHOW_CELL, wxART_DOC_TEMPLATE), _("Show cells"));
-	toolbar->AddTool(wxID_SHOW_HEADER, _("Show headers"), wxArtProvider::GetBitmap(wxART_SHOW_HEADER, wxART_DOC_TEMPLATE), _("Show headers"));
-	toolbar->AddTool(wxID_SHOW_AREA, _("Show area"), wxArtProvider::GetBitmap(wxART_SHOW_SECTION, wxART_DOC_TEMPLATE), _("Show area"));
+	toolbar->AddTool(wxID_SHOW_CELL, _("Show cells"), wxArtProvider::GetBitmapBundle(wxART_SHOW_CELL, wxART_DOC_TEMPLATE), _("Show cells"));
+	toolbar->AddTool(wxID_SHOW_HEADER, _("Show headers"), wxArtProvider::GetBitmapBundle(wxART_SHOW_HEADER, wxART_DOC_TEMPLATE), _("Show headers"));
+	toolbar->AddTool(wxID_SHOW_AREA, _("Show area"), wxArtProvider::GetBitmapBundle(wxART_SHOW_SECTION, wxART_DOC_TEMPLATE), _("Show area"));
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_DOCK_TABLE, _("Freeze row/col table"), wxArtProvider::GetBitmap(wxART_BORDER, wxART_DOC_TEMPLATE), _("Freeze row/col table"));
+	toolbar->AddTool(wxID_DOCK_TABLE, _("Freeze row/col table"), wxArtProvider::GetBitmapBundle(wxART_BORDER, wxART_DOC_TEMPLATE), _("Freeze row/col table"));
 	toolbar->EnableTool(wxID_DOCK_TABLE, m_gridEditor->IsEditable());
 }
 

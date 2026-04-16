@@ -240,5 +240,63 @@ private:
 #endif
 };
 
+#include <memory>
+
+// RAII guard for an ibDatabaseResultSet* obtained from ibDatabaseLayer::RunQueryWithResults
+// or ibPreparedStatement::RunQueryWithResults. Calls rs->Close() and db->CloseResultSet(rs)
+// in the destructor so early returns and exceptions don't leak. The db parameter accepts
+// either a raw ibDatabaseLayer* or a std::shared_ptr<ibDatabaseLayer> (the common form
+// across OES — e.g. the db_query macro returns shared_ptr by value).
+class BACKEND_API ibResultSetGuard {
+public:
+	ibResultSetGuard(ibDatabaseLayer* db, ibDatabaseResultSet* rs) : m_db(db), m_rs(rs) {}
+	ibResultSetGuard(const std::shared_ptr<ibDatabaseLayer>& db, ibDatabaseResultSet* rs) : m_db(db.get()), m_rs(rs) {}
+	~ibResultSetGuard() { reset(nullptr); }
+	ibResultSetGuard(const ibResultSetGuard&) = delete;
+	ibResultSetGuard& operator=(const ibResultSetGuard&) = delete;
+
+	ibDatabaseResultSet* get() const { return m_rs; }
+	ibDatabaseResultSet* operator->() const { return m_rs; }
+	explicit operator bool() const { return m_rs != nullptr; }
+
+	void reset(ibDatabaseResultSet* rs) {
+		if (m_rs != nullptr && m_db != nullptr) {
+			m_rs->Close();
+			m_db->CloseResultSet(m_rs);
+		}
+		m_rs = rs;
+	}
+
+private:
+	ibDatabaseLayer* m_db;
+	ibDatabaseResultSet* m_rs;
+};
+
+// RAII guard for an ibPreparedStatement* obtained from ibDatabaseLayer::PrepareStatement.
+// Calls db->CloseStatement(stmt) in the destructor. Same shared_ptr accommodation as above.
+class BACKEND_API ibStatementGuard {
+public:
+	ibStatementGuard(ibDatabaseLayer* db, ibPreparedStatement* stmt) : m_db(db), m_stmt(stmt) {}
+	ibStatementGuard(const std::shared_ptr<ibDatabaseLayer>& db, ibPreparedStatement* stmt) : m_db(db.get()), m_stmt(stmt) {}
+	~ibStatementGuard() { reset(nullptr); }
+	ibStatementGuard(const ibStatementGuard&) = delete;
+	ibStatementGuard& operator=(const ibStatementGuard&) = delete;
+
+	ibPreparedStatement* get() const { return m_stmt; }
+	ibPreparedStatement* operator->() const { return m_stmt; }
+	explicit operator bool() const { return m_stmt != nullptr; }
+
+	void reset(ibPreparedStatement* stmt) {
+		if (m_stmt != nullptr && m_db != nullptr) {
+			m_db->CloseStatement(m_stmt);
+		}
+		m_stmt = stmt;
+	}
+
+private:
+	ibDatabaseLayer* m_db;
+	ibPreparedStatement* m_stmt;
+};
+
 #endif // __DATABASE_LAYER_H__
 

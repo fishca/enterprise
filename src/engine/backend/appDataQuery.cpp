@@ -24,16 +24,15 @@ void ibApplicationData::ibApplicationDataSessionUpdater::Job_ClearLostSession()
 
 	// Prepared statement avoids string formatting of the date and the SQL-injection surface.
 	// The previous code also did a dead SELECT before the DELETE (result never read) — dropped.
-	ibPreparedStatement* stmt = m_session_db->PrepareStatement(
-		wxT("DELETE FROM %s WHERE lastActive < ?;"),
-		session_table
+	ibStatementGuard stmt(m_session_db,
+		m_session_db->PrepareStatement(
+			wxT("DELETE FROM %s WHERE lastActive < ?;"),
+			session_table)
 	);
 
-	if (stmt != nullptr) {
+	if (stmt) {
 		stmt->SetParamDate(1, prevDateTime);
 		stmt->RunQuery();
-		stmt->Close();
-		m_session_db->CloseStatement(stmt);
 	}
 
 	m_session_db->Commit();
@@ -45,69 +44,56 @@ void ibApplicationData::ibApplicationDataSessionUpdater::Job_CalcActiveSession()
 
 	// Use a prepared statement for the GUID lookup — avoids SQL injection via session GUID
 	// and lets the driver cache the plan across every 3-second tick.
-	ibPreparedStatement* dbSessionCountStmt = m_session_db->PrepareStatement(
-		wxT("SELECT session, userName, lastActive FROM %s WHERE session = ?;"),
-		session_table
+	ibStatementGuard selectStmt(m_session_db,
+		m_session_db->PrepareStatement(
+			wxT("SELECT session, userName, lastActive FROM %s WHERE session = ?;"),
+			session_table)
 	);
-	if (dbSessionCountStmt != nullptr) {
-		dbSessionCountStmt->SetParamString(1, m_session.str());
+	if (selectStmt) {
+		selectStmt->SetParamString(1, m_session.str());
 	}
-	ibDatabaseResultSet* dbSessionCountResult =
-		dbSessionCountStmt != nullptr ? dbSessionCountStmt->RunQueryWithResults() : nullptr;
+	ibResultSetGuard selectResult(m_session_db,
+		selectStmt ? selectStmt->RunQueryWithResults() : nullptr);
 
 	const wxDateTime& currentTime = wxDateTime::Now();
 
-	if (dbSessionCountResult != nullptr &&
-		dbSessionCountResult->Next()) {
+	if (selectResult && selectResult->Next()) {
 
 		// Prepared UPDATE: plugs user-name SQL-injection (if name contains an apostrophe).
-		ibPreparedStatement* updateStmt = m_session_db->PrepareStatement(
-			wxT("UPDATE %s SET lastActive = ?, userName = ? WHERE session = ?;"),
-			session_table
+		ibStatementGuard updateStmt(m_session_db,
+			m_session_db->PrepareStatement(
+				wxT("UPDATE %s SET lastActive = ?, userName = ? WHERE session = ?;"),
+				session_table)
 		);
-		if (updateStmt != nullptr) {
+		if (updateStmt) {
 			updateStmt->SetParamDate(1, currentTime);
 			updateStmt->SetParamString(2, appData->GetUserName());
 			updateStmt->SetParamString(3, m_session.str());
 			updateStmt->RunQuery();
-			updateStmt->Close();
-			m_session_db->CloseStatement(updateStmt);
 		}
 	}
 	else {
 
-		//start lost session 
-		ibPreparedStatement* dbSessionPrepareData = m_session_db->PrepareStatement(
-			wxT("INSERT INTO %s (session, userName, application, started, lastActive, computer) VALUES (?,?,?,?,?,?);"),
-			session_table
+		//start lost session
+		ibStatementGuard insertStmt(m_session_db,
+			m_session_db->PrepareStatement(
+				wxT("INSERT INTO %s (session, userName, application, started, lastActive, computer) VALUES (?,?,?,?,?,?);"),
+				session_table)
 		);
 
-		dbSessionPrepareData->SetParamString(1, m_session.str());
-		dbSessionPrepareData->SetParamString(2, appData->GetUserName()); //empty user!
-		dbSessionPrepareData->SetParamInt(3, appData->GetAppMode());
-		dbSessionPrepareData->SetParamDate(4, appData->GetStartedDate());
-		dbSessionPrepareData->SetParamDate(5, currentTime);
-		dbSessionPrepareData->SetParamString(6, appData->GetComputerName());
+		if (insertStmt) {
+			insertStmt->SetParamString(1, m_session.str());
+			insertStmt->SetParamString(2, appData->GetUserName()); //empty user!
+			insertStmt->SetParamInt(3, appData->GetAppMode());
+			insertStmt->SetParamDate(4, appData->GetStartedDate());
+			insertStmt->SetParamDate(5, currentTime);
+			insertStmt->SetParamString(6, appData->GetComputerName());
 
-		dbSessionPrepareData->RunQuery();
-
-		if (dbSessionPrepareData != nullptr)
-			dbSessionPrepareData->Close();
-
-		m_session_db->CloseStatement(dbSessionPrepareData);
+			insertStmt->RunQuery();
+		}
 	}
 
 	m_session_db->Commit();
-
-	if (dbSessionCountResult != nullptr)
-		dbSessionCountResult->Close();
-
-	m_session_db->CloseResultSet(dbSessionCountResult);
-
-	if (dbSessionCountStmt != nullptr) {
-		dbSessionCountStmt->Close();
-		m_session_db->CloseStatement(dbSessionCountStmt);
-	}
 }
 
 void ibApplicationData::ibApplicationDataSessionUpdater::Job_UpdateActiveSession()
@@ -117,26 +103,23 @@ void ibApplicationData::ibApplicationDataSessionUpdater::Job_UpdateActiveSession
 	// for the full query latency. Now we only hold it for the swap.
 	ibApplicationDataSessionArray snapshot;
 
-	ibDatabaseResultSet* dbSessionResult = m_session_db->RunQueryWithResults(
-		wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session;"),
-		session_table
+	ibResultSetGuard result(m_session_db,
+		m_session_db->RunQueryWithResults(
+			wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session;"),
+			session_table)
 	);
 
-	if (dbSessionResult != nullptr) {
-		while (dbSessionResult->Next()) {
+	if (result) {
+		while (result->Next()) {
 			snapshot.AppendSession(
-				static_cast<ibRunMode>(dbSessionResult->GetResultInt("application")),
-				dbSessionResult->GetResultDate("started"),
-				dbSessionResult->GetResultString("userName"),
-				dbSessionResult->GetResultString("computer"),
-				dbSessionResult->GetResultString("session")
+				static_cast<ibRunMode>(result->GetResultInt("application")),
+				result->GetResultDate("started"),
+				result->GetResultString("userName"),
+				result->GetResultString("computer"),
+				result->GetResultString("session")
 			);
 		}
-
-		dbSessionResult->Close();
 	}
-
-	m_session_db->CloseResultSet(dbSessionResult);
 
 	{
 		wxCriticalSectionLocker enter(ms_sessionLocker);
@@ -152,15 +135,14 @@ void ibApplicationData::ibApplicationDataSessionUpdater::ClearLostSessionUpdater
 	wxDateTime cutoff = wxDateTime::Now();
 	(void)cutoff.Subtract(wxTimeSpan(0, 0, timeInterval));
 
-	ibPreparedStatement* stmt = m_session_db->PrepareStatement(
-		wxT("DELETE FROM %s WHERE lastActive < ?;"),
-		session_table
+	ibStatementGuard stmt(m_session_db,
+		m_session_db->PrepareStatement(
+			wxT("DELETE FROM %s WHERE lastActive < ?;"),
+			session_table)
 	);
-	if (stmt != nullptr) {
+	if (stmt) {
 		stmt->SetParamDate(1, cutoff);
 		stmt->RunQuery();
-		stmt->Close();
-		m_session_db->CloseStatement(stmt);
 	}
 
 	m_session_db->Commit();
@@ -230,7 +212,8 @@ bool ibApplicationData::ibApplicationDataSessionUpdater::VerifySessionUpdater() 
 						m_sessionArray.GetUserName(idx)
 					);
 				}
-				catch (...) {
+				catch (const ibBackendException* err) {
+					ibBackendExceptionPtr guard(err);
 				}
 				return false;
 			}
@@ -284,33 +267,31 @@ wxThread::ExitCode ibApplicationData::ibApplicationDataSessionUpdater::Entry()
 	if (!VerifySessionUpdater())
 		return (wxThread::ExitCode)1;
 
-	//start empty session 
-	ibPreparedStatement* dbSessionPrepareData = m_session_db->PrepareStatement(
-		wxT("INSERT INTO %s (session, userName, application, started, lastActive, computer) VALUES (?,?,?,?,?,?);"),
-		session_table
-	);
+	//start empty session
+	{
+		ibStatementGuard insertStmt(m_session_db,
+			m_session_db->PrepareStatement(
+				wxT("INSERT INTO %s (session, userName, application, started, lastActive, computer) VALUES (?,?,?,?,?,?);"),
+				session_table)
+		);
 
-	if (dbSessionPrepareData == nullptr)
-		return (wxThread::ExitCode)1;
+		if (!insertStmt)
+			return (wxThread::ExitCode)1;
 
-	dbSessionPrepareData->SetParamString(1, m_session.str());
-	dbSessionPrepareData->SetParamString(2, wxEmptyString); //empty user!
-	dbSessionPrepareData->SetParamInt(3, appData->GetAppMode());
-	dbSessionPrepareData->SetParamDate(4, appData->GetStartedDate());
-	dbSessionPrepareData->SetParamDate(5, wxDateTime::Now());
-	dbSessionPrepareData->SetParamString(6, appData->GetComputerName());
+		insertStmt->SetParamString(1, m_session.str());
+		insertStmt->SetParamString(2, wxEmptyString); //empty user!
+		insertStmt->SetParamInt(3, appData->GetAppMode());
+		insertStmt->SetParamDate(4, appData->GetStartedDate());
+		insertStmt->SetParamDate(5, wxDateTime::Now());
+		insertStmt->SetParamString(6, appData->GetComputerName());
 
-	dbSessionPrepareData->RunQuery();
-	dbSessionPrepareData->Close();
+		insertStmt->RunQuery();
+	}
 
 	m_sessionArray.AppendSession(
 		appData->GetAppMode(), appData->GetStartedDate(), appData->GetUserName(), appData->GetComputerName(), m_session.str()
 	);
 
-	if (dbSessionPrepareData != nullptr)
-		dbSessionPrepareData->Close();
-
-	m_session_db->CloseStatement(dbSessionPrepareData);
 	m_sessionCreated = true;
 
 	// Tick cadence controls how fast this instance sees other clients joining/leaving.
@@ -355,15 +336,14 @@ wxThread::ExitCode ibApplicationData::ibApplicationDataSessionUpdater::Entry()
 
 	// Final DELETE with a prepared statement — last injection surface in this thread.
 	int result = DATABASE_LAYER_QUERY_RESULT_ERROR;
-	ibPreparedStatement* finalStmt = m_session_db->PrepareStatement(
-		wxT("DELETE FROM %s WHERE session = ?;"),
-		session_table
+	ibStatementGuard finalStmt(m_session_db,
+		m_session_db->PrepareStatement(
+			wxT("DELETE FROM %s WHERE session = ?;"),
+			session_table)
 	);
-	if (finalStmt != nullptr) {
+	if (finalStmt) {
 		finalStmt->SetParamString(1, m_session.str());
 		result = finalStmt->RunQuery();
-		finalStmt->Close();
-		m_session_db->CloseStatement(finalStmt);
 	}
 
 	m_sessionArray.ClearSession();
@@ -498,17 +478,17 @@ ibApplicationDataUserInfo ibApplicationData::ReadUserData(const ibGuid& userGuid
 	if (!userGuid.isValid())
 		return userInfo;
 
-	ibDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT * FROM %s WHERE guid = '%s';"), user_table, userGuid.str());
+	ibResultSetGuard result(db_query,
+		db_query->RunQueryWithResults(wxT("SELECT * FROM %s WHERE guid = '%s';"), user_table, userGuid.str()));
 
-	if (dbUserResult != nullptr && dbUserResult->Next()) {
+	if (result && result->Next()) {
 
-		userInfo.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
-		userInfo.m_strUserName = dbUserResult->GetResultString(wxT("name"));
-		userInfo.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
+		userInfo.m_strUserGuid = result->GetResultString(wxT("guid"));
+		userInfo.m_strUserName = result->GetResultString(wxT("name"));
+		userInfo.m_strUserFullName = result->GetResultString(wxT("fullName"));
 
 		wxMemoryBuffer buffer;
-		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
+		result->GetResultBlob(wxT("binaryData"), buffer);
 		ibReaderMemory userReader(buffer);
 
 		wxMemoryBuffer bufferPassword;
@@ -525,11 +505,6 @@ ibApplicationDataUserInfo ibApplicationData::ReadUserData(const ibGuid& userGuid
 		if (userReader.r_chunk(eBlockLang, bufferLang)) {
 			ReadUserData_Language(bufferLang, userInfo);
 		}
-
-		if (dbUserResult != nullptr)
-			dbUserResult->Close();
-
-		db_query->CloseResultSet(dbUserResult);
 	}
 
 	return userInfo;
@@ -541,18 +516,17 @@ ibApplicationDataUserInfo ibApplicationData::ReadUserData(const wxString& strUse
 	if (strUserName.IsEmpty())
 		return userInfo;
 
-	ibDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT * FROM %s WHERE name = '%s';"), user_table, strUserName);
+	ibResultSetGuard result(db_query,
+		db_query->RunQueryWithResults(wxT("SELECT * FROM %s WHERE name = '%s';"), user_table, strUserName));
 
-	if (dbUserResult != nullptr && dbUserResult->Next()) {
+	if (result && result->Next()) {
 
-		userInfo.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
-
-		userInfo.m_strUserName = dbUserResult->GetResultString(wxT("name"));
-		userInfo.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
+		userInfo.m_strUserGuid = result->GetResultString(wxT("guid"));
+		userInfo.m_strUserName = result->GetResultString(wxT("name"));
+		userInfo.m_strUserFullName = result->GetResultString(wxT("fullName"));
 
 		wxMemoryBuffer buffer;
-		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
+		result->GetResultBlob(wxT("binaryData"), buffer);
 		ibReaderMemory userReader(buffer);
 
 		wxMemoryBuffer bufferPassword;
@@ -569,11 +543,6 @@ ibApplicationDataUserInfo ibApplicationData::ReadUserData(const wxString& strUse
 		if (userReader.r_chunk(eBlockLang, bufferLang)) {
 			ReadUserData_Language(bufferLang, userInfo);
 		}
-
-		if (dbUserResult != nullptr)
-			dbUserResult->Close();
-
-		db_query->CloseResultSet(dbUserResult);
 	}
 
 	return userInfo;
@@ -581,21 +550,21 @@ ibApplicationDataUserInfo ibApplicationData::ReadUserData(const wxString& strUse
 
 bool ibApplicationData::SaveUserData(const ibApplicationDataUserInfo& userInfo) const
 {
-	ibPreparedStatement* dbUserPrepareData = nullptr;
-	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
-		dbUserPrepareData = db_query->PrepareStatement(
-			wxT("INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT (guid) DO UPDATE SET guid = excluded.guid, name = excluded.name, fullName = excluded.fullName, changed = excluded.changed, dataSize = excluded.dataSize, binaryData = excluded.binaryData; "), user_table);
-	else
-		dbUserPrepareData = db_query->PrepareStatement(
-			wxT("UPDATE OR INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) MATCHING (guid);"), user_table);
+	ibStatementGuard stmt(db_query,
+		db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD
+			? db_query->PrepareStatement(
+				wxT("INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT (guid) DO UPDATE SET guid = excluded.guid, name = excluded.name, fullName = excluded.fullName, changed = excluded.changed, dataSize = excluded.dataSize, binaryData = excluded.binaryData; "), user_table)
+			: db_query->PrepareStatement(
+				wxT("UPDATE OR INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) MATCHING (guid);"), user_table)
+	);
 
-	if (dbUserPrepareData == nullptr)
+	if (!stmt)
 		return false;
 
-	dbUserPrepareData->SetParamString(1, userInfo.m_strUserGuid);
-	dbUserPrepareData->SetParamString(2, userInfo.m_strUserName);
-	dbUserPrepareData->SetParamString(3, userInfo.m_strUserFullName);
-	dbUserPrepareData->SetParamDate(4, wxDateTime::Now());
+	stmt->SetParamString(1, userInfo.m_strUserGuid);
+	stmt->SetParamString(2, userInfo.m_strUserName);
+	stmt->SetParamString(3, userInfo.m_strUserFullName);
+	stmt->SetParamDate(4, wxDateTime::Now());
 
 	ibWriterMemory writer;
 
@@ -603,15 +572,10 @@ bool ibApplicationData::SaveUserData(const ibApplicationDataUserInfo& userInfo) 
 	writer.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
 	writer.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
 
-	dbUserPrepareData->SetParamNumber(5, writer.size());
-	dbUserPrepareData->SetParamBlob(6, writer.pointer(), writer.size());
+	stmt->SetParamNumber(5, writer.size());
+	stmt->SetParamBlob(6, writer.pointer(), writer.size());
 
-	const int result = dbUserPrepareData->RunQuery();
-
-	if (dbUserPrepareData != nullptr)
-		dbUserPrepareData->Close();
-
-	db_query->CloseStatement(dbUserPrepareData);
+	const int result = stmt->RunQuery();
 	return result != DATABASE_LAYER_QUERY_RESULT_ERROR;
 }
 
@@ -660,16 +624,17 @@ bool ibApplicationData::LoadUserInfoFromBuffer(wxMemoryBuffer& buffer)
 
 bool ibApplicationData::SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const
 {
-	ibDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(wxT("SELECT guid FROM %s;"), user_table);
+	ibResultSetGuard result(db_query,
+		db_query->RunQueryWithResults(wxT("SELECT guid FROM %s;"), user_table));
 
-	if (dbUserResult == nullptr)
+	if (!result)
 		return false;
 
 	ibWriterMemory writer; unsigned int idx = 0;
 
-	while (dbUserResult->Next()) {
+	while (result->Next()) {
 
-		const ibApplicationDataUserInfo& userInfo = ReadUserData(ibGuid(dbUserResult->GetResultString(wxT("guid"))));
+		const ibApplicationDataUserInfo& userInfo = ReadUserData(ibGuid(result->GetResultString(wxT("guid"))));
 
 		ibWriterMemory userWriter;
 
@@ -685,11 +650,6 @@ bool ibApplicationData::SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const
 	}
 
 	buffer = writer.buffer();
-
-	if (dbUserResult != nullptr)
-		dbUserResult->Close();
-
-	db_query->CloseResultSet(dbUserResult);
 	return true;
 }
 
@@ -697,43 +657,32 @@ bool ibApplicationData::SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const
 
 bool ibApplicationData::HasAllowedUser() const
 {
-	ibDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT name FROM %s;"), user_table);
+	ibResultSetGuard result(db_query,
+		db_query->RunQueryWithResults(wxT("SELECT name FROM %s;"), user_table));
 
-	if (dbUserResult == nullptr) return false;
-	bool hasUsers = false;
-	if (dbUserResult->Next()) hasUsers = true;
-
-	if (dbUserResult != nullptr)
-		dbUserResult->Close();
-
-	db_query->CloseResultSet(dbUserResult);
-	return hasUsers;
+	if (!result) return false;
+	return result->Next();
 }
 
 std::vector<ibApplicationDataShortUserInfo> ibApplicationData::GetAllowedUser() const
 {
-	ibDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT guid, name, fullName FROM %s;"), user_table);
+	ibResultSetGuard result(db_query,
+		db_query->RunQueryWithResults(wxT("SELECT guid, name, fullName FROM %s;"), user_table));
 
 	std::vector<ibApplicationDataShortUserInfo> userInfo;
 
-	if (dbUserResult == nullptr)
+	if (!result)
 		return userInfo;
 
-	while (dbUserResult->Next()) {
+	while (result->Next()) {
 
 		ibApplicationDataShortUserInfo entry;
-		entry.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
-		entry.m_strUserName = dbUserResult->GetResultString(wxT("name"));
-		entry.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
+		entry.m_strUserGuid = result->GetResultString(wxT("guid"));
+		entry.m_strUserName = result->GetResultString(wxT("name"));
+		entry.m_strUserFullName = result->GetResultString(wxT("fullName"));
 		userInfo.push_back(entry);
 	}
 
-	if (dbUserResult != nullptr)
-		dbUserResult->Close();
-
-	db_query->CloseResultSet(dbUserResult);
 	return userInfo;
 }
 

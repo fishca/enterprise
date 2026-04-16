@@ -368,7 +368,13 @@ private:
 #pragma endregion 
 #pragma region user
 	ibApplicationDataUserInfo m_userInfo;
-#pragma endregion 
+	// Raw password kept in memory only for the lifetime of the session. Needed so
+	// child processes (debug-target enterprise.exe launched from designer.exe)
+	// can be handed the original password rather than the stored hash — passing
+	// the hash lets the child "log in" with equivalent credentials, which is a
+	// privilege-escalation sink. Cleared on CloseSession.
+	wxString m_sessionRawPassword;
+#pragma endregion
 
 	static bool m_forceExit;
 	static wxCriticalSection m_cs_force_exit;

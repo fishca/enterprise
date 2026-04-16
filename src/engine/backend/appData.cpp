@@ -5,6 +5,8 @@
 
 #include "backend/appData.h"
 
+#include "backend/utils/passwordHash.hpp"
+
 //databases
 #include "backend/databaseLayer/firebird/firebirdDatabaseLayer.h"
 #include "backend/databaseLayer/postgres/postgresDatabaseLayer.h"
@@ -387,9 +389,13 @@ void ibApplicationData::ReadEngineConfig()
 #pragma region execute 
 long ibApplicationData::RunApplication(const wxString& strAppName, bool searchDebug) const
 {
+	// Hand the child process the raw password captured at login, not the stored hash.
+	// Otherwise enterprise.exe authenticates with the hash itself — which only worked
+	// before MD5→PBKDF2 because the verifier silently treated hash==hash as a match,
+	// and even then it let the stored hash act as a bearer token.
 	return RunApplication(strAppName,
 		m_userInfo.m_strUserName,
-		m_userInfo.m_strUserPassword,
+		m_sessionRawPassword,
 		searchDebug
 	);
 }
@@ -457,8 +463,30 @@ bool ibApplicationData::AuthenticationAndSetUser(const wxString& strUserName, co
 {
 	if (!strUserName.IsEmpty() || HasAllowedUser()) {
 		m_userInfo = ReadUserData(strUserName);
-		return m_userInfo.IsOk() &&
-			m_userInfo.m_strUserPassword == ibApplicationData::ComputeMd5(strUserPassword);
+		if (!m_userInfo.IsOk())
+			return false;
+
+		if (!ibPasswordHash::Verify(strUserPassword, m_userInfo.m_strUserPassword))
+			return false;
+
+		// Remember the raw password for the duration of the session so the designer
+		// can hand it to a child enterprise.exe at debug-launch time. The alternative
+		// — passing the stored hash — would let anyone with read access to the user
+		// table log in as that user, because the hash itself becomes the credential.
+		m_sessionRawPassword = strUserPassword;
+
+		// Lazy upgrade: if we just verified a legacy MD5 hash, re-store the password
+		// in PBKDF2 format so next login uses the modern verifier. Silent — if the
+		// DB write fails we don't fail the login, just keep the old hash.
+		if (ibPasswordHash::IsLegacy(m_userInfo.m_strUserPassword)) {
+			try {
+				m_userInfo.m_strUserPassword = ibPasswordHash::Hash(strUserPassword);
+				(void)SaveUserData(m_userInfo);
+			} catch (...) {
+				// ignore — login already succeeded
+			}
+		}
+		return true;
 	}
 
 	return true;

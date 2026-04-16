@@ -2,6 +2,7 @@
 
 #include "backend/appData.h"
 #include "backend/utils/md5.hpp"
+#include "backend/utils/passwordHash.hpp"
 
 #include "backend/metadataConfiguration.h"
 
@@ -203,7 +204,9 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 			if (m_bInitialized) {
 				const wxString& strUserPassword = m_textPassword->GetValue();
 				if (!strUserPassword.IsEmpty()) {
-					m_strUserPassword = ibMD5::ComputeMd5(strUserPassword);
+					// PBKDF2-SHA256 with a per-user salt; legacy MD5 is still accepted
+					// on login and upgraded lazily in AuthenticationAndSetUser.
+					m_strUserPassword = ibPasswordHash::Hash(strUserPassword);
 				}
 				else {
 					m_strUserPassword.Clear();

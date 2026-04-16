@@ -781,6 +781,9 @@ bool ibApplicationData::CloseSession()
 		m_sessionUpdater = nullptr;
 	}
 
+	// Wipe the in-memory raw password as soon as the session ends.
+	m_sessionRawPassword.clear();
+
 	m_connected_to_db = false;
 	return true;
 }

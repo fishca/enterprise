@@ -22,50 +22,57 @@ void ibApplicationData::ibApplicationDataSessionUpdater::Job_ClearLostSession()
 	wxDateTime prevDateTime = m_currentDateTime.GetValue();
 	(void)prevDateTime.Subtract(wxTimeSpan(0, 0, timeInterval));
 
-	const wxString& strLastActive = prevDateTime.FormatISOCombined(' ');
-	ibDatabaseResultSet* dbResultSetRecord = m_session_db->RunQueryWithResults(
-		wxT("SELECT lastActive FROM %s WHERE lastActive < '%s';"),
-		session_table,
-		strLastActive
+	// Prepared statement avoids string formatting of the date and the SQL-injection surface.
+	// The previous code also did a dead SELECT before the DELETE (result never read) — dropped.
+	ibPreparedStatement* stmt = m_session_db->PrepareStatement(
+		wxT("DELETE FROM %s WHERE lastActive < ?;"),
+		session_table
 	);
 
-	//clear
-	m_session_db->RunQuery(
-		wxT("DELETE FROM %s WHERE lastActive < '%s';"),
-		session_table,
-		strLastActive
-	);
+	if (stmt != nullptr) {
+		stmt->SetParamDate(1, prevDateTime);
+		stmt->RunQuery();
+		stmt->Close();
+		m_session_db->CloseStatement(stmt);
+	}
 
 	m_session_db->Commit();
-
-	if (dbResultSetRecord != nullptr)
-		dbResultSetRecord->Close();
-
-	m_session_db->CloseResultSet(dbResultSetRecord);
 }
 
 void ibApplicationData::ibApplicationDataSessionUpdater::Job_CalcActiveSession()
 {
 	m_session_db->BeginTransaction();
 
-	auto dbSessionCountResult = m_session_db->RunQueryWithResults(
-		wxT("SELECT session, userName, lastActive FROM %s WHERE session = '%s';"),
-		session_table,
-		m_session.str()
+	// Use a prepared statement for the GUID lookup — avoids SQL injection via session GUID
+	// and lets the driver cache the plan across every 3-second tick.
+	ibPreparedStatement* dbSessionCountStmt = m_session_db->PrepareStatement(
+		wxT("SELECT session, userName, lastActive FROM %s WHERE session = ?;"),
+		session_table
 	);
+	if (dbSessionCountStmt != nullptr) {
+		dbSessionCountStmt->SetParamString(1, m_session.str());
+	}
+	ibDatabaseResultSet* dbSessionCountResult =
+		dbSessionCountStmt != nullptr ? dbSessionCountStmt->RunQueryWithResults() : nullptr;
 
 	const wxDateTime& currentTime = wxDateTime::Now();
 
 	if (dbSessionCountResult != nullptr &&
 		dbSessionCountResult->Next()) {
 
-		m_session_db->RunQuery(
-			wxT("UPDATE %s SET lastActive = '%s', userName = '%s' WHERE session = '%s';"),
-			session_table,
-			currentTime.FormatISOCombined(' '),
-			appData->GetUserName(),
-			m_session.str()
+		// Prepared UPDATE: plugs user-name SQL-injection (if name contains an apostrophe).
+		ibPreparedStatement* updateStmt = m_session_db->PrepareStatement(
+			wxT("UPDATE %s SET lastActive = ?, userName = ? WHERE session = ?;"),
+			session_table
 		);
+		if (updateStmt != nullptr) {
+			updateStmt->SetParamDate(1, currentTime);
+			updateStmt->SetParamString(2, appData->GetUserName());
+			updateStmt->SetParamString(3, m_session.str());
+			updateStmt->RunQuery();
+			updateStmt->Close();
+			m_session_db->CloseStatement(updateStmt);
+		}
 	}
 	else {
 
@@ -96,23 +103,28 @@ void ibApplicationData::ibApplicationDataSessionUpdater::Job_CalcActiveSession()
 		dbSessionCountResult->Close();
 
 	m_session_db->CloseResultSet(dbSessionCountResult);
+
+	if (dbSessionCountStmt != nullptr) {
+		dbSessionCountStmt->Close();
+		m_session_db->CloseStatement(dbSessionCountStmt);
+	}
 }
 
 void ibApplicationData::ibApplicationDataSessionUpdater::Job_UpdateActiveSession()
 {
-	//append sessions 
+	// Build the snapshot OUTSIDE the critical section — the old code held ms_sessionLocker
+	// for the entire duration of the DB read, blocking UI threads that call GetSessionArray()
+	// for the full query latency. Now we only hold it for the swap.
+	ibApplicationDataSessionArray snapshot;
+
 	ibDatabaseResultSet* dbSessionResult = m_session_db->RunQueryWithResults(
-		//wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session WITH LOCK SKIP LOCKED;"),
 		wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session;"),
 		session_table
 	);
 
-	wxCriticalSectionLocker enter(ms_sessionLocker);
-
 	if (dbSessionResult != nullptr) {
-		m_sessionArray.ClearSession();
 		while (dbSessionResult->Next()) {
-			m_sessionArray.AppendSession(
+			snapshot.AppendSession(
 				static_cast<ibRunMode>(dbSessionResult->GetResultInt("application")),
 				dbSessionResult->GetResultDate("started"),
 				dbSessionResult->GetResultString("userName"),
@@ -125,59 +137,37 @@ void ibApplicationData::ibApplicationDataSessionUpdater::Job_UpdateActiveSession
 	}
 
 	m_session_db->CloseResultSet(dbSessionResult);
+
+	{
+		wxCriticalSectionLocker enter(ms_sessionLocker);
+		m_sessionArray = std::move(snapshot);
+	}
 }
 
 void ibApplicationData::ibApplicationDataSessionUpdater::ClearLostSessionUpdater()
 {
-	wxCriticalSectionLocker enter(ms_sessionLocker);
-
+	// DELETE stale rows first (prepared statement, no lock held — pure DB I/O).
 	m_session_db->BeginTransaction();
 
-	const wxDateTime& currentTime = wxDateTime::Now();
-	ibDatabaseResultSet* dbResultSetRecord = m_session_db->RunQueryWithResults(
-		wxT("SELECT lastActive FROM %s WHERE lastActive < '%s';"),
-		session_table,
-		currentTime.Subtract(wxTimeSpan(0, 0, timeInterval)).FormatISOCombined(' ')
-	);
+	wxDateTime cutoff = wxDateTime::Now();
+	(void)cutoff.Subtract(wxTimeSpan(0, 0, timeInterval));
 
-	//clear 
-	m_session_db->RunQuery(
-		wxT("DELETE FROM %s WHERE lastActive < '%s';"),
-		session_table,
-		currentTime.Subtract(wxTimeSpan(0, 0, timeInterval)).FormatISOCombined(' ')
+	ibPreparedStatement* stmt = m_session_db->PrepareStatement(
+		wxT("DELETE FROM %s WHERE lastActive < ?;"),
+		session_table
 	);
+	if (stmt != nullptr) {
+		stmt->SetParamDate(1, cutoff);
+		stmt->RunQuery();
+		stmt->Close();
+		m_session_db->CloseStatement(stmt);
+	}
 
 	m_session_db->Commit();
 
-	if (dbResultSetRecord != nullptr)
-		dbResultSetRecord->Close();
-
-	m_session_db->CloseResultSet(dbResultSetRecord);
-
-	//clear session 
-	m_sessionArray.ClearSession();
-
-	//append sessions 
-	ibDatabaseResultSet* dbSessionResult = m_session_db->RunQueryWithResults(
-		//wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session WITH LOCK SKIP LOCKED;"),
-		wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session;"),
-		session_table
-	);
-
-	if (dbSessionResult != nullptr) {
-		while (dbSessionResult->Next()) {
-			m_sessionArray.AppendSession(
-				static_cast<ibRunMode>(dbSessionResult->GetResultInt("application")),
-				dbSessionResult->GetResultDate("started"),
-				dbSessionResult->GetResultString("userName"),
-				dbSessionResult->GetResultString("computer"),
-				dbSessionResult->GetResultString("session")
-			);
-		}
-		dbSessionResult->Close();
-	}
-
-	m_session_db->CloseResultSet(dbSessionResult);
+	// Rebuild the snapshot and swap it in — same pattern as Job_UpdateActiveSession,
+	// so UI only blocks for the pointer swap, not for the DB read.
+	Job_UpdateActiveSession();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -202,16 +192,18 @@ bool ibApplicationData::ibApplicationDataSessionUpdater::InitSessionUpdater()
 
 	m_sessionUpdaterLoop = true;
 
-	while (m_sessionUpdaterLoop) {
-
-		if (m_sessionCreated)
+	// 20-second bound — must comfortably cover Entry()'s designer grace window
+	// (timeInterval + 2s) plus DB work. Previously this was an unbounded wait
+	// that would deadlock the main thread if Entry() died before signalling.
+	const int kMaxSpins = 400;   // 400 * 50ms = 20s
+	for (int i = 0; i < kMaxSpins && m_sessionUpdaterLoop.load(std::memory_order_acquire); ++i) {
+		if (m_sessionCreated.load(std::memory_order_acquire))
 			break;
-
 		wxMilliSleep(50);
 	}
 
 	m_sessionUpdaterLoop = false;
-	return m_sessionCreated;
+	return m_sessionCreated.load(std::memory_order_acquire);
 }
 
 void ibApplicationData::ibApplicationDataSessionUpdater::StartSessionUpdater()
@@ -257,10 +249,36 @@ ibApplicationData::ibApplicationDataSessionUpdater::~ibApplicationDataSessionUpd
 
 wxThread::ExitCode ibApplicationData::ibApplicationDataSessionUpdater::Entry()
 {
-	//�lear lost session 
+	// clear lost sessions
 	ClearLostSessionUpdater();
 
 	Job_UpdateActiveSession();
+
+	// Grace window for Designer: if a previous designer was force-killed via Task Manager
+	// less than `timeInterval` seconds ago, its row is still "fresh" (lastActive was
+	// updated within the cutoff) so ClearLostSessionUpdater skipped it, and we'd falsely
+	// report "another designer is already running". Wait a little longer than timeInterval
+	// so the zombie row ages past the cutoff, then retry the cleanup once.
+	if (appData->GetAppMode() == eDESIGNER_MODE) {
+		bool designerConflict = false;
+		{
+			wxCriticalSectionLocker enter(ms_sessionLocker);
+			for (unsigned int idx = 0; idx < m_sessionArray.GetSessionCount(); ++idx) {
+				if (eDESIGNER_MODE == m_sessionArray.GetSessionApplication(idx)) {
+					designerConflict = true;
+					break;
+				}
+			}
+		}
+		if (designerConflict) {
+			// Sleep in small slices so shutdown requests are honored promptly.
+			const int graceMs = (timeInterval + 2) * 1000;
+			for (int slept = 0; slept < graceMs && !TestDestroy(); slept += 250)
+				wxMilliSleep(250);
+			ClearLostSessionUpdater();
+			Job_UpdateActiveSession();
+		}
+	}
 
 	//verify session updater
 	if (!VerifySessionUpdater())
@@ -295,20 +313,32 @@ wxThread::ExitCode ibApplicationData::ibApplicationDataSessionUpdater::Entry()
 	m_session_db->CloseStatement(dbSessionPrepareData);
 	m_sessionCreated = true;
 
+	// Tick cadence controls how fast this instance sees other clients joining/leaving.
+	// 1000 ms gives near-real-time visibility while keeping DB load modest:
+	// each tick = own UPDATE + full SELECT, so 10 clients @ 1Hz ≈ 10 UPDATE + 10 SELECT /sec.
+	// Cutoff for lost-session cleanup (timeInterval=5s) still leaves 4s safety margin.
+	// Job_ClearLostSession is expensive for every instance to run — stagger it to every
+	// third tick (~3 s) so we keep that heartbeat behaviour.
+	const unsigned int kTickMs = 1000;
+	const unsigned int kClearEveryNthTick = 3;
+	unsigned int tickCounter = 0;
+
 	bool lastSessionStarted = m_sessionStarted;
 	while (!TestDestroy()) {
 
 		m_currentDateTime = wxDateTime::UNow();
 
-		Job_ClearLostSession();
+		if ((tickCounter % kClearEveryNthTick) == 0)
+			Job_ClearLostSession();
 		Job_CalcActiveSession();
 		Job_UpdateActiveSession();
+		++tickCounter;
 
 		const wxTimeSpan& job_allTotal_done = wxDateTime::UNow() - m_currentDateTime;
 
 		for (unsigned int milliseconds =
-			job_allTotal_done.GetMilliseconds().GetValue();
-			milliseconds < 3000;
+			(unsigned int)job_allTotal_done.GetMilliseconds().GetValue();
+			milliseconds < kTickMs;
 			milliseconds += 250)
 		{
 			if (m_sessionStarted != lastSessionStarted)
@@ -323,14 +353,24 @@ wxThread::ExitCode ibApplicationData::ibApplicationDataSessionUpdater::Entry()
 		lastSessionStarted = m_sessionStarted;
 	};
 
-	const int result = m_session_db->RunQuery(
-		wxT("DELETE FROM %s WHERE session = '%s';"),
-		session_table,
-		m_session.str()
+	// Final DELETE with a prepared statement — last injection surface in this thread.
+	int result = DATABASE_LAYER_QUERY_RESULT_ERROR;
+	ibPreparedStatement* finalStmt = m_session_db->PrepareStatement(
+		wxT("DELETE FROM %s WHERE session = ?;"),
+		session_table
 	);
+	if (finalStmt != nullptr) {
+		finalStmt->SetParamString(1, m_session.str());
+		result = finalStmt->RunQuery();
+		finalStmt->Close();
+		m_session_db->CloseStatement(finalStmt);
+	}
 
 	m_sessionArray.ClearSession();
-	m_sessionCreated = m_sessionStarted = false;
+	// Order matters: drop "started" first so observers see "no longer running" before
+	// "never created", never the impossible (started && !created) combo.
+	m_sessionStarted = false;
+	m_sessionCreated = false;
 
 	if (result != DATABASE_LAYER_QUERY_RESULT_ERROR)
 		return (wxThread::ExitCode)1;

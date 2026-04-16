@@ -1,6 +1,8 @@
 #ifndef __APP_DATA_H__
 #define __APP_DATA_H__
 
+#include <atomic>
+
 #include "backend/backend_core.h"
 
 #define appData				(ibApplicationData::Get())
@@ -39,7 +41,7 @@ class BACKEND_API ibApplicationDataSessionArray {
 	struct ibApplicationDataSessionUnit {
 
 		ibApplicationDataSessionUnit(ibRunMode runMode, const wxDateTime& startedDateTime,
-			const wxString strUserName, const wxString strComputerName, const wxString& strSession) :
+			const wxString& strUserName, const wxString& strComputerName, const wxString& strSession) :
 			m_runMode(runMode), m_startedDate(startedDateTime), m_strUserName(strUserName), m_strComputerName(strComputerName), m_strSession(strSession)
 		{
 		}
@@ -56,7 +58,7 @@ public:
 	ibApplicationDataSessionArray() : m_sessionArrayHash(wxNewUniqueGuid) {}
 
 	void AppendSession(ibRunMode runMode, const wxDateTime& startedTime,
-		const wxString strUserName, const wxString strComputerName, const wxString& strSession) {
+		const wxString& strUserName, const wxString& strComputerName, const wxString& strSession) {
 		m_listSession.emplace_back(runMode, startedTime, strUserName, strComputerName, strSession);
 	}
 
@@ -166,8 +168,11 @@ class BACKEND_API ibApplicationData {
 		void ClearLostSessionUpdater();
 		bool VerifySessionUpdater() const;
 
-		bool m_sessionCreated, m_sessionStarted;
-		bool m_sessionUpdaterLoop;
+		// Cross-thread flags — worker writes, main thread reads (and vice versa).
+		// Plain bool here was UB by the C++11 memory model.
+		std::atomic<bool> m_sessionCreated;
+		std::atomic<bool> m_sessionStarted;
+		std::atomic<bool> m_sessionUpdaterLoop;
 
 		ibApplicationDataSessionArray m_sessionArray;
 		std::shared_ptr<ibDatabaseLayer> m_session_db;

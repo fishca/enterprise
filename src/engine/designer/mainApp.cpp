@@ -9,10 +9,64 @@
 #include <wx/clipbrd.h>
 #include <wx/cmdline.h>
 #include <wx/debugrpt.h>
+#include <wx/filename.h>
 #include <wx/fs_arc.h>
 #include <wx/fs_filter.h>
 #include <wx/fs_mem.h>
 #include <wx/stdpaths.h>
+
+#ifdef __WXMSW__
+#include <windows.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+
+namespace {
+// See enterprise/mainApp.cpp for rationale — persists a minidump before
+// wxDebugReport wipes its temp directory on dialog close.
+static LPTOP_LEVEL_EXCEPTION_FILTER s_prevFilter = nullptr;
+
+static LONG WINAPI PersistentCrashDumpFilter(EXCEPTION_POINTERS* ep)
+{
+	wxString exePath = wxStandardPaths::Get().GetExecutablePath();
+	wxString crashDir = wxFileName(exePath).GetPath() + wxFILE_SEP_PATH + wxT("crashdumps");
+	wxFileName::Mkdir(crashDir, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
+
+	const wxString stamp = wxDateTime::Now().Format(wxT("%Y%m%dT%H%M%S"));
+	const wxString dumpPath = wxString::Format(wxT("%s%cdesigner_%u_%s.dmp"),
+		crashDir, wxFILE_SEP_PATH,
+		static_cast<unsigned>(::GetCurrentProcessId()),
+		stamp);
+
+	HANDLE hFile = ::CreateFileW(dumpPath.wc_str(), GENERIC_WRITE, 0, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if (hFile != INVALID_HANDLE_VALUE) {
+		MINIDUMP_EXCEPTION_INFORMATION mei = {};
+		mei.ThreadId = ::GetCurrentThreadId();
+		mei.ExceptionPointers = ep;
+		mei.ClientPointers = FALSE;
+
+		const MINIDUMP_TYPE type = static_cast<MINIDUMP_TYPE>(
+			MiniDumpWithDataSegs |
+			MiniDumpWithHandleData |
+			MiniDumpWithUnloadedModules |
+			MiniDumpWithThreadInfo |
+			MiniDumpWithFullMemory);
+
+		::MiniDumpWriteDump(::GetCurrentProcess(), ::GetCurrentProcessId(),
+			hFile, type, ep ? &mei : nullptr, nullptr, nullptr);
+		::CloseHandle(hFile);
+	}
+
+	return s_prevFilter ? s_prevFilter(ep) : EXCEPTION_CONTINUE_SEARCH;
+}
+
+static void InstallPersistentCrashDump()
+{
+	if (s_prevFilter == nullptr)
+		s_prevFilter = ::SetUnhandledExceptionFilter(PersistentCrashDumpFilter);
+}
+} // namespace
+#endif // __WXMSW__
 
 #include "resources/splashLogo.xpm"
 
@@ -91,6 +145,12 @@ int ibAppDesigner::OnRun()
 	// Abnormal Termination Handling
 #if wxUSE_ON_FATAL_EXCEPTION && wxUSE_STACKWALKER
 	::wxHandleFatalExceptions(true);
+#endif
+#ifdef __WXMSW__
+	// Install our top-level SEH filter after wx's so ours runs first and
+	// writes a persistent minidump to <exe>/crashdumps/ before wx's dialog
+	// wipes its temp folder.
+	InstallPersistentCrashDump();
 #endif
 
 	// Get the data directory
@@ -195,6 +255,13 @@ int ibAppDesigner::OnRun()
 
 void ibAppDesigner::OnUnhandledException()
 {
+	// Reached when a C++ exception escapes to wxApp's event loop (not a
+	// structured exception — that goes through OnFatalException).
+	wxDebugReportCompress report;
+	report.AddAll(wxDebugReport::Context_Current);
+
+	wxDebugReportPreviewStd preview;
+	if (preview.Show(report)) report.Process();
 }
 
 #ifdef __WXMSW__
@@ -203,11 +270,12 @@ void ibAppDesigner::OnUnhandledException()
 
 void ibAppDesigner::OnFatalException()
 {
-	//generate dump
-	wxDebugReport report;
-
-	report.AddCurrentContext();
-	report.AddCurrentContext();
+	// Collect everything at the exception context: XML report + minidump.
+	// AddAll(Context_Exception) captures state at the fault point (register
+	// values, stack, loaded modules), which is what a debugger needs to
+	// resolve the real crash site.
+	wxDebugReportCompress report;
+	report.AddAll(wxDebugReport::Context_Exception);
 
 	//release all created com-objects
 #ifdef __WXMSW__

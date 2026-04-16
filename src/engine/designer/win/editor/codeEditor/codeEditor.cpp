@@ -306,6 +306,10 @@ void ibCodeEditor::SetFontColorSettings(const ibFontColorSettings& settings)
 	StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).foreColor);
 	StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).backColor);
 
+	// Apply the full font to the line-number margin, not just its size — otherwise
+	// the margin keeps the default monospace face until a style cascade refresh
+	// (e.g. user opens Settings and saves) happens to pull it through.
+	StyleSetFont(wxSTC_STYLE_LINENUMBER, font);
 	StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
 
 	// Set the caret color as the inverse of the background color so it's always visible.

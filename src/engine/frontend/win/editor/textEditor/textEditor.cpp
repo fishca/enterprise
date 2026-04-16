@@ -115,6 +115,10 @@ void ibTextEditor::SetFontColorSettings(const ibFontColorSettings& settings)
 	wxStyledTextCtrl::StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).foreColor);
 	wxStyledTextCtrl::StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).backColor);
 
+	// Apply the full font to the line-number margin, not just its size — see
+	// codeEditor.cpp for the same fix. StyleSetSize alone leaves the margin
+	// with the default monospace face until a style cascade refresh occurs.
+	wxStyledTextCtrl::StyleSetFont(wxSTC_STYLE_LINENUMBER, font);
 	wxStyledTextCtrl::StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
 
 	// Set the caret color as the inverse of the background color so it's always visible.

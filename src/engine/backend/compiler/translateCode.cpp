@@ -923,19 +923,13 @@ bool ibTranslateCode::IsEnd() const
 
 int ibTranslateCode::IsKeyWord(const wxString& strKeyWord)
 {
-	//auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
-	//	[strKeyWord](const std::pair<const wxString, void*>& pair) -> bool {
-	//		return stringUtils::CompareString(pair.first, strKeyWord);
-	//	}
-	//);
-
-	//if (it != ms_listHashKeyWord.end())
-	//	return ((int)it->second) - 1;
-
-	for (auto& pair : ms_listHashKeyWord) {
-		if (stringUtils::CompareString(pair.first, strKeyWord))
-			return static_cast<int>(reinterpret_cast<intptr_t>(pair.second)) - 1;
-	}
+	// Keys in ms_listHashKeyWord are stored uppercase at load time
+	// (see LoadKeyWords — stringUtils::MakeUpper on every entry). Looking the
+	// query up by the same normalisation lets us use std::map::find's
+	// O(log N) instead of a full linear scan on every lexer token.
+	auto it = ms_listHashKeyWord.find(stringUtils::MakeUpper(strKeyWord));
+	if (it != ms_listHashKeyWord.end())
+		return static_cast<int>(reinterpret_cast<intptr_t>(it->second)) - 1;
 
 	return wxNOT_FOUND;
 }

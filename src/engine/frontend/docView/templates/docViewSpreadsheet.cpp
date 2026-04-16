@@ -347,6 +347,12 @@ void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 
 	case wxID_EDITABLE:
 		m_gridEditor->EnableEditing(!m_gridEditor->IsEditable());
+		// Toolbar buttons and menu items were gated on IsEditable() at build
+		// time (OnCreateToolbar / CreateMenuBar) but no wxUpdateUIEvent
+		// handlers exist to resync them on mode flip. Force a rebuild through
+		// mainFrame->ActivateView so both come back in the correct state.
+		if (mainFrame != nullptr)
+			mainFrame->ActivateView(this, true);
 		break;
 	}
 

@@ -281,7 +281,9 @@
     <ClCompile Include="win\ctrls\charts\wxtimeserieschartctrl.cpp" />
     <ClCompile Include="win\ctrls\charts\wxtimeserieschartoptions.cpp" />
     <ClCompile Include="win\ctrls\checktree.cpp" />
+    <ClCompile Include="win\ctrls\controlButton.cpp" />
     <ClCompile Include="win\ctrls\controlCheckboxEditor.cpp" />
+    <ClCompile Include="win\ctrls\controlStaticText.cpp" />
     <ClCompile Include="win\ctrls\controlTextEditor.cpp" />
     <ClCompile Include="win\ctrls\dataview\headerctrlcmn.cpp" />
     <ClCompile Include="win\ctrls\dataview\headerctrlg.cpp" />
@@ -518,7 +520,9 @@
     <ClInclude Include="win\ctrls\charts\wxtimeserieschartctrl.h" />
     <ClInclude Include="win\ctrls\charts\wxtimeserieschartoptions.h" />
     <ClInclude Include="win\ctrls\checktree.h" />
+    <ClInclude Include="win\ctrls\controlButton.h" />
     <ClInclude Include="win\ctrls\controlCheckboxEditor.h" />
+    <ClInclude Include="win\ctrls\controlStaticText.h" />
     <ClInclude Include="win\ctrls\controlTextEditor.h" />
     <ClInclude Include="win\ctrls\dataview\headerctrlg.h" />
     <ClInclude Include="win\ctrls\tableView.h" />

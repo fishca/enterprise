@@ -1,6 +1,7 @@
 
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
+#include "frontend/win/ctrls/controlStaticText.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueStaticText, ibValueWindow)
 
@@ -14,7 +15,7 @@ ibValueStaticText::ibValueStaticText() : ibValueWindow()
 
 wxObject* ibValueStaticText::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	wxStaticText* staticText = new wxStaticText(wxparent, wxID_ANY,
+	ibControlStaticText* staticText = new ibControlStaticText(wxparent, wxID_ANY,
 		m_propertyTitle->GetValueAsTranslateString(),
 		wxDefaultPosition,
 		wxDefaultSize);
@@ -28,16 +29,16 @@ void ibValueStaticText::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisu
 
 void ibValueStaticText::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	wxStaticText* staticText = dynamic_cast<wxStaticText*>(wxobject);
+	ibControlStaticText* staticText = dynamic_cast<ibControlStaticText*>(wxobject);
 
 	if (staticText != nullptr) {
-			
+
 		staticText->SetLabel(m_propertyTitle->GetValueAsTranslateString());
-		staticText->Wrap(m_propertyWrap->GetValueAsUInteger());
-		
-		if (m_propertyMarkup->GetValueAsBoolean() != false) {
-			staticText->SetLabelMarkup(m_propertyTitle->GetValueAsTranslateString());
-		}
+
+		// ibControlStaticText renders multi-line labels via explicit '\n'
+		// in the source text; word-wrap at a pixel width is not supported
+		// (the Wrap and SetLabelMarkup properties are kept on the meta
+		// object for backward compatibility but have no effect here).
 	}
 
 	UpdateWindow(staticText);

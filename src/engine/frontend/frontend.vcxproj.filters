@@ -782,6 +782,12 @@
     <ClCompile Include="win\ctrls\controlCheckboxEditor.cpp">
       <Filter>win\ctrl</Filter>
     </ClCompile>
+    <ClCompile Include="win\ctrls\controlButton.cpp">
+      <Filter>win\ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\controlStaticText.cpp">
+      <Filter>win\ctrl</Filter>
+    </ClCompile>
     <ClCompile Include="docView\templates\docViewSpreadsheet.cpp">
       <Filter>docView\templates</Filter>
     </ClCompile>
@@ -1489,6 +1495,12 @@
       <Filter>win\ctrl</Filter>
     </ClInclude>
     <ClInclude Include="win\ctrls\controlCheckboxEditor.h">
+      <Filter>win\ctrl</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\controlButton.h">
+      <Filter>win\ctrl</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\controlStaticText.h">
       <Filter>win\ctrl</Filter>
     </ClInclude>
     <ClInclude Include="docView\templates\docViewSpreadsheet.h">

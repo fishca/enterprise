@@ -602,97 +602,105 @@ void ibVisualHost::ClearControl(ibValueFrame* control, bool force)
 
 bool ibVisualHost::CalculateLabelSize(ibValueFrame* control)
 {
-	static wxCoord widthTextMax, heightTextTotal;
+	// Two-pass alignment of label columns across a form's layout tree.
+	//
+	//   Pass 1 (Calculate): walk the current vertical sizer, find every
+	//   child that exposes ibControlDynamicBorder, and record the widest
+	//   natural label width among them. Horizontal sizers are treated as
+	//   a single unit — their contents do not share a vertical column.
+	//
+	//   Pass 2 (Apply): feed that width back to each contributing control
+	//   via ApplyLabelSize(). Labels in the same vertical run line up on
+	//   one grid, so their trailing controls (text fields, combos, ...)
+	//   start at the same x offset.
+	//
+	// Apply uses post-order traversal so nested vertical groups compute
+	// their own local max before the outer group aligns top-level items.
+	// A horizontal sizer resets the outer max after its label is handled,
+	// giving each vertical run its own fresh column budget.
+	struct ibLabelAligner {
 
-	class ibControlCalculateSize {
+		// Recursively collect the max label width within a vertical sizer.
+		static void Calculate(const ibValueFrame* node,
+			wxBoxSizer* parentSizer, int& maxLabelWidth)
+		{
+			if (node->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
+				node = node->GetChild(0);
+			wxASSERT(node);
 
-		static inline void Calculate(const ibValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
+			wxObject* wxObj = node->GetWxObject();
+			ibControlDynamicBorder* label =
+				dynamic_cast<ibControlDynamicBorder*>(wxObj);
 
-			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				child = child->GetChild(0);
+			if (label != nullptr && label->AllowCalc()) {
+				wxCoord w = 0, h = 0;
+				label->CalculateLabelSize(&w, &h);
+				if (w > maxLabelWidth)
+					maxLabelWidth = w;
 			}
 
-			wxASSERT(child);
-
-			wxObject* wx_object = child->GetWxObject();
-
-			wxBoxSizer* sizer = dynamic_cast<wxBoxSizer*>(wx_object);
-			ibControlDynamicBorder* childCtrl = dynamic_cast<ibControlDynamicBorder*>(wx_object);
-
-			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
-				childCtrl->CalculateLabelSize(&widthTextMax, &heightTextTotal);
-				if (widthTextMax > maxX) maxX = widthTextMax;
-			}
-
-			if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
+			// A horizontal sizer stops the column — its children sit on
+			// one row, not stacked vertically.
+			if (parentSizer->GetOrientation() == wxHORIZONTAL)
 				return;
+
+			wxBoxSizer* childSizer = dynamic_cast<wxBoxSizer*>(wxObj);
+			wxBoxSizer* nextParent = childSizer != nullptr ? childSizer : parentSizer;
+			for (unsigned int i = 0; i < node->GetChildCount(); ++i)
+				Calculate(node->GetChild(i), nextParent, maxLabelWidth);
+		}
+
+		// Recursively apply the computed width back to each label.
+		static void Apply(ibValueFrame* node,
+			wxBoxSizer* parentSizer, int& maxLabelWidth)
+		{
+			if (node->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
+				node = node->GetChild(0);
+			wxASSERT(node);
+
+			wxObject* wxObj = node->GetWxObject();
+			wxBoxSizer* childSizer = dynamic_cast<wxBoxSizer*>(wxObj);
+			ibControlDynamicBorder* label =
+				dynamic_cast<ibControlDynamicBorder*>(wxObj);
+
+			// Children see a snapshot of our current max; any adjustments
+			// they make stay local to their subtree.
+			int subtreeMax = maxLabelWidth;
+			wxBoxSizer* nextParent = childSizer != nullptr ? childSizer : parentSizer;
+			for (unsigned int i = 0; i < node->GetChildCount(); ++i)
+				Apply(node->GetChild(i), nextParent, subtreeMax);
+
+			if (label != nullptr && label->AllowCalc()) {
+				label->ApplyLabelSize(maxLabelWidth != wxNOT_FOUND
+					? wxSize(maxLabelWidth, wxNOT_FOUND)
+					: wxDefaultSize);
+
+				// After a label in a horizontal sizer we break the column
+				// so the next vertical run starts from zero.
+				if (parentSizer->GetOrientation() == wxHORIZONTAL)
+					maxLabelWidth = wxNOT_FOUND;
 			}
+		}
 
-			for (unsigned int idx = 0; idx < child->GetChildCount(); idx++) {
-				Calculate(child->GetChild(idx), sizer ? sizer : parentSizer, maxX);
-			}
-		};
+		static bool CalculateAndApply(const ibValueForm* form)
+		{
+			wxBoxSizer* rootSizer =
+				dynamic_cast<wxBoxSizer*>(form->GetWxObject());
+			if (rootSizer == nullptr)
+				return false;
 
-		static inline void Apply(ibValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
+			int maxLabelWidth = 0;
+			if (rootSizer->GetOrientation() == wxVERTICAL)
+				Calculate(form, rootSizer, maxLabelWidth);
 
-			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				child = child->GetChild(0);
-			}
-
-			wxASSERT(child);
-
-			wxObject* wx_object = child->GetWxObject();
-
-			wxBoxSizer* sizer = dynamic_cast<wxBoxSizer*>(wx_object);
-			ibControlDynamicBorder* childCtrl = dynamic_cast<ibControlDynamicBorder*>(wx_object);
-
-			int currMax = maxX;
-
-			//if (maxX != wxNOT_FOUND ||
-			//	parentSizer->GetOrientation() == wxOrientation::wxVERTICAL) {
-			//	Calculate(child, sizer ? sizer : parentSizer, maxX);
-			//}
-
-			for (unsigned int idx = 0; idx < child->GetChildCount(); idx++) {
-				Apply(child->GetChild(idx), sizer ? sizer : parentSizer, currMax);
-			}
-
-			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
-
-				if (maxX != wxNOT_FOUND) {
-					childCtrl->ApplyLabelSize(wxSize(maxX, wxNOT_FOUND));
-				}
-				else {
-					childCtrl->ApplyLabelSize(wxDefaultSize);
-				}
-
-				if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
-					maxX = wxNOT_FOUND;
-				}
-			}
-		};
-
-	public:
-
-		static inline bool CalculateAndApply(const ibValueForm* control) {
-
-			int currMaxX = 0;
-
-			wxBoxSizer* parentSizer = dynamic_cast<wxBoxSizer*>(control->GetWxObject());
-
-			if (parentSizer->GetOrientation() == wxOrientation::wxVERTICAL) {
-				Calculate(control, parentSizer, currMaxX);
-			}
-
-			for (unsigned int idx = 0; idx < control->GetChildCount(); idx++) {
-				Apply(control->GetChild(idx), parentSizer, currMaxX);
-			}
+			for (unsigned int i = 0; i < form->GetChildCount(); ++i)
+				Apply(form->GetChild(i), rootSizer, maxLabelWidth);
 
 			return true;
 		}
 	};
 
-	return ibControlCalculateSize::CalculateAndApply(GetValueForm());
+	return ibLabelAligner::CalculateAndApply(GetValueForm());
 }
 
 void ibVisualHost::UpdateVirtualSize()

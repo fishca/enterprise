@@ -79,6 +79,20 @@ private:
 
 protected:
 
+	// Shared parent-resolution output for Create/Update/RemoveControl: they
+	// walk the same path through SIZERITEM / Staticboxsizer / WINDOW parents
+	// to figure out which wxWindow hosts the new wx object and which wxObject
+	// the sizer/child belongs to. Kept in one helper so the three functions
+	// don't diverge over time.
+	struct ControlContext {
+		ibValueFrame* objControl;   // original control, or its SIZERITEM wrapper
+		ibValueFrame* objParent;    // logical parent (SIZERITEM unwrapped)
+		wxObject*     parentObj;    // wxObject for objParent
+		wxWindow*     windowObj;    // owning wxWindow for layout (host as fallback)
+	};
+	ControlContext ResolveControlContext(ibValueFrame* obj, ibValueFrame* parent,
+		bool resolveWindow = true) const;
+
 	//Insert new control
 	void CreateControl(ibValueFrame* obj, ibValueFrame* parent = nullptr, bool firstCreated = false);
 

@@ -85,15 +85,21 @@ int main(int argc, char** argv)
 		strServer, strPort, strUser, strPassword, strDatabase, wxT("en")
 	);
 
-	// If connection is failed then exit from application 
+	// If connection is failed then exit from application
 	if (!connected) {
 		wxMessageBox(_("Failed to connection!"), _("Connection error"), wxOK | wxCENTRE | wxICON_ERROR);
+		appDataDestroy();
 		return 1;
 	}
 
 	if (!appData->Connect(strIBUser, strIBPassword)) {
+		appDataDestroy();
 		return 1;
 	}
+
+	// Without appDataDestroy() the session-updater thread and DB connection
+	// stayed alive past main() and the process crashed during static teardown.
+	appDataDestroy();
 
 	return 0;
 }

@@ -722,9 +722,16 @@ bool ibApplicationData::CloseSession()
 {
 	if (m_sessionUpdater != nullptr) {
 
-		if (m_sessionUpdater->IsRunning() &&
-			m_sessionUpdater->Delete() != wxTHREAD_NO_ERROR)
-			return false;
+		// The updater is a wxTHREAD_JOINABLE: Delete() only asks it to
+		// stop, Wait() blocks until its Entry() actually returns. Without
+		// the Wait() the shared_ptr reset below could destroy a still-
+		// running wxThread — we saw processes crash during static
+		// teardown because the orphaned thread was still ticking.
+		if (m_sessionUpdater->IsRunning()) {
+			if (m_sessionUpdater->Delete() != wxTHREAD_NO_ERROR)
+				return false;
+			m_sessionUpdater->Wait();
+		}
 
 		m_sessionUpdater = nullptr;
 	}

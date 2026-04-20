@@ -50,11 +50,18 @@ public:
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerODBC(*this); }
 
 	// transaction support
-	virtual void BeginTransaction();
+	virtual void BeginTransaction(const ibTxOptions& opts = {});
 	virtual void Commit();
 	virtual void RollBack();
 
-	virtual bool IsActiveTransaction();
+	// IsActiveTransaction inherits the base-class default.
+
+	// Row-lock probe for ibSessionRegistry. MSSQL behind ODBC honours
+	// `SET LOCK_TIMEOUT 0` + `SELECT ... WITH (UPDLOCK, ROWLOCK)`;
+	// other ODBC backends usually ignore the timeout hint and just
+	// block — the registry avoids calling this on those.
+	virtual bool TryProbeRowLock(const wxString& tableName,
+		const wxString& pkColumn, const wxString& pkValue) override;
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool TableExists(const wxString& table);

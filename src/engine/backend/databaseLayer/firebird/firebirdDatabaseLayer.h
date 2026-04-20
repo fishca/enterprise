@@ -53,7 +53,7 @@ public:
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerFirebird(*this); }
 
 	// transaction support
-	virtual void BeginTransaction();
+	virtual void BeginTransaction(const ibTxOptions& opts = {});
 	virtual void Commit();
 	virtual void RollBack();
 	
@@ -80,6 +80,19 @@ public:
 	virtual int GetDatabaseLayerType() const {
 		return DATABASELAYER_FIREBIRD;
 	}
+
+	// Row-level pessimistic locks. FB implementation: the "hold" path uses
+	// the regular wait-mode TX and SELECT ... WITH LOCK on the given rows;
+	// the probe opens a separate nowait TX so contention surfaces as a lock
+	// conflict exception instead of blocking. See base declarations for the
+	// contract.
+	virtual bool HoldRowLocks(const wxString& tableName,
+	                          const wxString& pkColumn,
+	                          const std::vector<wxString>& pkValues);
+	virtual void ReleaseRowLocks();
+	virtual bool TryProbeRowLock(const wxString& tableName,
+	                             const wxString& pkColumn,
+	                             const wxString& pkValue);
 
 protected:
 
@@ -108,6 +121,11 @@ private:
 
 	isc_db_handle m_pDatabase;
 	void *m_pStatus;
+
+	// True after a successful HoldRowLocks; tells ReleaseRowLocks whether
+	// there's a TX to commit and whether a re-Hold must commit the prior
+	// one first. Reset on Release / error.
+	bool m_rowLocksHeld = false;
 };
 
 #endif // __FIREBIRD_DATABASE_LAYER_H__

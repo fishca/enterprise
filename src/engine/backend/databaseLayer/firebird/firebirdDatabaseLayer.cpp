@@ -401,7 +401,7 @@ bool ibDatabaseLayerFirebird::IsOpen()
 }
 
 // transaction support
-void ibDatabaseLayerFirebird::BeginTransaction()
+void ibDatabaseLayerFirebird::BeginTransaction(const ibTxOptions& opts)
 {
 	ResetErrorCodes();
 
@@ -418,7 +418,12 @@ void ibDatabaseLayerFirebird::BeginTransaction()
 		//ISOLATION_SERIALIZABLE = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_consistency],
 		//ISOLATION_READ_COMMITED_READ_ONLY = [isc_tpb_version3, isc_tpb_read, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version];
 
-		static std::string isc_tpb = { isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version };
+		// Swap the wait/nowait byte based on the mode. NoWait is used by
+		// TryProbeRowLock so contention on SELECT ... WITH LOCK surfaces as
+		// a lock conflict exception immediately instead of blocking.
+		static const std::string isc_tpb_waitMode   = { isc_tpb_version3, isc_tpb_write, isc_tpb_wait,   isc_tpb_read_committed, isc_tpb_no_rec_version };
+		static const std::string isc_tpb_nowaitMode = { isc_tpb_version3, isc_tpb_write, isc_tpb_nowait, isc_tpb_read_committed, isc_tpb_no_rec_version };
+		const std::string& isc_tpb = opts.noWait ? isc_tpb_nowaitMode : isc_tpb_waitMode;
 
 		isc_db_handle pDatabase = m_pDatabase;
 		isc_tr_handle pTransaction = (isc_tr_handle)fbNextNode->m_pTransaction;
@@ -495,6 +500,120 @@ void ibDatabaseLayerFirebird::RollBack()
 bool ibDatabaseLayerFirebird::IsActiveTransaction()
 {
 	return m_pDatabase && m_fbNode->m_pTransaction;
+}
+
+// --- Row-level pessimistic locks -----------------------------------------
+
+bool ibDatabaseLayerFirebird::HoldRowLocks(const wxString& tableName,
+                                          const wxString& pkColumn,
+                                          const std::vector<wxString>& pkValues)
+{
+	// A previous hold must be committed before we stack a fresh one —
+	// otherwise two TXs would both target sys_session and their commits
+	// would interleave in unhelpful ways.
+	if (m_rowLocksHeld) {
+		try { Commit(); } catch (...) { /* best-effort */ }
+		m_rowLocksHeld = false;
+	}
+
+	if (pkValues.empty()) return true;
+
+	try {
+		BeginTransaction();
+	}
+	catch (...) {
+		return false;
+	}
+
+	// Build the IN-list with placeholders so driver escapes values (guids
+	// are trusted, but use the same code path as the rest of sys_session).
+	wxString sql = wxT("SELECT ") + pkColumn + wxT(" FROM ") + tableName + wxT(" WHERE ") + pkColumn + wxT(" IN (");
+	for (std::size_t i = 0; i < pkValues.size(); ++i) {
+		if (i) sql += wxT(",");
+		sql += wxT("?");
+	}
+	sql += wxT(") WITH LOCK");
+
+	ibPreparedStatement* stmt = DoPrepareStatement(sql);
+	if (!stmt) {
+		try { RollBack(); } catch (...) {}
+		return false;
+	}
+
+	for (std::size_t i = 0; i < pkValues.size(); ++i)
+		stmt->SetParamString(int(i + 1), pkValues[i]);
+
+	int lockedCount = 0;
+	bool sqlOk = false;
+	try {
+		ibDatabaseResultSet* rs = stmt->RunQueryWithResults();
+		if (rs) {
+			while (rs->Next()) ++lockedCount;
+			rs->Close();
+			CloseResultSet(rs);
+		}
+		sqlOk = true;
+	}
+	catch (...) {
+		sqlOk = false;
+	}
+	CloseStatement(stmt);
+
+	if (!sqlOk || lockedCount != int(pkValues.size())) {
+		try { RollBack(); } catch (...) {}
+		return false;
+	}
+
+	m_rowLocksHeld = true;
+	return true;
+}
+
+void ibDatabaseLayerFirebird::ReleaseRowLocks()
+{
+	if (!m_rowLocksHeld) return;
+	try { Commit(); } catch (...) { /* best-effort */ }
+	m_rowLocksHeld = false;
+}
+
+bool ibDatabaseLayerFirebird::TryProbeRowLock(const wxString& tableName,
+                                              const wxString& pkColumn,
+                                              const wxString& pkValue)
+{
+	// NOWAIT transaction so contention surfaces as an exception on
+	// RunQueryWithResults — no sit-and-wait.
+	try {
+		BeginTransaction({ /*.noWait=*/true });
+	}
+	catch (...) {
+		return false;
+	}
+
+	wxString sql = wxT("SELECT ") + pkColumn + wxT(" FROM ") + tableName + wxT(" WHERE ") + pkColumn + wxT(" = ? WITH LOCK");
+	ibPreparedStatement* stmt = DoPrepareStatement(sql);
+	bool gotLock = false;
+	if (stmt) {
+		stmt->SetParamString(1, pkValue);
+		try {
+			ibDatabaseResultSet* rs = stmt->RunQueryWithResults();
+			if (rs) {
+				// Row exists AND we successfully took its lock → no other
+				// connection holds it (NOWAIT would have thrown otherwise).
+				if (rs->Next()) gotLock = true;
+				rs->Close();
+				CloseResultSet(rs);
+			}
+		}
+		catch (...) {
+			// Lock conflict (owner still alive on another connection) or
+			// transient DB error — either way, don't touch the row.
+			gotLock = false;
+		}
+		CloseStatement(stmt);
+	}
+
+	// Always release — probe must never keep a lock outliving the call.
+	try { RollBack(); } catch (...) {}
+	return gotLock;
 }
 
 // query database

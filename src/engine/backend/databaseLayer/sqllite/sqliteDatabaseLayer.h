@@ -45,11 +45,11 @@ public:
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerSQLite(*this); }
 
 	// transaction support
-	virtual void BeginTransaction();
+	virtual void BeginTransaction(const ibTxOptions& opts = {});
 	virtual void Commit();
 	virtual void RollBack();
 
-	virtual bool IsActiveTransaction();
+	// IsActiveTransaction inherits the base-class default.
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool TableExists(const wxString& table);

@@ -61,11 +61,18 @@ public:
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerMySQL(*this); }
 
 	// transaction support
-	virtual void BeginTransaction();
+	virtual void BeginTransaction(const ibTxOptions& opts = {});
 	virtual void Commit();
 	virtual void RollBack();
 
-	virtual bool IsActiveTransaction();
+	// IsActiveTransaction uses the base-class default (reads the shared
+	// m_transaction_is_active flag that Begin / Commit / RollBack update).
+
+	// Row-lock probe — SESSION innodb_lock_wait_timeout=1 inside
+	// BeginTransaction(noWait) + SELECT ... FOR UPDATE. Surfaces a held
+	// row as an exception within ~1s instead of blocking the sweep.
+	virtual bool TryProbeRowLock(const wxString& tableName,
+		const wxString& pkColumn, const wxString& pkValue) override;
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool TableExists(const wxString& table);

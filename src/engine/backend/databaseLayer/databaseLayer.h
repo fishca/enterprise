@@ -16,6 +16,8 @@
 #include <wx/arrstr.h>
 #include <wx/variant.h>
 
+#include <vector>
+
 #include "databaseLayerDef.h"
 #include "databaseErrorReporter.h"
 #include "databaseStringConverter.h"
@@ -47,18 +49,37 @@ public:
 	virtual ibDatabaseLayer *Clone() = 0;
 
 	// transaction support
-	
-	/// Begin a transaction
-	virtual void BeginTransaction() = 0;
+
+	// Optional transaction attributes. Struct so future knobs (lock
+	// timeout, isolation level override, read-only hint) can land without
+	// changing the BeginTransaction signature again. Default-constructed
+	// value preserves historical behaviour — every existing caller works
+	// unchanged.
+	//
+	// `noWait` — when true, row-lock contention raises a lock conflict
+	// immediately instead of blocking. Used by row-lock probes
+	// (TryProbeRowLock). On FB maps to `isc_tpb_nowait`; other drivers
+	// approximate via session-level lock_timeout settings or ignore.
+	struct ibTxOptions {
+		bool noWait = false;
+		// int  lockTimeoutMs = -1;  // placeholder — add when a caller needs it
+	};
+
+	/// Begin a transaction. The default options preserve historical
+	/// (wait-mode, read-committed, read-write) behaviour.
+	virtual void BeginTransaction(const ibTxOptions& opts = {}) = 0;
 	
 	/// Commit the current transaction
 	virtual void Commit() = 0;
-	
+
 	/// Rollback the current transaction
 	virtual void RollBack() = 0;
 
-	/// Is the transaction to the database active?
-	virtual bool IsActiveTransaction() = 0;
+	/// Is a transaction currently open on this layer? Concrete drivers
+	/// flip `m_transaction_is_active` in BeginTransaction / Commit /
+	/// RollBack; the default reads the flag so every driver gets a
+	/// correct answer without repeating the accessor.
+	virtual bool IsActiveTransaction() { return m_transaction_is_active; }
 
 	// Define formatted run query 
 
@@ -179,6 +200,42 @@ public:
 
 	virtual int GetDatabaseLayerType() const = 0;
 
+	// ---- Row-level pessimistic locks (cluster-level session coordination) ----
+	//
+	// Used by ibSessionRegistry to hold / probe pessimistic locks on rows of
+	// sys_session. The lock is the source of truth for "owner process still
+	// alive" — when the connection that holds the lock drops, the DB engine
+	// rolls back its transaction and the lock is released, so peer processes
+	// see the row as free and can DELETE it as a zombie.
+	//
+	// Default implementations here return false / no-op — registry treats
+	// that as "not supported on this driver" and falls back to heartbeat-
+	// timestamp based liveness (fine for single-process SQLite).
+	//
+	// HoldRowLocks opens a dedicated transaction on THIS connection and
+	// locks each row identified by (tableName, pkColumn = pkValues[i])
+	// via the driver's pessimistic row lock (FB: SELECT ... WITH LOCK;
+	// PG/MySQL/MSSQL: SELECT ... FOR UPDATE). Transaction stays open
+	// until ReleaseRowLocks() commits. Calling again with a new set
+	// commits the prior TX before starting a fresh one. Returns true if
+	// every requested row was locked.
+	virtual bool HoldRowLocks(const wxString& tableName,
+	                          const wxString& pkColumn,
+	                          const std::vector<wxString>& pkValues) { (void)tableName; (void)pkColumn; (void)pkValues; return false; }
+
+	// Release the hold from HoldRowLocks (commits the internal TX). No-op
+	// if nothing is held. Always paired with HoldRowLocks.
+	virtual void ReleaseRowLocks() {}
+
+	// Non-blocking probe: try to take a short-term exclusive lock on
+	// (tableName, pkColumn = pkValue). Returns true if acquired —
+	// signalling that no other connection holds the row, so the caller
+	// may treat it as a zombie and DELETE it. The probe transaction is
+	// rolled back before return so no lock survives the call.
+	virtual bool TryProbeRowLock(const wxString& tableName,
+	                             const wxString& pkColumn,
+	                             const wxString& pkValue) { (void)tableName; (void)pkColumn; (void)pkValue; return false; }
+
 	/// Close all result set objects that have been generated but not yet closed
 	void CloseResultSets();
 
@@ -201,6 +258,14 @@ protected:
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery) = 0;
 	
 protected:
+
+	/// Shared transaction-active flag. Concrete drivers flip it in
+	/// BeginTransaction / Commit / RollBack; the default IsActiveTransaction
+	/// reads it. Per-driver overrides remain legal (Firebird still probes
+	/// its native TX handle) — the flag just gives drivers without a
+	/// handle-level signal a correct answer without each one reimplementing
+	/// the accessor.
+	bool m_transaction_is_active = false;
 
 	/// Add result set object pointer to the list for "garbage collection"
 	void LogResultSetForCleanup(ibDatabaseResultSet* pResultSet) { m_ResultSets.insert(pResultSet); }

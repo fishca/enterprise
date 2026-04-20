@@ -8,7 +8,7 @@
 
 // ctor
 ibDatabaseLayerPostgres::ibDatabaseLayerPostgres()
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+	: ibDatabaseLayer(), m_pDatabase(nullptr)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new ibInterfacePostgres();
@@ -28,7 +28,7 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres()
 }
 
 ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strDatabase)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+	: ibDatabaseLayer(), m_pDatabase(nullptr)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new ibInterfacePostgres();
@@ -49,7 +49,7 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strDatabase)
 }
 
 ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strDatabase)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+	: ibDatabaseLayer(), m_pDatabase(nullptr)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new ibInterfacePostgres();
@@ -70,7 +70,7 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, cons
 }
 
 ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+	: ibDatabaseLayer(), m_pDatabase(nullptr)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new ibInterfacePostgres();
@@ -91,7 +91,7 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strDatabase, co
 }
 
 ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+	: ibDatabaseLayer(), m_pDatabase(nullptr)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new ibInterfacePostgres();
@@ -112,7 +112,7 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, cons
 }
 
 ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: ibDatabaseLayer(), m_transaction_is_active(false)
+	: ibDatabaseLayer()
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new ibInterfacePostgres();
@@ -133,7 +133,7 @@ ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const wxString& strServer, cons
 }
 
 ibDatabaseLayerPostgres::ibDatabaseLayerPostgres(const ibDatabaseLayerPostgres& src)
-	: ibDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+	: ibDatabaseLayer(), m_pDatabase(nullptr)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new ibInterfacePostgres();
@@ -336,10 +336,21 @@ bool ibDatabaseLayerPostgres::IsOpen()
 }
 
 // transaction support
-void ibDatabaseLayerPostgres::BeginTransaction()
+void ibDatabaseLayerPostgres::BeginTransaction(const ibTxOptions& opts)
 {
 	DoRunQuery(wxT("BEGIN"), false);
 	m_transaction_is_active = true;
+
+	// PG's NOWAIT behaviour is per-statement (`SELECT ... FOR UPDATE NOWAIT`)
+	// or session-level (`SET lock_timeout`). Inside a TX the cleanest knob
+	// is `SET LOCAL lock_timeout = 0` — applies only to this TX, reverts
+	// on commit/rollback. Used by ibSessionRegistry::TryProbeRowLock so
+	// the probe SELECT fails immediately with a lock-timeout exception
+	// rather than blocking.
+	if (opts.noWait) {
+		try { DoRunQuery(wxT("SET LOCAL lock_timeout = 0"), false); }
+		catch (...) { /* best-effort — server without lock_timeout just waits */ }
+	}
 }
 
 void ibDatabaseLayerPostgres::Commit()
@@ -354,9 +365,41 @@ void ibDatabaseLayerPostgres::RollBack()
 	m_transaction_is_active = false; 
 }
 
-bool ibDatabaseLayerPostgres::IsActiveTransaction()
+// IsActiveTransaction inherits the base-class implementation which
+// reads the shared `m_transaction_is_active` flag that Begin / Commit
+// / RollBack maintain above.
+
+bool ibDatabaseLayerPostgres::TryProbeRowLock(const wxString& tableName,
+                                               const wxString& pkColumn,
+                                               const wxString& pkValue)
 {
-	return m_transaction_is_active;
+	// FOR UPDATE NOWAIT on Postgres fails immediately when the row is
+	// locked by another connection — exactly the signal the registry's
+	// probe wants. Wrap the SELECT in its own TX so the lock, if taken,
+	// dies with the ROLLBACK at the tail.
+	try { BeginTransaction({ /*.noWait=*/true }); }
+	catch (...) { return false; }
+
+	const wxString sql = wxT("SELECT ") + pkColumn + wxT(" FROM ")
+		+ tableName + wxT(" WHERE ") + pkColumn
+		+ wxT(" = ? FOR UPDATE NOWAIT");
+	ibPreparedStatement* stmt = DoPrepareStatement(sql);
+	bool gotLock = false;
+	if (stmt) {
+		stmt->SetParamString(1, pkValue);
+		try {
+			ibDatabaseResultSet* rs = stmt->RunQueryWithResults();
+			if (rs) {
+				if (rs->Next()) gotLock = true;
+				rs->Close();
+				CloseResultSet(rs);
+			}
+		}
+		catch (...) { gotLock = false; }
+		CloseStatement(stmt);
+	}
+	try { RollBack(); } catch (...) {}
+	return gotLock;
 }
 
 // query database

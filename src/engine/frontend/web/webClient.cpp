@@ -516,9 +516,19 @@ async function refreshTabs(){
 // whitespace between functions so no token is split across literals.
 R"HTML(
 async function login(user, password){
+  // Brief exponential-backoff retry on 401 — server serializes Login
+  // on a short timed_mutex; under rapid-F5 contention it can return
+  // failure rather than queueing. Client-side retry lets legit logins
+  // survive a burst without the user seeing an error UI.
   const body=new URLSearchParams({user:user||'',password:password||''});
-  const r=await netFetch(API+'/login',{method:'POST',body,credentials:'same-origin'});
-  return r.ok;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const r = await netFetch(API+'/login',
+      {method:'POST',body,credentials:'same-origin'});
+    if (r.ok) return true;
+    if (r.status !== 401) return false;
+    await new Promise(res => setTimeout(res, 200 * (attempt + 1)));
+  }
+  return false;
 }
 // GET /auth-info. Decides between open-access auto-login (empty sys_user
 // → server's /login passes through empty creds) and a credentials form

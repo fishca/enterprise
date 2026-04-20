@@ -134,6 +134,19 @@ public:
 			if (it == m_sessions.end()) return false;
 			s = it->second;
 		}
+		// Serialize ibWebSession::Login against itself — BeforeStart's
+		// ibProcUnit::Execute isn't thread-safe when two sessions run
+		// it concurrently on the shared bytecode. Try_lock with a
+		// short budget: on contention return failure so the client
+		// re-tries on its own cadence instead of a single F5 burst
+		// queueing all behind each other and taking N*login_time to
+		// drain (felt as "eternal loading" on rapid F5).
+		std::unique_lock<std::timed_mutex> loginLock(m_loginMutex, std::defer_lock);
+		if (!loginLock.try_lock_for(std::chrono::seconds(3))) {
+			std::cerr << "[Login] busy — rejecting, client should retry"
+			          << std::endl;
+			return false;
+		}
 		return s->Login(user, password);
 	}
 
@@ -455,6 +468,10 @@ private:
 	}
 
 	mutable std::mutex m_mutex;
+	// Serializes ibWebSession::Login (see Login comment). Separate from
+	// m_mutex so handler lookups aren't blocked while a login runs.
+	// timed_mutex for try_lock_for on contention fast-fail.
+	std::timed_mutex m_loginMutex;
 	// shared_ptr (not unique_ptr) so handler methods can grab a copy
 	// under m_mutex and keep the session alive while they work outside
 	// the lock. Destroy() removing the map entry no longer races with

@@ -15,12 +15,27 @@ ibSession::ibSession(std::string id, ibSessionKind kind)
 
 ibSession::~ibSession()
 {
+	// No lock in the dtor — at refcount-0 nobody else holds a pointer to
+	// this session, so the map is already single-owner. Locking here
+	// risks a deadlock when destruction races with a worker thread that
+	// is tearing down its own state through the same ibSession (the
+	// worker's pending GetProcUnitFor could be waiting on the same
+	// mutex when the dtor fires from the releasing thread).
 	m_procUnitMap.clear();
 }
 
+// m_procUnitMap is touched from multiple threads: HTTP login path
+// (InitRuntimeForSession Attach), HTTP logout path (ExitRuntimeForSession
+// Detach) and the session's own worker thread (GetProcUnit → Get on
+// every script dispatch). unordered_map is not thread-safe, so every
+// accessor locks m_procUnitMtx. Returning a raw pointer on Get is safe
+// because the shared_ptr stays owned by the map until Detach — the
+// caller runs synchronously under the lock's protection plus the
+// session-is-alive invariant (see SessionManager keeper).
 ibProcUnit* ibSession::GetProcUnitFor(const ibModuleDataObject* descriptor) const
 {
 	if (descriptor == nullptr) return nullptr;
+	std::lock_guard<std::mutex> lk(m_procUnitMtx);
 	auto it = m_procUnitMap.find(descriptor);
 	return it != m_procUnitMap.end() ? it->second.get() : nullptr;
 }
@@ -28,12 +43,14 @@ ibProcUnit* ibSession::GetProcUnitFor(const ibModuleDataObject* descriptor) cons
 void ibSession::AttachProcUnit(const ibModuleDataObject* descriptor, std::shared_ptr<ibProcUnit> pu)
 {
 	if (descriptor == nullptr) return;
+	std::lock_guard<std::mutex> lk(m_procUnitMtx);
 	m_procUnitMap[descriptor] = std::move(pu);
 }
 
 void ibSession::DetachProcUnit(const ibModuleDataObject* descriptor)
 {
 	if (descriptor == nullptr) return;
+	std::lock_guard<std::mutex> lk(m_procUnitMtx);
 	m_procUnitMap.erase(descriptor);
 }
 

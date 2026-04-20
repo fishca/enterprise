@@ -5,6 +5,8 @@
 
 #include "moduleManager.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
+#include <iostream>
 
 //*********************************************************************************************************
 //*                                   Events "moduleManager"                                              *
@@ -21,7 +23,13 @@ bool ibValueModuleManagerConfiguration::BeforeStart()
 
 	try {
 		ibValue bCancel = false;
-		if (ibProcUnit* pu = GetProcUnit()) {
+		ibProcUnit* pu = GetProcUnit();
+		std::cerr << "[BeforeStart] mgr=" << this
+		          << " current=" << ibSession::Current()
+		          << " pu=" << pu
+		          << " pu.byteCode=" << (pu ? pu->GetByteCode() : nullptr)
+		          << std::endl;
+		if (pu) {
 			pu->CallAsProc(wxT("beforeStart"), bCancel);
 		}
 		return !bCancel.GetBoolean();

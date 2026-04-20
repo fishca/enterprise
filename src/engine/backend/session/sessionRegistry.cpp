@@ -554,7 +554,14 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 		s.SetInserted(false);
 	}
 
-	m_own.erase(s.GetId());
+	// Erase only if the map entry still points to the same ibSession we
+	// are removing. On a refresh cycle with tabSid-preset guid, Add for
+	// session2 replaces m_own[guid] with session2 before session1's
+	// Remove runs; a blind erase here would yank session2's entry and
+	// break subsequent heartbeat / snapshot for a live session.
+	auto it = m_own.find(s.GetId());
+	if (it != m_own.end() && it->second.get() == &s)
+		m_own.erase(it);
 
 	s.Transition(ibSessionState::Gone);
 }

@@ -1158,7 +1158,11 @@ void ibProcUnit::CallAsProc(const long lCodeLine, ibValue** ppParams, const long
 	if (lCodeLine >= lCodeSize) {
 		if (!GetParent())
 			ibBackendCoreException::Error(_("Error calling module procedure!"));
+		// Delegate to the parent module's PU and RETURN — without the
+		// early return we fall through to `m_listCode[lCodeLine]` below
+		// with an out-of-range index and crash on debug-bounds-check.
 		GetParent()->CallAsProc(lCodeLine - lCodeSize, ppParams, lSizeArray);
+		return;
 	}
 
 	ibRunContext cRunContext(index3);// number of local variables
@@ -1185,7 +1189,11 @@ void ibProcUnit::CallAsFunc(const long lCodeLine, ibValue& pvarRetValue, ibValue
 	if (lCodeLine >= lCodeSize) {
 		if (!GetParent())
 			ibBackendCoreException::Error(_("Error calling module function!"));
+		// Same missing-return bug as CallAsProc — delegate to parent
+		// and bail out before indexing m_listCode with an out-of-range
+		// lCodeLine.
 		GetParent()->CallAsFunc(lCodeLine - lCodeSize, pvarRetValue, ppParams, lSizeArray);
+		return;
 	}
 
 	ibRunContext cRunContext(index3);// number of local variables

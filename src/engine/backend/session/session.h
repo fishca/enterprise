@@ -214,6 +214,9 @@ private:
 	ibValueModuleManager* m_moduleManager = nullptr;
 
 	std::unordered_map<const ibModuleDataObject*, std::shared_ptr<ibProcUnit>> m_procUnitMap;
+	// Guards m_procUnitMap. mutable so const accessors (GetProcUnitFor)
+	// can lock too.
+	mutable std::mutex m_procUnitMtx;
 
 	// Identity fields — populated progressively as the session moves
 	// through Add → Attach. Registry thread is the sole writer.

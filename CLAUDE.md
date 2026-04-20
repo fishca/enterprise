@@ -154,17 +154,11 @@ ibBackendValueForm* form = ibBackendValueForm::CreateNewForm(
 
 ## Known Issues
 
-### SQL Injection in appDataQuery.cpp
+### Password Hashing — PBKDF2-HMAC-SHA256
 
-`src/engine/backend/appDataQuery.cpp` contains session management queries that format table names and datetime values directly into query strings using `wxString::Format` / `RunQueryWithResults(wxT("... '%s'"), value)`. Table names come from internal constants (`session_table`, `user_table`) so the injection surface is limited, but it is not safe against malicious database content. Future work: migrate all queries to `ibPreparedStatement`.
+New passwords are hashed via `ibPasswordHash::Hash` (`src/engine/backend/utils/passwordHash.{hpp,cpp}`) using PBKDF2-HMAC-SHA256 at 600k iterations (OWASP 2023) with a 16-byte system-RNG salt, stored in PHC-style format `$pbkdf2-sha256$<iter>$<saltB64>$<hashB64>`. `Verify` additionally accepts legacy 32-hex MD5 hashes from pre-migration databases; callers use `NeedsRehash` + `Hash` to upgrade silently on successful login (see `ibApplicationData::AuthenticationAndSetUser`). MD5 stays in-tree for metadata integrity (`ibMD5::ComputeMd5`) — **never** reuse it for passwords.
 
-### MD5 Password Hashing
-
-User passwords are stored and compared as MD5 hashes (`ibApplicationData::ComputeMd5()`). MD5 is cryptographically broken. This should be migrated to bcrypt or Argon2 before any production deployment.
-
-### NDEBUG Defined in Debug|Win32
-
-`src/engine/backend/backend.vcxproj` defines `NDEBUG` in the `Debug|Win32` configuration, disabling all `wxASSERT` checks in 32-bit debug builds. The `Debug|x64` configuration is not affected. Track this as a build configuration bug.
+Argon2id (OWASP #1, memory-hard) would be the stronger option but requires vendoring an external library; revisit when the threat model calls for it.
 
 ### Empty Catch Blocks
 

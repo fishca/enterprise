@@ -30,6 +30,11 @@ public:
 
 	// True if storedHash is a legacy MD5 (32 hex chars) rather than PBKDF2.
 	static bool IsLegacy(const wxString& storedHash);
+
+	// True if storedHash should be replaced after a successful verify:
+	// legacy MD5, or PBKDF2 with a below-policy iteration count. Callers
+	// use this to drive lazy upgrade — re-hash with Hash() and re-store.
+	static bool NeedsRehash(const wxString& storedHash);
 };
 
 #endif // _IB_PASSWORD_HASH_H_

@@ -254,6 +254,16 @@ public:
 	//return external module
 	virtual ibValue* GetObjectValue() const { return nullptr; }
 
+	// Per-session runtime — create ProcUnit'ы for main + common modules
+	// under the given session's m_procUnitMap. Compile state untouched
+	// on `this`. Overridden by subclasses with additional modules
+	// (external data processor, report). Default impl handles the
+	// common-case main module + m_listCommonModuleManager fanout.
+	virtual bool InitRuntimeForSession(class ibSession* session);
+
+	// Symmetric teardown — drop this session's ProcUnit entries.
+	virtual void ExitRuntimeForSession(class ibSession* session);
+
 protected:
 
 	bool m_initialized;
@@ -304,6 +314,7 @@ public:
 
 	//exit common module
 	virtual bool ExitMainModule(bool force = false);
+
 };
 
 #endif

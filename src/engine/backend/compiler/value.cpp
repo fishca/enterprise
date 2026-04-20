@@ -20,11 +20,37 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValue, wxObject);
 #endif
 
 #ifdef DEBUG_VALUE
-static unsigned int s_nCreateCount = 0;
+#include <atomic>
+#include <iostream>
+#include <sstream>
+#include <thread>
+#include <wx/log.h>
+
+// Atomic counter — Create/Delete can race across the HTTP and worker
+// threads on the web build, and even on desktop if the designer's debug
+// thread manipulates values. A plain unsigned int would UB.
+static std::atomic<unsigned int> s_nCreateCount{0};
+
+// Cross-platform debugger sink. wxLogDebug already does the right
+// thing per OS:
+//   MSW  — OutputDebugString (visible in VS Output pane) + default
+//          wxLogStderr sink when no wxApp (we have wxInitializer only).
+//   GTK  — stderr.
+//   OSX  — NSLog (visible in Xcode Console).
+// Writing std::cerr on top of that duplicates every line on MSW.
+static inline void DebugValueEmit(const char* tag, unsigned int count) {
+	std::ostringstream os;
+	os << tag << ' ' << count
+	   << " tid=" << std::this_thread::get_id();
+	wxLogDebug(wxT("%s"), wxString::FromUTF8(os.str().c_str()));
+}
 #define DEBUG_VALUE_CREATE() \
-	if (wxTheApp != NULL) wxLogDebug(wxT("Create %d"), s_nCreateCount++); 
-#else 
-#define DEBUG_VALUE_CREATE() 
+	DebugValueEmit("Create", s_nCreateCount.fetch_add(1) + 1);
+#define DEBUG_VALUE_DELETE() \
+	DebugValueEmit("Delete", s_nCreateCount.fetch_sub(1) - 1);
+#else
+#define DEBUG_VALUE_CREATE()
+#define DEBUG_VALUE_DELETE()
 #endif
 
 //**********************************************************************
@@ -146,9 +172,7 @@ ibValue::~ibValue()
 {
 	if (m_typeClass == ibValueTypes::TYPE_REFFER && m_pRef && m_pRef != this)
 		m_pRef->DecrRef();
-#ifdef DEBUG_VALUE
-	if (wxTheApp != NULL) wxLogDebug(wxT("Delete %d"), --s_nCreateCount);
-#endif
+	DEBUG_VALUE_DELETE();
 }
 
 void ibValue::Reset()

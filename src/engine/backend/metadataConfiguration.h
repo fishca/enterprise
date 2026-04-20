@@ -66,7 +66,7 @@ public:
 	virtual ibValueModuleManagerConfiguration* GetModuleManager() const = 0;
 	virtual ibValueMetaObjectConfiguration* GetCommonMetaObject() const = 0;
 
-	//start/exit module 
+	//start/exit module
 	virtual bool StartMainModule(bool force = false) = 0;
 	virtual bool ExitMainModule(bool force = false) = 0;
 
@@ -151,7 +151,7 @@ public:
 	virtual ibValueModuleManagerConfiguration* GetModuleManager() const { return m_moduleManager; }
 	virtual ibValueMetaObjectConfiguration* GetCommonMetaObject() const { return m_commonObject; }
 
-	//start/exit module 
+	//start/exit module
 	virtual bool StartMainModule(bool force = false) {
 		return m_moduleManager != nullptr ?
 			m_moduleManager->StartMainModule() : false;

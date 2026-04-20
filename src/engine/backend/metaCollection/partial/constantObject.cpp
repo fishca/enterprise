@@ -58,7 +58,7 @@ bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataOb
 	}
 
 	if (!appData->DesignerMode()) {
-		m_procUnit = new ibProcUnit();
+		m_procUnit = std::make_shared<ibProcUnit>();
 		m_procUnit->SetParent(moduleManager->GetProcUnit());
 		try {
 			m_compileModule->Compile();
@@ -69,6 +69,7 @@ bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataOb
 			return false;
 		};
 		m_procUnit->Execute(m_compileModule->m_cByteCode, true);
+		AttachToCurrentSession();
 	}
 
 	PrepareNames();

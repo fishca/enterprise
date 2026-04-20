@@ -85,7 +85,12 @@ static wxString gs_listErrorString[] =
 
 //////////////////////////////////////////////////////////////////////
 
-static bool gs_evalMode = false, gs_processBackendError = false;
+// Per-thread flags. On desktop (single wx event-loop thread) behaviour is
+// unchanged. On web each session worker / HTTP handler / debug-watch thread
+// gets its own independent flag — otherwise a debug-watch eval on one
+// session would silence side-effects (UpdateForm, dialogs, OLE calls) on
+// other sessions running regular business logic.
+thread_local static bool gs_evalMode = false, gs_processBackendError = false;
 
 //////////////////////////////////////////////////////////////////////
 // Error handling

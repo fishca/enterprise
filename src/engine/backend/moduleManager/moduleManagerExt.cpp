@@ -3,6 +3,7 @@
 #include "backend/metadataConfiguration.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 //////////////////////////////////////////////////////////////////////////////////
 #define thisObject wxT("ThisObject")
@@ -66,7 +67,7 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 	m_compileModule->AddContextVariable(thisObject, m_objectValue);
 
 	//initialize procUnit
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 
 	//set complile module 
 	m_objectValue->m_compileModule = m_compileModule;
@@ -76,11 +77,15 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 
 	if (!appData->DesignerMode()) {
 
-		m_procUnit = new ibProcUnit();
+		m_procUnit = std::make_shared<ibProcUnit>();
 		m_procUnit->SetParent(moduleManager->GetProcUnit());
 
-		//set proc unit 
+		//set proc unit — shared with m_objectValue so both descriptors
+		//reach the same runtime; shared_ptr co-ownership keeps the unit
+		//alive until the last of them drops.
 		m_objectValue->m_procUnit = m_procUnit;
+		AttachToCurrentSession();
+		m_objectValue->AttachToCurrentSession();
 
 		try {
 			m_compileModule->Compile();
@@ -113,7 +118,7 @@ bool ibValueModuleManagerExternalDataProcessor::DestroyMainModule()
 		return true;
 
 	m_compileModule->Reset();
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 
 	//set complile module 
 	//set proc unit
@@ -137,7 +142,7 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 	if (!m_initialized)
 		return false;
 
-	//incrRef - for control delete 
+	//incrRef - for control delete
 	m_objectValue->IncrRef();
 
 	ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
@@ -278,7 +283,7 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 	m_compileModule->AddContextVariable(thisObject, m_objectValue);
 
 	//initialize procUnit
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 
 	//set complile module 
 	m_objectValue->m_compileModule = m_compileModule;
@@ -288,10 +293,12 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 
 	if (!appData->DesignerMode()) {
 
-		m_procUnit = new ibProcUnit();
+		m_procUnit = std::make_shared<ibProcUnit>();
 		m_procUnit->SetParent(moduleManager->GetProcUnit());
-		//set proc unit 
+		//set proc unit — shared with m_objectValue (co-ownership).
 		m_objectValue->m_procUnit = m_procUnit;
+		AttachToCurrentSession();
+		m_objectValue->AttachToCurrentSession();
 
 		try {
 			m_compileModule->Compile();
@@ -323,7 +330,7 @@ bool ibValueModuleManagerExternalReport::DestroyMainModule()
 		return true;
 
 	m_compileModule->Reset();
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 
 	//set complile module 
 	//set proc unit 
@@ -348,7 +355,7 @@ bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 	if (!m_initialized)
 		return false;
 
-	//incrRef - for control delete 
+	//incrRef - for control delete
 	m_objectValue->IncrRef();
 
 	ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();

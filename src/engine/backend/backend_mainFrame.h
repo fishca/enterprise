@@ -15,6 +15,13 @@ public:
 
 	static ibBackendDocMDIFrame* GetDocMDIFrame();
 
+	// Install this frame as the thread-local current frame on the
+	// calling thread. Used by ibWebApplication::WorkerLoop so the
+	// session's worker thread resolves singletons to its own frame
+	// and not the global-fallback (most-recently-constructed frame
+	// from some other session).
+	void InstallOnThread();
+
 	virtual ~ibBackendDocMDIFrame();
 	virtual wxFrame* GetFrameHandler() const = 0;
 

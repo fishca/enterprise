@@ -7,6 +7,7 @@
 #include "globalContextManager.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 #define objectManager wxT("Manager")
 #define objectMetadataManager wxT("Metadata")
@@ -263,15 +264,12 @@ bool ibValueModuleManagerConfiguration::CreateMainModule()
 		m_compileModule->AddContextVariable(ctor->GetClassName(), ctor->CreateObject());
 	}
 
-	//initialize procUnit
-	wxDELETE(m_procUnit);
-
+	// Compile only — runtime (ibProcUnit) is created per session by
+	// InitRuntimeForSession(ctx). The manager itself no longer carries
+	// a ProcUnit field.
 	if (!appData->DesignerMode()) {
 		try {
 			m_compileModule->Compile();
-
-			m_procUnit = new ibProcUnit;
-			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("Global module init failed: %s"), err.GetErrorDescription());
@@ -309,7 +307,9 @@ bool ibValueModuleManagerConfiguration::DestroyMainModule()
 
 	//reset global module
 	m_compileModule->Reset();
-	wxDELETE(m_procUnit);
+	// m_procUnit is no longer populated by CreateMainModule (compile-
+	// only since the runtime split 2026-04-19). Session ProcUnits are
+	// torn down by ExitRuntimeForSession, not here.
 
 	//Setup common modules
 	for (auto& moduleValue : m_listCommonModuleManager) {
@@ -369,6 +369,90 @@ bool ibValueModuleManagerConfiguration::ExitMainModule(bool force)
 //**********************************************************************
 
 SYSTEM_TYPE_REGISTER(ibValueModuleManagerConfiguration, "ConfigModuleManager", string_to_clsid("SO_COMM"));
+
+//**********************************************************************
+//*          Per-session runtime (compile / runtime split)             *
+//**********************************************************************
+
+bool ibValueModuleManager::InitRuntimeForSession(ibSession* session)
+{
+	if (session == nullptr)
+		return false;
+	// Runtime only for sessions that represent user work:
+	//   Enterprise — desktop thick client's single user.
+	//   WebClient  — one per browser tab through wes.
+	//   Service    — daemon / codeRunner batch runs.
+	// Skip WebServer (wes process's technical row), Designer (compile-
+	// only) and Launcher (no metadata). userInfo-empty is NOT a valid
+	// discriminator: open-access configurations (empty sys_user) have
+	// empty userInfo even for legitimate user sessions.
+	const ibSessionKind kind = session->GetKind();
+	const bool wantsRuntime =
+		(kind == ibSessionKind::Enterprise) ||
+		(kind == ibSessionKind::WebClient)  ||
+		(kind == ibSessionKind::Service);
+	if (!wantsRuntime)
+		return true;
+	// Compile must be done by the time runtime is created. In the
+	// current codebase CreateMainModule is called right before this
+	// (during metadata init on desktop; explicitly on web) so
+	// m_compileModule carries a compiled ibByteCode.
+	if (!appData->DesignerMode() && m_compileModule != nullptr) {
+		try {
+			auto mainPU = std::make_shared<ibProcUnit>();
+			mainPU->Execute(m_compileModule->m_cByteCode);
+			session->AttachProcUnit(this, mainPU);
+		}
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("InitRuntimeForSession main: %s"), err.GetErrorDescription());
+			return false;
+		}
+	}
+	// Common modules — each gets its own ProcUnit per session, parented
+	// to the session's main ProcUnit so local context chains resolve.
+	for (auto& moduleValue : m_listCommonModuleManager) {
+		if (!moduleValue)
+			continue;
+		ibCompileModule* cm = moduleValue->GetCompileModule();
+		if (cm == nullptr)
+			continue;
+		if (moduleValue->IsGlobalModule())
+			// Global modules are *inlined* into the main module at
+			// translation time — the translator splices their lexemes
+			// into the main compile unit and emits debugger hints
+			// noting the origin. There's no separate bytecode to run,
+			// so no separate ProcUnit either. Main's ProcUnit executes
+			// the spliced code as part of its own top-level.
+			continue;
+		try {
+			auto pu = std::make_shared<ibProcUnit>();
+			pu->SetParent(session->GetProcUnitFor(this));
+			pu->Execute(cm->m_cByteCode, false);
+			ibValueModuleUnit* rawUnit = moduleValue;  // ibValuePtr → T*
+			session->AttachProcUnit(rawUnit, pu);
+		}
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("InitRuntimeForSession common: %s"), err.GetErrorDescription());
+			return false;
+		}
+	}
+	return true;
+}
+
+void ibValueModuleManager::ExitRuntimeForSession(ibSession* session)
+{
+	if (session == nullptr)
+		return;
+	// Drop common modules first — ProcUnit parent chain breaks cleanly
+	// (children reference the main ProcUnit; release in reverse order).
+	for (auto& moduleValue : m_listCommonModuleManager) {
+		if (moduleValue) {
+			ibValueModuleUnit* rawUnit = moduleValue;
+			session->DetachProcUnit(rawUnit);
+		}
+	}
+	session->DetachProcUnit(this);
+}
 
 SYSTEM_TYPE_REGISTER(ibValueModuleManager::ibValueModuleUnit, "ModuleManager", string_to_clsid("SO_MODL"));
 SYSTEM_TYPE_REGISTER(ibValueModuleManager::ibValueMetadataUnit, "Metadata", string_to_clsid("SO_METD"));

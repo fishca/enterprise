@@ -33,7 +33,8 @@ bool ibBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale
 
 #pragma region _calc_count_h_
 
-	static size_t reserve_count = 0;
+	// POD scalar — no need for thread_local static; zero-init is free.
+	size_t reserve_count = 0;
 
 	for (const auto& c : strRawLocale.ToStdWstring()) {
 
@@ -58,11 +59,16 @@ bool ibBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale
 	array.clear();
 	array.reserve(reserve_count);
 
-	reserve_count = 0;
-
 #pragma endregion
 
-	static ibBackendLocalizationEntry entry;
+	// thread_local so each worker / HTTP thread reuses its own buffer
+	// capacity (wxString keeps its allocation across Clear) without
+	// racing on a single shared static. Was plain `static` — crashed
+	// /session on HTTP thread while session worker mutated the same
+	// buffer (dump 2026-04-19 17:12).
+	thread_local ibBackendLocalizationEntry entry;
+	entry.m_code.Clear();
+	entry.m_data.Clear();
 
 	for (const auto& c : strRawLocale.ToStdWstring()) {
 
@@ -103,7 +109,7 @@ bool ibBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale
 
 wxString ibBackendLocalization::CreateLocalizationRawLocText(const wxString& strLocale)
 {
-	static ibBackendLocalizationEntryArray array;
+	thread_local ibBackendLocalizationEntryArray array;
 	if (CreateLocalizationArray(strLocale, array))
 		return GetTranslateFromArray(ms_strUserLanguage, array);
 
@@ -146,7 +152,7 @@ bool ibBackendLocalization::IsLocalizationString(const wxString& strRawLocale)
 
 wxString ibBackendLocalization::GetRawLocText(const ibBackendLocalizationEntryArray& array)
 {
-	static wxString strRawTranslate;
+	thread_local wxString strRawTranslate;
 	GetRawLocText(array, strRawTranslate);
 	return std::move(strRawTranslate);
 }
@@ -171,7 +177,7 @@ bool ibBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLoca
 
 	bool success = false;
 
-	static wxString code, data;
+	thread_local wxString code, data;
 	code.Clear(); data.Clear();
 
 	for (const auto& c : strRawLocale.ToStdWstring()) {
@@ -214,12 +220,12 @@ bool ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLoca
 
 bool ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale, wxString& strResult)
 {
-	static ibBackendLocalizationEntryArray array;
-	
-	if (CreateLocalizationArray(strRawLocale, array) && 
+	thread_local ibBackendLocalizationEntryArray array;
+
+	if (CreateLocalizationArray(strRawLocale, array) &&
 		GetTranslateFromArray(strLangCode, array, strResult))
-		return true; 
-	
+		return true;
+
 	strResult.Clear();
 	//strResult = strRawLocale;
 	return false;
@@ -227,7 +233,7 @@ bool ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCod
 
 wxString ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale)
 {
-	static wxString strResult;
+	thread_local wxString strResult;
 	if (GetTranslateGetRawLocText(strRawLocale, strResult))
 		return std::move(strResult);
 	return ms_strEmptyLanguage;
@@ -235,7 +241,7 @@ wxString ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strRaw
 
 wxString ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale)
 {
-	static wxString strResult;
+	thread_local wxString strResult;
 	if (GetTranslateGetRawLocText(strLangCode, strRawLocale, strResult))
 		return std::move(strResult);
 	return ms_strEmptyLanguage;
@@ -258,7 +264,7 @@ void ibBackendLocalization::SetArrayTranslate(const wxString& strLangCode, ibBac
 
 wxString ibBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const ibBackendLocalizationEntryArray& array)
 {
-	static wxString result;
+	thread_local wxString result;
 	GetTranslateFromArray(strLangCode, array, result);
 	return std::move(result);
 }

@@ -7,6 +7,7 @@
 
 #include "backend/system/systemManager.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueModuleManager::ibValueModuleUnit, ibValue);
 
@@ -34,17 +35,10 @@ bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
 	//create singleton "manager"
 	m_compileModule->AddContextVariable(objectManager, m_moduleManager->GetObjectManager());
 
-	wxDELETE(m_procUnit);
-
+	// Compile only — per-session ProcUnit comes from InitRuntimeForSession.
 	if (!appData->DesignerMode()) {
 		try {
 			m_compileModule->Compile();
-			// у глобального модуля код исполняется в главном модуле!
-			if (!ibValueModuleUnit::IsGlobalModule()) {
-				m_procUnit = new ibProcUnit();
-				m_procUnit->SetParent(m_moduleManager->GetProcUnit());
-				m_procUnit->Execute(m_compileModule->m_cByteCode, false);
-			}
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("Common module init failed: %s"), err.GetErrorDescription());
@@ -63,7 +57,7 @@ bool ibValueModuleManager::ibValueModuleUnit::DestroyCommonModule()
 	m_compileModule->RemoveVariable(objectManager);
 	m_compileModule->Reset();
 
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 	return true;
 }
 

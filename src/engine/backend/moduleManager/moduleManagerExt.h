@@ -34,7 +34,7 @@ public:
 
 	// this method is automatically called to initialize attribute and method names.
 	virtual void PrepareNames() const;
-	
+
 	//method call
 	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
@@ -76,7 +76,7 @@ public:
 
 	// this method is automatically called to initialize attribute and method names.
 	virtual void PrepareNames() const;
-	
+
 	//method call
 	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 

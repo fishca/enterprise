@@ -74,7 +74,7 @@ public:
 
 	virtual ibValueMetaObject* GetCommonMetaObject() const {return m_commonObject;}
 
-	//start/exit module 
+	//start/exit module
 	virtual bool StartMainModule() { return m_moduleManager ? m_moduleManager->StartMainModule() : false; }
 	virtual bool ExitMainModule(bool force = false) { return m_moduleManager ? m_moduleManager->ExitMainModule(force) : false; }
 

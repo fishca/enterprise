@@ -592,7 +592,13 @@ bool ibMetaDataConfiguration::OnInitialize(const int flags)
 	if (!ibMetaDataConfigurationStorage::TableAlreadyCreated())
 		return false;
 
+#ifndef OES_USE_WEB
+	// Desktop only: one debug server per process, bound to the
+	// singleton metadata configuration. On the web build each
+	// ibWebSession owns its own ibDebuggerServer via CreateForSession(),
+	// so the singleton path is skipped entirely.
 	debugServerInit(flags);
+#endif
 
 	if (!LoadDatabase())
 		return false;
@@ -608,15 +614,19 @@ bool ibMetaDataConfiguration::OnInitialize(const int flags)
 	if (backend_mainFrame != nullptr)
 		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
 
+#ifndef OES_USE_WEB
 	if ((flags & _app_start_create_debug_server_flag) != 0)
 		debugServer->CreateServer(defaultHost, defaultDebuggerPort, true);
+#endif
 
 	return true;
 }
 
 bool ibMetaDataConfiguration::OnDestroy()
 {
+#ifndef OES_USE_WEB
 	debugServerDestroy();
+#endif
 	if (backend_mainFrame != nullptr) backend_mainFrame->OnDestroyConfiguration(GetConfigType());
 	return true;
 }

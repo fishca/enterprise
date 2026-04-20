@@ -24,10 +24,14 @@
 
 namespace {
 
-// Modest cost. Must be re-evaluated every couple of years.
-// 120k iterations ≈ 60 ms on a mid-2020s desktop CPU — enough to make
-// brute-force expensive while staying fast enough for interactive login.
-constexpr uint32_t kIterations = 120000;
+// Iteration count per OWASP 2023 recommendation for PBKDF2-HMAC-SHA256.
+// Must be re-evaluated every couple of years against current hardware.
+// 600k iterations ≈ 300 ms on a mid-2020s desktop CPU — acceptable for
+// interactive login, expensive enough that offline brute-force of a stolen
+// hash column is costly. Argon2id would be the stronger choice (memory-
+// hard) but requires vendoring a third-party library; PBKDF2 stays as it
+// leans on primitives we already have (HMAC-SHA256 + system RNG).
+constexpr uint32_t kIterations = 600000;
 constexpr size_t   kSaltLen    = 16;
 constexpr size_t   kKeyLen     = 32; // SHA-256 output size
 
@@ -135,6 +139,25 @@ bool ibPasswordHash::IsLegacy(const wxString& storedHash)
 		if (!hex) return false;
 	}
 	return true;
+}
+
+bool ibPasswordHash::NeedsRehash(const wxString& storedHash)
+{
+	if (IsLegacy(storedHash))
+		return true;
+
+	if (!storedHash.StartsWith(kPrefix))
+		return false;
+
+	// Parse the iteration count out of $pbkdf2-sha256$<iter>$<salt>$<hash>.
+	// Treat a malformed hash as "no rehash" — verification will fail on its
+	// own and we'd rather not overwrite something we don't understand.
+	const wxString rest = storedHash.Mid(wxString(kPrefix).length());
+	const int p1 = rest.Find('$');
+	if (p1 == wxNOT_FOUND) return false;
+	unsigned long iterations = 0;
+	if (!rest.Left(p1).ToULong(&iterations)) return false;
+	return iterations < kIterations;
 }
 
 wxString ibPasswordHash::Hash(const wxString& password)

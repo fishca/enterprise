@@ -1772,7 +1772,7 @@ bool ibValueRecordDataObjectExt::InitializeObject()
 				return false;
 			};
 
-			m_procUnit = new ibProcUnit();
+			m_procUnit = std::make_shared<ibProcUnit>();
 			m_procUnit->SetParent(moduleManager->GetProcUnit());
 		}
 	}
@@ -1782,6 +1782,7 @@ bool ibValueRecordDataObjectExt::InitializeObject()
 	if (!m_metaObject->IsExternalCreate()) {
 		if (!appData->DesignerMode()) {
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
+			AttachToCurrentSession();
 		}
 	}
 
@@ -1820,7 +1821,7 @@ bool ibValueRecordDataObjectExt::InitializeObject(ibValueRecordDataObjectExt* so
 				return false;
 			};
 
-			m_procUnit = new ibProcUnit();
+			m_procUnit = std::make_shared<ibProcUnit>();
 			m_procUnit->SetParent(moduleManager->GetProcUnit());
 		}
 	}
@@ -1830,6 +1831,7 @@ bool ibValueRecordDataObjectExt::InitializeObject(ibValueRecordDataObjectExt* so
 	if (!m_metaObject->IsExternalCreate()) {
 		if (!appData->DesignerMode()) {
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
+			AttachToCurrentSession();
 		}
 	}
 
@@ -1925,9 +1927,10 @@ bool ibValueRecordDataObjectRef::InitializeObject(const ibGuid& copyGuid)
 	}
 	if (!appData->DesignerMode()) {
 		wxASSERT(m_procUnit == nullptr);
-		m_procUnit = new ibProcUnit();
+		m_procUnit = std::make_shared<ibProcUnit>();
 		m_procUnit->SetParent(moduleManager->GetProcUnit());
 		m_procUnit->Execute(m_compileModule->m_cByteCode);
+		AttachToCurrentSession();
 		if (m_newObject) {
 			succes = Filling();
 		}
@@ -1969,9 +1972,10 @@ bool ibValueRecordDataObjectRef::InitializeObject(ibValueRecordDataObjectRef* so
 	bool succes = true;
 	if (!appData->DesignerMode()) {
 		wxASSERT(m_procUnit == nullptr);
-		m_procUnit = new ibProcUnit();
+		m_procUnit = std::make_shared<ibProcUnit>();
 		m_procUnit->SetParent(moduleManager->GetProcUnit());
 		m_procUnit->Execute(m_compileModule->m_cByteCode);
+		AttachToCurrentSession();
 		if (m_newObject && source != nullptr && !generate) {
 			m_procUnit->CallAsProc(wxT("OnCopy"), source->GetValue());
 		}
@@ -2678,9 +2682,10 @@ bool ibValueRecordSetObject::InitializeObject(const ibValueRecordSetObject* sour
 
 	if (!appData->DesignerMode()) {
 		wxASSERT(m_procUnit == nullptr);
-		m_procUnit = new ibProcUnit();
+		m_procUnit = std::make_shared<ibProcUnit>();
 		m_procUnit->SetParent(moduleManager->GetProcUnit());
 		m_procUnit->Execute(m_compileModule->m_cByteCode);
+		AttachToCurrentSession();
 	}
 
 	PrepareNames();

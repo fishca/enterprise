@@ -34,6 +34,9 @@
     <ClInclude Include="databaseLayer\databaseErrorReporter.h">
       <Filter>databaseLayer</Filter>
     </ClInclude>
+    <ClInclude Include="databaseLayer\connectionPool.h">
+      <Filter>databaseLayer</Filter>
+    </ClInclude>
     <ClInclude Include="databaseLayer\databaseLayer.h">
       <Filter>databaseLayer</Filter>
     </ClInclude>
@@ -693,6 +696,9 @@
     </ClCompile>
     <ClCompile Include="appData.cpp" />
     <ClCompile Include="uniqueKey.cpp" />
+    <ClCompile Include="databaseLayer\connectionPool.cpp">
+      <Filter>databaseLayer</Filter>
+    </ClCompile>
     <ClCompile Include="databaseLayer\databaseErrorReporter.cpp">
       <Filter>databaseLayer</Filter>
     </ClCompile>

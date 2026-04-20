@@ -3,6 +3,8 @@
 
 #include <atomic>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include "backend/backend_core.h"
 
@@ -16,10 +18,11 @@
 #define db_query  (ibApplicationData::GetDatabaseLayer())
 
 enum ibRunMode {
-	eLAUNCHER_MODE = 1,		// for create db, only backmode  
+	eLAUNCHER_MODE = 1,		// for create db, only backmode
 	eDESIGNER_MODE = 2,		// backmode + frontmode
-	eENTERPRISE_MODE = 3,	// backmode + frontmode
-	eSERVICE_MODE = 4		// only backmode 
+	eENTERPRISE_MODE = 3,	// backmode + frontmode (thick client)
+	eSERVICE_MODE = 4,		// only backmode
+	eWEB_ENTERPRISE_MODE = 5	// backmode + wfrontend (web — wes process)
 };
 
 enum ibDatabaseMode {
@@ -41,13 +44,17 @@ class BACKEND_API ibApplicationDataSessionArray {
 
 	struct ibApplicationDataSessionUnit {
 
-		ibApplicationDataSessionUnit(ibRunMode runMode, const wxDateTime& startedDateTime,
+		ibApplicationDataSessionUnit(ibRunMode runMode, int kind, const wxDateTime& startedDateTime,
 			const wxString& strUserName, const wxString& strComputerName, const wxString& strSession) :
-			m_runMode(runMode), m_startedDate(startedDateTime), m_strUserName(strUserName), m_strComputerName(strComputerName), m_strSession(strSession)
+			m_runMode(runMode), m_kind(kind), m_startedDate(startedDateTime), m_strUserName(strUserName), m_strComputerName(strComputerName), m_strSession(strSession)
 		{
 		}
 
 		ibRunMode m_runMode;
+		// session-layer role, numeric ibSessionKind. Stored as int so the
+		// header stays independent of session.h (appData.h is included
+		// from backend-wide code that predates session-registry).
+		int m_kind;
 		wxDateTime m_startedDate;
 		wxString m_strUserName;
 		wxString m_strComputerName;
@@ -58,9 +65,9 @@ public:
 
 	ibApplicationDataSessionArray() : m_sessionArrayHash(wxNewUniqueGuid) {}
 
-	void AppendSession(ibRunMode runMode, const wxDateTime& startedTime,
+	void AppendSession(ibRunMode runMode, int kind, const wxDateTime& startedTime,
 		const wxString& strUserName, const wxString& strComputerName, const wxString& strSession) {
-		m_listSession.emplace_back(runMode, startedTime, strUserName, strComputerName, strSession);
+		m_listSession.emplace_back(runMode, kind, startedTime, strUserName, strComputerName, strSession);
 	}
 
 	wxString GetSessionArrayHash() const { return wxString(m_sessionArrayHash.str()); }
@@ -77,7 +84,19 @@ public:
 	}
 
 	ibRunMode GetSessionApplication(unsigned int idx) const;
+	int       GetSessionKind(unsigned int idx) const;
+	// Short "Server" / "Client" label derived from (runMode, kind):
+	//   Web runtime + kind=WebClient (100) → "Client"
+	//   Web runtime + kind=WebServer (5) or legacy 0 → "Server"
+	//   Any desktop runtime → "Client"
+	// Used by designer's Active Users dialog.
+	wxString  GetSessionKindDescr(unsigned int idx) const;
 	unsigned int const GetSessionCount() const { return m_listSession.size(); }
+
+	// Back-fill kinds after rows were appended — used by the registry
+	// snapshot builder to tolerate legacy schemas where the `kind`
+	// column lives in a second optional SELECT.
+	void SetKindsFromMap(const std::unordered_map<std::string, int>& kindBySession);
 
 private:
 	ibGuid m_sessionArrayHash;
@@ -102,86 +121,15 @@ struct ibApplicationDataShortUserInfo {
 	wxString m_strUserFullName;
 };
 
-struct ibApplicationDataUserInfo {
-
-	struct ibApplicationDataUserRole {
-		wxString m_strRoleGuid;
-		wxString m_strRoleName;
-		ibRoleID m_miRoleId = wxNOT_FOUND;
-	};
-
-	bool IsOk() const { return !m_strUserGuid.IsEmpty(); }
-
-	bool IsSetPassword() const { return !m_strUserName.IsEmpty() && !m_strUserPassword.IsEmpty(); }
-	bool IsSetRole() const { return m_roleArray.size() > 0; }
-	bool IsSetLanguage() const { return !m_strLanguageGuid.IsEmpty() && !m_strLanguageCode.IsEmpty(); }
-
-	//User info 
-	wxString m_strUserGuid;
-	wxString m_strUserName;
-	wxString m_strUserFullName;
-	wxString m_strUserPassword;
-
-	//Role info 
-	std::vector<ibApplicationDataUserRole> m_roleArray;
-
-	//Language info 
-	wxString m_strLanguageGuid;
-	wxString m_strLanguageName;
-	wxString m_strLanguageCode;
-};
+// ibApplicationDataUserInfo moved to backend/userInfo.h so ibSession
+// can reach it without pulling all of appData.h. Include kept for source
+// compatibility — call sites that already saw the struct through appData.h
+// continue to do so.
+#include "backend/userInfo.h"
 #pragma endregion
 
 // This class is a singleton class.
 class BACKEND_API ibApplicationData {
-
-#pragma region session  
-	class ibApplicationDataSessionUpdater : public wxThread {
-	public:
-		ibApplicationDataSessionUpdater(ibApplicationData* application, const ibGuid& session);
-		virtual ~ibApplicationDataSessionUpdater();
-		bool InitSessionUpdater();
-		void StartSessionUpdater();
-		const ibApplicationDataSessionArray GetSessionArray() const;
-	protected:
-
-		virtual ExitCode Entry();
-
-		// This one is called by Delete() before actually deleting the thread and
-		// is executed in the context of the thread that called Delete().
-		virtual void OnDelete() { m_sessionUpdaterLoop = false; }
-
-		// This one is called by Kill() before killing the thread and is executed
-		// in the context of the thread that called Kill().
-		virtual void OnKill() { m_sessionUpdaterLoop = false; }
-
-		// called when the thread exits - in the context of this thread
-		//
-		// NB: this function will not be called if the thread is Kill()ed
-		virtual void OnExit() { m_sessionUpdaterLoop = false; }
-
-	private:
-
-		void Job_ClearLostSession();
-		void Job_CalcActiveSession();
-		void Job_UpdateActiveSession();
-
-		void ClearLostSessionUpdater();
-		bool VerifySessionUpdater() const;
-
-		// Cross-thread flags — worker writes, main thread reads (and vice versa).
-		// Plain bool here was UB by the C++11 memory model.
-		std::atomic<bool> m_sessionCreated;
-		std::atomic<bool> m_sessionStarted;
-		std::atomic<bool> m_sessionUpdaterLoop;
-
-		ibApplicationDataSessionArray m_sessionArray;
-		std::shared_ptr<ibDatabaseLayer> m_session_db;
-		const ibGuid m_session;
-		wxDateTime m_currentDateTime;
-		static wxCriticalSection ms_sessionLocker;
-	};
-#pragma endregion
 
 	ibApplicationData(ibRunMode runMode);
 
@@ -219,16 +167,52 @@ public:
 		return nullptr;
 	}
 
-#pragma region execute 
-	long RunApplication(const wxString& strAppName, bool searchDebug = true) const;
-	long RunApplication(const wxString& strAppName, const wxString& strUserName, const wxString& strUserPassword, bool searchDebug = true) const;
+	// Bounded pool of additional ibDatabaseLayer clones for worker
+	// threads that need their own connection (heartbeat writer, SSE
+	// streams, future per-session script workers). The primary m_db
+	// returned by GetDatabaseLayer() stays the single shared handle
+	// for the main thread. Pool allocates lazily on first Checkout
+	// and is bounded; Init/Shutdown are driven by CreateFile/Server
+	// and DestroyAppDataEnv respectively. Borrowed pointer — lifetime
+	// tied to ibApplicationData; never null while s_instance is alive.
+	static class ibConnectionPool* GetConnectionPool() {
+		return s_instance != nullptr ? s_instance->m_connectionPool.get() : nullptr;
+	}
+
+#pragma region execute
+	// RunApplication overloads spawn any OES bin (enterprise / designer /
+	// daemon / codeRunner / wenterprise-server). Connection flags are
+	// emitted in unified `--flag=value` form which every bin's parser
+	// accepts.
+	// useManifest=true switches to wenterprise-server's bind-handshake
+	// protocol: --port=0 --manifest=<tempfile>, poll manifest for the
+	// real URL and open the default browser. Returns pid.
+	long RunApplication(const wxString& strAppName,
+		bool searchDebug = true,
+		bool useManifest = false) const;
+	long RunApplication(const wxString& strAppName,
+		const wxString& strUserName,
+		const wxString& strUserPassword,
+		bool searchDebug = true,
+		bool useManifest = false) const;
+
+	// Append `--port=0 --manifest=<tempfile>` to cmd, spawn detached,
+	// poll the manifest for up to 5s and open the default browser at the
+	// reported URL. Returns pid on spawn-ok, 0 on failure. Exposed for
+	// callers that build the cmd from external connection data (e.g.
+	// launcher picks from a saved IB list, not the appData singleton).
+	static long SpawnWebServerWithManifest(wxString cmd);
 #pragma endregion
 
 	ibRunMode GetAppMode() const { return m_runMode; }
 
 	bool LauncherMode() const { return m_runMode == ibRunMode::eLAUNCHER_MODE; }
 	bool DesignerMode() const { return m_runMode == ibRunMode::eDESIGNER_MODE; }
-	bool EnterpriseMode() const { return m_runMode == ibRunMode::eENTERPRISE_MODE; }
+	bool EnterpriseMode() const {
+		return m_runMode == ibRunMode::eENTERPRISE_MODE
+			|| m_runMode == ibRunMode::eWEB_ENTERPRISE_MODE;
+	}
+	bool WebEnterpriseMode() const { return m_runMode == ibRunMode::eWEB_ENTERPRISE_MODE; }
 	bool ServiceMode() const { return m_runMode == ibRunMode::eSERVICE_MODE; }
 
 	inline wxString GetRunModeDescr(const ibRunMode& mode) const {
@@ -239,7 +223,9 @@ public:
 		case eDESIGNER_MODE:
 			return _("Designer");
 		case eENTERPRISE_MODE:
-			return _("Thick client");
+			return _("Thick client (GUI)");
+		case eWEB_ENTERPRISE_MODE:
+			return _("Web server");
 		case eSERVICE_MODE:
 			return _("Daemon");
 		}
@@ -265,12 +251,47 @@ public:
 
 	inline wxString GetDatabaseModeDescr() const { return GetDatabaseModeDescr(m_dbMode); }
 
+	// Legacy wrapper — verify creds AND install the resolved user info on
+	// the singleton + current session. Kept for existing callers
+	// (StartSession desktop path, ibWebSession::Login). Prefer the split
+	// below in new code: AuthenticateUser() is the pure verifier that
+	// ProcessAttach in ibSessionRegistry calls without touching singleton
+	// state, then the registry's handler drives installation into the
+	// target ibSession directly.
 	bool AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword);
+
+	// Pure credential check. Looks up the user, verifies the password
+	// (PBKDF2 with silent MD5→PBKDF2 upgrade via NeedsRehash), fills
+	// `outInfo` on success, and does NOT mutate singleton / current
+	// session state. Returns true for open-access mode too (empty
+	// sys_user populating + any creds → pass). Safe to call from the
+	// registry thread without a SessionScope.
+	bool AuthenticateUser(const wxString& strUserName,
+	                      const wxString& strUserPassword,
+	                      ibApplicationDataUserInfo& outInfo);
+
+	// Commit side: install a previously-verified UserInfo onto the
+	// legacy singleton slots (m_userInfo, m_sessionRawPassword) AND the
+	// current SessionScope's ibSession (dual-write while call sites
+	// migrate). `rawPassword` is cached for Designer "Start debugging"
+	// re-attach — pass the plain-text the caller received; pass empty
+	// to skip the raw-password cache (e.g. token-based flows).
+	void InstallUser(const ibApplicationDataUserInfo& info,
+	                 const wxString& rawPassword);
 
 	bool ExclusiveMode() const { return m_exclusiveMode; }
 
-	const wxString& GetUserName() const { return m_userInfo.m_strUserName; }
-	const wxString& GetUserPassword() const { return m_userInfo.m_strUserFullName; }
+	// User-identity accessors — session-aware. Readers see the user info
+	// of the current thread's `ibSession` when a SessionScope is active
+	// (per-cookie on web, main user session on desktop); they fall back
+	// to the process singleton `m_userInfo` only when no session is
+	// scoped (pre-auth bootstrap, standalone codeRunner). This closes
+	// the multi-tab "last login wins" bug described in
+	// project_web_session_bug.md.
+	const wxString& GetUserName()     const;
+	const wxString& GetUserPassword() const;
+	const ibApplicationDataUserInfo& GetUserInfo() const;
+
 	wxString GetComputerName() const { return m_strComputer; }
 	wxDateTime GetStartedDate() const { return m_startedDate; }
 
@@ -278,22 +299,25 @@ public:
 
 	std::vector<ibApplicationDataShortUserInfo> GetAllowedUser() const;
 
-#pragma region session  
+#pragma region session
 
-	const ibApplicationDataSessionArray GetSessionArray() const { return m_sessionUpdater->GetSessionArray(); }
+	// Cluster-wide sys_session snapshot, refreshed by the registry
+	// background sweep (~3s). Defined out-of-line in appData.cpp so this
+	// header doesn't need to pull sessionRegistry.h.
+	ibApplicationDataSessionArray GetSessionArray() const;
 
 	class ibPluginManager* GetPluginManager() const { return m_pluginManager.get(); }
 
-#pragma endregion 
+#pragma endregion
 
-	const std::vector<ibApplicationDataUserInfo::ibApplicationDataUserRole>& GetUserRoleArray() const { return m_userInfo.m_roleArray; }
+	const std::vector<ibApplicationDataUserInfo::ibApplicationDataUserRole>& GetUserRoleArray() const;
 
-#pragma region language  
+#pragma region language
 
-	ibGuid GetUserLanguageGuid() const { return m_userInfo.m_strLanguageGuid; }
-	wxString GetUserLanguageCode() const { return m_userInfo.m_strLanguageCode; }
+	ibGuid   GetUserLanguageGuid() const;
+	wxString GetUserLanguageCode() const;
 
-#pragma endregion 
+#pragma endregion
 
 	static bool IsForceExit() {
 		wxCriticalSectionLocker enter(m_cs_force_exit);
@@ -346,13 +370,14 @@ private:
 	bool LoadUserInfoFromBuffer(wxMemoryBuffer& buffer);
 	bool SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const;
 
-	wxString ComputeMd5() const { return ComputeMd5(m_userInfo.m_strUserPassword); }
+	wxString ComputeMd5() const;
 	wxString ComputeMd5(const wxString& userPassword) const;
 
 	static bool TableAlreadyCreated();
 	static void CreateTableUser();
 	static void CreateTableSession();
 	static void CreateTableEvent();
+	static void MigrateTableSession();
 
 	static bool ClearTableUser();
 
@@ -383,8 +408,24 @@ private:
 	static wxCriticalSection m_cs_force_exit;
 
 	std::shared_ptr<ibDatabaseLayer> m_db;
-	std::shared_ptr<ibApplicationDataSessionUpdater> m_sessionUpdater;
 	std::unique_ptr<class ibPluginManager> m_pluginManager;
+	// Additional-connection pool — see GetConnectionPool().
+	std::unique_ptr<class ibConnectionPool> m_connectionPool;
+
+	// Main-thread SessionScope — bound to the single user session on
+	// the desktop runtime. Alive between Connect()/Disconnect() so all
+	// script execution on the main thread sees ibSession::Current()
+	// rather than falling through to the legacy descriptor-owned
+	// ProcUnit. Web processes don't use this field (per-request scopes
+	// are set inside worker lambdas).
+	std::unique_ptr<class SessionScope> m_mainThreadScope;
+
+	// Main-thread session ticket from ibSessionRegistry::Connect(). Owns
+	// the ibSession lifetime; dtor submits Remove@Urgent so the DELETE
+	// of the sys_session row runs on the registry thread. Holds the
+	// ibSessionTicket forward-declared type; defined out-of-line in
+	// appData.cpp where sessionTicket.h is fully visible.
+	std::unique_ptr<class ibSessionTicket> m_mainTicket;
 
 	bool m_connected_to_db = false;
 	bool m_created_metadata = false;

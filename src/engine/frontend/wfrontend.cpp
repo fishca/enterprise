@@ -112,7 +112,7 @@ public:
 			if (m_sessions.find(id) != m_sessions.end())
 				return id;
 		}
-		auto session = std::make_unique<ibWebSession>(id, std::string());
+		auto session = std::make_shared<ibWebSession>(id, std::string());
 		if (!session->OnInit())
 			return std::string();
 
@@ -123,12 +123,16 @@ public:
 
 	bool Login(const std::string& id, const std::string& user, const std::string& password)
 	{
-		ibWebSession* s = nullptr;
+		// shared_ptr copy under lock keeps the session alive for the
+		// whole Login — a racing Destroy (e.g. pagehide beacon on
+		// reload) erases from the map but our copy keeps ibWebSession
+		// allocated until we return.
+		std::shared_ptr<ibWebSession> s;
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
 			auto it = m_sessions.find(id);
 			if (it == m_sessions.end()) return false;
-			s = it->second.get();
+			s = it->second;
 		}
 		return s->Login(user, password);
 	}
@@ -141,7 +145,7 @@ public:
 
 	void Destroy(const std::string& id)
 	{
-		std::unique_ptr<ibWebSession> dying;
+		std::shared_ptr<ibWebSession> dying;
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
 			auto it = m_sessions.find(id);
@@ -152,6 +156,11 @@ public:
 		}
 		// Run OnExit outside the lock so per-session teardown (which may
 		// touch backend state) does not serialise every other request.
+		// Any concurrent handler thread that looked up this session
+		// before the erase still holds its own shared_ptr; `dying` here
+		// may be NOT the last reference — the real destruction happens
+		// once every borrower drops. That's safe because OnExit is
+		// idempotent-on-already-exited and the dtor handles the rest.
 		if (dying) dying->OnExit();
 	}
 
@@ -180,12 +189,16 @@ public:
 	// so we don't have to touch the filesystem.
 	std::string TabIconPNG(const std::string& id, int tabIndex) const
 	{
+		// shared_ptr keeper — see SessionManager::Login comment for why
+		// raw pointer outside the lock is unsafe.
+		std::shared_ptr<ibWebSession> keeper;
 		ibWebDocChildFrame* tab = nullptr;
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
 			auto it = m_sessions.find(id);
 			if (it == m_sessions.end()) return std::string();
-			ibWebApplication* app = it->second->App();
+			keeper = it->second;
+			ibWebApplication* app = keeper->App();
 			if (app == nullptr) return std::string();
 			ibWebFrame* frame = app->GetFrame();
 			if (frame == nullptr) return std::string();
@@ -233,7 +246,7 @@ public:
 
 	void Clear()
 	{
-		std::unordered_map<std::string, std::unique_ptr<ibWebSession>> dying;
+		std::unordered_map<std::string, std::shared_ptr<ibWebSession>> dying;
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
 			dying.swap(m_sessions);
@@ -442,7 +455,12 @@ private:
 	}
 
 	mutable std::mutex m_mutex;
-	std::unordered_map<std::string, std::unique_ptr<ibWebSession>> m_sessions;
+	// shared_ptr (not unique_ptr) so handler methods can grab a copy
+	// under m_mutex and keep the session alive while they work outside
+	// the lock. Destroy() removing the map entry no longer races with
+	// in-flight Login / FireAction / OpenForm — the session survives
+	// until every borrower drops its copy.
+	std::unordered_map<std::string, std::shared_ptr<ibWebSession>> m_sessions;
 
 	// Sweep-thread plumbing. m_sweepCv lets the dtor unblock the
 	// in-flight `wait_for` instead of waiting the full interval.
@@ -815,12 +833,14 @@ std::string OpenFormInSession(ibWebSession* session, int metaID)
 
 std::string SessionManager::OpenForm(const std::string& id, int metaID)
 {
+	std::shared_ptr<ibWebSession> keeper;
 	ibWebSession* s = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		auto it = m_sessions.find(id);
 		if (it == m_sessions.end()) return "{}";
-		s = it->second.get();
+		keeper = it->second;
+		s = keeper.get();
 	}
 	// Out of the lock — form creation touches appData singletons and
 	// may take non-trivial time; other sessions shouldn't serialise
@@ -894,12 +914,14 @@ std::string FireActionInSession(ibWebSession* session, int controlID)
 
 std::string SessionManager::FireAction(const std::string& id, int controlID)
 {
+	std::shared_ptr<ibWebSession> keeper;
 	ibWebSession* s = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		auto it = m_sessions.find(id);
 		if (it == m_sessions.end()) return "{}";
-		s = it->second.get();
+		keeper = it->second;
+		s = keeper.get();
 	}
 	return FireActionInSession(s, controlID);
 }
@@ -939,12 +961,14 @@ std::string FireKindInSession(ibWebSession* session, int controlID,
 std::string SessionManager::FireKind(const std::string& id, int controlID,
 	const std::string& kind)
 {
+	std::shared_ptr<ibWebSession> keeper;
 	ibWebSession* s = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		auto it = m_sessions.find(id);
 		if (it == m_sessions.end()) return "{}";
-		s = it->second.get();
+		keeper = it->second;
+		s = keeper.get();
 	}
 	return FireKindInSession(s, controlID, kind);
 }
@@ -985,12 +1009,14 @@ std::string FireTextChangeInSession(ibWebSession* session, int controlID,
 std::string SessionManager::FireTextChange(const std::string& id, int controlID,
 	const std::string& newValue)
 {
+	std::shared_ptr<ibWebSession> keeper;
 	ibWebSession* s = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		auto it = m_sessions.find(id);
 		if (it == m_sessions.end()) return "{}";
-		s = it->second.get();
+		keeper = it->second;
+		s = keeper.get();
 	}
 	return FireTextChangeInSession(s, controlID, newValue);
 }
@@ -1028,12 +1054,14 @@ std::string FireToggleInSession(ibWebSession* session, int controlID, bool check
 
 std::string SessionManager::FireToggle(const std::string& id, int controlID, bool checked)
 {
+	std::shared_ptr<ibWebSession> keeper;
 	ibWebSession* s = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		auto it = m_sessions.find(id);
 		if (it == m_sessions.end()) return "{}";
-		s = it->second.get();
+		keeper = it->second;
+		s = keeper.get();
 	}
 	return FireToggleInSession(s, controlID, checked);
 }
@@ -1062,12 +1090,14 @@ std::string SessionManager::ActiveHostJSON(const std::string& id)
 	// thread and could read a half-mutated wxString mid-walk — user
 	// saw heap corruption in ConvertedBuffer::Extend when typing +
 	// the 2s poll fired concurrently (stack trace 2026-04-19).
+	std::shared_ptr<ibWebSession> keeper;
 	ibWebSession* s = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		auto it = m_sessions.find(id);
 		if (it == m_sessions.end()) return "{}";
-		s = it->second.get();
+		keeper = it->second;
+		s = keeper.get();
 	}
 	if (s == nullptr || !s->IsAuthenticated()) return "{}";
 	ibWebApplication* app = s->App();
@@ -1300,24 +1330,28 @@ std::string CloseTabInSession(ibWebSession* session, int tabIndex)
 
 std::string SessionManager::ActivateTab(const std::string& id, int tabIndex)
 {
+	std::shared_ptr<ibWebSession> keeper;
 	ibWebSession* s = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		auto it = m_sessions.find(id);
 		if (it == m_sessions.end()) return "{}";
-		s = it->second.get();
+		keeper = it->second;
+		s = keeper.get();
 	}
 	return ActivateTabInSession(s, tabIndex);
 }
 
 std::string SessionManager::CloseTab(const std::string& id, int tabIndex)
 {
+	std::shared_ptr<ibWebSession> keeper;
 	ibWebSession* s = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		auto it = m_sessions.find(id);
 		if (it == m_sessions.end()) return "{}";
-		s = it->second.get();
+		keeper = it->second;
+		s = keeper.get();
 	}
 	return CloseTabInSession(s, tabIndex);
 }

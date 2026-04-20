@@ -71,9 +71,6 @@
     <ClCompile Include="visualView\visualHostClient.cpp">
       <Filter>visualView</Filter>
     </ClCompile>
-    <ClCompile Include="visualView\visualHostClient_impl.cpp">
-      <Filter>visualView</Filter>
-    </ClCompile>
     <ClCompile Include="visualView\visualHost.cpp">
       <Filter>visualView</Filter>
     </ClCompile>

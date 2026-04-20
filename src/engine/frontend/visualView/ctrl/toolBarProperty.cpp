@@ -13,6 +13,12 @@ void ibValueToolbar::OnPropertySelected(ibProperty* property)
 
 void ibValueToolbar::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
+#ifndef OES_USE_WEB
+	// Designer-only: changing the Tools Source re-generates the tool
+	// children from the new source's action collection. Uses the
+	// visual-host designer context (g_visualHostContext) and pops a
+	// modal wxMessageBox; neither exists on web (no designer + no
+	// modal channel).
 	if (m_actSource == property) {
 
 		const int answer = wxMessageBox(
@@ -55,6 +61,7 @@ void ibValueToolbar::OnPropertyChanged(ibProperty* property, const wxVariant& ol
 			g_visualHostContext->RefreshEditor();
 		}
 	}
+#endif
 
 	ibValueWindow::OnPropertyChanged(property, oldValue, newValue);
 }

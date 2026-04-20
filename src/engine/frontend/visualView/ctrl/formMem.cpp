@@ -1,6 +1,11 @@
 #include "form.h"
 #include "backend/metaCollection/metaFormObject.h"
 
+#ifdef OES_USE_WEB
+#include <iostream>
+#include <iomanip>
+#endif
+
 bool ibValueForm::LoadForm(const wxMemoryBuffer& formData)
 {
 	if (formData.GetDataLen() == 0)
@@ -55,6 +60,21 @@ bool ibValueForm::LoadChildForm(ibReaderMemory& readerData, ibValueFrame* contro
 				break;
 			wxASSERT(clsid != 0);
 			ibValueFrame* newControl = ibValueForm::NewObject(clsid, controlParent, false);
+#ifdef OES_USE_WEB
+			if (newControl == nullptr) {
+				std::cerr << "[LoadChildForm] NewObject returned nullptr for clsid=0x"
+					<< std::hex << clsid << std::dec
+					<< " — unregistered control type; skipping subtree" << std::endl;
+				// Skip this control's subtree so we don't crash in LoadControl
+				// with a null this, and so the remaining siblings can still load.
+				prevReaderMetaMemory = readerMetaMemory;
+				continue;
+			}
+#else
+			wxASSERT_MSG(newControl != nullptr, wxT("ibValueForm::LoadChildForm: unregistered clsid"));
+			if (newControl == nullptr)
+				return false;
+#endif
 			//newControl->SetReadOnly(m_propEnabled);
 			std::shared_ptr <ibReaderMemory>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 			wxASSERT_MSG(readerDataMemory, wxT("ibValueForm::LoadChildForm: eDataBlock missing for child control"));

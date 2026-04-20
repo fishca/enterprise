@@ -1,5 +1,9 @@
 #include "widgets.h"
+#ifdef OES_USE_WEB
+#include "frontend/web/webWindow.h"
+#else
 #include "frontend/win/ctrls/controlCheckboxEditor.h"
+#endif
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueCheckbox, ibValueWindow)
 
@@ -77,14 +81,21 @@ wxString ibValueCheckbox::GetControlTitle() const
 	return wxEmptyString;
 }
 
-wxObject* ibValueCheckbox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* ibValueCheckbox::Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
-	ibControlCheckbox* checkbox = new wxControlNavigationCheckbox(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	checkbox->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &ibValueCheckbox::OnClickedCheckbox, this);
+	(void)visualHost;
+#ifdef OES_USE_WEB
+	(void)wxparent;
+	auto* checkbox = new ibWebCheckBox(GetControlID());
+#else
+	auto* checkbox = new wxControlNavigationCheckbox(
+		wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+#endif
+	checkbox->Bind(wxEVT_CHECKBOX, &ibValueCheckbox::OnClickedCheckbox, this);
 	return checkbox;
 }
 
-void ibValueCheckbox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+void ibValueCheckbox::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
 {
 }
 
@@ -92,25 +103,31 @@ void ibValueCheckbox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisual
 
 void ibValueCheckbox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	ibControlCheckbox* checkbox = dynamic_cast<ibControlCheckbox*>(wxobject);
+	(void)visualHost;
+#ifdef OES_USE_WEB
+	ibWebCheckBox* checkbox = static_cast<ibWebCheckBox*>(wxobject);
+#else
+	ibControlCheckbox* checkbox = static_cast<ibControlCheckbox*>(wxobject);
+#endif
 
 	if (checkbox != nullptr) {
-
-		if (!m_propertySource->IsEmptyProperty()) {
+		// Source-backed value refresh — shared metadata work.
+		if (!m_propertySource->IsEmptyProperty() && m_formOwner != nullptr) {
 			ibSourceDataObject* srcObject = m_formOwner->GetSourceObject();
-			if (srcObject != nullptr) {
+			if (srcObject != nullptr)
 				srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
-			}
 		}
 
 		checkbox->SetLabel(GetControlTitle());
-		if (!appData->DesignerMode()) {
+#ifdef OES_USE_WEB
+		checkbox->SetValue(m_selValue.GetBoolean());
+#else
+		if (!appData->DesignerMode())
 			checkbox->SetValue(m_selValue.GetBoolean());
-		}
 		checkbox->SetWindowStyle(
-			m_propertyTitleLocation->GetValueAsInteger() == 1 ? wxALIGN_LEFT :
-			wxALIGN_RIGHT
-		);
+			m_propertyTitleLocation->GetValueAsInteger() == 1 ? wxALIGN_LEFT
+			                                                  : wxALIGN_RIGHT);
+#endif
 	}
 
 	UpdateWindow(checkbox);
@@ -118,10 +135,15 @@ void ibValueCheckbox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 
 void ibValueCheckbox::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
-	ibControlCheckbox* checkbox = dynamic_cast<ibControlCheckbox*>(obj);
+#ifdef OES_USE_WEB
+	(void)obj;
+	(void)visualHost;
+#else
+	ibControlCheckbox* checkbox = static_cast<ibControlCheckbox*>(obj);
 	if (checkbox != nullptr) {
 		checkbox->Unbind(wxEVT_COMMAND_CHECKBOX_CLICKED, &ibValueCheckbox::OnClickedCheckbox, this);
 	}
+#endif
 }
 
 //*******************************************************************
@@ -152,10 +174,16 @@ bool ibValueCheckbox::SetControlValue(const ibValue& varControlVal)
 
 	m_selValue = varControlVal.GetBoolean();
 
-	ibControlCheckbox* checkboxCtrl = dynamic_cast<ibControlCheckbox*>(GetWxObject());
+#ifdef OES_USE_WEB
+	// Web: the next CreateAndUpdateVisualHost pass re-reads m_selValue
+	// from the source and emits it as the new JSON. No live node to
+	// poke — the rebuild is stateless.
+#else
+	ibControlCheckbox* checkboxCtrl = static_cast<ibControlCheckbox*>(GetWxObject());
 	if (checkboxCtrl != nullptr) {
 		checkboxCtrl->SetValue(varControlVal.GetBoolean());
 	}
+#endif
 
 	return true;
 }

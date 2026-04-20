@@ -102,7 +102,7 @@ bool ibFrontendDocMDIFrame::Create(const wxString& title,
 	return true;
 }
 
-wxWindow* ibFrontendDocMDIFrame::CreateChildFrame(ibMetaView* view, const wxPoint& pos, const wxSize& size, long style)
+ibFrontendWindow* ibFrontendDocMDIFrame::CreateChildFrame(ibMetaView* view, const wxPoint& pos, const wxSize& size, long style)
 {
 	// create a child valueForm of appropriate class for the current mode
 	ibMetaDocument* document = view->GetDocument();

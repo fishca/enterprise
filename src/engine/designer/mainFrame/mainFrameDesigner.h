@@ -17,6 +17,8 @@ enum {
 
 	wxID_DESIGNER_DEBUG_START = 10000,
 	wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING,
+	wxID_DESIGNER_DEBUG_START_WEB,
+	wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING_WEB,
 	wxID_DESIGNER_DEBUG_ATTACH_FOR_DEBUGGING,
 	wxID_DESIGNER_DEBUG_EDIT_POINT,
 	wxID_DESIGNER_DEBUG_STEP_OVER,
@@ -126,6 +128,8 @@ protected:
 	//events 
 	void OnStartDebug(wxCommandEvent& WXUNUSED(event));
 	void OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(event));
+	void OnStartDebugWeb(wxCommandEvent& WXUNUSED(event));
+	void OnStartDebugWithoutDebugWeb(wxCommandEvent& WXUNUSED(event));
 	void OnAttachForDebugging(wxCommandEvent& WXUNUSED(event));
 
 	void OnOpenConfiguration(wxCommandEvent& event);

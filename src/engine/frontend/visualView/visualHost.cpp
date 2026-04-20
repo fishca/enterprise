@@ -5,6 +5,316 @@
 
 #include "visualHost.h"
 
+#ifdef OES_USE_WEB
+
+#include "ctrl/frame.h"
+#include "ctrl/form.h"
+#include "ctrl/sizer.h"
+#include "ctrl/window.h"
+#include "formdefs.h"
+#include "frontend/web/webSizer.h"
+
+namespace {
+
+// Recursive walker — stays inside this TU. Parent is passed as the
+// typed pair (parentWindow, parentSizer) with exactly one non-null —
+// lets the branches use static_cast on the created object since
+// ibValueFrame::GetComponentType already discriminates the subtype
+// (COMPONENT_TYPE_FRAME / _WINDOW → ibWebWindow,
+// COMPONENT_TYPE_SIZER → ibWebSizer, _SIZERITEM transparent).
+//
+// Controls that haven't been ported fall through (GetComponentType
+// says one thing but Create returns ibNoObject) — the null-check on
+// `created` catches that; static_cast below only runs when it's safe.
+void AppendChildControls(ibValueFrame* node,
+	ibWebWindow* parentWindow, ibWebSizer* parentSizer,
+	ibVisualHost* host, const ibWebSizer::AddParams* pendingParams)
+{
+	if (node == nullptr || (parentWindow == nullptr && parentSizer == nullptr))
+		return;
+	for (unsigned int i = 0; i < node->GetChildCount(); ++i) {
+		ibValueFrame* child = dynamic_cast<ibValueFrame*>(node->GetChild(i));
+		if (child == nullptr)
+			continue;
+
+		const int componentType = child->GetComponentType();
+
+		// SIZERITEM: transparent carrier of Add params (proportion /
+		// flag / border / stretch). Captured and forwarded into the
+		// grandchild's Add/SetSizer. No visual node created.
+		if (componentType == COMPONENT_TYPE_SIZERITEM) {
+			auto* sizerItem = static_cast<ibValueSizerItem*>(child);
+			ibWebSizer::AddParams params;
+			params.proportion = sizerItem->GetProportion();
+			params.flag       = static_cast<int>(sizerItem->GetFlagBorder())
+			                   | static_cast<int>(sizerItem->GetFlagState());
+			params.border     = sizerItem->GetBorder();
+			AppendChildControls(child, parentWindow, parentSizer, host, &params);
+			continue;
+		}
+
+		// Create() expects ibFrontendWindow* (= ibWebWindow* on web).
+		// If we're sitting inside a sizer, walk up its owner chain
+		// to the nearest window (sizers don't own widgets; they
+		// belong to a window via SetSizer).
+		ibWebWindow* createParent = parentWindow;
+		if (createParent == nullptr) {
+			for (ibWebSizer* s = parentSizer; s != nullptr; ) {
+				wxObject* owner = s->GetOwner();
+				if (auto* w = dynamic_cast<ibWebWindow*>(owner)) {
+					createParent = w;
+					break;
+				}
+				s = dynamic_cast<ibWebSizer*>(owner);
+			}
+		}
+
+		// Ensure the ibValueFrame owns a non-zero controlId BEFORE the
+		// web shim is built. Otherwise ibWebWindow's own auto-id pool
+		// (starting at 1'000'000) steps in, the browser sees that id in
+		// node.id, but form->FindControlByID searches ibValueFrame ids
+		// only — the click POST /action/<id> lookup misses and commands
+		// silently no-op. Metadata-saved ids keep their values; only
+		// controls that loaded with m_controlId == 0 get freshly minted.
+		if (child->GetControlID() == 0 && child->GetOwnerForm() != nullptr)
+			child->GenerateNewID();
+		wxObject* created = child->Create(createParent, host);
+
+		// ibNoObject is the "empty" sentinel ibValueFrame::Create
+		// returns when a subclass isn't ported to web (base returns
+		// `new ibNoObject`). It's non-null but not an ibWebWindow /
+		// ibWebSizer — static_cast below would be UB. One dynamic_cast
+		// here is the safety filter; the rest of the path is then
+		// invariant-safe and uses static_cast.
+		if (created == nullptr || dynamic_cast<ibNoObject*>(created) != nullptr) {
+			AppendChildControls(child, parentWindow, parentSizer, host, nullptr);
+			continue;
+		}
+
+		ibWebWindow* nextWindow = parentWindow;
+		ibWebSizer*  nextSizer  = parentSizer;
+
+		switch (componentType) {
+		case COMPONENT_TYPE_FRAME:
+		case COMPONENT_TYPE_WINDOW:
+		// COMPONENT_TYPE_ABSTRACT components (toolbar items /
+		// separators) don't own a wx widget on desktop — their
+		// OnCreated uses the parent toolbar's AddTool directly —
+		// but on web we do render them as children of the parent
+		// container (ibWebToolbar). Their Create override returns
+		// an ibWebWindow-derived render shim.
+		case COMPONENT_TYPE_ABSTRACT: {
+			// Component type says it's a window; Create for this type
+			// returns an ibWebWindow subclass on web by construction.
+			// The controlId is set inside Create (the ibValueXxx knows
+			// its own GetControlID), so the walker doesn't stamp it.
+			ibWebWindow* win = static_cast<ibWebWindow*>(created);
+			if (parentWindow != nullptr)
+				win->SetParent(parentWindow);
+			else if (parentSizer != nullptr)
+				parentSizer->Add(win,
+					pendingParams ? *pendingParams : ibWebSizer::AddParams{});
+			host->AppendInnerControl(child, win);   // windows only
+			nextWindow = win;
+			nextSizer  = nullptr;
+			break;
+		}
+		case COMPONENT_TYPE_SIZER: {
+			ibWebSizer* siz = static_cast<ibWebSizer*>(created);
+			if (parentWindow != nullptr)
+				parentWindow->SetSizer(siz);
+			else if (parentSizer != nullptr)
+				parentSizer->Add(siz,
+					pendingParams ? *pendingParams : ibWebSizer::AddParams{});
+			nextWindow = nullptr;
+			nextSizer  = siz;
+			break;
+		}
+		default:
+			// Unknown / unported component type — no web node to
+			// attach. Descend with the parent we already had so any
+			// future transparent subtypes still get walked.
+			break;
+		}
+
+		// Self-Update: push property values into the raw shim Create
+		// produced. Runs BEFORE recursing into children, so children
+		// see the parent's state already applied.
+		child->Update(created, host);
+
+		// Pending params consumed by the first real Add/SetSizer
+		// above; clear for recursive descent.
+		AppendChildControls(child, nextWindow, nextSizer, host, nullptr);
+
+		// OnCreated / OnUpdated fire AFTER children have fully run
+		// their own Create + Update passes — matches desktop's
+		// GenerateControl order (post-order OnCreated), so parent
+		// hooks can assume their children are wired up.
+		child->OnCreated(created, createParent, host, /*firstCreated*/ true);
+		child->OnUpdated(created, createParent, host);
+	}
+}
+
+} // namespace
+
+bool ibVisualHost::CreateVisualHost()
+{
+	ibValueForm* form = GetValueForm();
+	if (form == nullptr)
+		return false;
+	// Seed a default root ibWebBoxSizer(wxVERTICAL) on the host if the
+	// form hasn't already placed a top-level sizer — mirrors desktop's
+	// GetBackgroundWindow()->SetSizer(new wxBoxSizer(wxVERTICAL)). Keeps
+	// SetOrientation target-addressable: the host always has a BoxSizer
+	// to mutate, even for forms whose root child is a WINDOW. Walker is
+	// still invoked with parentWindow = this (the host), so top-level
+	// WINDOW children keep going through SetParent as before; a top-
+	// level SIZER child still replaces this seeded one via the walker's
+	// `parentWindow->SetSizer(siz)` branch. Net effect: SetOrientation
+	// has something to grab onto on a bare form, and nothing else about
+	// the existing layout flow changes.
+	if (GetSizer() == nullptr)
+		SetSizer(new ibWebBoxSizer(wxVERTICAL));
+	// Apply the form's declared orientation to the root sizer —
+	// mirrors desktop CreateVisualHost which does the same right
+	// after SetCaption. Forms designed with horizontal root layout
+	// (wxHORIZONTAL) then stack children across, not down.
+	SetOrientation(form->GetOrient());
+	// Pass parentSizer = root (parentWindow = nullptr) so top-level
+	// controls get Added to the root sizer, the way desktop feeds
+	// them through GetFrameSizer(). Before this, a WINDOW child
+	// preferred SetParent(host) and ended up as a bare m_children
+	// entry — rendered as a stacked block-level div ignoring the
+	// sizer's orientation. A top-level SIZER child still replaces
+	// the root via the walker's `parentSizer->Add(siz)` branch, and
+	// nested controls follow the same pattern as before.
+	auto* rootSizer = static_cast<ibWebSizer*>(GetSizer());
+	AppendChildControls(form, nullptr, rootSizer, this, nullptr);
+	return true;
+}
+
+namespace {
+// Walk the existing ibValueFrame tree, call Update + OnUpdated on
+// each node that has a matching web shim. Mirrors the desktop
+// RefreshControl pass (per-element property refresh without tearing
+// down the tree). Skips ibValueFrames with no entry in the host's
+// map — those are structural elements (SizerItem) or unported types.
+void UpdateChildControls(ibValueFrame* node, ibVisualHost* host,
+	ibWebWindow* parentWindow)
+{
+	if (node == nullptr) return;
+	for (unsigned int i = 0; i < node->GetChildCount(); ++i) {
+		ibValueFrame* child = dynamic_cast<ibValueFrame*>(node->GetChild(i));
+		if (child == nullptr) continue;
+
+		wxObject* obj = host->GetWxObject(child);
+		ibWebWindow* childWin = dynamic_cast<ibWebWindow*>(obj);
+
+		// Self Update FIRST (pushes fresh properties), children
+		// recurse next, then OnUpdated fires post-order.
+		if (obj != nullptr)
+			child->Update(obj, host);
+
+		UpdateChildControls(child, host,
+			childWin != nullptr ? childWin : parentWindow);
+
+		if (obj != nullptr)
+			child->OnUpdated(obj, parentWindow, host);
+	}
+}
+} // namespace
+
+bool ibVisualHost::UpdateVisualHost()
+{
+	// Refresh pass: walk the tree, invoke Update / OnUpdated on each
+	// live web node. Web shims that want to push fresh property values
+	// into their node override Update (textctrl value, tool caption,
+	// checkbox state, …); no-op implementations leave the node alone,
+	// and the stateless rebuild (ClearVisualHost + CreateVisualHost)
+	// remains available for structural changes that can't be done
+	// in place.
+	ibValueForm* form = GetValueForm();
+	if (form == nullptr)
+		return false;
+	UpdateChildControls(form, this, this);
+	return true;
+}
+
+namespace {
+// Post-order Cleanup pass: children first, then parent — so a control
+// whose Cleanup assumes its children are still reachable sees them
+// before they're wiped. Mirrors desktop ibVisualHost::ClearControl.
+void CleanupChildControls(ibValueFrame* node, ibVisualHost* host)
+{
+	if (node == nullptr) return;
+	for (unsigned int i = 0; i < node->GetChildCount(); ++i) {
+		ibValueFrame* child = dynamic_cast<ibValueFrame*>(node->GetChild(i));
+		if (child == nullptr) continue;
+		CleanupChildControls(child, host);
+		if (wxObject* obj = host->GetWxObject(child))
+			child->Cleanup(obj, host);
+	}
+}
+} // namespace
+
+bool ibVisualHost::ClearVisualHost()
+{
+	// Walker allocates nodes with raw `new` and parents them under the
+	// host — we own them and must delete here before rebuilding,
+	// otherwise each CreateAndUpdate would leak the previous pass's
+	// tree. Before deleting, fire each control's Cleanup so custom
+	// controls see the "about to be removed" hook symmetrical to
+	// Create. Three slots to clear: the ibWebWindow children (direct
+	// siblings), the optional ibWebSizer set via SetSizer, and the
+	// (ibValueFrame → wxObject) index populated by the walker.
+	if (ibValueForm* form = GetValueForm())
+		CleanupChildControls(form, this);
+	m_baseObjects.clear();      // wipe after Cleanup so callbacks can still look up siblings
+	while (!GetChildren().empty()) {
+		ibWebWindow* c = GetChildren().back();
+		c->SetParent(nullptr);  // detaches from our m_children
+		delete c;
+	}
+	SetSizer(nullptr);          // deletes the previous pass's sizer tree
+	return true;
+}
+
+ibValueFrame* ibVisualHost::GetObjectBase(const wxObject* wxobject) const
+{
+	// Reverse index — iterate m_baseObjects; only desktop has call
+	// sites today. Kept defined on web so the virtual's symbol
+	// exists for anything that links against both.
+	for (const auto& kv : m_baseObjects) {
+		if (kv.second == wxobject)
+			return kv.first;
+	}
+	return nullptr;
+}
+
+wxObject* ibVisualHost::GetWxObject(const ibValueFrame* baseobject) const
+{
+	auto it = m_baseObjects.find(const_cast<ibValueFrame*>(baseobject));
+	return it != m_baseObjects.end() ? it->second : nullptr;
+}
+
+// Incremental lifecycle hooks — no-ops on web. The script-side caller
+// mutated the ibValueFrame tree; the next HTTP response's
+// ClearVisualHost + CreateVisualHost picks up the change. Defined so
+// shared caller code (ibValueForm::CreateControl / RemoveControl,
+// ibValueModelTableBox) doesn't need #ifdef guards.
+void ibVisualHost::CreateControl(ibValueFrame*, ibValueFrame*, bool) {}
+void ibVisualHost::UpdateControl(ibValueFrame*, ibValueFrame*)       {}
+void ibVisualHost::RemoveControl(ibValueFrame*, ibValueFrame*)       {}
+void ibVisualHost::ClearControl(ibValueFrame*, bool)                 {}
+
+#else  // !OES_USE_WEB
+// Everything below is the desktop (wxScrolledCanvas-based) implementation
+// of ibVisualHost. The web build reuses the class name but with a
+// stripped-down ibWebWindow-based declaration (see visualHost.h), so
+// none of the wx-specific implementation applies there. Rather than
+// rewrite each method as a #ifdef sandwich, the whole desktop engine
+// of the host stays here and is excluded from wfrontend.dll.
+
 #include "ctrl/control.h"
 #include "ctrl/form.h"
 
@@ -223,20 +533,21 @@ void ibVisualHost::GenerateControl(ibValueFrame* obj, wxWindow* wxparent, wxObje
 	switch (obj->GetComponentType())
 	{
 	case COMPONENT_TYPE_WINDOW:
-		if (obj->GetClassName() == wxT("NotebookPage")) {
-			if (ibPanelPage* pageWindow = wxDynamicCast(createdObject, ibPanelPage))
-				createdWindow = pageWindow;
-		}
-		else {
-			createdWindow = wxDynamicCast(createdObject, wxWindow);
-		}
+		// Component-type + classname discriminators already narrowed
+		// the type at compile time — Create for a COMPONENT_TYPE_WINDOW
+		// always returns a wxWindow-derived object, and the NotebookPage
+		// class specifically returns ibPanelPage. static_cast is safe.
+		if (obj->GetClassName() == wxT("NotebookPage"))
+			createdWindow = static_cast<ibPanelPage*>(createdObject);
+		else
+			createdWindow = static_cast<wxWindow*>(createdObject);
 		break;
 
 	case COMPONENT_TYPE_SIZER:
 	case COMPONENT_TYPE_SIZERITEM:
 		if (obj->GetClassName() == wxT("Staticboxsizer")) {
-			if (wxStaticBoxSizer* s = wxDynamicCast(createdObject, wxStaticBoxSizer))
-				createdWindow = s->GetStaticBox();
+			wxStaticBoxSizer* s = static_cast<wxStaticBoxSizer*>(createdObject);
+			createdWindow = s->GetStaticBox();
 		}
 		break;
 
@@ -268,19 +579,18 @@ void ibVisualHost::RefreshControl(ibValueFrame* obj, wxWindow* wxparent, wxObjec
 	switch (obj->GetComponentType())
 	{
 	case COMPONENT_TYPE_WINDOW:
-		createdWindow = wxDynamicCast(createdObject, wxWindow);
+		createdWindow = static_cast<wxWindow*>(createdObject);
 		break;
 
 	case COMPONENT_TYPE_SIZER:
 	case COMPONENT_TYPE_SIZERITEM:
 		if (obj->GetClassName() == wxT("Staticboxsizer")) {
-			if (wxStaticBoxSizer* s = wxDynamicCast(createdObject, wxStaticBoxSizer)) {
-				createdWindow = s->GetStaticBox();
-				createdSizer  = s;
-			}
+			wxStaticBoxSizer* s = static_cast<wxStaticBoxSizer*>(createdObject);
+			createdWindow = s->GetStaticBox();
+			createdSizer  = s;
 		}
 		else {
-			createdSizer = wxDynamicCast(createdObject, wxSizer);
+			createdSizer = static_cast<wxSizer*>(createdObject);
 		}
 		break;
 
@@ -435,7 +745,9 @@ void ibVisualHost::ClearControl(ibValueFrame* control, bool force)
 	{
 	case COMPONENT_TYPE_WINDOW:
 	{
-		wxWindow* controlWnd = dynamic_cast<wxWindow*>(GetWxObject(control));
+		// control's component type says WINDOW → the wxObject stored
+		// by Create is a wxWindow. static_cast is invariant-safe.
+		wxWindow* controlWnd = static_cast<wxWindow*>(GetWxObject(control));
 		if (controlWnd == nullptr)
 			return;
 
@@ -451,7 +763,7 @@ void ibVisualHost::ClearControl(ibValueFrame* control, bool force)
 
 	case COMPONENT_TYPE_SIZER:
 	{
-		wxSizer* controlSizer = dynamic_cast<wxSizer*>(GetWxObject(control));
+		wxSizer* controlSizer = static_cast<wxSizer*>(GetWxObject(control));
 		if (controlSizer == nullptr)
 			return;
 
@@ -644,3 +956,5 @@ ibFrontendVisualEditorNotebook* ibFrontendVisualEditorNotebook::FindEditorByForm
 
 	return nullptr;
 }
+
+#endif // !OES_USE_WEB

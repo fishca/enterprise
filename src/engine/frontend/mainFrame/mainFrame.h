@@ -9,6 +9,7 @@
 
 #include "backend/backend_mainFrame.h"
 #include "frontend/frontend.h"
+#include "frontend/frontendTypes.h"   // ibFrontendWindow typedef
 
 #if defined(backend_mainFrame)
 #undef backend_mainFrame
@@ -142,7 +143,12 @@ public:
 
 	virtual ~ibFrontendDocMDIFrame();
 
-	static wxWindow* CreateChildFrame(ibMetaView* view,
+	// Returns ibFrontendWindow* (typedef → wxWindow on desktop,
+	// ibWebWindow on web) so the signature reads the same across
+	// builds even though this static is desktop-only today. Keeps the
+	// door open for a shared signature if the web frame ever adopts
+	// the same factory entry point.
+	static ibFrontendWindow* CreateChildFrame(ibMetaView* view,
 		const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
 
 	static ibObjectInspector* GetObjectInspector() {

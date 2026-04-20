@@ -7,6 +7,10 @@
 #include "form.h"
 #include "backend/compiler/procUnit.h"
 
+#ifdef OES_USE_WEB
+#include <iostream>
+#endif
+
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueFrame, ibValue);
 
 //*************************************************************************
@@ -62,19 +66,35 @@ bool ibValueFrame::IsEditable() const
 
 bool ibValueFrame::LoadControl(const ibValueMetaObjectFormBase* metaForm, ibReaderMemory& dataReader)
 {
-	//save meta version 
-	const ibVersionID& version = dataReader.r_u32(); //reserved 
+#ifdef OES_USE_WEB
+	std::cerr << "[LoadControl] enter this=" << this
+		<< " metaForm=" << metaForm << std::endl;
+#endif
+	//save meta version
+	const ibVersionID& version = dataReader.r_u32(); //reserved
+
+#ifdef OES_USE_WEB
+	std::cerr << "[LoadControl] version ok, reading m_controlId" << std::endl;
+#endif
 
 	//Load meta id
 	m_controlId = dataReader.r_u32();
 
+#ifdef OES_USE_WEB
+	std::cerr << "[LoadControl] m_controlId=" << m_controlId << std::endl;
+#endif
+
 	//Load standart fields
 	SetControlName(dataReader.r_stringZ());
 
-	//default value 
+#ifdef OES_USE_WEB
+	std::cerr << "[LoadControl] name set" << std::endl;
+#endif
+
+	//default value
 	m_expanded = dataReader.r_u8();
 
-	//load frame 
+	//load frame
 	wxMemoryBuffer buffer_chunk;
 	if (!dataReader.r_chunk(frameBlock, buffer_chunk))
 		return false;
@@ -83,7 +103,7 @@ bool ibValueFrame::LoadControl(const ibValueMetaObjectFormBase* metaForm, ibRead
 	dataObjectReader.r_u32(); //reserved flags
 	if (!LoadData(dataObjectReader))
 		return false;
-	
+
 	return true;
 }
 
@@ -265,10 +285,12 @@ ibFormVisualDocument* ibValueFrame::GetVisualDocument() const
 	return valueForm->GetVisualDocument();
 }
 
+#ifndef OES_USE_WEB
 ibFrontendVisualEditorNotebook* ibValueFrame::FindVisualEditor() const
 {
 	return ibFrontendVisualEditorNotebook::FindEditorByForm(GetOwnerForm());
 }
+#endif
 
 //*******************************************************************
 //*                          Runtime                                *
@@ -278,6 +300,12 @@ ibFrontendVisualEditorNotebook* ibValueFrame::FindVisualEditor() const
 
 wxObject* ibValueFrame::GetWxObject() const
 {
+	// Unified path: form → visualDoc → view → host → GetWxObject(this).
+	// Web's ibVisualHostClient also populates m_baseObjects (walker
+	// inserts ibWebWindow* per ibValueFrame), so the same lookup works
+	// on both builds. Previously web returned nullptr unconditionally,
+	// which silently broke SetControlValue's editor-poke — Clear couldn't
+	// reach the ibWebTextCtrl to reset m_value (2026-04-19).
 	ibValueForm* const valueForm = GetOwnerForm();
 	if (valueForm != nullptr) {
 
@@ -294,14 +322,16 @@ wxObject* ibValueFrame::GetWxObject() const
 			return visualHost->GetWxObject((ibValueFrame*)this);
 
 		}
+#ifndef OES_USE_WEB
 		else if (g_visualHostContext != nullptr) {
 
-			//if run designer form search in own visualHost 
+			//if run designer form search in own visualHost
 			const ibVisualHost* visualHost =
 				g_visualHostContext->GetVisualHost();
 
 			return visualHost->GetWxObject((ibValueFrame*)this);
 		}
+#endif
 	}
 
 	return nullptr;
@@ -367,6 +397,12 @@ bool ibValueFrame::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 	if (ownerForm == nullptr)
 		return false;
 
+#ifndef OES_USE_WEB
+	// Live-update path: find the existing wxWindow for this control,
+	// re-apply properties via Update(), re-layout the parent. Web path
+	// rebuilds from scratch on each HTTP response (stateless render),
+	// so there's no live object to poke — return true and let the next
+	// ClearVisualHost+CreateVisualHost pass do the work.
 	ibFormVisualDocument* visualDoc = ownerForm->GetVisualDocument();
 	if (visualDoc != nullptr) {
 
@@ -395,6 +431,7 @@ bool ibValueFrame::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 			if (wxparent != nullptr) wxparent->Layout();
 		}
 	}
+#endif
 
 	return true;
 }

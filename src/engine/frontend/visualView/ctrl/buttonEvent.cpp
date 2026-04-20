@@ -10,5 +10,6 @@ void ibValueButton::OnButtonPressed(wxCommandEvent &event)
 		CallAsEvent(m_onButtonPressed, ibValueButton::GetValue())
 	);
 
-	m_formOwner->RefreshForm();
+	if (m_formOwner != nullptr)
+		m_formOwner->RefreshForm();
 }

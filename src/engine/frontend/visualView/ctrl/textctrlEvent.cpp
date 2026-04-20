@@ -1,7 +1,10 @@
 #include "widgets.h"
+#ifndef OES_USE_WEB
 #include "frontend/win/ctrls/controltextEditor.h"
+#endif
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/metaData.h"
+#include "frontend/visualView/ctrl/form.h"
 
 bool ibValueTextCtrl::TextProcessing(wxTextCtrl* textCtrl, const wxString& strData)
 {
@@ -72,6 +75,40 @@ void ibValueTextCtrl::OnTextUpdated(wxCommandEvent& event)
 	m_textModified = true;
 	event.Skip();
 }
+
+#ifdef OES_USE_WEB
+void ibValueTextCtrl::OnWebTextChanged(wxCommandEvent& event)
+{
+	// Mirrors desktop TextProcessing: coerce the incoming string
+	// through the backing ibValue's type (so a numeric / date source
+	// doesn't get silently overwritten with a raw string), commit via
+	// SetControlValue (which fires RefreshForm + sourceObject update),
+	// then fire the OnChange script the same way OnTextEnter does.
+	const wxString newText = event.GetString();
+
+	const ibMetaData* metaData = GetMetaData();
+	if (metaData != nullptr) {
+		ibValue selValue; GetControlValue(selValue);
+		const ibValue& typed = metaData->CreateObject(selValue.GetClassType());
+		if (typed.GetType() != ibValueTypes::TYPE_EMPTY) {
+			if (newText.Length() > 0) {
+				std::vector<ibValue> listValue;
+				if (typed.FindValue(newText, listValue)) {
+					SetControlValue(listValue.at(0));
+				}
+				// else: parse failure — keep the prior committed value;
+				// the next JSON walk re-emits it, the client overwrites
+				// its local buffer.
+			}
+			else {
+				SetControlValue(typed);  // empty string → empty-typed value
+			}
+			ibValueControl::CallAsEvent(m_eventOnChange, GetValue());
+		}
+	}
+	event.Skip();
+}
+#endif
 
 void ibValueTextCtrl::OnKillFocus(wxFocusEvent& event)
 {

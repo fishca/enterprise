@@ -5,6 +5,17 @@
 
 #include "form.h"
 #include "backend/metaCollection/partial/commonObject.h"
+#ifdef OES_USE_WEB
+// ibWebTimer full type needed for the dtor's delete in the idle-handler
+// cleanup loop — ibFrontendTimer resolves to ibWebTimer on this build.
+#include "frontend/web/webTimer.h"
+#else
+#include <wx/timer.h>
+#endif
+
+#ifdef OES_USE_WEB
+#include <iostream>
+#endif
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueForm, ibValueFrame);
 
@@ -27,13 +38,18 @@ ibValueForm::ibValueForm(const ibValueMetaObjectFormBase* creator, ibControlFram
 
 ibValueForm::~ibValueForm()
 {
-	for (auto pair : m_idleHandlerArray) {
-		wxTimer* timer = pair.second;
-		if (timer->IsRunning()) {
-			timer->Stop();
-		}
+#ifdef OES_USE_WEB
+	std::cerr << "[life] ~ibValueForm " << this << std::endl;
+#endif
+	// Idle-handler timers unified via ibFrontendTimer typedef + shared_ptr
+	// ownership (wxTimer on desktop, ibWebTimer on web). Stop + Unbind
+	// synchronously; the shared_ptr's dtor finishes the disposal when
+	// the map destructs below.
+	for (auto& pair : m_idleHandlerArray) {
+		auto& timer = pair.second;
+		if (!timer) continue;
+		if (timer->IsRunning()) timer->Stop();
 		timer->Unbind(wxEVT_TIMER, &ibValueForm::OnIdleHandler, this);
-		delete timer;
 	}
 
 	for (unsigned int idx = GetChildCount(); idx > 0; idx--) {
@@ -51,13 +67,16 @@ void ibValueForm::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateForm();
 }
 
-void ibValueForm::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void ibValueForm::OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
-	//lay out parent window 
+#ifndef OES_USE_WEB
+	// Parent-layout pass — Web has no live wxWindow to re-layout; the
+	// browser handles it on the next JSON response.
 	wxWindow* wndParent = visualHost->GetParent();
 	if (wndParent) {
 		wndParent->Layout();
 	}
+#endif
 }
 
 //**********************************************************************************

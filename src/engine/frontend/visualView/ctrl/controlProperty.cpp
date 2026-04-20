@@ -10,6 +10,10 @@ bool ibValueControl::OnPropertyChanging(ibProperty* property, const wxVariant& n
 
 void ibValueControl::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
+#ifndef OES_USE_WEB
 	if (g_visualHostContext != nullptr)
 		g_visualHostContext->ModifyProperty(property, oldValue, newValue);
+#else
+	(void)property; (void)oldValue; (void)newValue;
+#endif
 }

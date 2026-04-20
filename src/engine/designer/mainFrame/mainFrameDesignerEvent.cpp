@@ -54,6 +54,50 @@ void ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug(wxCommandEvent& WXU
 	appData->RunApplication(wxT("enterprise"), false);
 }
 
+static bool SaveIfModifiedBeforeWebDebug(wxWindow* parent)
+{
+	if (!activeMetaData->IsModified())
+		return true;
+	const int ans = wxMessageBox(
+		wxString::Format(_("Configuration '%s' has been changed.\nDo you want to save?"),
+			activeMetaData->GetConfigName()),
+		wxTheApp->GetAppDisplayName(),
+		wxYES_NO | wxCENTRE | wxICON_QUESTION, parent);
+	if (ans != wxYES)
+		return true;
+	return activeMetaData->SaveDatabase(saveConfigFlag);
+}
+
+static void LaunchWebDebug(wxWindow* parent, bool /*withDebug*/)
+{
+	// URL prefix and port are derived by wes itself (from --file/--db
+	// basename and OS-picked ephemeral port). Manifest handshake reports
+	// the real URL back and opens the browser — no guessing here.
+	if (appData->RunApplication(wxT("wenterprise-server"),
+			/*searchDebug=*/false, /*useManifest=*/true) == 0) {
+		wxMessageBox(_("Failed to start wenterprise-server"),
+			wxTheApp->GetAppDisplayName(), wxOK | wxICON_ERROR, parent);
+	}
+}
+
+void ibFrontendDocMDIFrameDesigner::OnStartDebugWeb(wxCommandEvent& WXUNUSED(event))
+{
+	if (debugClient->HasConnections()) {
+		wxMessageBox(_("Debugger is already running!"));
+		return;
+	}
+	if (!SaveIfModifiedBeforeWebDebug(this))
+		return;
+	LaunchWebDebug(this, /*withDebug=*/true);
+}
+
+void ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebugWeb(wxCommandEvent& WXUNUSED(event))
+{
+	if (!SaveIfModifiedBeforeWebDebug(this))
+		return;
+	LaunchWebDebug(this, /*withDebug=*/false);
+}
+
 #include "win/dlg/debugItem/debugItem.h"
 
 void ibFrontendDocMDIFrameDesigner::OnAttachForDebugging(wxCommandEvent& WXUNUSED)

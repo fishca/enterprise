@@ -117,9 +117,15 @@ bool ibValueForm::CreateDocForm(ibMetaDocument* docParent, bool createContext)
 	if (docParent != nullptr) {
 		visualCreatedDoc->SetDocParent(docParent);
 	}
+#ifndef OES_USE_WEB
 	else if (docParent == nullptr) {
+		// docManager is the desktop-wide ibMetaDocManager singleton;
+		// wfrontend.dll doesn't construct one. Web sessions keep the
+		// document alive through ibWebFrame::m_tabs ownership, not
+		// through a manager's document list.
 		docManager->AddDocument(visualCreatedDoc);
 	}
+#endif
 
 	if (visualCreatedDoc->OnCreate(m_formKey, createContext ? runFlag : demoFlag)) {
 

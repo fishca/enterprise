@@ -155,7 +155,6 @@
     <ClCompile Include="visualView\pageWindow.cpp" />
     <ClCompile Include="visualView\visualHostClient.cpp" />
     <ClCompile Include="visualView\visualHostClientDocView.cpp" />
-    <ClCompile Include="visualView\visualHostClient_impl.cpp" />
     <ClCompile Include="visualView\visualHost.cpp" />
     <ClCompile Include="visualView\visualHostEvent.cpp" />
     <ClCompile Include="win\ctrls\charts\wxareachart.cpp" />
@@ -644,7 +643,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;WXUSINGDLL;_CONSOLE;%(PreprocessorDefinitions);FRONTEND_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;WXUSINGDLL;_CONSOLE;%(PreprocessorDefinitions);FRONTEND_EXPORTS</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(oes3rdParty)wxWidgets\lib\vc_dll\mswud;$(oes3rdParty)wxWidgets\include;$(oesEngine);$(oesSrcDir)include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

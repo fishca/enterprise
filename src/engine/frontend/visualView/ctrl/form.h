@@ -140,7 +140,7 @@ public:
 	virtual ibMetaData* GetMetaData() const;
 
 	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const { return m_procUnit; }
+	virtual ibProcUnit* GetFormProcUnit() const { return m_procUnit.get(); }
 	virtual ibValueForm* GetImplValueRef() const override {
 		return const_cast<ibValueForm*>(this);
 	}
@@ -273,7 +273,7 @@ public:
 
 	//special proc
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost);
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost);
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost);
 
 	//actionData
 	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
@@ -300,20 +300,12 @@ private:
 	void RefreshDocForm();
 	bool CloseDocForm();
 
-	void OnIdleHandler(wxTimerEvent& event) {
+	// Body in formObject.cpp — needs ibWebTimer complete type on web
+	// for the wxObject* upcast (frontendTypes.h only forward-declares
+	// ibWebTimer). Inline in the header dragged web-specific includes
+	// into every desktop TU.
+	void OnIdleHandler(wxTimerEvent& event);
 
-		if (m_procUnit != nullptr) {
-
-			auto iterator = std::find_if(m_idleHandlerArray.begin(), m_idleHandlerArray.end(),
-				[event](const auto pair) { return pair.second == event.GetEventObject(); }
-			);
-
-			if (iterator != m_idleHandlerArray.end())
-				CallAsEvent(iterator->first);
-		}
-
-		event.Skip();
-	}
 
 	enum
 	{
@@ -338,7 +330,14 @@ private:
 	ibSourceDataObject* m_sourceObject;
 
 	std::set<ibValueControl*> m_listControl;
-	std::map<wxString, wxTimer*> m_idleHandlerArray;
+	// ibFrontendTimer = wxTimer on desktop, ibWebTimer on web. Both
+	// inherit wxEvtHandler + produce wxTimerEvent where GetEventObject()
+	// returns the timer instance — so OnIdleHandler's lookup matches
+	// uniformly across builds. shared_ptr removes the manual delete on
+	// teardown paths (form dtor, DetachIdleHandler, exception unwinds) —
+	// same ownership flavour as m_valueForm's ibValuePtr but here we
+	// don't need intrusive refcount, std is enough.
+	std::map<wxString, std::shared_ptr<ibFrontendTimer>> m_idleHandlerArray;
 
 	ibValuePtr<ibValueFormCollectionControl> m_formCollectionControl;
 

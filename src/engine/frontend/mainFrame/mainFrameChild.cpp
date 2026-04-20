@@ -36,9 +36,41 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 
 	struct ibProcSubMenu {
 
+		// Clone every item of `dst` (source, iterated) into `src`
+		// (destination, appended to). Names are inverted for
+		// historical reasons — kept as-is so existing callers don't
+		// need to change. Submenus need a different append API
+		// (wxMenu::AppendSubMenu) — routing them through Append()
+		// + SetSubMenu() on a wxITEM_NORMAL item leaves the
+		// submenu disconnected on MSW, so submenu contents don't
+		// surface in the child-frame's merged menu bar (symptom:
+		// "Start debugging ▸ Web client" missing after entering the
+		// form editor).
 		static void ConstructMenu(wxMenu* dst, wxMenu* src) {
 
 			for (const auto it : dst->GetMenuItems()) {
+
+				if (it->IsSubMenu()) {
+					// Recurse into a fresh submenu and attach via
+					// AppendSubMenu — that's the one wx treats as a
+					// proper submenu parent across platforms.
+					wxMenu* subMenu = new wxMenu;
+					ConstructMenu(it->GetSubMenu(), subMenu);
+					wxMenuItem* menuItem =
+						src->AppendSubMenu(subMenu, it->GetItemLabel(),
+							it->GetHelp());
+					menuItem->Enable(it->IsEnabled());
+					menuItem->SetBitmap(it->GetBitmap());
+#ifdef __WXMSW__
+					menuItem->SetMarginWidth(it->GetMarginWidth());
+#endif
+					continue;
+				}
+
+				if (it->GetKind() == wxITEM_SEPARATOR) {
+					src->AppendSeparator();
+					continue;
+				}
 
 				wxMenuItem* menuItem = src->Append(
 					it->GetId(),
@@ -54,12 +86,6 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 				menuItem->SetMarginWidth(it->GetMarginWidth());
 #endif
 				menuItem->SetHelp(it->GetHelp());
-
-				if (it->IsSubMenu()) {
-					wxMenu* subMenu = new wxMenu;
-					menuItem->SetSubMenu(subMenu);
-					ConstructMenu(subMenu, it->GetSubMenu());
-				}
 			}
 		}
 	};

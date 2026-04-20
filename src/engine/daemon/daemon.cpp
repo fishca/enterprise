@@ -14,19 +14,21 @@
 #include "backend/appData.h"
 
 static const wxCmdLineEntryDesc s_cmdLineDesc[] = {
-
-	//server mode 
-	{ wxCMD_LINE_OPTION, "srv", "srv", "Start using server address", wxCMD_LINE_VAL_STRING, NULL },
-	{ wxCMD_LINE_OPTION, "p", "p", "Start using port", wxCMD_LINE_VAL_STRING, NULL },
-
-	{ wxCMD_LINE_OPTION, "db", "db", "Start from current db", wxCMD_LINE_VAL_STRING, NULL },
-
-	{ wxCMD_LINE_OPTION, "usr", "usr", "Start from current login", wxCMD_LINE_VAL_STRING, NULL },
-	{ wxCMD_LINE_OPTION, "p", "p", "Start from current password", wxCMD_LINE_VAL_STRING, NULL },
-
-	{ wxCMD_LINE_SWITCH, "h", "help", "Show this help message.", wxCMD_LINE_VAL_STRING, wxCMD_LINE_OPTION_HELP },
-	{ wxCMD_LINE_PARAM, NULL, NULL, "File to open.", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
-	{ wxCMD_LINE_NONE, NULL, NULL, NULL, wxCMD_LINE_VAL_NONE, 0 }
+	// Short names stay legacy; long names match wenterprise-server /
+	// enterprise / designer so RunApplication emits one flag form that
+	// parses across every bin.
+	{ wxCMD_LINE_OPTION, "srv",    "server",   "Database server address", wxCMD_LINE_VAL_STRING, 0 },
+	{ wxCMD_LINE_OPTION, "p",      "dbport",   "Database server port",    wxCMD_LINE_VAL_STRING, 0 },
+	{ wxCMD_LINE_OPTION, "db",     "db",       "Database name",           wxCMD_LINE_VAL_STRING, 0 },
+	{ wxCMD_LINE_OPTION, "usr",    "user",     "Database user",           wxCMD_LINE_VAL_STRING, 0 },
+	{ wxCMD_LINE_OPTION, "pwd",    "password", "Database password",       wxCMD_LINE_VAL_STRING, 0 },
+	{ wxCMD_LINE_OPTION, "ib_usr", "ibuser",   "IB user",                 wxCMD_LINE_VAL_STRING, 0 },
+	{ wxCMD_LINE_OPTION, "ib_pwd", "ibpwd",    "IB password",             wxCMD_LINE_VAL_STRING, 0 },
+	{ wxCMD_LINE_OPTION, "lc",     "locale",   "UI locale",               wxCMD_LINE_VAL_STRING, 0 },
+	{ wxCMD_LINE_SWITCH, "d",      "debug",    "Enable debugger attach",  wxCMD_LINE_VAL_NONE,   0 },
+	{ wxCMD_LINE_SWITCH, "h",      "help",     "Show this help message.", wxCMD_LINE_VAL_NONE,   wxCMD_LINE_OPTION_HELP },
+	{ wxCMD_LINE_PARAM,  NULL,     NULL,       "File to open.",           wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
+	{ wxCMD_LINE_NONE,   NULL,     NULL,       NULL,                      wxCMD_LINE_VAL_NONE,   0 }
 };
 
 int main(int argc, char** argv)

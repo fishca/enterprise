@@ -223,6 +223,12 @@ ibFrameLauncher::ibFrameLauncher(wxWindow* parent, wxWindowID id, const wxString
 	m_buttonDesigner->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonDesigner, this);
 
 	sizerRight->Add(m_buttonDesigner, 0, wxALL | wxEXPAND, FromDIP(5));
+
+	m_buttonWeb = new wxButton(this, wxID_ANY, _("Web"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonWeb->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_HELP_BOOK, wxART_BUTTON));
+	m_buttonWeb->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonWeb, this);
+
+	sizerRight->Add(m_buttonWeb, 0, wxALL | wxEXPAND, FromDIP(5));
 	sizerRight->Add(0, 0, 1, wxEXPAND, FromDIP(5));
 
 	m_buttonAdd = new wxButton(this, wxID_ANY, _("Add"), wxDefaultPosition, wxDefaultSize, 0);
@@ -307,6 +313,60 @@ void ibFrameLauncher::OnButtonDesigner(wxCommandEvent& event) {
 	auto itSelection = m_listInfoBase.begin() + selection;
 	wxString executeCmd = BuildLaunchCommand("designer", itSelection->second);
 	wxExecute(executeCmd);
+	Close(true);
+}
+
+void ibFrameLauncher::OnButtonWeb(wxCommandEvent& event) {
+	int selection = m_listIBwnd->GetSelection();
+	if (selection == wxNOT_FOUND) return;
+	auto itSelection = m_listInfoBase.begin() + selection;
+	const CListInfo& info = itSelection->second;
+
+	// wenterprise-server uses `--name=value` double-dashed flags.
+	// URL prefix is derived by wes itself from --file basename (or --db),
+	// so CLI launch and designer-spawned launch produce the same URL.
+	// Port defaults to 0 (OS-picked); the actual bound port is read back
+	// from a manifest file the server writes after bind+init.
+	wxString exePath = FindSiblingExecutable(wxT("wenterprise-server"));
+	wxString cmd = wxT("\"") + exePath + wxT("\"");
+
+	if (info.m_bFileMode) {
+		if (!info.m_strFilePath.IsEmpty())
+			cmd += wxT(" --file=\"") + info.m_strFilePath + wxT("\"");
+	}
+	else {
+		if (!info.m_strServer.IsEmpty())
+			cmd += wxT(" --server=") + info.m_strServer;
+		if (!info.m_strPort.IsEmpty())
+			cmd += wxT(" --dbport=") + info.m_strPort;
+		if (!info.m_strDatabase.IsEmpty())
+			cmd += wxT(" --db=") + info.m_strDatabase;
+		if (!info.m_strUser.IsEmpty())
+			cmd += wxT(" --user=") + info.m_strUser;
+		if (!info.m_strPassword.IsEmpty())
+			cmd += wxT(" --password=") + info.m_strPassword;
+	}
+
+	// IB-side auth: reuse the launcher entry's user/password. Most
+	// embedded-Firebird configs don't need distinct DB vs IB creds.
+	if (!info.m_strUser.IsEmpty())
+		cmd += wxT(" --ibuser=") + info.m_strUser;
+	if (!info.m_strPassword.IsEmpty())
+		cmd += wxT(" --ibpwd=") + info.m_strPassword;
+	if (appData != nullptr) {
+		wxString locale = appData->GetLocale();
+		if (!locale.IsEmpty())
+			cmd += wxT(" --locale=") + locale;
+	}
+
+	// Shared helper adds --port=0 --manifest=<tempfile>, spawns wes,
+	// polls the manifest and opens the browser at the reported URL.
+	// Any change to the spawn/handshake protocol lives in one place.
+	const long pid = ibApplicationData::SpawnWebServerWithManifest(cmd);
+	if (pid == 0) {
+		wxLogError(_("Failed to start wenterprise-server: %s"), cmd);
+		return;
+	}
 	Close(true);
 }
 

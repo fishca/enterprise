@@ -33,6 +33,7 @@ class ibFrameLauncher : public wxFrame {
 	wxStaticText* m_staticDBName;
 	wxButton* m_buttonEnterprise;
 	wxButton* m_buttonDesigner;
+	wxButton* m_buttonWeb;
 	wxButton* m_buttonAdd;
 	wxButton* m_buttonEdit;
 	wxButton* m_buttonDelete;
@@ -56,6 +57,7 @@ protected:
 
 	void OnButtonEnterprise(wxCommandEvent& event);
 	void OnButtonDesigner(wxCommandEvent& event);
+	void OnButtonWeb(wxCommandEvent& event);
 
 	void OnButtonAdd(wxCommandEvent& event);
 	void OnButtonEdit(wxCommandEvent& event);

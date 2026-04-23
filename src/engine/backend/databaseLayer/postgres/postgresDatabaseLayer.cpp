@@ -336,10 +336,9 @@ bool ibDatabaseLayerPostgres::IsOpen()
 }
 
 // transaction support
-void ibDatabaseLayerPostgres::BeginTransaction(const ibTxOptions& opts)
+void ibDatabaseLayerPostgres::DoBeginTransaction(const ibTxOptions& opts)
 {
 	DoRunQuery(wxT("BEGIN"), false);
-	m_transaction_is_active = true;
 
 	// PG's NOWAIT behaviour is per-statement (`SELECT ... FOR UPDATE NOWAIT`)
 	// or session-level (`SET lock_timeout`). Inside a TX the cleanest knob
@@ -353,21 +352,17 @@ void ibDatabaseLayerPostgres::BeginTransaction(const ibTxOptions& opts)
 	}
 }
 
-void ibDatabaseLayerPostgres::Commit()
+void ibDatabaseLayerPostgres::DoCommit()
 {
 	DoRunQuery(wxT("COMMIT"), false);
-	m_transaction_is_active = false;
 }
 
-void ibDatabaseLayerPostgres::RollBack()
+void ibDatabaseLayerPostgres::DoRollBack()
 {
 	DoRunQuery(wxT("ROLLBACK"), false);
-	m_transaction_is_active = false; 
 }
 
-// IsActiveTransaction inherits the base-class implementation which
-// reads the shared `m_transaction_is_active` flag that Begin / Commit
-// / RollBack maintain above.
+// IsActiveTransaction inherits the base-class default (m_txDepth > 0).
 
 bool ibDatabaseLayerPostgres::TryProbeRowLock(const wxString& tableName,
                                                const wxString& pkColumn,

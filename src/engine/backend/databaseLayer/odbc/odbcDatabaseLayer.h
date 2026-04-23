@@ -49,12 +49,10 @@ public:
 	/// clone database  
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerODBC(*this); }
 
-	// transaction support
-	virtual void BeginTransaction(const ibTxOptions& opts = {});
-	virtual void Commit();
-	virtual void RollBack();
-
-	// IsActiveTransaction inherits the base-class default.
+	// IsActiveTransaction inherits the base-class default
+	// (m_txDepth > 0). Driver transaction primitives
+	// (DoBeginTransaction / DoCommit / DoRollBack) are protected —
+	// see below.
 
 	// Row-lock probe for ibSessionRegistry. MSSQL behind ODBC honours
 	// `SET LOCK_TIMEOUT 0` + `SELECT ... WITH (UPDLOCK, ROWLOCK)`;
@@ -84,6 +82,12 @@ protected:
 
 	// ibPreparedStatement support
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
 private:
 

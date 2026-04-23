@@ -394,6 +394,10 @@ bool ibFormVisualEditView::OnClose(bool deleteWindow)
 	// view on desktop). On web the view's "frame" is an ibWebDocChildFrame
 	// living in ibWebFrame's tab vector — its lifetime is managed by
 	// the session's tab close path, not by the view. So no Destroy here.
+	//
+	// This runs through the CloseForm → CallAfter defer path
+	// (formObject.cpp), so we're on a fresh idle dispatch — safe to
+	// Destroy synchronously.
 	if (deleteWindow) {
 		GetFrame()->Destroy();
 		SetFrame(nullptr);

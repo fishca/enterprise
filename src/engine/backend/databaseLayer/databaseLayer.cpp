@@ -2,6 +2,8 @@
 #include "databaseErrorCodes.h"
 #include "databaseLayerException.h"
 
+#include "connectionPool.h"
+
 // ctor()
 ibDatabaseLayer::ibDatabaseLayer()
 	: ibDatabaseErrorReporter()
@@ -13,6 +15,72 @@ ibDatabaseLayer::~ibDatabaseLayer()
 {
 	CloseResultSets();
 	CloseStatements();
+}
+
+// --- Transaction wrappers (Option A: nested-safe counter layer) ------------
+//
+// See databaseLayer.h for the semantics. Drivers override the Do* methods;
+// the wrappers here enforce "only the outermost level touches the driver".
+
+void ibDatabaseLayer::BeginTransaction(const ibTxOptions& opts)
+{
+	if (m_txDepth == 0) {
+		DoBeginTransaction(opts);   // may throw — depth stays 0, state clean
+		m_txAborted = false;
+		// Pin this conn to the thread for the whole TX. While set,
+		// ibApplicationData::GetDatabaseLayer and the pool's
+		// GetFreeConnection will return this exact conn for the
+		// current thread — any db_query access on this thread lands
+		// on the TX's conn regardless of whether the caller had a
+		// scope open.
+		ibConnectionPool::SetActiveTxConnection(shared_from_this());
+	}
+	++m_txDepth;
+}
+
+void ibDatabaseLayer::Commit()
+{
+	if (m_txDepth == 0)
+		return;                      // no open transaction; silent no-op
+
+	if (m_txDepth > 1) {
+		--m_txDepth;                 // nested inner commit — count down, defer
+		return;
+	}
+
+	// Outermost level — resolve to the driver. Reset state before the
+	// driver call so that if DoCommit / DoRollBack throws the depth
+	// still reflects "no transaction" (matching the driver's typical
+	// behaviour on failure: the TX is gone either way).
+	m_txDepth = 0;
+	const bool aborted = m_txAborted;
+	m_txAborted = false;
+	// Release the thread's TX pin BEFORE the driver call. The layer
+	// stays alive through whatever other shared_ptr the caller holds
+	// (scope, pool's m_idle after drop, etc.); if this was the only
+	// reference it will be released after the driver op completes
+	// naturally via RAII.
+	ibConnectionPool::SetActiveTxConnection(nullptr);
+	if (aborted) DoRollBack();
+	else         DoCommit();
+}
+
+void ibDatabaseLayer::RollBack()
+{
+	if (m_txDepth == 0)
+		return;                      // nothing to roll back
+
+	m_txAborted = true;              // poison any pending outer commit
+
+	if (m_txDepth > 1) {
+		--m_txDepth;                 // nested inner rollback — count down, defer real op
+		return;
+	}
+
+	m_txDepth = 0;
+	m_txAborted = false;
+	ibConnectionPool::SetActiveTxConnection(nullptr);
+	DoRollBack();
 }
 
 #if !wxUSE_UTF8_LOCALE_ONLY

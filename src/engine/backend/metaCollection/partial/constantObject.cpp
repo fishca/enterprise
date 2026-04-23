@@ -8,6 +8,7 @@
 #include "backend/system/systemManager.h"
 
 #include "backend/appData.h"
+#include "backend/databaseLayer/connectionPool.h"
 
 //***********************************************************************
 //*                           constant value                            *
@@ -59,7 +60,7 @@ bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataOb
 
 	if (!appData->DesignerMode()) {
 		m_procUnit = std::make_shared<ibProcUnit>();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
+		m_procUnit->SetParent(moduleManager->GetProcUnit().get());
 		try {
 			m_compileModule->Compile();
 		}
@@ -339,9 +340,9 @@ bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 
 		const ibValue& constValue = m_constValue;
 
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!m_metaObject->AccessRight_Write()) {
@@ -352,20 +353,19 @@ bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		const wxString& fieldName = m_metaObject->GetFieldNameDB();
 
-		if (db_query->TableExists(tableName)) {
+		if (scope->TableExists(tableName)) {
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 
-				db_query_active_transaction.BeginTransaction();
+				scope.SafeBeginTransaction();
 				{
 					ibValue cancel = false;
 
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("failed to write object in db!"));
 						return false;
 					}
@@ -431,7 +431,7 @@ bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 
 				if (hasError) {
 					m_constValue = constValue;
-					db_query_active_transaction.RollBackTransaction();
+					scope.SafeRollBackTransaction();
 					ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
 				}
 
@@ -439,12 +439,12 @@ bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
 					}
 				}
 
-				db_query_active_transaction.CommitTransaction();
+				scope.SafeCommitTransaction();
 
 				if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
 			}

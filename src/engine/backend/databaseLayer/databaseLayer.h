@@ -16,6 +16,7 @@
 #include <wx/arrstr.h>
 #include <wx/variant.h>
 
+#include <memory>
 #include <vector>
 
 #include "databaseLayerDef.h"
@@ -27,7 +28,10 @@
 WX_DECLARE_HASH_SET(ibDatabaseResultSet*, wxPointerHash, wxPointerEqual, DatabaseResultSetHashSet);
 WX_DECLARE_HASH_SET(ibPreparedStatement*, wxPointerHash, wxPointerEqual, DatabaseStatementHashSet);
 
-class BACKEND_API ibDatabaseLayer : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
+class BACKEND_API ibDatabaseLayer
+	: public ibDatabaseErrorReporter
+	, public ibDatabaseStringConverter
+	, public std::enable_shared_from_this<ibDatabaseLayer>
 {
 public:
 	/// Constructor
@@ -65,21 +69,42 @@ public:
 		// int  lockTimeoutMs = -1;  // placeholder — add when a caller needs it
 	};
 
+	// Transaction support — nested-safe counter layer.
+	//
+	// Public BeginTransaction / Commit / RollBack are non-virtual
+	// wrappers that implement depth-counter + aborted-flag semantics
+	// so that nested calls (Document.Write triggering register writes
+	// triggering their own transactions; runtime BeginTransaction
+	// wrapping several object writes) collapse onto a single real
+	// driver transaction:
+	//
+	//   - First Begin drives DoBeginTransaction; subsequent nested
+	//     Begins only bump the counter.
+	//   - Commit on the outermost level drives DoCommit — unless any
+	//     inner RollBack fired, in which case the aborted flag turns
+	//     the outer Commit into a real DoRollBack. "Inner rollback
+	//     poisons outer commit."
+	//   - RollBack sets the aborted flag and decrements; when the
+	//     counter reaches 0 the real DoRollBack fires.
+	//
+	// Drivers override DoBeginTransaction / DoCommit / DoRollBack with
+	// their dialect-specific SQL or native API calls. Drivers must
+	// NOT touch m_txDepth / m_txAborted directly — the base owns them.
+
 	/// Begin a transaction. The default options preserve historical
 	/// (wait-mode, read-committed, read-write) behaviour.
-	virtual void BeginTransaction(const ibTxOptions& opts = {}) = 0;
-	
-	/// Commit the current transaction
-	virtual void Commit() = 0;
+	void BeginTransaction(const ibTxOptions& opts = {});
 
-	/// Rollback the current transaction
-	virtual void RollBack() = 0;
+	/// Commit the current transaction (or RollBack if any inner level
+	/// called RollBack first — see the aborted-flag semantics above).
+	void Commit();
 
-	/// Is a transaction currently open on this layer? Concrete drivers
-	/// flip `m_transaction_is_active` in BeginTransaction / Commit /
-	/// RollBack; the default reads the flag so every driver gets a
-	/// correct answer without repeating the accessor.
-	virtual bool IsActiveTransaction() { return m_transaction_is_active; }
+	/// Rollback the current transaction.
+	void RollBack();
+
+	/// Is a transaction currently open on this layer? Derived from the
+	/// depth counter so nested levels report active correctly.
+	bool IsActiveTransaction() { return m_txDepth > 0; }
 
 	// Define formatted run query 
 
@@ -256,16 +281,29 @@ protected:
 
 	/// Prepare a SQL statement which can be reused with different parameters
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery) = 0;
-	
+
+	// Driver-specific transaction operations. Called by the non-virtual
+	// wrappers above only at depth transitions (0→1 for DoBegin, 1→0
+	// for DoCommit / DoRollBack); intermediate nested levels never
+	// reach the driver. Drivers implement these with their dialect's
+	// transaction SQL or native API — and do NOT manipulate m_txDepth
+	// or m_txAborted themselves.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) = 0;
+	virtual void DoCommit() = 0;
+	virtual void DoRollBack() = 0;
+
 protected:
 
-	/// Shared transaction-active flag. Concrete drivers flip it in
-	/// BeginTransaction / Commit / RollBack; the default IsActiveTransaction
-	/// reads it. Per-driver overrides remain legal (Firebird still probes
-	/// its native TX handle) — the flag just gives drivers without a
-	/// handle-level signal a correct answer without each one reimplementing
-	/// the accessor.
-	bool m_transaction_is_active = false;
+	/// Nested-transaction depth counter. Owned by the base-class
+	/// Begin / Commit / RollBack wrappers; drivers must not touch it.
+	int m_txDepth = 0;
+
+	/// "Aborted" flag — set by any RollBack while a transaction is
+	/// still open, cleared when the outermost level finally resolves.
+	/// Makes the outermost Commit fall through to a real DoRollBack
+	/// so an inner failure can poison an otherwise successful outer
+	/// commit.
+	bool m_txAborted = false;
 
 	/// Add result set object pointer to the list for "garbage collection"
 	void LogResultSetForCleanup(ibDatabaseResultSet* pResultSet) { m_ResultSets.insert(pResultSet); }

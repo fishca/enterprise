@@ -37,6 +37,9 @@
     <ClInclude Include="databaseLayer\connectionPool.h">
       <Filter>databaseLayer</Filter>
     </ClInclude>
+    <ClInclude Include="databaseLayer\connectionScope.h">
+      <Filter>databaseLayer</Filter>
+    </ClInclude>
     <ClInclude Include="databaseLayer\databaseLayer.h">
       <Filter>databaseLayer</Filter>
     </ClInclude>
@@ -697,6 +700,9 @@
     <ClCompile Include="appData.cpp" />
     <ClCompile Include="uniqueKey.cpp" />
     <ClCompile Include="databaseLayer\connectionPool.cpp">
+      <Filter>databaseLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="databaseLayer\connectionScope.cpp">
       <Filter>databaseLayer</Filter>
     </ClCompile>
     <ClCompile Include="databaseLayer\databaseErrorReporter.cpp">

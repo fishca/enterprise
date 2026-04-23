@@ -22,6 +22,16 @@
 #include "backend/databaseLayer/sqllite/sqliteDatabaseLayer.h"
 #include "backend/databaseLayer/connectionPool.h"
 
+// GetDatabaseLayer — trivial delegate. The actual priority chain
+// lives inside ibConnectionPool (TX > scope TL > primary). Kept here
+// so the db_query macro's target stays stable; legacy call sites
+// continue to see ibApplicationData::GetDatabaseLayer as the entry
+// point even as the pool grows more responsibilities.
+std::shared_ptr<ibDatabaseLayer> ibApplicationData::GetDatabaseLayer()
+{
+	return ibConnectionPool::GetDatabaseLayer();
+}
+
 //sandbox
 #include "metadataConfiguration.h"
 
@@ -133,7 +143,6 @@ ibApplicationData::ibApplicationData(ibRunMode runMode) :
 	m_strComputer(wxGetHostName()),
 	m_startedDate(wxDateTime::Now()),
 	m_sessionGuid(wxNewUniqueGuid),
-	m_db(nullptr),
 	m_pluginManager(std::make_unique<ibPluginManager>()),
 	m_connectionPool(std::make_unique<ibConnectionPool>()),
 	m_dbMode(ibDatabaseMode::eNONE),
@@ -250,17 +259,18 @@ bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& 
 
 			s_instance->ReadEngineConfig();
 
-			s_instance->m_db = db;
 			s_instance->m_exclusiveMode = runMode == ibRunMode::eDESIGNER_MODE;
 
 			s_instance->m_dbMode = ibDatabaseMode::eFILE;
 
-			// Additional-connection pool for worker threads (heartbeat,
-			// metadata watcher, SSE streams, per-session script workers).
-			// Size=32 — slack over ~20 concurrent User sessions. Pool
-			// allocates lazily so single-threaded runs (designer,
+			// The pool is the single owner of every connection in the
+			// process. `db` here is the master — the pool holds it as
+			// m_source for Clone() and also as the first idle entry so
+			// the earliest Checkout hands it out directly. Size=32 —
+			// slack over ~20 concurrent User sessions. Pool allocates
+			// clones lazily so single-threaded runs (designer,
 			// classChecker) open zero extra FB handles.
-			s_instance->m_connectionPool->Init(db.get(), 32);
+			s_instance->m_connectionPool->Init(db, 32);
 
 			if (runMode == ibRunMode::eDESIGNER_MODE && !ibApplicationData::TableAlreadyCreated()) {
 				ibApplicationData::CreateTableSession();
@@ -311,16 +321,16 @@ bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString
 
 			s_instance->ReadEngineConfig();
 
-			s_instance->m_db = db;
 			s_instance->m_exclusiveMode = runMode == ibRunMode::eDESIGNER_MODE;
 
 			s_instance->m_dbMode = ibDatabaseMode::eSERVER;
 
-			// maxSize=32 — room for heartbeat + metadata watcher + up to ~20
-// concurrent session workers / SSE streams + slack. Bump via CLI
-// flag later if needed; pool allocates lazily so unused capacity is
-// free.
-s_instance->m_connectionPool->Init(db.get(), 32);
+			// Pool owns every connection. `db` becomes the master (source
+			// for Clone + first hand-out). maxSize=32 covers heartbeat +
+			// metadata watcher + ~20 concurrent sessions/SSE + slack. CLI
+			// override can land later; lazy allocation keeps unused
+			// capacity free.
+			s_instance->m_connectionPool->Init(db, 32);
 
 			if (!SetLocaleAppDataEnv(strLocale))
 				return false;
@@ -359,7 +369,8 @@ bool ibApplicationData::SetLocaleAppDataEnv(const wxString& strLocale)
 
 bool ibApplicationData::DestroyAppDataEnv()
 {
-	if (s_instance != nullptr && s_instance->m_db != nullptr) {
+	if (s_instance != nullptr && s_instance->m_connectionPool != nullptr &&
+	    ibConnectionPool::GetPrimaryConnection() != nullptr) {
 
 		if (!s_instance->Disconnect()) return false;
 
@@ -369,15 +380,11 @@ bool ibApplicationData::DestroyAppDataEnv()
 		s_instance->m_strPassword = wxEmptyString;
 		s_instance->m_strDatabase = wxEmptyString;
 
-		// Close pooled clones BEFORE the prototype so every FB handle
-		// is released by the same ordering discipline — prototype last.
-		if (s_instance->m_connectionPool != nullptr)
-			s_instance->m_connectionPool->Shutdown();
-
-		if (s_instance->m_db->IsOpen())
-			s_instance->m_db->Close();
-
-		s_instance->m_db = nullptr;
+		// Pool shutdown closes every connection it owns — the master
+		// (m_source) and every clone in m_idle. Outstanding hand-outs
+		// are invalidated via the m_shutdown flag — their deleter
+		// drops the captured pool ref instead of re-parking.
+		s_instance->m_connectionPool->Shutdown();
 
 		wxDELETE(s_instance);
 		return true;

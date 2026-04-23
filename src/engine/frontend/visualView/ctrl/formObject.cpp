@@ -306,8 +306,8 @@ bool ibValueForm::InitializeFormModule()
 			if (m_procUnit == nullptr) {
 				m_procUnit = std::make_shared<ibProcUnit>();
 				m_procUnit->SetParent(
-					sourceObjectValue != nullptr ? sourceObjectValue->GetProcUnit() :
-					moduleManager->GetProcUnit()
+					sourceObjectValue != nullptr ? sourceObjectValue->GetProcUnit().get() :
+					moduleManager->GetProcUnit().get()
 				);
 			}
 
@@ -517,15 +517,22 @@ bool ibValueForm::CloseForm(bool force)
 		// view, host, AND every control (including the toolbar that
 		// just fired the OnTool we're in). Mark the tab; the
 		// session's Dispatch epilogue drains pending closes AFTER
-		// the wxEvent chain unwinds. Desktop can delete eagerly
-		// because wx's own widget destruction (Destroy) is queued.
+		// the wxEvent chain unwinds.
 		if (auto* webFrame = dynamic_cast<ibWebFrame*>(
 				ibBackendDocMDIFrame::GetDocMDIFrame())) {
 			webFrame->MarkTabForCloseByForm(this);
 		}
 		return true;
 #else
-		return ownerDocForm->DeleteAllViews();
+		// Same hazard on desktop — wxDocument::DeleteAllViews deletes
+		// the view (a wxEvtHandler) plus every control synchronously.
+		// If CloseForm was invoked from within the toolbar's tool
+		// event (Save-and-close command), control returns to
+		// wxAuiToolBar::OnLeftUp on freed memory → UAF in
+		// wxEvtHandler::TryHereOnly. Defer the deletion through
+		// CallAfter so the click event fully unwinds first.
+		ownerDocForm->CallAfter([doc = ownerDocForm]{ doc->DeleteAllViews(); });
+		return true;
 #endif
 	}
 

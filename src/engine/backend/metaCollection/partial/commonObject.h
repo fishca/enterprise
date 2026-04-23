@@ -1242,44 +1242,15 @@ public:
 //*                                      Object                                              *
 //********************************************************************************************
 
-#pragma region __transaction_guard_h__
+// The legacy `ibTransactionGuard` template lived here; replaced by
+// ibConnectionScope's merged Safe{Begin,Commit,RollBack}Transaction
+// methods (databaseLayer/connectionScope.h). Mutation entry points
+// (Write/Delete on every object type, plus register RecordSet /
+// Manager writes) were migrated wholesale; the struct had no remaining
+// call sites and was removed to keep the transaction API surface on
+// one path.
 
-template <typename db_type = class BACKEND_API ibDatabaseLayer>
-struct ibTransactionGuard
-{
-	ibTransactionGuard() : m_db(ibApplicationData::GetDatabaseLayer()), m_active_transaction(false) {}
-	ibTransactionGuard(const std::shared_ptr<db_type>& db) : m_db(db), m_active_transaction(false) {}
-	~ibTransactionGuard() { RollBackTransaction(); }
-
-	/// Begin a transaction
-	void BeginTransaction() {
-		if (!m_active_transaction && m_db != nullptr)
-			m_db->BeginTransaction();
-		m_active_transaction = true;
-	}
-
-	/// Commit the current transaction
-	void CommitTransaction() {
-		if (m_active_transaction && m_db != nullptr)
-			m_db->Commit();
-		m_active_transaction = false;
-	}
-
-	/// Rollback the current transaction
-	void RollBackTransaction() {
-		if (m_active_transaction && m_db != nullptr)
-			m_db->RollBack();
-		m_active_transaction = false;
-	}
-
-private:
-	bool m_active_transaction;
-	std::shared_ptr<db_type> m_db;
-};
-
-#pragma endregion 
-
-//manager with meta object  
+//manager with meta object
 #pragma region managers
 
 class BACKEND_API ibValueManagerObject : public ibValue {

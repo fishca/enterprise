@@ -1,7 +1,7 @@
 #include "accumulationRegister.h"
 
 #include "backend/appData.h"
-#include "backend/databaseLayer/databaseLayer.h"
+#include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -10,9 +10,9 @@ bool ibValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bo
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -22,23 +22,22 @@ bool ibValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bo
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query_active_transaction.BeginTransaction();
+				scope.SafeBeginTransaction();
 
 				{
 					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!SaveData(replace, clearTable)) {
-					db_query_active_transaction.RollBackTransaction();
+					scope.SafeRollBackTransaction();
 					ibBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
@@ -47,13 +46,13 @@ bool ibValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bo
 					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
-				db_query_active_transaction.CommitTransaction();
+				scope.SafeCommitTransaction();
 			}
 
 			m_objModified = false;
@@ -67,9 +66,9 @@ bool ibValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -79,23 +78,22 @@ bool ibValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query_active_transaction.BeginTransaction();
+				scope.SafeBeginTransaction();
 
 				{
 					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
-					db_query_active_transaction.RollBackTransaction();
+					scope.SafeRollBackTransaction();
 					ibBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
@@ -104,13 +102,13 @@ bool ibValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 					ibValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
-				db_query_active_transaction.CommitTransaction();
+				scope.SafeCommitTransaction();
 			}
 
 			m_objModified = false;

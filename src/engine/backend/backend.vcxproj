@@ -67,6 +67,7 @@
     <ClInclude Include="databaseLayer\databaseErrorCodes.h" />
     <ClInclude Include="databaseLayer\databaseErrorReporter.h" />
     <ClInclude Include="databaseLayer\connectionPool.h" />
+    <ClInclude Include="databaseLayer\connectionScope.h" />
     <ClInclude Include="databaseLayer\databaseLayer.h" />
     <ClInclude Include="databaseLayer\databaseLayerDef.h" />
     <ClInclude Include="databaseLayer\databaseLayerException.h" />
@@ -317,6 +318,7 @@
     <ClCompile Include="compiler\valueFactory.cpp" />
     <ClCompile Include="compiler\value_res.cpp" />
     <ClCompile Include="databaseLayer\connectionPool.cpp" />
+    <ClCompile Include="databaseLayer\connectionScope.cpp" />
     <ClCompile Include="databaseLayer\databaseErrorReporter.cpp" />
     <ClCompile Include="databaseLayer\databaseLayer.cpp" />
     <ClCompile Include="databaseLayer\databaseQueryParser.cpp" />

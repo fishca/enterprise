@@ -52,12 +52,11 @@ public:
 	/// clone database  
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerFirebird(*this); }
 
-	// transaction support
-	virtual void BeginTransaction(const ibTxOptions& opts = {});
-	virtual void Commit();
-	virtual void RollBack();
-	
-	virtual bool IsActiveTransaction();
+	// IsActiveTransaction inherits the base-class default
+	// (m_txDepth > 0). The previous override that probed the native
+	// m_fbNode state is gone — the counter is the source of truth.
+	// Driver transaction primitives (DoBeginTransaction / DoCommit /
+	// DoRollBack) are protected — see below.
 
 	static int TranslateErrorCode(int nCode);
 	//static wxString TranslateErrorCodeToString(ibInterfaceFirebird* pInterface, int nCode, ISC_STATUS_ARRAY status);
@@ -102,6 +101,20 @@ protected:
 
 	// ibPreparedStatement support
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	//
+	// Firebird's native API supports concurrent transactions per
+	// connection (the fb_tr_list stack inside these methods), but the
+	// base-class counter ensures DoBeginTransaction / DoCommit /
+	// DoRollBack only fire on outermost depth transitions — so the
+	// stack always stays one node deep in practice. Keeping the stack
+	// code intact means no behaviour change for direct native callers
+	// (HoldRowLocks / TryProbeRowLock, etc.).
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
 private:
 

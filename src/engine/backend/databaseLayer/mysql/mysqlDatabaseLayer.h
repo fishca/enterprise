@@ -60,13 +60,9 @@ public:
 	/// clone database  
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerMySQL(*this); }
 
-	// transaction support
-	virtual void BeginTransaction(const ibTxOptions& opts = {});
-	virtual void Commit();
-	virtual void RollBack();
-
-	// IsActiveTransaction uses the base-class default (reads the shared
-	// m_transaction_is_active flag that Begin / Commit / RollBack update).
+	// IsActiveTransaction uses the base-class default (m_txDepth > 0).
+	// Driver transaction primitives (DoBeginTransaction / DoCommit /
+	// DoRollBack) are protected — see below.
 
 	// Row-lock probe — SESSION innodb_lock_wait_timeout=1 inside
 	// BeginTransaction(noWait) + SELECT ... FOR UPDATE. Surfaces a held
@@ -96,6 +92,12 @@ protected:
 
 	// ibPreparedStatement support
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
 private:
 	void InitDatabase();

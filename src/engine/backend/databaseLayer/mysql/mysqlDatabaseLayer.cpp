@@ -265,7 +265,7 @@ bool ibDatabaseLayerMySQL::IsOpen()
 }
 
 // transaction support
-void ibDatabaseLayerMySQL::BeginTransaction(const ibTxOptions& opts)
+void ibDatabaseLayerMySQL::DoBeginTransaction(const ibTxOptions& opts)
 {
 	ResetErrorCodes();
 
@@ -276,7 +276,6 @@ void ibDatabaseLayerMySQL::BeginTransaction(const ibTxOptions& opts)
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
-	m_transaction_is_active = true;
 
 	// InnoDB's NOWAIT is either per-statement (`SELECT ... FOR UPDATE NOWAIT`,
 	// MySQL 8+) or session-level via `innodb_lock_wait_timeout`. Setting
@@ -288,7 +287,7 @@ void ibDatabaseLayerMySQL::BeginTransaction(const ibTxOptions& opts)
 	}
 }
 
-void ibDatabaseLayerMySQL::Commit()
+void ibDatabaseLayerMySQL::DoCommit()
 {
 	ResetErrorCodes();
 
@@ -306,10 +305,9 @@ void ibDatabaseLayerMySQL::Commit()
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
-	m_transaction_is_active = false;
 }
 
-void ibDatabaseLayerMySQL::RollBack()
+void ibDatabaseLayerMySQL::DoRollBack()
 {
 	ResetErrorCodes();
 
@@ -327,13 +325,9 @@ void ibDatabaseLayerMySQL::RollBack()
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
-	m_transaction_is_active = false;
 }
 
-// IsActiveTransaction inherits the base-class default (reads the
-// shared `m_transaction_is_active` flag). Removing the always-false
-// override here fixes the long-standing bug where scripts checking
-// ActiveTransaction() mid-work always saw false on MySQL.
+// IsActiveTransaction inherits the base-class default (m_txDepth > 0).
 
 bool ibDatabaseLayerMySQL::TryProbeRowLock(const wxString& tableName,
                                             const wxString& pkColumn,

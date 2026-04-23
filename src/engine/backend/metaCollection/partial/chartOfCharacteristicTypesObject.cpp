@@ -8,7 +8,7 @@
 
 #include "backend/appData.h"
 #include "reference/reference.h"
-#include "backend/databaseLayer/databaseLayer.h"
+#include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
 
 #include "backend/fileSystem/fs.h"
@@ -134,9 +134,9 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -146,18 +146,17 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 				{
-					db_query_active_transaction.BeginTransaction();
+					scope.SafeBeginTransaction();
 
 					{
 						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
@@ -178,7 +177,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 					if (!SaveData()) {
 						if (generateUniqueIdentifier)
 							ibValueRecordDataObjectChartOfCharacteristicTypes::ResetUniqueIdentifier();
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
@@ -189,13 +188,13 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
 								ibValueRecordDataObjectChartOfCharacteristicTypes::ResetUniqueIdentifier();
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 					}
 
-					db_query_active_transaction.CommitTransaction();
+					scope.SafeCommitTransaction();
 
 					if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
 					else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
@@ -212,9 +211,9 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::DeleteObject()
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -236,24 +235,23 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::DeleteObject()
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 				{
-					db_query_active_transaction.BeginTransaction();
+					scope.SafeBeginTransaction();
 
 					{
 						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
 					if (!DeleteData()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to delete object in db!"));
 						return false;
 					}
@@ -262,13 +260,13 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::DeleteObject()
 						ibValue cancel = false;
 						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
-					db_query_active_transaction.CommitTransaction();
+					scope.SafeCommitTransaction();
 
 					if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
 				}

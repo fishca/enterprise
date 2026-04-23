@@ -401,7 +401,7 @@ bool ibDatabaseLayerFirebird::IsOpen()
 }
 
 // transaction support
-void ibDatabaseLayerFirebird::BeginTransaction(const ibTxOptions& opts)
+void ibDatabaseLayerFirebird::DoBeginTransaction(const ibTxOptions& opts)
 {
 	ResetErrorCodes();
 
@@ -443,7 +443,7 @@ void ibDatabaseLayerFirebird::BeginTransaction(const ibTxOptions& opts)
 	}
 }
 
-void ibDatabaseLayerFirebird::Commit()
+void ibDatabaseLayerFirebird::DoCommit()
 {
 	ResetErrorCodes();
 
@@ -470,7 +470,7 @@ void ibDatabaseLayerFirebird::Commit()
 	}
 }
 
-void ibDatabaseLayerFirebird::RollBack()
+void ibDatabaseLayerFirebird::DoRollBack()
 {
 	ResetErrorCodes();
 
@@ -497,10 +497,11 @@ void ibDatabaseLayerFirebird::RollBack()
 	}
 }
 
-bool ibDatabaseLayerFirebird::IsActiveTransaction()
-{
-	return m_pDatabase && m_fbNode->m_pTransaction;
-}
+// IsActiveTransaction inherits the base-class default (m_txDepth > 0).
+// The previous native-handle probe (m_fbNode->m_pTransaction) was
+// removed — the counter on the base is the source of truth for the
+// runtime contract, and matches the drivers that don't have a native
+// handle to probe.
 
 // --- Row-level pessimistic locks -----------------------------------------
 

@@ -161,19 +161,27 @@ public:
 	void ReadEngineConfig();
 #pragma endregion
 
-	static std::shared_ptr<ibDatabaseLayer> GetDatabaseLayer() {
-		if (s_instance != nullptr)
-			return s_instance->m_db;
-		return nullptr;
-	}
+	// Returns the connection the current thread should use for
+	// database work. Resolution order:
+	//   1. Thread-local active-TX connection (pool-tracked) — while a
+	//      transaction is open, every db_query access on this thread
+	//      must land on the same conn.
+	//   2. Thread-local current connection set by the innermost live
+	//      ibConnectionScope on this thread.
+	//   3. Process-wide m_db — the legacy single shared connection
+	//      held directly by ibApplicationData. Unchanged fallback
+	//      for code that hasn't been migrated to ibConnectionScope.
+	//
+	// This is what the `db_query` macro expands to. Defined out-of-
+	// line in appData.cpp; the TL slots themselves live on
+	// ibConnectionPool (see connectionPool.h).
+	static std::shared_ptr<ibDatabaseLayer> GetDatabaseLayer();
 
-	// Bounded pool of additional ibDatabaseLayer clones for worker
-	// threads that need their own connection (heartbeat writer, SSE
-	// streams, future per-session script workers). The primary m_db
-	// returned by GetDatabaseLayer() stays the single shared handle
-	// for the main thread. Pool allocates lazily on first Checkout
-	// and is bounded; Init/Shutdown are driven by CreateFile/Server
-	// and DestroyAppDataEnv respectively. Borrowed pointer — lifetime
+	// Process-wide connection pool — the sole owner of every live
+	// ibDatabaseLayer. Pool holds the master (opened at Init) as
+	// m_source and lazily clones up to maxSize on demand. Init/
+	// Shutdown are driven by CreateFile/Server AppDataEnv and
+	// DestroyAppDataEnv respectively. Borrowed pointer — lifetime
 	// tied to ibApplicationData; never null while s_instance is alive.
 	static class ibConnectionPool* GetConnectionPool() {
 		return s_instance != nullptr ? s_instance->m_connectionPool.get() : nullptr;
@@ -407,9 +415,11 @@ private:
 	static bool m_forceExit;
 	static wxCriticalSection m_cs_force_exit;
 
-	std::shared_ptr<ibDatabaseLayer> m_db;
 	std::unique_ptr<class ibPluginManager> m_pluginManager;
-	// Additional-connection pool — see GetConnectionPool().
+	// Connection pool — the sole owner of every ibDatabaseLayer in
+	// the process. Master (opened at Init) plus lazy clones up to
+	// maxSize. `db_query` / GetDatabaseLayer resolve through the
+	// pool; ibApplicationData keeps no direct DB handle of its own.
 	std::unique_ptr<class ibConnectionPool> m_connectionPool;
 
 	// Main-thread SessionScope — bound to the single user session on

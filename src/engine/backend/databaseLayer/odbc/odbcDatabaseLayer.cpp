@@ -260,7 +260,7 @@ bool ibDatabaseLayerODBC::IsOpen()
 	return m_bIsConnected;
 }
 
-void ibDatabaseLayerODBC::BeginTransaction(const ibTxOptions& opts)
+void ibDatabaseLayerODBC::DoBeginTransaction(const ibTxOptions& opts)
 {
 	ResetErrorCodes();
 
@@ -270,7 +270,6 @@ void ibDatabaseLayerODBC::BeginTransaction(const ibTxOptions& opts)
 		InterpretErrorCodes(nRet);
 		ThrowDatabaseException();
 	}
-	m_transaction_is_active = true;
 
 	// MSSQL's session-level lock-wait is set via `SET LOCK_TIMEOUT 0`.
 	// Works for any ODBC-linked MSSQL backend; other DBMSes behind ODBC
@@ -282,7 +281,7 @@ void ibDatabaseLayerODBC::BeginTransaction(const ibTxOptions& opts)
 	}
 }
 
-void ibDatabaseLayerODBC::Commit()
+void ibDatabaseLayerODBC::DoCommit()
 {
 	ResetErrorCodes();
 
@@ -299,10 +298,9 @@ void ibDatabaseLayerODBC::Commit()
 		InterpretErrorCodes(nRet);
 		ThrowDatabaseException();
 	}
-	m_transaction_is_active = false;
 }
 
-void ibDatabaseLayerODBC::RollBack()
+void ibDatabaseLayerODBC::DoRollBack()
 {
 	ResetErrorCodes();
 
@@ -319,10 +317,9 @@ void ibDatabaseLayerODBC::RollBack()
 		InterpretErrorCodes(nRet);
 		ThrowDatabaseException();
 	}
-	m_transaction_is_active = false;
 }
 
-// IsActiveTransaction inherits the base-class default.
+// IsActiveTransaction inherits the base-class default (m_txDepth > 0).
 
 bool ibDatabaseLayerODBC::TryProbeRowLock(const wxString& tableName,
                                            const wxString& pkColumn,

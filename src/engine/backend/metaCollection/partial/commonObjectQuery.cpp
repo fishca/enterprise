@@ -6,7 +6,7 @@
 #include "commonObject.h"
 
 #include "backend/appData.h"
-#include "backend/databaseLayer/databaseLayer.h"
+#include "backend/databaseLayer/connectionPool.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
 #include "backend/metaCollection/partial/tabularSection/tabularSection.h"
@@ -1489,16 +1489,16 @@ void ibValueRecordDataObjectRef::SetDeletionMark(bool deletionMark)
 
 bool ibValueRecordManagerObject::ExistData()
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+
+	if (!scope || !scope->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	bool success = false;
 
 	if (m_recordLine != nullptr) {
 
-		db_query->BeginTransaction();
+		scope.SafeBeginTransaction();
 
 		wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
 		wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
@@ -1514,7 +1514,7 @@ bool ibValueRecordManagerObject::ExistData()
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+		ibPreparedStatement* statement = scope->PrepareStatement(queryText);
 
 		if (statement != nullptr) {
 			for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
@@ -1530,13 +1530,13 @@ bool ibValueRecordManagerObject::ExistData()
 			ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 			if (resultSet != nullptr) {
 				success = resultSet->Next();
-				db_query->CloseResultSet(resultSet);
+				scope->CloseResultSet(resultSet);
 			}
 
-			db_query->CloseStatement(statement);
+			scope->CloseStatement(statement);
 		}
 
-		db_query->Commit();
+		scope.SafeCommitTransaction();
 	}
 
 	return success;

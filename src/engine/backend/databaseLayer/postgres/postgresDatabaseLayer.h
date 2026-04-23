@@ -59,13 +59,9 @@ public:
 	/// clone database  
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerPostgres(*this); }
 
-	// transaction support
-	virtual void BeginTransaction(const ibTxOptions& opts = {});
-	virtual void Commit();
-	virtual void RollBack();
-
-	// IsActiveTransaction uses the base-class default which reads the
-	// shared `m_transaction_is_active` flag.
+	// IsActiveTransaction uses the base-class default (m_txDepth > 0).
+	// Driver transaction primitives (DoBeginTransaction / DoCommit /
+	// DoRollBack) are protected — see below.
 
 	// Pessimistic row-lock probe for ibSessionRegistry's designer-
 	// exclusive policy. PG implementation: BEGIN → SELECT ... FOR
@@ -100,10 +96,13 @@ protected:
 	// ibPreparedStatement support
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
 
-private:
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
-	// m_transaction_is_active now lives on the base class — shared flag
-	// read by ibDatabaseLayer::IsActiveTransaction.
+private:
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	ibInterfacePostgres* m_pInterface;

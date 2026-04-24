@@ -56,6 +56,11 @@ public:
 	// entry instead.
 	void InitializeRuntime();
 
+	// Drop the runtime slot — symmetric teardown for InitializeRuntime.
+	// Used by ExitRuntimeForSession to release this descriptor's
+	// ProcUnit at session end. No-op if already empty.
+	void ResetRuntime() { m_procUnit.reset(); }
+
 	// Bind (or rebind) a named context variable on this descriptor's
 	// compile module. The value is an ibValue that exposes its method
 	// table + attributes at compile time — both the "full object"

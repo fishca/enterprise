@@ -402,28 +402,27 @@ bool ibValueModuleManager::InitRuntimeForSession(ibSession* session)
 		(kind == ibSessionKind::Service);
 	if (!wantsRuntime)
 		return true;
-	// Compile must be done by the time runtime is created. In the
-	// current codebase CreateMainModule is called right before this
-	// (during metadata init on desktop; explicitly on web) so
-	// m_compileModule carries a compiled ibByteCode.
+	// Imperative pipeline — each descriptor owns its m_procUnit.
+	// CreateMainModule already compiled m_compileModule; now we just
+	// allocate the runtime slot and execute the top-level.
 	if (!appData->DesignerMode() && m_compileModule != nullptr) {
 		try {
-			auto mainPU = std::make_shared<ibProcUnit>();
-			mainPU->Execute(m_compileModule->m_cByteCode);
-			session->AttachProcUnit(this, mainPU);
+			InitializeRuntime();     // ensure root's ProcUnit exists
+			Run();                    // execute main module top-level
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("InitRuntimeForSession main: %s"), err.GetErrorDescription());
 			return false;
 		}
 	}
-	// Common modules — each gets its own ProcUnit per session, parented
-	// to the session's main ProcUnit so local context chains resolve.
+	// Common modules — each has its own compile + m_procUnit. Parent
+	// is wired in ibValueModuleUnit's ctor (SetParent(moduleManager)),
+	// which cascades procUnit->SetParent on creation inside
+	// InitializeRuntime() below.
 	for (auto& moduleValue : m_listCommonModuleManager) {
 		if (!moduleValue)
 			continue;
-		ibCompileModule* cm = moduleValue->GetCompileModule();
-		if (cm == nullptr)
+		if (moduleValue->GetCompileModule() == nullptr)
 			continue;
 		if (moduleValue->IsGlobalModule())
 			// Global modules are *inlined* into the main module at
@@ -434,11 +433,8 @@ bool ibValueModuleManager::InitRuntimeForSession(ibSession* session)
 			// the spliced code as part of its own top-level.
 			continue;
 		try {
-			auto pu = std::make_shared<ibProcUnit>();
-			pu->SetParent(session->GetProcUnitFor(this).get());
-			pu->Execute(cm->m_cByteCode, false);
-			ibValueModuleUnit* rawUnit = moduleValue;  // ibValuePtr → T*
-			session->AttachProcUnit(rawUnit, pu);
+			moduleValue->InitializeRuntime();
+			moduleValue->Run(false);
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("InitRuntimeForSession common: %s"), err.GetErrorDescription());
@@ -453,18 +449,16 @@ void ibValueModuleManager::ExitRuntimeForSession(ibSession* session)
 	if (session == nullptr)
 		return;
 	// Pairs with InitRuntimeForSession's lock — concurrent Init + Exit
-	// would race on m_listCommonModuleManager iteration + session map
-	// access. Hot code path but brief (just detach map entries).
+	// would race on m_listCommonModuleManager iteration + common-module
+	// ProcUnit drop. Hot code path but brief.
 	std::lock_guard<std::mutex> lock(m_runtimeMutex);
-	// Drop common modules first — ProcUnit parent chain breaks cleanly
-	// (children reference the main ProcUnit; release in reverse order).
+	// Drop common modules first — procUnit parent chain breaks cleanly
+	// when children release before the root (leaf → root order).
 	for (auto& moduleValue : m_listCommonModuleManager) {
-		if (moduleValue) {
-			ibValueModuleUnit* rawUnit = moduleValue;
-			session->DetachProcUnit(rawUnit);
-		}
+		if (moduleValue)
+			moduleValue->ResetRuntime();
 	}
-	session->DetachProcUnit(this);
+	ResetRuntime();
 }
 
 SYSTEM_TYPE_REGISTER(ibValueModuleManager::ibValueModuleUnit, "ModuleManager", string_to_clsid("SO_MODL"));

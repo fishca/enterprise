@@ -34,26 +34,11 @@ ibRuntimeModuleDataObject::~ibRuntimeModuleDataObject()
 
 std::shared_ptr<ibProcUnit> ibRuntimeModuleDataObject::GetProcUnit() const
 {
-	// Preferred path — walk parent chain to the descriptor's session,
-	// look up in its ProcUnit map. No thread_local dependency, stable
-	// regardless of which thread dispatches (web HTTP handler can read
-	// without SessionScope once parent is wired).
-	//
-	// Fallback to thread_local Current() — for legacy callsites where
-	// the descriptor's parent isn't wired yet (common modules on the
-	// legacy singleton mm whose parent == nullptr → GetSession returns
-	// nullptr). This branch goes away once per-session common-module
-	// trees land.
-	//
-	// Final fallback — descriptor's own m_procUnit for pre-session
-	// bootstrap and headless paths (codeRunner, classChecker).
-	ibSession* session = GetSession();
-	if (session == nullptr)
-		session = ibSession::Current();
-	if (session != nullptr) {
-		if (auto pu = session->GetProcUnitFor(this))
-			return pu;
-	}
+	// ProcUnit lives directly on the descriptor — each descriptor owns
+	// its runtime slot via InitializeRuntime(). Session / thread_local
+	// lookup is no longer needed: per-instance descriptors (form, record
+	// object, constant) have their own m_procUnit; common modules and
+	// root are wired at InitRuntimeForSession into the same field.
 	return m_procUnit;
 }
 

@@ -98,7 +98,12 @@ m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
-		m_moduleManager = new ibValueModuleManagerConfiguration(this, m_commonObject);
+		// Legacy singleton — no session at this layer. Per-session root
+		// managers are created via ibSession::CreateRoot once StartSession
+		// / Login wires up the new path. This singleton remains during
+		// migration so existing activeMetaData->GetModuleManager() callers
+		// keep working.
+		m_moduleManager = new ibValueModuleManagerConfiguration(nullptr, this, m_commonObject);
 		m_moduleManager->IncrRef();
 		if (!m_commonObject->OnLoadMetaObject(this)) {
 			wxASSERT_MSG(false, "m_commonObject->OnLoadMetaObject() == false");

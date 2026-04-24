@@ -1,5 +1,7 @@
 #include "session.h"
 
+#include "backend/moduleManager/moduleManager.h"
+
 #include <utility>
 #include <chrono>
 
@@ -22,32 +24,53 @@ ibSession::~ibSession()
 	// worker's pending GetProcUnitFor could be waiting on the same
 	// mutex when the dtor fires from the releasing thread).
 	m_procUnitMap.clear();
+	// m_root drops via member destruction after this body returns —
+	// nested common-module / object descriptors held by the root fall
+	// with it (shared_ptr cascade).
+}
+
+ibValueModuleManagerConfiguration* ibSession::GetModuleManager() const
+{
+	return m_root;   // ibValuePtr's implicit operator T*()
+}
+
+ibValueModuleManagerConfiguration& ibSession::CreateRoot(
+	ibMetaData* metaData,
+	ibValueMetaObjectConfiguration* commonMeta)
+{
+	m_root = ibValuePtr<ibValueModuleManagerConfiguration>(
+		new ibValueModuleManagerConfiguration(this, metaData, commonMeta));
+	return *m_root;
+}
+
+void ibSession::ClearRoot()
+{
+	m_root = nullptr;
 }
 
 // m_procUnitMap is touched from multiple threads: HTTP login path
 // (InitRuntimeForSession Attach), HTTP logout path (ExitRuntimeForSession
 // Detach) and the session's own worker thread (GetProcUnit → Get on
 // every script dispatch). unordered_map is not thread-safe, so every
-// accessor locks m_procUnitMtx. Returning a raw pointer on Get is safe
-// because the shared_ptr stays owned by the map until Detach — the
-// caller runs synchronously under the lock's protection plus the
-// session-is-alive invariant (see SessionManager keeper).
-ibProcUnit* ibSession::GetProcUnitFor(const ibModuleDataObject* descriptor) const
+// accessor locks m_procUnitMtx. Returning shared_ptr — caller needs to
+// outlive the CallAsProc even if the session is concurrently removed
+// from the registry (rapid F5 crash, 2026-04-21).
+std::shared_ptr<ibProcUnit> ibSession::GetProcUnitFor(const ibRuntimeModuleDataObject* descriptor) const
 {
 	if (descriptor == nullptr) return nullptr;
 	std::lock_guard<std::mutex> lk(m_procUnitMtx);
 	auto it = m_procUnitMap.find(descriptor);
-	return it != m_procUnitMap.end() ? it->second.get() : nullptr;
+	return it != m_procUnitMap.end() ? it->second : nullptr;
 }
 
-void ibSession::AttachProcUnit(const ibModuleDataObject* descriptor, std::shared_ptr<ibProcUnit> pu)
+void ibSession::AttachProcUnit(const ibRuntimeModuleDataObject* descriptor, std::shared_ptr<ibProcUnit> pu)
 {
 	if (descriptor == nullptr) return;
 	std::lock_guard<std::mutex> lk(m_procUnitMtx);
 	m_procUnitMap[descriptor] = std::move(pu);
 }
 
-void ibSession::DetachProcUnit(const ibModuleDataObject* descriptor)
+void ibSession::DetachProcUnit(const ibRuntimeModuleDataObject* descriptor)
 {
 	if (descriptor == nullptr) return;
 	std::lock_guard<std::mutex> lk(m_procUnitMtx);

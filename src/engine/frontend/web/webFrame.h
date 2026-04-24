@@ -49,6 +49,14 @@ public:
 	// second thread_local or a separate globals table.
 	ibWebApplication* GetApp() const { return m_app; }
 
+	// Per-cookie session this frame drives. Forwarded from the owning
+	// ibWebApplication which has the session pointer set at Login time
+	// (ibWebSession::Login → app->SetSessionContext(ticket->Session())).
+	// Used by UI-originated paths (script OpenForm from OnStart, sidebar
+	// clicks) where no ownerControl is available to walk a descriptor
+	// parent chain up to the session.
+	virtual ibSession* GetSession() const override;
+
 	// ibWebWindow
 	virtual wxString GetControlType() const override { return wxT("frame"); }
 

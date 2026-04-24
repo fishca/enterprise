@@ -12,8 +12,17 @@
 #include "visualView/visualHostClient.h"
 
 #include "webChildFrame.h"
+#include "webApplication.h"   // for GetSessionContext on GetSession()
 
 ibWebFrame::ibWebFrame(ibWebApplication* app) : m_app(app) {}
+
+ibSession* ibWebFrame::GetSession() const
+{
+	// Per-cookie ibWebApplication carries the ticket's session (bound
+	// at Login time via ibWebSession::Login → SetSessionContext). No
+	// app / no session set — return nullptr; callers guard.
+	return m_app != nullptr ? m_app->GetSessionContext() : nullptr;
+}
 
 ibWebFrame::~ibWebFrame()
 {
@@ -53,6 +62,9 @@ ibBackendValueForm* ibWebFrame::CreateNewForm(
 	// recurse infinitely (OnStart script tab-spawn, 2026-04-19). Callers
 	// that need BuildForm fallback (sidebar click via OpenFormInSession)
 	// invoke CreateAndBuildForm themselves above this call.
+	//
+	// Parent descriptor wiring happens inside ibValueForm — it has
+	// ownerControl + access to backend_mainFrame for the UI fallback.
 	ibControlFrame* ownerControl = dynamic_cast<ibControlFrame*>(backendControl);
 	return ibValue::CreateAndPrepareValueRef<ibValueForm>(
 		creator, ownerControl, srcObject, formGuid);

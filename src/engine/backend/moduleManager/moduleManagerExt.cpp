@@ -18,7 +18,7 @@ ibCompileModule* ibValueModuleManagerExternalDataProcessor::GetCompileModule() c
 	return moduleManager->GetCompileModule();
 }
 
-ibProcUnit* ibValueModuleManagerExternalDataProcessor::GetProcUnit() const
+std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalDataProcessor::GetProcUnit() const
 {
 	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
@@ -77,20 +77,18 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 
 	if (!appData->DesignerMode()) {
 
-		m_procUnit = std::make_shared<ibProcUnit>();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
+		InitializeRuntime();
+		m_procUnit->SetParent(moduleManager->GetProcUnit().get());
 
 		//set proc unit — shared with m_objectValue so both descriptors
 		//reach the same runtime; shared_ptr co-ownership keeps the unit
 		//alive until the last of them drops.
 		m_objectValue->m_procUnit = m_procUnit;
-		AttachToCurrentSession();
-		m_objectValue->AttachToCurrentSession();
 
 		try {
-			m_compileModule->Compile();
+			Compile();
 			//and run...
-			m_procUnit->Execute(m_compileModule->m_cByteCode);
+			Execute();
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("External module '%s' init failed: %s"),
@@ -234,7 +232,7 @@ ibCompileModule* ibValueModuleManagerExternalReport::GetCompileModule() const
 	return moduleManager->GetCompileModule();
 }
 
-ibProcUnit* ibValueModuleManagerExternalReport::GetProcUnit() const
+std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalReport::GetProcUnit() const
 {
 	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
@@ -293,16 +291,14 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 
 	if (!appData->DesignerMode()) {
 
-		m_procUnit = std::make_shared<ibProcUnit>();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
+		InitializeRuntime();
+		m_procUnit->SetParent(moduleManager->GetProcUnit().get());
 		//set proc unit — shared with m_objectValue (co-ownership).
 		m_objectValue->m_procUnit = m_procUnit;
-		AttachToCurrentSession();
-		m_objectValue->AttachToCurrentSession();
 
 		try {
-			m_compileModule->Compile();
-			m_procUnit->Execute(m_compileModule->m_cByteCode);
+			Compile();
+			Execute();
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("External module '%s' re-init failed: %s"),
@@ -482,7 +478,7 @@ bool ibValueModuleManagerExternalDataProcessor::CallAsFunc(const long lMethodNum
 		return m_objectValue->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
@@ -577,7 +573,7 @@ bool ibValueModuleManagerExternalReport::CallAsFunc(const long lMethodNum, ibVal
 		return m_objectValue->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

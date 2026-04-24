@@ -462,6 +462,11 @@ bool ibApplicationData::InitLocale(const wxString& locale)
 	return false;
 }
 
+ibSession* ibApplicationData::GetMainSession() const
+{
+	return m_mainTicket ? m_mainTicket->Session() : nullptr;
+}
+
 bool ibApplicationData::Connect(const wxString& strUserName, const wxString& strUserPassword, const int flags)
 {
 	if (m_created_metadata)
@@ -479,10 +484,29 @@ bool ibApplicationData::Connect(const wxString& strUserName, const wxString& str
 	m_created_metadata = true;
 	m_run_metadata = activeMetaData->RunDatabase();
 
+	// Commit 2 (runtime facade plan): bind the session's own root module
+	// manager. Populated only for modes that actually run scripts — the
+	// wes technical session (eWEB_ENTERPRISE_MODE → WebServer kind),
+	// designer and launcher skip this. Per-cookie WebClient sessions are
+	// handled separately in ibWebSession::Login.
+	//
+	// Readers still go through activeMetaData->GetModuleManager() (legacy
+	// singleton) in this commit; the session-aware overload + reader
+	// migration lands in the next commit.
+	if (m_run_metadata && activeMetaData != nullptr &&
+	    (m_runMode == eENTERPRISE_MODE || m_runMode == eSERVICE_MODE))
+	{
+		if (auto* session = m_mainTicket ? m_mainTicket->Session() : nullptr) {
+			session->CreateRoot(
+				activeMetaData,
+				activeMetaData->GetCommonMetaObject());
+		}
+	}
+
 	// Phase A: bring up per-session runtime for the current session.
 	// Desktop's User session gets ProcUnits for main + common modules
 	// under its m_procUnitMap, so subsequent meta->GetProcUnit() calls
-	// resolve via the session (delegate in ibModuleDataObject::GetProcUnit).
+	// resolve via the session (delegate in ibRuntimeModuleDataObject::GetProcUnit).
 	// Legacy CreateMainModule still creates its own ProcUnit on the
 	// descriptor — double-write during Phase A, harmless (fallback).
 	// Web's System session returns early inside InitRuntimeForSession
@@ -513,6 +537,17 @@ bool ibApplicationData::Disconnect()
 				if (auto* ctx = ibSession::Current())
 					mm->ExitRuntimeForSession(ctx);
 			}
+		}
+
+		// Commit 2: drop session's own root module manager BEFORE the
+		// metadata tree goes down in CloseDatabase. The root's common
+		// modules + compile state reference metadata descriptors; without
+		// explicit clear, the root could outlive metadata (registry drains
+		// session removal asynchronously) and its dtor would touch dead
+		// pointers.
+		if (m_mainTicket) {
+			if (auto* session = m_mainTicket->Session())
+				session->ClearRoot();
 		}
 
 		// CloseSession drops m_mainThreadScope + m_mainTicket. Ticket

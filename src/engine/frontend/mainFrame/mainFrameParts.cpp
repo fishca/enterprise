@@ -121,6 +121,16 @@ void ibFrontendDocMDIFrame::ActivateView(ibMetaView* view, bool activate) {
 
 #include "frontend/win/dlgs/authorization.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
+#include "backend/moduleManager/moduleManager.h"
+
+ibSession* ibFrontendDocMDIFrame::GetSession() const
+{
+	// Desktop: one process — one session. The frame doesn't own a
+	// session pointer; the active session is the one appData holds
+	// through m_mainTicket. nullptr before Connect and after Disconnect.
+	return appData != nullptr ? appData->GetMainSession() : nullptr;
+}
 
 bool ibFrontendDocMDIFrame::AuthenticationUser(const wxString& userName, const wxString& userPassword) const
 {
@@ -168,6 +178,9 @@ ibBackendValueForm* ibFrontendDocMDIFrame::CreateNewForm(const ibValueMetaObject
 {
 	ibControlFrame* ownerControl = dynamic_cast<ibControlFrame*>(backendControl);
 	wxASSERT(!(backendControl == nullptr && ownerControl != nullptr));
+	// Parent descriptor wiring happens inside ibValueForm's ctor — it
+	// already receives ownerControl; for the UI path (null owner) it
+	// falls back to backend_mainFrame->GetSession()->GetModuleManager().
 	return ibValue::CreateAndPrepareValueRef<ibValueForm>(creator, ownerControl, srcObject, formGuid);
 }
 

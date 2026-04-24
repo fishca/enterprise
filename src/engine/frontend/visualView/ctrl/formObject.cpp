@@ -261,10 +261,37 @@ void ibValueForm::InitializeForm(const ibValueMetaObjectFormBase* creator,
 	if (creator != nullptr)
 		m_formType = creator->GetTypeForm();
 
+	// Runtime-tree parent is determined here — srcObject is set only
+	// in this method, and the form's metadata + module-manager root
+	// are reachable through the creator. Form sits under the bound
+	// data-record descriptor (catalog/document/external DP object) if
+	// any; otherwise directly under the metadata's root. Subsequent
+	// BindVariable / InitializeRuntime pick up this parent to wire
+	// their compile / procUnit scope chain on creation.
+	ibRuntimeModuleDataObject* sourceDesc =
+		dynamic_cast<ibRuntimeModuleDataObject*>(srcObject);
+	ibRuntimeModuleDataObject* descParent = sourceDesc;
+	if (descParent == nullptr && creator != nullptr) {
+		const ibMetaData* meta = creator->GetMetaData();
+		if (meta != nullptr) {
+			if (ibValueModuleManager* mm = meta->GetModuleManager())
+				descParent = mm;
+		}
+	}
+	if (descParent != nullptr)
+		ibRuntimeModuleDataObject::SetParent(descParent);
+
 	//SetReadOnly(readOnly);
 }
 
 #include "backend/system/systemManager.h"
+
+// Form's meta-object drives lazy compile-module creation via
+// BindContextVariable when m_compileModule is not yet wired.
+const ibValueMetaObjectModuleBase* ibValueForm::GetMetaForCompile() const
+{
+	return m_metaFormObject;
+}
 
 bool ibValueForm::InitializeFormModule()
 {
@@ -275,44 +302,22 @@ bool ibValueForm::InitializeFormModule()
 			return false;
 		}
 
-		const ibMetaData* metaData = m_metaFormObject->GetMetaData();
-		wxASSERT(metaData);
-		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
-		wxASSERT(moduleManager);
+		// Parent is already wired in InitializeForm(). BindVariable +
+		// InitializeRuntime lazily create compile module / ProcUnit
+		// and pick up the parent's scope chain on creation. Run is
+		// Designer-guarded; Compile internally too. Session linkage
+		// flows through the parent chain (descriptor → root → session).
+		BindContextVariable(thisForm, this);
+		InitializeRuntime();
 
-		ibModuleDataObject* sourceObjectValue =
-			dynamic_cast<ibModuleDataObject*>(m_sourceObject);
-
-		if (m_compileModule == nullptr) {
-			m_compileModule = new ibCompileModule(m_metaFormObject);
-			m_compileModule->SetParent(
-				sourceObjectValue != nullptr ? sourceObjectValue->GetCompileModule() :
-				moduleManager->GetCompileModule()
-			);
-			m_compileModule->AddContextVariable(thisForm, this);
+		try {
+			Compile();
+			Run(true);
 		}
-
-		if (!appData->DesignerMode()) {
-
-			try {
-				m_compileModule->Compile();
-			}
-			catch (const ibBackendException&) {
-				if (!appData->DesignerMode())
-					throw;
-				return false;
-			};
-
-			if (m_procUnit == nullptr) {
-				m_procUnit = std::make_shared<ibProcUnit>();
-				m_procUnit->SetParent(
-					sourceObjectValue != nullptr ? sourceObjectValue->GetProcUnit().get() :
-					moduleManager->GetProcUnit().get()
-				);
-			}
-
-			m_procUnit->Execute(m_compileModule->m_cByteCode, true);
-			AttachToCurrentSession();
+		catch (const ibBackendException&) {
+			if (!appData->DesignerMode())
+				throw;
+			return false;
 		}
 
 		PrepareNames();

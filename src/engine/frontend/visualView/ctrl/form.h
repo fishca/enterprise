@@ -30,7 +30,7 @@ const ibClassID g_controlFormCLSID = string_to_clsid("CT_FRME");
 //********************************************************************************************
 
 class FRONTEND_API ibValueForm :
-	public ibBackendValueForm, public ibValueFrame, public ibModuleDataObject
+	public ibBackendValueForm, public ibValueFrame, public ibRuntimeModuleDataObject
 {
 	wxDECLARE_DYNAMIC_CLASS(ibValueForm);
 
@@ -135,6 +135,11 @@ public:
 		ibSourceDataObject* srcObject, const ibUniqueKey& formGuid);
 
 	virtual bool InitializeFormModule();
+
+	// Form's meta-object drives lazy compile-module creation inside
+	// ibRuntimeModuleDataObject::BindContextVariable. Form has m_metaFormObject
+	// set at InitializeForm time, long before m_compileModule exists.
+	virtual const class ibValueMetaObjectModuleBase* GetMetaForCompile() const override;
 
 	//get metaData
 	virtual ibMetaData* GetMetaData() const;

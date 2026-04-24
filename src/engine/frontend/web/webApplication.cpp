@@ -362,7 +362,7 @@ void ibWebApplication::WorkerLoop()
 
 	// Pin THIS session's ibSession as Current() for the worker
 	// thread. Same reasoning as InstallOnThread above: without this,
-	// ibModuleDataObject::GetProcUnit falls back to descriptor-owned
+	// ibRuntimeModuleDataObject::GetProcUnit falls back to descriptor-owned
 	// m_procUnit (shared across sessions). Scope lives for the entire
 	// worker lifetime — stays active across every task dispatched here.
 	SessionScope sessionScope(m_sessionContext);

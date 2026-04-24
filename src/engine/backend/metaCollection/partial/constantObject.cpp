@@ -43,11 +43,11 @@ bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataOb
 	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	if (!m_compileModule) {
-		m_compileModule = new ibCompileModule(m_metaObject->GetModuleObject());
-		m_compileModule->SetParent(moduleManager->GetCompileModule());
-		m_compileModule->AddContextVariable(wxT("ThisObject"), this);
-	}
+	// Descriptor parent first — subsequent BindVariable /
+	// InitializeRuntime picks up the parent on lazy creation, no
+	// after-fact cascade needed.
+	ibRuntimeModuleDataObject::SetParent(moduleManager);
+	BindContextVariable(wxT("ThisObject"), this);
 
 	try {
 		m_constValue = GetConstValue();
@@ -58,20 +58,16 @@ bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataOb
 		return false;
 	}
 
-	if (!appData->DesignerMode()) {
-		m_procUnit = std::make_shared<ibProcUnit>();
-		m_procUnit->SetParent(moduleManager->GetProcUnit().get());
-		try {
-			m_compileModule->Compile();
-		}
-		catch (const ibBackendException&) {
-			if (!appData->DesignerMode())
-				throw;
-			return false;
-		};
-		m_procUnit->Execute(m_compileModule->m_cByteCode, true);
-		AttachToCurrentSession();
+	InitializeRuntime();
+	try {
+		Compile();
 	}
+	catch (const ibBackendException&) {
+		if (!appData->DesignerMode())
+			throw;
+		return false;
+	};
+	Run(true);
 
 	PrepareNames();
 	//is Ok

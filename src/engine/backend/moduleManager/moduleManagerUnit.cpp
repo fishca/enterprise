@@ -12,11 +12,15 @@
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueModuleManager::ibValueModuleUnit, ibValue);
 
 ibValueModuleManager::ibValueModuleUnit::ibValueModuleUnit(ibValueModuleManager *moduleManager, ibValueMetaObjectModuleBase *moduleObject, bool managerModule) :
-	ibValue(ibValueTypes::TYPE_VALUE, true), ibModuleDataObject(new ibCompileCommonModule(moduleObject)),
+	ibValue(ibValueTypes::TYPE_VALUE, true), ibRuntimeModuleDataObject(new ibCompileCommonModule(moduleObject)),
 	m_methodHelper(new ibValueMethodHelper()),
 	m_moduleManager(moduleManager),
 	m_moduleObject(moduleObject)
 {
+	// Parent chain in the runtime tree — common module sits directly
+	// under its owning root module manager. Enables GetSession() walks
+	// from nested scripts without relying on ambient SessionScope.
+	SetParent(moduleManager);
 }
 
 ibValueModuleManager::ibValueModuleUnit::~ibValueModuleUnit()
@@ -26,25 +30,24 @@ ibValueModuleManager::ibValueModuleUnit::~ibValueModuleUnit()
 
 #define objectManager wxT("Manager")
 
-//common module 
+//common module
 bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
 {
 	wxASSERT(m_moduleManager != nullptr);
 
-	m_compileModule->SetParent(m_moduleManager->GetCompileModule());
-	//create singleton "manager"
-	m_compileModule->AddContextVariable(objectManager, m_moduleManager->GetObjectManager());
+	// Parent already wired in ctor (SetParent(moduleManager)). Bind
+	// the module-scope "Manager" singleton that scripts reach via
+	// Manager.<method>() inside common modules.
+	BindContextVariable(objectManager, m_moduleManager->GetObjectManager());
 
 	// Compile only — per-session ProcUnit comes from InitRuntimeForSession.
-	if (!appData->DesignerMode()) {
-		try {
-			m_compileModule->Compile();
-		}
-		catch (const ibBackendException& err) {
-			wxLogWarning(_("Common module init failed: %s"), err.GetErrorDescription());
-			return false;
-		};
+	try {
+		Compile();
 	}
+	catch (const ibBackendException& err) {
+		wxLogWarning(_("Common module init failed: %s"), err.GetErrorDescription());
+		return false;
+	};
 
 	ibValueModuleUnit::PrepareNames();
 	return true;
@@ -83,14 +86,14 @@ void ibValueModuleManager::ibValueModuleUnit::PrepareNames() const
 
 bool ibValueModuleManager::ibValueModuleUnit::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
-	return ibModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecuteProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
 bool ibValueModuleManager::ibValueModuleUnit::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

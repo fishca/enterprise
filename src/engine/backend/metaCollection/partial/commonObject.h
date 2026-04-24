@@ -1309,7 +1309,7 @@ public:
 //object with metaobject 
 #pragma region objects 
 class BACKEND_API ibValueRecordDataObject : public ibValue, public ibActionDataObject,
-	public ibSourceDataObject, public ibValueDataObject, public ibModuleDataObject {
+	public ibSourceDataObject, public ibValueDataObject, public ibRuntimeModuleDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordDataObject);
 protected:
 	enum helperAlias {
@@ -1342,6 +1342,17 @@ public:
 	//support actionData
 	virtual ibActionCollection GetActionCollection(const ibFormID& formType) override { return ibActionCollection(); }
 	virtual void ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm) override {}
+
+	// Feed the record's data-object module into ibRuntimeModuleDataObject's
+	// lazy compile-module creation. Every record-data subclass has
+	// its own GetMetaObject() (virtual in a parallel ibValueDataObject
+	// hierarchy) returning concrete metadata; GetModuleObject() then
+	// extracts the compile-target.
+	virtual const class ibValueMetaObjectModuleBase* GetMetaForCompile() const override {
+		if (auto* m = GetMetaObject())
+			return m->GetModuleObject();
+		return nullptr;
+	}
 
 	virtual ibValueRecordDataObject* CopyObjectValue() = 0;
 
@@ -1666,7 +1677,7 @@ protected:
 	ibValueMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API ibValueRecordSetObject : public ibValueModelTableBase, public ibModuleDataObject {
+class BACKEND_API ibValueRecordSetObject : public ibValueModelTableBase, public ibRuntimeModuleDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordSetObject);
 public:
 

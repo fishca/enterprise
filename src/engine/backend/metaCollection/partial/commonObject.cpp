@@ -1677,7 +1677,7 @@ bool ibValueRecordDataObject::CallAsProc(const long lMethodNum, ibValue** paPara
 {
 	const long lMethodAlias = m_methodHelper->GetPropAlias(lMethodNum);
 	if (lMethodAlias == eProcUnit) {
-		return ibModuleDataObject::ExecuteProc(
+		return ibRuntimeModuleDataObject::ExecuteProc(
 			GetMethodName(lMethodNum), paParams, lSizeArray
 		);
 	}
@@ -1689,7 +1689,7 @@ bool ibValueRecordDataObject::CallAsFunc(const long lMethodNum, ibValue& pvarRet
 {
 	const long lMethodAlias = m_methodHelper->GetPropAlias(lMethodNum);
 	if (lMethodAlias == eProcUnit) {
-		return ibModuleDataObject::ExecuteFunc(
+		return ibRuntimeModuleDataObject::ExecuteFunc(
 			GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 		);
 	}
@@ -1756,35 +1756,26 @@ bool ibValueRecordDataObjectExt::InitializeObject()
 		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 
-		if (!m_compileModule) {
-			m_compileModule = new ibCompileModule(m_metaObject->GetModuleObject());
-			m_compileModule->SetParent(moduleManager->GetCompileModule());
-			m_compileModule->AddContextVariable(thisObject, this);
-		}
+		// Imperative: parent first, then lazy compile + runtime slot
+		// pick up parent automatically on creation.
+		ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
+		BindContextVariable(thisObject, this);
+		InitializeRuntime();
 
-		if (!appData->DesignerMode()) {
-			try {
-				m_compileModule->Compile();
-			}
-			catch (const ibBackendException&) {
-				if (!appData->DesignerMode())
-					throw;
-				return false;
-			};
-
-			m_procUnit = std::make_shared<ibProcUnit>();
-			m_procUnit->SetParent(moduleManager->GetProcUnit());
+		try {
+			Compile();
 		}
+		catch (const ibBackendException&) {
+			if (!appData->DesignerMode())
+				throw;
+			return false;
+		};
 	}
 
 	PrepareEmptyObject();
 
-	if (!m_metaObject->IsExternalCreate()) {
-		if (!appData->DesignerMode()) {
-			m_procUnit->Execute(m_compileModule->m_cByteCode);
-			AttachToCurrentSession();
-		}
-	}
+	if (!m_metaObject->IsExternalCreate())
+		Run();
 
 	PrepareNames();
 
@@ -1805,35 +1796,24 @@ bool ibValueRecordDataObjectExt::InitializeObject(ibValueRecordDataObjectExt* so
 		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 
-		if (m_compileModule == nullptr) {
-			m_compileModule = new ibCompileModule(m_metaObject->GetModuleObject());
-			m_compileModule->SetParent(moduleManager->GetCompileModule());
-			m_compileModule->AddContextVariable(thisObject, this);
-		}
+		ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
+		BindContextVariable(thisObject, this);
+		InitializeRuntime();
 
-		if (!appData->DesignerMode()) {
-			try {
-				m_compileModule->Compile();
-			}
-			catch (const ibBackendException&) {
-				if (!appData->DesignerMode())
-					throw;
-				return false;
-			};
-
-			m_procUnit = std::make_shared<ibProcUnit>();
-			m_procUnit->SetParent(moduleManager->GetProcUnit());
+		try {
+			Compile();
 		}
+		catch (const ibBackendException&) {
+			if (!appData->DesignerMode())
+				throw;
+			return false;
+		};
 	}
 
 	PrepareEmptyObject();
 
-	if (!m_metaObject->IsExternalCreate()) {
-		if (!appData->DesignerMode()) {
-			m_procUnit->Execute(m_compileModule->m_cByteCode);
-			AttachToCurrentSession();
-		}
-	}
+	if (!m_metaObject->IsExternalCreate())
+		Run();
 
 	PrepareNames();
 
@@ -1888,21 +1868,19 @@ bool ibValueRecordDataObjectRef::InitializeObject(const ibGuid& copyGuid)
 	wxASSERT(metaData);
 	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
-	if (m_compileModule == nullptr) {
-		m_compileModule = new ibCompileModule(m_metaObject->GetModuleObject());
-		m_compileModule->SetParent(moduleManager->GetCompileModule());
-		m_compileModule->AddContextVariable(thisObject, this);
+
+	ibRuntimeModuleDataObject::SetParent(moduleManager);
+	BindContextVariable(thisObject, this);
+
+	try {
+		Compile();
 	}
-	if (!appData->DesignerMode()) {
-		try {
-			m_compileModule->Compile();
-		}
-		catch (const ibBackendException&) {
-			if (!appData->DesignerMode())
-				throw;
-			return false;
-		};
-	}
+	catch (const ibBackendException&) {
+		if (!appData->DesignerMode())
+			throw;
+		return false;
+	};
+
 	bool succes = true;
 	if (!appData->DesignerMode()) {
 		if (m_newObject && !copyGuid.isValid()) {
@@ -1927,10 +1905,9 @@ bool ibValueRecordDataObjectRef::InitializeObject(const ibGuid& copyGuid)
 	}
 	if (!appData->DesignerMode()) {
 		wxASSERT(m_procUnit == nullptr);
-		m_procUnit = std::make_shared<ibProcUnit>();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
-		m_procUnit->Execute(m_compileModule->m_cByteCode);
-		AttachToCurrentSession();
+		InitializeRuntime();
+		m_procUnit->SetParent(moduleManager->GetProcUnit().get());
+		Execute();
 		if (m_newObject) {
 			succes = Filling();
 		}
@@ -1948,21 +1925,18 @@ bool ibValueRecordDataObjectRef::InitializeObject(ibValueRecordDataObjectRef* so
 	wxASSERT(metaData);
 	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
-	if (m_compileModule == nullptr) {
-		m_compileModule = new ibCompileModule(m_metaObject->GetModuleObject());
-		m_compileModule->SetParent(moduleManager->GetCompileModule());
-		m_compileModule->AddContextVariable(thisObject, this);
+
+	ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
+	BindContextVariable(thisObject, this);
+
+	try {
+		Compile();
 	}
-	if (!appData->DesignerMode()) {
-		try {
-			m_compileModule->Compile();
-		}
-		catch (const ibBackendException&) {
-			if (!appData->DesignerMode())
-				throw;
-			return false;
-		};
-	}
+	catch (const ibBackendException&) {
+		if (!appData->DesignerMode())
+			throw;
+		return false;
+	};
 
 	if (!generate && source != nullptr)
 		PrepareEmptyObject(source);
@@ -1972,10 +1946,13 @@ bool ibValueRecordDataObjectRef::InitializeObject(ibValueRecordDataObjectRef* so
 	bool succes = true;
 	if (!appData->DesignerMode()) {
 		wxASSERT(m_procUnit == nullptr);
-		m_procUnit = std::make_shared<ibProcUnit>();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
-		m_procUnit->Execute(m_compileModule->m_cByteCode);
-		AttachToCurrentSession();
+		InitializeRuntime();
+		// Re-apply descriptor SetParent so cascade picks up the now-
+		// existent procUnit and wires its parent too. Compile-side
+		// parent is already set from the first call above — rewriting
+		// to the same value.
+		ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
+		Execute();
 		if (m_newObject && source != nullptr && !generate) {
 			m_procUnit->CallAsProc(wxT("OnCopy"), source->GetValue());
 		}
@@ -2651,22 +2628,17 @@ bool ibValueRecordSetObject::InitializeObject(const ibValueRecordSetObject* sour
 	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	if (m_compileModule == nullptr) {
-		m_compileModule = new ibCompileModule(m_metaObject->GetModuleObject());
-		m_compileModule->SetParent(moduleManager->GetCompileModule());
-		m_compileModule->AddContextVariable(thisObject, this);
-	}
+	ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
+	BindContextVariable(thisObject, this);
 
-	if (!appData->DesignerMode()) {
-		try {
-			m_compileModule->Compile();
-		}
-		catch (const ibBackendException&) {
-			if (!appData->DesignerMode())
-				throw;
-			return false;
-		};
+	try {
+		Compile();
 	}
+	catch (const ibBackendException&) {
+		if (!appData->DesignerMode())
+			throw;
+		return false;
+	};
 
 	if (source != nullptr) {
 		for (long row = 0; row < source->GetRowCount(); row++) {
@@ -2682,10 +2654,10 @@ bool ibValueRecordSetObject::InitializeObject(const ibValueRecordSetObject* sour
 
 	if (!appData->DesignerMode()) {
 		wxASSERT(m_procUnit == nullptr);
-		m_procUnit = std::make_shared<ibProcUnit>();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
-		m_procUnit->Execute(m_compileModule->m_cByteCode);
-		AttachToCurrentSession();
+		InitializeRuntime();
+		// Descriptor parent cascades both compile and procUnit parents.
+		ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
+		Execute();
 	}
 
 	PrepareNames();

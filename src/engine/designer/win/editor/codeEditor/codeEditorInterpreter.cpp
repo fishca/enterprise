@@ -69,7 +69,7 @@ void ibPrecompileCode::Clear() //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿
 
 void ibPrecompileCode::PrepareModuleData()
 {
-	ibModuleDataObject* contextVariable = nullptr;
+	ibRuntimeModuleDataObject* contextVariable = nullptr;
 
 	if (m_moduleObject) {
 		ibMetaData* metaData = m_moduleObject->GetMetaData();

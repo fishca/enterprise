@@ -107,7 +107,7 @@ private:
 #include "backend/moduleInfo.h"
 
 class BACKEND_API ibValueRecordDataObjectConstant : public ibValue, public ibActionDataObject,
-	public ibSourceDataObject, public ibModuleDataObject {
+	public ibSourceDataObject, public ibRuntimeModuleDataObject {
 	virtual bool InitializeObject(const ibValueRecordDataObjectConstant* source = nullptr);
 protected:
 	enum helperAlias {
@@ -132,6 +132,12 @@ protected:
 public:
 
 	virtual ~ibValueRecordDataObjectConstant();
+
+	// Constant's module object drives lazy compile creation via
+	// BindContextVariable.
+	virtual const class ibValueMetaObjectModuleBase* GetMetaForCompile() const override {
+		return m_metaObject ? m_metaObject->GetModuleObject() : nullptr;
+	}
 
 	ibValue GetConstValue() const;
 	bool SetConstValue(const ibValue& cValue);

@@ -138,6 +138,14 @@ public:
 	virtual ~ibApplicationData();
 	static ibApplicationData* Get() { return s_instance; }
 
+	// Session this process runs under (desktop: the single logged-in
+	// user session; wes: the WebServer technical session). Forwards to
+	// m_mainTicket's session — nullptr before StartSession completes
+	// and after CloseSession. Per-cookie WebClient sessions (web) are
+	// NOT this — they live on ibWebSession and are reached through the
+	// corresponding ibWebFrame.
+	class ibSession* GetMainSession() const;
+
 	///////////////////////////////////////////////////////////////////////////
 	static bool CreateAppDataEnv(ibRunMode runMode = ibRunMode::eENTERPRISE_MODE);
 	///////////////////////////////////////////////////////////////////////////

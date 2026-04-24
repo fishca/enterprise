@@ -114,6 +114,17 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	bool initOk = false;
 	{
 		SessionScope scope(m_ticket->Session());
+
+		// Commit 2 (runtime facade plan): bind the session's own root
+		// module manager. Per-tab WebClient session runs scripts →
+		// needs a root. Readers still go through activeMetaData
+		// singleton in this commit; migration lands next commit.
+		if (activeMetaData != nullptr) {
+			m_ticket->Session()->CreateRoot(
+				activeMetaData,
+				activeMetaData->GetCommonMetaObject());
+		}
+
 		if (activeMetaData != nullptr) {
 			if (auto* mm = activeMetaData->GetModuleManager())
 				mm->InitRuntimeForSession(m_ticket->Session());
@@ -144,6 +155,11 @@ void ibWebSession::OnExit()
 			if (auto* mm = activeMetaData->GetModuleManager())
 				mm->ExitRuntimeForSession(m_ticket->Session());
 		}
+
+		// Commit 2 symmetric: drop session's own root so its refs to
+		// metadata descriptors release now, not later when the registry
+		// thread eventually destroys the ibSession.
+		m_ticket->Session()->ClearRoot();
 	}
 
 	if (m_app) {

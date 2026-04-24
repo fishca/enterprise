@@ -93,7 +93,7 @@ ibCodeEditor::~ibCodeEditor()
 	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	ibModuleDataObject* dataRef = nullptr;
+	ibRuntimeModuleDataObject* dataRef = nullptr;
 	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
 		ibCompileModule* compileModule = dataRef->GetCompileModule();
 		if (compileModule != nullptr) compileModule->ClearLexem();
@@ -469,7 +469,7 @@ bool ibCodeEditor::SyntaxControl(bool throwMessage) const
 	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	ibModuleDataObject* dataRef = nullptr;
+	ibRuntimeModuleDataObject* dataRef = nullptr;
 	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
 		ibCompileModule* compileModule = dataRef->GetCompileModule();
 		try {
@@ -717,7 +717,7 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 
 				ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 				wxASSERT(moduleManager);
-				ibModuleDataObject* pRefData = nullptr;
+				ibRuntimeModuleDataObject* pRefData = nullptr;
 				if (moduleManager->FindCompileModule(m_document->GetMetaObject(), pRefData)) {
 					ibCompileCode* compileModule = pRefData->GetCompileModule();
 					wxASSERT(compileModule);

@@ -24,7 +24,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueForm, ibValueFrame);
 //****************************************************************************
 
 ibValueForm::ibValueForm(const ibValueMetaObjectFormBase* creator, ibControlFrame* ownerControl,
-	ibSourceDataObject* srcObject, const ibUniqueKey& formGuid) : ibValueFrame(), ibModuleDataObject(),
+	ibSourceDataObject* srcObject, const ibUniqueKey& formGuid) : ibValueFrame(), ibRuntimeModuleDataObject(),
 	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr),
 	m_formCollectionControl(ibValue::CreateAndPrepareValueRef<ibValueFormCollectionControl>(this)),
 	m_formType(defaultFormType), m_closeOnChoice(true), m_closeOnOwnerClose(true), m_formModified(false)
@@ -355,7 +355,7 @@ bool ibValueForm::CallAsProc(const long lMethodNum, ibValue** paParams, const lo
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecuteProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
@@ -372,7 +372,7 @@ bool ibValueForm::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibVal
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

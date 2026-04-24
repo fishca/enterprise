@@ -17,7 +17,7 @@
 //*********************************************************************************************************
 
 ibValueModuleManager::ibValueModuleManager(ibMetaData* metadata, ibValueMetaObjectModule* obj) :
-	ibValue(ibValueTypes::TYPE_VALUE), ibModuleDataObject(new ibCompileModule(obj)),
+	ibValue(ibValueTypes::TYPE_VALUE), ibRuntimeModuleDataObject(new ibCompileModule(obj)),
 	m_objectManager(new ibValueGlobalContextManager(metadata)),
 	m_metaManager(new ibValueMetadataUnit(metadata)),
 	m_methodHelper(new ibValueMethodHelper()),
@@ -91,7 +91,7 @@ bool ibValueModuleManager::AddCommonModule(ibValueMetaObjectCommonModule* common
 	if (runModule) {
 		if (!commonModule->IsGlobalModule()) {
 			try {
-				m_compileModule->Compile();
+				Compile();
 			}
 			catch (const ibBackendException& err) {
 				wxLogWarning(_("Common module '%s' failed to compile: %s"),
@@ -127,7 +127,7 @@ bool ibValueModuleManager::RenameCommonModule(ibValueMetaObjectCommonModule* com
 		try {
 			m_compileModule->AddVariable(newName, moduleValue);
 			m_compileModule->RemoveVariable(commonModule->GetName());
-			m_compileModule->Compile();
+			Compile();
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("Rename of common module '%s' to '%s' left compile in failed state: %s"),
@@ -202,14 +202,14 @@ void ibValueModuleManager::PrepareNames() const
 
 bool ibValueModuleManager::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
-	return ibModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecuteProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
 bool ibValueModuleManager::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
@@ -241,8 +241,12 @@ long ibValueModuleManager::FindProp(const wxString& strName) const
 //  ibValueModuleManagerConfiguration
 //////////////////////////////////////////////////////////////////////////////////
 
-ibValueModuleManagerConfiguration::ibValueModuleManagerConfiguration(ibMetaData* metadata, ibValueMetaObjectConfiguration* metaObject)
+ibValueModuleManagerConfiguration::ibValueModuleManagerConfiguration(
+	ibSession* session,
+	ibMetaData* metadata,
+	ibValueMetaObjectConfiguration* metaObject)
 	: ibValueModuleManager(metadata, metaObject ? metaObject->GetModuleObject() : nullptr)
+	, m_session(session)
 {
 }
 
@@ -269,7 +273,7 @@ bool ibValueModuleManagerConfiguration::CreateMainModule()
 	// a ProcUnit field.
 	if (!appData->DesignerMode()) {
 		try {
-			m_compileModule->Compile();
+			Compile();
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("Global module init failed: %s"), err.GetErrorDescription());
@@ -378,6 +382,11 @@ bool ibValueModuleManager::InitRuntimeForSession(ibSession* session)
 {
 	if (session == nullptr)
 		return false;
+	// Serialize against other sessions' Init/Exit — the Execute of
+	// top-level module init + per-session parent ProcUnit chain isn't
+	// thread-safe against concurrent Execute on the same compileModule.
+	// Rapid F5 reliably hit this as an OOB operator[] inside Execute.
+	std::lock_guard<std::mutex> lock(m_runtimeMutex);
 	// Runtime only for sessions that represent user work:
 	//   Enterprise — desktop thick client's single user.
 	//   WebClient  — one per browser tab through wes.
@@ -426,7 +435,7 @@ bool ibValueModuleManager::InitRuntimeForSession(ibSession* session)
 			continue;
 		try {
 			auto pu = std::make_shared<ibProcUnit>();
-			pu->SetParent(session->GetProcUnitFor(this));
+			pu->SetParent(session->GetProcUnitFor(this).get());
 			pu->Execute(cm->m_cByteCode, false);
 			ibValueModuleUnit* rawUnit = moduleValue;  // ibValuePtr → T*
 			session->AttachProcUnit(rawUnit, pu);
@@ -443,6 +452,10 @@ void ibValueModuleManager::ExitRuntimeForSession(ibSession* session)
 {
 	if (session == nullptr)
 		return;
+	// Pairs with InitRuntimeForSession's lock — concurrent Init + Exit
+	// would race on m_listCommonModuleManager iteration + session map
+	// access. Hot code path but brief (just detach map entries).
+	std::lock_guard<std::mutex> lock(m_runtimeMutex);
 	// Drop common modules first — ProcUnit parent chain breaks cleanly
 	// (children reference the main ProcUnit; release in reverse order).
 	for (auto& moduleValue : m_listCommonModuleManager) {

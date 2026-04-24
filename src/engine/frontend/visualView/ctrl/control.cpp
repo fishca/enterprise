@@ -80,5 +80,10 @@ ibProcUnit* ibValueControl::GetFormProcUnit() const
 		return nullptr;
 	}
 
-	return m_formOwner->GetProcUnit();
+	// .get() on the shared_ptr — raw pointer out is acceptable here
+	// because form event handlers run on the same worker thread that
+	// owns the session, so a concurrent session teardown can't race
+	// mid-callback (unlike BeforeStart which is re-entered from the
+	// registry thread via Init/ExitRuntimeForSession).
+	return m_formOwner->GetProcUnit().get();
 }

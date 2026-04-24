@@ -51,6 +51,9 @@ public:
 
 	virtual bool AuthenticationUser(const wxString& userName, const wxString& userPassword) const;
 
+	// Desktop: one process, one session — forwarded from appData.
+	virtual ibSession* GetSession() const override;
+
 	virtual ibMetaData* FindMetadataByPath(const wxString& strFileName) const;
 
 #pragma region _frontend_call_h__

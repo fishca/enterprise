@@ -12,7 +12,9 @@
 
 #include "backend/backend.h"
 #include "backend/userInfo.h"
-#include "backend/appData.h"   // ibRunMode
+#include "backend/appData.h"      // ibRunMode
+#include "backend/compiler/value.h" // ibValue (base for ibValuePtr)
+#include "backend/value_ptr.h"    // ibValuePtr for m_root
 
 #include <atomic>
 #include <condition_variable>
@@ -25,8 +27,11 @@
 #include <wx/string.h>
 
 class ibValueModuleManager;
-class ibModuleDataObject;
+class ibValueModuleManagerConfiguration;
+class ibRuntimeModuleDataObject;
 class ibProcUnit;
+class ibMetaData;
+class ibValueMetaObjectConfiguration;
 
 // ------------------------------------------------------------------
 // ibSessionState — lifecycle axis. Advances strictly forward through
@@ -143,8 +148,24 @@ public:
 	const std::string& GetId()   const { return m_id; }
 	ibSessionKind      GetKind() const { return m_kind; }
 
-	ibValueModuleManager* GetModuleManager() const { return m_moduleManager; }
-	void                  SetModuleManager(ibValueModuleManager* mm) { m_moduleManager = mm; }
+	// Root runtime of this session. Populated by CreateRoot() at
+	// StartSession / Login; stays nullptr for sessions that never run
+	// scripts (Designer, WebServer technical session, Launcher).
+	ibValueModuleManagerConfiguration* GetModuleManager() const;
+
+	// Create the session's root module manager and bind it. Returns a
+	// reference for immediate use (CreateMainModule, AddCommonModule,
+	// StartMainModule via main frame). Calling twice replaces the old
+	// root — previous ibValuePtr releases its ref (delete-if-last).
+	ibValueModuleManagerConfiguration& CreateRoot(
+		ibMetaData* metaData,
+		ibValueMetaObjectConfiguration* commonMeta);
+
+	// Drop the session's root explicitly. Must be called before the
+	// process-level metadata tree is torn down (ibMetaData::CloseDatabase),
+	// otherwise the root's refs to metadata descriptors dangle. No-op
+	// when the session never had a root.
+	void ClearRoot();
 
 	ibApplicationDataUserInfo&       GetUserInfo()       { return m_userInfo; }
 	const ibApplicationDataUserInfo& GetUserInfo() const { return m_userInfo; }
@@ -157,9 +178,14 @@ public:
 	void            SetSessionRawPassword(const wxString& pwd) { m_sessionRawPassword = pwd; }
 	void            ClearSessionRawPassword() { m_sessionRawPassword.clear(); }
 
-	ibProcUnit* GetProcUnitFor(const ibModuleDataObject* descriptor) const;
-	void        AttachProcUnit(const ibModuleDataObject* descriptor, std::shared_ptr<ibProcUnit> pu);
-	void        DetachProcUnit(const ibModuleDataObject* descriptor);
+	// Returns shared_ptr — caller MUST keep it alive for the entire
+	// duration of any call on the ProcUnit. Raw .get() across a long-
+	// running CallAsProc races with ExitRuntimeForSession dropping the
+	// map entry; fast F5 reproduced the UAF as operator[] on a
+	// destroyed m_pByteCode vector. See project_refresh_execute_crash.md.
+	std::shared_ptr<ibProcUnit> GetProcUnitFor(const ibRuntimeModuleDataObject* descriptor) const;
+	void                        AttachProcUnit(const ibRuntimeModuleDataObject* descriptor, std::shared_ptr<ibProcUnit> pu);
+	void                        DetachProcUnit(const ibRuntimeModuleDataObject* descriptor);
 
 	// State accessors — lock-free reads.
 	ibSessionState State() const { return m_state.load(std::memory_order_acquire); }
@@ -211,9 +237,14 @@ private:
 	std::string    m_id;
 	ibSessionKind  m_kind;
 
-	ibValueModuleManager* m_moduleManager = nullptr;
+	// Root runtime — intrusive-refcounted owner (ibValuePtr is the
+	// project convention for ibValue-derived types). Nested descriptors
+	// (common modules, object instances, forms) will weakly parent up
+	// to this root through m_parent wiring added in a later commit.
+	// See project_runtime_facade_plan.md.
+	ibValuePtr<ibValueModuleManagerConfiguration> m_root;
 
-	std::unordered_map<const ibModuleDataObject*, std::shared_ptr<ibProcUnit>> m_procUnitMap;
+	std::unordered_map<const ibRuntimeModuleDataObject*, std::shared_ptr<ibProcUnit>> m_procUnitMap;
 	// Guards m_procUnitMap. mutable so const accessors (GetProcUnitFor)
 	// can lock too.
 	mutable std::mutex m_procUnitMtx;

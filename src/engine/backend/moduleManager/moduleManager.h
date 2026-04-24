@@ -3,12 +3,16 @@
 
 #include "backend/moduleInfo.h"
 
+#include <mutex>
+
 #include "backend/metaCollection/metaObjectMetadata.h"
 #include "backend/metaCollection/metaModuleObject.h"
 #include "backend/metaCollection/partial/commonObject.h"
 
+class ibSession;
+
 class BACKEND_API ibValueModuleManager :
-	public ibModuleDataObject, public ibValue {
+	public ibRuntimeModuleDataObject, public ibValue {
 protected:
 	enum helperAlias {
 		eProcUnit
@@ -16,7 +20,7 @@ protected:
 public:
 
 	class BACKEND_API ibValueModuleUnit :
-		public ibModuleDataObject, public ibValue {
+		public ibRuntimeModuleDataObject, public ibValue {
 		wxDECLARE_DYNAMIC_CLASS(ibValueModuleUnit);
 	protected:
 		enum helperAlias {
@@ -268,6 +272,14 @@ protected:
 
 	bool m_initialized;
 
+	// Serializes Init/ExitRuntimeForSession across sessions — the
+	// compile/common-module state is process-shared so two concurrent
+	// Init (rapid F5) or Init-racing-Exit (pagehide beacon for old
+	// session while new one logs in) would corrupt m_listCommonModule*
+	// iteration or the ProcUnit Execute of BeforeStart running on
+	// bytecode whose parent PU ptrs are mid-reassignment.
+	std::mutex m_runtimeMutex;
+
 	//global manager
 	ibValuePtr<ibValue> m_objectManager;
 
@@ -292,16 +304,38 @@ protected:
 };
 
 class BACKEND_API ibValueModuleManagerConfiguration :
-	public ibValueModuleManager {
+	public ibValueModuleManager, public ibRuntimeRoot {
 	//system events:
 	bool BeforeStart();
 	void OnStart();
 	bool BeforeExit();
 	void OnExit();
+
+	// Back-pointer to the session this root runs under. nullptr only for
+	// the legacy singleton created by ibMetaDataConfigurationFile while
+	// the old code path is still alive; production sessions always supply
+	// their own session via ibSession::CreateRoot.
+	ibSession* m_session;
 public:
 
-	//metaData and external variant
-	ibValueModuleManagerConfiguration(ibMetaData* metaData = nullptr, ibValueMetaObjectConfiguration* metaObject = nullptr);
+	// Session-aware construction. Pass nullptr for the legacy singleton
+	// path; ibSession::CreateRoot supplies a real session pointer.
+	ibValueModuleManagerConfiguration(
+		ibSession* session,
+		ibMetaData* metaData,
+		ibValueMetaObjectConfiguration* metaObject);
+
+	// Root descriptor — owns its session reference directly (no walk).
+	// Single override satisfies both virtual bases (ibRuntimeModuleDataObject
+	// and ibRuntimeRoot both declare `virtual ibSession* GetSession() const`
+	// with matching signature).
+	ibSession* GetSession() const override { return m_session; }
+
+	// GetRoot override — we are the root, return ourselves as the
+	// ibRuntimeRoot interface pointer.
+	ibRuntimeRoot* GetRoot() const override {
+		return const_cast<ibValueModuleManagerConfiguration*>(this);
+	}
 
 	//Create common module
 	virtual bool CreateMainModule();

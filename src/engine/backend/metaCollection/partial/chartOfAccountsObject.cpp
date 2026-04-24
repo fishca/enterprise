@@ -218,5 +218,5 @@ bool ibValueRecordDataObjectChartOfAccounts::CallAsFunc(const long lMethodNum, i
 	case Func::enGetTemplate: pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString()); return true;
 	case Func::enGetMetadata: pvarRetValue = m_metaObject; return true;
 	}
-	return ibModuleDataObject::ExecuteFunc(GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray);
+	return ibRuntimeModuleDataObject::ExecuteFunc(GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray);
 }

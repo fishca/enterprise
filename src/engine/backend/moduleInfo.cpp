@@ -5,20 +5,21 @@
 
 #include "moduleInfo.h"
 
+#include "appData.h"                 // DesignerMode() guard in Compile()
 #include "session/session.h"
 #include "session/sessionRegistry.h"
 
-ibModuleDataObject::ibModuleDataObject() :
+ibRuntimeModuleDataObject::ibRuntimeModuleDataObject() :
 	m_compileModule(nullptr)
 {
 }
 
-ibModuleDataObject::ibModuleDataObject(ibCompileModule* compileCode) :
+ibRuntimeModuleDataObject::ibRuntimeModuleDataObject(ibCompileModule* compileCode) :
 	m_compileModule(compileCode)
 {
 }
 
-ibModuleDataObject::~ibModuleDataObject()
+ibRuntimeModuleDataObject::~ibRuntimeModuleDataObject()
 {
 	// Best-effort: drop our entry from the current session's ProcUnit
 	// map so per-instance descriptors (Catalog objects, Document
@@ -31,7 +32,7 @@ ibModuleDataObject::~ibModuleDataObject()
 	// drops (may be co-owned by sessions via AttachProcUnit).
 }
 
-ibProcUnit* ibModuleDataObject::GetProcUnit() const
+std::shared_ptr<ibProcUnit> ibRuntimeModuleDataObject::GetProcUnit() const
 {
 	// Prefer the current session's ProcUnit when one is scoped onto
 	// this thread. During the migration the descriptor-owned m_procUnit
@@ -40,13 +41,13 @@ ibProcUnit* ibModuleDataObject::GetProcUnit() const
 	// yet — ensures zero behaviour change while the switch-over lands
 	// incrementally.
 	if (auto* ctx = ibSession::Current()) {
-		if (auto* pu = ctx->GetProcUnitFor(this))
+		if (auto pu = ctx->GetProcUnitFor(this))
 			return pu;
 	}
-	return m_procUnit.get();
+	return m_procUnit;
 }
 
-void ibModuleDataObject::AttachToCurrentSession() const
+void ibRuntimeModuleDataObject::AttachToCurrentSession() const
 {
 	if (!m_procUnit)
 		return;
@@ -60,7 +61,7 @@ void ibModuleDataObject::AttachToCurrentSession() const
 	}
 }
 
-void ibModuleDataObject::DetachFromCurrentSession() const
+void ibRuntimeModuleDataObject::DetachFromCurrentSession() const
 {
 	// Prefer the session we actually attached to — handles the "dtor
 	// runs on a thread without SessionScope" case.
@@ -77,4 +78,108 @@ void ibModuleDataObject::DetachFromCurrentSession() const
 	// AttachToCurrentSession). Best-effort detach from Current().
 	if (auto* ctx = ibSession::Current())
 		ctx->DetachProcUnit(this);
+}
+
+ibSession* ibRuntimeModuleDataObject::GetSession() const
+{
+	// Default: walk up the parent chain. Root descriptors
+	// (ibValueModuleManagerConfiguration) override and return their
+	// m_session directly. Orphan descriptors (legacy singleton mm, no
+	// parent wired) return nullptr.
+	return m_parent ? m_parent->GetSession() : nullptr;
+}
+
+ibRuntimeRoot* ibRuntimeModuleDataObject::GetRoot() const
+{
+	// Default: walk up. Root descriptor overrides and returns `this`
+	// cast to the interface.
+	return m_parent ? m_parent->GetRoot() : nullptr;
+}
+
+void ibRuntimeModuleDataObject::InitializeRuntime()
+{
+	// ProcUnit is the runtime slot — allocated lazily per descriptor.
+	// Designer never executes so no slot is needed; duplicate calls
+	// (already-set slot) short-circuit to keep the same instance.
+	if (m_procUnit != nullptr || appData->DesignerMode())
+		return;
+	m_procUnit = std::make_shared<ibProcUnit>();
+	// Propagate parent's ProcUnit as scope chain if parent is already
+	// wired — allows SetParent to be called BEFORE this, subsequent
+	// InitializeRuntime picks up the parent automatically.
+	if (m_parent != nullptr) {
+		if (auto parentPu = m_parent->GetProcUnit())
+			m_procUnit->SetParent(parentPu.get());
+	}
+}
+
+void ibRuntimeModuleDataObject::BindContextVariable(const wxString& name, ibValue* value)
+{
+	// Lazy-create m_compileModule on first BindContextVariable —
+	// subclass provides its meta-object via GetMetaObject() override.
+	// ibCompileModule ctor takes non-const meta; const_cast is safe —
+	// compile only reads the meta tree, never mutates it.
+	if (m_compileModule == nullptr) {
+		if (const ibValueMetaObjectModuleBase* meta = GetMetaForCompile()) {
+			m_compileModule = new ibCompileModule(
+				const_cast<ibValueMetaObjectModuleBase*>(meta));
+			// Propagate parent's compile scope chain — SetParent can
+			// be called before BindContextVariable; we pick up the
+			// parent compile on creation.
+			if (m_parent != nullptr) {
+				if (ibCompileModule* parentCompile = m_parent->GetCompileModule())
+					m_compileModule->SetParent(parentCompile);
+			}
+		}
+	}
+	if (m_compileModule != nullptr)
+		m_compileModule->AddContextVariable(name, value);
+}
+
+void ibRuntimeModuleDataObject::Run(bool delta)
+{
+	// Designer never executes script — the editor only cares about
+	// AST / symbol table. Runtime / codeRunner / daemon all go through
+	// here.
+	if (appData->DesignerMode())
+		return;
+	Execute(delta);
+}
+
+bool ibRuntimeModuleDataObject::Compile()
+{
+	if (m_compileModule == nullptr)
+		return false;
+	// Designer never runs bytecode — keep compile state untouched so
+	// the intellisense walker sees a consistent AST without emit
+	// side-effects that only make sense at runtime.
+	if (appData->DesignerMode())
+		return true;
+	m_compileModule->Compile();
+	return true;
+}
+
+void ibRuntimeModuleDataObject::Execute(bool delta)
+{
+	if (m_procUnit != nullptr && m_compileModule != nullptr)
+		m_procUnit->Execute(m_compileModule->m_cByteCode, delta);
+}
+
+void ibRuntimeModuleDataObject::SetParent(ibRuntimeModuleDataObject* parent)
+{
+	m_parent = parent;
+
+	// Cascade to compile+runtime layers so callers don't have to wire
+	// them separately. Propagate only when both sides have the
+	// corresponding object — parent may be a bare descriptor without a
+	// compiled module (e.g. root in Designer mode) or without a
+	// ProcUnit (system session that never runs scripts).
+	if (m_compileModule != nullptr && parent != nullptr) {
+		if (ibCompileModule* parentCompile = parent->GetCompileModule())
+			m_compileModule->SetParent(parentCompile);
+	}
+	if (m_procUnit != nullptr && parent != nullptr) {
+		if (auto parentPu = parent->GetProcUnit())
+			m_procUnit->SetParent(parentPu.get());
+	}
 }

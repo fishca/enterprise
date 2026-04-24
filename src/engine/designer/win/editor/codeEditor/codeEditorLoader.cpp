@@ -38,7 +38,7 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 				wxEmptyString
 			);
 		}
-		ibModuleDataObject* moduleDataObject = dynamic_cast<ibModuleDataObject*>(vObject.GetRef());
+		ibRuntimeModuleDataObject* moduleDataObject = dynamic_cast<ibRuntimeModuleDataObject*>(vObject.GetRef());
 		if (moduleDataObject != nullptr) {
 			const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
 			if (computeModuleObject != nullptr) {
@@ -539,7 +539,7 @@ void ibCodeEditor::LoadCallTip()
 					}
 				}
 
-				ibModuleDataObject* moduleDataObject = dynamic_cast<ibModuleDataObject*>(vObject.GetRef());
+				ibRuntimeModuleDataObject* moduleDataObject = dynamic_cast<ibRuntimeModuleDataObject*>(vObject.GetRef());
 				if (moduleDataObject) {
 					const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
 					if (computeModuleObject) {

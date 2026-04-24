@@ -516,19 +516,10 @@ async function refreshTabs(){
 // whitespace between functions so no token is split across literals.
 R"HTML(
 async function login(user, password){
-  // Brief exponential-backoff retry on 401 — server serializes Login
-  // on a short timed_mutex; under rapid-F5 contention it can return
-  // failure rather than queueing. Client-side retry lets legit logins
-  // survive a burst without the user seeing an error UI.
-  const body=new URLSearchParams({user:user||'',password:password||''});
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const r = await netFetch(API+'/login',
-      {method:'POST',body,credentials:'same-origin'});
-    if (r.ok) return true;
-    if (r.status !== 401) return false;
-    await new Promise(res => setTimeout(res, 200 * (attempt + 1)));
-  }
-  return false;
+  const body = new URLSearchParams({user:user||'',password:password||''});
+  const r = await netFetch(API+'/login',
+    {method:'POST',body,credentials:'same-origin'});
+  return r.ok;
 }
 // GET /auth-info. Decides between open-access auto-login (empty sys_user
 // → server's /login passes through empty creds) and a credentials form
@@ -1174,9 +1165,13 @@ async function paintActiveTab(){
   const bootOverlay = document.getElementById('bootOverlay');
   // Step 1: find out whether we need to prompt for credentials.
   const info = await authInfo();
-  // Step 2: authenticate. Open-access = empty creds, the server lets
-  // that through when sys_user is empty. Populated sys_user → show
-  // the form, loop until the user supplies creds that /login accepts.
+  // Step 2: authenticate.
+  // Open-access (no sys_user rows): loop auto-login until it succeeds.
+  // The server's timed_mutex may reject under rapid-F5 contention;
+  // retrying rather than falling to the form is correct because an
+  // empty-creds form can't collect anything useful.
+  // Populated sys_user: show the credentials form; promptLogin loops
+  // internally until /login accepts the creds.
   let authenticated = false;
   if (!info.hasUsers) {
     authenticated = await login('', '');

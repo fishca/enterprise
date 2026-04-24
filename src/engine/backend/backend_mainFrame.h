@@ -5,6 +5,8 @@
 #include "backend/backend_spreadsheet.h"
 #include "backend/system/systemEnum.h"
 
+class ibSession;
+
 #define backend_mainFrame \
 	ibBackendDocMDIFrame::GetDocMDIFrame() \
 
@@ -24,6 +26,14 @@ public:
 
 	virtual ~ibBackendDocMDIFrame();
 	virtual wxFrame* GetFrameHandler() const = 0;
+
+	// Session this frame drives. Desktop: the single process session,
+	// forwarded from appData->GetMainSession(). Web (ibWebFrame): the
+	// per-cookie session bound at construction. Used by UI-originated
+	// form-open paths (sidebar / menu / toolbar click) where no
+	// ownerControl is available to walk a descriptor parent chain.
+	// Default nullptr — headless / pre-session bootstrap paths.
+	virtual ibSession* GetSession() const { return nullptr; }
 
 	virtual class ibMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
 	virtual void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const {}

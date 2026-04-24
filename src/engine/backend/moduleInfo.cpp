@@ -34,14 +34,24 @@ ibRuntimeModuleDataObject::~ibRuntimeModuleDataObject()
 
 std::shared_ptr<ibProcUnit> ibRuntimeModuleDataObject::GetProcUnit() const
 {
-	// Prefer the current session's ProcUnit when one is scoped onto
-	// this thread. During the migration the descriptor-owned m_procUnit
-	// stays populated by the module manager (desktop path), so we
-	// gracefully fall back when the session hasn't attached its own
-	// yet — ensures zero behaviour change while the switch-over lands
-	// incrementally.
-	if (auto* ctx = ibSession::Current()) {
-		if (auto pu = ctx->GetProcUnitFor(this))
+	// Preferred path — walk parent chain to the descriptor's session,
+	// look up in its ProcUnit map. No thread_local dependency, stable
+	// regardless of which thread dispatches (web HTTP handler can read
+	// without SessionScope once parent is wired).
+	//
+	// Fallback to thread_local Current() — for legacy callsites where
+	// the descriptor's parent isn't wired yet (common modules on the
+	// legacy singleton mm whose parent == nullptr → GetSession returns
+	// nullptr). This branch goes away once per-session common-module
+	// trees land.
+	//
+	// Final fallback — descriptor's own m_procUnit for pre-session
+	// bootstrap and headless paths (codeRunner, classChecker).
+	ibSession* session = GetSession();
+	if (session == nullptr)
+		session = ibSession::Current();
+	if (session != nullptr) {
+		if (auto pu = session->GetProcUnitFor(this))
 			return pu;
 	}
 	return m_procUnit;

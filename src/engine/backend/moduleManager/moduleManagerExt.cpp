@@ -63,32 +63,29 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	m_compileModule->SetParent(moduleManager->GetCompileModule());
-	m_compileModule->AddContextVariable(thisObject, m_objectValue);
+	// Imperative pipeline — SetParent cascades compile+procUnit parents
+	// to configuration root's; BindContextVariable wires thisObject;
+	// InitializeRuntime / Compile / Run drive the top-level.
+	ibRuntimeModuleDataObject::SetParent(moduleManager);
+	BindContextVariable(thisObject, m_objectValue);
 
-	//initialize procUnit
-	m_procUnit.reset();
-
-	//set complile module 
+	// m_objectValue (the external DP's script-visible object) shares the
+	// same compile module — it's the script-side wrapper around the
+	// same source. Set before InitializeObject so the object sees it.
 	m_objectValue->m_compileModule = m_compileModule;
 
-	//initialize object 
 	m_objectValue->InitializeObject();
 
 	if (!appData->DesignerMode()) {
-
 		InitializeRuntime();
-		m_procUnit->SetParent(moduleManager->GetProcUnit().get());
-
-		//set proc unit — shared with m_objectValue so both descriptors
-		//reach the same runtime; shared_ptr co-ownership keeps the unit
-		//alive until the last of them drops.
+		// Share procUnit with m_objectValue — both descriptors reach
+		// the same runtime; shared_ptr co-ownership keeps the unit
+		// alive until the last of them drops.
 		m_objectValue->m_procUnit = m_procUnit;
 
 		try {
 			Compile();
-			//and run...
-			Execute();
+			Run();
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("External module '%s' init failed: %s"),
@@ -277,28 +274,22 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	m_compileModule->SetParent(moduleManager->GetCompileModule());
-	m_compileModule->AddContextVariable(thisObject, m_objectValue);
+	// Imperative pipeline — see ExternalDataProcessor::CreateMainModule
+	// for the same shape; parent cascade, context var, shared procUnit
+	// with m_objectValue.
+	ibRuntimeModuleDataObject::SetParent(moduleManager);
+	BindContextVariable(thisObject, m_objectValue);
 
-	//initialize procUnit
-	m_procUnit.reset();
-
-	//set complile module 
 	m_objectValue->m_compileModule = m_compileModule;
-
-	//initialize object 
 	m_objectValue->InitializeObject();
 
 	if (!appData->DesignerMode()) {
-
 		InitializeRuntime();
-		m_procUnit->SetParent(moduleManager->GetProcUnit().get());
-		//set proc unit — shared with m_objectValue (co-ownership).
 		m_objectValue->m_procUnit = m_procUnit;
 
 		try {
 			Compile();
-			Execute();
+			Run();
 		}
 		catch (const ibBackendException& err) {
 			wxLogWarning(_("External module '%s' re-init failed: %s"),

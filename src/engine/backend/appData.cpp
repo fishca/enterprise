@@ -507,14 +507,14 @@ bool ibApplicationData::Connect(const wxString& strUserName, const wxString& str
 	// Desktop's User session gets ProcUnits for main + common modules
 	// under its m_procUnitMap, so subsequent meta->GetProcUnit() calls
 	// resolve via the session (delegate in ibRuntimeModuleDataObject::GetProcUnit).
-	// Legacy CreateMainModule still creates its own ProcUnit on the
-	// descriptor — double-write during Phase A, harmless (fallback).
 	// Web's System session returns early inside InitRuntimeForSession
-	// (role != User) so no runtime is spun up at server startup.
-	if (activeMetaData != nullptr) {
+	// (kind != user-runtime) so no runtime is spun up at server
+	// startup. Explicit session from the main ticket — no thread_local
+	// indirection.
+	if (activeMetaData != nullptr && m_mainTicket) {
 		if (auto* mm = activeMetaData->GetModuleManager()) {
-			if (auto* ctx = ibSession::Current())
-				mm->InitRuntimeForSession(ctx);
+			if (auto* session = m_mainTicket->Session())
+				mm->InitRuntimeForSession(session);
 		}
 	}
 
@@ -529,13 +529,13 @@ bool ibApplicationData::Disconnect()
 
 	if (m_created_metadata) {
 
-		// Phase A symmetric teardown — drop this session's ProcUnit
-		// entries from its m_procUnitMap before the moduleManager's
-		// own DestroyMainModule tears down the shared compile state.
-		if (activeMetaData != nullptr) {
+		// Symmetric teardown — drop per-session ProcUnits before
+		// DestroyMainModule tears down the shared compile state.
+		// Explicit session from the ticket; no thread_local indirection.
+		if (activeMetaData != nullptr && m_mainTicket) {
 			if (auto* mm = activeMetaData->GetModuleManager()) {
-				if (auto* ctx = ibSession::Current())
-					mm->ExitRuntimeForSession(ctx);
+				if (auto* session = m_mainTicket->Session())
+					mm->ExitRuntimeForSession(session);
 			}
 		}
 

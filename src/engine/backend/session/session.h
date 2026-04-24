@@ -21,7 +21,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
 
 #include <wx/datetime.h>
 #include <wx/string.h>
@@ -178,15 +177,6 @@ public:
 	void            SetSessionRawPassword(const wxString& pwd) { m_sessionRawPassword = pwd; }
 	void            ClearSessionRawPassword() { m_sessionRawPassword.clear(); }
 
-	// Returns shared_ptr — caller MUST keep it alive for the entire
-	// duration of any call on the ProcUnit. Raw .get() across a long-
-	// running CallAsProc races with ExitRuntimeForSession dropping the
-	// map entry; fast F5 reproduced the UAF as operator[] on a
-	// destroyed m_pByteCode vector. See project_refresh_execute_crash.md.
-	std::shared_ptr<ibProcUnit> GetProcUnitFor(const ibRuntimeModuleDataObject* descriptor) const;
-	void                        AttachProcUnit(const ibRuntimeModuleDataObject* descriptor, std::shared_ptr<ibProcUnit> pu);
-	void                        DetachProcUnit(const ibRuntimeModuleDataObject* descriptor);
-
 	// State accessors — lock-free reads.
 	ibSessionState State() const { return m_state.load(std::memory_order_acquire); }
 	ibAuthState    Auth()  const { return m_auth.load(std::memory_order_acquire); }
@@ -239,15 +229,9 @@ private:
 
 	// Root runtime — intrusive-refcounted owner (ibValuePtr is the
 	// project convention for ibValue-derived types). Nested descriptors
-	// (common modules, object instances, forms) will weakly parent up
-	// to this root through m_parent wiring added in a later commit.
-	// See project_runtime_facade_plan.md.
+	// (common modules, object instances, forms) parent up through
+	// m_parent chain. See project_runtime_facade_plan.md.
 	ibValuePtr<ibValueModuleManagerConfiguration> m_root;
-
-	std::unordered_map<const ibRuntimeModuleDataObject*, std::shared_ptr<ibProcUnit>> m_procUnitMap;
-	// Guards m_procUnitMap. mutable so const accessors (GetProcUnitFor)
-	// can lock too.
-	mutable std::mutex m_procUnitMtx;
 
 	// Identity fields — populated progressively as the session moves
 	// through Add → Attach. Registry thread is the sole writer.

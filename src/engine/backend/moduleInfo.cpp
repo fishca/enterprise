@@ -7,7 +7,6 @@
 
 #include "appData.h"                 // DesignerMode() guard in Compile()
 #include "session/session.h"
-#include "session/sessionRegistry.h"
 
 ibRuntimeModuleDataObject::ibRuntimeModuleDataObject() :
 	m_compileModule(nullptr)
@@ -21,58 +20,14 @@ ibRuntimeModuleDataObject::ibRuntimeModuleDataObject(ibCompileModule* compileCod
 
 ibRuntimeModuleDataObject::~ibRuntimeModuleDataObject()
 {
-	// Best-effort: drop our entry from the current session's ProcUnit
-	// map so per-instance descriptors (Catalog objects, Document
-	// objects, forms, constants) don't leave dangling keys behind.
-	// No-op when no SessionScope is active on this thread — not every
-	// descriptor's dtor runs under a session.
-	DetachFromCurrentSession();
 	wxDELETE(m_compileModule);
 	// m_procUnit auto-destructs via shared_ptr when the last reference
-	// drops (may be co-owned by sessions via AttachProcUnit).
+	// drops.
 }
 
 std::shared_ptr<ibProcUnit> ibRuntimeModuleDataObject::GetProcUnit() const
 {
-	// ProcUnit lives directly on the descriptor — each descriptor owns
-	// its runtime slot via InitializeRuntime(). Session / thread_local
-	// lookup is no longer needed: per-instance descriptors (form, record
-	// object, constant) have their own m_procUnit; common modules and
-	// root are wired at InitRuntimeForSession into the same field.
 	return m_procUnit;
-}
-
-void ibRuntimeModuleDataObject::AttachToCurrentSession() const
-{
-	if (!m_procUnit)
-		return;
-	if (auto* ctx = ibSession::Current()) {
-		ctx->AttachProcUnit(this, m_procUnit);
-		// Remember which session we attached to so the dtor can detach
-		// even if it runs outside SessionScope (e.g. on a cleanup thread
-		// or after the caller dropped its SessionScope). Lookup by id
-		// stays safe when the session is already gone.
-		m_attachedSessionId = ctx->GetId();
-	}
-}
-
-void ibRuntimeModuleDataObject::DetachFromCurrentSession() const
-{
-	// Prefer the session we actually attached to — handles the "dtor
-	// runs on a thread without SessionScope" case.
-	if (!m_attachedSessionId.empty()) {
-		if (auto* ctx = ibSessionRegistry::Instance().Find(m_attachedSessionId))
-			ctx->DetachProcUnit(this);
-		// If Find returned null the session was already Destroy'd;
-		// its m_procUnitMap went with it, so there's nothing to detach.
-		m_attachedSessionId.clear();
-		return;
-	}
-	// Fallback — descriptor never recorded an attach id (e.g. someone
-	// attached via raw AttachProcUnit path without going through
-	// AttachToCurrentSession). Best-effort detach from Current().
-	if (auto* ctx = ibSession::Current())
-		ctx->DetachProcUnit(this);
 }
 
 ibSession* ibRuntimeModuleDataObject::GetSession() const

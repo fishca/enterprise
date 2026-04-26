@@ -520,9 +520,15 @@ namespace {
 
 bool FinishConnect(const std::string& ibUser, const std::string& ibPassword)
 {
-	if (!appData->Connect(
-		wxString::FromUTF8(ibUser.c_str()),
-		wxString::FromUTF8(ibPassword.c_str())))
+	// CreateSession + Authenticate. Registry's lifecycle event listeners
+	// (wired in ibApplicationData ctor) drive metadata load, root mm
+	// allocation/compile and runtime init through OnFirstConnect /
+	// OnAuthenticated; nothing to do here beyond auth.
+	ibSession* session = appData->CreateSession();
+	if (session == nullptr ||
+	    !session->Open(
+	        wxString::FromUTF8(ibUser.c_str()),
+	        wxString::FromUTF8(ibPassword.c_str())))
 	{
 		RememberError();
 		appDataDestroy();
@@ -547,7 +553,8 @@ WFRONTEND_API bool wfrontendInitFile(
 	const std::string& filePath,
 	const std::string& ibUser,
 	const std::string& ibPassword,
-	const std::string& locale)
+	const std::string& locale,
+	bool               debugEnable)
 {
 	std::lock_guard<std::mutex> lock(g_initMutex);
 	if (g_initialized.load())
@@ -562,6 +569,13 @@ WFRONTEND_API bool wfrontendInitFile(
 		RememberError();
 		return false;
 	}
+
+	// Stamp debug flag BEFORE FinishConnect: OnFirstConnect listener
+	// (in appData::WireSessionEvents) reads m_loadMetadataFlags inside
+	// metadataCreate, which decides whether to construct debugServer.
+	// Per-session EnableDebug() in OnAuthenticated also gates on this.
+	if (debugEnable)
+		appData->m_loadMetadataFlags = _app_start_create_debug_server_flag;
 
 	if (!FinishConnect(ibUser, ibPassword))
 		return false;
@@ -578,7 +592,8 @@ WFRONTEND_API bool wfrontendInitServer(
 	const std::string& database,
 	const std::string& ibUser,
 	const std::string& ibPassword,
-	const std::string& locale)
+	const std::string& locale,
+	bool               debugEnable)
 {
 	std::lock_guard<std::mutex> lock(g_initMutex);
 	if (g_initialized.load())
@@ -597,6 +612,9 @@ WFRONTEND_API bool wfrontendInitServer(
 		RememberError();
 		return false;
 	}
+
+	if (debugEnable)
+		appData->m_loadMetadataFlags = _app_start_create_debug_server_flag;
 
 	if (!FinishConnect(ibUser, ibPassword))
 		return false;
@@ -642,6 +660,42 @@ WFRONTEND_API std::string wfrontendConfigName()
 		return {};
 	const wxString& n = activeMetaData->GetConfigName();
 	return std::string(n.mb_str(wxConvUTF8));
+}
+
+WFRONTEND_API void wfrontendSetProcessExitHook(void (*hook)())
+{
+	ibApplicationData::SetProcessExitHook(hook);
+	// One-shot wiring of the keep-alive predicate too: wes process
+	// stays up while at least one user tab beyond the auto-launched
+	// debug viewer is connected. Baseline Count is 2 (technical
+	// WebServer session + first browser tab opened by the designer
+	// after spawn). > 2 means a real user has more tabs, decline
+	// process exit.
+	static bool wired = false;
+	if (!wired) {
+		ibSessionRegistry::Instance().OnShouldKeepAlive([]() {
+			return ibSessionRegistry::Instance().Count() > 2;
+		});
+		wired = true;
+	}
+}
+
+WFRONTEND_API bool wfrontendDebugMode()
+{
+	if (!g_initialized.load() || appData == nullptr)
+		return false;
+	return (appData->m_loadMetadataFlags & _app_start_create_debug_server_flag) != 0;
+}
+
+WFRONTEND_API bool wfrontendSessionPaused(const std::string& sessionId)
+{
+	if (!g_initialized.load() || appData == nullptr)
+		return false;
+	auto* sess = ibSessionRegistry::Instance().Find(sessionId);
+	if (sess == nullptr) return false;
+	auto* d = sess->Debug();
+	if (d == nullptr) return false;
+	return d->m_debugLoop.load(std::memory_order_acquire);
 }
 
 WFRONTEND_API bool wfrontendHasUsers()
@@ -762,7 +816,7 @@ std::string OpenFormInSession(ibWebSession* session, int metaID)
 	// at Login). Without the scope, Current() is null on worker threads,
 	// the form's parent-ProcUnit comes up nullptr, and Execute throws
 	// "compilation failed (#2)" at form-open.
-	SessionScope scope(session->Session());
+	ibSessionScope scope(session->Session());
 
 	// Forms live one or two levels deep under the configuration (common
 	// forms directly, object-owned forms under their catalog/document).

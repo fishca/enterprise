@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "backend/backend_form.h"
+#include "backend/session/session.h"
 #include "backend/compiler/value.h"
 #include "backend/metaCollection/metaFormObject.h"   // ibValueMetaObjectFormBase::CreateAndBuildForm
 
@@ -77,7 +78,7 @@ ibUniqueKey ibWebFrame::CreateFormUniqueKey(
 {
 	// Same fallback chain desktop uses (formGuid → ownerControl
 	// guid → sourceObject guid → fresh random guid). Without this,
-	// ibBackendDocMDIFrame's default returns wxNullUniqueKey for
+	// ibBackendDocFrame's default returns wxNullUniqueKey for
 	// every form, breaking FindDocByUniqueKey.
 	return ibFormVisualDocument::CreateFormUniqueKey(ownerControl, sourceObject, formGuid);
 }
@@ -107,8 +108,11 @@ ibFrontendWindow* ibWebFrame::CreateChildFrame(
 	// narrow downcast below, leaving non-form docs untouched.
 	if (view == nullptr) return nullptr;
 
-	auto* webFrame = dynamic_cast<ibWebFrame*>(
-		ibBackendDocMDIFrame::GetDocMDIFrame());
+	// Per-tab session is pinned by the worker loop's ibSessionScope; its
+	// GetFrame() is our ibWebFrame. No helper needed — direct path.
+	ibSession* session = ibSession::Current();
+	auto* webFrame = session != nullptr
+		? dynamic_cast<ibWebFrame*>(session->GetFrame()) : nullptr;
 	if (webFrame == nullptr) return nullptr;
 
 	ibMetaDocument* doc = view->GetDocument();

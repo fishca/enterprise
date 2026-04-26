@@ -4,7 +4,6 @@
 #include "backend/metadataConfiguration.h"
 #include "backend/session/session.h"
 #include "backend/session/sessionRegistry.h"
-#include "backend/session/sessionTicket.h"
 #include "backend/moduleManager/moduleManager.h"
 
 #include "webApplication.h"
@@ -35,7 +34,7 @@ ibWebSession::~ibWebSession()
 
 ibSession* ibWebSession::Session() const
 {
-	return m_ticket ? m_ticket->Session() : nullptr;
+	return m_session;
 }
 
 bool ibWebSession::OnInit()
@@ -83,56 +82,43 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	if (result.m_code != ibConnectResult::Ok)
 		return false;
 
-	m_ticket = std::make_unique<ibSessionTicket>(std::move(result.m_ticket));
+	m_session = result.m_session;
 
-	// Attach credentials. Empty creds + empty sys_user = open-access pass-
-	// through (AuthenticateUser returns true with empty info) → Ok.
-	// Populated sys_user + wrong creds → WrongPassword → bail; caller
-	// (HTTP /login handler) reports 401, ibWebSession is destroyed by
-	// the session manager on the error path.
+	// Session-owned auth — unified path with desktop ibAppEnterprise /
+	// ibAppDesigner flow. ibSession::Authenticate submits Attach through
+	// the registry directly (shared_from_this), and on failure fires
+	// OnShowAuthenticate. Base ibSession returns false there — web's
+	// HTTP login form is the user-visible prompt, driven from the
+	// client-side, not from a modal.
 	const wxString wxUser = wxString::FromUTF8(user.c_str());
 	const wxString wxPass = wxString::FromUTF8(password.c_str());
-	ibAttachResult ar = m_ticket->Attach(wxUser, wxPass);
-	if (ar != ibAttachResult::Ok) {
-		m_ticket.reset();   // dtor → Remove@Urgent — sys_session row DELETEd
+	if (!m_session->Open(wxUser, wxPass)) {
+		m_session->Close();   // submit Remove → sys_session row DELETEd
+		m_session = nullptr;
 		return false;
 	}
 
 	m_user = user;
 
-	// Spin up the per-cookie application. Session pointer borrowed from
-	// the ticket — lifetime tied to m_ticket (dropped in OnExit / dtor).
+	// Spin up the per-cookie application. Session lifetime tied to
+	// m_session — explicitly Close()d in OnExit / dtor.
 	auto app = std::make_unique<ibWebApplication>();
-	app->SetSessionContext(m_ticket->Session());
+	app->SetSessionContext(m_session);
 
-	// InitRuntimeForSession MUST run before app->OnInit(): OnInit calls
-	// StartMainModule which fires OnStart; OnStart resolves its ProcUnit
-	// through GetProcUnit() → Current()'s m_procUnitMap. Attach after
-	// OnInit would leave the map empty at OnStart time, the delegate
-	// would fall through to the now-empty legacy descriptor and OnStart
-	// (and every default OpenForm it invokes) would be silently skipped.
+	// CreateRoot / CompileRoot / InitRuntimeForSession are driven by
+	// ibSessionRegistry::NotifyAuthenticated → appData::WireSessionEvents
+	// (OnFirstConnect → metadataCreate; EnsureRoot; OnAuthenticated →
+	// RunDatabase + CompileRoot + InitRuntimeForSession for runtime modes).
+	// Both fired inside the m_session->Open(...) call above. Calling them
+	// again here would re-execute the main module's top-level script.
 	bool initOk = false;
 	{
-		SessionScope scope(m_ticket->Session());
-
-		// Commit 2 (runtime facade plan): bind the session's own root
-		// module manager. Per-tab WebClient session runs scripts →
-		// needs a root. Readers still go through activeMetaData
-		// singleton in this commit; migration lands next commit.
-		if (activeMetaData != nullptr) {
-			m_ticket->Session()->CreateRoot(
-				activeMetaData,
-				activeMetaData->GetCommonMetaObject());
-		}
-
-		if (activeMetaData != nullptr) {
-			if (auto* mm = activeMetaData->GetModuleManager())
-				mm->InitRuntimeForSession(m_ticket->Session());
-		}
+		ibSessionScope scope(m_session);
 		initOk = app->OnInit();
 	}
 	if (!initOk) {
-		m_ticket.reset();
+		m_session->Close();
+		m_session = nullptr;
 		return false;
 	}
 
@@ -146,20 +132,20 @@ void ibWebSession::OnExit()
 		return;
 
 	// Symmetric teardown — drop this session's ProcUnit entries from the
-	// shared moduleManager before destroying the app + ticket. SessionScope
-	// pinned to our session so ExitRuntimeForSession's bookkeeping is
+	// shared moduleManager before destroying the app + closing the session.
+	// ibSessionScope pinned so ExitRuntimeForSession's bookkeeping is
 	// consistent with the rest of the web runtime's expectations.
-	if (m_ticket && m_ticket->Session()) {
-		SessionScope scope(m_ticket->Session());
+	if (m_session != nullptr) {
+		ibSessionScope scope(m_session);
 		if (activeMetaData != nullptr) {
-			if (auto* mm = activeMetaData->GetModuleManager())
-				mm->ExitRuntimeForSession(m_ticket->Session());
+			if (auto* mm = m_session->GetModuleManager())
+				mm->ExitRuntimeForSession(m_session);
 		}
 
-		// Commit 2 symmetric: drop session's own root so its refs to
-		// metadata descriptors release now, not later when the registry
-		// thread eventually destroys the ibSession.
-		m_ticket->Session()->ClearRoot();
+		// Drop session's own root so its refs to metadata descriptors
+		// release now, not later when the registry thread eventually
+		// destroys the ibSession.
+		m_session->ClearRoot();
 	}
 
 	if (m_app) {
@@ -167,11 +153,13 @@ void ibWebSession::OnExit()
 		m_app.reset();
 	}
 
-	// Ticket dtor submits Remove@Urgent — registry thread DELETEs the
-	// sys_session row and releases the row lock. Safe to reset here:
-	// the worker already joined inside m_app->OnExit, so no one is
-	// holding a SessionScope on this session anymore.
-	m_ticket.reset();
+	// Submit Remove@Urgent through session — registry thread DELETEs the
+	// sys_session row and releases the row lock. Safe to call here: the
+	// worker already joined inside m_app->OnExit.
+	if (m_session != nullptr) {
+		m_session->Close();
+		m_session = nullptr;
+	}
 
 	m_initialized = false;
 }

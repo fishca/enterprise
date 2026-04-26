@@ -30,6 +30,11 @@ wxPGProperty* ibObjectInspector::GetEvent(ibEvent*) const { return nullptr; }
 ibFrontendDocMDIFrame* ibFrontendDocMDIFrame::s_instance = nullptr;
 void ibFrontendDocMDIFrame::UpdateFrameManager() {}
 
+// Web build has its own wxWebFrame / ibWebFrame plumbing; the desktop
+// frame's lazy-runtime hook is never reached. Stub keeps the inline
+// Show() in mainFrame.h link-clean inside wfrontend.dll.
+bool ibFrontendDocMDIFrame::EnsureRuntime() { return true; }
+
 // -----------------------------------------------------------------------------
 // ibKeyBinder — key-binding registry for the designer menus.
 // -----------------------------------------------------------------------------

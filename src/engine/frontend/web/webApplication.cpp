@@ -159,24 +159,20 @@ ibWebApplication::~ibWebApplication()
 
 ibValueModuleManagerConfiguration* ibWebApplication::GetModuleManager() const
 {
-	// Shared across all sessions — compile state belongs to the metadata-
-	// level singleton. activeMetaData returns the Configuration subtype
-	// via its virtual (see ibMetaDataConfigurationFile::GetModuleManager),
-	// so a static_cast is safe here.
-	if (activeMetaData == nullptr)
-		return nullptr;
-	return static_cast<ibValueModuleManagerConfiguration*>(
-		activeMetaData->GetModuleManager());
+	// Per-session — runtime mm now lives on ibSession (formerly on
+	// metadata; that virtual is gone). Pull the current session's mm,
+	// which is already typed as ibValueModuleManagerConfiguration*.
+	ibSession* session = ibSession::Current();
+	return session ? session->GetModuleManager() : nullptr;
 }
 
 ibWebApplication* currentWebApp()
 {
-	// The backend's thread_local main-frame singleton is our ibWebFrame
-	// on web; it carries a back-pointer to the owning ibWebApplication.
-	// If no session is active on this thread (module-loading phase,
-	// unit tests), everything's null and we hand back null too.
-	ibBackendDocMDIFrame* mdi = ibBackendDocMDIFrame::GetDocMDIFrame();
-	ibWebFrame* frame = static_cast<ibWebFrame*>(mdi);
+	// Current session's frame on web is its ibWebFrame — reach directly
+	// through the session, no process/thread-local singleton.
+	ibSession* session = ibSession::Current();
+	if (session == nullptr) return nullptr;
+	auto* frame = dynamic_cast<ibWebFrame*>(session->GetFrame());
 	return frame != nullptr ? frame->GetApp() : nullptr;
 }
 
@@ -196,6 +192,13 @@ bool ibWebApplication::OnInit()
 	(void)common;  // pulled from metadata inside the shared moduleManager
 	m_frame = new ibWebFrame(this);
 	std::cerr << "[app] frame created" << std::endl;
+
+	// Publish the frame on the session so script-side calls into
+	// ibBackendValueForm::CreateNewForm / FindFormByUniqueKey resolve
+	// through ibSession::CurrentFrame() instead of throwing
+	// "Context functions are not available!".
+	if (m_sessionContext != nullptr)
+		m_sessionContext->SetFrame(m_frame);
 
 	// No per-session moduleManager any more — the shared Configuration
 	// lives in metadata (compiled once at wfrontendInit). InitRuntimeForSession
@@ -224,7 +227,7 @@ bool ibWebApplication::OnInit()
 	// OnStart/BeforeStart resolve the session's ProcUnit through
 	// ibValueModuleManager::GetProcUnit() — that delegate consults
 	// ibSession::Current(), which the worker thread has installed
-	// via SessionScope (and the bootstrap thread did the same before
+	// via ibSessionScope (and the bootstrap thread did the same before
 	// calling OnInit). No runtime passed explicitly.
 	std::cerr << "[app] StartMainModule: begin" << std::endl;
 	const bool startOk = StartMainModuleSafe(sharedMgr);
@@ -350,22 +353,12 @@ void ibWebApplication::StopWorker()
 
 void ibWebApplication::WorkerLoop()
 {
-	// Pin THIS session's ibWebFrame as the worker thread's main-frame
-	// singleton slot. The frame was created on the HTTP handler thread
-	// during OnInit; without this call, worker tasks would resolve
-	// singletons via ms_mainFrame (global fallback), which leaks across
-	// sessions — session A's worker could end up mutating session B's
-	// frame. One InstallOnThread per worker lifetime is enough (thread-
-	// local, set once, used by every task's GetDocMDIFrame call).
-	if (m_frame != nullptr)
-		m_frame->InstallOnThread();
-
-	// Pin THIS session's ibSession as Current() for the worker
-	// thread. Same reasoning as InstallOnThread above: without this,
-	// ibRuntimeModuleDataObject::GetProcUnit falls back to descriptor-owned
-	// m_procUnit (shared across sessions). Scope lives for the entire
-	// worker lifetime — stays active across every task dispatched here.
-	SessionScope sessionScope(m_sessionContext);
+	// Pin THIS session's ibSession as Current() for the worker thread.
+	// The frame is reached via the session (m_sessionContext->GetFrame()),
+	// no thread-local frame slot — frame ownership lives in the session.
+	// Scope lives for the entire worker lifetime, stays active across
+	// every task dispatched here.
+	ibSessionScope sessionScope(m_sessionContext);
 
 	// One thread, one drain cycle: grab one task at a time (to let
 	// ProcessPendingEvents run after each so queued wxTimerEvents
@@ -442,7 +435,7 @@ void ibWebApplication::OnExit()
 	// Shared moduleManager lives in metadata — don't Destroy it, just
 	// fire per-session Exit events. GetProcUnit() in the event handlers
 	// delegates through ibSession::Current(), which the worker
-	// thread's SessionScope has set up.
+	// thread's ibSessionScope has set up.
 	if (auto* sharedMgr = GetModuleManager()) {
 		std::cerr << "[app] ExitMainModule: begin" << std::endl;
 		ExitMainModuleSafe(sharedMgr);
@@ -453,6 +446,10 @@ void ibWebApplication::OnExit()
 		std::cerr << "[app] delete m_frame: begin" << std::endl;
 		// Tabs already closed above; m_frame's m_tabs should be empty.
 		// ~ibWebFrame's DeleteAllViews loop is an idempotent no-op here.
+		// Detach from session first so any late ibSession::CurrentFrame()
+		// lookup doesn't see a freed pointer.
+		if (m_sessionContext != nullptr)
+			m_sessionContext->SetFrame(nullptr);
 		delete m_frame;
 		m_frame = nullptr;
 		std::cerr << "[app] delete m_frame: done" << std::endl;

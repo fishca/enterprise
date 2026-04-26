@@ -125,6 +125,12 @@ struct CmdArgs {
 
 	// URL prefix: defaults to file base name or --db name.
 	std::string urlPrefix;
+
+	// --debug flag: enables the in-process debug server so designer can
+	// attach via TCP and step through scripts running in this wes
+	// (technical session + every per-tab WebClient session). Off by
+	// default — production wes runs without a listener.
+	bool debugEnable = false;
 };
 
 bool StartsWith(const std::string& s, const char* prefix)
@@ -151,6 +157,7 @@ CmdArgs ParseArgs(int argc, char** argv)
 		else if (StartsWith(arg, "--locale="))    a.locale      = arg.substr(9);
 		else if (StartsWith(arg, "--url="))       a.urlPrefix   = arg.substr(6);
 		else if (StartsWith(arg, "--manifest="))  a.manifest    = arg.substr(11);
+		else if (arg == "--debug")                a.debugEnable = true;
 		else if (arg == "--help" || arg == "-h") {
 			std::cout <<
 				"Usage: wenterprise-server [options]\n"
@@ -289,12 +296,12 @@ bool PortAlreadyListening(const std::string& host, int port)
 bool InitBackend(const CmdArgs& args)
 {
 	if (!args.file.empty()) {
-		return wfrontendInitFile(args.file, args.ibUser, args.ibPassword, args.locale);
+		return wfrontendInitFile(args.file, args.ibUser, args.ibPassword, args.locale, args.debugEnable);
 	}
 	if (!args.server.empty()) {
 		return wfrontendInitServer(args.server, args.dbPort,
 			args.srvUser, args.srvPassword, args.database,
-			args.ibUser, args.ibPassword, args.locale);
+			args.ibUser, args.ibPassword, args.locale, args.debugEnable);
 	}
 	std::cerr << "Either --file=<path> or --server=<host> --db=<name> is required (see --help)."
 		<< std::endl;
@@ -679,6 +686,21 @@ int main(int argc, char** argv)
 			"application/json; charset=utf-8");
 	});
 
+	// GET /debug-status — process-wide debug flag (was --debug on?) +
+	// per-session paused flag (is the session currently parked at a
+	// breakpoint?). Client polls this on its live tick to render the
+	// top-right "Debug" / "Paused" badge.
+	svr.Get(prefix + "/debug-status",
+		[](const httplib::Request& req, httplib::Response& res) {
+			const std::string sid = SessionIdFromReq(req);
+			const bool dbg    = wfrontendDebugMode();
+			const bool paused = !sid.empty() && wfrontendSessionPaused(sid);
+			res.set_content(
+				std::string("{\"debugMode\":") + (dbg ? "true" : "false") +
+				",\"paused\":" + (paused ? "true" : "false") + "}",
+				"application/json; charset=utf-8");
+		});
+
 	// GET /auth-info — whether the configuration has sys_user rows.
 	// Client uses it on boot to decide between auto-login (open access)
 	// and showing a credentials form. No session required — purely
@@ -796,6 +818,8 @@ int main(int argc, char** argv)
 	// technical-session INSERT records "host:boundPort" in sys_session.address.
 	wfrontendSetServerAddress(args.host, boundPort);
 
+	// AccessMode (Server) is set by appData's ctor inside InitBackend
+	// based on the eWEB_ENTERPRISE_MODE runMode.
 	if (!InitBackend(args)) {
 		const std::string err = wfrontendLastError();
 		std::cerr << "Failed to open the database";
@@ -803,6 +827,15 @@ int main(int argc, char** argv)
 		std::cerr << std::endl;
 		return 1;
 	}
+
+	// Unify backend's ForceExit() with wes's main loop: instead of
+	// posting to wxTheApp (which has no event loop in the httplib
+	// blocking-listen path), call svr.stop() so listen_after_bind
+	// returns and main proceeds to wfrontendShutdown — same orderly
+	// path as Ctrl+C.
+	wfrontendSetProcessExitHook([]() {
+		if (g_svr) g_svr->stop();
+	});
 
 	// 0.0.0.0 is a wildcard bind, not a routable address — browsers
 	// can't connect to it. Advertise localhost so the URL is clickable

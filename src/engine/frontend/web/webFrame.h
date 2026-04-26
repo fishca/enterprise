@@ -2,7 +2,7 @@
 #define __WEB_FRAME_H__
 
 // Web analogue of the desktop "main frame" (wxAuiMDIParentFrame +
-// ibBackendDocMDIFrame). No wx MDI: tabs are a plain vector of
+// ibBackendDocFrame). No wx MDI: tabs are a plain vector of
 // ibVisualHostClient instances owned by the frame. When a script
 // (OpenForm / ActionForm / ...) asks for a new form, CreateNewForm
 // builds the ibValueForm via the same factory the desktop uses,
@@ -30,14 +30,14 @@ class ibMetaView;
 class ibWebDocChildFrame;
 
 // Root of the web control tree for one session. Inherits both:
-//   * ibBackendDocMDIFrame — so backend code (scripts, OpenForm, ...)
+//   * ibBackendDocFrame — so backend code (scripts, OpenForm, ...)
 //     reaches us through the existing singleton pointer;
 //   * ibWebWindow — so the frame is the top node in the same
 //     parent/child hierarchy as the controls it hosts and is
 //     serialisable into the JSON response alongside them.
 class ibWebApplication;
 
-class ibWebFrame : public ibBackendDocMDIFrame, public ibWebWindow {
+class ibWebFrame : public ibBackendDocFrame, public ibWebWindow {
 public:
 	explicit ibWebFrame(ibWebApplication* app);
 	virtual ~ibWebFrame() override;
@@ -45,7 +45,7 @@ public:
 	// Back-pointer to the session's owning application. Lets
 	// arbitrary web-side code reach the per-session dispatcher /
 	// timer map via the thread_local main-frame singleton
-	// (ibBackendDocMDIFrame::GetDocMDIFrame), without threading a
+	// (ibBackendDocFrame::GetDocMDIFrame), without threading a
 	// second thread_local or a separate globals table.
 	ibWebApplication* GetApp() const { return m_app; }
 

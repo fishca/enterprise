@@ -9,6 +9,7 @@
 #include "frontend/docView/docManager.h"
 #include "backend/srcExplorer.h"
 #include "backend/moduleManager/moduleManager.h"
+#include "backend/session/session.h"
 #include "frontend/visualView/visualHostClient.h"
 #ifdef OES_USE_WEB
 // ibWebTimer full type for `new ibFrontendTimer()` in AttachIdleHandler.
@@ -272,9 +273,9 @@ void ibValueForm::InitializeForm(const ibValueMetaObjectFormBase* creator,
 		dynamic_cast<ibRuntimeModuleDataObject*>(srcObject);
 	ibRuntimeModuleDataObject* descParent = sourceDesc;
 	if (descParent == nullptr && creator != nullptr) {
-		const ibMetaData* meta = creator->GetMetaData();
-		if (meta != nullptr) {
-			if (ibValueModuleManager* mm = meta->GetModuleManager())
+		ibSession* session = ibSession::Current();
+		if (session != nullptr) {
+			if (ibValueModuleManager* mm = session->GetModuleManager())
 				descParent = mm;
 		}
 	}
@@ -523,8 +524,7 @@ bool ibValueForm::CloseForm(bool force)
 		// just fired the OnTool we're in). Mark the tab; the
 		// session's Dispatch epilogue drains pending closes AFTER
 		// the wxEvent chain unwinds.
-		if (auto* webFrame = dynamic_cast<ibWebFrame*>(
-				ibBackendDocMDIFrame::GetDocMDIFrame())) {
+		if (auto* webFrame = dynamic_cast<ibWebFrame*>(ibSession::CurrentFrame())) {
 			webFrame->MarkTabForCloseByForm(this);
 		}
 		return true;

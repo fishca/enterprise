@@ -65,7 +65,7 @@ public:
 
 	// Session context for this application. Set by the owning
 	// ibWebSession right after construction; worker loop installs it
-	// onto its thread via SessionScope so any descriptor-level
+	// onto its thread via ibSessionScope so any descriptor-level
 	// GetProcUnit call delegates through the session. nullptr until
 	// the session wires it up.
 	ibSession*                  GetSessionContext() const { return m_sessionContext; }

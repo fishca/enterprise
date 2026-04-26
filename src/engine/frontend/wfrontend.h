@@ -60,7 +60,8 @@ WFRONTEND_API bool wfrontendInitFile(
 	const std::string& filePath,
 	const std::string& ibUser,
 	const std::string& ibPassword,
-	const std::string& locale = "en");
+	const std::string& locale = "en",
+	bool               debugEnable = false);
 
 WFRONTEND_API bool wfrontendInitServer(
 	const std::string& server,
@@ -70,7 +71,8 @@ WFRONTEND_API bool wfrontendInitServer(
 	const std::string& database,
 	const std::string& ibUser,
 	const std::string& ibPassword,
-	const std::string& locale = "en");
+	const std::string& locale = "en",
+	bool               debugEnable = false);
 
 WFRONTEND_API void        wfrontendShutdown();
 WFRONTEND_API std::string wfrontendLastError();
@@ -89,6 +91,21 @@ WFRONTEND_API std::string wfrontendServerAddress();   // "host:port"; "" if unse
 // (ibMetaDataConfiguration::GetConfigName). Empty if not initialised
 // or the metadata has no name yet.
 WFRONTEND_API std::string wfrontendConfigName();
+
+// Install a process-exit hook on backend's ForceExit path. wes's main
+// hands in a lambda that calls `g_svr->stop()` so any backend code that
+// requests exit (debug-Destroy, fatal error) lands in the same orderly
+// httplib-stop → wfrontendShutdown sequence as Ctrl+C.
+WFRONTEND_API void        wfrontendSetProcessExitHook(void (*hook)());
+
+// True if the wes process was launched with --debug (debug server up,
+// per-session Debug context auto-enabled at authenticate time).
+WFRONTEND_API bool        wfrontendDebugMode();
+
+// True iff the per-tab session identified by sessionId is currently
+// parked at a breakpoint (its ibSession::Debug()->m_debugLoop is true).
+// Returns false for unknown / non-debugged / running sessions.
+WFRONTEND_API bool        wfrontendSessionPaused(const std::string& sessionId);
 
 // True when the sys_user table has at least one row. Clients use this
 // to decide whether to show a login form (true) or auto-login the

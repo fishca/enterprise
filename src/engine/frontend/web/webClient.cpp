@@ -155,10 +155,12 @@ input.ctrl{padding:3px 6px;border:1px solid #aaa;border-radius:3px}
   transition:opacity .15s}
 #netStatus.loading{background:#eef2ff;color:#3b50a0;border:1px solid #c4cfed}
 #netStatus.error{background:#fce5e5;color:#8a2e2e;border:1px solid #e6aaaa}
+#netStatus.debug-paused{background:#fff4e0;color:#a04020;border:1px solid #f0c0a0}
 #netStatus .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
   margin-right:6px;vertical-align:middle}
 #netStatus.loading .dot{background:#6a84e0;animation:pulse 1s infinite}
 #netStatus.error .dot{background:#c43b3b}
+#netStatus.debug-paused .dot{background:#d06030;animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 /* Full-page overlay that hides the initial "Pick a form" placeholder
    and the tab-bar building up in parallel fetches. Removed in one go
@@ -173,6 +175,13 @@ input.ctrl{padding:3px 6px;border:1px solid #aaa;border-radius:3px}
   border-top-color:#3b50a0;border-radius:50%;
   animation:bootSpin 1s linear infinite}
 @keyframes bootSpin{to{transform:rotate(360deg)}}
+/* Debug indicator inside the sidebar status line. Reuses #status's
+   existing real estate ("connecting..." / "connected") rather than
+   adding a separate overlay or badge. */
+#status .dbg{display:inline-block;margin-left:6px;padding:1px 6px;
+  border-radius:4px;font-size:.78em;letter-spacing:.04em;font-weight:600}
+#status .dbg.mode{background:#fdecea;color:#a04020;border:1px solid #f0c0b0}
+#status .dbg.paused{background:#a04020;color:#fff;border:1px solid #802010}
 /* Credentials prompt — shown when GET /auth-info says hasUsers=true.
    Stacked on top of bootOverlay; both disappear together once login
    succeeds and the initial fetches finish. */
@@ -285,6 +294,14 @@ function showSpinner(){ spinner.classList.add('show'); }
 function hideSpinner(){ spinner.classList.remove('show'); }
 
 let inflight=0, loadingTimer=null, lastError=false;
+// Set by pollDebugStatus from /debug-status. dbgMode reflects wes
+// process-wide --debug; dbgPaused reflects this tab's session being
+// parked at a breakpoint. Used by beginRequest below to relabel the
+// loading banner — when scripts may stop on a breakpoint, "Загрузка…"
+// is misleading; "В режиме отладки" / "Отладчик: пауза" tells the user
+// the real reason the UI is waiting.
+let dbgMode   = false;
+let dbgPaused = false;
 // Threshold chosen so the common triad (poll + user click fetching
 // back-to-back) completes under it on a healthy connection. Anything
 // slower than this is genuinely worth a spinner. Polls are ~5ms,
@@ -298,8 +315,12 @@ function beginRequest(){
   if(loadingTimer) return;
   loadingTimer=setTimeout(()=>{
     loadingTimer=null;
-    if(inflight>0 && !lastError){
-      showNetStatus('loading','Загрузка…');
+    if(inflight>0 && !lastError && !dbgPaused){
+      // Relabel as "В режиме отладки" when wes was started with
+      // --debug — any stall in this state likely means a breakpoint
+      // is about to fire (or just fired) on the script thread.
+      showNetStatus(dbgMode ? 'debug-paused' : 'loading',
+                    dbgMode ? 'В режиме отладки' : 'Загрузка…');
       showSpinner();
     }
   }, LOADING_THRESHOLD_MS);
@@ -309,10 +330,10 @@ function endRequest(ok){
   if(inflight===0 && loadingTimer){ clearTimeout(loadingTimer); loadingTimer=null; }
   if(ok){
     lastError=false;
-    if(inflight===0){ hideNetStatus(); hideSpinner(); }
+    if(inflight===0 && !dbgPaused){ hideNetStatus(); hideSpinner(); }
   } else {
     lastError=true;
-    showNetStatus('error','Нет связи с сервером');
+    if(!dbgPaused) showNetStatus('error','Нет связи с сервером');
     if(inflight===0) hideSpinner();
   }
 }
@@ -1194,6 +1215,48 @@ async function paintActiveTab(){
     bootOverlay.classList.add('hide');
     setTimeout(() => bootOverlay.remove(), 200);
   }
+  // Debug indicator: a "DEBUG" pill in the sidebar status line while
+  // the wes process is in --debug mode. When this tab's session parks
+  // at a breakpoint, also takes over the top netStatus banner with
+  // "Отладчик: пауза" so the generic "Загрузка…" doesn't mask the real
+  // reason. Polls /debug-status; cheap (in-memory flag check on wes).
+  const dbgPill = document.createElement('span');
+  dbgPill.className = 'dbg';
+  dbgPill.style.display = 'none';
+  status.appendChild(dbgPill);
+  let dbgState = { debugMode: false, paused: false };
+  async function pollDebugStatus(){
+    try {
+      const r = await fetch(API+'/debug-status',{credentials:'same-origin'});
+      if (!r.ok) return;
+      const next = await r.json();
+      if (next.debugMode === dbgState.debugMode && next.paused === dbgState.paused)
+        return;
+      dbgState = next;
+      dbgPaused = next.paused;
+      dbgMode   = next.debugMode;
+      if (next.paused) {
+        dbgPill.textContent = 'PAUSED';
+        dbgPill.className = 'dbg paused';
+        dbgPill.style.display = '';
+        showNetStatus('debug-paused','Отладчик: пауза');
+        hideSpinner();
+      } else {
+        if (next.debugMode) {
+          dbgPill.textContent = 'DEBUG';
+          dbgPill.className = 'dbg mode';
+          dbgPill.style.display = '';
+        } else {
+          dbgPill.style.display = 'none';
+        }
+        // Resume — clear the paused banner. inflight keeps its own
+        // loading state, so it'll re-flash if a request is still slow.
+        if (inflight === 0) hideNetStatus();
+      }
+    } catch (e) { /* network blip — try again next tick */ }
+  }
+  setInterval(pollDebugStatus, 500);
+  pollDebugStatus();
 })();
 </script></body></html>
 )HTML";

@@ -26,7 +26,7 @@
 #include <string>
 
 class ibWebApplication;
-class ibSessionTicket;
+class ibSession;
 
 class ibWebSession {
 public:
@@ -53,7 +53,7 @@ public:
 	const std::string& ConfigName() const { return m_configName; }
 	ibWebApplication*  App()        const { return m_app.get(); }
 	// Raw ibSession pointer from the ticket — for HTTP handlers that need
-	// to pin SessionScope on their worker thread so ibSession::Current()
+	// to pin ibSessionScope on their worker thread so ibSession::Current()
 	// resolves for moduleManager->GetProcUnit() etc. Nullptr before Login.
 	class ibSession* Session() const;
 
@@ -76,11 +76,10 @@ private:
 	// leave a half-initialised app behind.
 	std::unique_ptr<ibWebApplication> m_app;
 
-	// Session registry ticket — RAII owner of the underlying ibSession.
-	// Populated by Login() via ibSessionRegistry::Connect; dtor submits
-	// Remove@Urgent so the sys_session row is DELETEd + row lock
-	// released on the registry thread ahead of any pending Normal Adds.
-	std::unique_ptr<ibSessionTicket> m_ticket;
+	// Session pointer — registry's m_own owns the shared_ptr. Set by
+	// Login() via ibSessionRegistry::Connect; cleared on OnExit (which
+	// submits Remove@Urgent through ibSession::Close).
+	class ibSession* m_session = nullptr;
 };
 
 #endif

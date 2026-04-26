@@ -13,7 +13,6 @@
 #include "backend/plugin/pluginManager.h"
 #include "backend/session/session.h"
 #include "backend/session/sessionRegistry.h"
-#include "backend/session/sessionTicket.h"
 #include "backend/moduleManager/moduleManager.h"
 
 //databases
@@ -135,6 +134,7 @@ ibApplicationData* ibApplicationData::s_instance = nullptr;
 
 bool ibApplicationData::m_forceExit = false;
 wxCriticalSection ibApplicationData::m_cs_force_exit;
+ibApplicationData::ProcessExitHook ibApplicationData::s_processExitHook = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -145,18 +145,146 @@ ibApplicationData::ibApplicationData(ibRunMode runMode) :
 	m_sessionGuid(wxNewUniqueGuid),
 	m_pluginManager(std::make_unique<ibPluginManager>()),
 	m_connectionPool(std::make_unique<ibConnectionPool>()),
+	m_sessionRegistry(std::make_unique<ibSessionRegistry>()),
 	m_dbMode(ibDatabaseMode::eNONE),
 	m_locale_lang(wxLanguage::wxLANGUAGE_UNKNOWN)
 {
+	// Pick the session access mode from runMode — every Single-session
+	// app (enterprise/designer/daemon/codeRunner/classChecker) gets
+	// Single, the web server (wes) gets Server (per-tab + system fallback).
+	// Apps no longer need to call SetAccessMode themselves.
+	//
+	// Drive the registry directly here — the global `appData` pointer is
+	// assigned only after this ctor returns, so going through
+	// ibSession::SetAccessMode (which routes through ibSessionRegistry::
+	// Instance() and asserts on the global) would fire wxASSERT mid-ctor.
+	switch (runMode) {
+	case eWEB_ENTERPRISE_MODE:
+		m_sessionRegistry->SetAccessMode(ibSession::AccessMode::Shared);
+		break;
+	case eLAUNCHER_MODE:
+		// Launcher has no session — leave default; Current() returns
+		// nullptr until something explicitly binds.
+		break;
+	default:
+		m_sessionRegistry->SetAccessMode(ibSession::AccessMode::Single);
+		break;
+	}
+
 	// Load everything under <exe-dir>/plugins that exports the OES plugin ABI.
 	// Launcher has no script/metadata subsystem so plugins have nothing to hook —
 	// skip it there to avoid paying the scan cost on every connection chooser.
 	if (runMode != eLAUNCHER_MODE)
 		m_pluginManager->LoadAll();
+
+	// Wire session-lifecycle event listeners — drives metadata load on
+	// first auth + per-session runtime bring-up + last-auth-out cleanup.
+	if (runMode != eLAUNCHER_MODE)
+		WireSessionEvents();
+}
+
+void ibApplicationData::WireSessionEvents()
+{
+	auto* registry = m_sessionRegistry.get();
+	if (registry == nullptr) return;
+
+	// First authenticated session in the process → load metadata skeleton
+	// only. CreateRoot / RunDatabase / CompileRoot live in OnAuthenticated
+	// (and the designer's manual RunDatabase after mainFrameShow) — this
+	// listener is just the one-shot metadata bootstrap.
+	registry->OnFirstConnect([this](ibSession* /*s*/) {
+		if (m_created_metadata) return;
+		if (!metaDataCreate(m_runMode, m_loadMetadataFlags)) return;
+		m_created_metadata = true;
+	});
+
+	// Every authenticated session (including the first) gets per-session
+	// bring-up: thread binding, root mm allocation + compile, runtime start
+	// for runtime-enabled modes.
+	registry->OnAuthenticated([this](ibSession* s) {
+		if (s == nullptr) return;
+		ibSession::BindSessionToThread(s, std::this_thread::get_id());
+		auto* registry = m_sessionRegistry.get();
+		if (registry && registry->GetAccessMode() == ibSession::AccessMode::Shared
+		    && registry->GetFallback() == nullptr)
+		{
+			// First Shared-mode auth establishes the system fallback.
+			registry->SetFallback(s);
+		}
+		// Enable per-session debug context iff this process was started
+		// with --debug. Marks the session as debugged so ibProcUnit's
+		// breakpoint dispatch + DoDebugLoop's CV wait route through the
+		// session's own state instead of the legacy server-singleton.
+		if ((m_loadMetadataFlags & _app_start_create_debug_server_flag) != 0)
+			s->EnableDebug();
+		if (activeMetaData != nullptr) {
+			// Root mm is already allocated by ibSession::EnsureRoot — the
+			// registry calls it between OnFirstConnect (metadataCreate) and
+			// this listener. Here we drive cross-process metadata bring-up
+			// (RunDatabase once per process — fires OnBefore/After
+			// RunMetaObject which read session->mm and populate
+			// ibCompileValueCache + ibModuleStorage) and per-session
+			// compile + runtime start.
+			if (!m_run_metadata) {
+				m_run_metadata = activeMetaData->RunDatabase();
+			}
+			s->CompileRoot();
+			const bool wantsRuntime =
+				(m_runMode == eENTERPRISE_MODE) ||
+				(m_runMode == eSERVICE_MODE) ||
+				(m_runMode == eWEB_ENTERPRISE_MODE);
+			if (wantsRuntime) {
+				if (auto* mm = s->GetModuleManager())
+					mm->InitRuntimeForSession(s);
+			}
+		}
+	});
+
+	// Per-session teardown — runs on the registry thread inside
+	// ProcessRemove while the session is in Stopping state. UnbindSession
+	// (by pointer, not thread id) erases bindings regardless of which
+	// thread originally pinned them.
+	registry->OnDisconnect([this](ibSession* s) {
+		if (s == nullptr) return;
+		if (auto* mm = s->GetModuleManager())
+			mm->ExitRuntimeForSession(s);
+		s->DestroyRoot();
+		ibSession::UnbindSession(s);
+		auto* registry = m_sessionRegistry.get();
+		if (registry && registry->GetFallback() == s)
+			registry->ClearFallback();
+	});
+
+	// Last authenticated session out — unload metadata so the process is
+	// back to a sessionless state (refcount = 0). Then request process
+	// exit; the keep-alive predicate (web tabs, etc.) can decline.
+	registry->OnLastDisconnect([this]() {
+		if (m_run_metadata) {
+			const bool isConfigOpen = activeMetaData != nullptr && activeMetaData->IsConfigOpen();
+			if (isConfigOpen)
+				activeMetaData->CloseDatabase(forceCloseFlag);
+		}
+		m_created_metadata = false;
+		m_run_metadata = false;
+		// EndJob and other "no more work" paths route here. ForceExit
+		// goes through ProcessExitHook (wes' main → svr->stop()) or
+		// wxTheApp->Exit (desktop), with ShouldKeepAlive declining when
+		// non-debug clients are still live.
+		if (!ibSessionRegistry::Instance().ShouldKeepAlive())
+			ForceExit();
+	});
 }
 
 ibApplicationData::~ibApplicationData()
 {
+	// Stop is the kill-switch: it submits Remove@Urgent for every session
+	// still in m_own (technical wes session, stranded per-tab sessions),
+	// then drains the queue before joining the worker — so every
+	// sys_session row DELETEs and OnDisconnect listeners fire before any
+	// other member of appData dies. m_sessionRegistry itself is destroyed
+	// at the end of this dtor; its own dtor calls Stop again best-effort.
+	if (m_sessionRegistry) m_sessionRegistry->Stop();
+
 	// Explicit early unload so plugins see Destroy() while the host is still
 	// alive; also clears the vector before appData's other members die.
 	if (m_pluginManager) m_pluginManager->UnloadAll();
@@ -164,7 +292,7 @@ ibApplicationData::~ibApplicationData()
 
 // ---------------------------------------------------------------------------
 // User-identity accessors — prefer the current thread's ibSession when a
-// SessionScope is active (per-cookie on web, main user session on desktop);
+// ibSessionScope is active (per-cookie on web, main user session on desktop);
 // fall back to the process singleton only when no scope is set (pre-auth
 // bootstrap, standalone codeRunner). Moved out-of-line so the header
 // doesn't have to include session/session.h (which would create a cycle
@@ -372,7 +500,12 @@ bool ibApplicationData::DestroyAppDataEnv()
 	if (s_instance != nullptr && s_instance->m_connectionPool != nullptr &&
 	    ibConnectionPool::GetPrimaryConnection() != nullptr) {
 
-		if (!s_instance->Disconnect()) return false;
+		// Reset cached session credentials. The active session itself is
+		// closed by its holder (mainApp/webSession) via ibSession::Close(),
+		// not from here; ~ibApplicationData runs Stop() to drain pending
+		// Removes when s_instance is destroyed below.
+		s_instance->m_sessionRawPassword.clear();
+		s_instance->m_connected_to_db = false;
 
 		s_instance->m_strServer = wxEmptyString;
 		s_instance->m_strPort = wxEmptyString;
@@ -462,121 +595,14 @@ bool ibApplicationData::InitLocale(const wxString& locale)
 	return false;
 }
 
-ibSession* ibApplicationData::GetMainSession() const
-{
-	return m_mainTicket ? m_mainTicket->Session() : nullptr;
-}
+// ---------------------------------------------------------------------------
+// Phased startup (split of legacy Connect). Apps compose the phases;
+// runtime start is NOT here — it's driven from the session owned by the
+// app's main frame (frame->Initialize(session) wires it). Connect() stays
+// as a convenience wrapper for callers without inter-phase hooks
+// (codeRunner, daemon, tests).
+// ---------------------------------------------------------------------------
 
-bool ibApplicationData::Connect(const wxString& strUserName, const wxString& strUserPassword, const int flags)
-{
-	if (m_created_metadata)
-		return false;
-
-	// StartSession now creates the main ibSession via ibSessionRegistry::
-	// Connect(req) and installs the SessionScope on this thread bound to
-	// the ticket's session. The scope lives until CloseSession resets it,
-	// so module manager / ProcUnit construction below sees a valid
-	// ibSession::Current().
-	if (!StartSession(strUserName, strUserPassword))
-		return false;  //start session
-	if (!metaDataCreate(m_runMode, flags))
-		return false;
-	m_created_metadata = true;
-	m_run_metadata = activeMetaData->RunDatabase();
-
-	// Commit 2 (runtime facade plan): bind the session's own root module
-	// manager. Populated only for modes that actually run scripts — the
-	// wes technical session (eWEB_ENTERPRISE_MODE → WebServer kind),
-	// designer and launcher skip this. Per-cookie WebClient sessions are
-	// handled separately in ibWebSession::Login.
-	//
-	// Readers still go through activeMetaData->GetModuleManager() (legacy
-	// singleton) in this commit; the session-aware overload + reader
-	// migration lands in the next commit.
-	if (m_run_metadata && activeMetaData != nullptr &&
-	    (m_runMode == eENTERPRISE_MODE || m_runMode == eSERVICE_MODE))
-	{
-		if (auto* session = m_mainTicket ? m_mainTicket->Session() : nullptr) {
-			session->CreateRoot(
-				activeMetaData,
-				activeMetaData->GetCommonMetaObject());
-		}
-	}
-
-	// Phase A: bring up per-session runtime for the current session.
-	// Desktop's User session gets ProcUnits for main + common modules
-	// under its m_procUnitMap, so subsequent meta->GetProcUnit() calls
-	// resolve via the session (delegate in ibRuntimeModuleDataObject::GetProcUnit).
-	// Web's System session returns early inside InitRuntimeForSession
-	// (kind != user-runtime) so no runtime is spun up at server
-	// startup. Explicit session from the main ticket — no thread_local
-	// indirection.
-	if (activeMetaData != nullptr && m_mainTicket) {
-		if (auto* mm = activeMetaData->GetModuleManager()) {
-			if (auto* session = m_mainTicket->Session())
-				mm->InitRuntimeForSession(session);
-		}
-	}
-
-	return m_connected_to_db &&
-		m_created_metadata &&
-		m_run_metadata;
-}
-
-bool ibApplicationData::Disconnect()
-{
-	bool success = true;
-
-	if (m_created_metadata) {
-
-		// Symmetric teardown — drop per-session ProcUnits before
-		// DestroyMainModule tears down the shared compile state.
-		// Explicit session from the ticket; no thread_local indirection.
-		if (activeMetaData != nullptr && m_mainTicket) {
-			if (auto* mm = activeMetaData->GetModuleManager()) {
-				if (auto* session = m_mainTicket->Session())
-					mm->ExitRuntimeForSession(session);
-			}
-		}
-
-		// Commit 2: drop session's own root module manager BEFORE the
-		// metadata tree goes down in CloseDatabase. The root's common
-		// modules + compile state reference metadata descriptors; without
-		// explicit clear, the root could outlive metadata (registry drains
-		// session removal asynchronously) and its dtor would touch dead
-		// pointers.
-		if (m_mainTicket) {
-			if (auto* session = m_mainTicket->Session())
-				session->ClearRoot();
-		}
-
-		// CloseSession drops m_mainThreadScope + m_mainTicket. Ticket
-		// dtor submits Remove@Urgent — drained by the registry thread
-		// before Stop() joins it below. Keep going on failure so the
-		// registry thread is always joined; otherwise the process
-		// stays alive with an orphaned registry thread and the user
-		// sees a zombie entry in tasklist after closing the window.
-		if (!CloseSession())
-			success = false;
-
-		if (m_run_metadata) {
-			const bool isConfigOpen = activeMetaData != nullptr && activeMetaData->IsConfigOpen();
-			if (isConfigOpen && !activeMetaData->CloseDatabase(forceCloseFlag))
-				success = false;
-		}
-
-		metaDataDestroy();
-		m_created_metadata = false;
-	}
-
-	// Stop the registry unconditionally — even when we partially failed
-	// above, the thread MUST be joined, otherwise the process can't
-	// exit. The thread's graceful final-drain handles any pending
-	// Remove requests (including the Urgent from m_mainTicket's dtor).
-	ibSessionRegistry::Instance().Stop();
-
-	return success;
-}
 
 #pragma region config
 
@@ -675,7 +701,7 @@ long ibApplicationData::RunApplication(const wxString& strAppName, const wxStrin
 	// that's enterprise.exe's in-process debugger attach, not relevant
 	// to a headless wes child.
 	if (useManifest)
-		return SpawnWebServerWithManifest(executeCmd);
+		return SpawnWebServerWithManifest(executeCmd, searchDebug);
 
 	const long execute = wxExecute(executeCmd);
 
@@ -700,7 +726,7 @@ long ibApplicationData::RunApplication(const wxString& strAppName, const wxStrin
 	return execute;
 }
 
-long ibApplicationData::SpawnWebServerWithManifest(wxString cmd)
+long ibApplicationData::SpawnWebServerWithManifest(wxString cmd, bool searchDebug)
 {
 	// --port=0 → OS picks an ephemeral port. --manifest=<file> → wes writes
 	// host/port/prefix/url there once it is actually accepting connections.
@@ -750,6 +776,31 @@ long ibApplicationData::SpawnWebServerWithManifest(wxString cmd)
 	wxRemoveFile(manifestPath);
 	if (!url.IsEmpty())
 		wxLaunchDefaultBrowser(url);
+
+	// Web debug attach: wes is up with --debug, its in-process
+	// ibDebuggerServer is listening on defaultDebuggerPort..+diapason
+	// in non-blocking (wait=false) mode. SearchServer scans + verifies
+	// each port, but verified+Scanner stays Scanner — designer never
+	// auto-promotes to Debugger on a non-waiting server. We retry
+	// SearchServer in rounds because a single sweep can race with wes's
+	// metadataCreate (debug server still coming up) — first sweep's
+	// scan threads exit on connect-refused, leaving counter=-1, which
+	// lets the next SearchServer call create fresh threads. Once verify
+	// succeeds (m_connectionSuccess), AttachAllVerified pushes
+	// CommandId_StartSession so wes flips to Debugger mode.
+	if (searchDebug && pid != 0) {
+		const int kRounds      = 20;   // 20 rounds * 250ms = ~5s
+		const int kRoundSleepMs = 250;
+		for (int round = 0; round < kRounds; ++round) {
+			if (debugClient == nullptr) break;
+			debugClient->SearchServer(true);
+			wxMilliSleep(kRoundSleepMs);
+			if (debugClient->GetConnectionSuccess())
+				break;
+		}
+		if (debugClient != nullptr && debugClient->GetConnectionSuccess())
+			debugClient->AttachAllVerified();
+	}
 
 	return pid;
 }
@@ -803,9 +854,9 @@ void ibApplicationData::InstallUser(const ibApplicationDataUserInfo& info,
 		m_sessionRawPassword = rawPassword;
 
 	// Per-session mirror. The registry thread calls InstallUser under a
-	// SessionScope bound to the target ibSession, so Current() resolves
+	// ibSessionScope bound to the target ibSession, so Current() resolves
 	// to the session we intend to mutate. Desktop StartSession path also
-	// runs under the "main" SessionScope set up in Connect().
+	// runs under the "main" ibSessionScope set up in Connect().
 	if (auto* ctx = ibSession::Current()) {
 		ctx->SetUserInfo(info);
 		ctx->SetSessionRawPassword(rawPassword);

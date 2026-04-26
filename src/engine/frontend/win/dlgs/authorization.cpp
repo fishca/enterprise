@@ -72,3 +72,15 @@ ibDialogAuthentication::ibDialogAuthentication(wxWindow* parent, wxWindowID id, 
 		}
 	);
 }
+
+bool ibPromptAuthenticationDialog(const wxString& userName, const wxString& userPassword)
+{
+	if (appData == nullptr)
+		return false;
+
+	ibDialogAuthentication dlg;
+	dlg.SetLogin(userName);
+	dlg.SetPassword(userPassword);
+
+	return dlg.ShowModal() != wxID_CANCEL;
+}

@@ -2,6 +2,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/metadataConfiguration.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "backend/session/sessionRegistry.h"
 
 #include <wx/menu.h>
@@ -116,6 +117,12 @@ void ibDialogActiveUser::OnContextMenu(wxListEvent& event)
 	const wxString guid = m_activeTable->GetItemText(row, 5);
 	if (guid.IsEmpty()) return;
 
+	// Kick / Reload are designer-only admin actions. enterprise.exe
+	// users see the dialog read-only — runtime operators don't get to
+	// boot peers off. (Permission check on top of this comes later when
+	// the role system surfaces an "admin" predicate.)
+	if (!appData->DesignerMode()) return;
+
 	wxMenu menu;
 	menu.Append(ID_ActiveUser_Kick,   _("Kick session"));
 	menu.Append(ID_ActiveUser_Reload, _("Reload clients"));
@@ -133,6 +140,27 @@ void ibDialogActiveUser::OnKickSelected(wxCommandEvent&)
 	if (row < 0) return;
 	const wxString guid = m_activeTable->GetItemText(row, 5);
 	if (guid.IsEmpty()) return;
+
+	// Self-kick guard: if the selected row's session belongs to the
+	// current process, refuse — kicking yourself only triggers a forced
+	// close on the kicker's own UI, not on a peer.
+	if (auto* self = ibSession::Current()) {
+		if (guid == wxString::FromUTF8(self->GetId().c_str())) {
+			wxMessageBox(_("Cannot kick the current session. Close the application instead."),
+				wxTheApp->GetAppDisplayName(), wxOK | wxICON_INFORMATION, this);
+			return;
+		}
+	}
+
+	const wxString user = m_activeTable->GetItemText(row, 0);
+	const wxString userLabel = user.IsEmpty()
+		? wxString(_("(user not specified)"))
+		: user;
+	const int answer = wxMessageBox(
+		wxString::Format(_("Kick session of '%s'?"), userLabel),
+		wxTheApp->GetAppDisplayName(), wxYES_NO | wxICON_QUESTION, this);
+	if (answer != wxYES) return;
+
 	if (!ibSessionRegistry::Instance().Kick(guid)) {
 		wxLogWarning(_("Failed to queue kick for session %s"), guid);
 	}
@@ -145,6 +173,18 @@ void ibDialogActiveUser::OnReloadSelected(wxCommandEvent&)
 	if (row < 0) return;
 	const wxString guid = m_activeTable->GetItemText(row, 5);
 	if (guid.IsEmpty()) return;
+
+	// Same self-guard as kick: reloading the current process's own
+	// session via the signal path would just close the designer that
+	// invoked it.
+	if (auto* self = ibSession::Current()) {
+		if (guid == wxString::FromUTF8(self->GetId().c_str())) {
+			wxMessageBox(_("Cannot reload the current session."),
+				wxTheApp->GetAppDisplayName(), wxOK | wxICON_INFORMATION, this);
+			return;
+		}
+	}
+
 	if (!ibSessionRegistry::Instance().Reload(guid)) {
 		wxLogWarning(_("Failed to queue reload for session %s"), guid);
 	}

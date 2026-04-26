@@ -12,6 +12,7 @@
 #endif
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 static const wxCmdLineEntryDesc s_cmdLineDesc[] = {
 	// Short names stay legacy; long names match wenterprise-server /
@@ -82,7 +83,7 @@ int main(int argc, char** argv)
 
 	wxSocketBase::Initialize();
 
-	// Init appData
+	// Init appData (sets AccessMode internally based on runMode).
 	bool connected = appDataCreateServer(ibRunMode::eENTERPRISE_MODE,
 		strServer, strPort, strUser, strPassword, strDatabase, wxT("en")
 	);
@@ -94,7 +95,11 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	if (!appData->Connect(strIBUser, strIBPassword)) {
+	// CreateSession + Authenticate. Registry's lifecycle listeners (wired
+	// in ibApplicationData ctor) handle metadata load + per-session
+	// runtime bring-up through OnFirstConnect / OnAuthenticated.
+	ibSession* session = appData->CreateSession();
+	if (session == nullptr || !session->Open(strIBUser, strIBPassword)) {
 		appDataDestroy();
 		return 1;
 	}

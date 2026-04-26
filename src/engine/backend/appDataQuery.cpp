@@ -3,11 +3,9 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 #include "backend/databaseLayer/connectionPool.h"
 
-#include "backend/backend_mainFrame.h"
 #include "backend/backend_exception.h"
 
 #include "backend/session/sessionRegistry.h"
-#include "backend/session/sessionTicket.h"
 #include "backend/session/designerExclusivePolicy.h"
 
 
@@ -403,11 +401,25 @@ std::vector<ibApplicationDataShortUserInfo> ibApplicationData::GetAllowedUser() 
 	return userInfo;
 }
 
-bool ibApplicationData::StartSession(const wxString& strUserName, const wxString& strUserPassword)
-{
-	if (!CloseSession())
-		return false;
+// -----------------------------------------------------------------------
+// Phased session lifecycle — StartSession below is the legacy wrapper
+// kept for callers that want one-shot session+auth. Apps that want
+// to keep the ticket visible during a login-retry loop use
+// CreateSession + Authenticate separately.
+// -----------------------------------------------------------------------
 
+ibSession* ibApplicationData::CreateSession()
+{
+	// Legacy path — default factory means registry builds a plain ibSession.
+	// Desktop GUI apps now use CreateSessionTyped<ibEnterpriseSession>() etc.;
+	// this overload stays for codeRunner / daemon / headless callers that
+	// don't need a derived session type.
+	return CreateSessionWithFactory({});
+}
+
+ibSession* ibApplicationData::CreateSessionWithFactory(
+	std::function<std::shared_ptr<ibSession>(std::string, ibSessionKind)> factory)
+{
 	// Bring up the session registry. Own the sys_session table outright:
 	// registry handles INSERT / UPDATE / DELETE via its write connection
 	// and holds pessimistic row locks that peers use to detect liveness
@@ -416,10 +428,10 @@ bool ibApplicationData::StartSession(const wxString& strUserName, const wxString
 	reg.EnableSysSessionOwnership(true);
 
 	// Designer-exclusive policy — replaces the legacy
-	// VerifySessionUpdater grace-retry check. Only meaningful when this
-	// process runs as designer; for other modes the policy's CanAdd
-	// short-circuits to true. AddPolicy must happen BEFORE Start so the
-	// chain is immutable once the thread is consuming the queue.
+	// VerifySessionUpdater grace-retry check. Only meaningful for the
+	// designer process; other modes' CanAdd short-circuits to true.
+	// AddPolicy must happen BEFORE Start so the chain is immutable
+	// once the consumer thread is running.
 	if (m_runMode == eDESIGNER_MODE)
 		reg.AddPolicy(std::make_unique<ibDesignerExclusivePolicy>(&reg));
 
@@ -427,66 +439,22 @@ bool ibApplicationData::StartSession(const wxString& strUserName, const wxString
 
 	// Anonymous-phase Connect — registry INSERTs a row with userName=''
 	// immediately so peers (Active Users UI, designer-exclusive policy)
-	// see "someone is logging in" before Attach settles. Process run
-	// mode passed as-is. Session kind is explicit: wes's own technical
-	// session is WebServer; desktop modes default via runMode.
+	// see "someone is logging in". Session kind is explicit: wes's own
+	// technical session is WebServer; desktop modes default via runMode.
 	ibConnectRequest req;
-	req.m_computer = m_strComputer;
-	req.m_appMode  = m_runMode;
-	req.m_kind     = (m_runMode == eWEB_ENTERPRISE_MODE)
-	                   ? ibSessionKind::WebServer
-	                   : SessionKindFromRunMode(m_runMode);
+	req.m_computer       = m_strComputer;
+	req.m_appMode        = m_runMode;
+	req.m_kind           = (m_runMode == eWEB_ENTERPRISE_MODE)
+	                         ? ibSessionKind::WebServer
+	                         : SessionKindFromRunMode(m_runMode);
+	req.m_sessionFactory = std::move(factory);
 
 	auto result = reg.Connect(req);
 	if (result.m_code != ibConnectResult::Ok)
-		return false;
-
-	m_mainTicket = std::make_unique<ibSessionTicket>(std::move(result.m_ticket));
-
-	// Main-thread SessionScope binds Current() to this ticket's session.
-	// AuthenticateUser / InstallUser inside ProcessAttach mirror into
-	// Current()'s userInfo; with the scope in place, that Current() is
-	// the same session the ticket owns.
-	m_mainThreadScope = std::make_unique<SessionScope>(m_mainTicket->Session());
-
-	// Try CLI / prior creds. On wrong password, fall back to the
-	// desktop Authentication dialog — its OK button calls
-	// AuthenticationAndSetUser which populates the legacy singleton
-	// mirrors (m_userInfo, m_sessionRawPassword). After the dialog
-	// returns success, re-Attach the ticket with the validated creds
-	// so ProcessAttach's UPDATE of sys_session.userName fires on the
-	// session we actually own.
-	ibAttachResult ar = m_mainTicket->Attach(strUserName, strUserPassword);
-	if (ar != ibAttachResult::Ok) {
-		// Give the GUI one chance to prompt.
-		if (backend_mainFrame != nullptr &&
-			backend_mainFrame->AuthenticationUser(strUserName, strUserPassword)) {
-			ar = m_mainTicket->Attach(m_userInfo.m_strUserName, m_sessionRawPassword);
-		}
-	}
-
-	if (ar != ibAttachResult::Ok) {
-		m_mainThreadScope.reset();
-		m_mainTicket.reset();
-		return false;
-	}
-
-	m_connected_to_db = true;
-	return true;
+		return nullptr;
+	// Registry's m_own holds the shared_ptr; result.m_session is a raw
+	// observer. Lifecycle is now driven by ibSession::Close() from the
+	// holder (mainApp, webSession).
+	return result.m_session;
 }
 
-bool ibApplicationData::CloseSession()
-{
-	// Ticket dtor submits Remove@Urgent — registry thread DELETEs the
-	// sys_session row and releases the row lock. We drop the
-	// SessionScope first so no residual Current() points at a
-	// soon-to-be-gone session.
-	m_mainThreadScope.reset();
-	m_mainTicket.reset();
-
-	// Wipe the in-memory raw password as soon as the session ends.
-	m_sessionRawPassword.clear();
-
-	m_connected_to_db = false;
-	return true;
-}

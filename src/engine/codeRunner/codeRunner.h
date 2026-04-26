@@ -25,7 +25,7 @@
 /// Class ibFrameCodeRunner
 ///////////////////////////////////////////////////////////////////////////////
 
-class ibFrameCodeRunner : public ibBackendDocMDIFrame, public wxFrame {
+class ibFrameCodeRunner : public ibBackendDocFrame, public wxFrame {
 	void PrepareTABs();
 	void HighlightSyntaxAndCalculateFoldLevel(
 		const int fromLine, const int toLine,

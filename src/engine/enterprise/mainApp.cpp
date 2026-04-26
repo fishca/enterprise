@@ -5,6 +5,9 @@
 
 #include "mainApp.h"
 #include "backend/appData.h"
+#include "backend/backend_mainFrame.h"
+#include "frontend/session/guiSession.h"   // transitively pulls backend/session/session.h
+#include "backend/session/sessionRegistry.h"
 
 #include <wx/clipbrd.h>
 #include <wx/debugrpt.h>
@@ -138,6 +141,22 @@ bool ibAppEnterprise::OnCmdLineParsed(wxCmdLineParser& parser)
 
 #include "backend/backend_exception.h"
 
+// ibEnterpriseSession — concrete GUI session for enterprise.exe. Lives
+// here (not in a dedicated header) because only this exe ever needs it.
+// OnCreateSession runs on the main thread after the registry has Added
+// the session; it instantiates the exe-specific frame class — the only
+// place where `ibFrontendDocMDIFrameEnterprise` is visible, since the
+// concrete frame type is not exported to frontend.dll.
+class ibEnterpriseSession : public ibGUISession {
+public:
+	using ibGUISession::ibGUISession;
+
+	bool OnCreateSession() override {
+		AttachFrame(new ibFrontendDocMDIFrameEnterprise);
+		return m_frame != nullptr;
+	}
+};
+
 bool ibAppEnterprise::OnInit()
 {
 	wxSocketBase::Initialize();
@@ -231,17 +250,35 @@ int ibAppEnterprise::OnRun()
 #if wxUSE_LIBPNG
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
-	mainFrameCreate(ibFrontendDocMDIFrameEnterprise);
-	if (!appData->Connect(m_strIBUser, m_strIBPassword, m_debugEnable ? _app_start_create_debug_server_flag : _app_start_default_flag)) {
-		const wxString& strLastError = ibBackendException::GetLastError();
-		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
-		mainFrameDestroy();
+	// Flow (enterprise thick client):
+	//   1. CreateSessionTyped<ibEnterpriseSession> — session is registered
+	//      in the registry; its OnCreateSession hook instantiates the
+	//      frame + wires the back-link on the main thread.
+	//   2. Authenticate — attaches user creds to the ticket; interactive
+	//      dialog fallback shows through session->GetFrame().
+	//   3. LoadMetadata — compile descriptors.
+	//   4. mainFrameShow — EnsureRuntime lazily creates root + ProcUnits,
+	//      AllowRun fires BeforeStart veto.
+	// Stash flags so OnFirstConnect listener picks them up when
+	// LoadMetadata fires from the registry event chain.
+	appData->m_loadMetadataFlags = m_debugEnable
+		? _app_start_create_debug_server_flag
+		: _app_start_default_flag;
+
+	// AccessMode was set by appData's ctor based on runMode. Registry
+	// listeners (wired in appData ctor) handle BindSessionToThread,
+	// LoadMetadata, CreateRoot + CompileRoot + InitRuntimeForSession
+	// through OnFirstConnect / OnAuthenticated.
+	ibSession* session = appData->CreateSessionTyped<ibEnterpriseSession>();
+	if (session == nullptr || !session->Open(m_strIBUser, m_strIBPassword)) {
+		if (session != nullptr) session->Close();
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
+		wxMessageBox(_("Authentication failed"));
 		return 1;
 	}
+
 	if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
-	bool allow = mainFrameShow();
-	if (!allow) return 1;
+	if (!session->ShowFrame()) return 1;
 	return wxApp::OnRun();
 }
 
@@ -296,7 +333,17 @@ int ibAppEnterprise::OnExit()
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
 
-	mainFrameDestroy();
+	// Tear every session down through the session manager BEFORE
+	// wxApp::OnExit. registry->Stop() submits Remove@Urgent for each
+	// session in m_own and drains the queue — OnDisconnect listeners
+	// fire while the wx event loop is still alive, so any frame-Destroy
+	// scheduled from there gets dispatched. Without this the event
+	// loop dies first and the Destroy events stay queued. Idempotent —
+	// ~ibApplicationData calls Stop again best-effort.
+	if (appData != nullptr) {
+		auto* registry = appData->GetSessionRegistry();
+		if (registry != nullptr) registry->Stop();
+	}
 
 	bool suсcess_exit = wxApp::OnExit();
 

@@ -5,6 +5,11 @@
 
 #include "mainApp.h"
 #include "backend/appData.h"
+#include "backend/backend_mainFrame.h"
+#include "backend/debugger/debugClientBridge.h"
+#include "frontend/session/guiSession.h"   // transitively pulls backend/session/session.h
+#include "backend/session/sessionRegistry.h"
+#include "mainFrame/debugger/debugClientImpl.h"
 
 #include <wx/clipbrd.h>
 #include <wx/cmdline.h>
@@ -129,6 +134,20 @@ bool ibAppDesigner::OnCmdLineParsed(wxCmdLineParser& parser)
 
 //////////////////////////////////////////////////////////////////////////////////
 
+// ibDesignerSession — concrete GUI session for designer.exe. OnCreateSession
+// instantiates the exe-specific frame class (ibFrontendDocMDIFrameDesigner),
+// which is not exported to frontend.dll. Declared here so designer.exe owns
+// its own concrete session type.
+class ibDesignerSession : public ibGUISession {
+public:
+	using ibGUISession::ibGUISession;
+
+	bool OnCreateSession() override {
+		AttachFrame(new ibFrontendDocMDIFrameDesigner);
+		return m_frame != nullptr;
+	}
+};
+
 bool ibAppDesigner::OnInit()
 {
 	wxSocketBase::Initialize();
@@ -234,17 +253,41 @@ int ibAppDesigner::OnRun()
 #if wxUSE_LIBPNG
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
-	mainFrameCreate(ibFrontendDocMDIFrameDesigner);
-	if (!appData->Connect(m_strIBUser, m_strIBPassword)) {
-		const wxString& strLastError = ibBackendException::GetLastError();
-		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
-		mainFrameDestroy();
+	// Flow (designer IDE):
+	//   1. CreateSessionTyped<ibDesignerSession> — registry Add plus
+	//      OnCreateSession hook that instantiates the designer frame on
+	//      the main thread (DesignerExclusivePolicy veto happens inside
+	//      the registry Connect before OnCreateSession runs).
+	//   2. Authenticate — creds, dialog fallback via session->GetFrame().
+	//   3. LoadMetadata — compile descriptors (intellisense).
+	//   4. mainFrameShow — Designer kind → EnsureRuntime no-op;
+	//                      AllowRun = true unconditionally.
+
+	// AccessMode was set by appData's ctor based on runMode. Registry
+	// listeners (wired in appData ctor) handle BindSessionToThread,
+	// LoadMetadata, CreateRoot + CompileRoot through OnFirstConnect /
+	// OnAuthenticated — nothing to compose here.
+	ibSession* session = appData->CreateSessionTyped<ibDesignerSession>();
+	if (session == nullptr || !session->Open(m_strIBUser, m_strIBPassword)) {
+		if (session != nullptr) session->Close();
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
+		wxMessageBox(_("Authentication failed"));
 		return 1;
 	}
+
+	// Wire the debug-client bridge AFTER m_session->Open(): debugClient
+	// (the global ms_debugClient) is constructed inside metadataCreate
+	// which fires from the OnFirstConnect listener during NotifyAuthenticated.
+	// Calling SetDebuggerClientBridge before that point silently no-ops
+	// (debugClient == nullptr branch in debugClientBridge.cpp), so
+	// ibDebuggerClient's adapter never gets the bridge and OnEnterLoop /
+	// OnSessionStart fire into the void — F5 then hits a breakpoint that
+	// the IDE never displays.
+	ibDebuggerClientBridge::SetDebuggerClientBridge(
+		new ibDebuggerClientBridgeDesigner);
+
 	if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
-	bool allow = mainFrameShow();
-	if (!allow) return 1;
+	if (!session->ShowFrame()) return 1;
 	return wxApp::OnRun();
 }
 
@@ -297,7 +340,17 @@ int ibAppDesigner::OnExit()
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
 
-	mainFrameDestroy();
+	// Tear every session down through the session manager BEFORE
+	// wxApp::OnExit. registry->Stop() submits Remove@Urgent for each
+	// session in m_own and drains the queue — OnDisconnect listeners
+	// fire while the wx event loop is still alive, so any frame-Destroy
+	// scheduled from there gets dispatched. Without this the event
+	// loop dies first and the Destroy events stay queued. Idempotent —
+	// ~ibApplicationData calls Stop again best-effort.
+	if (appData != nullptr) {
+		auto* registry = appData->GetSessionRegistry();
+		if (registry != nullptr) registry->Stop();
+	}
 
 	bool suсcess_exit = wxApp::OnExit();
 

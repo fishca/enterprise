@@ -68,13 +68,17 @@ static bool SaveIfModifiedBeforeWebDebug(wxWindow* parent)
 	return activeMetaData->SaveDatabase(saveConfigFlag);
 }
 
-static void LaunchWebDebug(wxWindow* parent, bool /*withDebug*/)
+static void LaunchWebDebug(wxWindow* parent, bool withDebug)
 {
 	// URL prefix and port are derived by wes itself (from --file/--db
 	// basename and OS-picked ephemeral port). Manifest handshake reports
 	// the real URL back and opens the browser — no guessing here.
+	// withDebug=true → wes spawns with --debug so its debugServer comes
+	// up; the designer's debugClient then attaches via the manifest's
+	// pid/host (out-of-band of the manifest itself — debug-server still
+	// listens on defaultDebuggerPort+offset).
 	if (appData->RunApplication(wxT("wenterprise-server"),
-			/*searchDebug=*/false, /*useManifest=*/true) == 0) {
+			/*searchDebug=*/withDebug, /*useManifest=*/true) == 0) {
 		wxMessageBox(_("Failed to start wenterprise-server"),
 			wxTheApp->GetAppDisplayName(), wxOK | wxICON_ERROR, parent);
 	}

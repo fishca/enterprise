@@ -2,8 +2,10 @@
 #define __APP_DATA_H__
 
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 
 #include "backend/backend_core.h"
@@ -38,6 +40,8 @@ enum ibDatabaseMode {
 //////////////////////////////////////////////////////////////////
 
 class BACKEND_API ibDatabaseLayer;
+class BACKEND_API ibSession;
+enum class ibSessionKind : int;   // defined in backend/session/session.h
 
 #pragma region session  
 class BACKEND_API ibApplicationDataSessionArray {
@@ -138,13 +142,6 @@ public:
 	virtual ~ibApplicationData();
 	static ibApplicationData* Get() { return s_instance; }
 
-	// Session this process runs under (desktop: the single logged-in
-	// user session; wes: the WebServer technical session). Forwards to
-	// m_mainTicket's session — nullptr before StartSession completes
-	// and after CloseSession. Per-cookie WebClient sessions (web) are
-	// NOT this — they live on ibWebSession and are reached through the
-	// corresponding ibWebFrame.
-	class ibSession* GetMainSession() const;
 
 	///////////////////////////////////////////////////////////////////////////
 	static bool CreateAppDataEnv(ibRunMode runMode = ibRunMode::eENTERPRISE_MODE);
@@ -161,8 +158,52 @@ public:
 	// Initialize application
 	bool InitLocale(const wxString& locale = wxT(""));
 
-	bool Connect(const wxString& strUserName, const wxString& strUserPassword, const int flags = _app_start_default_flag);
-	bool Disconnect();
+	// ------------------------------------------------------------------
+	// Phased startup — split of Connect(). Apps compose:
+	//
+	//   CreateSession()     → ticket visible in sys_session, registry
+	//                         policies fire (DesignerExclusive etc.).
+	//   Authenticate(u, p)  → ticket.Attach with creds (+ dialog
+	//                         fallback on fail).
+	//   LoadMetadata(flags) → compile descriptors.
+	//   frame->Initialize(session)  → bind + runtime (by session kind).
+	//   frame->Show()       → AllowRun fires BeforeStart veto.
+	//
+	// A failed Authenticate keeps the ticket visible (user sees
+	// "login in progress" in admin) until it's explicitly dropped.
+	// Retry loops can call Authenticate again without re-creating the
+	// session.
+	// ------------------------------------------------------------------
+
+	// Phase 1: registry session — anonymous Connect (no creds yet).
+	// Row inserted in sys_session immediately so admin / policies see
+	// "someone is logging in". DesignerExclusivePolicy (etc.) fire
+	// here before any auth. Returns session pointer on success;
+	// nullptr if registry Connect failed (policy veto, row-lock dup).
+	ibSession* CreateSession();
+
+	// Typed counterpart of CreateSession. The caller (enterprise/mainApp.cpp,
+	// designer/mainApp.cpp, web code) picks the concrete derived session
+	// class (ibEnterpriseSession, ibDesignerSession, ibWebClientSession, …).
+	// Template body lives in backend/session/session.h (included by all
+	// sites that instantiate a derived session type) so the factory lambda
+	// has the derived ctor visible at instantiation.
+	// Flow:
+	//   1. CreateSessionWithFactory() runs the registry Add through a
+	//      factory that builds SessionT instead of the plain base.
+	//   2. OnCreateSession() fires on the main (caller) thread for UI-side
+	//      setup — GUI sessions create their wx frame here.
+	//   3. On OnCreateSession returning false, CloseSession rolls back the
+	//      registry ticket and CreateSessionTyped returns nullptr.
+	template<class SessionT>
+	SessionT* CreateSessionTyped();
+
+private:
+	// Register the session-lifecycle event listeners that drive
+	// metadata + per-session runtime bring-up/teardown. Called once
+	// from the ctor — listeners stay live for the appData's lifetime.
+	void WireSessionEvents();
+public:
 
 #pragma region config
 	// Read setting from file
@@ -217,7 +258,7 @@ public:
 	// reported URL. Returns pid on spawn-ok, 0 on failure. Exposed for
 	// callers that build the cmd from external connection data (e.g.
 	// launcher picks from a saved IB list, not the appData singleton).
-	static long SpawnWebServerWithManifest(wxString cmd);
+	static long SpawnWebServerWithManifest(wxString cmd, bool searchDebug = false);
 #pragma endregion
 
 	ibRunMode GetAppMode() const { return m_runMode; }
@@ -281,14 +322,14 @@ public:
 	// `outInfo` on success, and does NOT mutate singleton / current
 	// session state. Returns true for open-access mode too (empty
 	// sys_user populating + any creds → pass). Safe to call from the
-	// registry thread without a SessionScope.
+	// registry thread without a ibSessionScope.
 	bool AuthenticateUser(const wxString& strUserName,
 	                      const wxString& strUserPassword,
 	                      ibApplicationDataUserInfo& outInfo);
 
 	// Commit side: install a previously-verified UserInfo onto the
 	// legacy singleton slots (m_userInfo, m_sessionRawPassword) AND the
-	// current SessionScope's ibSession (dual-write while call sites
+	// current ibSessionScope's ibSession (dual-write while call sites
 	// migrate). `rawPassword` is cached for Designer "Start debugging"
 	// re-attach — pass the plain-text the caller received; pass empty
 	// to skip the raw-password cache (e.g. token-based flows).
@@ -298,7 +339,7 @@ public:
 	bool ExclusiveMode() const { return m_exclusiveMode; }
 
 	// User-identity accessors — session-aware. Readers see the user info
-	// of the current thread's `ibSession` when a SessionScope is active
+	// of the current thread's `ibSession` when a ibSessionScope is active
 	// (per-cookie on web, main user session on desktop); they fall back
 	// to the process singleton `m_userInfo` only when no session is
 	// scoped (pre-auth bootstrap, standalone codeRunner). This closes
@@ -340,14 +381,23 @@ public:
 		return m_forceExit;
 	}
 
+	// Optional hook called inside ForceExit before the wxApp path. Used by
+	// hosts whose main loop is not wxApp's (wenterprise-server runs an
+	// httplib listen_after_bind in the main thread, so wxTheApp->Exit()
+	// would fire into a queue nobody is draining). wes's main installs a
+	// hook that calls svr->stop() — listen_after_bind returns, the rest
+	// of main runs wfrontendShutdown which DELETEs sys_session rows and
+	// joins workers cleanly. Set ONCE, ideally right after wfrontendInit.
+	using ProcessExitHook = void (*)();
+	static void SetProcessExitHook(ProcessExitHook hook) { s_processExitHook = hook; }
+
 	static void ForceExit() {
 		wxCriticalSectionLocker enter(m_cs_force_exit);
 		if (!m_forceExit) {
-			wxTheApp->CallAfter(
-				[]() {
-					wxTheApp->Exit();
-				}
-			);
+			if (s_processExitHook != nullptr)
+				s_processExitHook();
+			else if (wxTheApp != nullptr)
+				wxTheApp->CallAfter([]() { wxTheApp->Exit(); });
 			m_forceExit = true;
 		}
 	}
@@ -372,8 +422,15 @@ public:
 private:
 
 	bool HasAllowedUser() const;
-	bool StartSession(const wxString& userName, const wxString& md5Password);
-	bool CloseSession();
+
+	// Impl helper shared between CreateSession() and CreateSessionTyped<T>.
+	// Runs the registry Connect with the given factory (empty factory =>
+	// default ibSession construction) and installs the resulting ticket
+	// + ibSessionScope. Returns the new session's base pointer, nullptr on
+	// registry failure. Caller of CreateSessionTyped then invokes
+	// OnCreateSession() on the main thread.
+	ibSession* CreateSessionWithFactory(
+		std::function<std::shared_ptr<ibSession>(std::string, ibSessionKind)> factory);
 
 	void ReadUserData_Password(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
 	void ReadUserData_Role(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
@@ -422,6 +479,7 @@ private:
 
 	static bool m_forceExit;
 	static wxCriticalSection m_cs_force_exit;
+	static ProcessExitHook s_processExitHook;
 
 	std::unique_ptr<class ibPluginManager> m_pluginManager;
 	// Connection pool — the sole owner of every ibDatabaseLayer in
@@ -430,24 +488,29 @@ private:
 	// pool; ibApplicationData keeps no direct DB handle of its own.
 	std::unique_ptr<class ibConnectionPool> m_connectionPool;
 
-	// Main-thread SessionScope — bound to the single user session on
-	// the desktop runtime. Alive between Connect()/Disconnect() so all
-	// script execution on the main thread sees ibSession::Current()
-	// rather than falling through to the legacy descriptor-owned
-	// ProcUnit. Web processes don't use this field (per-request scopes
-	// are set inside worker lambdas).
-	std::unique_ptr<class SessionScope> m_mainThreadScope;
+	// Session manager (registry). Owned here — created in ctor, destroyed
+	// in dtor. Process-wide singleton in practice (appData itself is one),
+	// accessed via ibSessionRegistry::Instance() facade or directly via
+	// GetSessionRegistry().
+	std::unique_ptr<class ibSessionRegistry> m_sessionRegistry;
 
-	// Main-thread session ticket from ibSessionRegistry::Connect(). Owns
-	// the ibSession lifetime; dtor submits Remove@Urgent so the DELETE
-	// of the sys_session row runs on the registry thread. Holds the
-	// ibSessionTicket forward-declared type; defined out-of-line in
-	// appData.cpp where sessionTicket.h is fully visible.
-	std::unique_ptr<class ibSessionTicket> m_mainTicket;
+public:
+	class ibSessionRegistry* GetSessionRegistry() const { return m_sessionRegistry.get(); }
+
+private:
 
 	bool m_connected_to_db = false;
 	bool m_created_metadata = false;
 	bool m_run_metadata = false;
+
+public:
+	// Flags stashed before Authenticate fires the OnFirstConnect
+	// listener — listener can't take a flags argument (callback shape is
+	// fixed) so the flags ride here instead. Apps that need non-default
+	// flags (Enterprise's debug-server flag) write directly before
+	// CreateSessionTyped + Authenticate.
+	int  m_loadMetadataFlags = _app_start_default_flag;
+private:
 
 	ibDatabaseMode m_dbMode;
 

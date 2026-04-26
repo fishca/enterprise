@@ -66,10 +66,10 @@ void ibGUISession::AttachFrame(ibFrontendDocMDIFrame* frame)
 bool ibGUISession::OnShowAuthenticate(const wxString& user, const wxString& password)
 {
 	// Desktop dialog lives as a standalone free function — no frame
-	// dependency on the call path. Dialog's OK handler populates
-	// singleton m_userInfo / m_sessionRawPassword via AuthenticationAndSetUser,
-	// so on `true` return session->Authenticate re-submits Attach with
-	// the validated creds on the same session.
+	// dependency on the call path. Dialog's OK handler runs under the
+	// main-thread ibSessionScope bound to this session, so the InstallUser
+	// it triggers writes m_userInfo / m_sessionRawPassword on this session
+	// directly. Authenticate then re-submits Attach with those validated creds.
 	return ibPromptAuthenticationDialog(user, password);
 }
 

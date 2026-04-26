@@ -13,8 +13,17 @@
 namespace {
 // Per-thread current-session map. Lookup semantics depend on the
 // access mode owned by ibSessionRegistry — see ibSession::Current.
+//
+// weak_ptr storage so a session destroyed while a binding still
+// references it auto-expires. Critical for the nested-SessionScope
+// refresh-cycle race: the inner scope's dtor restores its captured
+// m_prev into the map; if that previous session got destroyed in the
+// meantime, restoring a raw pointer would resurrect a dangling
+// reference. With weak_ptr the expired binding either unlocks to
+// nullptr (Current returns null/fallback) or is simply erased on the
+// next observation — no UAF.
 std::shared_mutex s_currentMutex;
-std::unordered_map<std::thread::id, ibSession*> s_currentByThread;
+std::unordered_map<std::thread::id, std::weak_ptr<ibSession>> s_currentByThread;
 } // namespace
 
 ibSession::ibSession(std::string id, ibSessionKind kind)
@@ -26,6 +35,19 @@ ibSession::ibSession(std::string id, ibSessionKind kind)
 
 ibSession::~ibSession()
 {
+	// Safety net for thread→session bindings. The normal teardown path
+	// runs UnbindSession(this) from ibApplicationData's OnDisconnect
+	// listener, fired by ibSessionRegistry::ProcessRemove. But a session
+	// can also be destroyed without going through that path — e.g. when
+	// ProcessAdd's `m_own[guid] = req.session` overwrites an entry whose
+	// shared_ptr was the last strong reference to the previous session
+	// (refresh cycle reusing the same tabSid as the freshly-removed
+	// session). Without this guard, `s_currentByThread` keeps a raw
+	// pointer to the destroyed session and the next Current() / GetFrame()
+	// from any worker that was bound to it dereferences freed memory.
+	// Idempotent — UnbindSession is a no-op when no bindings target this.
+	UnbindSession(this);
+
 	// Ensure the destruction chain for objects created by this session
 	// runs even when the session falls off without an explicit ClearRoot
 	// (registry-driven Remove, abnormal teardown). Idempotent — ClearRoot
@@ -89,6 +111,24 @@ void ibSession::SetActivity(const wxString& activity)
 	reg.Submit(std::move(req), ibPriority::Low);
 }
 
+void ibSession::SetExclusive(bool on)
+{
+	// Registry runs the queue handshake + wait and gives us back the
+	// verdict; we only translate it into an exception for the script
+	// layer. Granted == success path (acquire AND release).
+	const ibExclusiveResult r = ibSessionRegistry::Instance().SetExclusive(this, on);
+	switch (r) {
+	case ibExclusiveResult::Granted:
+		return;
+	case ibExclusiveResult::HeldByOther:
+		ibBackendCoreException::Error(_("Another session is in exclusive mode"));
+	case ibExclusiveResult::NotSole:
+		ibBackendCoreException::Error(_("Cannot acquire exclusive mode: other sessions are active"));
+	case ibExclusiveResult::Pending:
+		ibBackendCoreException::Error(_("Exclusive mode request did not complete"));
+	}
+}
+
 ibValueModuleManagerConfiguration* ibSession::CreateRoot(ibMetaDataConfigurationBase* metaData)
 {
 	// Per-session root mm — replaces the legacy ibMetaDataConfigurationFile
@@ -148,14 +188,17 @@ ibSession* ibSession::Current()
 	case AccessMode::Single:
 		// One session per process. Map holds at most one entry; return
 		// the lone value regardless of calling thread. Empty map
-		// (pre-bind / post-clear) → nullptr.
+		// (pre-bind / post-clear) or expired weak_ptr → nullptr.
 		return s_currentByThread.empty()
 			? nullptr
-			: s_currentByThread.begin()->second;
+			: s_currentByThread.begin()->second.lock().get();
 	case AccessMode::Shared:
 		// Per-thread lookup with fallback to the registry's system session.
-		if (auto it = s_currentByThread.find(std::this_thread::get_id()); it != s_currentByThread.end())
-			return it->second;
+		// Expired binding (session destroyed without explicit Unbind) →
+		// fall through to fallback, same as no binding at all.
+		if (auto it = s_currentByThread.find(std::this_thread::get_id()); it != s_currentByThread.end()) {
+			if (auto sp = it->second.lock()) return sp.get();
+		}
 		return ibSessionRegistry::Instance().GetFallback();
 	}
 	return nullptr;
@@ -189,10 +232,11 @@ ibSession* ibSession::GetByThread(std::thread::id tid)
 	case AccessMode::Single:
 		return s_currentByThread.empty()
 			? nullptr
-			: s_currentByThread.begin()->second;
+			: s_currentByThread.begin()->second.lock().get();
 	case AccessMode::Shared:
-		if (auto it = s_currentByThread.find(tid); it != s_currentByThread.end())
-			return it->second;
+		if (auto it = s_currentByThread.find(tid); it != s_currentByThread.end()) {
+			if (auto sp = it->second.lock()) return sp.get();
+		}
 		return ibSessionRegistry::Instance().GetFallback();
 	}
 	return nullptr;
@@ -203,8 +247,12 @@ std::vector<std::pair<std::thread::id, ibSession*>> ibSession::SnapshotByThread(
 	std::shared_lock<std::shared_mutex> lk(s_currentMutex);
 	std::vector<std::pair<std::thread::id, ibSession*>> out;
 	out.reserve(s_currentByThread.size());
-	for (const auto& kv : s_currentByThread)
-		out.emplace_back(kv.first, kv.second);
+	for (const auto& kv : s_currentByThread) {
+		// Skip expired entries — the binding's session was destroyed.
+		// Snapshot reflects live state, not historical bindings.
+		if (auto sp = kv.second.lock())
+			out.emplace_back(kv.first, sp.get());
+	}
 	return out;
 }
 
@@ -212,7 +260,14 @@ void ibSession::BindSessionToThread(ibSession* s, std::thread::id tid)
 {
 	std::unique_lock<std::shared_mutex> lk(s_currentMutex);
 	if (s != nullptr)
-		s_currentByThread[tid] = s;
+		// weak_from_this is C++17, doesn't throw if the session isn't
+		// yet wrapped in a shared_ptr — returns expired weak_ptr in
+		// that case. All ibSession instances are made via make_shared
+		// in the registry's typed factory, so by the time anyone calls
+		// Bind the shared control block exists. If a future code path
+		// constructs ibSession on the stack, the binding silently
+		// expires on next lookup — safer than dangling raw pointer.
+		s_currentByThread[tid] = s->weak_from_this();
 	else
 		s_currentByThread.erase(tid);
 }
@@ -225,10 +280,14 @@ void ibSession::UnbindThread(std::thread::id tid)
 
 void ibSession::UnbindSession(ibSession* s)
 {
-	if (s == nullptr) return;
+	// Idempotent cleanup. Erases entries pointing to `s` AND any expired
+	// weak_ptr entries we encounter while iterating — defensive, since
+	// the bindings would auto-expire on next lookup anyway. Caller still
+	// passes raw `ibSession*` (this) for ergonomics.
 	std::unique_lock<std::shared_mutex> lk(s_currentMutex);
 	for (auto it = s_currentByThread.begin(); it != s_currentByThread.end();) {
-		if (it->second == s)
+		auto locked = it->second.lock();
+		if (!locked || (s != nullptr && locked.get() == s))
 			it = s_currentByThread.erase(it);
 		else
 			++it;
@@ -331,10 +390,10 @@ bool ibSession::Open(const wxString& user, const wxString& password)
 
 	// Interactive fallback — GUI override shows login dialog (shared for
 	// designer + enterprise via ibGUISession::OnShowAuthenticate). The
-	// dialog's OK handler populates singleton m_userInfo / m_sessionRawPassword
-	// via AuthenticationAndSetUser, which mirrors into this session too
-	// (main thread has ibSessionScope bound to us). On false return auth
-	// fails and the caller reports the original error.
+	// dialog's OK handler calls appData->Login under the main thread's
+	// ibSessionScope bound to this session, so m_userInfo /
+	// m_sessionRawPassword on `this` are populated on `true` return. On
+	// false return auth fails and the caller reports the original error.
 	if (!OnShowAuthenticate(user, password)) return false;
 
 	res = submitAttach(m_userInfo.m_strUserName, m_sessionRawPassword);
@@ -363,9 +422,15 @@ ibSessionScope::ibSessionScope(ibSession* s)
 	const std::thread::id tid = std::this_thread::get_id();
 	std::unique_lock<std::shared_mutex> lk(s_currentMutex);
 	auto it = s_currentByThread.find(tid);
-	m_prev = it != s_currentByThread.end() ? it->second : nullptr;
+	// Save the previous binding as a weak_ptr COPY (not raw). If the
+	// referenced session is destroyed while this scope is alive, the
+	// dtor's restore-step lock()s and either falls back to "no binding"
+	// or restores a still-live session — never resurrects a freed
+	// pointer. Was the root cause of the rapid-F5 UAF in CurrentFrame
+	// (see project_refresh_execute_crash 2026-04-27).
+	if (it != s_currentByThread.end()) m_prev = it->second;
 	if (s != nullptr)
-		s_currentByThread[tid] = s;
+		s_currentByThread[tid] = s->weak_from_this();
 	else
 		s_currentByThread.erase(tid);
 }
@@ -374,8 +439,8 @@ ibSessionScope::~ibSessionScope()
 {
 	const std::thread::id tid = std::this_thread::get_id();
 	std::unique_lock<std::shared_mutex> lk(s_currentMutex);
-	if (m_prev != nullptr)
-		s_currentByThread[tid] = m_prev;
+	if (auto sp = m_prev.lock())
+		s_currentByThread[tid] = m_prev;   // weak_ptr copy of still-live binding
 	else
 		s_currentByThread.erase(tid);
 }

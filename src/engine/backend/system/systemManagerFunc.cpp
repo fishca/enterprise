@@ -933,6 +933,16 @@ bool ibValueSystemFunction::ExclusiveMode() {
 	return appData->ExclusiveMode();
 }
 
+void ibValueSystemFunction::SetExclusive(bool on) {
+	// Acquire/release exclusive mode for the calling session. Throws
+	// ibBackendCoreException with a localized reason on rejection — the
+	// script's try/except is the natural retry point.
+	auto* s = ibSession::Current();
+	if (s == nullptr)
+		ibBackendCoreException::Error(_("No active session"));
+	s->SetExclusive(on);
+}
+
 wxString ibValueSystemFunction::GeneralLanguage() {
 	return appData->GetUserLanguageCode();
 }

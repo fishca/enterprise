@@ -96,6 +96,7 @@ enum
 	enUserName,
 	enUserPassword,
 	enExclusiveMode,
+	enSetExclusive,
 	enGeneralLanguage,
 	enEndJob,
 	enUserInterruptProcessing,
@@ -201,6 +202,7 @@ void ibValueSystemFunction::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("UserName"), wxT("UserName()"));
 	m_methodHelper->AppendFunc(wxT("UserPassword"), wxT("UserPassword()"));
 	m_methodHelper->AppendFunc(wxT("ExclusiveMode"), wxT("ExclusiveMode()"));
+	m_methodHelper->AppendProc(wxT("SetExclusive"), 1, wxT("SetExclusive(on : boolean)"));
 	m_methodHelper->AppendFunc(wxT("GeneralLanguage"), wxT("GeneralLanguage()"));
 	m_methodHelper->AppendFunc(wxT("EndJob"), 1, wxT("EndJob(force : boolean)"));
 	m_methodHelper->AppendFunc(wxT("UserInterruptProcessing"), wxT("UserInterruptProcessing()"));
@@ -394,6 +396,7 @@ bool ibValueSystemFunction::CallAsProc(const long lMethodNum, ibValue** paParams
 		case enExecute: Execute(paParams[0]->GetString()); return true;
 		case enRunApp: RunApp(paParams[0]->GetString()); return true;
 		case enSetAppTitle: SetAppTitle(paParams[0]->GetString()); return true;
+		case enSetExclusive: SetExclusive(paParams[0]->GetBoolean()); return true;
 		case enEndJob: EndJob(paParams[0]->GetInteger()); return true;
 		case enUserInterruptProcessing: UserInterruptProcessing(); return true;
 		case enShowCommonForm: ShowCommonForm(

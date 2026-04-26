@@ -524,6 +524,11 @@ bool FinishConnect(const std::string& ibUser, const std::string& ibPassword)
 	// (wired in ibApplicationData ctor) drive metadata load, root mm
 	// allocation/compile and runtime init through OnFirstConnect /
 	// OnAuthenticated; nothing to do here beyond auth.
+	//
+	// Kind == WebServer (default for eWEB_ENTERPRISE_MODE through the
+	// no-arg CreateSession overload) registers this session as the
+	// process's server in ibSessionRegistry::ServerSession(); subsequent
+	// per-tab WebClient sessions auto-link to it.
 	ibSession* session = appData->CreateSession();
 	if (session == nullptr ||
 	    !session->Open(
@@ -665,16 +670,19 @@ WFRONTEND_API std::string wfrontendConfigName()
 WFRONTEND_API void wfrontendSetProcessExitHook(void (*hook)())
 {
 	ibApplicationData::SetProcessExitHook(hook);
-	// One-shot wiring of the keep-alive predicate too: wes process
-	// stays up while at least one user tab beyond the auto-launched
-	// debug viewer is connected. Baseline Count is 2 (technical
-	// WebServer session + first browser tab opened by the designer
-	// after spawn). > 2 means a real user has more tabs, decline
-	// process exit.
+	// One-shot wiring of the keep-alive predicate: wes process stays up
+	// while at least one WebClient session is registered against our
+	// WebServer-kind system session. Replaces the pre-2026-04-26
+	// "Count() > 2" heuristic — magic number meant "system + first
+	// browser tab", fragile against any new bookkeeping session
+	// sneaking in. Registry's ServerSession() resolves to wes's system
+	// session (set by ProcessAdd when the WebServer-kind session was
+	// added at wfrontendInit); CountClients answers "how many real tabs
+	// do I have?" directly.
 	static bool wired = false;
 	if (!wired) {
 		ibSessionRegistry::Instance().OnShouldKeepAlive([]() {
-			return ibSessionRegistry::Instance().Count() > 2;
+			return ibSessionRegistry::Instance().HasClients();
 		});
 		wired = true;
 	}

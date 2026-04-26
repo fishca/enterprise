@@ -254,7 +254,7 @@ int ibAppDesigner::OnRun()
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
 	// Flow (designer IDE):
-	//   1. CreateSessionTyped<ibDesignerSession> — registry Add plus
+	//   1. CreateSession<ibDesignerSession> — registry Add plus
 	//      OnCreateSession hook that instantiates the designer frame on
 	//      the main thread (DesignerExclusivePolicy veto happens inside
 	//      the registry Connect before OnCreateSession runs).
@@ -267,7 +267,7 @@ int ibAppDesigner::OnRun()
 	// listeners (wired in appData ctor) handle BindSessionToThread,
 	// LoadMetadata, CreateRoot + CompileRoot through OnFirstConnect /
 	// OnAuthenticated — nothing to compose here.
-	ibSession* session = appData->CreateSessionTyped<ibDesignerSession>();
+	ibSession* session = appData->CreateSession<ibDesignerSession>();
 	if (session == nullptr || !session->Open(m_strIBUser, m_strIBPassword)) {
 		if (session != nullptr) session->Close();
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();

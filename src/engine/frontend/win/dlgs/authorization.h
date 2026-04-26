@@ -32,9 +32,10 @@ private:
 
 // Standalone interactive-auth entry point. Shows ibDialogAuthentication
 // modal with the prefilled user/password; dialog's OK handler calls
-// appData->AuthenticationAndSetUser itself, so the singleton m_userInfo
-// / m_sessionRawPassword are populated on submit. Returns true if user
-// confirmed (ShowModal != wxID_CANCEL), false on cancel. Registered as
+// AuthenticateUser + InstallUser itself under the main thread's
+// ibSessionScope, so m_userInfo / m_sessionRawPassword on the scoped
+// session are populated on confirm. Returns true if user confirmed
+// (ShowModal != wxID_CANCEL), false on cancel. Registered as
 // ibApplicationData's InteractiveAuthHook by GUI apps (enterprise /
 // designer) at startup so the Authenticate() fallback can prompt
 // without depending on the main frame's lifecycle.

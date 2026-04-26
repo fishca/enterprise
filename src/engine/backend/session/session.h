@@ -90,7 +90,7 @@ enum class ibSessionKind : int {
 inline ibSessionKind SessionKindFromRunMode(ibRunMode m) {
 	// Web run mode is ambiguous at this layer — default to WebClient
 	// (the per-tab common case). Callers that need WebServer set the
-	// kind explicitly (see ibApplicationData::StartSession).
+	// kind explicitly (see ibSessionRegistry::CreateSessionWithFactory).
 	if (m == eWEB_ENTERPRISE_MODE) return ibSessionKind::WebClient;
 	return static_cast<ibSessionKind>(m);
 }
@@ -216,9 +216,10 @@ public:
 	const std::string& GetId()   const { return m_id; }
 	ibSessionKind      GetKind() const { return m_kind; }
 
-	// Root runtime of this session. Populated by CreateRoot() at
-	// StartSession / Login; stays nullptr for sessions that never run
-	// scripts (Designer, WebServer technical session, Launcher).
+	// Root runtime of this session. Populated by CreateRoot() driven from
+	// the registry's NotifyAuthenticated phase right after Open() succeeds;
+	// stays nullptr for sessions that never run scripts (Designer,
+	// WebServer technical session, Launcher).
 	ibValueModuleManagerConfiguration* GetModuleManager() const;
 
 	// Create the session's root module manager. The configuration's
@@ -254,6 +255,46 @@ public:
 	// `sys_session.currentActivity`; admin UI sees it on the next snapshot.
 	void SetActivity(const wxString& activity);
 
+	// Server session — back-link from a server-spawned client to the
+	// session that hosts it. Set by the holder right after the client is
+	// registered in the registry (e.g. wes's WebClient session points to
+	// wes's WebServer system session). Empty for standalone sessions
+	// (desktop main, wes system itself, codeRunner) — Server() returns
+	// nullptr.
+	//
+	// Used by:
+	//   - shutdown logic: a server checks "do I still have clients?"
+	//     before declining process exit (replaces the pre-2026-04-26
+	//     Count() > 2 magic number on wes's keep-alive hook);
+	//   - cluster topology: walking up the chain identifies which node
+	//     of the cluster a session is currently homed on;
+	//   - admin UI: discriminates "client of server X" vs "standalone"
+	//     in Active Users / sys_session listings.
+	//
+	// weak_ptr so a server's premature death doesn't dangle clients;
+	// children's Server().lock() returns nullptr after the server is gone.
+	std::shared_ptr<ibSession> Server() const { return m_server.lock(); }
+	void SetServer(ibSession* server) {
+		if (server != nullptr) m_server = server->shared_from_this();
+		else                   m_server.reset();
+	}
+
+	// Exclusive (monopoly) mode — at most one session in the registry
+	// holds it at a time. While held, every other Connect parks in
+	// ibSessionRegistry::m_pendingExclusive and only resumes when this
+	// session releases or closes.
+	//
+	// SetExclusive(true)  — submits SetExclusive@Normal, waits for the
+	//                       registry handler. Throws ibBackendCoreException
+	//                       on rejection: another session already holds
+	//                       exclusive, or other live sessions are still
+	//                       attached to the registry (acquisition needs
+	//                       this session to be the sole live one).
+	// SetExclusive(false) — release. No-op when not currently exclusive.
+	//                       Drains parked Adds.
+	bool IsExclusive() const { return m_exclusive.load(std::memory_order_acquire); }
+	void SetExclusive(bool on);
+
 	// Compile the root mm — runs CreateMainModule on the allocated
 	// m_root. Called after metadata->RunDatabase() has populated common-
 	// module descriptors in metadata's ibModuleStorage. Returns false
@@ -283,9 +324,6 @@ public:
 	ibApplicationDataUserInfo&       GetUserInfo()       { return m_userInfo; }
 	const ibApplicationDataUserInfo& GetUserInfo() const { return m_userInfo; }
 	void SetUserInfo(const ibApplicationDataUserInfo& info) { m_userInfo = info; }
-
-	const ibGuid& GetSessionGuid() const { return m_sessionGuid; }
-	void          SetSessionGuid(const ibGuid& guid) { m_sessionGuid = guid; }
 
 	const wxString& GetSessionRawPassword() const { return m_sessionRawPassword; }
 	void            SetSessionRawPassword(const wxString& pwd) { m_sessionRawPassword = pwd; }
@@ -479,17 +517,45 @@ private:
 	wxString m_activity;   // guarded by m_mtx; last-reported activity string
 	wxString m_reason;     // guarded by m_mtx; reject / auth-fail diagnostic
 
-	// Legacy mirrors — populated alongside identity during migration
-	// so existing readers (appData->GetUserInfo, scripts) see consistent
-	// state. Eventually these become the primary storage, identity's
-	// analogues become computed views.
+	// Authoritative user identity for this session. Populated by InstallUser
+	// (registry's ProcessAttach for headless paths, the GUI login dialog
+	// under a ibSessionScope on the main thread). m_identity holds the row
+	// fields written to sys_session; m_userInfo carries the full user record
+	// (roles, language) used by script-side AppUser() readers and access
+	// checks. m_sessionRawPassword caches the plain-text for Designer
+	// "Start debugging" — handed to spawned child processes so they can
+	// re-authenticate without prompting.
 	ibApplicationDataUserInfo m_userInfo;
-	ibGuid                    m_sessionGuid;
 	wxString                  m_sessionRawPassword;
 
 	// Script-visible "working date" — see GetWorkDate/SetWorkDate.
 	// Initialized to the session-creation wall-clock in the ctor.
 	wxDateTime                m_workDate;
+
+	// Exclusive mode — see SetExclusive(). True only on the session that
+	// currently holds monopoly. Atomic for lock-free IsExclusive() reads
+	// from any thread (script-side, listeners). Mutated by the registry
+	// thread inside ProcessSetExclusive, with a notify_all on m_cv after
+	// the result lands so SetExclusive() callers can resume.
+	std::atomic<bool>          m_exclusive { false };
+
+	// SetExclusive() handshake — Pending while a SetExclusive request is
+	// in the queue, set by ProcessSetExclusive to the final outcome.
+	// SetExclusive() reads it under m_mtx after WaitForState wakes up.
+public:
+	enum class ibExclusiveResult : int {
+		Pending     = 0,
+		Granted     = 1,   // either acquire ok or release ok
+		HeldByOther = 2,   // another session is currently exclusive
+		NotSole     = 3,   // other live sessions present — can't acquire
+	};
+private:
+	ibExclusiveResult         m_exclusiveResult { ibExclusiveResult::Pending };
+
+	// Server (parent) session — non-owning back-link populated by the
+	// holder of the client after the server spawns it. See Server() /
+	// SetServer above.
+	std::weak_ptr<ibSession>   m_server;
 };
 
 // RAII binding for the calling thread — calls
@@ -516,6 +582,13 @@ private:
 // thread for the duration of the scope. Nested scopes restore the
 // prior value on exit. Legacy — will be removed once direct ibSession
 // pointer passing reaches all script call sites.
+//
+// m_prev is a weak_ptr (not raw): if the previously-bound session is
+// destroyed while this scope is active, the dtor's restore step
+// lock()s and either falls back to "no binding" or re-binds a still-
+// live session — never restores a dangling pointer. Critical for
+// rapid-F5 / refresh-cycle paths where nested scopes' inner dtor
+// could resurrect a freed binding into s_currentByThread.
 class BACKEND_API ibSessionScope {
 public:
 	explicit ibSessionScope(ibSession* s);
@@ -525,35 +598,12 @@ public:
 	ibSessionScope& operator=(const ibSessionScope&) = delete;
 
 private:
-	ibSession* m_prev;
+	std::weak_ptr<ibSession> m_prev;
 };
 
-// ---------------------------------------------------------------------
-// ibApplicationData::CreateSessionTyped<SessionT> — template body kept
-// here so every callsite that already includes session.h (to use the
-// derived type) gets the definition automatically. Instantiation needs
-// the concrete SessionT ctor (std::string, ibSessionKind) to be visible,
-// which it is at the call site that uses the derived type.
-// ---------------------------------------------------------------------
-template<class SessionT>
-SessionT* ibApplicationData::CreateSessionTyped()
-{
-	static_assert(std::is_base_of<ibSession, SessionT>::value,
-		"CreateSessionTyped<T>: T must derive from ibSession");
-
-	ibSession* base = CreateSessionWithFactory(
-		[](std::string id, ibSessionKind kind) -> std::shared_ptr<ibSession> {
-			return std::make_shared<SessionT>(std::move(id), kind);
-		});
-	if (base == nullptr)
-		ibBackendCoreException::Error(_("Failed to create session"));
-
-	SessionT* derived = static_cast<SessionT*>(base);
-	if (!derived->OnCreateSession()) {
-		derived->Close();   // submit Remove → registry drops m_own entry
-		ibBackendCoreException::Error(_("Failed to create session frame"));
-	}
-	return derived;
-}
+// ibApplicationData::CreateSession<SessionT> template bodies live in
+// sessionRegistry.h — they delegate through ibSessionRegistry's factory
+// methods, which require the registry's full type at instantiation.
+// Callers that use the typed overload include sessionRegistry.h.
 
 #endif

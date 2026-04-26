@@ -6,7 +6,6 @@
 #include "backend/backend_exception.h"
 
 #include "backend/session/sessionRegistry.h"
-#include "backend/session/designerExclusivePolicy.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,9 +60,13 @@ void ibApplicationData::CreateTableSession()
 			// pid             = owner process id (for admin / kick / debugger attach)
 			// address         = "host:port" for web processes; "" for desktop
 			// currentActivity = last scripted/engine label ("idle", "running:OnStart", "reload", ...)
+			// exclusive       = 1 when this session holds process-wide monopoly mode; 0 otherwise.
+			//                   Cluster-aware exclusive gate reads this column from peer rows
+			//                   to block new Connects when another process is exclusive.
 			"pid               INTEGER,"
 			"address           VARCHAR(256),"
-			"currentActivity   VARCHAR(128));"),
+			"currentActivity   VARCHAR(128),"
+			"exclusive         INTEGER);"),
 			session_table
 		);
 
@@ -153,6 +156,13 @@ void ibApplicationData::MigrateTableSession()
 		// tick; the handler acts and clears the signal. "kick" is the
 		// first supported value — more (reload, refresh) may follow.
 		try { db_query->RunQuery(wxT("ALTER TABLE %s ADD signal VARCHAR(32)"), session_table); }
+		catch (...) {}
+	}
+	if (!has(wxT("exclusive"))) {
+		// Process-wide monopoly mode marker. 1 = this session holds
+		// exclusive; cluster-aware gate in ProcessAdd / ProcessSetExclusive
+		// reads peer rows to detect another process holding it.
+		try { db_query->RunQuery(wxT("ALTER TABLE %s ADD exclusive INTEGER"), session_table); }
 		catch (...) {}
 	}
 }
@@ -402,59 +412,20 @@ std::vector<ibApplicationDataShortUserInfo> ibApplicationData::GetAllowedUser() 
 }
 
 // -----------------------------------------------------------------------
-// Phased session lifecycle — StartSession below is the legacy wrapper
-// kept for callers that want one-shot session+auth. Apps that want
-// to keep the ticket visible during a login-retry loop use
-// CreateSession + Authenticate separately.
+// Phased session lifecycle — apps compose CreateSession (or the typed
+// CreateSession<T>) with session->Open() so the registry ticket
+// stays visible during login-retry loops. There is no one-shot
+// "Connect/StartSession" anymore; failed Open keeps the anonymous row
+// in sys_session until the caller drops the ticket explicitly.
 // -----------------------------------------------------------------------
 
 ibSession* ibApplicationData::CreateSession()
 {
-	// Legacy path — default factory means registry builds a plain ibSession.
-	// Desktop GUI apps now use CreateSessionTyped<ibEnterpriseSession>() etc.;
-	// this overload stays for codeRunner / daemon / headless callers that
-	// don't need a derived session type.
-	return CreateSessionWithFactory({});
-}
-
-ibSession* ibApplicationData::CreateSessionWithFactory(
-	std::function<std::shared_ptr<ibSession>(std::string, ibSessionKind)> factory)
-{
-	// Bring up the session registry. Own the sys_session table outright:
-	// registry handles INSERT / UPDATE / DELETE via its write connection
-	// and holds pessimistic row locks that peers use to detect liveness
-	// (replaces the pre-2026-04-20 1 Hz heartbeat UPDATE path).
-	auto& reg = ibSessionRegistry::Instance();
-	reg.EnableSysSessionOwnership(true);
-
-	// Designer-exclusive policy — replaces the legacy
-	// VerifySessionUpdater grace-retry check. Only meaningful for the
-	// designer process; other modes' CanAdd short-circuits to true.
-	// AddPolicy must happen BEFORE Start so the chain is immutable
-	// once the consumer thread is running.
-	if (m_runMode == eDESIGNER_MODE)
-		reg.AddPolicy(std::make_unique<ibDesignerExclusivePolicy>(&reg));
-
-	reg.Start();
-
-	// Anonymous-phase Connect — registry INSERTs a row with userName=''
-	// immediately so peers (Active Users UI, designer-exclusive policy)
-	// see "someone is logging in". Session kind is explicit: wes's own
-	// technical session is WebServer; desktop modes default via runMode.
-	ibConnectRequest req;
-	req.m_computer       = m_strComputer;
-	req.m_appMode        = m_runMode;
-	req.m_kind           = (m_runMode == eWEB_ENTERPRISE_MODE)
-	                         ? ibSessionKind::WebServer
-	                         : SessionKindFromRunMode(m_runMode);
-	req.m_sessionFactory = std::move(factory);
-
-	auto result = reg.Connect(req);
-	if (result.m_code != ibConnectResult::Ok)
-		return nullptr;
-	// Registry's m_own holds the shared_ptr; result.m_session is a raw
-	// observer. Lifecycle is now driven by ibSession::Close() from the
-	// holder (mainApp, webSession).
-	return result.m_session;
+	// Default-factory passthrough — registry builds a plain ibSession.
+	// Used by codeRunner / daemon / headless callers and by the wes
+	// process's own system session bring-up. GUI apps go through the
+	// typed CreateSession<T>() template overload (defined in
+	// sessionRegistry.h after the registry class).
+	return m_sessionRegistry->CreateSessionWithFactory(m_runMode, m_strComputer, {});
 }
 

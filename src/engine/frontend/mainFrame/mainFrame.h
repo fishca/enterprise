@@ -60,7 +60,7 @@ public:
 	void SetGUISession(class ibGUISession* s) { m_guiSession = s; }
 	class ibGUISession* GetGUISession() const { return m_guiSession; }
 
-	// Bind session to this frame. Called once right after StartSession
+	// Bind session to this frame. Called once right after session->Open
 	// succeeds, BEFORE LoadMetadata — so AllowRun/AllowClose and any
 	// session-aware UI already see the session even while metadata is
 	// being compiled. Runtime start (CreateRoot + InitRuntimeForSession)

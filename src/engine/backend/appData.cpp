@@ -124,6 +124,38 @@ void ibApplicationDataSessionArray::SetKindsFromMap(
 	}
 }
 
+void ibApplicationDataSessionArray::SetExclusiveFromMap(
+	const std::unordered_map<std::string, bool>& exclusiveBySession)
+{
+	for (auto& u : m_listSession) {
+		auto it = exclusiveBySession.find(std::string(u.m_strSession.ToUTF8().data()));
+		if (it != exclusiveBySession.end())
+			u.m_exclusive = it->second;
+	}
+}
+
+bool ibApplicationDataSessionArray::IsExclusive(unsigned int idx) const
+{
+	if (idx >= m_listSession.size()) return false;
+	return m_listSession[idx].m_exclusive;
+}
+
+wxString ibApplicationDataSessionArray::ExclusiveHolderSession() const
+{
+	for (const auto& u : m_listSession)
+		if (u.m_exclusive)
+			return u.m_strSession;
+	return wxEmptyString;
+}
+
+wxString ibApplicationDataSessionArray::ExclusiveHolderUser() const
+{
+	for (const auto& u : m_listSession)
+		if (u.m_exclusive)
+			return u.m_strUserName;
+	return wxEmptyString;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //								ibApplicationData
 ///////////////////////////////////////////////////////////////////////////////
@@ -141,8 +173,6 @@ ibApplicationData::ProcessExitHook ibApplicationData::s_processExitHook = nullpt
 ibApplicationData::ibApplicationData(ibRunMode runMode) :
 	m_runMode(runMode),
 	m_strComputer(wxGetHostName()),
-	m_startedDate(wxDateTime::Now()),
-	m_sessionGuid(wxNewUniqueGuid),
 	m_pluginManager(std::make_unique<ibPluginManager>()),
 	m_connectionPool(std::make_unique<ibConnectionPool>()),
 	m_sessionRegistry(std::make_unique<ibSessionRegistry>()),
@@ -291,19 +321,27 @@ ibApplicationData::~ibApplicationData()
 }
 
 // ---------------------------------------------------------------------------
-// User-identity accessors — prefer the current thread's ibSession when a
-// ibSessionScope is active (per-cookie on web, main user session on desktop);
-// fall back to the process singleton only when no scope is set (pre-auth
-// bootstrap, standalone codeRunner). Moved out-of-line so the header
-// doesn't have to include session/session.h (which would create a cycle
-// via userInfo.h's own transitive includes).
+// User-identity accessors — route through the current thread's ibSession
+// (per-cookie on web, main user session on desktop). Without an active
+// ibSessionScope (pre-auth bootstrap, standalone codeRunner) we return a
+// shared empty sentinel — readers see an unauthenticated state, callers
+// that depend on a real user must arrange a session scope first.
 // ---------------------------------------------------------------------------
 
 const ibApplicationDataUserInfo& ibApplicationData::GetUserInfo() const
 {
 	if (auto* ctx = ibSession::Current())
 		return ctx->GetUserInfo();
-	return m_userInfo;
+	static const ibApplicationDataUserInfo s_empty;
+	return s_empty;
+}
+
+bool ibApplicationData::ExclusiveMode() const
+{
+	// Process-wide query through the registry — answers "is anyone in
+	// exclusive mode right now?". Cluster-aware variant adds the
+	// sys_session.exclusive snapshot in a follow-up.
+	return m_sessionRegistry != nullptr && m_sessionRegistry->HasExclusiveSession();
 }
 
 const wxString& ibApplicationData::GetUserName() const
@@ -387,8 +425,6 @@ bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& 
 
 			s_instance->ReadEngineConfig();
 
-			s_instance->m_exclusiveMode = runMode == ibRunMode::eDESIGNER_MODE;
-
 			s_instance->m_dbMode = ibDatabaseMode::eFILE;
 
 			// The pool is the single owner of every connection in the
@@ -449,8 +485,6 @@ bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString
 
 			s_instance->ReadEngineConfig();
 
-			s_instance->m_exclusiveMode = runMode == ibRunMode::eDESIGNER_MODE;
-
 			s_instance->m_dbMode = ibDatabaseMode::eSERVER;
 
 			// Pool owns every connection. `db` becomes the master (source
@@ -500,11 +534,10 @@ bool ibApplicationData::DestroyAppDataEnv()
 	if (s_instance != nullptr && s_instance->m_connectionPool != nullptr &&
 	    ibConnectionPool::GetPrimaryConnection() != nullptr) {
 
-		// Reset cached session credentials. The active session itself is
-		// closed by its holder (mainApp/webSession) via ibSession::Close(),
-		// not from here; ~ibApplicationData runs Stop() to drain pending
-		// Removes when s_instance is destroyed below.
-		s_instance->m_sessionRawPassword.clear();
+		// The active session itself is closed by its holder
+		// (mainApp/webSession) via ibSession::Close(), which clears the
+		// session's own cached creds; ~ibApplicationData runs Stop() to
+		// drain pending Removes when s_instance is destroyed below.
 		s_instance->m_connected_to_db = false;
 
 		s_instance->m_strServer = wxEmptyString;
@@ -652,12 +685,18 @@ long ibApplicationData::RunApplication(const wxString& strAppName, bool searchDe
 	// Otherwise enterprise.exe authenticates with the hash itself — which only worked
 	// before MD5→PBKDF2 because the verifier silently treated hash==hash as a match,
 	// and even then it let the stored hash act as a bearer token.
-	return RunApplication(strAppName,
-		m_userInfo.m_strUserName,
-		m_sessionRawPassword,
-		searchDebug,
-		useManifest
-	);
+	//
+	// Creds come from the calling thread's ibSession (ibSessionScope set
+	// by the host app's mainApp once session->Open succeeds). If no
+	// session is scoped — codeRunner or pre-auth tools that have no
+	// business spawning interactive children — we still call through with
+	// empty strings; the child will fall back to its own login flow.
+	wxString userName, rawPassword;
+	if (auto* s = ibSession::Current()) {
+		userName    = s->GetUserInfo().m_strUserName;
+		rawPassword = s->GetSessionRawPassword();
+	}
+	return RunApplication(strAppName, userName, rawPassword, searchDebug, useManifest);
 }
 
 long ibApplicationData::RunApplication(const wxString& strAppName, const wxString& strUserName, const wxString& strUserPassword, bool searchDebug, bool useManifest) const
@@ -845,37 +884,31 @@ bool ibApplicationData::AuthenticateUser(const wxString& strUserName,
 void ibApplicationData::InstallUser(const ibApplicationDataUserInfo& info,
                                      const wxString& rawPassword)
 {
-	// Singleton legacy mirrors. Readers still go through `appData->GetUserInfo()`
-	// for most existing code; those will migrate to ibSession-level reads
-	// once the session field-extract phase (project_session_registry_refactor
-	// step 8) lands.
-	m_userInfo = info;
-	if (!rawPassword.IsEmpty())
-		m_sessionRawPassword = rawPassword;
-
-	// Per-session mirror. The registry thread calls InstallUser under a
-	// ibSessionScope bound to the target ibSession, so Current() resolves
-	// to the session we intend to mutate. Desktop StartSession path also
-	// runs under the "main" ibSessionScope set up in Connect().
+	// User identity now lives only on the ibSession. The registry thread
+	// calls InstallUser under a ibSessionScope bound to the target session
+	// (ProcessAttach); the desktop login dialog calls it under the main-
+	// thread scope of the session that owns the dialog. Without a current
+	// session there is nowhere to install — the caller is in a pre-auth
+	// path that has no business calling this.
 	if (auto* ctx = ibSession::Current()) {
 		ctx->SetUserInfo(info);
 		ctx->SetSessionRawPassword(rawPassword);
-		ctx->SetSessionGuid(m_sessionGuid);
 	}
 }
 
-bool ibApplicationData::AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword)
+bool ibApplicationData::Login(const wxString& strUserName,
+                              const wxString& strUserPassword,
+                              ibApplicationDataUserInfo& outInfo)
 {
-	ibApplicationDataUserInfo info;
-	if (!AuthenticateUser(strUserName, strUserPassword, info))
+	if (!AuthenticateUser(strUserName, strUserPassword, outInfo))
 		return false;
 
-	// Open-access path: AuthenticateUser returns true with IsOk()=false.
-	// Skip Install — nothing to install, keep singleton state as-is.
-	if (!info.IsOk())
-		return true;
+	// Open-access pass-through: verification succeeded but no real user
+	// was resolved (sys_user empty + caller supplied no creds). Caller
+	// treats this as "auth settled"; nothing to install.
+	if (outInfo.IsOk())
+		InstallUser(outInfo, strUserPassword);
 
-	InstallUser(info, strUserPassword);
 	return true;
 }
 

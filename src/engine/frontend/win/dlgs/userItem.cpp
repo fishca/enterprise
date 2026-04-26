@@ -205,7 +205,7 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 				const wxString& strUserPassword = m_textPassword->GetValue();
 				if (!strUserPassword.IsEmpty()) {
 					// PBKDF2-SHA256 with a per-user salt; legacy MD5 is still accepted
-					// on login and upgraded lazily in AuthenticationAndSetUser.
+					// on login and upgraded lazily in AuthenticateUser (NeedsRehash).
 					m_strUserPassword = ibPasswordHash::Hash(strUserPassword);
 				}
 				else {

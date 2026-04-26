@@ -109,6 +109,7 @@ public:
 	static wxString UserName();
 	static wxString UserPassword();
 	static bool ExclusiveMode();
+	static void SetExclusive(bool on);
 	static wxString GeneralLanguage();
 	static void EndJob(bool force = false);
 

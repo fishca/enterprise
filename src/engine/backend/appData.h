@@ -63,6 +63,9 @@ class BACKEND_API ibApplicationDataSessionArray {
 		wxString m_strUserName;
 		wxString m_strComputerName;
 		wxString m_strSession;
+		// Process-wide exclusive (monopoly) flag — true when this row
+		// holds it. Filled in by JobRefreshSnapshot from sys_session.exclusive.
+		bool m_exclusive = false;
 	};
 
 public:
@@ -101,6 +104,19 @@ public:
 	// snapshot builder to tolerate legacy schemas where the `kind`
 	// column lives in a second optional SELECT.
 	void SetKindsFromMap(const std::unordered_map<std::string, int>& kindBySession);
+
+	// Back-fill exclusive flags from a second optional SELECT — same
+	// pattern as kinds, tolerant of pre-migration schemas where the
+	// column doesn't exist yet.
+	void SetExclusiveFromMap(const std::unordered_map<std::string, bool>& exclusiveBySession);
+
+	// Per-row exclusive flag accessor — returns the holder session (the
+	// only one with m_exclusive==true), if any. Used by ProcessAdd's
+	// cross-process exclusive gate and by ProcessSetExclusive's
+	// sole-live check.
+	bool        IsExclusive(unsigned int idx) const;
+	wxString    ExclusiveHolderSession() const;
+	wxString    ExclusiveHolderUser() const;
 
 private:
 	ibGuid m_sessionArrayHash;
@@ -182,21 +198,35 @@ public:
 	// nullptr if registry Connect failed (policy veto, row-lock dup).
 	ibSession* CreateSession();
 
-	// Typed counterpart of CreateSession. The caller (enterprise/mainApp.cpp,
+	// Typed overload of CreateSession. The caller (enterprise/mainApp.cpp,
 	// designer/mainApp.cpp, web code) picks the concrete derived session
 	// class (ibEnterpriseSession, ibDesignerSession, ibWebClientSession, …).
-	// Template body lives in backend/session/session.h (included by all
-	// sites that instantiate a derived session type) so the factory lambda
-	// has the derived ctor visible at instantiation.
+	// Template bodies live in backend/session/sessionRegistry.h (callers
+	// that instantiate the typed overload include it) so the registry's
+	// CreateSessionWithFactory is visible at instantiation.
 	// Flow:
-	//   1. CreateSessionWithFactory() runs the registry Add through a
-	//      factory that builds SessionT instead of the plain base.
+	//   1. m_sessionRegistry->CreateSessionWithFactory runs
+	//      EnsureStartedForCreateSession + Connect(req) under a factory
+	//      that builds SessionT instead of the plain base.
 	//   2. OnCreateSession() fires on the main (caller) thread for UI-side
 	//      setup — GUI sessions create their wx frame here.
-	//   3. On OnCreateSession returning false, CloseSession rolls back the
-	//      registry ticket and CreateSessionTyped returns nullptr.
+	//   3. On OnCreateSession returning false, the session is Close()d so
+	//      the registry ticket is dropped and CreateSession returns nullptr.
 	template<class SessionT>
-	SessionT* CreateSessionTyped();
+	SessionT* CreateSession();
+
+	// Per-tab variant for the wes web frontend. Caller supplies the cookie
+	// guid (used as sys_session.session PK + the registry's session id —
+	// one identifier across cookie / SessionManager / sys_session row) and
+	// the listener address ("host:port", surfaced in admin UI). Kind is
+	// fixed at WebClient (per-tab), independent of process run mode.
+	// Server() is auto-populated by the registry — it tracks the most
+	// recent WebServer-kind session in the process and attaches subsequent
+	// non-server sessions to it. Single-session apps never register a
+	// WebServer session so their Server() stays null.
+	template<class SessionT>
+	SessionT* CreateSession(const wxString& presetGuid,
+	                        const wxString& address);
 
 private:
 	// Register the session-lifecycle event listeners that drive
@@ -308,49 +338,54 @@ public:
 
 	inline wxString GetDatabaseModeDescr() const { return GetDatabaseModeDescr(m_dbMode); }
 
-	// Legacy wrapper — verify creds AND install the resolved user info on
-	// the singleton + current session. Kept for existing callers
-	// (StartSession desktop path, ibWebSession::Login). Prefer the split
-	// below in new code: AuthenticateUser() is the pure verifier that
-	// ProcessAttach in ibSessionRegistry calls without touching singleton
-	// state, then the registry's handler drives installation into the
-	// target ibSession directly.
-	bool AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword);
+	// Verify credentials and install the resolved user onto the current
+	// ibSessionScope's ibSession. Single entry point used by both the GUI
+	// login dialog (main-thread, scope = the desktop session) and the
+	// registry's ProcessAttach (registry-thread, scope = the target tab
+	// session). Returns true on successful verification — `outInfo` is
+	// filled in that case; the install side runs only when outInfo.IsOk()
+	// (open-access mode passes verification with empty info — no install).
+	// Returns false on bad creds; outInfo is left untouched.
+	bool Login(const wxString& strUserName,
+	           const wxString& strUserPassword,
+	           ibApplicationDataUserInfo& outInfo);
 
-	// Pure credential check. Looks up the user, verifies the password
-	// (PBKDF2 with silent MD5→PBKDF2 upgrade via NeedsRehash), fills
-	// `outInfo` on success, and does NOT mutate singleton / current
-	// session state. Returns true for open-access mode too (empty
-	// sys_user populating + any creds → pass). Safe to call from the
-	// registry thread without a ibSessionScope.
+	// Pure credential check used by Login above. Looks up the user, verifies
+	// the password (PBKDF2 with silent MD5→PBKDF2 upgrade via NeedsRehash),
+	// fills `outInfo` on success, and does NOT mutate any session state.
+	// Returns true for open-access mode too (empty sys_user populating +
+	// any creds → pass with outInfo.IsOk()==false). Safe to call from the
+	// registry thread without a ibSessionScope. Exposed as a building block
+	// so registry's ProcessAttach can short-circuit on bad creds before
+	// pinning a session scope.
 	bool AuthenticateUser(const wxString& strUserName,
 	                      const wxString& strUserPassword,
 	                      ibApplicationDataUserInfo& outInfo);
 
-	// Commit side: install a previously-verified UserInfo onto the
-	// legacy singleton slots (m_userInfo, m_sessionRawPassword) AND the
-	// current ibSessionScope's ibSession (dual-write while call sites
-	// migrate). `rawPassword` is cached for Designer "Start debugging"
-	// re-attach — pass the plain-text the caller received; pass empty
-	// to skip the raw-password cache (e.g. token-based flows).
+	// Commit side of Login. Writes the resolved user onto the current
+	// ibSessionScope's ibSession. `rawPassword` is cached for Designer
+	// "Start debugging" re-attach — pass the plain-text the caller received;
+	// pass empty to skip the raw-password cache (e.g. token-based flows).
+	// No-op when no session is scoped — the caller is in a pre-auth path
+	// that has no business installing a user. Most callers should go
+	// through Login above instead of invoking this directly.
 	void InstallUser(const ibApplicationDataUserInfo& info,
 	                 const wxString& rawPassword);
 
-	bool ExclusiveMode() const { return m_exclusiveMode; }
+	// Process-wide exclusive (monopoly) mode — true when any session
+	// currently holds it. Facade over ibSessionRegistry; out-of-line so
+	// this header doesn't have to pull sessionRegistry.h.
+	bool ExclusiveMode() const;
 
-	// User-identity accessors — session-aware. Readers see the user info
-	// of the current thread's `ibSession` when a ibSessionScope is active
-	// (per-cookie on web, main user session on desktop); they fall back
-	// to the process singleton `m_userInfo` only when no session is
-	// scoped (pre-auth bootstrap, standalone codeRunner). This closes
-	// the multi-tab "last login wins" bug described in
-	// project_web_session_bug.md.
+	// User-identity accessors — read from the current thread's `ibSession`
+	// (per-cookie on web, main user session on desktop). Without an active
+	// ibSessionScope the readers see an empty/unauthenticated state — used
+	// only by pre-auth bootstrap and standalone tools (codeRunner).
 	const wxString& GetUserName()     const;
 	const wxString& GetUserPassword() const;
 	const ibApplicationDataUserInfo& GetUserInfo() const;
 
 	wxString GetComputerName() const { return m_strComputer; }
-	wxDateTime GetStartedDate() const { return m_startedDate; }
 
 	wxString GetLocale() const { return m_locale.GetCanonicalName(); }
 
@@ -423,15 +458,6 @@ private:
 
 	bool HasAllowedUser() const;
 
-	// Impl helper shared between CreateSession() and CreateSessionTyped<T>.
-	// Runs the registry Connect with the given factory (empty factory =>
-	// default ibSession construction) and installs the resulting ticket
-	// + ibSessionScope. Returns the new session's base pointer, nullptr on
-	// registry failure. Caller of CreateSessionTyped then invokes
-	// OnCreateSession() on the main thread.
-	ibSession* CreateSessionWithFactory(
-		std::function<std::shared_ptr<ibSession>(std::string, ibSessionKind)> factory);
-
 	void ReadUserData_Password(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
 	void ReadUserData_Role(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
 	void ReadUserData_Language(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
@@ -460,21 +486,9 @@ private:
 
 	ibRunMode m_runMode;
 	wxString m_strComputer;
-	wxDateTime m_startedDate;
-	wxDateTime m_lastActivity;
-	ibGuid m_sessionGuid;
 
 #pragma region config
 	ibApplicationDataConfigInfo m_configInfo;
-#pragma endregion 
-#pragma region user
-	ibApplicationDataUserInfo m_userInfo;
-	// Raw password kept in memory only for the lifetime of the session. Needed so
-	// child processes (debug-target enterprise.exe launched from designer.exe)
-	// can be handed the original password rather than the stored hash — passing
-	// the hash lets the child "log in" with equivalent credentials, which is a
-	// privilege-escalation sink. Cleared on CloseSession.
-	wxString m_sessionRawPassword;
 #pragma endregion
 
 	static bool m_forceExit;
@@ -508,7 +522,7 @@ public:
 	// listener — listener can't take a flags argument (callback shape is
 	// fixed) so the flags ride here instead. Apps that need non-default
 	// flags (Enterprise's debug-server flag) write directly before
-	// CreateSessionTyped + Authenticate.
+	// CreateSession + Authenticate.
 	int  m_loadMetadataFlags = _app_start_default_flag;
 private:
 
@@ -528,8 +542,6 @@ private:
 	// LOCALE
 	wxLocale m_locale;
 	int m_locale_lang;
-
-	bool m_exclusiveMode = false; //Exclusive mode
 };
 
 ///////////////////////////////////////////////////////////////////////////////

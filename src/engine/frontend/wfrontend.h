@@ -53,9 +53,11 @@ extern "C" WFRONTEND_API const char* wfrontendClientHTML();
 //   * wfrontendInitFile()   — appDataCreateFile  (single-file DB path)
 //   * wfrontendInitServer() — appDataCreateServer (host/port/db)
 //
-// Both then call appData->Connect(ibUser, ibPassword) to authenticate
-// the "service" user; per-HTTP-session auth is layered on top. The
-// last error (if any) is available via wfrontendLastError().
+// Both then bring up the wes process's own system session via
+// CreateSession + session->Open(ibUser, ibPassword) — that's the
+// service-account authentication. Per-HTTP-session auth (the per-tab
+// ibWebSession::Login flow) is layered on top. The last error (if
+// any) is available via wfrontendLastError().
 WFRONTEND_API bool wfrontendInitFile(
 	const std::string& filePath,
 	const std::string& ibUser,

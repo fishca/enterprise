@@ -10,7 +10,7 @@
 // ibGUISession itself is concrete-able but useless without an override —
 // base OnCreateSession returns true, leaving m_frame null, so GetFrame()
 // yields nullptr and Authenticate()'s dialog-prompt fallback no-ops. Any
-// exe that wires CreateSessionTyped<ibGUISession>() without overriding
+// exe that wires CreateSession<ibGUISession>() without overriding
 // will see an empty main window — that's a bug, not a feature.
 
 #include "frontend/frontend.h"
@@ -20,7 +20,7 @@ class ibFrontendDocMDIFrame;
 
 class FRONTEND_API ibGUISession : public ibSession {
 public:
-	// Inherit (std::string, ibSessionKind) ctor so CreateSessionTyped<T>'s
+	// Inherit (std::string, ibSessionKind) ctor so CreateSession<T>'s
 	// factory lambda (make_shared<T>(id, kind)) works across every
 	// derived session class without boilerplate.
 	using ibSession::ibSession;
@@ -64,9 +64,9 @@ public:
 
 	// Shared interactive-auth implementation for designer + enterprise:
 	// shows the standalone ibDialogAuthentication (via ibPromptAuthenticationDialog),
-	// which writes singleton userInfo / rawPassword on submit. Returns
-	// true on user confirm, false on cancel. Web-client session — when
-	// wired — provides its own override driving the HTTP login-form flow.
+	// which calls appData->Login on submit (verify + install on this
+	// session). Returns true on user confirm, false on cancel. Web-client
+	// session uses its own HTTP login-form flow instead.
 	bool OnShowAuthenticate(const wxString& user, const wxString& password) override;
 
 protected:

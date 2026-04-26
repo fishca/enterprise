@@ -10,21 +10,17 @@
 //
 // This header exposes:
 //   - Legacy Create / Destroy / Find / List / Count (Phase-2 API, kept
-//     behaviour-identical until Connect(req) lands in a follow-up).
+//     behaviour-identical alongside the Submit-based Connect(req) flow).
 //   - Queue + worker-thread plumbing (Start / Stop / Submit / request
 //     bins). Thread stays idle until Start() is called explicitly by
-//     `ibApplicationData::Connect`; Stop() joins it before Disconnect
-//     frees the DB. DrainAll takes snapshots per-priority top-down
-//     (strict descending Urgent → Normal → Low → Background, FIFO
-//     within each bin) so Urgent evictions overtake pending Normal
-//     Adds as soon as the next tick runs.
+//     `ibApplicationData::CreateSession`; the appData dtor invokes
+//     Stop() before the pool is shut down. DrainAll takes snapshots
+//     per-priority top-down (strict descending Urgent → Normal → Low →
+//     Background, FIFO within each bin) so Urgent evictions overtake
+//     pending Normal Adds as soon as the next tick runs.
 //   - Fatal-invariant plumbing (m_fatal + Die) — registry thread death
 //     means sys_session no longer reflects reality, so any Connect /
 //     Submit after that point must not pretend to succeed.
-//
-// Real Add / Attach / Remove / SetActivity handlers are not implemented
-// yet (next commit). The scaffolding lives here so callers can wire
-// Start/Stop into Connect/Disconnect without a follow-up churn.
 
 #include "backend/backend.h"
 #include "session.h"
@@ -41,6 +37,7 @@
 #include <shared_mutex>
 #include <string>
 #include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -52,11 +49,12 @@ class ibApplicationDataSessionArray;
 // strict descending-priority order.
 // -------------------------------------------------------------------
 enum class ibRegistryRequestKind {
-	Add,          // register a newly-constructed session (anonymous or creds-bound)
-	Attach,       // bind user identity to an already-Added session
-	Detach,       // drop user identity, session stays Anonymous
-	Remove,       // teardown — DELETE row, release lock, drop from m_own
-	SetActivity,  // update currentActivity column (scripts / handlers)
+	Add,           // register a newly-constructed session (anonymous or creds-bound)
+	Attach,        // bind user identity to an already-Added session
+	Detach,        // drop user identity, session stays Anonymous
+	Remove,        // teardown — DELETE row, release lock, drop from m_own
+	SetActivity,   // update currentActivity column (scripts / handlers)
+	SetExclusive,  // acquire/release process-wide exclusive (monopoly) mode
 };
 
 struct BACKEND_API ibRegistryRequest {
@@ -69,6 +67,9 @@ struct BACKEND_API ibRegistryRequest {
 
 	// SetActivity payload.
 	wxString activity;
+
+	// SetExclusive payload — true acquires, false releases.
+	bool     exclusiveOn = false;
 };
 
 // -------------------------------------------------------------------
@@ -110,7 +111,7 @@ struct BACKEND_API ibConnectRequest {
 
 	// Optional session factory — when set, Connect() builds the session
 	// through this callback instead of make_shared<ibSession>. Lets the
-	// typed factory path (ibApplicationData::CreateSessionTyped<T>)
+	// typed factory path (ibApplicationData::CreateSession<T>)
 	// construct derived sessions (ibGUISession / ibEnterpriseSession /
 	// ibWebClientSession etc.) while the registry's Add/Attach/Remove
 	// pipeline keeps working through the base ibSession interface.
@@ -139,10 +140,11 @@ class BACKEND_API ibSessionRegistry {
 public:
 	static ibSessionRegistry& Instance();
 
-	// ---- Legacy API (Phase 2) ----
-	// Left intact so existing callers (`ibApplicationData::Connect`,
-	// `ibWebSession::Login`, `moduleInfo::DetachFromCurrentSession`) keep
-	// working. Migrated to Submit-based flow in a follow-up commit.
+	// ---- Legacy direct API ----
+	// Imperative create-and-go shortcuts, retained for in-process callers
+	// that don't go through the Submit-based Connect(req) flow (test
+	// harnesses, low-level wiring). New code should use Connect(req) +
+	// ibSessionTicket so registry policies and the auth state machine fire.
 	ibSession* Create(const std::string& id, ibRunMode runMode);
 	void       Destroy(const std::string& id);
 	ibSession* Find(const std::string& id);
@@ -164,22 +166,49 @@ public:
 	std::vector<std::string> List() const;
 	std::size_t              Count() const;
 
+	// Does the registered server session (m_currentServer) currently have
+	// any client attached? Server-shutdown logic uses this to decline
+	// process exit while real clients are still alive — replaces the
+	// pre-2026-04-26 `Count() > 2` heuristic. Returns false in single-
+	// session apps where no WebServer-kind session ever registered.
+	bool                     HasClients() const;
+
+	// ---- Session factory facade ----
+	// Wraps the EnsureStartedForCreateSession + Connect(req) handshake.
+	// `appData->CreateSession*` forward here; per-tab web flow uses the
+	// (presetGuid, address) overload to inject cookie-derived identity.
+	// Caller passes runMode + computer so the registry stays decoupled
+	// from appData's runtime state (those values are used for the
+	// DesignerExclusivePolicy gate + the default ibConnectRequest fields
+	// m_appMode / m_computer / m_kind).
+	// Returns the registered ibSession pointer (owned by m_own); nullptr
+	// on registry-Connect failure (policy veto, row-lock dup, registry
+	// down). Throws nothing — typed wrappers in ibApplicationData turn
+	// nullptr into ibBackendCoreException.
+	ibSession* CreateSessionWithFactory(ibRunMode runMode,
+	                                    const wxString& computer,
+	                                    ibConnectRequest::SessionFactory factory);
+	ibSession* CreateSessionWithFactory(ibRunMode runMode,
+	                                    const wxString& computer,
+	                                    const wxString& presetGuid,
+	                                    const wxString& address,
+	                                    ibConnectRequest::SessionFactory factory);
+
 	// ---- Thread + queue ----
 	// Set whether the registry owns sys_session row I/O. Default false —
 	// handlers only drive in-memory state transitions (useful for tests
 	// or embedding scenarios where a different actor keeps the table).
-	// Desktop `ibApplicationData::Connect` flips this to true before
-	// Start(), so handlers take over INSERT / UPDATE / DELETE and
-	// `HoldRowLocks` takes real pessimistic locks. Must be set BEFORE
-	// Start() — Start decides whether to check out pool connections
-	// based on this flag.
+	// CreateSessionWithFactory flips this to true before Start() so the
+	// handlers take over INSERT / UPDATE / DELETE and `HoldRowLocks`
+	// takes real pessimistic locks. Must be set BEFORE Start() — Start
+	// decides whether to check out pool connections based on this flag.
 	void EnableSysSessionOwnership(bool enabled) { m_ownsSysSession = enabled; }
 	bool OwnsSysSession() const { return m_ownsSysSession; }
 
 	// Start the consumer thread. No-op if already running. Invariant:
-	// must be called once — and only once — before any Submit().
-	// Typically called from `ibApplicationData::Connect` right after the
-	// DB is open.
+	// must be called once — and only once — before any Submit(). Typically
+	// called via EnsureStartedForCreateSession from CreateSessionWithFactory
+	// right after the DB is open.
 	void Start();
 
 	// Signal stop, wake the thread, join it. The kill-switch — submits
@@ -251,9 +280,10 @@ public:
 
 	// ---- Lifecycle events ----
 	// Process-wide event hooks fired by registry as sessions move through
-	// their lifecycle. Listeners are typically wired during app bootstrap
-	// (ibApplicationData ctor / OnInit) and replace the legacy monolithic
-	// orchestration in appData::Connect/Disconnect. All callbacks run
+	// their lifecycle. Listeners are wired once during app bootstrap (in
+	// ibApplicationData::WireSessionEvents from the ctor) and drive the
+	// metadata + per-session runtime bring-up/teardown that used to live
+	// inside the monolithic Connect/Disconnect path. All callbacks run
 	// synchronously on the thread that triggered the event (Authenticate
 	// caller's thread, registry thread for Add/Remove, etc.) — listeners
 	// must not block long.
@@ -332,6 +362,12 @@ public:
 
 private:
 
+	// Idempotent registry bring-up driven from CreateSessionWithFactory.
+	// First call enables sys_session ownership, registers the
+	// DesignerExclusive policy when runMode == eDESIGNER_MODE, and
+	// starts the consumer thread. Subsequent calls are no-ops.
+	void EnsureStartedForCreateSession(ibRunMode runMode);
+
 	void ThreadBody() noexcept;
 
 	// Drain queue: pop snapshot from each bin top-down (Urgent first),
@@ -346,6 +382,16 @@ private:
 	void ProcessDetach(ibRegistryRequest& req);
 	void ProcessRemove(ibRegistryRequest& req);
 	void ProcessSetActivity(ibRegistryRequest& req);
+	void ProcessSetExclusive(ibRegistryRequest& req);
+
+	// Drains m_pendingExclusive — called from ProcessSetExclusive(off)
+	// and from ProcessRemove when the leaving session was the holder.
+	// Re-runs ProcessAdd on each parked request; if the request belongs
+	// to a session whose Created state has expired (timed out producer)
+	// the Add is harmless — Transition tries to move past Created
+	// regardless and the producer's WaitForState will already have
+	// returned Timeout.
+	void DrainPendingExclusive();
 
 	// Periodic jobs. Real impl ports `Job_*` from appDataQuery.cpp in a
 	// follow-up; current bodies are placeholders that simply bump the
@@ -387,6 +433,25 @@ public:
 	bool ConsumeReloadRequest() {
 		return m_reloadRequested.exchange(false, std::memory_order_acq_rel);
 	}
+
+	// Process-wide "is anyone exclusive?" — read by appData->ExclusiveMode()
+	// facade. atomic load of the holder pointer, snapshot-style. Cluster-
+	// aware variant (sys_session.exclusive column) lands separately.
+	bool HasExclusiveSession() const {
+		return m_exclusiveSession.load(std::memory_order_acquire) != nullptr;
+	}
+
+	// Synchronous acquire/release of exclusive (monopoly) mode for the
+	// given session. Submits SetExclusive@Normal through the queue and
+	// blocks the caller until ProcessSetExclusive runs and writes the
+	// outcome back. Returns the verdict; ibSession::SetExclusive (the
+	// script-facing path) maps this to ibBackendCoreException for
+	// non-Granted results.
+	//
+	//   on=true  → Granted iff this session is the sole live one and no
+	//              other session currently holds exclusive.
+	//   on=false → always Granted (idempotent release).
+	ibSession::ibExclusiveResult SetExclusive(ibSession* session, bool on);
 
 private:
 
@@ -438,6 +503,27 @@ private:
 	std::size_t                         m_authenticatedCount = 0;
 	bool                                m_firstConnectFired  = false;
 
+	// --- server (parent) auto-tracking ---
+	// Most recent session added with kind == WebServer. ProcessAdd uses
+	// it to auto-populate Server() on subsequent (non-server) sessions
+	// so wes per-tab clients link to the wes system session without the
+	// caller threading a parameter through. nullptr in single-session
+	// apps (desktop GUI, daemon, codeRunner) — no WebServer kind ever
+	// registers, no auto-attach happens.
+	ibSession*                                                   m_currentServer = nullptr;
+
+	// --- exclusive (monopoly) mode ---
+	// Current holder (registry-thread writes; readers via HasExclusiveSession
+	// load atomically). std::atomic<ibSession*> so the read path is lock-
+	// free; producer threads see the answer to "is anyone exclusive?"
+	// without contending with the registry thread's bookkeeping.
+	std::atomic<ibSession*>                                      m_exclusiveSession { nullptr };
+
+	// Adds parked while m_exclusiveSession is held by another session.
+	// Drained on release (ProcessSetExclusive(off) or holder's Remove).
+	// Single-threaded access (registry consumer only), so no mutex.
+	std::deque<ibRegistryRequest>                                m_pendingExclusive;
+
 	// --- sys_session ownership ----
 	// Off by default — handlers only drive state transitions. Flip to
 	// true (via EnableSysSessionOwnership) before Start() to take over
@@ -484,5 +570,66 @@ private:
 	mutable std::shared_mutex                              m_snapshotMtx;
 	std::unique_ptr<ibApplicationDataSessionArray>         m_snapshot;
 };
+
+// ---------------------------------------------------------------------
+// ibApplicationData::CreateSession<SessionT> — template bodies live here
+// (not in session.h) because they delegate through
+// ibSessionRegistry::CreateSessionWithFactory and need the registry's
+// full type at instantiation. Each callsite that uses the typed
+// overload (enterprise/mainApp.cpp, designer/mainApp.cpp,
+// frontend/web/webSession.cpp) already includes this header.
+//
+// Both overloads coexist with the non-template ibSession*
+// CreateSession() declared in appData.h — overload resolution picks
+// the template only when the caller supplies an explicit <T> argument.
+// ---------------------------------------------------------------------
+
+namespace ib_detail {
+
+template<class SessionT>
+inline SessionT* FinishCreateSession(ibSession* base)
+{
+	if (base == nullptr)
+		ibBackendCoreException::Error(_("Failed to create session"));
+
+	SessionT* derived = static_cast<SessionT*>(base);
+	if (!derived->OnCreateSession()) {
+		derived->Close();   // submit Remove → registry drops m_own entry
+		ibBackendCoreException::Error(_("Failed to create session frame"));
+	}
+	return derived;
+}
+
+template<class SessionT>
+inline std::shared_ptr<ibSession> MakeSessionFactory(std::string id, ibSessionKind kind)
+{
+	return std::make_shared<SessionT>(std::move(id), kind);
+}
+
+} // namespace ib_detail
+
+template<class SessionT>
+SessionT* ibApplicationData::CreateSession()
+{
+	static_assert(std::is_base_of<ibSession, SessionT>::value,
+		"CreateSession<T>: T must derive from ibSession");
+
+	ibSession* base = m_sessionRegistry->CreateSessionWithFactory(
+		m_runMode, m_strComputer, &ib_detail::MakeSessionFactory<SessionT>);
+	return ib_detail::FinishCreateSession<SessionT>(base);
+}
+
+template<class SessionT>
+SessionT* ibApplicationData::CreateSession(const wxString& presetGuid,
+                                            const wxString& address)
+{
+	static_assert(std::is_base_of<ibSession, SessionT>::value,
+		"CreateSession<T>: T must derive from ibSession");
+
+	ibSession* base = m_sessionRegistry->CreateSessionWithFactory(
+		m_runMode, m_strComputer, presetGuid, address,
+		&ib_detail::MakeSessionFactory<SessionT>);
+	return ib_detail::FinishCreateSession<SessionT>(base);
+}
 
 #endif

@@ -115,9 +115,10 @@ struct CmdArgs {
 	std::string database;             // --db
 
 	// IB (configuration) user credentials used for the backend's own
-	// appData->Connect() — i.e. the service account. Empty in file mode:
-	// appData uses the embedded-engine auth and sys_user check only kicks
-	// in when the configuration explicitly has user accounts.
+	// system session — i.e. the service account submitted to
+	// session->Open() at wes startup. Empty in file mode: appData uses
+	// the embedded-engine auth and the sys_user check only kicks in when
+	// the configuration explicitly has user accounts.
 	std::string ibUser;
 	std::string ibPassword;
 

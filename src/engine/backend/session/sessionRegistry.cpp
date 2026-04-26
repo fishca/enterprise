@@ -1,5 +1,6 @@
 #include "sessionRegistry.h"
 #include "sessionPolicy.h"
+#include "designerExclusivePolicy.h"
 
 #include "backend/appData.h"
 #include "backend/backend_exception.h"
@@ -139,6 +140,96 @@ std::size_t ibSessionRegistry::Count() const
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	return m_sessions.size();
+}
+
+bool ibSessionRegistry::HasClients() const
+{
+	ibSession* server = m_currentServer;
+	if (server == nullptr) return false;
+	std::shared_lock<std::shared_mutex> lock(m_ownMutex);
+	for (const auto& kv : m_own) {
+		const ibSession* s = kv.second.get();
+		if (s == nullptr || s == server) continue;
+		auto srv = s->Server();
+		if (srv && srv.get() == server)
+			return true;
+	}
+	return false;
+}
+
+// --- Session factory facade ----------------------------------------------
+
+void ibSessionRegistry::EnsureStartedForCreateSession(ibRunMode runMode)
+{
+	if (m_threadAlive.load(std::memory_order_acquire)) return;
+
+	// Own sys_session row I/O: registry handles INSERT / UPDATE / DELETE
+	// via its write connection and holds pessimistic row locks that peers
+	// use to detect liveness. Replaces the pre-2026-04-20 1 Hz heartbeat
+	// UPDATE path. EnableSysSessionOwnership is idempotent; only effective
+	// before the first Start().
+	EnableSysSessionOwnership(true);
+
+	// Designer-exclusive policy — only one designer process per IB at a
+	// time. AddPolicy must happen BEFORE Start so the chain is immutable
+	// once the consumer thread is running.
+	if (runMode == eDESIGNER_MODE)
+		AddPolicy(std::make_unique<ibDesignerExclusivePolicy>(this));
+
+	Start();
+}
+
+ibSession* ibSessionRegistry::CreateSessionWithFactory(ibRunMode runMode,
+                                                       const wxString& computer,
+                                                       ibConnectRequest::SessionFactory factory)
+{
+	EnsureStartedForCreateSession(runMode);
+
+	// Anonymous-phase Connect — registry INSERTs a row with userName=''
+	// immediately so peers (Active Users UI, designer-exclusive policy)
+	// see "someone is logging in". Session kind is explicit: wes's own
+	// technical session is WebServer; desktop modes default via runMode.
+	ibConnectRequest req;
+	req.m_computer       = computer;
+	req.m_appMode        = runMode;
+	req.m_kind           = (runMode == eWEB_ENTERPRISE_MODE)
+	                         ? ibSessionKind::WebServer
+	                         : SessionKindFromRunMode(runMode);
+	req.m_sessionFactory = std::move(factory);
+
+	auto result = Connect(req);
+	if (result.m_code != ibConnectResult::Ok)
+		return nullptr;
+	// Registry's m_own holds the shared_ptr; result.m_session is a raw
+	// observer. Lifecycle is driven by ibSession::Close() from the holder
+	// (mainApp, webSession).
+	return result.m_session;
+}
+
+ibSession* ibSessionRegistry::CreateSessionWithFactory(ibRunMode runMode,
+                                                       const wxString& computer,
+                                                       const wxString& presetGuid,
+                                                       const wxString& address,
+                                                       ibConnectRequest::SessionFactory factory)
+{
+	// Per-tab variant — registry is normally already running by the time
+	// per-tab logins arrive (wes process bring-up created its WebServer
+	// system session at startup). EnsureStartedForCreateSession is
+	// idempotent so calling it here is safe in either order.
+	EnsureStartedForCreateSession(runMode);
+
+	ibConnectRequest req;
+	req.m_computer       = computer;
+	req.m_appMode        = runMode;
+	req.m_kind           = ibSessionKind::WebClient;
+	req.m_address        = address;
+	req.m_presetGuid     = presetGuid;
+	req.m_sessionFactory = std::move(factory);
+
+	auto result = Connect(req);
+	if (result.m_code != ibConnectResult::Ok)
+		return nullptr;
+	return result.m_session;
 }
 
 // --- Thread lifecycle ----------------------------------------------------
@@ -282,7 +373,7 @@ ibConnectResult ibSessionRegistry::Connect(const ibConnectRequest& req,
 
 	const std::string idStr = identity.m_guid.str();
 
-	// Factory path — typed CreateSessionTyped<T> on appData hands us a
+	// Factory path — typed CreateSession<T> on appData hands us a
 	// callback that builds a derived session (ibGUISession / ibEnterpriseSession /
 	// ibWebClientSession …). Default path keeps the plain base class.
 	auto session = req.m_sessionFactory
@@ -676,6 +767,53 @@ void ibSessionRegistry::ProcessAdd(ibRegistryRequest& req)
 	if (!req.session) return;
 	ibSession& s = *req.session;
 
+	// Server (parent) auto-tracking — kind == WebServer registers as
+	// the process's server; subsequent non-server sessions get Server()
+	// pinned to it so keep-alive / topology queries see the tree without
+	// the caller threading the pointer through. Single-session apps
+	// (desktop GUI, daemon, codeRunner) never add a WebServer-kind
+	// session, so m_currentServer stays nullptr and Server() does too.
+	if (s.GetKind() == ibSessionKind::WebServer)
+		m_currentServer = &s;
+	else if (m_currentServer != nullptr)
+		s.SetServer(m_currentServer);
+
+	// Exclusive (monopoly) gate — if another session holds the IB in
+	// exclusive mode, park the request. The session stays in Created
+	// state; the producer's WaitForState in Connect blocks until either
+	// the holder releases (ProcessSetExclusive(off)) or the holder's
+	// Remove fires — both drain m_pendingExclusive and re-run ProcessAdd
+	// on the parked requests.
+	ibSession* holder = m_exclusiveSession.load(std::memory_order_acquire);
+	if (holder != nullptr && holder != &s) {
+		m_pendingExclusive.push_back(std::move(req));
+		return;
+	}
+
+	// Cross-process gate — peer process holds exclusive (visible in our
+	// snapshot). Reject with policy veto: peer holders aren't tied to
+	// our event loop, so parking would deadlock if the peer's release
+	// never reaches us (e.g. peer crashed, sweep hasn't fired yet).
+	// Cluster sweep + JobRefreshSnapshot will eventually clear the row;
+	// the producer's caller can retry.
+	{
+		std::shared_lock<std::shared_mutex> lk(m_snapshotMtx);
+		if (m_snapshot) {
+			const wxString ownId = wxString::FromUTF8(s.GetId().c_str());
+			const unsigned int n = m_snapshot->GetSessionCount();
+			for (unsigned int i = 0; i < n; ++i) {
+				if (m_snapshot->GetSession(i) == ownId) continue;
+				if (m_snapshot->IsExclusive(i)) {
+					wxString reason = wxString::Format(
+						_("Another session holds exclusive mode (user '%s')"),
+						m_snapshot->GetUserName(i));
+					s.Transition(ibSessionState::Rejected, reason);
+					return;
+				}
+			}
+		}
+	}
+
 	// Policy veto chain — first reject wins.
 	for (auto& p : m_policies) {
 		wxString reason;
@@ -731,31 +869,27 @@ void ibSessionRegistry::ProcessAttach(ibRegistryRequest& req)
 		return;
 	}
 
+	// Single auth entry — verifies creds and (when info.IsOk()) writes
+	// m_userInfo / m_sessionRawPassword onto the target session via
+	// InstallUser. Pin scope to the target so InstallUser routes to this
+	// session, not whatever the registry thread last touched.
 	ibApplicationDataUserInfo info;
-	const bool ok = appData->AuthenticateUser(req.user, req.password, info);
+	bool ok;
+	{
+		ibSessionScope scope(&s);
+		ok = appData->Login(req.user, req.password, info);
+	}
 	if (!ok) {
 		s.TransitionAuth(ibAuthState::AuthFailed, _("invalid user or password"));
 		return;
 	}
 
-	// Open-access pass-through: AuthenticateUser returned true with an
-	// empty info (no sys_user rows AND caller supplied no creds).
-	// Transition to Authenticated anyway — from the caller's perspective
-	// "auth is settled, you may proceed"; userInfo just stays empty,
-	// mirroring the legacy AuthenticationAndSetUser pass-through path.
+	// Open-access pass-through: Login returned true with an empty info
+	// (no sys_user rows AND caller supplied no creds). Transition to
+	// Authenticated anyway — userInfo just stays empty; nothing more to do.
 	if (!info.IsOk()) {
 		s.TransitionAuth(ibAuthState::Authenticated);
 		return;
-	}
-
-	// Install on this session directly. Legacy singleton mirroring is
-	// the registry's responsibility: we bind Current() to the target
-	// session for the InstallUser call so the dual-write reaches this
-	// session's m_userInfo (not the main-thread session that happens
-	// to be Current on the registry thread otherwise).
-	{
-		ibSessionScope scope(&s);
-		appData->InstallUser(info, req.password);
 	}
 
 	// Surface the authenticated user in the row-level identity too.
@@ -808,6 +942,20 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 	const bool wasAuthenticated = (s.Auth() == ibAuthState::Authenticated);
 	s.Transition(ibSessionState::Stopping);
 
+	// If this session was holding exclusive mode, release it before the
+	// row teardown so any parked Adds resume. Atomic store + drain.
+	if (m_exclusiveSession.load(std::memory_order_acquire) == &s) {
+		m_exclusiveSession.store(nullptr, std::memory_order_release);
+		s.m_exclusive.store(false, std::memory_order_release);
+		DrainPendingExclusive();
+	}
+
+	// If the leaving session was the registered server, drop the
+	// auto-tracking pointer. Subsequent CreateSession calls will leave
+	// Server() null until another WebServer-kind session is added.
+	if (m_currentServer == &s)
+		m_currentServer = nullptr;
+
 	// Fire Disconnect listeners while session is still alive (between
 	// Stopping and Gone) — they may need to query session identity.
 	// NotifyDisconnect itself gates the auth-counter decrement on
@@ -835,6 +983,151 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 	}
 
 	s.Transition(ibSessionState::Gone);
+}
+
+ibSession::ibExclusiveResult ibSessionRegistry::SetExclusive(ibSession* session, bool on)
+{
+	using R = ibSession::ibExclusiveResult;
+	if (session == nullptr) return R::Pending;
+	if (IsFatal())          return R::Pending;
+
+	// Reset the session's result slot before submitting so we can detect
+	// when the handler has filled it.
+	{
+		std::lock_guard<std::mutex> lk(session->m_mtx);
+		session->m_exclusiveResult = R::Pending;
+	}
+
+	ibRegistryRequest req;
+	req.kind        = ibRegistryRequestKind::SetExclusive;
+	req.session     = session->shared_from_this();
+	req.exclusiveOn = on;
+	Submit(std::move(req), ibPriority::Normal);
+
+	std::unique_lock<std::mutex> lk(session->m_mtx);
+	session->m_cv.wait_for(lk, std::chrono::seconds(5),
+		[&]{ return session->m_exclusiveResult != R::Pending; });
+	return session->m_exclusiveResult;
+}
+
+void ibSessionRegistry::ProcessSetExclusive(ibRegistryRequest& req)
+{
+	if (!req.session) return;
+	ibSession& s = *req.session;
+
+	auto setResult = [&](ibSession::ibExclusiveResult r) {
+		std::lock_guard<std::mutex> lk(s.m_mtx);
+		s.m_exclusiveResult = r;
+		s.m_cv.notify_all();
+	};
+
+	// DB-side flip helper — UPDATE sys_session.exclusive on the row this
+	// session owns. No-op for tests / embedders that don't own sys_session
+	// or whose schema predates the column. Best-effort; failure here
+	// doesn't roll back the in-process state since cluster sweep cleans
+	// up zombie rows anyway.
+	auto writeExclusiveColumn = [&](int value) {
+		if (!m_ownsSysSession || !m_writeConn || !s.Inserted()) return;
+		ibStatementGuard stmt(m_writeConn.get(),
+			m_writeConn->PrepareStatement(
+				wxT("UPDATE %s SET exclusive = ? WHERE session = ?;"),
+				session_table));
+		if (!stmt) return;
+		stmt->SetParamInt   (1, value);
+		stmt->SetParamString(2, wxString::FromUTF8(s.GetId().c_str()));
+		try { stmt->RunQuery(); } catch (...) { /* legacy schema — silent */ }
+	};
+
+	if (req.exclusiveOn) {
+		// Acquire path.
+		ibSession* holder = m_exclusiveSession.load(std::memory_order_acquire);
+		if (holder != nullptr) {
+			if (holder == &s) {
+				// Re-acquiring our own — idempotent success.
+				setResult(ibSession::ibExclusiveResult::Granted);
+				return;
+			}
+			setResult(ibSession::ibExclusiveResult::HeldByOther);
+			return;
+		}
+
+		// In-process sole-live check — every other Added session blocks
+		// us. Iterate m_own under shared lock; only the registry thread
+		// writes m_own so the snapshot is consistent for the duration of
+		// this call.
+		bool soleLive = true;
+		{
+			std::shared_lock<std::shared_mutex> lock(m_ownMutex);
+			for (const auto& kv : m_own) {
+				ibSession* other = kv.second.get();
+				if (other == nullptr || other == &s) continue;
+				if (other->State() == ibSessionState::Added) {
+					soleLive = false;
+					break;
+				}
+			}
+		}
+		if (!soleLive) {
+			setResult(ibSession::ibExclusiveResult::NotSole);
+			return;
+		}
+
+		// Cluster sole-live check + cross-process exclusive scan — peer
+		// processes' rows live in m_snapshot (refreshed every ~1s by
+		// JobRefreshSnapshot). Any peer row blocks acquire; our own row
+		// is the one we just verified above.
+		{
+			std::shared_lock<std::shared_mutex> lk(m_snapshotMtx);
+			if (m_snapshot) {
+				const wxString ownId = wxString::FromUTF8(s.GetId().c_str());
+				const unsigned int n = m_snapshot->GetSessionCount();
+				bool clusterSole = true;
+				bool peerExclusive = false;
+				for (unsigned int i = 0; i < n; ++i) {
+					if (m_snapshot->GetSession(i) == ownId) continue;
+					clusterSole = false;
+					if (m_snapshot->IsExclusive(i)) {
+						peerExclusive = true;
+						break;
+					}
+				}
+				if (peerExclusive) {
+					setResult(ibSession::ibExclusiveResult::HeldByOther);
+					return;
+				}
+				if (!clusterSole) {
+					setResult(ibSession::ibExclusiveResult::NotSole);
+					return;
+				}
+			}
+		}
+
+		m_exclusiveSession.store(&s, std::memory_order_release);
+		s.m_exclusive.store(true, std::memory_order_release);
+		writeExclusiveColumn(1);
+		setResult(ibSession::ibExclusiveResult::Granted);
+		return;
+	}
+
+	// Release path — only the holder can release. Releasing while not
+	// the holder is a silent success (idempotent).
+	if (m_exclusiveSession.load(std::memory_order_acquire) == &s) {
+		m_exclusiveSession.store(nullptr, std::memory_order_release);
+		s.m_exclusive.store(false, std::memory_order_release);
+		writeExclusiveColumn(0);
+		DrainPendingExclusive();
+	}
+	setResult(ibSession::ibExclusiveResult::Granted);
+}
+
+void ibSessionRegistry::DrainPendingExclusive()
+{
+	// Move out so a re-park during the loop body (shouldn't happen — the
+	// holder is gone — but defensive) doesn't iterate a moving deque.
+	std::deque<ibRegistryRequest> pending;
+	pending.swap(m_pendingExclusive);
+	for (auto& r : pending)
+		ProcessAdd(r);
 }
 
 void ibSessionRegistry::ProcessSetActivity(ibRegistryRequest& req)
@@ -1126,6 +1419,25 @@ void ibSessionRegistry::JobRefreshSnapshot()
 				fresh->SetKindsFromMap(kindBySession);
 			}
 		} catch (...) { /* legacy schema — fine, kinds stay 0 */ }
+
+		// Third pass: exclusive flag — same legacy-tolerant pattern as
+		// kind. Pre-migration schemas keep m_exclusive=false everywhere
+		// (default-constructed) which means cluster gates degrade
+		// gracefully to "no monopoly anywhere".
+		try {
+			ibResultSetGuard rsx(m_writeConn.get(),
+				m_writeConn->RunQueryWithResults(
+					wxT("SELECT session, exclusive FROM %s;"),
+					session_table));
+			if (rsx) {
+				std::unordered_map<std::string, bool> exclusiveBySession;
+				while (rsx->Next()) {
+					exclusiveBySession[std::string(rsx->GetResultString("session").ToUTF8().data())]
+						= rsx->GetResultInt("exclusive") != 0;
+				}
+				fresh->SetExclusiveFromMap(exclusiveBySession);
+			}
+		} catch (...) { /* legacy schema — fine, exclusive stays false */ }
 	}
 	catch (const ibBackendException& err) {
 		SESSION_LOG("[session REFRESH] SELECT failed: "
@@ -1208,11 +1520,12 @@ void ibSessionRegistry::ThreadBody() noexcept
 			auto batch = DrainAll();
 			for (auto& req : batch) {
 				switch (req.kind) {
-					case ibRegistryRequestKind::Add:         ProcessAdd(req);         break;
-					case ibRegistryRequestKind::Attach:      ProcessAttach(req);      break;
-					case ibRegistryRequestKind::Detach:      ProcessDetach(req);      break;
-					case ibRegistryRequestKind::Remove:      ProcessRemove(req);      break;
-					case ibRegistryRequestKind::SetActivity: ProcessSetActivity(req); break;
+					case ibRegistryRequestKind::Add:          ProcessAdd(req);          break;
+					case ibRegistryRequestKind::Attach:       ProcessAttach(req);       break;
+					case ibRegistryRequestKind::Detach:       ProcessDetach(req);       break;
+					case ibRegistryRequestKind::Remove:       ProcessRemove(req);       break;
+					case ibRegistryRequestKind::SetActivity:  ProcessSetActivity(req);  break;
+					case ibRegistryRequestKind::SetExclusive: ProcessSetExclusive(req); break;
 				}
 			}
 

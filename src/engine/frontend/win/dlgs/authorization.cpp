@@ -66,9 +66,12 @@ ibDialogAuthentication::ibDialogAuthentication(wxWindow* parent, wxWindowID id, 
 
 	// Connect Events
 	m_buttonOK->Bind(wxEVT_COMMAND_BUTTON_CLICKED, [&](wxCommandEvent& event) {
-		bool success = appData->AuthenticationAndSetUser(m_comboBoxLogin->GetValue(), m_textCtrlPassword->GetValue());
-		if (success) event.Skip();
-		else wxMessageBox(_("Wrong user or password entered!"));
+		ibApplicationDataUserInfo info;
+		if (!appData->Login(m_comboBoxLogin->GetValue(), m_textCtrlPassword->GetValue(), info)) {
+			wxMessageBox(_("Wrong user or password entered!"));
+			return;
+		}
+		event.Skip();
 		}
 	);
 }

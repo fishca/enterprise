@@ -251,7 +251,7 @@ int ibAppEnterprise::OnRun()
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
 	// Flow (enterprise thick client):
-	//   1. CreateSessionTyped<ibEnterpriseSession> — session is registered
+	//   1. CreateSession<ibEnterpriseSession> — session is registered
 	//      in the registry; its OnCreateSession hook instantiates the
 	//      frame + wires the back-link on the main thread.
 	//   2. Authenticate — attaches user creds to the ticket; interactive
@@ -269,7 +269,7 @@ int ibAppEnterprise::OnRun()
 	// listeners (wired in appData ctor) handle BindSessionToThread,
 	// LoadMetadata, CreateRoot + CompileRoot + InitRuntimeForSession
 	// through OnFirstConnect / OnAuthenticated.
-	ibSession* session = appData->CreateSessionTyped<ibEnterpriseSession>();
+	ibSession* session = appData->CreateSession<ibEnterpriseSession>();
 	if (session == nullptr || !session->Open(m_strIBUser, m_strIBPassword)) {
 		if (session != nullptr) session->Close();
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();

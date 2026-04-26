@@ -3,31 +3,36 @@
 This doc reviews the mechanism that keeps `backend.dll` UI-agnostic
 while letting `frontend.dll` (desktop wx) or `wfrontend.dll` (web,
 `OES_USE_WEB`) provide the concrete UI. The linchpin is
-`ibBackendDocMDIFrame` — an abstract interface in backend, implemented
-once per frontend, reachable everywhere via a `backend_mainFrame`
-singleton pointer. It works, but it carries well-known design smells
-worth documenting before the next scale step.
+`ibBackendDocFrame` — an abstract interface in backend, implemented
+once per frontend, reached through the owning `ibSession`. It works,
+but the interface still carries some well-known design smells worth
+documenting before the next scale step.
 
-> **Naming note:** the "MDI" in `ibBackendDocMDIFrame` /
-> `ibFrontendDocMDIFrame` / `GetDocMDIFrame` is a relic of the old
-> wxWidgets MDI API. New code MUST NOT introduce the "MDI" suffix
-> anywhere — use `Shell`, `HostFrame`, `DocFrame`, `DocParentFrame`,
-> or plain `MainFrame`. Existing symbols are tracked for rename in
-> "Suggested direction" below. References to the current symbol names
-> in this review stay verbatim because the code still uses them.
+> **Naming note:** the historical interface was named
+> `ibBackendDocMDIFrame` (and the singleton accessor `GetDocMDIFrame`),
+> a relic of the old wxWidgets MDI API. The backend-side rename to
+> `ibBackendDocFrame` has landed; the frontend desktop class is still
+> named `ibFrontendDocMDIFrame` (rename pending). New code MUST NOT
+> introduce the "MDI" suffix in new symbols — prefer `Shell`,
+> `HostFrame`, `DocFrame`, `DocParentFrame`, or plain `MainFrame`.
 
 ## How it works today
 
 **Interfaces in `backend/backend_mainFrame.h`:**
 
-- `ibBackendDocMDIFrame` — abstract. Methods cover four unrelated
+- `ibBackendDocFrame` — abstract. Methods cover four unrelated
   concerns:
   - **Form factory**: `CreateNewForm`, `CreateFormUniqueKey`,
     `FindFormByUniqueKey*`, `UpdateFormUniqueKey`.
   - **Frame/window service**: `RaiseFrame`, `ActiveWindow`,
-    `ActivateForm`, `ShowForm` side effects.
-  - **Authentication**: `AuthenticationUser`.
-  - **Misc metadata accessors**: `FindMetadataByPath`.
+    `RefreshFrame`, `SetTitle`, `SetStatusText`, `ShowModalMessage`.
+  - **Spreadsheet output**: `ShowSpreadsheetDocument`,
+    `PrintSpreadsheetDocument`.
+  - **Misc metadata accessor**: `FindMetadataByPath`.
+
+  (The earlier `AuthenticationUser` method moved to the session layer —
+  `ibSession::OnShowAuthenticate`, overridden by `ibGUISession` for the
+  desktop login dialog.)
 
 - `ibBackendValueForm` — the minimum form API for backend (LoadForm /
   SaveForm / BuildForm / ShowForm / Notify* / access flags). Frontend
@@ -41,20 +46,39 @@ worth documenting before the next scale step.
 
 **Wiring:**
 
-- `backend_mainFrame` is a macro: `((ibBackendDocMDIFrame*)ibBackendDocMDIFrame::GetDocMDIFrame())`.
-- On **desktop**, `GetDocMDIFrame()` returns a process-wide singleton
-  pinned by `ibFrontendDocMDIFrame`'s constructor. One process = one
-  user = one frame = fine.
-- On **web**, `GetDocMDIFrame()` returns a `thread_local` slot pinned
-  by `ibWebApplication::WorkerLoop` when its worker thread starts.
-  One worker per session → thread-local is "session-local" by
-  construction, so N concurrent sessions in one process don't clobber
-  each other.
-- On **headless** (daemon.exe, codeRunner.exe), the singleton is
-  `nullptr`. Every static accessor in `backend_form.cpp` starts with
-  `if (backend_mainFrame != nullptr) ... else Error(...)` to surface a
-  clean `ibBackendCoreException::Error(_("Context functions are not available!"))`
-  instead of a segfault.
+- The frame is no longer a process-level or thread-local singleton on
+  the backend side. `ms_mainFrame` / `t_mainFrame` / `GetDocMDIFrame` /
+  `InstallOnThread` and the `backend_mainFrame` macro are all gone.
+  The frame belongs to the `ibSession` that created it; backend code
+  reaches it through one of:
+  - `ibSession::Current()->GetFrame()` (or the convenience
+    `ibSession::CurrentFrame()`) — for code that already runs under a
+    bound session, which is the common runtime path;
+  - `appData->GetMainSession()->GetFrame()` — for process-lifecycle
+    callers (metadata-config hooks, property dtors);
+  - `ibWebSession::Session()->GetFrame()` — for per-tab web handlers;
+  - explicit walking of an object descriptor's parent chain to its
+    owning session (`object->GetSession()->GetFrame()`).
+- On **desktop**, `ibSession::Current()` resolves through `AccessMode::Single`
+  (one session per process for its lifetime) — every thread sees the
+  same lone session and therefore the same frame.
+- On **web** (wenterprise-server), `AccessMode::Shared` does per-thread
+  lookup. Per-tab worker threads are bound to their `ibWebClientSession`
+  via `ibSessionScope` / `ibSessionThreadBinding`; the wes process's
+  technical `WebServer` session is registered as the fallback for
+  unbound threads (registry consumer, signal handlers).
+- On **headless** (daemon.exe, codeRunner.exe), the session has no GUI
+  frame: `GetFrame()` returns null. The accessors in `backend_form.cpp`
+  test `auto* frame = ibSession::CurrentFrame(); if (frame != nullptr)
+  ...` and otherwise raise
+  `ibBackendCoreException::Error(_("Context functions are not available!"))`.
+
+The frontend desktop side does keep its own GUI-local singleton:
+`ibFrontendDocMDIFrame::GetFrame()` (via the `mainFrame` macro in
+`frontend/mainFrame/mainFrame.h`). That singleton is internal to the
+GUI layer and is NOT what backend code reaches into — it's a wx-side
+implementation detail of where the desktop frame lives. The web side
+has no equivalent.
 
 ## What works
 
@@ -68,52 +92,49 @@ worth documenting before the next scale step.
 - **Polymorphism, not ifdefs.** Backend call sites stay identical
   for desktop and web. No compile-time branching at the call site; the
   virtual call dispatches at runtime.
-- **Per-thread isolation on web** works well enough to run multiple
-  sessions in a single `wenterprise-server.exe` process without the
-  singleton clash we would have seen with process-wide state.
+- **Frame ownership on the session.** Removing the
+  `backend_mainFrame` singleton closed the previous "ambient state"
+  hole — the session that created the frame is the explicit owner;
+  every backend caller reaches the frame through a session pointer
+  that's already in scope. Multiple concurrent web sessions in one
+  process each see their own frame without collision.
 
 ## What smells
 
-1. **`ibBackendDocMDIFrame` is a god-interface.** Form factory, frame
-   service, authentication UI, metadata lookup — all glued onto one
-   vtable. Cohesion is low; a future component that needs only to
-   raise a window ends up depending on form-creation too.
+1. **`ibBackendDocFrame` is still a chunky interface.** Form factory,
+   frame service, spreadsheet output, metadata lookup — all glued onto
+   one vtable. Cohesion is moderate at best; a future component that
+   needs only to raise a window ends up depending on form-creation
+   too.
 
-2. **Global singleton (even if thread-local).** Classic test-hostile
-   pattern. Unit tests that touch any form code have to stand up a
-   complete mainFrame or mock one. There's no clean way to inject a
-   fake — everything reaches into the singleton. The `thread_local`
-   trick on web sidesteps concurrency but keeps the ambient-state
-   problem.
+2. **Headless null-checks scattered.** Every `ibBackendValueForm::Find*`
+   / `CreateNewForm` accessor in `backend/backend_form.cpp` hand-checks
+   `auto* frame = ibSession::CurrentFrame(); if (frame != nullptr)
+   ...`. A new method that forgets the check would crash headless
+   silently. A null-object pattern — an `ibNoUIFrame` that throws
+   `ibBackendCoreException::Error` uniformly from every method —
+   would centralise this.
 
-3. **15+ null-check call sites.** Every `ibBackendValueForm::Find*` /
-   `CreateNewForm` accessor in `backend/backend_form.cpp` hand-checks
-   `backend_mainFrame != nullptr`. A new method that forgets the
-   check will crash headless silently. A null-object pattern — a
-   `ibNoUIFrame` that throws `ibBackendCoreException::Error`
-   uniformly from every method — would centralise this.
+3. **`AccessMode::Shared` per-thread binding is implicit.** Every
+   web worker thread that calls into backend must be bound to its
+   session via `ibSessionScope` (or `ibSessionThreadBinding` for
+   long-lived bindings) before the first script-touching call. Miss
+   the binding and `ibSession::Current()` falls back to the
+   `WebServer` system session — meaning the call lands in the wrong
+   session's runtime, with subtle data-bleed risk. The HTTP-handler
+   discipline is documented in memory note
+   `reference_sessionscope_http_handlers`, but it isn't enforced by
+   the type system.
 
-4. **Thread-local pinning is fragile.** Every thread that ends up
-   calling backend code must `InstallOnThread` before the first call.
-   Miss it and the thread-local slot is `nullptr`, so the call
-   behaves as headless even though it's inside a live session. The
-   debugger's `ibDebugServerScope` RAII pattern (see
-   `debugServer.h:226`) is documented and present, but no one calls
-   it — the pin happens via a one-shot `SetCurrent` in `WorkerLoop`
-   instead. That's fine as long as every script path goes through
-   the worker; the day one doesn't, we get hard-to-diagnose
-   "breakpoints silently skipped" bugs. We saw a variant of this in
-   the per-session debug listener test (see
-   `docs/web/open-issues.md`).
+4. **MDI naming partially leaked.** Backend rename to
+   `ibBackendDocFrame` is done; frontend desktop class
+   `ibFrontendDocMDIFrame` and its `mainFrame` macro still carry the
+   "MDI" suffix. Web (`ibWebFrame`) uses tabs with no nesting; some
+   of the MDI semantics (z-order, active-child tracking) map awkwardly
+   between the two. Renaming the desktop class to `ibFrontendShell`
+   or similar would close the asymmetry.
 
-5. **MDI naming implies structure that doesn't hold on web.** MDI
-   means Multiple-Document-Interface — child windows inside a parent
-   window. Web uses tabs with no nesting; some of the MDI semantics
-   (z-order, active-child tracking) map awkwardly. Renaming the
-   interface to `ibBackendShell` or `ibBackendHostFrame` would better
-   describe what it actually is.
-
-6. **Backend knows frontend concepts via the interface.** `ShowForm`
+5. **Backend knows frontend concepts via the interface.** `ShowForm`
    takes `ibBackendMetaDocument*` as the parent — that document is
    really a `ibFormVisualDocument` (a frontend wxDocument subclass).
    The abstract interface has to carry enough types to let every
@@ -121,55 +142,47 @@ worth documenting before the next scale step.
    frontend needs a different document representation, the interface
    has to grow again.
 
-7. **Auth UI is a side door.** `AuthenticationUser` is desktop-only
-   by silent omission. Web leaves it at the base `return false`, so
-   `StartSession` on web fails hard instead of prompting. We could
-   wire a web analogue (see `docs/web/authentication.md`), but the
-   fact that it hasn't been needed so far also hints the method is
-   in the wrong interface — it's not a frame responsibility, it's an
-   auth responsibility that happens to need a UI affordance.
-
 ## Suggested direction (not urgent)
 
 The split is worth keeping — it's earning its cost. The specific
 refactors that would pay off later:
 
-- **Carve `ibBackendDocMDIFrame` into cohesive services.**
+- **Carve `ibBackendDocFrame` into cohesive services.**
   - `ibBackendFormFactory` (CreateNewForm / Find* / UpdateFormUniqueKey).
   - `ibBackendFrameService` (RaiseFrame / ActiveWindow /
-    ActivateForm).
-  - `ibBackendInteractiveAuth` (AuthenticationUser — optional on
-    headless and web).
+    RefreshFrame / SetTitle / SetStatusText).
+  - `ibBackendSpreadsheetOutput` (ShowSpreadsheetDocument /
+    PrintSpreadsheetDocument).
 
   Each service is independently null-object'able, independently
   testable, and backend call sites only depend on the one they need.
 
-- **Replace the global singleton with an explicit session
-  context.** Prerequisite for the per-session state refactor
-  (`project_web_session_bug.md`). Instead of `backend_mainFrame`, an
-  `ibSession*` lives on the call stack (or in a narrow
-  thread-local just at the entry points, not dereferenced from the
-  depths). Concrete impl passes it through the call chain. Web
-  naturally has one context per request; desktop has one forever.
+- **Type-safe session binding.** Replace the implicit
+  `ibSessionScope`-on-every-handler discipline with a
+  `SessionBoundCallable<F>` wrapper that takes the session at
+  construction and refuses to fire without one bound. The web
+  request dispatcher's natural place to enforce this is the
+  per-request entry point.
 
-- **Null-object pattern for headless.** No more `if (x != nullptr)`
+- **Null-object pattern for headless.** No more `if (frame != nullptr)`
   scattered through `backend_form.cpp` — either the service is
   bound to a real implementation or to a throw-only fallback. One
   place, one policy.
 
-- **Rename.** `ibBackendDocMDIFrame` → `ibBackendShell` (or similar)
-  once the service split settles. MDI is a desktop-isms leak.
+- **Rename frontend side.** `ibFrontendDocMDIFrame` → `ibFrontendShell`
+  (or similar). MDI is a desktop-ism leak.
 
 None of this blocks current work. It starts paying off when:
 
 - A third frontend needs to ship (native mobile UI? terminal UI for
-  `codeRunner` interactive mode?) — the god-interface will make
+  `codeRunner` interactive mode?) — the chunky interface will make
   each new impl harder than necessary.
-- PostgreSQL-scale production needs true per-session isolation with
-  many concurrent users on one process — thread-local state will be
-  the bottleneck.
+- The compute-server tiering plan progresses (see
+  [`compute-server-tiering.md`](compute-server-tiering.md)) — a
+  shared worker pool dispatching across many sessions means the
+  per-handler binding discipline becomes a hot-path concern, not just
+  a correctness one.
 
 Until then the current architecture is adequate: it works, it's
 understood, and the smells are documented so nobody trips over them
-twice. The `project_web_session_bug.md` plan is the obvious first
-move when the scaling conversation gets real.
+twice.

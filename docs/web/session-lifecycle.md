@@ -8,49 +8,52 @@
 > in progress — see `docs/web/open-issues.md` → "Session registry
 > refactor" and memory note `project_session_registry_refactor.md`.
 
-Two-phase model since the compile/runtime split (2026-04-19):
+Two-stage model since the compile/runtime split (2026-04-19):
 
-1. **Server bootstrap** (`wfrontendInit*` → `appData->Connect` → metadata
-   load) compiles all modules once, into the process-wide
-   `ibValueModuleManagerConfiguration` that lives on `activeMetaData`.
-   No `ibProcUnit` is created at this stage.
-2. **Per-session runtime** (`ibWebSession::Login` → `InitRuntimeForSession`
-   → `ibWebApplication::OnInit`) allocates the session's `ibProcUnit`
-   instances against the shared bytecode and fires the `OnStart` script
-   on them.
+1. **Server bootstrap** (`wfrontendInit*` → metadata load) compiles
+   all module bytecode into descriptor-owned `ibByteCode` blobs on
+   `ibModuleDataObject::m_byteCode` (shared across sessions). No
+   `ibProcUnit` is created at this stage.
+2. **Per-session runtime** (`ibWebSession::Login` →
+   `registry.Connect` → `ticket.Attach` → `NotifyAuthenticated` →
+   `mm->InitRuntimeForSession(s)` → `ibWebApplication::OnInit`)
+   allocates the session's `ibProcUnit` instances against the shared
+   bytecode and fires the `OnStart` script on them.
 
-`ibWebApplication` is the per-session "app" analogue of `wxTheApp`. It
-does **not** own the module manager — that's shared. It owns the
-frame, the worker thread, and a borrowed pointer to the session's
-`ibSession`.
+Each session owns its own `ibValueModuleManagerConfiguration` via
+`ibSession::m_root` (`ibValuePtr`-managed). `ibWebApplication` is the
+per-session "app" analogue of `wxTheApp`. It owns the frame, the
+worker thread, and a borrowed pointer to the session's `ibSession`.
 
-## Session run mode
+## Session kind
 
-Every `ibSession` carries its own `ibRunMode m_runMode` set at
-creation time. Often equals `ibApplicationData::GetAppMode()`, but
-diverges inside a web process: the wenterprise-server's startup
-session is `eWEB_ENTERPRISE_MODE` (technical bootstrap, no runtime),
-every `/login` mints a per-cookie session as `eENTERPRISE_MODE`
-(thick-client-like user runtime living inside the web process).
+Every `ibSession` carries an `ibSessionKind m_kind` (sessions-layer
+enum, 1:1 with `ibRunMode` for the unambiguous cases) set at
+creation time. The web run mode is ambiguous at this layer and
+splits into two distinct session kinds inside one wes process:
+`WebServer` (the technical bootstrap session, no script runtime) and
+`WebClient` (per-tab / per-API-caller, runs scripts).
+`SessionKindFromRunMode` returns `WebClient` for
+`eWEB_ENTERPRISE_MODE` (the common per-tab case); the wes process's
+own `WebServer` row is created with the kind passed explicitly.
 
-`InitRuntimeForSession` reads `session->GetRunMode()` to decide
-whether to spin up `ibProcUnit`s:
+`InitRuntimeForSession` filters by kind:
 
 ```cpp
-const ibRunMode mode = session->GetRunMode();
+const ibSessionKind kind = session->GetKind();
 const bool wantsRuntime =
-    (mode == eENTERPRISE_MODE) || (mode == eSERVICE_MODE);
-if (!wantsRuntime) return true;  // designer, launcher, web technical
+       kind == ibSessionKind::Enterprise
+    || kind == ibSessionKind::WebClient
+    || kind == ibSessionKind::Service;
+if (!wantsRuntime) return true;  // Launcher, Designer, WebServer
 ```
 
-**Don't try to derive session run mode from state** (`userInfo`-
-populated, or similar). An open-access configuration (empty `sys_user`
-table) leaves `userInfo` empty even after a successful `/login` —
-`AuthenticationAndSetUser` early-returns `true` without dual-writing
-to the session. A "empty userInfo → skip runtime" heuristic would
-falsely skip that legitimate user session. The previous `ibSessionRole`
-enum was collapsed into `ibRunMode` (2026-04-20); attempting to drop
-the per-session field entirely was reverted for this reason.
+**Don't try to derive kind from state** (`userInfo`-populated, or
+similar). An open-access configuration (empty `sys_user` table)
+leaves `userInfo` empty even after a successful `/login`. A "empty
+userInfo → skip runtime" heuristic would falsely skip that
+legitimate user session. The kind is set authoritatively at
+session-creation time.
 
 ## Login flow
 
@@ -58,64 +61,71 @@ the per-session field entirely was reverted for this reason.
 POST /w/<prefix>/login
     │
     └── ibWebSession::Login(user, password)
-        ├── appData->AuthenticationAndSetUser(user, pw)
-        │     OES-level auth; mirrors user info both onto appData
-        │     (legacy singleton) and onto Current() session
-        │     (ibSession::m_userInfo / m_sessionGuid /
-        │      m_sessionRawPassword — dual-write during migration).
+        ├── ibConnectRequest req { computer, eWEB_ENTERPRISE_MODE,
+        │                          address = wfrontendServerAddress(),
+        │                          presetGuid = tabSid (from cookie/header) }
         │
-        ├── ibSessionRegistry::Create(sessionId, ibSessionRole::User)
-        │     Returns a borrowed ibSession*. Lives in the
-        │     manager's map until Destroy; HTTP thread and the
-        │     session's worker thread install it via SessionScope.
+        ├── registry.Connect(req)
+        │     - Submit(Add, Normal), waits state Added
+        │     - Add handler INSERTs anonymous sys_session row under
+        │       row-lock, kind = ibSessionKind::WebClient
+        │     - returns an ibSessionTicket (RAII; dtor submits Remove@Urgent)
         │
-        ├── { SessionScope initScope(ctx);
-        │     │
-        │     ├── mm->InitRuntimeForSession(ctx)
-        │     │     Creates shared_ptr<ibProcUnit> for the main module
-        │     │     plus one per non-global common module, wires up
-        │     │     SetParent / extern tables, Executes bytecode to
-        │     │     populate globals, then AttachProcUnit(key, pu) on
-        │     │     the session — keyed by the ibModuleDataObject
-        │     │     descriptor. Session-only; System/Designer sessions
-        │     │     skip this.
+        ├── ticket.Attach(user, pwd)
+        │     - Submit(Attach, Normal)
+        │     - ProcessAttach calls appData->AuthenticateUser → InstallUser
+        │       (writes user identity onto session->m_userInfo +
+        │       m_sessionRawPassword)
+        │     - registry.NotifyAuthenticated(s) runs the 3 phases:
+        │         1. OnFirstConnect (one-shot per process)
+        │         2. session->EnsureRoot() — CreateRoot(activeMetaData)
+        │         3. OnAuthenticated → RunDatabase + session->CompileRoot()
+        │                            + mm->InitRuntimeForSession(s)
+        │       (creates shared_ptr<ibProcUnit> for main + each non-global
+        │        common module on the descriptors, executes bytecode top-
+        │        level to populate globals)
+        │
+        ├── { ibSessionScope initScope(ticket->Session());
         │     │
         │     └── app->OnInit()                    ← ORDER MATTERS
         │           │                                (see note below)
         │           ├── new ibWebFrame(this)       ← frame first; scripts
         │           │                                need it during OnStart
+        │           ├── session->SetFrame(frame)   ← publish to ibSession
         │           └── StartMainModuleSafe(mgr)
         │                 │ SEH-wrapped call into:
         │                 └── ibValueModuleManagerConfiguration::StartMainModule
-        │                     ├── BeforeStart()  → GetProcUnit() →
-        │                     │     CallAsProc("beforeStart", bCancel)
+        │                     ├── BeforeStart()  → CallAsProc("beforeStart", bCancel)
         │                     │     (script veto; false ⇒ abort login)
-        │                     └── OnStart()      → GetProcUnit() →
-        │                           CallAsProc("onStart")
+        │                     └── OnStart()      → CallAsProc("onStart")
         │                           (script opens default forms via
         │                            OpenForm(...))
         │   }
         │
-        └── m_app = move(app)
+        └── m_ticket = move(ticket); m_app = move(app)
 ```
 
-`GetProcUnit()` on the shared moduleManager delegates through
-`ibSession::Current()->GetProcUnitFor(this)`; Current() is set by
-`SessionScope` on the running thread. Fallback is the descriptor's own
-`m_procUnit` (legacy / designer path). See
-`src/engine/backend/moduleInfo.cpp`.
+Script dispatch through `ibModuleDataObject::GetProcUnit()` returns
+the descriptor's `m_procUnit` slot. The slot is rebuilt for the
+active session by `InitRuntimeForSession` and serialised by
+`m_runtimeMutex` — so concurrent web sessions calling into the same
+descriptor coordinate through the runtime mutex (current scaling
+ceiling; per-descriptor per-session map is the target — see
+[`../runtime-facade.md`](../runtime-facade.md), step 1).
 
 ### InitRuntimeForSession must run before OnInit
 
 `app->OnInit()` calls `StartMainModule` which fires `BeforeStart` /
-`OnStart`. Those resolve the runtime via `GetProcUnit()` delegate; the
-delegate returns the session's attached ProcUnit. If the attach happens
-**after** OnInit, the map is still empty at OnStart time, the delegate
-falls back to the now-cleared shared `m_procUnit`, returns `nullptr`,
-and the script (including every `OpenForm` it makes) is silently
-skipped — symptom: `tabCount=0` after a successful login.
+`OnStart`. Those resolve the runtime via `GetProcUnit()`; the
+descriptor must have its session-bound `m_procUnit` set by the time
+`OnStart` runs. If `InitRuntimeForSession` runs **after** OnInit, the
+slot is empty at OnStart time, dispatch returns nullptr, and the
+script (including every `OpenForm` it makes) is silently skipped —
+symptom: `tabCount=0` after a successful login.
 
-Order is hard-coded in `webSession.cpp::Login`. Don't swap it.
+Order is enforced by the registry — `NotifyAuthenticated` runs
+`InitRuntimeForSession` in its OnAuthenticated phase, before
+`Login()` returns and before `app->OnInit()` is called.
 
 ## Teardown flow
 
@@ -123,11 +133,6 @@ Destruction mirrors Login in reverse:
 
 ```
 ibWebSession::OnExit
-    ├── { SessionScope exitScope(ctx);
-    │     └── mm->ExitRuntimeForSession(ctx)
-    │           DetachProcUnit per descriptor; shared_ptr refcount
-    │           drops; ibProcUnit dtor runs.
-    │   }
     ├── app->OnExit()
     │     ├── RunOnWorker([]{ DeleteAllViews }).get()  ← close tabs on
     │     │                                              worker thread;
@@ -138,15 +143,24 @@ ibWebSession::OnExit
     │     │                                              thread-local state
     │     │                                              is valid
     │     ├── StopWorker()
-    │     ├── ExitMainModuleSafe(sharedMgr)
+    │     ├── ExitMainModuleSafe(session->GetModuleManager())
     │     │     BeforeExit() → CallAsProc("beforeExit", bCancel)
     │     │     OnExit()     → CallAsProc("onExit")
+    │     ├── { ibSessionScope exitScope(session);
+    │     │     └── mm->ExitRuntimeForSession(session)
+    │     │           Releases this session's ProcUnit on every touched
+    │     │           descriptor (under m_runtimeMutex). Bytecode stays
+    │     │           on the descriptor for the next session.
+    │     │   }
     │     └── delete m_frame
-    └── ibSessionRegistry::Destroy(sessionId)
+    └── ticket.reset() → Submit(Remove, Urgent)
+            └── ProcessRemove DELETEs sys_session row, releases row-lock
 ```
 
-Shared `ibValueModuleManagerConfiguration` is **not** destroyed at
-session exit — it lives for the process lifetime on metadata.
+Per-session `ibValueModuleManagerConfiguration` (`session->m_root`)
+drops with the session — it's owned by the session, not metadata.
+Compile state on descriptors lives for the process lifetime
+regardless.
 
 ## SEH wrapper — why
 
@@ -181,23 +195,32 @@ timers via `PostWork(fn)` (fire-and-forget). `ibProcUnit` is
 thread-affine to the worker — serialising through one thread removes
 any per-access mutex.
 
-The worker installs `SessionScope(m_sessionContext)` and
-`ibDebuggerServer::SetCurrent(m_debugServer)` at the top of
-`WorkerLoop` so breakpoints and `GetProcUnit()` lookups resolve to
-this session's state rather than the process-level fallback.
+The worker installs `ibSessionScope(m_sessionContext)` at the top of
+`WorkerLoop` so `ibSession::Current()` returns this tab's session
+(under `AccessMode::Shared`) and breakpoint / runtime lookups
+resolve to its state rather than the process-level `WebServer`
+fallback.
 
 ## `ibWebApplication` fields today
 
 - `m_frame` — raw `ibWebFrame*`. Owned; `new` in OnInit, `delete` in
-  OnExit. Not refcounted.
+  OnExit. Not refcounted. Published to the session via
+  `ibSession::SetFrame` so backend code can reach it through
+  `ibSession::CurrentFrame()`.
 - `m_sessionContext` — borrowed `ibSession*`. Set by the owning
-  `ibWebSession` right after construction; ibSessionRegistry owns the
-  session's lifetime.
-- `m_debugServer` — per-session `ibDebuggerServer` for breakpoints.
+  `ibWebSession` right after construction; the registry owns the
+  session's lifetime through the ticket.
 - Worker-thread state (`m_worker`, `m_workerMtx`, `m_workerCv`,
   `m_workerQueue`, `m_workerStop`).
 - Live-update counter (`m_seq`, `m_seqMtx`, `m_seqCv`) for SSE.
 
+Per-session debug state moved to `ibSession::ibDebugSession` (CV /
+mutex / runContext / watch expressions) so concurrent web sessions
+each enter their own debug loop. `ibDebuggerServer` stays
+process-level — it dispatches commands by `sessionGuid` to the
+matching session's debug state.
+
 The former `ibValuePtr<ibValueModuleManagerConfiguration> m_moduleManager`
-field is gone — `GetModuleManager()` now returns the shared instance
-via `static_cast<ibValueModuleManagerConfiguration*>(activeMetaData->GetModuleManager())`.
+field is gone — `GetModuleManager()` returns
+`session->GetModuleManager()` (each session has its own root mm
+under `ibSession::m_root`).

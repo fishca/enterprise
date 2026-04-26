@@ -70,7 +70,7 @@ The backend is the core engine. It is self-contained — no GUI dependencies. Ke
 
 - **`ibApplicationData`** (`src/engine/backend/appData.h`) — master runtime object; holds database connection pool, run mode, and application metadata. Accessed via the `appData` macro. No longer holds per-session state after the session/runtime split (user info, ProcUnits, frame all moved to `ibSession`).
 - **`ibMetaDataConfiguration`** (`src/engine/backend/metadataConfiguration.h`) — loads, saves, and manages the metadata tree (all business objects). Accessed via `activeMetaData`. Stores compile cache (compiled bytecode) per module descriptor; runtime instances live in sessions.
-- **`ibSession` / `ibSessionRegistry`** (`src/engine/backend/session/`) — per-session state and process-wide session manager. Every script-executing thread runs under a `SessionScope` pinning one `ibSession*` to thread-local. See [Sessions and Runtime Ownership](#sessions-and-runtime-ownership).
+- **`ibSession` / `ibSessionRegistry`** (`src/engine/backend/session/`) — per-session state and process-wide session manager. The session is reachable via `ibSession::Current()`, which dispatches by `AccessMode` — `Single` (one session per process: desktop, daemon, codeRunner) returns the lone session regardless of thread; `Shared` (wenterprise-server) does per-thread lookup with a process-wide fallback. `ibSessionScope` and `ibSessionThreadBinding` are the RAII helpers that bind a session to the calling thread. See [Sessions and Runtime Ownership](#sessions-and-runtime-ownership).
 - **`ibDebuggerServer`** (`src/engine/backend/debugger/debugServer.h`) — TCP server that accepts designer connections and relays debugger events.
 
 ### Frontend Layer (`frontend.dll`, `wfrontend.dll`)
@@ -83,7 +83,7 @@ Two sibling DLLs share the same form/view/control code paths through `OES_USE_WE
 Shared frontend objects:
 - **`ibValueForm`** — the runtime representation of an open form; holds the control tree and responds to user events. Same class on both builds.
 - **`ibVisualHost` / `ibVisualHostClient`** — render and input routing surface. Desktop = wxWindow; web = `ibWebWindow` tree serialised to JSON.
-- **`ibFrontendDocParentFrame` / `ibFrontendDocChildFrame`** — document-view framework wrappers (wxWidgets on desktop, `ibWebFrame` / `ibWebDocChildFrame` on web). Template-mixin rewrite in progress to follow `wxDocParentFrameAny` pattern.
+- **Doc-view frames** — backend-facing interface `ibBackendDocFrame` (renamed from the historical `ibBackendDocMDIFrame`); concrete implementations are `ibFrontendDocMDIFrame` (desktop, wraps `wxAuiMDIParentFrame` + `wxDocParentFrameAnyBase`) and `ibWebFrame` (web). Children are `CAuiDocChildFrame` / `ibDialogDocChildFrame` on desktop and `ibWebDocChildFrame` on web. The frame is owned by the `ibSession` that created it (no process-level singleton on the backend side); legacy `mainFrame` macro still exists in `frontend/mainFrame/mainFrame.h` as a frontend-local accessor for the GUI singleton, but new backend code reaches the frame through `ibSession::Current()->GetFrame()` or `ibSession::CurrentFrame()`. Template-mixin rewrite to follow `wxDocParentFrameAny` is partial — `ibFrontendDocMDIFrame` keeps the "MDI" suffix until the frontend-side rename lands.
 
 ---
 
@@ -199,7 +199,7 @@ Each opcode has type-specialised variants selected by adding `TYPE_DELTA1` (numb
 
 ### Execution Model
 
-`ibProcUnit` maintains a linked list of parent `ibProcUnit` objects representing the module scope chain. Each call creates an `ibRunContext` holding the local variable array. Exceptions use the throw-by-pointer pattern: `throw(new ibBackendInterruptException)`, caught as `catch(const ibBackendException*)`.
+`ibProcUnit` maintains a linked list of parent `ibProcUnit` objects representing the module scope chain. Each call creates an `ibRunContext` holding the local variable array. Exceptions are thrown by value and caught by const reference (standard C++): `throw ibBackendInterruptException();` (often through static `Error()` helpers like `ibBackendCoreException::Error(_("..."))`) caught as `catch (const ibBackendException& err)`. `ibBackendException` has a virtual destructor so catching by base preserves dynamic type for `dynamic_cast`. Rethrow uses bare `throw;`. The previous throw-by-pointer / `catch(const ibBackendException*)` pattern is fully removed.
 
 ### Keyword Inventory
 
@@ -295,12 +295,25 @@ OES distinguishes between **metadata** (compile-time, process-wide, shared) and 
 
 `ibSession` (`src/engine/backend/session/session.h`) is the unit of runtime state:
 
-- **Identity** — guid, userName, computer, pid, address, appMode, started timestamp
+- **Identity** (`ibSessionIdentity`) — guid, userName, userGuid, computer, address (host:port for web), appMode, started timestamp, pid
+- **Kind** (`ibSessionKind`) — Launcher / Designer / Enterprise / Service / WebServer (wes process technical row) / WebClient (per-tab). 1:1 with `ibRunMode` for the unambiguous cases; the web run mode splits into the two distinct session kinds inside one process.
 - **State machine** — `ibSessionState` (Created / Added / Rejected / Stopping / Gone), `ibAuthState` (Anonymous / Authenticated / AuthFailed)
-- **User info** — `ibApplicationDataUserInfo` — OES-user (from `sys_user` table), distinct from the DB-level admin user used to open the database connection
-- **ProcUnit map** — `map<const ibModuleDataObject*, shared_ptr<ibProcUnit>>` — per-session runtime instances for every script-hosting descriptor (main module, common modules, per-object runtimes as they spawn)
+- **User info** — `ibApplicationDataUserInfo` — OES-user (from `sys_user` table), distinct from the DB-level admin user used to open the database connection. Plus `m_sessionRawPassword` — plain-text cached only for Designer "Start debugging" so spawned children can re-authenticate without prompting.
+- **Working date** — `m_workDate` per-session (replaces the legacy static `ibValueSystemFunction::ms_workDate` so two web sessions don't step on each other).
+- **Root module manager** — `m_root : ibValuePtr<ibValueModuleManagerConfiguration>`. Created via `EnsureRoot()` in `ibSessionRegistry::NotifyAuthenticated`'s middle phase (between `OnFirstConnect` and `OnAuthenticated` listener phases). Stays nullptr for sessions that never run scripts (Designer, WebServer technical, Launcher).
+- **Frame** — `m_frame : ibBackendDocFrame*` (non-owning) for plain `ibSession`, or overridden virtual `GetFrame()` on `ibGUISession`. The frame belongs to the session, not to a process-wide singleton.
+- **Per-session debug** — optional `ibDebugSession` (CV/mutex + per-session watch expressions + run context) so concurrent web sessions can each enter their own debug loop without blocking.
+- **Exclusive (monopoly) mode** — `m_exclusive`. At most one session in the registry holds it; while held, every other Connect parks until release.
+- **Server back-link** — `m_server : weak_ptr<ibSession>` from a server-spawned client to the session that hosts it (e.g., wes's WebClient → wes's WebServer). Used by shutdown logic, cluster topology, and admin UI.
 
-Every script-executing thread runs under a `SessionScope` RAII guard that pins one `ibSession*` to a `thread_local` slot. `ibSession::Current()` returns the scoped session. Script dispatch (`ibModuleDataObject::GetProcUnit()`) resolves through the current session's map — different sessions invoking the same module descriptor get **different** ProcUnits, each with their own local state.
+`ibSession::Current()` is the canonical "session this code is currently working on". Dispatch depends on `AccessMode` (a process-wide setting fixed at startup before any session is created):
+
+- **Single** (desktop, daemon, codeRunner, classChecker) — one session per process for its lifetime. `Current()` returns the lone session regardless of thread.
+- **Shared** (wenterprise-server) — per-thread lookup of bound sessions, with a process-wide fallback for threads that aren't bound (registry consumer, signal handlers).
+
+`ibSessionScope` (legacy) and `ibSessionThreadBinding` (preferred for app entry points) are the RAII helpers that bind a session to the calling thread. The thread_local pin is being replaced incrementally by direct `ibSession*` pointer passing through `ibProcUnit` and friends.
+
+Runtime ProcUnits are not held in a per-session map on `ibSession` itself. Each module descriptor (`ibModuleDataObject`) keeps its own `m_procUnit`. Per-session ProcUnit ownership through a descriptor map is the target end-state of the runtime-facade plan (see [`runtime-facade.md`](runtime-facade.md), step 1) — not yet landed.
 
 ### ibSessionRegistry
 
@@ -314,34 +327,35 @@ The registry supports multiple concurrent sessions (N on web, 1 on desktop) thro
 
 ### Runtime ownership — current state and direction
 
-**Current (partially migrated):**
-- Compile state (`ibCompileCode` with immutable `ibByteCode`) is shared-in-metadata, per module descriptor.
-- ProcUnits are per-session, stored in `ibSession::m_procUnitMap`. Created by `InitRuntimeForSession(session)` at Login, destroyed by `ExitRuntimeForSession(session)` at Logout.
-- A legacy `ibModuleDataObject::m_procUnit` field still exists on descriptors as a migration fallback (desktop path) and has dual-write with the session map.
-- `ibValueModuleManager` (the "module manager" — main module of configuration plus list of common modules) lives as a shared singleton in metadata (`activeMetaData->GetModuleManager()`). It owns compile state and is the dispatch point for `BeforeStart / OnStart / BeforeExit / OnExit` events.
+**Current:**
+- Compile state (`ibCompileCode` with immutable `ibByteCode`) lives on the descriptor (`ibModuleDataObject`) and is shared across sessions.
+- ProcUnits are kept on the descriptor itself (`ibModuleDataObject::m_procUnit`). The descriptor's runtime is rebuilt for each session by `ibValueModuleManager::InitRuntimeForSession(session)` and torn down by `ExitRuntimeForSession(session)` — both serialised by `m_runtimeMutex`. There is no per-session ProcUnit map yet; the descriptor's ProcUnit is single-occupancy at any given moment, so concurrent web sessions on the same descriptor must coordinate through the runtime mutex (current scaling ceiling).
+- The session's root `ibValueModuleManagerConfiguration` is owned by `ibSession::m_root` (intrusive-refcounted via `ibValuePtr`). `ibSession::CreateRoot(metaData)` allocates it; `ibSession::CompileRoot()` runs `CreateMainModule`; `appData`'s `OnAuthenticated` listener then drives `RunDatabase` (one-shot per process) + `CompileRoot` + `mm->InitRuntimeForSession(session)`.
+- `BeforeStart / OnStart / BeforeExit / OnExit` events dispatch through the session's root module manager.
 
-**Direction (in progress, see `project_runtime_owner_refactor` memory):**
+**Direction (in progress, see [`runtime-facade.md`](runtime-facade.md)):**
 
-`ibValueModuleManager` is conceptually the **runtime entry point** — the root of a session's runtime tree. It should not live in metadata; it should be a **per-session runtime unit** owned by the session. Metadata keeps only compile-state (the `shared_ptr<ibCompileCode>` / `shared_ptr<ibByteCode>` per descriptor).
+`ibValueModuleManager` becomes the per-session runtime root. The descriptor's `m_procUnit` field disappears in favour of a per-descriptor `m_runtimes : map<ibSession*, shared_ptr<ibModuleDataObject>>`. Nested nodes (common module, catalog/document instance, form, external DP) inherit from `ibModuleDataObject + ibValue` and parent up via `weak_ptr<ibModuleDataObject> m_parent`. Eval is the only exception — outside the descriptor map, parent set from `ibValueModuleManager::Current()` at compile time.
 
-Target structure for a runtime unit (`ibValueModuleManager` after refactor):
+Target structure for a runtime node:
 
 ```
-ibValueModuleManager (per-session)
-  ├── kind        — Main / CommonModule / ObjectManager / Instance / External / Eval
-  ├── descriptor  — which metadata node it represents
-  ├── session     — which session owns it
-  ├── byteCode    — shared_ptr<ibByteCode> (immutable, shared across sessions)
-  ├── procUnit    — owned ibProcUnit (mutable runtime state)
-  └── parent      — shared_ptr<ibValueModuleManager> (common→main, form→main, eval→enclosing)
+ibModuleDataObject (per-session)
+  ├── compileModule  — back-ref to compile state (descriptor-shared)
+  ├── procUnit       — shared_ptr<ibProcUnit> (mutable runtime state)
+  └── parent         — weak_ptr<ibModuleDataObject> (common→root, form→object|root, eval→Current())
+
+ibValueModuleManager : ibModuleDataObject (root only — per-session singleton)
+  ├── m_session     — which session owns it
+  └── m_context     — runtime context (locals frame chain)
 ```
 
-- Main module = session's **runtimeRoot**; common modules, forms, per-instance catalog/document runtimes hang off as children via `parent` shared_ptr chain.
-- Script dispatch (`obj.Method()`, `Catalogs.X.Find(...)`) walks the parent chain — each runtime reaches enclosing globals through parent's procUnit.
-- Teardown is clean cascade: drop session → drop runtimeRoot → parent chain unwinds bottom-up (children go first).
+- Main module = session's runtime root; common modules, forms, per-instance catalog/document runtimes hang off as children via `parent` weak chain.
+- Script dispatch walks the parent chain — each runtime reaches enclosing globals through parent's procUnit.
+- Teardown cascade: session.Stop() iterates `m_touchedDescriptors` and calls `_DropRuntime(this)` on each; the descriptor drops its `shared_ptr<runtime>` for that session, the runtime dtor releases its procUnit, parent weak refs expire bottom-up.
 - `ibByteCode` becomes self-contained (holds its own moduleName, rootContext, parent-bytecode ref); the `byteCode->m_compileModule` back-pointer is removed. This decouples runtime lifetime from `ibCompileCode` lifetime — metadata reload can drop compile state while running sessions hold their bytecode through their shared_ptr.
 
-**Same model for desktop and web** — desktop has N=1 session (process-wide), web has N per-cookie. The `ibSessionRegistry + ibSession + SessionScope + runtime unit` stack is identical; differences are only in session count and threading (desktop = wx main thread dispatches scripts; web = per-session worker thread via `RunOnWorker`).
+**Same model for desktop and web** — desktop has N=1 session (process-wide, `AccessMode::Single`), web has N per-cookie (`AccessMode::Shared`). The `ibSessionRegistry + ibSession + ibSessionScope + runtime tree` stack is identical; differences are only in session count and threading (desktop = wx main thread dispatches scripts; web = per-session worker thread via `RunOnWorker`).
 
 ### Designer — compile only
 
@@ -493,35 +507,45 @@ The server runs each connection as a `wxThread` (`ibDebuggerServer::ibDebuggerSe
 
 ```
 launcher.exe (or direct enterprise.exe with CLI creds)
-  └─ ibApplicationData::CreateServerAppDataEnv(mode, server, port, user, pwd, db, locale)
-       └─ ibDatabaseLayer::Open(server, port, db, user, pwd)   # DB-level admin connection
-            └─ ibApplicationData::Connect(userName, userPassword)
-                 └─ ibSessionRegistry::Start(+EnableSysSessionOwnership)
-                      └─ registry.Connect(req) — Submit(Add, Normal), wait state Added
-                           └─ Add → DB INSERT sys_session row under row-lock
-                                └─ ticket.Attach(user, pwd) — Submit(Attach, Normal)
-                                     └─ AuthenticateUser (PBKDF2 preferred, MD5 silent-upgrade path)
-                                          └─ InstallUser → SessionScope(session)'d dual-write
-                                               └─ InitRuntimeForSession(session)
-                                                    └─ create main ProcUnit + Execute top-level
-                                                         └─ StartMainModule: BeforeStart / OnStart events
-                                                              └─ wx main loop handles UI
+  └─ ibApplicationData::CreateServerAppDataEnv(mode, server, port, ibUser, ibPwd, db, locale)
+       └─ ibDatabaseLayer::Open(server, port, db, ibUser, ibPwd)   # DB-level admin connection
+            └─ appData->CreateSession<ibEnterpriseSession>()        # phased session lifecycle
+                 # registry runs Connect(req) under the session factory:
+                 #   - Submit(Add, Normal), waits state Added
+                 #   - Add handler INSERTs sys_session row under row-lock
+                 #   - OnCreateSession() fires on the main thread
+                 #     (ibGUISession overrides — builds the wx frame here)
+                 └─ session->Open(user, password)                   # auth orchestration
+                      └─ ticket.Attach(user, pwd) — Submit(Attach, Normal)
+                           └─ ibApplicationData::AuthenticateUser
+                                  (PBKDF2 preferred, MD5 silent-upgrade path)
+                                └─ InstallUser writes session->m_userInfo
+                                     └─ NotifyAuthenticated phases (registry-driven):
+                                          1. OnFirstConnect — metadataCreate (one-shot)
+                                          2. session->EnsureRoot() — CreateRoot(activeMetaData)
+                                          3. OnAuthenticated — RunDatabase (one-shot)
+                                                             + session->CompileRoot()
+                                                             + mm->InitRuntimeForSession(s)
+                                                                — main ProcUnit + Execute top-level
+                                                                — StartMainModule: BeforeStart / OnStart
+                                                                — wx main loop handles UI
 ```
 
 ### User Login (web — wenterprise-server)
 
 ```
-HTTP: POST /w/<dbalias>/login  (body: user+pwd, cookie: tabSid GUID)
+HTTP: POST /w/<dbalias>/login  (body: user+pwd, cookie: tabSid UUID)
   └─ wfrontendCreateSessionWithId(tabSid)      # if unknown cookie, create new session
        └─ Sessions().Login(tabSid, user, pwd)
             └─ registry.Connect(req)           # same path as desktop
                  └─ ticket.Attach(user, pwd)   # AuthenticateUser on worker-side
-                      └─ InitRuntimeForSession(session)
-                           └─ SessionScope(session) on HTTP handler thread
-                                └─ ibWebApplication::OnInit
-                                     └─ StartMainModule (BeforeStart / OnStart, under runtimeMutex)
-                                          └─ StartWorker — per-session worker thread
-                                               └─ future HTTP calls POST to worker via RunOnWorker
+                      └─ NotifyAuthenticated phases (OnFirstConnect / EnsureRoot / OnAuthenticated)
+                           └─ session->EnsureRoot + CompileRoot + mm->InitRuntimeForSession(s)
+                                └─ ibSessionScope(session) on HTTP handler thread
+                                     └─ ibWebApplication::OnInit
+                                          └─ StartMainModule (BeforeStart / OnStart, under m_runtimeMutex)
+                                               └─ StartWorker — per-session worker thread
+                                                    └─ future HTTP calls POST to worker via RunOnWorker
 ```
 
 ### Form Open
@@ -530,10 +554,11 @@ HTTP: POST /w/<dbalias>/login  (body: user+pwd, cookie: tabSid GUID)
 Script (desktop) / HTTP POST /open?metaID=N (web):
 OpenForm("Catalog.Products.ListForm")
   └─ ibValueMetaObjectFormBase::CreateAndBuildForm(metaForm, owner, srcObj, uniqueKey)
-       └─ ibBackendMainFrame::CreateNewForm(metaFormObject, ownerControl, srcObject)
+       └─ ibSession::CurrentFrame()->CreateNewForm(metaFormObject, ownerControl, srcObject)
+              # session-owned frame; desktop = ibFrontendDocMDIFrame, web = ibWebFrame
             └─ ibValueForm constructed (per-instance compileModule + ProcUnit)
                  └─ LoadFormData / BuildForm — control tree built from metadata
-                      └─ ibBackendMainFrame::CreateDocumentWindow()
+                      └─ frame creates the doc-view child (CAuiDocChildFrame / ibWebDocChildFrame)
                            └─ ibVisualHost created (wxWindow on desktop, ibWebWindow on web)
                                 └─ controls instantiated and laid out
                                      └─ OnOpen() script handler via ibProcUnit::CallAsProc()
@@ -561,8 +586,9 @@ HTTP: POST /w/<dbalias>/logout?sid=<tabSid>  (sendBeacon from browser pagehide)
             └─ ~ibWebSession → OnExit
                  └─ RunOnWorker DeleteAllViews of open tabs (form dtors)
                       └─ StopWorker (joins per-session worker thread)
-                           └─ ExitMainModule (BeforeExit / OnExit events, under runtimeMutex)
-                                └─ ExitRuntimeForSession — drop session's ProcUnit map entries
+                           └─ ExitMainModule (BeforeExit / OnExit events, under m_runtimeMutex)
+                                └─ mm->ExitRuntimeForSession(s) — release descriptor ProcUnits
+                                                                  bound to this session
                                      └─ delete frame
                                           └─ ticket.reset → Submit(Remove, Urgent)
                                                └─ registry DELETE sys_session row, release row-lock

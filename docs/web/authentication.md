@@ -2,51 +2,57 @@
 
 OES has two entry points into authentication:
 
-1. `ibApplicationData::StartSession(user, password)` — invoked at app
-   startup (enterprise.exe / designer.exe) with credentials read from the
-   command line or from launcher arguments.
-2. `ibWebSession::Login(user, password)` — invoked per-session from the
-   browser via `POST /w/<prefix>/login`.
+1. **Desktop / headless** — the app gets an `ibSession*` from
+   `appData->CreateSession()` (or typed `CreateSession<SessionT>()`),
+   then calls `session->Open(user, password)` with credentials read
+   from the command line or launcher arguments. Replaces the legacy
+   monolithic `ibApplicationData::StartSession`.
+2. **Web** — `ibWebSession::Login(user, password)` invoked per-session
+   from the browser via `POST /w/<prefix>/login`.
 
-Both funnel into `ibApplicationData::AuthenticationAndSetUser` which
-reads the user row from `sys_user`, verifies the password through
-`ibPasswordHash::Verify` (PBKDF2 with transparent MD5-legacy fallback,
-and lazy upgrade via `NeedsRehash`), and stashes the result.
+Both paths funnel through the registry's `ProcessAttach`, which calls
+`ibApplicationData::AuthenticateUser` (pure verifier — reads the user
+row from `sys_user`, runs `ibPasswordHash::Verify` for PBKDF2 with
+transparent MD5-legacy fallback and lazy upgrade via `NeedsRehash`),
+then `InstallUser` writes the resolved identity onto the active
+session.
 
-## StartSession fallback — AuthenticationUser
+## Open() fallback — OnShowAuthenticate
 
-`StartSession` is the desktop path. If `AuthenticationAndSetUser` fails
-(bad/empty CLI credentials), the session doesn't give up yet — it
-falls back to the frontend:
+`session->Open(user, password)` is the desktop path. If silent CLI
+authentication fails (bad/empty credentials), the session falls back
+to its own prompt hook:
 
 ```cpp
-// src/engine/backend/appDataQuery.cpp (~712)
-if (!AuthenticationAndSetUser(strUserName, strUserPassword)) {
-    succes = false;
-    if (backend_mainFrame != nullptr &&
-        backend_mainFrame->AuthenticationUser(strUserName, strUserPassword)) {
-        succes = true;
-    }
+// src/engine/backend/session/session.cpp — ibSession::Open
+if (!Authenticate(user, password)) {
+    if (OnShowAuthenticate(user, password))      // virtual override point
+        return Authenticate(GetUserInfo().m_strUserName,
+                            GetSessionRawPassword());
+    return false;
 }
 ```
 
-`backend_mainFrame->AuthenticationUser` is a virtual method on
-`ibBackendDocMDIFrame`. Concrete implementations:
+`OnShowAuthenticate` is a virtual on `ibSession`. The previous
+`backend_mainFrame->AuthenticationUser` indirection through the
+frame interface is gone — auth UI is no longer a frame
+responsibility. Concrete overrides:
 
-- **Desktop** (`ibFrontendDocMDIFrame::AuthenticationUser`,
-  `frontend/mainFrame/mainFrameParts.cpp:125`): shows the modal
-  `ibDialogAuthentication` with the prefilled login/password fields,
-  blocks until the user submits or cancels. Returns `true` on submit
-  (dialog internally re-runs `AuthenticationAndSetUser` with the
-  user-entered credentials).
-- **Web** (`ibWebFrame::AuthenticationUser` — currently NOT overridden,
-  base returns `false`): no fallback today. If StartSession ever runs
-  on the web backend with invalid CLI credentials, it just fails.
-- **Headless** (daemon / codeRunner / classChecker): `backend_mainFrame`
-  is `nullptr`, so the fallback branch is skipped entirely. CLI
-  credentials must be correct; failure exits cleanly.
+- **Desktop** (`ibGUISession::OnShowAuthenticate`): shows the modal
+  `ibDialogAuthentication` with prefilled login/password fields and
+  blocks until the user submits or cancels. On submit it stores
+  `m_userInfo` + `m_sessionRawPassword` on the session and returns
+  true so the registry's `Open()` re-runs Authenticate with the
+  dialog-filled creds.
+- **Web** (`ibWebSession`): no override yet — base `ibSession::OnShowAuthenticate`
+  returns false, so a failed CLI auth on the web path fails hard.
+  Real web auth comes from the browser via `POST /login`, so this
+  path is essentially never taken in practice.
+- **Headless** (daemon / codeRunner / classChecker): no override —
+  base returns false. CLI credentials must be correct; failure
+  exits cleanly.
 
-## Why web doesn't hit StartSession today
+## Why web doesn't hit Open() today
 
 Web credentials come from the browser via `POST /login`, not from the
 server process command line. The flow is:
@@ -55,25 +61,28 @@ server process command line. The flow is:
 browser → GET / → wfrontendCreateSession → session w/o auth
         → POST /login (user, password)
           → wfrontendLogin → ibWebSession::Login
-            → appData->AuthenticationAndSetUser
-              → 200 OK (success) or 401 (failure, client re-shows form)
+            → registry.Connect(req) + ticket.Attach(user, pwd)
+              → ProcessAttach → AuthenticateUser → InstallUser
+                → 200 OK (success) or 401 (failure, client re-shows form)
 ```
 
-`StartSession` is invoked by `enterprise.exe` / `designer.exe` startup,
-not by `wenterprise-server`. The web server binds its DB connection
-without an "IB user" per se — that connection is a service account
-configured via `--ibuser=` / `--ibpwd=` flags when launcher or designer
-spawn the server process; `ibWebSession::Login` then attaches the real
-end-user identity on top.
+`session->Open()` is the desktop / headless path used by
+`enterprise.exe` / `designer.exe` / `daemon.exe` / `codeRunner.exe`
+startup, not by `wenterprise-server`. The web server binds its DB
+connection without an "IB user" per se — that connection is a
+service account configured via `--ibuser=` / `--ibpwd=` flags when
+launcher or designer spawn the server process; `ibWebSession::Login`
+then attaches the real end-user identity on top via the same
+`ProcessAttach` path the desktop session would use.
 
 ## TODO: interactive re-auth on web
 
 If a future use-case needs CLI-driven auto-login on web (e.g. kiosk
 mode pre-filling `--ibuser=...` / `--ibpwd=...` for a default user,
-with the option to override interactively), we need a web equivalent
-of `AuthenticationUser`. Proposal:
+with the option to override interactively), we need a web override
+of `ibSession::OnShowAuthenticate`. Proposal:
 
-1. `ibWebFrame::AuthenticationUser` flags the session as "needs auth"
+1. `ibWebSession::OnShowAuthenticate` flags the session as "needs auth"
    (add `bool m_needsAuth` on `ibWebSession`, or a setter on
    `ibWebApplication`). Returns `false` — current auth attempt still
    fails.
@@ -83,7 +92,7 @@ of `AuthenticationUser`. Proposal:
 3. `webClient.cpp` sees `needsAuth` in any fetch response and re-shows
    the login form overlay (same path as the initial login screen).
 4. `POST /login` clears the flag on successful
-   `AuthenticationAndSetUser`.
+   authentication.
 
 This keeps the desktop modal semantics without blocking the HTTP
 handler thread — the server publishes a state, the client observes
@@ -97,32 +106,36 @@ retry machinery.
 
 ## Per-session identity storage
 
-`AuthenticationAndSetUser` dual-writes the resolved user identity to
-both the legacy `ibApplicationData` singleton and to the current
-session's `ibSession` (via `SessionScope::Current()`):
+User identity now lives on `ibSession`, not on a process-wide
+singleton. `ibApplicationData::InstallUser` is the single writer; it
+reads the active session via `ibSession::Current()` and stores:
 
-- `m_userInfo` — OES user row from `sys_user` (name, full name, guid,
-  roles).
-- `m_sessionGuid` — per-session DB guid (used as session identifier
-  on the `sys_session` heartbeat row and in debug protocol handshake).
+- `m_userInfo` (`ibApplicationDataUserInfo`) — OES user row from
+  `sys_user` (name, full name, guid, roles, language).
 - `m_sessionRawPassword` — plain-text of the submitted password.
-  Cleared in `CloseSession` / `ClearSessionRawPassword`. Never
-  persisted to disk.
+  Cleared by `ibSession::ClearSessionRawPassword` and on session
+  destruction. Never persisted to disk.
 
   **Why plain-text**: Designer's "Start debugging" spawns a child
   runtime process (enterprise.exe or wenterprise-server.exe) and
   needs to pass the current user's creds to it so the debugger
   attaches without re-prompting. The stored hash is useless here —
-  `AuthenticationAndSetUser` re-verifies against whatever the child
-  process pulls from `sys_user`, so plain-text is what must travel.
-  Risk is bounded: only in-memory, wiped on logout, not written to
-  disk. When / if a token-based one-shot debug handshake replaces the
-  creds-passthrough, `m_sessionRawPassword` can be dropped.
+  the child re-verifies against whatever it pulls from `sys_user`,
+  so plain-text is what must travel. Risk is bounded: only in-memory,
+  wiped on logout, not written to disk. When/if a token-based
+  one-shot debug handshake replaces the creds-passthrough,
+  `m_sessionRawPassword` can be dropped.
 
-Readers still go through `appData->GetUserInfo()` etc. — migration
-of readers to `ibSession::Current()->GetUserInfo()` is a
-separate phase (see `project_unified_session_architecture.md` step
-2e(iii.a) → readers migration).
+Session identity (the GUID published as `sys_session.session` and
+threaded through the debug protocol handshake) is part of
+`ibSessionIdentity::m_guid` — populated at Add time, immutable
+afterwards.
+
+Readers go through `appData->GetUserInfo()` (forwards to
+`ibSession::Current()->GetUserInfo()`) or directly through the session
+pointer where one is in scope. The 25+ legacy callsites picked up
+session-aware behaviour automatically when the singleton field was
+made a forwarder.
 
 **Empty `userName` in `sys_session`** has three legitimate meanings,
 not a single sentinel — see `reference_empty_username_meanings.md`
@@ -144,9 +157,10 @@ primitive. New passwords are PBKDF2-HMAC-SHA256 at 600k iterations
 (OWASP 2023 recommendation) with a 16-byte system-RNG salt, stored in
 PHC format `$pbkdf2-sha256$<iter>$<saltB64>$<hashB64>`. `Verify` also
 accepts legacy 32-hex MD5 strings for compatibility with pre-migration
-databases; `NeedsRehash` returns true for those so `AuthenticationAndSetUser`
-silently re-stores the hash in the modern format on the next successful
-login.
+databases; `NeedsRehash` returns true for those so the post-auth path
+silently re-stores the hash in the modern format on the next
+successful login (see `ibApplicationData::Login` →
+`SaveUserData(outInfo)`).
 
 Argon2id would be the stronger primitive (memory-hard, resists GPU
 attacks) but requires vendoring a third-party library; revisit when

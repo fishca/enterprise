@@ -25,28 +25,37 @@
 
 ## Lifecycle (desktop)
 
+The phased entry points on `ibApplicationData` are
+`CreateSession()` (or typed `CreateSession<SessionT>()`) plus the
+session's own `Open(user, pwd)`. The legacy monolithic `StartSession`
+is gone — failed `Open` keeps the anonymous row in `sys_session`
+until the caller drops the ticket explicitly, which lets the GUI
+login-retry loop reuse one row across attempts.
+
 ```
-ibApplicationData::Connect(user, pwd)
-├── StartSession(user, pwd)
-│   ├── registry.EnableSysSessionOwnership(true)
+ibSession* s = appData->CreateSession<ibEnterpriseSession>();
+│   ├── registry.EnableSysSessionOwnership(true)         # one-shot
 │   ├── (designer only) registry.AddPolicy(DesignerExclusivePolicy)
-│   ├── registry.Start()                         # spawn thread, 3 pool checkouts
-│   │                                            # (lock / write / probe conns)
-│   ├── registry.Connect(req)                    # Submit(Add, Normal) → Wait
+│   ├── registry.EnsureStarted()                         # spawn thread,
+│   │                                                    # 3 pool checkouts
+│   │                                                    # (lock / write / probe)
+│   ├── registry.CreateSessionWithFactory(...)            # builds typed ibSession
+│   ├── registry.Connect(req)                             # Submit(Add, Normal) → Wait
 │   │   └── ProcessAdd:
 │   │       ├── policy chain
 │   │       ├── m_own[guid] = session
 │   │       └── InsertSessionRow (+ ext UPDATE)
-│   ├── m_mainTicket = move(result.ticket)
-│   ├── m_mainThreadScope = SessionScope(ticket.Session())
-│   └── session.Open(user, pwd)
-│       ├── submitAttach(user, pwd) → ProcessAttach
-│       │   ├── appData->AuthenticateUser(…)     # pure verifier
-│       │   ├── SessionScope(&s) + InstallUser   # dual-write singleton + session
-│       │   └── UPDATE userName / userGuid
-│       ├── (on Attach fail) OnShowAuthenticate  # GUI dialog override
-│       │   └── re-submitAttach with dialog creds
-│       └── registry.NotifyAuthenticated(s)      # 3-phase (see below)
+│   └── OnCreateSession() fires on main thread            # GUI subclass
+│                                                          # builds wx frame here
+│
+s->Open(user, pwd)
+│   ├── submitAttach(user, pwd) → ProcessAttach
+│   │   ├── appData->AuthenticateUser(…)                 # pure verifier
+│   │   ├── ibSessionScope(&s) + appData->InstallUser     # session-aware writer
+│   │   └── UPDATE userName / userGuid
+│   ├── (on Attach fail) OnShowAuthenticate              # GUI dialog override
+│   │   └── re-submitAttach with dialog creds
+│   └── registry.NotifyAuthenticated(s)                   # 3-phase (see below)
 ```
 
 ### NotifyAuthenticated phases
@@ -252,7 +261,7 @@ enum class ibSessionKind : int {
 };
 ```
 
-- Desktop `ibApplicationData::StartSession` → `SessionKindFromRunMode(m_runMode)` (wes process passes `WebServer` explicitly).
+- Desktop `appData->CreateSession()` → `SessionKindFromRunMode(m_runMode)` (wes process passes `WebServer` explicitly via the typed factory).
 - `ibWebSession::Login` → `ibSessionKind::WebClient` + `m_appMode = eWEB_ENTERPRISE_MODE`.
 - `sys_session.kind` is added via `MigrateTableSession` (best-effort ALTER TABLE); legacy schemas without it still work (kinds read as 0).
 - `moduleManager::InitRuntimeForSession` filters by kind: runtime runs for `Enterprise / WebClient / Service`, skipped for the rest.

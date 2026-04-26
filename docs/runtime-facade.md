@@ -6,9 +6,18 @@ descriptor-owned map, bytecode decoupling + AOT persistent cache as
 follow-up. This document records the architectural decisions of the
 2026-04-22 session and the implementation phase plan.
 
-> **Status:** design. No step started. The existing implementation
-> uses a singleton mm with dual-write through a session map —
-> superseded by this plan.
+> **Status:** design — partial groundwork landed. Step 1 of the
+> 17-step plan (descriptor `m_runtimes` map + Attach/Detach API) is
+> not in code yet. Adjacent precursors that did land 2026-04-26:
+> `ibCompileValueCache` extracted from designer's GUI tree onto
+> `ibMetaData` (template for the runtime-tree split), and
+> `ibSession::EnsureRoot()` + the 3-phase `NotifyAuthenticated`
+> contract — root mm ownership moved into the session, `appData`'s
+> `OnAuthenticated` listener no longer drives `CreateRoot`. The
+> existing implementation still keeps each descriptor's runtime as
+> a single `m_procUnit` (rebuilt per-session by
+> `InitRuntimeForSession` / `ExitRuntimeForSession` under
+> `m_runtimeMutex`); per-descriptor per-session map is the target.
 
 ---
 
@@ -511,9 +520,12 @@ Brief summary:
   concurrent with executing procUnit. Closed by steps 7-8 (bytecode
   self-owned through shared_ptr, runtime paths do not touch compileModule).
 - **`project_mainframe_singleton_variants`** — `backend_mainFrame`
-  thread_local pinning fragility. In parallel: runtime gets
-  session/context through parent walk, not through thread_local ambient
-  lookup every time.
+  thread_local pinning fragility. **Already closed** by the
+  ibBackendDocFrame rename + frame ownership move onto `ibSession`
+  (no process-level singleton on the backend side anymore). The
+  runtime-tree refactor is parallel: runtime gets session/context
+  through parent walk, not through thread_local ambient lookup every
+  time.
 - **`project_runtime_owner_refactor`** — previous iteration of the plan.
   Superseded by this document.
 - **`project_bytecode_compile_decoupling`** — step 8, refined in
@@ -531,8 +543,9 @@ Brief summary:
 - [`session-registry.md`](session-registry.md) — session layer,
   registry refactor (completed, adjacent layer)
 - [`backend-frontend-split.md`](backend-frontend-split.md) —
-  adjacent architectural problem (god-interface
-  `ibBackendDocMDIFrame`), partially covered by the runtime session-
+  adjacent architectural review (chunky `ibBackendDocFrame` interface,
+  successor of the historical `ibBackendDocMDIFrame`), partially
+  covered by the runtime session-
   owned model
 
 ### Memory notes

@@ -101,7 +101,7 @@ Phase 2 plan and the 2026-04-20 refinement diff.
 - `AuthenticationAndSetUser` split into pure `AuthenticateUser(user, pwd, outInfo)` + side-effect `InstallUser(info, rawPassword)`. Legacy wrapper retained for existing callers (web `ibWebSession::Login`, desktop login dialog `authorization.cpp`). `ProcessAttach` calls the pure variant.
 - Registry owns `sys_session` row I/O: `Start()` checks out three dedicated pool connections (lock / write / probe), handlers INSERT row at anonymous Add, UPDATE userName on Attach success, DELETE on Remove. `HoldRowLocks` pins the full own-set per drain batch; `TryProbeRowLock` during `JobSweepStale` removes zombie rows cluster-wide (idempotent).
 - `JobRefreshSnapshot` rebuilds the cluster snapshot every ~3s; `GetClusterSnapshot()` returns a copy under RW mutex. `ibApplicationData::GetSessionArray()` now delegates here — Active Users dialog wires through automatically.
-- `ibApplicationData::StartSession` → `registry.EnableSysSessionOwnership(true)` + `Start()` + `Connect(req)` + `Attach()` (+ `backend_mainFrame->AuthenticationUser` fallback for the GUI dialog, re-Attach with dialog-filled creds).
+- `ibApplicationData::StartSession` → `registry.EnableSysSessionOwnership(true)` + `Start()` + `Connect(req)` + `Attach()` (+ `ibSession::OnShowAuthenticate` virtual override on `ibGUISession` for the GUI dialog fallback, re-Attach with dialog-filled creds).
 - `CloseSession` → drop `m_mainTicket` (dtor submits Remove@Urgent), drop `m_mainThreadScope`. `Disconnect` ends with `registry.Stop()`.
 - `ibApplicationDataSessionUpdater` class + all `Job_*` / `VerifySessionUpdater` / `ClearLostSessionUpdater` impl **deleted** from `appData.h` and `appDataQuery.cpp` (~370 lines removed).
 - Full solution builds (backend / frontend / wfrontend / enterprise / designer / launcher / daemon / codeRunner / classChecker / simplePlugin, Debug|Win32).
@@ -725,23 +725,31 @@ stay in `SessionManager::m_sessions` until process exit. Their runtime
   handler; otherwise the sweep must take the same mutex as Find and
   verify the session isn't being used.
 
-### Per-session appData state — TODO
+### Per-session appData state — DONE (2026-04-20)
 
-`ibWebSession::Login` calls `appData->AuthenticationAndSetUser` which
-mutates the **singleton** `m_userInfo`, `m_sessionUpdater`,
-`m_sessionGuid`, `m_sessionRawPassword`. Multi-tab = last-login-wins,
-and `sys_session` never sees per-tab rows (user statement: "каждая
-вкладка в браузере отдельная сессия"). Plan:
+The previous "ibWebSession::Login mutates singleton appData state →
+multi-tab last-login-wins" issue is closed by the session-registry
+refactor. Concrete changes that landed:
 
-- Extract per-session state out of `ibApplicationData` into
-  `ibWebSession`. `appData` retains only connection-level state (DB,
-  locale, mode).
-- `AuthenticationAndSetUser` split in two — auth verification stays
-  pure, the "install user info" step takes a target (session on web,
-  singleton on desktop via a small adapter).
-- `ibWebSession::Login` constructs its own `SessionUpdater` and
-  inserts a row into `sys_session`.
-- Full writeup in the memory system: `project_web_session_bug.md`.
+- `AuthenticationAndSetUser` split into pure `AuthenticateUser(user,
+  pwd, outInfo)` (verifier) plus `InstallUser(info, rawPassword)`
+  (side-effect writer that targets `ibSession::Current()`).
+- User-identity fields (`m_userInfo`, `m_sessionRawPassword`,
+  `m_workDate`) live on `ibSession`. The legacy `m_sessionUpdater` /
+  `m_sessionGuid` singletons on `ibApplicationData` are gone — session
+  guid lives in `ibSessionIdentity::m_guid`, the heartbeat is run by
+  `ibSessionRegistry`'s registry thread.
+- `ibWebSession::Login` goes through `registry.Connect(req)` plus
+  `ticket.Attach(user, pwd)`; `sys_session` sees one row per tab
+  through the registry's INSERT.
+- Singleton accessors on `ibApplicationData` (`GetUserName`,
+  `GetUserInfo`, `GetUserPassword`, …) forward to
+  `ibSession::Current()->GetUserInfo()` when a scope is active, so
+  25+ legacy callers picked up per-tab behaviour automatically.
+
+Memory note `project_web_session_bug.md` and
+[`../session-registry.md`](../session-registry.md) carry the full
+post-mortem.
 
 ### Web MDI refactor to `ibWebDocParent/ChildFrameAny<Base>` — TODO
 
@@ -851,8 +859,13 @@ default sink also lands on stderr when no wxApp is attached.
 - `/bigobj` missing on `commonObject.cpp` — added globally to
   `backend.vcxproj`.
 - `ms_mainFrame == nullptr` assert when two concurrent sessions created
-  frames — `backend_mainFrame.cpp` now uses a `thread_local` slot plus
-  the classic `ms_mainFrame` fallback.
+  frames — fixed by removing the backend-side frame singleton entirely.
+  Frame is now owned by the `ibSession` that created it; backend code
+  reaches it through `ibSession::Current()->GetFrame()` (or the
+  convenience `ibSession::CurrentFrame()`). Per-thread session
+  bindings for the web build use `AccessMode::Shared` with
+  `ibSessionScope` / `ibSessionThreadBinding` plus a process-wide
+  fallback for the `WebServer` system session.
 - `m_moduleManager` raw pointer + manual IncrRef/DecrRef —
   replaced by `ibValuePtr<ibValueModuleManagerConfiguration>` in
   `webApplication.{h,cpp}`.
@@ -928,8 +941,8 @@ default sink also lands on stderr when no wxApp is attached.
   invokes the registered procedure on the form's `ibProcUnit`,
   then rebuilds the visual host. `currentWebApp()` free function
   in `webApplication.cpp` reaches the session's app from arbitrary
-  script context via the thread_local main-frame singleton
-  (`ibBackendDocMDIFrame::GetDocMDIFrame` → `ibWebFrame` → stored
+  script context via the active session's frame
+  (`ibSession::CurrentFrame()` → cast to `ibWebFrame*` → stored
   back-pointer `m_app`). `ibWebFrame` ctor now takes
   `ibWebApplication*`. `Bind(wxEVT_TIMER, ...)` wired in
   `OnInit`, unwound in `OnExit` along with timer stop+clear.

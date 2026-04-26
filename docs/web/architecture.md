@@ -2,19 +2,28 @@
 
 ## Compile/runtime split
 
-Since 2026-04-19 the module manager separates **compile** (process-wide,
-shared) from **runtime** (per-session).
+The module manager is **per-session**. Each session owns its own
+`ibValueModuleManagerConfiguration` via `ibSession::m_root`
+(`ibValuePtr`-managed, intrusive-refcounted). Bytecode (`ibByteCode`)
+is per-descriptor (`ibModuleDataObject`), shared across sessions
+because compile is metadata-driven and immutable; the runtime
+ProcUnit is rebuilt on each descriptor for the active session by
+`ibValueModuleManager::InitRuntimeForSession(s)` and torn down by
+`ExitRuntimeForSession(s)` — both serialised by `m_runtimeMutex`.
 
-`ibValueModuleManagerConfiguration` lives on `activeMetaData` — one
-instance per process, owns the compiled bytecode for main + common
-modules. No `ibProcUnit` on the manager itself.
+Bring-up sequence (web): `ibWebSession::Login` → `registry.Connect`
+→ `ticket.Attach` → `ibSessionRegistry::NotifyAuthenticated` runs
+the 3 phases (OnFirstConnect → `EnsureRoot` → OnAuthenticated). The
+OnAuthenticated listener drives `RunDatabase` (one-shot per process),
+`session->CompileRoot()`, then `mm->InitRuntimeForSession(session)`.
+`app->OnInit()` runs after that under an `ibSessionScope` bound on
+the HTTP handler thread.
 
-`ibSession::m_procUnitMap<descriptor, shared_ptr<ibProcUnit>>`
-holds the per-session runtime. `ibValueModuleManager::InitRuntimeForSession(ctx)`
-creates the ProcUnits against the shared bytecode and attaches them;
-`ExitRuntimeForSession(ctx)` tears down. Called from `ibWebSession::Login`
-BEFORE `app->OnInit()` — OnStart resolves its ProcUnit via `GetProcUnit()`
-delegate which reads `ibSession::Current()->GetProcUnitFor(this)`.
+There is no per-session `ProcUnit` map on `ibSession` itself; the
+descriptor's single `m_procUnit` slot is the current scaling
+ceiling. Per-descriptor per-session map (`m_runtimes`) is the target
+end-state of [`runtime-facade.md`](../runtime-facade.md), not yet
+landed.
 
 No `ibValueModuleManagerWebConfiguration` — web specifics live in
 session lifecycle (frame ownership, worker thread, debug server),
@@ -40,19 +49,30 @@ Debug). SolutionDir must be the enterprise root — props at the root
 ## Per-session isolation
 
 Each HTTP session gets its own `ibWebSession` owning an `ibWebApplication`.
-`ibWebApplication` owns the **session-scoped module manager** (with its
-own compiled bytecode, `ibProcUnit`, common modules, context variables)
-and the `ibWebFrame` (logical MDI root).
+The session itself owns:
 
-The desktop singleton `ibBackendDocMDIFrame::GetDocMDIFrame()` is
-per-thread in the web build (`thread_local` in
-`src/engine/backend/backend_mainFrame.cpp`). One HTTP request handler
-thread = one logical "desktop app" session.
+- `m_root : ibValuePtr<ibValueModuleManagerConfiguration>` — the
+  per-session module manager root.
+- `m_frame : ibBackendDocFrame*` (set via `SetFrame`) — published by
+  `ibWebApplication` after it builds the `ibWebFrame`.
+- `m_userInfo`, `m_sessionRawPassword`, `m_workDate` — per-session
+  identity and runtime knobs that used to be process-wide singletons.
+- Optional `ibDebugSession` for per-session breakpoint loops.
+
+Process-level frame singleton on the backend side is gone
+(`ms_mainFrame` / `t_mainFrame` / `GetDocMDIFrame` /
+`backend_mainFrame` macro removed). Frame access goes through
+`ibSession::Current()->GetFrame()` (or the convenience
+`ibSession::CurrentFrame()`). On wenterprise-server, `Current()`
+runs in `AccessMode::Shared`: per-thread bindings via
+`ibSessionScope` / `ibSessionThreadBinding` for tab worker threads;
+the wes process's `WebServer` system session is registered as the
+fallback for unbound threads.
 
 ## Frame / tabs / form tree
 
 ```
-ibWebFrame : ibBackendDocMDIFrame, ibWebWindow
+ibWebFrame : ibBackendDocFrame, ibWebWindow
 ├── m_tabs : vector<unique_ptr<ibWebDocChildFrame>>
 │   └── each owns:
 │       ibVisualHostClient           <- ibValuePtr<ibValueForm> m_valueForm
@@ -91,20 +111,26 @@ form creation works even when the registry is missing control types.
 
 ## DB connection pool
 
-`ibApplicationData::m_db` is the single shared `ibDatabaseLayer` used
-by the main thread (`db_query` macro points at it). For additional
-worker threads that need their own connection — session heartbeat
-writer, metadata-watcher SELECT, future SSE streams and per-session
-script workers — `ibConnectionPool` (`src/engine/backend/databaseLayer/connectionPool.{h,cpp}`)
-lends clones out of a bounded set.
+`ibApplicationData` no longer holds a direct `m_db`. The pool
+(`ibConnectionPool` in `src/engine/backend/databaseLayer/connectionPool.{h,cpp}`)
+is the sole owner of every live connection. The `db_query` macro
+resolves through `ibApplicationData::GetDatabaseLayer()` which uses
+the priority chain: active-TX TL → active-scope TL → primary
+(master) connection. See [`../connection-pool.md`](../connection-pool.md)
+for the full architecture (RAII `ibConnectionScope`, counter-based
+nested transactions across 5 drivers, TL pinning, migration
+status).
 
-Lifecycle: `Init(prototype, maxSize=32)` at
-`CreateFile/ServerAppDataEnv` time, `Shutdown` at `DestroyAppDataEnv`.
-Clones are allocated lazily on first `Checkout` so a single-threaded
-run (designer, classChecker) opens zero extra FB handles. A
+Lifecycle: `Init(primary, maxSize=32)` at `CreateFile` /
+`ServerAppDataEnv` time, `Shutdown` at `DestroyAppDataEnv`. Clones
+are allocated lazily on first `Checkout` so a single-threaded run
+(designer, classChecker) opens zero extra FB handles. A
 `shared_ptr`'s custom deleter re-parks the clone on the pool's idle
-list when the last borrower drops it — the connection stays open for
-the next checkout. `ibConnectionScope` is the RAII guard.
+list when the last borrower drops it.
+
+The session registry uses `CheckoutIndependent` (no TL touch) for
+its three persistent connections (lock / write / probe) on the
+registry thread.
 
 The metadata-change watcher uses the same pool: every sweep tick
 borrows one connection, runs `SELECT file_guid FROM sys_config`, and

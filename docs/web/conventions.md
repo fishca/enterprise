@@ -249,10 +249,13 @@ Only `wfrontend.dll` is compiled with `OES_USE_WEB` defined.
 `frontend.dll` and `backend.dll` do **not** see this macro. Implications:
 
 - Anything guarded by `#ifdef OES_USE_WEB` in a file compiled for both
-  DLLs (e.g. `backend_mainFrame.cpp`) is invisible to the desktop build.
-  Don't put a web-only fix there under this guard and expect it to
-  affect a shared class — change the unconditional code instead (as
-  done for `thread_local` mainFrame).
+  DLLs is invisible to the desktop build. Don't put a web-only fix
+  there under this guard and expect it to affect a shared class —
+  change the unconditional code instead. Example: when the frame
+  singleton was removed in favour of session-owned frames, the change
+  was made unconditionally in `backend_mainFrame.{h,cpp}` and `ibSession`,
+  not gated on `OES_USE_WEB` — both desktop and web get the same
+  ownership story.
 - `visualView/ctrl/*.cpp` files are compiled into both `frontend.dll`
   and `wfrontend.dll`. Use `OES_USE_WEB` to pick the web branch
   (typically: construct an `ibWebWindow` subclass instead of a native

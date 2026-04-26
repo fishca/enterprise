@@ -6,6 +6,7 @@
 
 #include <map>
 #include <algorithm>
+#include <functional>
 #include <assert.h>
 
 BEGIN_EVENT_TABLE(ibDialogKeyBinder, wxPanel)
@@ -116,26 +117,41 @@ ibDialogKeyBinder::~ibDialogKeyBinder()
 
 void ibDialogKeyBinder::Initialize()
 {
-	// Add the commands to the tree.
+	// Add the commands to the tree. Group strings can be hierarchical —
+	// AddCommandsFromMenu builds them as "Top / Sub / Subsub" so that
+	// menu nesting (File → Recent → Clear) maps onto a nested tree here
+	// instead of one flat group line per leaf submenu.
 	wxTreeItemId root = m_commandTreeCtrl->AddRoot(_("Commands"));
-	std::map<wxString, wxTreeItemId> groups;
+	std::map<wxString, wxTreeItemId> groupNodeByPath;
+
+	std::function<wxTreeItemId(const wxString&)> getOrCreateGroup =
+		[&](const wxString& path) -> wxTreeItemId {
+		auto it = groupNodeByPath.find(path);
+		if (it != groupNodeByPath.end())
+			return it->second;
+
+		// Find parent path (everything before the last " / ") and the
+		// leaf label (everything after). Top-level group has no parent
+		// separator and parents to root.
+		const wxString sep = wxT(" / ");
+		const size_t cut = path.rfind(sep);
+		wxTreeItemId parent;
+		wxString label;
+		if (cut == wxString::npos) {
+			parent = root;
+			label  = path;
+		} else {
+			parent = getOrCreateGroup(path.substr(0, cut));
+			label  = path.substr(cut + sep.length());
+		}
+		wxTreeItemId node = m_commandTreeCtrl->AppendItem(parent, label);
+		groupNodeByPath.emplace(path, node);
+		return node;
+	};
 
 	for (unsigned int i = 0; i < m_commands.size(); ++i)
 	{
-		std::map<wxString, wxTreeItemId>::iterator iterator = groups.find(m_commands[i]->group);
-
-		wxTreeItemId groupNode;
-
-		if (iterator == groups.end())
-		{
-			// We haven't encountered this group yet, so create a new node for it.
-			groupNode = m_commandTreeCtrl->AppendItem(root, m_commands[i]->group);
-			groups.emplace(std::make_pair(m_commands[i]->group, groupNode));
-		}
-		else
-		{
-			groupNode = iterator->second;
-		}
+		wxTreeItemId groupNode = getOrCreateGroup(m_commands[i]->group);
 
 		CommandData* data = new CommandData;
 		data->command = m_commands[i];
@@ -145,11 +161,9 @@ void ibDialogKeyBinder::Initialize()
 		label.Replace("&", "");
 
 		m_commandTreeCtrl->AppendItem(groupNode, label, -1, -1, data);
-
 	}
 
 	m_commandTreeCtrl->Expand(root);
-
 }
 
 void ibDialogKeyBinder::OnCommandTreeSelectionChanged(wxTreeEvent& event)

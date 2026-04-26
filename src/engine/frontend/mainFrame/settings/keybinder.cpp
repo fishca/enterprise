@@ -70,15 +70,26 @@ void ibKeyBinder::AddCommandsFromMenuBar(wxMenuBar* menuBar)
 
 void ibKeyBinder::AddCommandsFromMenu(const wxString& group, wxMenu* menu)
 {
-    
     const wxMenuItemList& list = menu->GetMenuItems();
 
     for (auto node = list.GetFirst(); node != nullptr; node = node->GetNext())
     {
         wxMenuItem* item = node->GetData();
+
+        // Recurse into submenus so their items show up in the keybinder
+        // dialog. Without this only top-level menu items appear and
+        // anything nested (e.g. File → Recent → ...) is silently skipped.
+        // Sub-group label = parent + " / " + submenu's own label, so the
+        // dialog's tree groups them under their own folder.
+        if (item->IsSubMenu() && item->GetSubMenu() != nullptr) {
+            AddCommandsFromMenu(
+                group + wxT(" / ") + item->GetItemLabelText(),
+                item->GetSubMenu());
+            continue;
+        }
+
         AddCommand(group, item);
     }
-    
 }
 
 void ibKeyBinder::RemoveCommand(int id)
@@ -166,13 +177,20 @@ void ibKeyBinder::UpdateMenu(wxMenu* menu)
     for (auto node = list.GetFirst(); node != nullptr; node = node->GetNext())
     {
         wxMenuItem* item = node->GetData();
-        wxString label;
 
-        if (GetMenuItemText(item, label))
-        {
+        // Recurse into submenus — symmetric with AddCommandsFromMenu.
+        // Without this, hotkeys assigned to submenu commands in the
+        // settings dialog never appear in the actual menu (label-with-
+        // accelerator path bypasses the nested items).
+        if (item->IsSubMenu() && item->GetSubMenu() != nullptr) {
+            UpdateMenu(item->GetSubMenu());
+            continue;
+        }
+
+        wxString label;
+        if (GetMenuItemText(item, label)) {
             item->SetItemLabel(label);
         }
-        
     }
 }
 

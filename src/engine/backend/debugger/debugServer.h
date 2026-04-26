@@ -10,6 +10,7 @@
 #include <wx/socket.h>
 
 struct ibRunContext;
+class ibSession;
 
 #define debugServer           (ibDebuggerServer::Get())
 #define debugServerInit(f)    (ibDebuggerServer::Initialize(f))
@@ -61,14 +62,19 @@ class BACKEND_API ibDebuggerServer {
 
 	private:
 
-		bool		m_waitConnection;
+		std::atomic<bool> m_waitConnection;
 
 		ConnectionType m_connectionType;
 
 		wxString m_strHostName;
 		unsigned short m_numHostPort;
 
-		bool m_acceptConnection;
+		// Worker thread sets true after Accept; main thread polls this
+		// in CreateServer's wait loop. Plain bool was being kept in a
+		// register on the main thread → wait loop never observed the
+		// flip and the server hung until something else flushed cache
+		// (e.g. designer closing rewrote enough memory).
+		std::atomic<bool> m_acceptConnection;
 
 		wxSocketServer* m_socketServer;
 		wxSocketBase* m_socket;
@@ -97,6 +103,11 @@ public:
 	bool CreateServer(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort, bool wait = false);
 	void ShutdownServer();
 
+	// Session is read out of runContext → GetProcUnit() → GetSession()
+	// at call time — the debug server is a process-level singleton
+	// shared across concurrent sessions; they enter sequentially and
+	// each knows its session through the run context already held by
+	// the dispatch loop.
 	void EnterDebugger(ibRunContext* runContext, const struct ibByteUnit& byteCode, long& numPrevLine);
 	void SendErrorToClient(const wxString& strFileName, const wxString& strDocPath, unsigned int numLine, const wxString& strErrorMessage);
 
@@ -115,8 +126,18 @@ protected:
 		m_bDebugLoop = false;
 		m_debugLoopCV.notify_all();
 
+		// Drain every per-session debug loop too — without this a wes
+		// process with several tabs paused at breakpoints stays parked
+		// after the designer disconnects, because each session has its
+		// own CV and m_debugLoopCV above only wakes the legacy global
+		// waiter (kept as a safety mirror).
+		WakeAllDebugSessions();
+
 		ClearCollectionBreakpoint();
 	}
+
+	void WakeAllDebugSessions();
+	void WakeDebugSession(const wxString& sessionGuid);
 
 	void ClearCollectionBreakpoint();
 

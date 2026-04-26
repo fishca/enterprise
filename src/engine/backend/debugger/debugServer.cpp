@@ -8,6 +8,8 @@
 #include "backend/compiler/procUnit.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/metadataConfiguration.h"
+#include "backend/session/session.h"
+#include "backend/session/sessionRegistry.h"
 
 #include "backend/fileSystem/fs.h"
 #if _USE_NET_COMPRESSOR == 1
@@ -122,9 +124,57 @@ void ibDebuggerServer::ClearCollectionBreakpoint()
 	m_listBreakpoint.clear();
 }
 
+void ibDebuggerServer::WakeDebugSession(const wxString& sessionGuid)
+{
+	// Empty guid -> wake everyone (legacy / pre-multi-session designer
+	// command). Otherwise route only to the matching session so siblings
+	// stay parked at their own breakpoints.
+	if (sessionGuid.IsEmpty()) { WakeAllDebugSessions(); return; }
+
+	ibSession* sess = ibSessionRegistry::Instance().Find(
+		std::string(sessionGuid.mb_str(wxConvUTF8)));
+	if (sess == nullptr) return;
+	auto* d = sess->Debug();
+	if (d == nullptr) return;
+	d->m_debugLoop = false;
+	std::lock_guard<std::mutex> lk(d->m_mutex);
+	d->m_cv.notify_all();
+}
+
+void ibDebuggerServer::WakeAllDebugSessions()
+{
+	// Iterate live sessions, flip their per-session m_debugLoop off and
+	// kick the CV so the script-thread parked in DoDebugLoop returns.
+	// Used on connection loss / server shutdown so sibling tabs in a
+	// wes process don't stay frozen after the designer disconnects.
+	for (auto& [tid, s] : ibSession::SnapshotByThread()) {
+		(void)tid;
+		if (s == nullptr) continue;
+		auto* d = s->Debug();
+		if (d == nullptr) continue;
+		d->m_debugLoop = false;
+		std::lock_guard<std::mutex> lk(d->m_mutex);
+		d->m_cv.notify_all();
+	}
+}
+
 void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& strModuleName, int numLine, ibRunContext* runContext)
 {
-	m_runContext = runContext;
+	// Resolve the script-thread's session — caller is ibProcUnit::Execute
+	// which runs under ibSessionScope, so Current() is the session that
+	// actually hit the breakpoint. The per-session ibDebugSession is the
+	// one we'll park on (so concurrent web sessions don't share a global
+	// CV / m_runContext).
+	ibSession* sess = ibSession::Current();
+	ibSession::ibDebugSession* dbg = sess ? sess->Debug() : nullptr;
+	if (dbg == nullptr) {
+		// Session not in debug mode — bail without touching server-global
+		// state. ResetDebugger here would clear breakpoints for everyone.
+		return;
+	}
+
+	dbg->m_runContext = runContext;
+	m_runContext = runContext;  // legacy mirror — eval/locals still read this
 
 	// Snapshot the thread pointer once — ShutdownServer nulls m_socketConnectionThread
 	// from another thread and we must not deref the member twice with a concurrent null.
@@ -141,6 +191,10 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 		ibWriterMemory commandChannelEnterLoop;
 
 		commandChannelEnterLoop.w_u16(CommandId_EnterLoop);
+		// Session guid travels with every loop-entry packet so the
+		// designer side can route Continue/Step/Eval back to the right
+		// session in a multi-tab wes process.
+		commandChannelEnterLoop.w_stringZ(wxString::FromUTF8(sess->GetId().c_str()));
 		commandChannelEnterLoop.w_stringZ(strDocPath);
 		commandChannelEnterLoop.w_stringZ(strModuleName);
 		commandChannelEnterLoop.w_s32(numLine);
@@ -148,7 +202,7 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 		SendCommand(commandChannelEnterLoop.pointer(), commandChannelEnterLoop.size());
 	}
 
-	//send expressions from user 
+	//send expressions from user
 	SendExpressions();
 
 	//send local variable
@@ -158,7 +212,8 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 	SendStack();
 
 	//start debug loop
-	m_bDebugLoop = true;
+	dbg->m_debugLoop = true;
+	m_bDebugLoop = true;        // legacy mirror used by ResetDebugger fast-path
 	m_bDebugStopLine = false;
 
 	//create stream for this loop
@@ -167,16 +222,20 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 #endif
 
 	// event-driven wait: woken immediately by Continue/StepInto/StepOver/Detach/Destroy.
-	// Connection loss is signalled via m_bDebugLoop=false from the socket worker's
-	// ResetDebugger path or ShutdownServer — no need to touch m_socketConnectionThread
-	// from here (avoids UAF race with ShutdownServer nulling/deleting it).
-	// 250ms wake-up is a safety tick only.
-	while (m_bDebugLoop.load(std::memory_order_acquire)) {
-		std::unique_lock<std::mutex> lock(m_debugLoopMutex);
-		m_debugLoopCV.wait_for(lock, std::chrono::milliseconds(250), [this]() {
-			return !m_bDebugLoop.load(std::memory_order_acquire);
+	// CV/mutex live on the per-session ibDebugSession so a sibling tab's
+	// step doesn't unpark this script thread by accident.
+	// 250ms wake-up is a safety tick only. The wake-condition also watches
+	// the server-global m_bDebugLoop so connection-loss / shutdown
+	// (ResetDebugger) drains every session's parked thread.
+	while (dbg->m_debugLoop.load(std::memory_order_acquire)
+	    && m_bDebugLoop.load(std::memory_order_acquire)) {
+		std::unique_lock<std::mutex> lock(dbg->m_mutex);
+		dbg->m_cv.wait_for(lock, std::chrono::milliseconds(250), [this, dbg]() {
+			return !dbg->m_debugLoop.load(std::memory_order_acquire)
+			    || !m_bDebugLoop.load(std::memory_order_acquire);
 		});
 	}
+	dbg->m_debugLoop = false;
 
 #ifdef __WXMSW__
 	ibValueOLE::ReleaseStreamForDispatch();
@@ -189,6 +248,7 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 		ibWriterMemory commandChannelLeaveLoop;
 
 		commandChannelLeaveLoop.w_u16(CommandId_LeaveLoop);
+		commandChannelLeaveLoop.w_stringZ(wxString::FromUTF8(sess->GetId().c_str()));
 		commandChannelLeaveLoop.w_stringZ(strDocPath);
 		commandChannelLeaveLoop.w_stringZ(strModuleName);
 		commandChannelLeaveLoop.w_s32(numLine);
@@ -196,10 +256,13 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 		SendCommand(commandChannelLeaveLoop.pointer(), commandChannelLeaveLoop.size());
 	}
 
-	//activate main frame 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->RaiseFrame();
+	// Activate main frame — pinned by the worker scope of the
+	// suspended target's thread. Eval / debug commands route through
+	// here while the worker is parked in the CV wait.
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->RaiseFrame();
 
+	dbg->m_runContext = nullptr;
 	m_runContext = nullptr;
 }
 
@@ -904,25 +967,33 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 		}
 	}
 	else if (commandFromClient == CommandId_Continue) {
+		wxString sid; commandReader.r_stringZ(sid);
 		ms_debugServer->m_bDebugStopLine = false;
 		ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
+		ms_debugServer->WakeDebugSession(sid);
 		ms_debugServer->m_debugLoopCV.notify_all();
 	}
 	else if (commandFromClient == CommandId_StepInto) {
+		wxString sid; commandReader.r_stringZ(sid);
 		if (ms_debugServer->IsDebugLooped()) {
 			ms_debugServer->m_bDebugStopLine = true;
 			ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
+			ms_debugServer->WakeDebugSession(sid);
 			ms_debugServer->m_debugLoopCV.notify_all();
 		}
 	}
 	else if (commandFromClient == CommandId_StepOver) {
+		wxString sid; commandReader.r_stringZ(sid);
 		if (ms_debugServer->IsDebugLooped()) {
 			ms_debugServer->m_numCurrentNumberStopContext = ibProcUnit::GetCountRunContext();
 			ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
+			ms_debugServer->WakeDebugSession(sid);
 			ms_debugServer->m_debugLoopCV.notify_all();
 		}
 	}
 	else if (commandFromClient == CommandId_Pause) {
+		wxString sid; commandReader.r_stringZ(sid);
+		(void)sid;  // Pause sets a flag the script thread checks at next op
 		ms_debugServer->m_bDebugStopLine = true;
 	}
 	else if (commandFromClient == CommandId_Detach) {
@@ -931,6 +1002,7 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 			ms_debugServer->m_bDebugLoop =
 			ms_debugServer->m_bDoLoop = false;
 		ms_debugServer->m_debugLoopCV.notify_all();
+		ms_debugServer->WakeAllDebugSessions();
 
 		ibDebuggerServerConnection::Disconnect();
 	}
@@ -940,8 +1012,20 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 			ms_debugServer->m_bDebugLoop =
 			ms_debugServer->m_bDoLoop = false;
 		ms_debugServer->m_debugLoopCV.notify_all();
+		ms_debugServer->WakeAllDebugSessions();
 
 		ibDebuggerServerConnection::Disconnect();
+
+		// Destroy = process exit, but hosts can decline. wes registers a
+		// keep-alive hook that returns true while user tabs are still
+		// connected (work in progress); enterprise.exe never registers
+		// one, so this is a no-op there. Unified ForceExit path:
+		//  - Desktop: wxTheApp->Exit() drains the GUI loop.
+		//  - Web (wes): process-exit hook installed by wes's main
+		//    calls svr->stop(), listen_after_bind returns,
+		//    wfrontendShutdown runs the same teardown as Ctrl+C.
+		if (ibSessionRegistry::Instance().ShouldKeepAlive())
+			return;
 
 		// Note: CoUninitialize() is already done in Entry() epilogue (line ~472).
 		// Doing it again here would give a double-uninit on the worker thread.

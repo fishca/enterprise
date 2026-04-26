@@ -42,8 +42,8 @@ enum CommandId
 	CommandId_ToggleBreakpoint = 7,    // Toggles a breakpoint on a line on and off.
 	CommandId_RemoveBreakpoint = 8,    // Remove a breakpoint on a line on and off.
 	CommandId_Pause = 9,    // Instructs the debugger to break on the next line of script code.
-	CommandId_Detach = 10,    // Detaches the debugger from the process.
-	CommandId_Destroy = 11,    // Destroy the enterprise from the process.
+	CommandId_Detach = 10,    // Soft stop: disconnect debug client + reset debug state, listener stays so the debugger can reattach.
+	CommandId_Destroy = 11,    // Hard stop: same as Detach plus ForceExit on desktop (kill enterprise.exe). Web mode skips the ForceExit (wes serves other tabs) — effectively degrades to Detach.
 
 	CommandId_PatchInsertLine = 12,   // Adds a new line of code.
 	CommandId_PatchDeleteLine = 13,   // Deletes a line of code.
@@ -84,6 +84,11 @@ enum ConnectionType {
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 struct ibDebugData {
+	// Identifies which ibSession (web tab or main desktop) the event
+	// came from / should be routed to. Empty on protocol-level packets
+	// (verify, set-connection-type) — only event/command packets that
+	// touch a specific runtime carry it.
+	wxString m_sessionGuid;
 	wxString m_fileName;
 	wxString m_moduleName;
 };

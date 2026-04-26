@@ -5,6 +5,7 @@
 
 #include "debugClient.h"
 #include "backend/metadataConfiguration.h"
+#include "backend/session/session.h"
 
 #include "backend/fileSystem/fs.h"
 #if _USE_NET_COMPRESSOR == 1
@@ -44,6 +45,7 @@ void ibDebuggerClient::Continue()
 {
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_Continue);
+	commandChannel.w_stringZ(m_currentSessionGuid);
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
@@ -51,6 +53,7 @@ void ibDebuggerClient::StepOver()
 {
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_StepOver);
+	commandChannel.w_stringZ(m_currentSessionGuid);
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
@@ -58,6 +61,7 @@ void ibDebuggerClient::StepInto()
 {
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_StepInto);
+	commandChannel.w_stringZ(m_currentSessionGuid);
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
@@ -65,6 +69,7 @@ void ibDebuggerClient::Pause()
 {
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_Pause);
+	commandChannel.w_stringZ(m_currentSessionGuid);
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
@@ -361,12 +366,12 @@ void ibDebuggerClient::RemoveAllBreakpoint()
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 	if (RemoveAllBreakpointInDB()) {
 		m_listBreakpoint.clear();
-		if (backend_mainFrame != nullptr) {
-			backend_mainFrame->RefreshFrame();
-		}
+		if (auto* frame = ibSession::CurrentFrame())
+			frame->RefreshFrame();
 	}
 	else {
-		wxMessageBox("Error in : void ibDebuggerClient::RemoveAllBreakpoint()");
+		if (auto* frame = ibSession::CurrentFrame())
+			frame->ShowModalMessage("Error in : void ibDebuggerClient::RemoveAllBreakpoint()", wxT("RemoveAllBreakpoint"), wxOK | wxCENTRE);
 	}
 }
 
@@ -765,13 +770,20 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 		ms_debugClient->m_enterLoop = true;
 		ms_debugClient->m_activeSocket = this;
 
-		wxString strFileName; commandReader.r_stringZ(strFileName);
-		wxString strModuleName; commandReader.r_stringZ(strModuleName);
+		// New first field: sessionGuid (which session in wenterprise-server
+		// hit the breakpoint). On desktop enterprise.exe this is the main
+		// session's guid; on wes one of the per-tab WebClient sessions.
+		wxString sessionGuid;     commandReader.r_stringZ(sessionGuid);
+		wxString strFileName;     commandReader.r_stringZ(strFileName);
+		wxString strModuleName;   commandReader.r_stringZ(strModuleName);
 
 		ibDebugLineData data;
+		data.m_sessionGuid = sessionGuid;
 		data.m_fileName = strFileName;
 		data.m_moduleName = strModuleName;
 		data.m_line = ms_debugClient->GetLineOffset(strModuleName, commandReader.r_s32());
+
+		ms_debugClient->m_currentSessionGuid = sessionGuid;
 
 		ms_debugClient->CallAfter(
 			&ibDebuggerClient::ibDebuggerClientAdapter::OnEnterLoop, m_socketClient, data
@@ -782,11 +794,13 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 		ms_debugClient->m_enterLoop = false;
 		ms_debugClient->m_activeSocket = nullptr;
 
-		const wxString& strFileName = commandReader.r_stringZ();
-		const wxString& strModuleName = commandReader.r_stringZ();
+		wxString sessionGuid;          commandReader.r_stringZ(sessionGuid);
+		const wxString& strFileName    = commandReader.r_stringZ();
+		const wxString& strModuleName  = commandReader.r_stringZ();
 
 		ibDebugLineData data;
 
+		data.m_sessionGuid = sessionGuid;
 		data.m_fileName = strFileName;
 		data.m_moduleName = strModuleName;
 		data.m_line = ms_debugClient->GetLineOffset(strModuleName, commandReader.r_s32());

@@ -39,16 +39,45 @@ ibApplicationData::Connect(user, pwd)
 │   │       └── InsertSessionRow (+ ext UPDATE)
 │   ├── m_mainTicket = move(result.ticket)
 │   ├── m_mainThreadScope = SessionScope(ticket.Session())
-│   ├── ticket.Attach(user, pwd)                 # Submit(Attach) → Wait
-│   │   └── ProcessAttach:
-│   │       ├── appData->AuthenticateUser(…)     # pure verifier
-│   │       ├── SessionScope(&s) + InstallUser   # dual-write singleton + session
-│   │       └── UPDATE userName / userGuid
-│   └── (on Attach fail) backend_mainFrame->AuthenticationUser(dialog)
-│       └── re-Attach with singleton's creds
-├── metaDataCreate(runMode, flags)
-└── activeMetaData->RunDatabase() + InitRuntimeForSession(ctx)
+│   └── session.Open(user, pwd)
+│       ├── submitAttach(user, pwd) → ProcessAttach
+│       │   ├── appData->AuthenticateUser(…)     # pure verifier
+│       │   ├── SessionScope(&s) + InstallUser   # dual-write singleton + session
+│       │   └── UPDATE userName / userGuid
+│       ├── (on Attach fail) OnShowAuthenticate  # GUI dialog override
+│       │   └── re-submitAttach with dialog creds
+│       └── registry.NotifyAuthenticated(s)      # 3-phase (see below)
 ```
+
+### NotifyAuthenticated phases
+
+`ibSessionRegistry::NotifyAuthenticated` orchestrates session bring-up in three strict phases. Listeners that depend on later state must hook the right phase.
+
+```
+NotifyAuthenticated(s):
+  1. OnFirstConnect listeners (one-shot per process):
+       appData lambda → metaDataCreate(runMode, flags)
+                        # populates the activeMetaData singleton
+
+  2. s->EnsureRoot()        # idempotent CreateRoot(activeMetaData)
+                            # session's own root mm allocated NOW
+                            # — so step 3 listeners see GetModuleManager() != null
+
+  3. OnAuthenticated listeners (every authenticated session):
+       appData lambda:
+         ├── BindSessionToThread
+         ├── (Shared mode + no fallback) registry.SetFallback(s)
+         ├── (one-shot) activeMetaData->RunDatabase()
+         │     # fires OnBefore/AfterRunMetaObject which reach into
+         │     # session->GetModuleManager() and the metadata-side
+         │     # ibCompileValueCache — both required to be live by now
+         ├── s->CompileRoot()
+         └── (runtime modes) mm->InitRuntimeForSession(s)
+```
+
+**Why three phases, not two.** The pre-2026-04-26 layout fired `OnFirstConnect` then `OnAuthenticated` directly. `CreateRoot` lived in `appData`'s `OnAuthenticated` listener, and `RunDatabase` was nominally below it but ordering was easy to flip. The crash that drove this refactor was `OnBeforeRunMetaObject` reading `ibSession::Current()->GetModuleManager()` while `RunDatabase` was iterating — mm null because `CreateRoot` hadn't run yet on the very first session. Putting `EnsureRoot` between phases makes the contract explicit: every `OnAuthenticated` listener can rely on `s->GetModuleManager()` being non-null when `activeMetaData` is set.
+
+**Where `CreateRoot` lives.** In `ibSession`. The session is the owner of its root mm; the registry just calls the hook at the right moment. `appData`'s `OnAuthenticated` no longer touches `CreateRoot` — only `RunDatabase`/`CompileRoot`/`InitRuntimeForSession`.
 
 ## Lifecycle (web per-cookie)
 

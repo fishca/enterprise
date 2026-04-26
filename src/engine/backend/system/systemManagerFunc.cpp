@@ -15,6 +15,7 @@
 #include "backend/compiler/translateCode.h"
 #include "backend/compiler/procUnit.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 #include "systemManagerEnum.h"
 
@@ -304,10 +305,16 @@ ibValue ibValueSystemFunction::CurrentDate()
 }
 
 ibValue ibValueSystemFunction::WorkingDate() {
-	ms_workDate.SetHour(0);
-	ms_workDate.SetMinute(0);
-	ms_workDate.SetSecond(0);
-	return ms_workDate;
+	// Session-aware via ibSession::Current() — when a worker scope is
+	// active the session's m_workDate is used; otherwise process-wide
+	// ms_workDate (codeRunner / pre-Connect bootstrap).
+	wxDateTime d = ibSession::Current() != nullptr
+		? ibSession::Current()->GetWorkDate()
+		: ms_workDate;
+	d.SetHour(0);
+	d.SetMinute(0);
+	d.SetSecond(0);
+	return d;
 }
 
 ibValue ibValueSystemFunction::AddMonth(const ibValue& cData, int nMonthAdd)
@@ -488,11 +495,11 @@ wxString ibValueSystemFunction::GetTempFileName()
 	);
 }
 
-//--- Работа с окнами: 
+//--- Работа с окнами:
 ibBackendValueForm* ibValueSystemFunction::ActiveWindow()
 {
-	return backend_mainFrame ?
-		backend_mainFrame->ActiveWindow() : nullptr;
+	auto* frame = ibSession::CurrentFrame();
+	return frame != nullptr ? frame->ActiveWindow() : nullptr;
 }
 
 //--- Специальные:
@@ -504,8 +511,8 @@ void ibValueSystemFunction::Message(const wxString& strMessage, ibStatusMessage 
 	if (!wxIsMainThread())
 		return;
 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->Message(strMessage, status);
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->Message(strMessage, status);
 }
 
 void ibValueSystemFunction::Alert(const wxString& strMessage) //Alert
@@ -516,9 +523,10 @@ void ibValueSystemFunction::Alert(const wxString& strMessage) //Alert
 	if (!wxIsMainThread())
 		return;
 
-	if (backend_mainFrame != nullptr) {
-		wxMessageBox(strMessage, _("Warning"), wxICON_WARNING, backend_mainFrame->GetFrameHandler());
-	}
+	// Frontend-owned: frame knows whether to pop a wx-modal (desktop)
+	// or emit a toast/HTTP notification (web).
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->ShowModalMessage(strMessage, _("Warning"), wxICON_WARNING | wxOK);
 }
 
 ibValue ibValueSystemFunction::Question(const wxString& strMessage, ibQuestionMode mode)//Question
@@ -538,9 +546,14 @@ ibValue ibValueSystemFunction::Question(const wxString& strMessage, ibQuestionMo
 	else if (mode == ibQuestionMode::ibQuestionMode_YesNoCancel)
 		wndStyle = wxYES | wxNO | wxCANCEL;
 
-	int retCode = wxMessageBox(strMessage, _("Question"), wndStyle | wxICON_QUESTION,
-		backend_mainFrame ? backend_mainFrame->GetFrameHandler() : nullptr
-	);
+	// Route through the frame's MessageBox virtual so backend stays
+	// wx-free here. No frame = script is running in a context without
+	// UI (daemon, codeRunner) — default to "Cancel" to keep flows that
+	// assume success conservative.
+	auto* frame = ibSession::CurrentFrame();
+	int retCode = frame != nullptr
+		? frame->ShowModalMessage(strMessage, _("Question"), wndStyle | wxICON_QUESTION)
+		: wxCANCEL;
 
 	ibValuibQuestionReturnCode* retValue = ibValue::CreateAndPrepareValueRef<ibValuibQuestionReturnCode>();
 	switch (retCode) {
@@ -572,9 +585,8 @@ void ibValueSystemFunction::SetStatus(const wxString& sStatus)
 	if (!wxIsMainThread())
 		return;
 
-	if (backend_mainFrame != nullptr) {
-		backend_mainFrame->SetStatusText(sStatus);
-	}
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->SetStatusText(sStatus);
 }
 
 void ibValueSystemFunction::ClearMessage()
@@ -585,8 +597,8 @@ void ibValueSystemFunction::ClearMessage()
 	if (!wxIsMainThread())
 		return;
 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->ClearMessage();
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->ClearMessage();
 }
 
 void ibValueSystemFunction::SetError(const wxString& strError)
@@ -901,9 +913,8 @@ void ibValueSystemFunction::SetAppTitle(const wxString& sTitle)//SetAppTitle
 {
 	if (ibBackendException::IsEvalMode())
 		return;
-	if (backend_mainFrame != nullptr) {
-		backend_mainFrame->SetTitle(sTitle);
-	}
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->SetTitle(sTitle);
 }
 
 wxString ibValueSystemFunction::UserDir() {
@@ -930,15 +941,13 @@ wxString ibValueSystemFunction::GeneralLanguage() {
 
 void ibValueSystemFunction::EndJob(bool force) //EndJob
 {
-	if (force) {
-		ibApplicationData::ForceExit();
-	}
-	else if (activeMetaData != nullptr) {
-		ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
-		if (moduleManager->DestroyMainModule()) {
-			ibApplicationData::ForceExit();
-		}
-	}
+	// Just close the current session through the manager. force=true
+	// skips BeforeExit / OnExit veto checks. The registry's
+	// OnLastDisconnect listener fires when the auth-counter hits 0 and
+	// requests ForceExit there — declined by keep-alive predicates if
+	// other clients (web tabs, etc.) are still live.
+	if (auto* session = ibSession::Current())
+		session->Close(force);
 }
 
 void ibValueSystemFunction::UserInterruptProcessing()

@@ -5,6 +5,7 @@
 
 #include "moduleManager.h"
 #include "backend/appData.h"
+#include "backend/backend_exception.h"
 
 //*********************************************************************************************************
 //*                                   Events "moduleManager"                                              *
@@ -38,7 +39,16 @@ bool ibValueModuleManagerConfiguration::BeforeStart()
 			pu->CallAsProc(wxT("beforeStart"), bCancel);
 		return !bCancel.GetBoolean();
 	}
+	catch (const ibBackendException& err) {
+		wxLogWarning(_("BeforeStart: %s"), err.GetErrorDescription());
+		return false;
+	}
+	catch (const std::exception& err) {
+		wxLogWarning(wxT("BeforeStart: %s"), err.what());
+		return false;
+	}
 	catch (...) {
+		wxLogWarning(wxT("BeforeStart: unknown exception"));
 		return false;
 	}
 }

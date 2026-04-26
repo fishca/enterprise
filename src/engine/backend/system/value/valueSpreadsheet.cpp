@@ -1,5 +1,6 @@
 #include "valueSpreadsheet.h"
 #include "backend/backend_mainFrame.h"
+#include "backend/session/session.h"
 
 #pragma region __collection__h__
 
@@ -508,14 +509,14 @@ bool ibValueSpreadsheetDocument::CallAsProc(const long lMethodNum, ibValue** paP
 		return true;
 	}
 	else if (lMethodNum == ePrint) {
-		if (backend_mainFrame != nullptr)
-			return backend_mainFrame->PrintSpreadsheetDocument(m_spreadsheetDoc, lSizeArray > 0 ? paParams[0]->GetBoolean() : false);
+		if (auto* frame = ibSession::CurrentFrame())
+			return frame->PrintSpreadsheetDocument(m_spreadsheetDoc, lSizeArray > 0 ? paParams[0]->GetBoolean() : false);
 		ibBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
 	else if (lMethodNum == eShow) {
-		if (backend_mainFrame != nullptr)
-			return backend_mainFrame->ShowSpreadsheetDocument(paParams[0]->GetString(), m_spreadsheetDoc);
+		if (auto* frame = ibSession::CurrentFrame())
+			return frame->ShowSpreadsheetDocument(paParams[0]->GetString(), m_spreadsheetDoc);
 		ibBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}

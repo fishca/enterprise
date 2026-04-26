@@ -1,6 +1,7 @@
 #include "webSession.h"
 
 #include "backend/appData.h"
+#include "backend/backend_exception.h"
 #include "backend/metadataConfiguration.h"
 #include "backend/session/session.h"
 #include "backend/session/sessionRegistry.h"
@@ -8,6 +9,19 @@
 
 #include "webApplication.h"
 #include "wfrontend.h"
+
+// ibWebClientSession — concrete per-tab session class for the wes web
+// frontend. Defined in this .cpp (not in a dedicated header) because
+// only ibWebSession::Login ever instantiates it through
+// appData->CreateSession<ibWebClientSession>(presetGuid, address).
+// Marker subtype today — no overrides; ibSession's base behaviour suffices
+// (no main frame, OnDestroySession is a no-op true). Kept as a real class
+// so ibSession::Current() resolves to a typed pointer when web-specific
+// behaviour needs to differ from desktop later.
+class ibWebClientSession : public ibSession {
+public:
+	using ibSession::ibSession;   // (std::string, ibSessionKind) ctor
+};
 
 namespace {
 
@@ -34,7 +48,7 @@ ibWebSession::~ibWebSession()
 
 ibSession* ibWebSession::Session() const
 {
-	return m_session;
+	return m_session.get();
 }
 
 bool ibWebSession::OnInit()
@@ -50,39 +64,53 @@ bool ibWebSession::OnInit()
 
 bool ibWebSession::Login(const std::string& user, const std::string& password)
 {
+	// Serialize against a concurrent OnExit on this same instance.
+	// SessionManager::Login holds a shared_ptr keeper while we run; if
+	// SessionManager::Destroy fires for the same id at the same time it
+	// holds its own keeper and proceeds to OnExit. Without the lock the
+	// two raced over m_session / m_app and worker bring-up vs teardown.
+	std::lock_guard<std::recursive_mutex> lifeLock(m_lifecycleMutex);
+
 	if (!m_initialized || appData == nullptr)
 		return false;
 	if (m_app)
 		return true;  // already logged in — idempotent
 
-	// Anonymous-phase Connect through the session registry. The anonymous
-	// row lands in sys_session immediately (empty userName + eWEB_ENTERPRISE_MODE
-	// app mode) so admin / Active-Users listings see "login in progress"
-	// between GET / (cookie mint) and POST /login settling.
-	//
-	// Process run mode stays eWEB_ENTERPRISE_MODE both for the wes
-	// technical session and for every browser tab — physically only the
-	// server process is running. Disambiguation (WebServer vs WebClient)
-	// lives in ibSessionKind, not ibRunMode.
-	auto& reg = ibSessionRegistry::Instance();
-	ibConnectRequest req;
-	req.m_computer = appData->GetComputerName();
-	req.m_appMode  = ibRunMode::eWEB_ENTERPRISE_MODE;
-	req.m_kind     = ibSessionKind::WebClient;
-	req.m_address  = wxString::FromUTF8(wfrontendServerAddress().c_str());
-	// Reuse the tab's sessionStorage id (our SessionManager key) as
-	// the registry's session guid — one identifier across header,
-	// cookie, SessionManager, sys_session.session column.
-	req.m_presetGuid = wxString::FromUTF8(m_id.c_str());
-	// leave userName + password empty — Attach happens separately below
-	// so a wrong password just rejects the Attach; the ticket (and the
-	// anonymous row) can be retried with new creds.
-
-	auto result = reg.Connect(req);
-	if (result.m_code != ibConnectResult::Ok)
+	// Anonymous-phase create through the session registry — same shape as
+	// desktop's appData->CreateSession<ibEnterpriseSession>() (see
+	// enterprise/mainApp.cpp). The anonymous row lands in sys_session
+	// immediately (empty userName + eWEB_ENTERPRISE_MODE app mode) so
+	// admin / Active-Users listings see "login in progress" between
+	// GET / (cookie mint) and POST /login settling. Reuse the tab's
+	// sessionStorage id as the registry's session guid — one identifier
+	// across cookie / SessionManager / sys_session.session column. Auth
+	// happens separately via session->Open below so a wrong password
+	// just rejects the Attach; the anonymous row can be retried with new
+	// creds without re-creating the ticket.
+	const wxString presetGuid = wxString::FromUTF8(m_id.c_str());
+	const wxString address    = wxString::FromUTF8(wfrontendServerAddress().c_str());
+	// CreateSession throws via ibBackendCoreException::Error on registry
+	// Connect / OnCreateSession failure; web HTTP handlers expect bool
+	// false instead of an exception escaping into httplib's loop.
+	// Translate here. Server() is auto-populated by the registry from
+	// the most recent WebServer-kind session — wes's system session,
+	// already added at wfrontendInit — so keep-alive hook sees this tab
+	// as a real client without an explicit pointer here.
+	ibSession* sessionRaw = nullptr;
+	try {
+		sessionRaw = appData->CreateSession<ibWebClientSession>(presetGuid, address);
+	} catch (const ibBackendException&) {
+		sessionRaw = nullptr;
+	}
+	if (sessionRaw == nullptr)
 		return false;
-
-	m_session = result.m_session;
+	// Grab our own strong reference now — registry's m_own holds another
+	// one, but a concurrent ProcessAdd that reuses our presetGuid would
+	// overwrite m_own[guid] and drop registry's reference, freeing the
+	// session out from under our raw pointer. shared_from_this is safe
+	// because ibSession was constructed via std::make_shared in the
+	// registry factory path.
+	m_session = sessionRaw->shared_from_this();
 
 	// Session-owned auth — unified path with desktop ibAppEnterprise /
 	// ibAppDesigner flow. ibSession::Authenticate submits Attach through
@@ -94,7 +122,7 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	const wxString wxPass = wxString::FromUTF8(password.c_str());
 	if (!m_session->Open(wxUser, wxPass)) {
 		m_session->Close();   // submit Remove → sys_session row DELETEd
-		m_session = nullptr;
+		m_session.reset();
 		return false;
 	}
 
@@ -103,7 +131,7 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	// Spin up the per-cookie application. Session lifetime tied to
 	// m_session — explicitly Close()d in OnExit / dtor.
 	auto app = std::make_unique<ibWebApplication>();
-	app->SetSessionContext(m_session);
+	app->SetSessionContext(m_session.get());
 
 	// CreateRoot / CompileRoot / InitRuntimeForSession are driven by
 	// ibSessionRegistry::NotifyAuthenticated → appData::WireSessionEvents
@@ -113,12 +141,12 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	// again here would re-execute the main module's top-level script.
 	bool initOk = false;
 	{
-		ibSessionScope scope(m_session);
+		ibSessionScope scope(m_session.get());
 		initOk = app->OnInit();
 	}
 	if (!initOk) {
 		m_session->Close();
-		m_session = nullptr;
+		m_session.reset();
 		return false;
 	}
 
@@ -128,6 +156,13 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 
 void ibWebSession::OnExit()
 {
+	// Serialize against a concurrent Login on this same instance — see
+	// the comment in Login(). Acquired before any state inspection so a
+	// racing Login that wins the lock first sees a consistent state on
+	// its check, and Destroy's OnExit tears down a fully-initialized
+	// session rather than half-set-up state.
+	std::lock_guard<std::recursive_mutex> lifeLock(m_lifecycleMutex);
+
 	if (!m_initialized)
 		return;
 
@@ -135,11 +170,11 @@ void ibWebSession::OnExit()
 	// shared moduleManager before destroying the app + closing the session.
 	// ibSessionScope pinned so ExitRuntimeForSession's bookkeeping is
 	// consistent with the rest of the web runtime's expectations.
-	if (m_session != nullptr) {
-		ibSessionScope scope(m_session);
+	if (m_session) {
+		ibSessionScope scope(m_session.get());
 		if (activeMetaData != nullptr) {
 			if (auto* mm = m_session->GetModuleManager())
-				mm->ExitRuntimeForSession(m_session);
+				mm->ExitRuntimeForSession(m_session.get());
 		}
 
 		// Drop session's own root so its refs to metadata descriptors
@@ -155,10 +190,13 @@ void ibWebSession::OnExit()
 
 	// Submit Remove@Urgent through session — registry thread DELETEs the
 	// sys_session row and releases the row lock. Safe to call here: the
-	// worker already joined inside m_app->OnExit.
-	if (m_session != nullptr) {
+	// worker already joined inside m_app->OnExit. Our m_session strong-ref
+	// keeps the session alive until reset() below — registry's m_own may
+	// have already been overwritten by a concurrent same-presetGuid login,
+	// but the object stays valid through Close()'s shared_from_this().
+	if (m_session) {
 		m_session->Close();
-		m_session = nullptr;
+		m_session.reset();
 	}
 
 	m_initialized = false;

@@ -71,15 +71,31 @@ private:
 	std::int64_t       m_lastActiveMs;
 	bool               m_initialized = false;
 
+	// Lifecycle serializer — locks Login and OnExit on the same instance
+	// against each other. Rapid F5 races SessionManager::Login (holds a
+	// keeper shared_ptr) against SessionManager::Destroy (also holds a
+	// keeper) on the same ibWebSession; without this the two ran
+	// concurrently and Destroy's m_session.reset() freed the ibSession
+	// while Login's worker thread was still about to start with
+	// m_sessionContext pointing at it. Recursive in case future code
+	// calls OnExit re-entrantly from the same thread (dtor → OnExit →
+	// internal teardown). Distinct from m_mutex which only guards the
+	// activity timestamp accessors.
+	mutable std::recursive_mutex m_lifecycleMutex;
+
 	// Per-session "app" — owns the module manager, future frame, etc.
 	// Created lazily in OnInit so a failed authentication does not
 	// leave a half-initialised app behind.
 	std::unique_ptr<ibWebApplication> m_app;
 
-	// Session pointer — registry's m_own owns the shared_ptr. Set by
-	// Login() via ibSessionRegistry::Connect; cleared on OnExit (which
-	// submits Remove@Urgent through ibSession::Close).
-	class ibSession* m_session = nullptr;
+	// Session pointer — registry's m_own owns one shared_ptr; we keep our
+	// own strong ref so a concurrent refresh-cycle that overwrites
+	// m_own[presetGuid] (same tabSid lands in ProcessAdd while we are
+	// mid-OnExit) cannot drop the last reference and free the session
+	// while OnExit is still calling methods on it. Set by Login() right
+	// after CreateSession via shared_from_this(); cleared on OnExit / dtor
+	// AFTER the final ibSession::Close call returns.
+	std::shared_ptr<class ibSession> m_session;
 };
 
 #endif

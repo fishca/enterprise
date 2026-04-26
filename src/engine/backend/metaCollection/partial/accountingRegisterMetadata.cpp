@@ -122,11 +122,9 @@ bool ibValueMetaObjectAccountingRegister::OnDeleteMetaObject()
 
 bool ibValueMetaObjectAccountingRegister::OnReloadMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordSetObjectAccountingRegister* recordSet = nullptr;
-		if (moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), recordSet)) {
+		if (cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), recordSet)) {
 			if (!recordSet->InitializeObject()) return false;
 		}
 	}
@@ -158,8 +156,6 @@ bool ibValueMetaObjectAccountingRegister::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags)) return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
 	// Set Account field type from Chart of Accounts binding
 	const ibMetaDescription& metaDesc = m_propertyChartOfAccounts->GetValueAsMetaDesc();
@@ -210,9 +206,9 @@ bool ibValueMetaObjectAccountingRegister::OnAfterRunMetaObject(int flags)
 		}
 	}
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRegisterData::OnAfterRunMetaObject(flags)) {
-			if (!moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateRecordSetObjectValue())) return false;
+			if (!cc->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateRecordSetObjectValue())) return false;
 			return true;
 		}
 	}
@@ -228,11 +224,9 @@ bool ibValueMetaObjectAccountingRegister::OnBeforeCloseMetaObject()
 	if (!(*m_propertyAttributeSubconto3)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject()) return false;
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRegisterData::OnBeforeCloseMetaObject()) {
-			if (!moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject())) return false;
+			if (!cc->RemoveCompileModule(m_propertyModuleObject->GetMetaObject())) return false;
 			return true;
 		}
 	}
@@ -273,11 +267,9 @@ ibValueManagerDataObject* ibValueMetaObjectAccountingRegister::CreateManagerData
 
 ibValueRecordSetObject* ibValueMetaObjectAccountingRegister::CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordSetObject* pDataRef = nullptr;
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
+		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectAccountingRegister>(this, uniqueKey);
 		return pDataRef;
 	}

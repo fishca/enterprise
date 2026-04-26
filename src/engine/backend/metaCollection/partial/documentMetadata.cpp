@@ -77,11 +77,9 @@ ibValueManagerDataObject* ibValueMetaObjectDocument::CreateManagerDataObjectValu
 
 ibValueRecordDataObjectRef* ibValueMetaObjectDocument::CreateObjectRefValue(const ibGuid& objGuid)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 	ibValueRecordDataObjectDocument* pDataRef = nullptr;
-	if (appData->DesignerMode()) {
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectDocument>(this, objGuid);
 	}
 	else {
@@ -276,12 +274,10 @@ bool ibValueMetaObjectDocument::OnDeleteMetaObject()
 
 bool ibValueMetaObjectDocument::OnReloadMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordDataObjectDocument* pDataRef = nullptr;
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
+		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
 			return true;
 		}
 
@@ -301,8 +297,6 @@ bool ibValueMetaObjectDocument::OnReloadMetaObject()
 
 bool ibValueMetaObjectDocument::OnBeforeRunMetaObject(int flags)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
 	if (!(*m_propertyAttributeNumber)->OnBeforeRunMetaObject(flags))
 		return false;
@@ -340,8 +334,6 @@ bool ibValueMetaObjectDocument::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
 	const ibMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
@@ -353,10 +345,10 @@ bool ibValueMetaObjectDocument::OnAfterRunMetaObject(int flags)
 		}
 	}
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 
 		if (ibValueMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(flags)) {
-			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue());
+			return cc->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue());
 		}
 
 		return false;
@@ -382,8 +374,6 @@ bool ibValueMetaObjectDocument::OnBeforeCloseMetaObject()
 	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
 	const ibMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
@@ -395,10 +385,10 @@ bool ibValueMetaObjectDocument::OnBeforeCloseMetaObject()
 		}
 	}
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 
 		if (ibValueMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject()) {
-			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
+			return cc->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
 		}
 
 		return false;

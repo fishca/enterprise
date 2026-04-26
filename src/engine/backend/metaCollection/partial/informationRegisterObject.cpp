@@ -6,8 +6,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "backend/backend_mainFrame.h"
-
 bool ibValueRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clearTable)
 {
 	if (!appData->DesignerMode())

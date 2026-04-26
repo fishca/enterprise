@@ -77,10 +77,8 @@ bool ibVisualEditorNotebook::ibVisualEditor::LoadForm()
 	ibMetaData* metaData = creator->GetMetaData();
 	wxASSERT(metaData);
 
-	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->FindCompileModule(creator, m_valueForm)) {
+	auto* cc = metaData->GetCompileCache();
+	if (!cc || !cc->FindCompileModule(creator, m_valueForm)) {
 		m_valueForm = new ibValueForm(creator, nullptr);
 		if (!creator->LoadFormData(m_valueForm)) {
 			wxDELETE(m_valueForm);

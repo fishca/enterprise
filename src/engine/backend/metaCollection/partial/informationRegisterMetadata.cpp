@@ -157,19 +157,17 @@ bool ibValueMetaObjectInformationRegister::OnDeleteMetaObject()
 
 bool ibValueMetaObjectInformationRegister::OnReloadMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 
 		ibValueRecordSetObjectInformationRegister* recordSet = nullptr;
-		if (moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), recordSet)) {
+		if (cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), recordSet)) {
 			if (!recordSet->InitializeObject())
 				return false;
 		}
 
 		ibValueRecordManagerObjectInformationRegister* recordManager = nullptr;
-		if (moduleManager->FindCompileModule(m_metaRecordManager, recordManager)) {
+		if (cc->FindCompileModule(m_metaRecordManager, recordManager)) {
 			if (!recordManager->InitializeObject())
 				return false;
 		}
@@ -201,17 +199,15 @@ bool ibValueMetaObjectInformationRegister::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags))
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 
 		if (ibValueMetaObjectRegisterData::OnAfterRunMetaObject(flags)) {
 
-			if (!moduleManager->AddCompileModule(m_metaRecordManager, CreateRecordManagerObjectValue()))
+			if (!cc->AddCompileModule(m_metaRecordManager, CreateRecordManagerObjectValue()))
 				return false;
 
-			if (!moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateRecordSetObjectValue()))
+			if (!cc->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateRecordSetObjectValue()))
 				return false;
 
 			return true;
@@ -229,17 +225,15 @@ bool ibValueMetaObjectInformationRegister::OnBeforeCloseMetaObject()
 	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject())
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 
 		if (ibValueMetaObjectRegisterData::OnBeforeCloseMetaObject()) {
 
-			if (!moduleManager->RemoveCompileModule(m_metaRecordManager))
+			if (!cc->RemoveCompileModule(m_metaRecordManager))
 				return false;
 
-			if (!moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject()))
+			if (!cc->RemoveCompileModule(m_propertyModuleObject->GetMetaObject()))
 				return false;
 
 			return true;
@@ -303,12 +297,10 @@ ibValueManagerDataObject* ibValueMetaObjectInformationRegister::CreateManagerDat
 
 ibValueRecordSetObject* ibValueMetaObjectInformationRegister::CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordSetObject* pDataRef = nullptr;
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
+		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectInformationRegister>(this, uniqueKey);
 		}
 		return pDataRef;
@@ -319,12 +311,10 @@ ibValueRecordSetObject* ibValueMetaObjectInformationRegister::CreateRecordSetObj
 
 ibValueRecordManagerObject* ibValueMetaObjectInformationRegister::CreateRecordManagerObjectRegValue(const ibUniqueKeyPair& uniqueKey)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordManagerObject* pDataRef = nullptr;
-		if (!moduleManager->FindCompileModule(m_metaRecordManager, pDataRef)) {
+		if (!cc->FindCompileModule(m_metaRecordManager, pDataRef)) {
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordManagerObjectInformationRegister>(this, uniqueKey);
 		}
 		return pDataRef;

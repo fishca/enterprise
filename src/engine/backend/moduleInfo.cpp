@@ -6,7 +6,6 @@
 #include "moduleInfo.h"
 
 #include "appData.h"                 // DesignerMode() guard in Compile()
-#include "session/session.h"
 
 ibRuntimeModuleDataObject::ibRuntimeModuleDataObject() :
 	m_compileModule(nullptr)
@@ -28,15 +27,6 @@ ibRuntimeModuleDataObject::~ibRuntimeModuleDataObject()
 std::shared_ptr<ibProcUnit> ibRuntimeModuleDataObject::GetProcUnit() const
 {
 	return m_procUnit;
-}
-
-ibSession* ibRuntimeModuleDataObject::GetSession() const
-{
-	// Default: walk up the parent chain. Root descriptors
-	// (ibValueModuleManagerConfiguration) override and return their
-	// m_session directly. Orphan descriptors (legacy singleton mm, no
-	// parent wired) return nullptr.
-	return m_parent ? m_parent->GetSession() : nullptr;
 }
 
 ibRuntimeRoot* ibRuntimeModuleDataObject::GetRoot() const

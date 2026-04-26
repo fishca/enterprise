@@ -46,11 +46,9 @@ ibValueManagerDataObject* ibValueMetaObjectChartOfAccounts::CreateManagerDataObj
 
 ibValueRecordDataObjectHierarchyRef* ibValueMetaObjectChartOfAccounts::CreateObjectRefValue(ibObjectMode mode, const ibGuid& guid)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 	ibValueRecordDataObjectChartOfAccounts* pDataRef = nullptr;
-	if (appData->DesignerMode()) {
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectChartOfAccounts>(this, guid, mode);
 	}
 	else {
@@ -215,11 +213,9 @@ bool ibValueMetaObjectChartOfAccounts::OnDeleteMetaObject()
 
 bool ibValueMetaObjectChartOfAccounts::OnReloadMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordDataObjectChartOfAccounts* pDataRef = nullptr;
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) return true;
+		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) return true;
 		return pDataRef->InitializeObject();
 	}
 	return true;
@@ -256,8 +252,6 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
 	// Set SubcontoKind column type from ПВХ binding
 	const ibMetaDescription& metaDesc = m_propertyChartOfCharacteristicTypes->GetValueAsMetaDesc();
@@ -280,9 +274,9 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 		(*m_propertySubcontoKindsTable)->SetFlag(metaDisableFlag);
 	}
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags))
-			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue(ibObjectMode::OBJECT_ITEM));
+			return cc->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue(ibObjectMode::OBJECT_ITEM));
 		return false;
 	}
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags);
@@ -298,11 +292,9 @@ bool ibValueMetaObjectChartOfAccounts::OnBeforeCloseMetaObject()
 	if (!(*m_propertySubcontoKindsTable)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject()) return false;
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject())
-			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
+			return cc->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
 		return false;
 	}
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject();

@@ -91,24 +91,16 @@ bool ibMetaDataConfigurationBase::SaveConfigToFile(const wxString& strFileName)
 //**************************************************************************************************
 
 ibMetaDataConfigurationFile::ibMetaDataConfigurationFile() : ibMetaDataConfigurationBase(),
-m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
+m_commonObject(nullptr), m_configOpened(false)
 {
 	//create main metaObject
 	m_commonObject = new ibValueMetaObjectConfiguration();
 	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
-		// Legacy singleton — no session at this layer. Per-session root
-		// managers are created via ibSession::CreateRoot once StartSession
-		// / Login wires up the new path. This singleton remains during
-		// migration so existing activeMetaData->GetModuleManager() callers
-		// keep working.
-		m_moduleManager = new ibValueModuleManagerConfiguration(nullptr, this, m_commonObject);
-		m_moduleManager->IncrRef();
 		if (!m_commonObject->OnLoadMetaObject(this)) {
 			wxASSERT_MSG(false, "m_commonObject->OnLoadMetaObject() == false");
 		}
-		m_moduleManager->PrepareNames();
 	}
 
 	m_commonObject->PrepareNames();
@@ -133,16 +125,11 @@ m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 
 		m_commonObject->SetLanguage(commonLanguage->GetMetaID());
 	}
-
-	wxASSERT(m_moduleManager);
 }
 
 ibMetaDataConfigurationFile::~ibMetaDataConfigurationFile()
 {
-	//delete module manager
-	wxDELETE(m_moduleManager);
-
-	//clear data 
+	//clear data
 	if (!ClearDatabase()) {
 		wxASSERT_MSG(false, "ClearDatabase() == false");
 	}
@@ -150,6 +137,8 @@ ibMetaDataConfigurationFile::~ibMetaDataConfigurationFile()
 	//delete common metaObject
 	wxDELETE(m_commonObject);
 }
+
+
 
 ////////////////////////////////////////////////////////////////////
 
@@ -209,35 +198,33 @@ bool ibMetaDataConfigurationFile::RunDatabase(int flags)
 			return false;
 	}
 
-	if (m_moduleManager->CreateMainModule()) {
+	// CreateMainModule (compile) is no longer fired from RunDatabase —
+	// orchestration moved to the caller (appData::LoadMetadata) so
+	// metadata stays a pure skeleton/factory and runtime ops sit on the
+	// session-mm side.
 
-		if (!m_commonObject->OnAfterRunMetaObject(flags)) {
-			wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
-			return false;
-		}
-
-		for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
-
-			auto child = m_commonObject->GetChild(idx);
-			if (!m_commonObject->FilterChild(child->GetClassType()))
-				continue;
-
-			if (child->IsDeleted())
-				continue;
-
-			if (!child->OnAfterRunMetaObject(flags))
-				return false;
-
-			if (!RunChildMetadata(child, flags, false))
-				return false;
-		}
-		//if (!StartMainModule())
-		//	return false;
-		m_configOpened = true;
-		return true;
+	if (!m_commonObject->OnAfterRunMetaObject(flags)) {
+		wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
+		return false;
 	}
 
-	return false;
+	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
+
+		auto child = m_commonObject->GetChild(idx);
+		if (!m_commonObject->FilterChild(child->GetClassType()))
+			continue;
+
+		if (child->IsDeleted())
+			continue;
+
+		if (!child->OnAfterRunMetaObject(flags))
+			return false;
+
+		if (!RunChildMetadata(child, flags, false))
+			return false;
+	}
+	m_configOpened = true;
+	return true;
 }
 
 bool ibMetaDataConfigurationFile::RunChildMetadata(ibValueMetaObject* object, int flags, bool before)
@@ -292,9 +279,9 @@ bool ibMetaDataConfigurationFile::CloseDatabase(int flags)
 		return false;
 	}
 
-	if (!m_moduleManager->DestroyMainModule()) {
-		return false;
-	}
+	// DestroyMainModule moved to the caller (appData::Disconnect /
+	// UnloadMetadata) — symmetric with CreateMainModule that was hoisted
+	// out of RunDatabase.
 
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
 
@@ -597,13 +584,11 @@ bool ibMetaDataConfiguration::OnInitialize(const int flags)
 	if (!ibMetaDataConfigurationStorage::TableAlreadyCreated())
 		return false;
 
-#ifndef OES_USE_WEB
-	// Desktop only: one debug server per process, bound to the
-	// singleton metadata configuration. On the web build each
-	// ibWebSession owns its own ibDebuggerServer via CreateForSession(),
-	// so the singleton path is skipped entirely.
+	// One debug server per process, bound to the singleton metadata
+	// configuration. Per-session debug context (ibSession::Debug) layers
+	// on top — handshake is process-level, EnterLoop / step routing is
+	// per-session via sessionGuid.
 	debugServerInit(flags);
-#endif
 
 	if (!LoadDatabase())
 		return false;
@@ -614,25 +599,25 @@ bool ibMetaDataConfiguration::OnInitialize(const int flags)
 		ibMetaData::FindAnyObjectByFilter(appData->GetUserLanguageGuid(), g_metaLanguageCLSID);
 	// Initialize localization engine  
 	ibBackendLocalization::SetUserLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
-#pragma endregion 
+#pragma endregion
 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
-
-#ifndef OES_USE_WEB
-	if ((flags & _app_start_create_debug_server_flag) != 0)
-		debugServer->CreateServer(defaultHost, defaultDebuggerPort, true);
-#endif
+	if ((flags & _app_start_create_debug_server_flag) != 0) {
+		// wait=true blocks bootstrap until the designer's debugClient
+		// connects (OnStart must not run before breakpoints arrive).
+		// For wes that's a deadlock — wes needs to bind HTTP and start
+		// serving immediately; the designer attaches later through the
+		// per-process search. Per-tab WebClient sessions stop at their
+		// own OnStart only after the listener exists.
+		const bool waitForClient = !appData->WebEnterpriseMode();
+		debugServer->CreateServer(defaultHost, defaultDebuggerPort, waitForClient);
+	}
 
 	return true;
 }
 
 bool ibMetaDataConfiguration::OnDestroy()
 {
-#ifndef OES_USE_WEB
 	debugServerDestroy();
-#endif
-	if (backend_mainFrame != nullptr) backend_mainFrame->OnDestroyConfiguration(GetConfigType());
 	return true;
 }
 
@@ -682,10 +667,7 @@ bool ibMetaDataConfigurationStorage::OnInitialize(const int flags)
 	// Initialize localization engine 
 	ibBackendLocalization::SetUserLanguage(GetLangCode());
 
-#pragma endregion 
-
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
+#pragma endregion
 
 	return true;
 }
@@ -694,9 +676,6 @@ bool ibMetaDataConfigurationStorage::OnDestroy()
 {
 	debugClientDestroy();
 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnDestroyConfiguration(GetConfigType());
-
 	return true;
 }
 
@@ -704,6 +683,11 @@ bool ibMetaDataConfigurationStorage::OnDestroy()
 
 ibMetaDataConfigurationStorage::ibMetaDataConfigurationStorage() :
 	ibMetaDataConfiguration(), m_configMetadata(new ibMetaDataConfiguration()) {
+	// Designer-edit configuration → allocate compile-value cache so
+	// metadata-collection callsites (Add/Find/RemoveCompileModule) gate
+	// on `if (auto* cc = metaData->GetCompileCache())` instead of the
+	// runtime-mode appData->DesignerMode() check.
+	m_compileCache = std::make_unique<ibCompileValueCache>();
 }
 
 ibMetaDataConfigurationStorage::~ibMetaDataConfigurationStorage() {

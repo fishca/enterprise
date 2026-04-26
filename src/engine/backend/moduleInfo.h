@@ -6,18 +6,12 @@
 
 #include <memory>
 
-class ibSession;
-
-// Pure interface implemented by any descriptor that terminates a
-// runtime tree. Lets nested descriptors reach "whoever owns this
-// runtime" via GetRoot() walk without hard-coding the concrete class.
-// Today: ibValueModuleManagerConfiguration. Tomorrow: standalone
-// external DP-as-root for mini-sessions, Designer-style compile-only
-// roots — each implements GetSession() on its own terms.
+// Marker interface for descriptors that terminate a runtime tree.
+// Today: ibValueModuleManagerConfiguration. Used by ibRuntimeModuleDataObject::GetRoot
+// parent walk to find "the root above this nested descriptor".
 class BACKEND_API ibRuntimeRoot {
 public:
 	virtual ~ibRuntimeRoot() = default;
-	virtual ibSession* GetSession() const = 0;
 };
 
 class BACKEND_API ibRuntimeModuleDataObject {
@@ -120,7 +114,7 @@ public:
 	}
 
 	virtual ibCompileModule* GetCompileModule() const { return m_compileModule; }
-	// Session-aware: when a SessionScope is active, first checks the
+	// Session-aware: when a ibSessionScope is active, first checks the
 	// session's ProcUnit map. Falls back to the descriptor-owned
 	// m_procUnit (legacy path, still in use on desktop until sessions
 	// fully own runtimes). See project_unified_session_architecture.md.
@@ -130,14 +124,13 @@ public:
 	// if the session is concurrently removed (fast-F5 crash).
 	virtual std::shared_ptr<ibProcUnit> GetProcUnit() const;
 
-	// Parent descriptor in the runtime tree — scope chain + session
-	// lookup. Raw pointer because parent-outlives-child is an ownership
-	// invariant (session owns root through ibValuePtr, root owns nested
-	// through m_listCommonModuleManager / form tabs / script locals).
-	// Root descriptor (ibValueModuleManagerConfiguration) leaves this
-	// nullptr and overrides GetSession() to return its m_session field.
-	// Eval is the only case where parent is a live runtime-executing
-	// node picked up via Current() at compile time.
+	// Parent descriptor in the runtime tree — scope chain for symbol
+	// resolution and call-stack frame chain. Raw pointer because
+	// parent-outlives-child is an ownership invariant (session owns
+	// root through ibValuePtr, root owns nested through
+	// m_listCommonModuleManager / form tabs / script locals). Eval is
+	// the only case where parent is a live runtime-executing node
+	// picked up via Current() at compile time.
 	//
 	// Side-effect: cascades to the descriptor's compile+runtime layer.
 	// If m_compileModule and parent->GetCompileModule() both exist, the
@@ -147,12 +140,6 @@ public:
 	// of separately wiring both compile and runtime parents.
 	void SetParent(ibRuntimeModuleDataObject* parent);
 	ibRuntimeModuleDataObject* GetParent() const { return m_parent; }
-
-	// Walk the parent chain until a node returns its session. Root
-	// descriptor overrides this with its m_session. Default: recurse.
-	// Returns nullptr for detached descriptors (legacy singleton
-	// mm, descriptors created outside any session).
-	virtual ibSession* GetSession() const;
 
 	// Walk the parent chain until we hit a node that acts as runtime
 	// root (implements ibRuntimeRoot). Configuration is today's sole
@@ -168,9 +155,9 @@ protected:
 	std::shared_ptr<ibProcUnit> m_procUnit;
 
 	// Parent descriptor — set by creation paths (AddCommonModule,
-	// CreateNewForm, AddObject) so GetSession() can walk up. Raw ptr;
-	// safe as long as parent outlives child (enforced by owning
-	// containers).
+	// CreateNewForm, AddObject) so scope chain walks up correctly.
+	// Raw ptr; safe as long as parent outlives child (enforced by
+	// owning containers).
 	ibRuntimeModuleDataObject* m_parent = nullptr;
 };
 

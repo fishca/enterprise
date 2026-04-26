@@ -147,38 +147,35 @@ bool ibValueMetaObjectCommonModule::OnDeleteMetaObject()
 
 bool ibValueMetaObjectCommonModule::OnRenameMetaObject(const wxString& newName)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->RenameCommonModule(this, newName))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->RenameCommonModule(this, newName))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnRenameMetaObject(newName);
 }
 
 bool ibValueMetaObjectCommonModule::OnBeforeRunMetaObject(int flags)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->AddCommonModule(this, false, (flags & newObjectFlag) != 0))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->AddCommonModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnBeforeRunMetaObject(flags);
 }
 
 bool ibValueMetaObjectCommonModule::OnAfterRunMetaObject(int flags)
 {
-	return ibValueMetaObjectModuleBase::OnBeforeRunMetaObject(flags);
+	return ibValueMetaObjectModuleBase::OnAfterRunMetaObject(flags);
 }
 
 bool ibValueMetaObjectCommonModule::OnBeforeCloseMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->RemoveCommonModule(this))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->RemoveCommonModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnAfterCloseMetaObject();
 }
@@ -194,11 +191,10 @@ bool ibValueMetaObjectCommonModule::OnAfterCloseMetaObject()
 
 bool ibValueMetaObjectManagerModule::OnBeforeRunMetaObject(int flags)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->AddCommonModule(this, true, (flags & newObjectFlag) != 0))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->AddCommonModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnBeforeRunMetaObject(flags);
 }
@@ -210,11 +206,10 @@ bool ibValueMetaObjectManagerModule::OnAfterRunMetaObject(int flags)
 
 bool ibValueMetaObjectManagerModule::OnBeforeCloseMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->RemoveCommonModule(this))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->RemoveCommonModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnBeforeCloseMetaObject();
 }

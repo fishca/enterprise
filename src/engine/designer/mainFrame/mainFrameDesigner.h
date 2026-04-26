@@ -100,9 +100,6 @@ public:
 
 	virtual bool Show(bool show = true) override;
 
-public:
-	virtual void OnInitializeConfiguration(enum ibConfigType cfg);
-	virtual void OnDestroyConfiguration(enum ibConfigType cfg);
 protected:
 
 	void InitializeDefaultMenu();

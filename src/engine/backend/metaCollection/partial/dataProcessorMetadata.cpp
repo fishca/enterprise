@@ -5,6 +5,7 @@
 
 #include "dataProcessor.h"
 #include "backend/metaData.h"
+#include "backend/session/session.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectDataProcessor, ibValueMetaObjectRecordDataExt)
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectExternalDataProcessor, ibValueMetaObjectDataProcessor)
@@ -41,12 +42,13 @@ ibValueManagerDataObject* ibValueMetaObjectDataProcessor::CreateManagerDataObjec
 
 ibValueRecordDataObjectExt* ibValueMetaObjectDataProcessor::CreateObjectExtValue()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 	ibValueRecordDataObjectDataProcessor* pDataRef = nullptr;
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (!IsExternalCreate()) {
-			if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
+			if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
 				return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectDataProcessor>(this);
 		}
 		else {
@@ -134,9 +136,6 @@ bool ibValueMetaObjectDataProcessor::OnCreateMetaObject(ibMetaData* metaData, in
 
 bool ibValueMetaObjectDataProcessor::OnLoadMetaObject(ibMetaData* metaData)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
 	if (!IsExternalCreate()) {
 
 		if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
@@ -182,12 +181,9 @@ bool ibValueMetaObjectDataProcessor::OnDeleteMetaObject()
 
 bool ibValueMetaObjectDataProcessor::OnReloadMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordDataObjectDataProcessor* pDataRef = nullptr;
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
+		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
 			return true;
 		}
 		return pDataRef->InitializeObject();
@@ -223,12 +219,9 @@ bool ibValueMetaObjectDataProcessor::OnAfterRunMetaObject(int flags)
 		return false;
 	}
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRecordDataExt::OnAfterRunMetaObject(flags))
-			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue());
+			return cc->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue());
 		return false;
 	}
 
@@ -247,12 +240,9 @@ bool ibValueMetaObjectDataProcessor::OnBeforeCloseMetaObject()
 		return false;
 	}
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRecordDataExt::OnBeforeCloseMetaObject())
-			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
+			return cc->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
 		return false;
 	}
 

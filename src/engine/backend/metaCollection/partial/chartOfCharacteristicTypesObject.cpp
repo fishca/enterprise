@@ -128,8 +128,6 @@ ibBackendValueForm* ibValueRecordDataObjectChartOfCharacteristicTypes::GetFormVa
 //*                        ChartOfCharacteristicTypes events                                    *
 //***********************************************************************************************
 
-#include "backend/backend_mainFrame.h"
-
 bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 {
 	if (!appData->DesignerMode())

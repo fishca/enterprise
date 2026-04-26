@@ -216,34 +216,17 @@ public:
 	//check is empty
 	virtual bool IsEmpty() const { return false; }
 
-	//compile modules:
-	bool AddCompileModule(const ibValueMetaObject* moduleObject, ibValue* object);
-	bool RemoveCompileModule(const ibValueMetaObject* moduleObject);
-
-	//templates:
-	template <class T> inline bool FindCompileModule(const ibValueMetaObject* moduleObject, T*& objValue) const {
-		auto it = m_listCommonModuleValue.find(moduleObject);
-		if (it != m_listCommonModuleValue.end()) {
-			objValue = dynamic_cast<T*>(&(*it->second));
-			return objValue != nullptr;
-		}
-		objValue = nullptr;
-		return false;
-	}
-
-	template <class T> inline bool FindParentCompileModule(const ibValueMetaObject* moduleObject, T*& objValue) const {
-		ibValueMetaObject* parentMetadata = moduleObject ? moduleObject->GetParent() : nullptr;
-		if (parentMetadata != nullptr)
-			return FindCompileModule(parentMetadata, objValue);
-		return false;
-	}
-
-	//common modules:
-	bool AddCommonModule(ibValueMetaObjectCommonModule* commonModule, bool managerModule = false, bool runModule = false);
+	// common modules — runtime-side mutation API. Metadata's
+	// AddCommonModule/RenameCommonModule/RemoveCommonModule forwards
+	// here on each active runtime; mm's CreateMainModule also invokes
+	// RuntimeRegisterCommonModule for every descriptor in metadata's
+	// init-modules list. Not for direct caller use outside metadata
+	// or CreateMainModule.
+	bool RuntimeRegisterCommonModule(ibValueMetaObjectCommonModule* commonModule, bool compileNow = false);
+	bool RuntimeRenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName);
+	bool RuntimeUnregisterCommonModule(ibValueMetaObjectCommonModule* commonModule);
 
 	ibValueModuleUnit* FindCommonModule(ibValueMetaObjectCommonModule* commonModule) const;
-	bool RenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName);
-	bool RemoveCommonModule(ibValueMetaObjectCommonModule* commonModule);
 
 	//system object:
 	ibValue* GetObjectManager() const { return m_objectManager; }
@@ -286,9 +269,6 @@ protected:
 	// global metamanager
 	ibValuePtr<ibValueMetadataUnit> m_metaManager;
 
-	//map with compile data
-	std::map<const ibValueMetaObject*, ibValuePtr<ibValue>> m_listCommonModuleValue;
-
 	//array of common modules
 	std::vector<ibValuePtr<ibValueModuleUnit>> m_listCommonModuleManager;
 
@@ -310,26 +290,11 @@ class BACKEND_API ibValueModuleManagerConfiguration :
 	void OnStart();
 	bool BeforeExit();
 	void OnExit();
-
-	// Back-pointer to the session this root runs under. nullptr only for
-	// the legacy singleton created by ibMetaDataConfigurationFile while
-	// the old code path is still alive; production sessions always supply
-	// their own session via ibSession::CreateRoot.
-	ibSession* m_session;
 public:
 
-	// Session-aware construction. Pass nullptr for the legacy singleton
-	// path; ibSession::CreateRoot supplies a real session pointer.
 	ibValueModuleManagerConfiguration(
-		ibSession* session,
 		ibMetaData* metaData,
 		ibValueMetaObjectConfiguration* metaObject);
-
-	// Root descriptor — owns its session reference directly (no walk).
-	// Single override satisfies both virtual bases (ibRuntimeModuleDataObject
-	// and ibRuntimeRoot both declare `virtual ibSession* GetSession() const`
-	// with matching signature).
-	ibSession* GetSession() const override { return m_session; }
 
 	// GetRoot override — we are the root, return ourselves as the
 	// ibRuntimeRoot interface pointer.

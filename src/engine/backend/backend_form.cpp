@@ -1,6 +1,7 @@
 #include "backend_form.h"
 #include "backend/backend_exception.h"
 #include "backend/backend_mainFrame.h"
+#include "backend/session/session.h"
 
 #if !wxUSE_EXTENDED_RTTI
 wxClassInfo ibBackendControlFrame::ms_classInfo(wxT("ibBackendControlFrame"), 0, 0,
@@ -21,8 +22,8 @@ ibBackendValueForm* ibBackendValueForm::CreateNewForm(
 	const ibUniqueKey& formGuid
 )
 {
-	if (backend_mainFrame != nullptr) {
-		ibBackendValueForm* createdForm = backend_mainFrame->CreateNewForm(
+	if (ibSession::CurrentFrame() != nullptr) {
+		ibBackendValueForm* createdForm = ibSession::CurrentFrame()->CreateNewForm(
 			creator,
 			ownerControl,
 			srcObject,
@@ -42,42 +43,42 @@ ibBackendValueForm* ibBackendValueForm::CreateNewForm(
 
 ibUniqueKey ibBackendValueForm::CreateFormUniqueKey(ibBackendControlFrame* ownerControl, ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid)
 {
-	if (backend_mainFrame != nullptr)  return backend_mainFrame->CreateFormUniqueKey(ownerControl, sourceObject, formGuid);
+	if (ibSession::CurrentFrame() != nullptr)  return ibSession::CurrentFrame()->CreateFormUniqueKey(ownerControl, sourceObject, formGuid);
 	ibBackendCoreException::Error(_("Context functions are not available!"));
 	return ibUniqueKey();
 }
 
 ibBackendValueForm* ibBackendValueForm::FindFormByUniqueKey(ibBackendControlFrame* ownerControl, ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid)
 {
-	if (backend_mainFrame != nullptr) return backend_mainFrame->FindFormByUniqueKey(ownerControl, sourceObject, formGuid);
+	if (ibSession::CurrentFrame() != nullptr) return ibSession::CurrentFrame()->FindFormByUniqueKey(ownerControl, sourceObject, formGuid);
 	ibBackendCoreException::Error(_("Context functions are not available!"));
 	return nullptr;
 }
 
 ibBackendValueForm* ibBackendValueForm::FindFormByUniqueKey(const ibUniqueKey& guid)
 {
-	if (backend_mainFrame != nullptr)  return backend_mainFrame->FindFormByUniqueKey(guid);
+	if (ibSession::CurrentFrame() != nullptr)  return ibSession::CurrentFrame()->FindFormByUniqueKey(guid);
 	ibBackendCoreException::Error(_("Context functions are not available!"));
 	return nullptr;
 }
 
 ibBackendValueForm* ibBackendValueForm::FindFormByControlUniqueKey(const ibUniqueKey& guid)
 {
-	if (backend_mainFrame != nullptr)  return backend_mainFrame->FindFormByControlUniqueKey(guid);
+	if (ibSession::CurrentFrame() != nullptr)  return ibSession::CurrentFrame()->FindFormByControlUniqueKey(guid);
 	ibBackendCoreException::Error(_("Context functions are not available!"));
 	return nullptr;
 }
 
 ibBackendValueForm* ibBackendValueForm::FindFormBySourceUniqueKey(const ibUniqueKey& guid)
 {
-	if (backend_mainFrame != nullptr)  return backend_mainFrame->FindFormBySourceUniqueKey(guid);
+	if (ibSession::CurrentFrame() != nullptr)  return ibSession::CurrentFrame()->FindFormBySourceUniqueKey(guid);
 	ibBackendCoreException::Error(_("Context functions are not available!"));
 	return nullptr;
 }
 
 bool ibBackendValueForm::UpdateFormUniqueKey(const ibUniqueKeyPair& guid)
 {
-	if (backend_mainFrame != nullptr) return backend_mainFrame->UpdateFormUniqueKey(guid);
+	if (ibSession::CurrentFrame() != nullptr) return ibSession::CurrentFrame()->UpdateFormUniqueKey(guid);
 	ibBackendCoreException::Error(_("Context functions are not available!"));
 	return false;
 }

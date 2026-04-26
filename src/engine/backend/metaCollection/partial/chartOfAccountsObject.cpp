@@ -77,8 +77,6 @@ ibBackendValueForm* ibValueRecordDataObjectChartOfAccounts::GetFormValue(const w
 }
 #pragma endregion
 
-#include "backend/backend_mainFrame.h"
-
 bool ibValueRecordDataObjectChartOfAccounts::WriteObject()
 {
 	if (!appData->DesignerMode()) {

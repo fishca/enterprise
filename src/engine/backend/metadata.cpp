@@ -1,9 +1,153 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
-//	Description : metaData 
+//	Description : metaData
 ////////////////////////////////////////////////////////////////////////////
 
 #include "metaData.h"
+
+#include "backend/metaCollection/metaModuleObject.h"
+#include "backend/metaCollection/metaFormObject.h"
+
+#include <algorithm>
+
+//**************************************************************************************************
+//*                                       ibModuleStorage                                          *
+//**************************************************************************************************
+
+bool ibModuleStorage::AddCommonModule(ibValueMetaObjectCommonModule* commonModule)
+{
+	if (commonModule == nullptr)
+		return false;
+	auto it = std::find(m_initModules.begin(), m_initModules.end(), commonModule);
+	if (it == m_initModules.end())
+		m_initModules.emplace_back(commonModule);
+	return true;
+}
+
+bool ibModuleStorage::RenameCommonModule(ibValueMetaObjectCommonModule* /*commonModule*/, const wxString& /*newName*/)
+{
+	// Descriptor name is owned by the descriptor itself; storage indexes
+	// by raw pointer, so rename is a no-op. Kept on the API as a single
+	// notification point — runtime mm picks up name changes on its own
+	// during compile.
+	return true;
+}
+
+bool ibModuleStorage::RemoveCommonModule(ibValueMetaObjectCommonModule* commonModule)
+{
+	if (commonModule == nullptr)
+		return false;
+	auto it = std::find(m_initModules.begin(), m_initModules.end(), commonModule);
+	if (it != m_initModules.end())
+		m_initModules.erase(it);
+	return true;
+}
+
+//**************************************************************************************************
+//*                                    ibCompileValueCache                                         *
+//**************************************************************************************************
+
+bool ibCompileValueCache::AddCompileModule(const ibValueMetaObject* moduleObject, ibValue* object)
+{
+	if (object == nullptr)
+		return true;
+	auto it = m_cache.find(moduleObject);
+	if (it == m_cache.end()) {
+		ibCompileEntry entry;
+		entry.m_value = ibValuePtr<ibValue>(object);
+		m_cache.emplace(moduleObject, std::move(entry));
+		return true;
+	}
+	return false;
+}
+
+bool ibCompileValueCache::AddCompileModule(const ibValueMetaObject* moduleObject, ibDeferredForm deferred)
+{
+	if (moduleObject == nullptr)
+		return false;
+	// Insert/replace — second registration for the same descriptor (e.g.
+	// after a designer rename + re-run) overrides the prior rebuilder
+	// and drops any built value so the next Find rebuilds from scratch.
+	ibCompileEntry entry;
+	entry.m_deferred = deferred;
+	m_cache.insert_or_assign(moduleObject, std::move(entry));
+	return true;
+}
+
+bool ibCompileValueCache::RemoveCompileModule(const ibValueMetaObject* moduleObject)
+{
+	auto it = m_cache.find(moduleObject);
+	if (it != m_cache.end()) {
+		m_cache.erase(it);
+		return true;
+	}
+	return false;
+}
+
+bool ibCompileValueCache::InvalidateCompileModule(const ibValueMetaObject* moduleObject)
+{
+	auto it = m_cache.find(moduleObject);
+	if (it == m_cache.end()) return false;
+
+	// No rebuilder — entry was registered as an already-built value
+	// (e.g. catalog/document module). Nothing to invalidate; rebuild
+	// requires a fresh AddCompileModule(meta, value) by the registering
+	// side.
+	if (!it->second.m_deferred.has_value())
+		return false;
+
+	// Drop the cached built value; rebuilder stays so the next Find
+	// triggers a Construct.
+	it->second.m_value = ibValuePtr<ibValue>();
+	return true;
+}
+
+ibValue* ibCompileValueCache::FindCompileModuleRef(const ibValueMetaObject* moduleObject) const
+{
+	auto it = m_cache.find(moduleObject);
+	if (it == m_cache.end())
+		return nullptr;
+
+	// Cached built value — return directly.
+	if (it->second.m_value)
+		return &(*it->second.m_value);
+
+	// Pending or invalidated — try the rebuilder. mm should be ready by
+	// the time the first lookup arrives; on Construct failure the cache
+	// entry is dropped to avoid retrying on every subsequent lookup.
+	if (!it->second.m_deferred.has_value())
+		return nullptr;
+
+	// Re-entrancy guard: Construct internally calls
+	// CreateObjectForm → CreateAndBuildForm → back into FindCompileModule
+	// for the same creator. Without this guard the lookup would trigger
+	// another Construct on the still-empty entry and recurse forever
+	// (stack-overflow on first new-form add).
+	if (it->second.m_constructing)
+		return nullptr;
+	it->second.m_constructing = true;
+
+	ibValue* value = it->second.m_deferred->Construct();
+
+	// Re-find: Construct may have called Invalidate / erase along the way.
+	it = m_cache.find(moduleObject);
+	if (it == m_cache.end())
+		return value;  // cache cleared; just return what we built (may be null)
+
+	it->second.m_constructing = false;
+	if (value == nullptr) {
+		m_cache.erase(it);
+		return nullptr;
+	}
+	it->second.m_value = ibValuePtr<ibValue>(value);
+	return value;
+}
+
+ibValue* ibCompileValueCache::FindParentCompileModuleRef(const ibValueMetaObject* moduleObject) const
+{
+	ibValueMetaObject* parent = moduleObject ? moduleObject->GetParent() : nullptr;
+	return parent ? FindCompileModuleRef(parent) : nullptr;
+}
 
 //**************************************************************************************************
 //*                                          ibMetaData											   *

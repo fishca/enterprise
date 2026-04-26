@@ -8,6 +8,16 @@
 #include "backend/metaData.h"
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
+#include "backend/backend_metatree.h"
+
+// ibDeferredForm impl — defined here where ibValueMetaObjectGenericData
+// (parent's CreateObjectForm) and formWrapper are fully visible.
+ibValue* ibDeferredForm::Construct() const
+{
+	if (m_parent == nullptr || m_form == nullptr)
+		return nullptr;
+	return formWrapper::inl::cast_value(m_parent->CreateObjectForm(m_form));
+}
 
 // -----------------------------------------------------------------------
 // ibBackendCommandItem
@@ -58,6 +68,12 @@ bool ibValueMetaObjectFormBase::LoadFormData(ibBackendValueForm* valueForm) cons
 bool ibValueMetaObjectFormBase::SaveFormData(ibBackendValueForm* valueForm) {
 	const wxMemoryBuffer& memoryBuffer = valueForm->SaveForm();
 	SetFormData(memoryBuffer);
+	// Designer's form-edit commit — invalidate this form's compile-cache
+	// entry so the next FindCompileModule rebuilds the form value via the
+	// stored ibDeferredForm rebuilder. Caller is always the visual form
+	// editor; runtime never reaches here.
+	if (auto* cc = m_metaData ? m_metaData->GetCompileCache() : nullptr)
+		cc->InvalidateCompileModule(this);
 	return !memoryBuffer.IsEmpty();
 }
 
@@ -80,9 +96,9 @@ ibBackendValueForm* ibValueMetaObjectFormBase::CreateAndBuildForm(const ibValueM
 	if (creator != nullptr) {
 		const ibMetaData* metaData = creator->GetMetaData();
 		wxASSERT(metaData);
-		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
-		wxASSERT(moduleManager);
-		if (!moduleManager->FindCompileModule(creator, result)) {
+		auto* cc = metaData->GetCompileCache();
+		const bool foundCached = cc && cc->FindCompileModule(creator, result);
+		if (!foundCached) {
 			result = ibBackendValueForm::CreateNewForm(creator, ownerControl, srcObject, formGuid);
 			if (!creator->GetFormData().IsEmpty() && !creator->LoadFormData(result)) {
 				wxDELETE(result);
@@ -127,9 +143,8 @@ ibBackendValueForm* ibValueMetaObjectFormBase::CreateAndBuildForm(const ibValueM
 wxMemoryBuffer ibValueMetaObjectFormBase::CopyFormData() const
 {
 	ibBackendValueForm* valueForm = nullptr;
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (moduleManager->FindCompileModule(this, valueForm))
+	auto* cc = m_metaData->GetCompileCache();
+	if (cc && cc->FindCompileModule(this, valueForm))
 		return valueForm->SaveForm();
 	return wxMemoryBuffer();
 }
@@ -272,14 +287,17 @@ bool ibValueMetaObjectForm::OnBeforeRunMetaObject(int flags)
 
 bool ibValueMetaObjectForm::OnAfterRunMetaObject(int flags)
 {
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 
-		ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-		wxASSERT(moduleManager);
 		ibValueMetaObjectGenericData* metaObject = wxDynamicCast(m_parent, ibValueMetaObjectGenericData);
 		wxASSERT(metaObject);
 
-		return moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(metaObject->CreateObjectForm(this)));
+		// Defer the actual form build — passing an eager CreateObjectForm
+		// result here would need session->m_root compiled, but CompileRoot
+		// only fires after RunDatabase finishes. The cache's overloaded
+		// AddCompileModule accepts an ibDeferredForm and materializes
+		// it on first FindCompileModule lookup.
+		return cc->AddCompileModule(this, ibDeferredForm(metaObject, this));
 	}
 
 	return ibValueMetaObjectFormBase::OnAfterRunMetaObject(flags);
@@ -287,11 +305,11 @@ bool ibValueMetaObjectForm::OnAfterRunMetaObject(int flags)
 
 bool ibValueMetaObjectForm::OnBeforeCloseMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (!moduleManager->RemoveCompileModule(this))
-		return false;
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (!cc->RemoveCompileModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectFormBase::OnBeforeCloseMetaObject();
 }
@@ -352,10 +370,8 @@ bool ibValueMetaObjectCommonForm::OnBeforeRunMetaObject(int flags)
 
 bool ibValueMetaObjectCommonForm::OnAfterRunMetaObject(int flags)
 {
-	if (appData->DesignerMode()) {
-		ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-		wxASSERT(moduleManager);
-		if (moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(ibValueMetaObjectFormBase::CreateAndBuildForm(this, defaultFormType)))) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (cc->AddCompileModule(this, formWrapper::inl::cast_value(ibValueMetaObjectFormBase::CreateAndBuildForm(this, defaultFormType)))) {
 			return ibValueMetaObjectModuleBase::OnAfterRunMetaObject(flags);
 		}
 		return false;
@@ -365,10 +381,8 @@ bool ibValueMetaObjectCommonForm::OnAfterRunMetaObject(int flags)
 
 bool ibValueMetaObjectCommonForm::OnBeforeCloseMetaObject()
 {
-	if (appData->DesignerMode()) {
-		ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-		wxASSERT(moduleManager);
-		if (moduleManager->RemoveCompileModule(this)) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (cc->RemoveCompileModule(this)) {
 			return ibValueMetaObjectModuleBase::OnBeforeCloseMetaObject();
 		}
 		return false;

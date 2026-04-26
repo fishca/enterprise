@@ -5,6 +5,7 @@
 
 #include "codeEditorInterpreter.h"
 #include "backend/metaData.h"
+#include "backend/session/session.h"
 
 
 #pragma warning(push)
@@ -74,9 +75,11 @@ void ibPrecompileCode::PrepareModuleData()
 	if (m_moduleObject) {
 		ibMetaData* metaData = m_moduleObject->GetMetaData();
 		wxASSERT(metaData);
-		ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+		ibSession* session = ibSession::Current();
+		ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 		wxASSERT(moduleManager);
-		if (!moduleManager->FindCompileModule(m_moduleObject, contextVariable)) {
+		auto* cc = metaData->GetCompileCache();
+		if (!cc || !cc->FindCompileModule(m_moduleObject, contextVariable)) {
 			wxASSERT_MSG(false, "ibPrecompileCode::PrepareModuleData");
 		}
 		for (auto pair : moduleManager->GetContextVariables()) {
@@ -199,8 +202,8 @@ void ibPrecompileCode::PrepareModuleData()
 			if (moduleObject != nullptr) {
 				ibMetaData* metaData = moduleObject->GetMetaData();
 				wxASSERT(metaData);
-				ibValueModuleManager* moduleManager = metaData->GetModuleManager();
-				if (moduleManager->FindCompileModule(moduleObject, pRefData)) {
+				auto* cc = metaData->GetCompileCache();
+				if (cc && cc->FindCompileModule(moduleObject, pRefData)) {
 					//adding variables from context
 					for (long i = 0; i < pRefData->GetNProps(); i++) {
 						wxString strAttributeName = pRefData->GetPropName(i);
@@ -681,7 +684,8 @@ bool ibPrecompileCode::Compile()
 	//���������� ���������� ��������
 	ibMetaData* metaData = m_moduleObject->GetMetaData();
 	wxASSERT(metaData);
-	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	for (auto variable : moduleManager->GetGlobalVariables()) {

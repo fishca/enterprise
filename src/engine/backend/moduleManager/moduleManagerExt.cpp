@@ -13,21 +13,24 @@
 
 ibCompileModule* ibValueModuleManagerExternalDataProcessor::GetCompileModule() const
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
 
 std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalDataProcessor::GetProcUnit() const
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
 
 std::map<wxString, ibValue*>& ibValueModuleManagerExternalDataProcessor::GetContextVariables()
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
@@ -60,7 +63,8 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 	if (m_initialized)
 		return true;
 
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	// Imperative pipeline — SetParent cascades compile+procUnit parents
@@ -150,8 +154,9 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 	if (defFormObject != nullptr) {
 
 		ibBackendValueForm* result = nullptr;
+		ibCompileValueCache* cc = m_metaManager->GetMetaData()->GetCompileCache();
 
-		if (!ibValueModuleManager::FindCompileModule(defFormObject, result)) {
+		if (!cc || !cc->FindCompileModule(defFormObject, result)) {
 
 			//valueForm = defFormObject->CreateForm(
 			//	nullptr, m_objectValue
@@ -164,7 +169,7 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 			//catch (...) {
 			//	wxDELETE(valueForm);
 			//	if (!appData->DesignerMode()) {
-			//		//decrRef - for control delete 
+			//		//decrRef - for control delete
 			//		m_objectValue->DecrRef();
 			//		return false;
 			//	}
@@ -176,7 +181,7 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 				result->ShowForm();
 			}
 			else if (!appData->DesignerMode()) {
-				//decrRef - for control delete 
+				//decrRef - for control delete
 				m_objectValue->DecrRef();
 				return false;
 			}
@@ -224,21 +229,24 @@ bool ibValueModuleManagerExternalDataProcessor::ExitMainModule(bool force)
 
 ibCompileModule* ibValueModuleManagerExternalReport::GetCompileModule() const
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
 
 std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalReport::GetProcUnit() const
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
 
 std::map<wxString, ibValue*>& ibValueModuleManagerExternalReport::GetContextVariables()
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
@@ -271,7 +279,8 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 	if (m_initialized)
 		return true;
 
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	// Imperative pipeline — see ExternalDataProcessor::CreateMainModule
@@ -354,7 +363,8 @@ bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 
 	if (defFormObject != nullptr) {
 		ibBackendValueForm* result = nullptr;
-		if (!ibValueModuleManager::FindCompileModule(defFormObject, result)) {
+		ibCompileValueCache* cc = m_metaManager->GetMetaData()->GetCompileCache();
+		if (!cc || !cc->FindCompileModule(defFormObject, result)) {
 
 			//valueForm = defFormObject->CreateForm(
 			//	nullptr, m_objectValue

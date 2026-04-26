@@ -9,6 +9,7 @@
 
 #include "backend/appData.h"
 #include "backend/databaseLayer/connectionPool.h"
+#include "backend/session/session.h"
 
 //***********************************************************************
 //*                           constant value                            *
@@ -16,13 +17,10 @@
 
 ibValueRecordDataObjectConstant* ibValueMetaObjectConstant::CreateRecordDataObjectValue()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
 	ibValueRecordDataObjectConstant* pDataRef = nullptr;
 
-	if (appData->DesignerMode()) {
-		if (!moduleManager->FindCompileModule(m_propertyModule->GetMetaObject(), pDataRef))
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (!cc->FindCompileModule(m_propertyModule->GetMetaObject(), pDataRef))
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectConstant>(this);
 	}
 	else {
@@ -38,9 +36,8 @@ ibValueRecordDataObjectConstant* ibValueMetaObjectConstant::CreateRecordDataObje
 
 bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataObjectConstant* source)
 {
-	ibMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	// Descriptor parent first — subsequent BindVariable /
@@ -327,8 +324,7 @@ ibValue ibValueRecordDataObjectConstant::GetConstValue() const
 	return ret;
 }
 
-#include "backend/backend_mainFrame.h"
-#include "backend/databaseLayer/databaseErrorCodes.h" 
+#include "backend/databaseLayer/databaseErrorCodes.h"
 
 bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 {

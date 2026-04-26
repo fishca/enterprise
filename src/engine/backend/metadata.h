@@ -1,12 +1,126 @@
 #ifndef __METADATA_H__
 #define __METADATA_H__
 
+#include <map>
+#include <memory>
+#include <optional>
+#include <vector>
+
 #include "backend/moduleManager/moduleManager.h"
+#include "backend/value_ptr.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 class BACKEND_API ibBackendMetadataTree;
+class BACKEND_API ibValueMetaObjectCommonModule;
+class BACKEND_API ibValueMetaObjectGenericData;
+class BACKEND_API ibValueMetaObjectFormBase;
 ///////////////////////////////////////////////////////////////////////////////
 class BACKEND_API ibCtorMetaValueType;
+///////////////////////////////////////////////////////////////////////////////
+
+// Module-storage skeleton — list of common-module descriptors that
+// belong to the metadata. Designer-mutation API (Add/Rename/Remove) +
+// read-only iteration for runtime mm. One instance per metadata; held
+// by value on ibMetaData so the accessor never returns nullptr (empty
+// storage is the default for metadata kinds without init modules).
+class BACKEND_API ibModuleStorage {
+public:
+	bool AddCommonModule(ibValueMetaObjectCommonModule* commonModule);
+	bool RenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName);
+	bool RemoveCommonModule(ibValueMetaObjectCommonModule* commonModule);
+
+	const std::vector<ibValueMetaObjectCommonModule*>& GetInitModules() const { return m_initModules; }
+
+private:
+	std::vector<ibValueMetaObjectCommonModule*> m_initModules;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Lazy form-construction marker stored in the compile-value cache.
+// Eager form-build at OnAfterRunMetaObject time would assert on a null
+// mm (form's compile module needs to be parented to the session root,
+// which isn't compiled yet at that point). Instead the cache registers
+// this deferred descriptor; cache materializes the form value on first
+// FindCompileModule lookup, when mm is fully ready.
+class BACKEND_API ibDeferredForm {
+public:
+	ibDeferredForm(ibValueMetaObjectGenericData* parent,
+	               ibValueMetaObjectFormBase* form) noexcept
+		: m_parent(parent), m_form(form) {}
+
+	// Builds the form value. Calls parent->CreateObjectForm(form) and
+	// wraps via formWrapper::inl::cast_value into a ibValue*. Returns
+	// nullptr if either pointer isn't set.
+	class ibValue* Construct() const;
+
+	ibValueMetaObjectGenericData* Parent() const { return m_parent; }
+	ibValueMetaObjectFormBase*    Form()   const { return m_form; }
+
+private:
+	ibValueMetaObjectGenericData* m_parent;
+	ibValueMetaObjectFormBase*    m_form;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Compile-value cache — stores compiled ibValue pointers for designer's
+// intellisense / metadata-property previews. Created only on metadata
+// configurations that support designer editing (ibMetaDataConfigurationStorage);
+// runtime configurations leave m_compileCache nullptr → callsites use
+// `if (auto* cc = metaData->GetCompileCache())` instead of DesignerMode().
+//
+// Two AddCompileModule overloads share storage:
+//   - (meta, ibValue*)        — caller already has the compiled value
+//                               (catalog/document/register/manager modules).
+//                               Stored as immediate; Find returns directly.
+//   - (meta, ibDeferredForm)  — caller can't build eagerly (forms whose
+//                               compile module needs the session's root
+//                               mm ready). Stored with a rebuilder
+//                               descriptor; Find lazily Constructs on
+//                               first lookup and caches the result while
+//                               keeping the rebuilder alive for later
+//                               invalidations.
+//
+// FindCompileModuleRef is const but mutates the cache via mutable storage —
+// lazy materialization replaces deferred entries with built ibValue without
+// changing the API contract for callers.
+class BACKEND_API ibCompileValueCache {
+public:
+	bool AddCompileModule(const ibValueMetaObject* moduleObject, ibValue* object);
+	bool AddCompileModule(const ibValueMetaObject* moduleObject, ibDeferredForm deferred);
+	bool RemoveCompileModule(const ibValueMetaObject* moduleObject);
+
+	// Mark a deferred entry as dirty — Designer calls this on form-edit
+	// commits so the next Find rebuilds the form value via the stored
+	// rebuilder. No-op for entries that were registered as immediate
+	// values (no rebuilder), and no-op for unknown descriptors.
+	bool InvalidateCompileModule(const ibValueMetaObject* moduleObject);
+
+	ibValue* FindCompileModuleRef(const ibValueMetaObject* moduleObject) const;
+	ibValue* FindParentCompileModuleRef(const ibValueMetaObject* moduleObject) const;
+
+	template <class T>
+	bool FindCompileModule(const ibValueMetaObject* moduleObject, T*& objValue) const {
+		objValue = dynamic_cast<T*>(FindCompileModuleRef(moduleObject));
+		return objValue != nullptr;
+	}
+
+	template <class T>
+	bool FindParentCompileModule(const ibValueMetaObject* moduleObject, T*& objValue) const {
+		objValue = dynamic_cast<T*>(FindParentCompileModuleRef(moduleObject));
+		return objValue != nullptr;
+	}
+
+private:
+	struct ibCompileEntry {
+		ibValuePtr<ibValue>           m_value;     // built value; null if pending or invalidated
+		std::optional<ibDeferredForm> m_deferred;  // rebuilder; present for forms
+		bool                          m_constructing = false; // recursion guard for FindCompileModuleRef
+	};
+	mutable std::map<const ibValueMetaObject*, ibCompileEntry> m_cache;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 
 class BACKEND_API ibMetaData {
@@ -20,7 +134,21 @@ public:
 
 	virtual ~ibMetaData() {}
 
-	virtual ibValueModuleManager* GetModuleManager() const = 0;
+	// Module-storage skeleton — list of common-module descriptors that
+	// runtime mm reads in CreateMainModule to spawn its own instances.
+	// Always non-null (empty for metadata kinds without init modules,
+	// e.g. external data processor / report).
+	ibModuleStorage* GetModuleStorage() { return &m_moduleStorage; }
+	const ibModuleStorage* GetModuleStorage() const { return &m_moduleStorage; }
+
+	// Compile-value cache — designer-only storage of compiled ibValue
+	// pointers used by intellisense / metadata-property previews. Created
+	// only on metadata configurations that support designer editing
+	// (ibMetaDataConfigurationStorage's ctor allocates it). Runtime-only
+	// configurations leave it nullptr — callers gate by null-check
+	// (`if (auto* cc = metaData->GetCompileCache())`) instead of querying
+	// appData->DesignerMode().
+	ibCompileValueCache* GetCompileCache() const { return m_compileCache.get(); }
 
 	virtual bool IsModified() const { return m_metaModify; }
 	virtual void Modify(bool modify = true) {
@@ -263,6 +391,15 @@ protected:
 	//custom types
 	std::vector<ibCtorMetaValueType*> m_factoryCtors;
 	std::atomic<unsigned int> m_factoryCtorCountChanges = 0;
+
+	// Common-module skeleton — populated by descriptor's OnBeforeRunMetaObject
+	// during RunDatabase. Empty for metadata kinds without init modules.
+	ibModuleStorage m_moduleStorage;
+
+	// Compile-value cache — designer-only. Allocated by
+	// ibMetaDataConfigurationStorage's ctor; remains nullptr on runtime
+	// configurations. Lifetime ends with the metadata.
+	std::unique_ptr<ibCompileValueCache> m_compileCache;
 
 private:
 	ibBackendMetadataTree* m_metaTree;

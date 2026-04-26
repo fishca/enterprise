@@ -41,6 +41,8 @@ bool ibProperty::PasteData(ibReaderMemory& reader)
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "backend/backend_mainFrame.h"
+#include "backend/appData.h"
+#include "backend/session/session.h"
 
 ibPropertyObject::~ibPropertyObject()
 {
@@ -52,13 +54,16 @@ ibPropertyObject::~ibPropertyObject()
 	for (auto& event : m_events)
 		wxDELETE(event.second);
 
-	ibPropertyObject* pobj(this);
-
-	if (backend_mainFrame != nullptr && pobj == backend_mainFrame->GetProperty()) {
-		backend_mainFrame->SetProperty(nullptr);
+	// Clear dangling reference on the main frame's property slot if this
+	// is the current selection. Explicit chain through appData → main
+	// session → frame; null-guarded for headless (no UI). TODO: replace
+	// this with an observer pattern so ibPropertyObject doesn't reach
+	// the frame at destruction time.
+	if (auto* frame = ibSession::CurrentFrame()) {
+		if (this == frame->GetProperty()) {
+			frame->SetProperty(nullptr);
+		}
 	}
-
-	//LogDebug(wxT("delete ibPropertyObject"));
 }
 
 wxString ibPropertyObject::GetIndentString(int indent) const

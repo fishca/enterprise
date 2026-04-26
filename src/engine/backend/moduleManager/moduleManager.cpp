@@ -8,6 +8,8 @@
 
 #include "backend/appData.h"
 #include "backend/session/session.h"
+#include "backend/session/sessionRegistry.h"
+#include "backend/metadataConfiguration.h"
 
 #define objectManager wxT("Manager")
 #define objectMetadataManager wxT("Metadata")
@@ -29,8 +31,6 @@ ibValueModuleManager::ibValueModuleManager(ibMetaData* metadata, ibValueMetaObje
 
 void ibValueModuleManager::Clear()
 {
-	//clear compile table 
-	m_listCommonModuleValue.clear();
 	m_listCommonModuleManager.clear();
 }
 
@@ -41,39 +41,18 @@ ibValueModuleManager::~ibValueModuleManager()
 }
 
 //*************************************************************************************************************************
-//************************************************  support compile module ************************************************
+//************************************************  support common module *************************************************
 //*************************************************************************************************************************
 
-bool ibValueModuleManager::AddCompileModule(const ibValueMetaObject* mobj, ibValue* object)
+bool ibValueModuleManager::RuntimeRegisterCommonModule(ibValueMetaObjectCommonModule* commonModule, bool compileNow)
 {
-	if (!appData->DesignerMode() || !object)
-		return true;
-	auto iterator = m_listCommonModuleValue.find(mobj);
-	if (iterator == m_listCommonModuleValue.end()) {
-		m_listCommonModuleValue.emplace(mobj, object);
-		return true;
+	ibValuePtr<ibValueModuleUnit> moduleValue(
+		new ibValueModuleUnit(this, commonModule, commonModule->IsManagerModule()));
+
+	if (auto* cc = m_metaManager->GetMetaData()->GetCompileCache()) {
+		if (!cc->AddCompileModule(commonModule, moduleValue))
+			return false;
 	}
-	return false;
-}
-
-bool ibValueModuleManager::RemoveCompileModule(const ibValueMetaObject* obj)
-{
-	if (!appData->DesignerMode())
-		return true;
-	auto iterator = m_listCommonModuleValue.find(obj);
-	if (iterator != m_listCommonModuleValue.end()) {
-		m_listCommonModuleValue.erase(iterator);
-		return true;
-	}
-	return false;
-}
-
-bool ibValueModuleManager::AddCommonModule(ibValueMetaObjectCommonModule* commonModule, bool managerModule, bool runModule)
-{
-	ibValuePtr<ibValueModuleUnit> moduleValue(new ibValueModuleUnit(this, commonModule, managerModule));
-
-	if (!ibValueModuleManager::AddCompileModule(commonModule, moduleValue))
-		return false;
 
 	m_listCommonModuleManager.emplace_back(moduleValue);
 
@@ -88,7 +67,7 @@ bool ibValueModuleManager::AddCommonModule(ibValueMetaObjectCommonModule* common
 		m_compileModule->AppendModule(moduleValue->GetCompileModule());
 	}
 
-	if (runModule) {
+	if (compileNow) {
 		if (!commonModule->IsGlobalModule()) {
 			try {
 				Compile();
@@ -118,7 +97,7 @@ ibValueModuleManager::ibValueModuleUnit* ibValueModuleManager::FindCommonModule(
 	return nullptr;
 }
 
-bool ibValueModuleManager::RenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName)
+bool ibValueModuleManager::RuntimeRenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName)
 {
 	ibValue* moduleValue = FindCommonModule(commonModule);
 	wxASSERT(moduleValue);
@@ -141,13 +120,15 @@ bool ibValueModuleManager::RenameCommonModule(ibValueMetaObjectCommonModule* com
 	return true;
 }
 
-bool ibValueModuleManager::RemoveCommonModule(ibValueMetaObjectCommonModule* commonModule)
+bool ibValueModuleManager::RuntimeUnregisterCommonModule(ibValueMetaObjectCommonModule* commonModule)
 {
 	ibValuePtr<ibValueModuleManager::ibValueModuleUnit> moduleValue(FindCommonModule(commonModule));
 	wxASSERT(moduleValue);
 
-	if (!ibValueModuleManager::RemoveCompileModule(commonModule))
-		return false;
+	if (auto* cc = m_metaManager->GetMetaData()->GetCompileCache()) {
+		if (!cc->RemoveCompileModule(commonModule))
+			return false;
+	}
 
 	auto iterator = std::find(m_listCommonModuleManager.begin(), m_listCommonModuleManager.end(), moduleValue);
 
@@ -242,11 +223,9 @@ long ibValueModuleManager::FindProp(const wxString& strName) const
 //////////////////////////////////////////////////////////////////////////////////
 
 ibValueModuleManagerConfiguration::ibValueModuleManagerConfiguration(
-	ibSession* session,
 	ibMetaData* metadata,
 	ibValueMetaObjectConfiguration* metaObject)
 	: ibValueModuleManager(metadata, metaObject ? metaObject->GetModuleObject() : nullptr)
-	, m_session(session)
 {
 }
 
@@ -255,6 +234,22 @@ bool ibValueModuleManagerConfiguration::CreateMainModule()
 {
 	if (m_initialized)
 		return true;
+
+	// Read the init-modules list from metadata's storage and create per-
+	// runtime ibValueModuleUnit instances for each. Metadata's storage is
+	// the registry (designer-side mutation through ibModuleStorage's
+	// Add/Rename/Remove); every runtime mm reads it here to spawn its
+	// own runtime objects.
+	if (auto* metaData = m_metaManager ? m_metaManager->GetMetaData() : nullptr) {
+		if (auto* storage = metaData->GetModuleStorage()) {
+			for (auto* commonModule : storage->GetInitModules()) {
+				if (commonModule == nullptr || commonModule->IsDeleted())
+					continue;
+				if (!RuntimeRegisterCommonModule(commonModule, /*compileNow=*/false))
+					return false;
+			}
+		}
+	}
 
 	//Добавление глобальных констант
 	for (auto variable : m_listGlConstValue) {
@@ -289,6 +284,15 @@ bool ibValueModuleManagerConfiguration::CreateMainModule()
 	}
 
 	m_initialized = true;
+
+	// Fire AfterCompile — post-compile hook for AOT-cache writes,
+	// diagnostics, etc. Owner session is resolved via the registry's
+	// reverse lookup (m_own scan, match by root mm pointer) so the
+	// fire site doesn't depend on ibSession::Current()'s thread-binding
+	// state at compile time.
+	if (auto* session = ibSessionRegistry::Instance().FindSessionByRoot(this))
+		ibSessionRegistry::Instance().NotifyAfterCompile(session);
+
 	return true;
 }
 

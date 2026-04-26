@@ -221,8 +221,6 @@ ibBackendValueForm* ibValueRecordDataObjectDocument::GetFormValue(const wxString
 //*                                   Document events                                            *
 //***********************************************************************************************
 
-#include "backend/backend_mainFrame.h"
-
 bool ibValueRecordDataObjectDocument::WriteObject(ibDocumentWriteMode writeMode, ibDocumentPostingMode postingMode)
 {
 	if (!appData->DesignerMode())

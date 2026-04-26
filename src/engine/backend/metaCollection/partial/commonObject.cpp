@@ -8,6 +8,7 @@
 #include "backend/srcExplorer.h"
 #include "backend/system/systemManager.h"
 #include "backend/objCtor.h"
+#include "backend/session/session.h"
 
 #include "backend/metaCollection/partial/reference/reference.h"
 
@@ -1274,7 +1275,8 @@ void ibValueManagerDataObject::PrepareNames() const
 	const ibMetaData* metaData = valueMetaObject->GetMetaData();
 	wxASSERT(metaData);
 
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	const ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
@@ -1296,7 +1298,8 @@ bool ibValueManagerDataObject::CallAsProc(const long lMethodNum, ibValue** paPar
 	const ibMetaData* metaData = valueMetaObject->GetMetaData();
 	wxASSERT(metaData);
 
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	const ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	ibValue* pRefData =
@@ -1316,7 +1319,8 @@ bool ibValueManagerDataObject::CallAsFunc(const long lMethodNum, ibValue& pvarRe
 	const ibMetaData* metaData = valueMetaObject->GetMetaData();
 	wxASSERT(metaData);
 
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	const ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	ibValue* pRefData =
@@ -1751,9 +1755,8 @@ bool ibValueRecordDataObjectExt::InitializeObject()
 			return false;
 		}
 
-		const ibMetaData* metaData = m_metaObject->GetMetaData();
-		wxASSERT(metaData);
-		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+		ibSession* session = ibSession::Current();
+		const ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 		wxASSERT(moduleManager);
 
 		// Imperative: parent first, then lazy compile + runtime slot
@@ -1791,9 +1794,8 @@ bool ibValueRecordDataObjectExt::InitializeObject(ibValueRecordDataObjectExt* so
 	//}
 
 	if (!m_metaObject->IsExternalCreate()) {
-		const ibMetaData* metaData = m_metaObject->GetMetaData();
-		wxASSERT(metaData);
-		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+		ibSession* session = ibSession::Current();
+		const ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 		wxASSERT(moduleManager);
 
 		ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
@@ -1864,9 +1866,8 @@ bool ibValueRecordDataObjectRef::InitializeObject(const ibGuid& copyGuid)
 		return false;
 	}
 
-	ibMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	ibRuntimeModuleDataObject::SetParent(moduleManager);
@@ -1921,9 +1922,8 @@ bool ibValueRecordDataObjectRef::InitializeObject(const ibGuid& copyGuid)
 
 bool ibValueRecordDataObjectRef::InitializeObject(ibValueRecordDataObjectRef* source, bool generate)
 {
-	const ibMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	const ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
@@ -2622,10 +2622,8 @@ bool ibValueRecordSetObject::InitializeObject(const ibValueRecordSetObject* sour
 		return false;
 	}
 
-	const ibMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	const ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
 	ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));

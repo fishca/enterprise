@@ -7,6 +7,9 @@
 class BACKEND_API ibValueMetaObject;
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Designer-side metadata tree facade. Compile-value cache moved to
+// ibCompileValueCache (in metadata.h) — owned by ibMetaData when the
+// configuration supports designer editing. Tree is now strictly UI-side.
 class BACKEND_API ibBackendMetadataTree {
 public:
 

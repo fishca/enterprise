@@ -90,11 +90,9 @@ ibCodeEditor::~ibCodeEditor()
 	wxASSERT(metaObject);
 	const ibMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
 	ibRuntimeModuleDataObject* dataRef = nullptr;
-	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
+	auto* cc = metaData->GetCompileCache();
+	if (cc && cc->FindCompileModule(metaObject, dataRef)) {
 		ibCompileModule* compileModule = dataRef->GetCompileModule();
 		if (compileModule != nullptr) compileModule->ClearLexem();
 	}
@@ -466,11 +464,9 @@ bool ibCodeEditor::SyntaxControl(bool throwMessage) const
 	wxASSERT(metaObject);
 	const ibMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
 	ibRuntimeModuleDataObject* dataRef = nullptr;
-	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
+	auto* cc = metaData->GetCompileCache();
+	if (cc && cc->FindCompileModule(metaObject, dataRef)) {
 		ibCompileModule* compileModule = dataRef->GetCompileModule();
 		try {
 			if (compileModule->Compile()) {
@@ -715,10 +711,9 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 				ibMetaData* metaData = moduleObject->GetMetaData();
 				wxASSERT(metaData);
 
-				ibValueModuleManager* moduleManager = metaData->GetModuleManager();
-				wxASSERT(moduleManager);
 				ibRuntimeModuleDataObject* pRefData = nullptr;
-				if (moduleManager->FindCompileModule(m_document->GetMetaObject(), pRefData)) {
+				auto* cc = metaData->GetCompileCache();
+				if (cc && cc->FindCompileModule(m_document->GetMetaObject(), pRefData)) {
 					ibCompileCode* compileModule = pRefData->GetCompileModule();
 					wxASSERT(compileModule);
 					if (!compileModule->m_changedCode) compileModule->m_changedCode = true;

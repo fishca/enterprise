@@ -132,8 +132,6 @@ ibBackendValueForm* ibValueRecordDataObjectCatalog::GetFormValue(const wxString&
 //*                                   Catalog events                                            *
 //***********************************************************************************************
 
-#include "backend/backend_mainFrame.h"
-
 bool ibValueRecordDataObjectCatalog::WriteObject()
 {
 	if (!appData->DesignerMode())

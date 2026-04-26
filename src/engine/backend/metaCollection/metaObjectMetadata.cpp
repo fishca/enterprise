@@ -5,6 +5,8 @@
 
 #include "metaObjectMetadata.h"
 #include "metaModuleObject.h"
+#include "backend/appData.h"
+#include "backend/session/session.h"
 
 //*****************************************************************************************
 //*                         metaData													  * 
@@ -121,11 +123,17 @@ bool ibValueMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
 	if (!(*m_propertyModuleConfiguration)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
 	wxASSERT(moduleManager);
 
-	if (!moduleManager->AddCompileModule(m_propertyModuleConfiguration->GetMetaObject(), moduleManager))
-		return false;
+	// Designer's compile-cache only exists on the edit configuration
+	// (ibMetaDataConfigurationStorage). Runtime configurations have null cache
+	// — skip silently; runtime mm holds modules elsewhere.
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (!cc->AddCompileModule(m_propertyModuleConfiguration->GetMetaObject(), moduleManager))
+			return false;
+	}
 
 	ibCompileCode::SetCodeStyle(m_propertySyntax->GetValueAsEnum());
 	return ibValueMetaObject::OnBeforeRunMetaObject(flags);
@@ -136,11 +144,10 @@ bool ibValueMetaObjectConfiguration::OnAfterCloseMetaObject()
 	if (!(*m_propertyModuleConfiguration)->OnAfterCloseMetaObject())
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->RemoveCompileModule(m_propertyModuleConfiguration->GetMetaObject()))
-		return false;
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (!cc->RemoveCompileModule(m_propertyModuleConfiguration->GetMetaObject()))
+			return false;
+	}
 
 	return ibValueMetaObject::OnAfterCloseMetaObject();
 }

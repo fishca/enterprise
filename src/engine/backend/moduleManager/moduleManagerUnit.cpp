@@ -19,7 +19,7 @@ ibValueModuleManager::ibValueModuleUnit::ibValueModuleUnit(ibValueModuleManager 
 {
 	// Parent chain in the runtime tree — common module sits directly
 	// under its owning root module manager. Enables GetSession() walks
-	// from nested scripts without relying on ambient SessionScope.
+	// from nested scripts without relying on ambient ibSessionScope.
 	SetParent(moduleManager);
 }
 

@@ -37,6 +37,9 @@
     <ClCompile Include="win\dlgs\authorization.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
+    <ClCompile Include="session\guiSession.cpp">
+      <Filter>session</Filter>
+    </ClCompile>
     <ClCompile Include="win\dlgs\activeUser.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
@@ -937,6 +940,9 @@
     <ClInclude Include="win\dlgs\authorization.h">
       <Filter>win\dlg</Filter>
     </ClInclude>
+    <ClInclude Include="session\guiSession.h">
+      <Filter>session</Filter>
+    </ClInclude>
     <ClInclude Include="win\dlgs\activeUser.h">
       <Filter>win\dlg</Filter>
     </ClInclude>
@@ -1616,6 +1622,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="session">
+      <UniqueIdentifier>{a38c1d4e-7a52-4bc3-9e1b-12f9d8cc4a01}</UniqueIdentifier>
+    </Filter>
     <Filter Include="win">
       <UniqueIdentifier>{e09820de-4672-403b-bb92-2fa562dbb2c7}</UniqueIdentifier>
     </Filter>

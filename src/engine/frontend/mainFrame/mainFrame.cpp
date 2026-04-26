@@ -9,6 +9,8 @@
 //application data
 #include "backend/appData.h"
 
+#include "frontend/session/guiSession.h"
+
 //common 
 #include "frontend/docView/docManager.h"
 #include "frontend/mainFrame/objinspect/objinspect.h"
@@ -256,6 +258,10 @@ bool ibFrontendDocMDIFrame::Destroy()
 ibFrontendDocMDIFrame::~ibFrontendDocMDIFrame()
 {
 	if (s_instance == this) s_instance = nullptr;
+
+	// Notify the owning session so its observer-pointer doesn't dangle when
+	// wx destroys top-level frames before wxApp::OnExit fires Session::Close.
+	if (m_guiSession != nullptr) m_guiSession->DetachFrame(this);
 
 	// deinitialize the valueForm manager
 	m_mgr.UnInit();

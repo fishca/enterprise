@@ -29,13 +29,13 @@
 #include "backend/backend.h"
 #include "session.h"
 #include "sessionPolicy.h"   // unique_ptr<ibSessionPolicy> needs complete type
-#include "sessionTicket.h"
 
 #include <array>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <deque>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -107,19 +107,30 @@ struct BACKEND_API ibConnectRequest {
 	// cookie mint / desktop dialog). If m_userName is set Connect
 	// submits Add then Attach synchronously; on Attach failure the
 	// session is torn down before Connect returns.
+
+	// Optional session factory — when set, Connect() builds the session
+	// through this callback instead of make_shared<ibSession>. Lets the
+	// typed factory path (ibApplicationData::CreateSessionTyped<T>)
+	// construct derived sessions (ibGUISession / ibEnterpriseSession /
+	// ibWebClientSession etc.) while the registry's Add/Attach/Remove
+	// pipeline keeps working through the base ibSession interface.
+	// Default-constructed (empty std::function) → default behaviour.
+	using SessionFactory =
+		std::function<std::shared_ptr<ibSession>(std::string id, ibSessionKind kind)>;
+	SessionFactory m_sessionFactory;
 };
 
 struct BACKEND_API ibConnectResult {
 	enum Code {
-		Ok,              // ticket valid, session Added (+ Attached if creds given)
+		Ok,              // session Added (+ Attached if creds given) — m_session non-null
 		RejectedPolicy,  // ProcessAdd policy veto — terminal
 		RejectedAuth,    // ProcessAttach AuthenticateUser failed — terminal here
 		Timeout,         // registry didn't answer within the window
 		RegistryDown,    // registry fatal / not started
 	};
-	Code             m_code   = Timeout;
-	wxString         m_reason;
-	ibSessionTicket  m_ticket;
+	Code        m_code    = Timeout;
+	wxString    m_reason;
+	ibSession*  m_session = nullptr;   // owned by registry's m_own; session->Close() to remove
 };
 
 class ibDatabaseLayer;
@@ -135,6 +146,20 @@ public:
 	ibSession* Create(const std::string& id, ibRunMode runMode);
 	void       Destroy(const std::string& id);
 	ibSession* Find(const std::string& id);
+
+	// Reverse lookup — find the session in m_own whose root module-manager
+	// equals `mm`. Used by mm::CreateMainModule to recover its owning
+	// session deterministically (without going through ibSession::Current()
+	// which depends on AccessMode + thread-binding state). Returns nullptr
+	// when no live session in m_own owns this mm. Iterates m_own under
+	// m_ownMutex (shared lock).
+	ibSession* FindSessionByRoot(ibValueModuleManagerConfiguration* mm) const;
+
+	// Symmetric lookup by main-window pointer. Frame's own m_guiSession
+	// back-link is the cheap path; this is for backend code that has
+	// the frame pointer but no direct field on it (e.g. cross-DLL hooks).
+	// Iterates m_own comparing s->GetFrame() == frame.
+	ibSession* FindSessionByFrame(class ibBackendDocFrame* frame) const;
 
 	std::vector<std::string> List() const;
 	std::size_t              Count() const;
@@ -157,11 +182,21 @@ public:
 	// DB is open.
 	void Start();
 
-	// Signal stop, wake the thread, join it. Drains any pending urgent
-	// requests before exit (best-effort). Safe to call on an already-
-	// stopped registry. Typically called from `ibApplicationData::Disconnect`
-	// before the DB closes.
+	// Signal stop, wake the thread, join it. The kill-switch — submits
+	// Remove@Urgent for every session still in m_own before flipping
+	// m_stop, so the worker's final drain pass DELETEs each sys_session
+	// row + fires OnDisconnect listeners on its way out. Safe to call on
+	// an already-stopped registry.
 	void Stop();
+
+	// Hosts register a predicate "should the process keep running?".
+	// Used by debug-Destroy / shutdown paths: if any registered hook
+	// returns true, the kill is declined (e.g. wes keeps serving while
+	// user tabs are still connected). Empty list -> default false
+	// (nothing wants to keep us alive, exit is OK).
+	using KeepAliveHook = std::function<bool()>;
+	void OnShouldKeepAlive(KeepAliveHook h);
+	bool ShouldKeepAlive() const;
 
 	// Submit a request. Thread-safe from any caller. Returns immediately;
 	// producer blocks on the session's cv (ibSession::m_cv) for the
@@ -214,6 +249,73 @@ public:
 	// the pointer — pass via std::make_unique.
 	void AddPolicy(std::unique_ptr<ibSessionPolicy> policy);
 
+	// ---- Lifecycle events ----
+	// Process-wide event hooks fired by registry as sessions move through
+	// their lifecycle. Listeners are typically wired during app bootstrap
+	// (ibApplicationData ctor / OnInit) and replace the legacy monolithic
+	// orchestration in appData::Connect/Disconnect. All callbacks run
+	// synchronously on the thread that triggered the event (Authenticate
+	// caller's thread, registry thread for Add/Remove, etc.) — listeners
+	// must not block long.
+	using SessionCallback = std::function<void(ibSession*)>;
+	using VoidCallback    = std::function<void()>;
+
+	// Fires after a session is added to the registry (ProcessAdd success).
+	void OnConnectCreate(SessionCallback cb);
+
+	// Fires when a session transitions to Authenticated (auth success).
+	void OnAuthenticated(SessionCallback cb);
+
+	// Fires once-per-process the first time a session reaches
+	// Authenticated, OR after the registry was empty and a session
+	// authenticates again. Use case: load metadata exactly once on
+	// the first authenticated user.
+	void OnFirstConnect(SessionCallback cb);
+
+	// Fires before a session is removed (ProcessRemove).
+	void OnDisconnect(SessionCallback cb);
+
+	// Fires when the registry transitions from non-empty to empty.
+	// Use case: unload metadata when no users remain.
+	void OnLastDisconnect(VoidCallback cb);
+
+	// Fires from mm::CreateMainModule after compile succeeded — handy
+	// for post-compile diagnostics, AOT-cache writes, etc.
+	void OnAfterCompile(SessionCallback cb);
+
+	// Per-session reload signal (admin issued "reload" on this session's
+	// sys_session row). JobCheckSignal fires this for the matching own-
+	// session; frontend / web-side listeners react (close frame, evict
+	// tab, etc.) — backend stays UI-free.
+	void OnReload(SessionCallback cb);
+
+	// Internal — called by session/registry at the right transition points.
+	// Public so session.cpp's Authenticate can fire NotifyAuthenticated;
+	// registry's ProcessAdd/Remove fire the others.
+	void NotifyConnectCreate(ibSession* s);
+	void NotifyAuthenticated(ibSession* s);
+	void NotifyDisconnect(ibSession* s);
+	void NotifyAfterCompile(ibSession* s);
+	void NotifyReload(ibSession* s);
+
+	// ---- Session access mode + fallback ----
+	// Process-wide flag describing how ibSession::Current() resolves the
+	// active session. Owned by registry because it's session-population
+	// policy: Single-mode app has 1 session and resolution is constant;
+	// Client-mode runs N concurrent sessions strictly per-thread; Server-
+	// mode is per-thread with a process-wide fallback. Mode is set by
+	// ibApplicationData ctor based on runMode and persists for the
+	// process lifetime. ibSession::Current() reads through here.
+	void                SetAccessMode(ibSession::AccessMode mode);
+	ibSession::AccessMode GetAccessMode() const;
+
+	// Shared-mode fallback session — returned by Current() when calling
+	// thread is unbound. No-op in Single mode (which ignores the calling
+	// thread entirely).
+	void       SetFallback(ibSession* s);
+	void       ClearFallback();
+	ibSession* GetFallback() const;
+
 	// Registry-thread invariant: if the thread exits abnormally (exception
 	// escaped, stuck tick, DB hang) the process must terminate — continuing
 	// would mean sys_session reflects lies to peer processes. These
@@ -222,12 +324,13 @@ public:
 	bool IsThreadAlive() const { return m_threadAlive.load(std::memory_order_acquire); }
 	bool IsFatal()       const { return m_fatal.load(std::memory_order_acquire); }
 
-private:
-	ibSessionRegistry() = default;
+	ibSessionRegistry();
 	~ibSessionRegistry();
 
 	ibSessionRegistry(const ibSessionRegistry&)            = delete;
 	ibSessionRegistry& operator=(const ibSessionRegistry&) = delete;
+
+private:
 
 	void ThreadBody() noexcept;
 
@@ -301,11 +404,39 @@ private:
 	// entry, the ticket's shared_ptr keeps the session alive until it
 	// drops too; that's fine because at Stopping → Gone the session has
 	// no DB row and no lock anymore.
+	//
+	// m_ownMutex guards m_own for cross-thread reads (FindSessionByRoot
+	// from compile threads). Writers — ProcessAdd / ProcessRemove on the
+	// registry thread — take a unique lock; readers take a shared lock.
+	mutable std::shared_mutex                                    m_ownMutex;
 	std::unordered_map<std::string, std::shared_ptr<ibSession>>  m_own;
 
 	// Policy chain. Built at Start-time, read-only once the thread runs
 	// (no need for extra locking — only ThreadBody touches on Add).
 	std::vector<std::unique_ptr<ibSessionPolicy>>                m_policies;
+
+	// Process-wide access mode + Shared-mode fallback. Set once at app
+	// startup (see SetAccessMode); read-only afterwards under shared lock
+	// from ibSession::Current.
+	mutable std::shared_mutex                                    m_accessMutex;
+	ibSession::AccessMode                                        m_accessMode = ibSession::AccessMode::Single;
+	ibSession*                                                   m_fallback = nullptr;
+
+	// Lifecycle event listeners. Mutated only at app bootstrap (single
+	// thread); read at notify time. Mutex guards both the lists and
+	// m_authenticatedCount / m_firstConnectFired against concurrent
+	// notifications from auth threads and registry thread.
+	mutable std::mutex                  m_eventMutex;
+	std::vector<SessionCallback>        m_listConnectCreate;
+	std::vector<SessionCallback>        m_listAuthenticated;
+	std::vector<SessionCallback>        m_listFirstConnect;
+	std::vector<SessionCallback>        m_listDisconnect;
+	std::vector<VoidCallback>           m_listLastDisconnect;
+	std::vector<SessionCallback>        m_listAfterCompile;
+	std::vector<KeepAliveHook>          m_listKeepAlive;
+	std::vector<SessionCallback>        m_listReload;
+	std::size_t                         m_authenticatedCount = 0;
+	bool                                m_firstConnectFired  = false;
 
 	// --- sys_session ownership ----
 	// Off by default — handlers only drive state transitions. Flip to

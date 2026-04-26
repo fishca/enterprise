@@ -57,9 +57,15 @@ void LogSession(const std::string& msg)
 
 ibSessionRegistry& ibSessionRegistry::Instance()
 {
-	static ibSessionRegistry instance;
-	return instance;
+	// Owned by ibApplicationData since 2026-04-25 — registry's lifetime
+	// matches appData's. Construction order: appData ctor → m_sessionRegistry.
+	// Callers that hit Instance() before appData exists are bugs (tests
+	// that need a registry should create their own ibApplicationData).
+	wxASSERT(appData != nullptr);
+	return *appData->GetSessionRegistry();
 }
+
+ibSessionRegistry::ibSessionRegistry() = default;
 
 ibSessionRegistry::~ibSessionRegistry()
 {
@@ -93,6 +99,30 @@ ibSession* ibSessionRegistry::Find(const std::string& id)
 	std::lock_guard<std::mutex> lock(m_mutex);
 	auto it = m_sessions.find(id);
 	return it != m_sessions.end() ? it->second.get() : nullptr;
+}
+
+ibSession* ibSessionRegistry::FindSessionByRoot(ibValueModuleManagerConfiguration* mm) const
+{
+	if (mm == nullptr) return nullptr;
+	std::shared_lock<std::shared_mutex> lock(m_ownMutex);
+	for (const auto& kv : m_own) {
+		ibSession* s = kv.second.get();
+		if (s != nullptr && s->GetModuleManager() == mm)
+			return s;
+	}
+	return nullptr;
+}
+
+ibSession* ibSessionRegistry::FindSessionByFrame(ibBackendDocFrame* frame) const
+{
+	if (frame == nullptr) return nullptr;
+	std::shared_lock<std::shared_mutex> lock(m_ownMutex);
+	for (const auto& kv : m_own) {
+		ibSession* s = kv.second.get();
+		if (s != nullptr && s->GetFrame() == frame)
+			return s;
+	}
+	return nullptr;
 }
 
 std::vector<std::string> ibSessionRegistry::List() const
@@ -153,6 +183,30 @@ void ibSessionRegistry::Start()
 void ibSessionRegistry::Stop()
 {
 	if (!m_thread.joinable()) return;
+
+	// Submit Remove for every session still in m_own (the wes process's
+	// technical WebServer session, stranded per-tab sessions on a hard
+	// exit, etc.) BEFORE flipping m_stop. The worker's end-of-loop drain
+	// pass picks them up and runs ProcessRemove → DELETE sys_session row
+	// + fire OnDisconnect listeners — without this they'd be orphaned in
+	// the DB until the next sweep eventually cleans them up.
+	{
+		std::vector<std::shared_ptr<ibSession>> owned;
+		{
+			std::shared_lock<std::shared_mutex> lk(m_ownMutex);
+			owned.reserve(m_own.size());
+			for (auto& kv : m_own) {
+				if (kv.second) owned.push_back(kv.second);
+			}
+		}
+		for (auto& s : owned) {
+			ibRegistryRequest req;
+			req.kind    = ibRegistryRequestKind::Remove;
+			req.session = s;
+			Submit(std::move(req), ibPriority::Urgent);
+		}
+	}
+
 	{
 		std::lock_guard<std::mutex> lk(m_submitMtx);
 		m_stop.store(true, std::memory_order_release);
@@ -228,7 +282,12 @@ ibConnectResult ibSessionRegistry::Connect(const ibConnectRequest& req,
 
 	const std::string idStr = identity.m_guid.str();
 
-	auto session = std::make_shared<ibSession>(idStr, req.m_kind);
+	// Factory path — typed CreateSessionTyped<T> on appData hands us a
+	// callback that builds a derived session (ibGUISession / ibEnterpriseSession /
+	// ibWebClientSession …). Default path keeps the plain base class.
+	auto session = req.m_sessionFactory
+		? req.m_sessionFactory(idStr, req.m_kind)
+		: std::make_shared<ibSession>(idStr, req.m_kind);
 	session->SetIdentity(identity);
 
 	// --- Submit Add + wait for Created → Added / Rejected ---
@@ -289,9 +348,10 @@ ibConnectResult ibSessionRegistry::Connect(const ibConnectRequest& req,
 		}
 	}
 
-	// Success — hand over ticket ownership.
-	r.m_code   = ibConnectResult::Ok;
-	r.m_ticket = ibSessionTicket(session, this);
+	// Success — return raw session pointer. Registry's m_own keeps it
+	// alive; caller drives the lifecycle through ibSession::Close().
+	r.m_code    = ibConnectResult::Ok;
+	r.m_session = session.get();
 	return r;
 }
 
@@ -321,6 +381,201 @@ void ibSessionRegistry::AddPolicy(std::unique_ptr<ibSessionPolicy> policy)
 	// Only safe before Start(); the thread reads m_policies without a
 	// lock. Callers wire policies during app bootstrap.
 	m_policies.push_back(std::move(policy));
+}
+
+// --- Lifecycle events ---------------------------------------------------
+
+void ibSessionRegistry::OnConnectCreate(SessionCallback cb)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listConnectCreate.push_back(std::move(cb));
+}
+
+void ibSessionRegistry::OnAuthenticated(SessionCallback cb)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listAuthenticated.push_back(std::move(cb));
+}
+
+void ibSessionRegistry::OnFirstConnect(SessionCallback cb)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listFirstConnect.push_back(std::move(cb));
+}
+
+void ibSessionRegistry::OnDisconnect(SessionCallback cb)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listDisconnect.push_back(std::move(cb));
+}
+
+void ibSessionRegistry::OnLastDisconnect(VoidCallback cb)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listLastDisconnect.push_back(std::move(cb));
+}
+
+void ibSessionRegistry::OnAfterCompile(SessionCallback cb)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listAfterCompile.push_back(std::move(cb));
+}
+
+void ibSessionRegistry::OnReload(SessionCallback cb)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listReload.push_back(std::move(cb));
+}
+
+void ibSessionRegistry::NotifyReload(ibSession* s)
+{
+	if (s == nullptr) return;
+	std::vector<SessionCallback> listeners;
+	{
+		std::lock_guard<std::mutex> lk(m_eventMutex);
+		listeners = m_listReload;
+	}
+	for (const auto& cb : listeners)
+		if (cb) cb(s);
+}
+
+void ibSessionRegistry::OnShouldKeepAlive(KeepAliveHook h)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listKeepAlive.push_back(std::move(h));
+}
+
+bool ibSessionRegistry::ShouldKeepAlive() const
+{
+	std::vector<KeepAliveHook> hooks;
+	{
+		std::lock_guard<std::mutex> lk(m_eventMutex);
+		hooks = m_listKeepAlive;
+	}
+	for (auto& h : hooks) {
+		if (h && h()) return true;
+	}
+	return false;
+}
+
+void ibSessionRegistry::NotifyAfterCompile(ibSession* s)
+{
+	if (s == nullptr) return;
+	std::vector<SessionCallback> listeners;
+	{
+		std::lock_guard<std::mutex> lk(m_eventMutex);
+		listeners = m_listAfterCompile;
+	}
+	for (const auto& cb : listeners)
+		if (cb) cb(s);
+}
+
+void ibSessionRegistry::NotifyConnectCreate(ibSession* s)
+{
+	if (s == nullptr) return;
+	std::vector<SessionCallback> snapshot;
+	{
+		std::lock_guard<std::mutex> lk(m_eventMutex);
+		snapshot = m_listConnectCreate;
+	}
+	for (const auto& cb : snapshot)
+		if (cb) cb(s);
+}
+
+void ibSessionRegistry::NotifyAuthenticated(ibSession* s)
+{
+	if (s == nullptr) return;
+	// Pin session as Current() on the calling thread BEFORE listeners
+	// fire, so RunDatabase / CompileRoot / etc. can resolve through
+	// ibSession::Current() inside listener bodies without each listener
+	// having to bind manually.
+	ibSession::BindSessionToThread(s, std::this_thread::get_id());
+
+	std::vector<SessionCallback> auths;
+	std::vector<SessionCallback> firsts;
+	bool fireFirst = false;
+	{
+		std::lock_guard<std::mutex> lk(m_eventMutex);
+		++m_authenticatedCount;
+		if (!m_firstConnectFired) {
+			m_firstConnectFired = true;
+			fireFirst = true;
+			firsts = m_listFirstConnect;
+		}
+		auths = m_listAuthenticated;
+	}
+	if (fireFirst) {
+		for (const auto& cb : firsts)
+			if (cb) cb(s);
+	}
+	// Between phases — OnFirstConnect's metadataCreate may have just set
+	// activeMetaData; OnAuthenticated's listeners (RunDatabase ->
+	// OnBeforeRunMetaObject) need session->mm to exist. Session creates
+	// its root here so ownership stays in ibSession (see EnsureRoot).
+	s->EnsureRoot();
+	for (const auto& cb : auths)
+		if (cb) cb(s);
+}
+
+void ibSessionRegistry::NotifyDisconnect(ibSession* s)
+{
+	if (s == nullptr) return;
+	// Only authenticated sessions move the counter — sessions removed
+	// pre-auth (Rejected / cancelled Add) don't pair with NotifyAuthenticated.
+	const bool wasAuth = (s->Auth() == ibAuthState::Authenticated);
+	std::vector<SessionCallback> disconnects;
+	std::vector<VoidCallback>    lasts;
+	bool fireLast = false;
+	{
+		std::lock_guard<std::mutex> lk(m_eventMutex);
+		disconnects = m_listDisconnect;
+		if (wasAuth && m_authenticatedCount > 0) {
+			--m_authenticatedCount;
+			if (m_authenticatedCount == 0) {
+				m_firstConnectFired = false;
+				fireLast = true;
+				lasts = m_listLastDisconnect;
+			}
+		}
+	}
+	for (const auto& cb : disconnects)
+		if (cb) cb(s);
+	if (fireLast) {
+		for (const auto& cb : lasts)
+			if (cb) cb();
+	}
+}
+
+// --- Access mode + fallback ---------------------------------------------
+
+void ibSessionRegistry::SetAccessMode(ibSession::AccessMode mode)
+{
+	std::unique_lock<std::shared_mutex> lk(m_accessMutex);
+	m_accessMode = mode;
+}
+
+ibSession::AccessMode ibSessionRegistry::GetAccessMode() const
+{
+	std::shared_lock<std::shared_mutex> lk(m_accessMutex);
+	return m_accessMode;
+}
+
+void ibSessionRegistry::SetFallback(ibSession* s)
+{
+	std::unique_lock<std::shared_mutex> lk(m_accessMutex);
+	m_fallback = s;
+}
+
+void ibSessionRegistry::ClearFallback()
+{
+	std::unique_lock<std::shared_mutex> lk(m_accessMutex);
+	m_fallback = nullptr;
+}
+
+ibSession* ibSessionRegistry::GetFallback() const
+{
+	std::shared_lock<std::shared_mutex> lk(m_accessMutex);
+	return m_fallback;
 }
 
 // --- Handlers ------------------------------------------------------------
@@ -432,7 +687,10 @@ void ibSessionRegistry::ProcessAdd(ibRegistryRequest& req)
 
 	// Claim ownership before touching DB — ProcessRemove finds us in
 	// m_own regardless of whether the INSERT below succeeded.
-	m_own[s.GetId()] = req.session;
+	{
+		std::unique_lock<std::shared_mutex> lock(m_ownMutex);
+		m_own[s.GetId()] = req.session;
+	}
 
 	// DB ownership gate. When `m_ownsSysSession` is off, registry only
 	// drives state transitions (useful for tests / embedders that keep
@@ -460,6 +718,7 @@ void ibSessionRegistry::ProcessAdd(ibRegistryRequest& req)
 	}
 
 	s.Transition(ibSessionState::Added);
+	NotifyConnectCreate(&s);
 }
 
 void ibSessionRegistry::ProcessAttach(ibRegistryRequest& req)
@@ -495,7 +754,7 @@ void ibSessionRegistry::ProcessAttach(ibRegistryRequest& req)
 	// session's m_userInfo (not the main-thread session that happens
 	// to be Current on the registry thread otherwise).
 	{
-		SessionScope scope(&s);
+		ibSessionScope scope(&s);
 		appData->InstallUser(info, req.password);
 	}
 
@@ -546,7 +805,16 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 {
 	if (!req.session) return;
 	ibSession& s = *req.session;
+	const bool wasAuthenticated = (s.Auth() == ibAuthState::Authenticated);
 	s.Transition(ibSessionState::Stopping);
+
+	// Fire Disconnect listeners while session is still alive (between
+	// Stopping and Gone) — they may need to query session identity.
+	// NotifyDisconnect itself gates the auth-counter decrement on
+	// session's auth state, so non-authenticated removals don't
+	// disturb the first/last-connect bookkeeping.
+	NotifyDisconnect(&s);
+	(void)wasAuthenticated;
 
 	if (m_ownsSysSession && m_writeConn && s.Inserted()) {
 		const wxString guidStr = wxString::FromUTF8(s.GetId().c_str());
@@ -559,9 +827,12 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 	// session2 replaces m_own[guid] with session2 before session1's
 	// Remove runs; a blind erase here would yank session2's entry and
 	// break subsequent heartbeat / snapshot for a live session.
-	auto it = m_own.find(s.GetId());
-	if (it != m_own.end() && it->second.get() == &s)
-		m_own.erase(it);
+	{
+		std::unique_lock<std::shared_mutex> lock(m_ownMutex);
+		auto it = m_own.find(s.GetId());
+		if (it != m_own.end() && it->second.get() == &s)
+			m_own.erase(it);
+	}
 
 	s.Transition(ibSessionState::Gone);
 }
@@ -776,15 +1047,15 @@ void ibSessionRegistry::JobCheckSignal()
 			}
 		}
 		else if (p.signal == wxT("reload")) {
-			// Broad "reload metadata" directive — same effect as a Destroy
-			// on every web-client session the target process owns. Clients
-			// hit 401 on their next poll and re-land on /login with the
-			// fresh metadata already loaded process-wide (metadata is
-			// reloaded by a separate mechanism that watches sys_config).
-			// `kick` on a single row → single-session kick; `reload` on
-			// any row triggers process-wide client eviction so admin
-			// doesn't have to enumerate every per-tab session.
+			// Broad "reload metadata" directive. Wes uses the process-wide
+			// flag (eviction on next /poll). Per-session listeners
+			// (frontend GUI registers one in ibGUISession::AttachFrame)
+			// react with their own teardown — backend stays GUI-free.
 			m_reloadRequested.store(true, std::memory_order_release);
+			const std::string idStr(p.guid.ToUTF8().data());
+			auto it = m_own.find(idStr);
+			if (it != m_own.end() && it->second)
+				NotifyReload(it->second.get());
 		}
 		// Future: "refresh" → broadcast SSE prod to client.
 

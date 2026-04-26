@@ -28,7 +28,6 @@
     <ClInclude Include="session\session.h" />
     <ClInclude Include="session\sessionPolicy.h" />
     <ClInclude Include="session\sessionRegistry.h" />
-    <ClInclude Include="session\sessionTicket.h" />
     <ClInclude Include="backend_core.h" />
     <ClInclude Include="backend_mainFrame.h" />
     <ClInclude Include="backend_picture.h" />
@@ -285,7 +284,6 @@
     <ClCompile Include="session\designerExclusivePolicy.cpp" />
     <ClCompile Include="session\session.cpp" />
     <ClCompile Include="session\sessionRegistry.cpp" />
-    <ClCompile Include="session\sessionTicket.cpp" />
     <ClCompile Include="backend_core.cpp" />
     <ClCompile Include="backend_mainFrame.cpp" />
     <ClCompile Include="backend_picture.cpp" />

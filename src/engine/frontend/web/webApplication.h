@@ -21,13 +21,10 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <deque>
 #include <functional>
 #include <future>
 #include <memory>
 #include <mutex>
-#include <thread>
-#include <vector>
 
 #include <wx/event.h>
 
@@ -36,10 +33,8 @@
 #include "backend/compiler/value.h"
 #include "backend/value_ptr.h"
 
-class ibValueForm;
 class ibValueModuleManagerConfiguration;
 class ibWebFrame;
-class ibWebTimer;
 class ibSession;
 class ibWebClientSession;
 
@@ -112,23 +107,23 @@ public:
 	bool DispatchTextChange(int controlId, const wxString& value)  { return Dispatch(controlId, wxT("text"),  value);                           }
 	bool DispatchToggle(int controlId, bool checked)               { return Dispatch(controlId, wxT("toggle"), checked ? wxT("1") : wxT("0")); }
 
-	// Session worker thread interface. All script execution runs on
-	// the worker — HTTP handlers and timers submit work, worker
-	// drains serially. Why: ibProcUnit is not thread-safe across
-	// session state. Serialising through one thread keeps it safe
-	// without per-access locking and mirrors how a wxApp event loop
-	// would naturally serialise.
+	// Session task dispatch — forwards to the process-wide ibWorkerPool
+	// (appData->GetWorkerPool()), which preserves per-session FIFO +
+	// lease semantics across all concurrent web sessions sharing the
+	// pool's fixed worker thread count. Replaces the per-session worker
+	// thread that used to live on this object.
 	//
-	//   PostWork          — fire-and-forget; used by timer ticks.
+	//   PostWork          — fire-and-forget; used by timer ticks and
+	//                       internal cleanup paths.
 	//   RunOnWorker<T>(f) — submits and returns a future for the
 	//                       result; HTTP handlers .get() it to
 	//                       synchronously return the JSON response.
 	//
-	// If the worker hasn't started yet (OnInit still running), work
-	// is queued and executed when StartWorker runs the loop. If
-	// the worker is stopping, PostWork discards and RunOnWorker's
-	// future is set to default T{} — a dying session just drops
-	// pending ticks.
+	// Both eventually call ibWorkerPool::Submit(m_sessionContext, ...).
+	// Reentrant submit on the same session runs inline (the pool worker
+	// already holds this session's lease). Submission on a stopped pool
+	// or with no session context is a no-op for PostWork; RunOnWorker
+	// returns a future that fulfils with an exception in that case.
 	void PostWork(std::function<void()> fn);
 
 	template <class Fn>
@@ -141,17 +136,6 @@ public:
 	}
 
 private:
-	void StartWorker();
-	void StopWorker();
-	void WorkerLoop();
-
-	// Worker thread state. m_workerStop flips once on OnExit; drains
-	// happen under m_workerMtx + m_workerCv.
-	std::thread                        m_worker;
-	std::atomic<bool>                  m_workerStop { false };
-	std::mutex                         m_workerMtx;
-	std::condition_variable            m_workerCv;
-	std::deque<std::function<void()>>  m_workerQueue;
 	// m_moduleManager owns its refcount via ibValuePtr — assigning a raw
 	// pointer IncrRef's implicitly, assigning nullptr (or destruction)
 	// DecrRef's. Keeps OnInit's failure branch and OnExit's teardown

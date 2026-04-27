@@ -39,6 +39,7 @@
 #include <thread>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class ibApplicationDataSessionArray;
@@ -328,6 +329,23 @@ public:
 	void NotifyAfterCompile(ibSession* s);
 	void NotifyReload(ibSession* s);
 
+	// ---- Worker pool ----
+	// Per-session task dispatcher. Owned here because worker scheduling
+	// is part of session management — sessions hold the queue keys, the
+	// registry hands them out and tears them down. The pool is allocated
+	// in the ctor when maxWorkers > 0; ProcessRemove drops the leaving
+	// session's queue from the pool automatically.
+	class ibWorkerPool* GetWorkerPool() const { return m_workerPool.get(); }
+
+	// Force-close every session this process owns. force=true sets
+	// each session's m_forceExit flag (interrupts any in-flight script
+	// at the next opcode), fires OnForceExit per kind (GUI: schedule
+	// wxTheApp::Exit; web/server: no-op), and submits Remove. Used by
+	// GUI hosts on app shutdown so the wx event loop ends after every
+	// session has cleaned up — without the host having to enumerate
+	// sessions itself.
+	void CloseAll(bool force);
+
 	// ---- Session access mode + fallback ----
 	// Process-wide flag describing how ibSession::Current() resolves the
 	// active session. Owned by registry because it's session-population
@@ -346,6 +364,31 @@ public:
 	void       ClearFallback();
 	ibSession* GetFallback() const;
 
+	// --- debug thread → parked-session redirection ---
+	// Lets debug-server worker threads resolve ibSession::Current() to
+	// "the session whose script is currently parked at a breakpoint",
+	// without every command handler taking an explicit sid parameter.
+	// Workers register themselves as debug threads on Entry; script
+	// threads parked in DoDebugLoop are queued FIFO; debug threads'
+	// Current() returns the queue's front (the active target). Multiple
+	// sessions can be parked simultaneously — they rotate as each one
+	// resumes (Continue/Step/Detach removes it from the queue, the next
+	// becomes active).
+	void RegisterDebugThread(std::thread::id tid);
+	void UnregisterDebugThread(std::thread::id tid);
+	bool IsDebugThread(std::thread::id tid) const;
+
+	// Worker (script thread) parking lifecycle. Called from
+	// ibDebuggerServer::DoDebugLoop around the CV wait. Idempotent on
+	// duplicates — a session entering the loop twice (re-entrant
+	// breakpoint, shouldn't happen) appears once in the queue.
+	void EnterDebugLoop(ibSession* s);
+	void LeaveDebugLoop(ibSession* s);
+
+	// Read by ibSession::Current() on debug threads. Returns nullptr
+	// when no session is parked.
+	std::shared_ptr<ibSession> GetActiveDebugTarget() const;
+
 	// Registry-thread invariant: if the thread exits abnormally (exception
 	// escaped, stuck tick, DB hang) the process must terminate — continuing
 	// would mean sys_session reflects lies to peer processes. These
@@ -354,7 +397,14 @@ public:
 	bool IsThreadAlive() const { return m_threadAlive.load(std::memory_order_acquire); }
 	bool IsFatal()       const { return m_fatal.load(std::memory_order_acquire); }
 
-	ibSessionRegistry();
+	// maxWorkers — hard cap on the worker pool's OS-thread count. 0
+	// means no pool (single-session GUI modes — designer, enterprise,
+	// daemon). Headless modes (wenterprise-server, future oes-server)
+	// pass a positive value sized by the host based on hardware
+	// concurrency. The pool is allocated here so registry's lifecycle
+	// owns it end-to-end: pool stops before sessions tear down inside
+	// our Stop().
+	explicit ibSessionRegistry(std::size_t maxWorkers = 0);
 	~ibSessionRegistry();
 
 	ibSessionRegistry(const ibSessionRegistry&)            = delete;
@@ -398,14 +448,6 @@ private:
 	// tick counter.
 	void JobSweepStale();
 	void JobRefreshSnapshot();
-
-	// Refresh the pessimistic-lock hold on m_lockConn so every currently-
-	// inserted session's row is locked. Called after any m_own change
-	// (Add / Remove). Commits the prior hold-TX before opening a fresh
-	// one — small blip window (~ms) during which a peer's Sweep could
-	// DELETE our rows; re-verified on next loop pass (future refinement:
-	// re-INSERT missing rows on blip detect).
-	void RebuildLockHold();
 
 	// Refresh lastActive on every own row. Companion to JobSweepStale's
 	// fallback-cutoff path — peers use lastActive staleness to detect
@@ -477,6 +519,11 @@ private:
 	mutable std::shared_mutex                                    m_ownMutex;
 	std::unordered_map<std::string, std::shared_ptr<ibSession>>  m_own;
 
+	// Worker pool. Allocated by appData ctor for headless modes via
+	// SetWorkerPool; nullptr otherwise. Stop'd before m_own teardown
+	// in our own Stop() so pending tasks complete with valid sessions.
+	std::unique_ptr<class ibWorkerPool>                          m_workerPool;
+
 	// Policy chain. Built at Start-time, read-only once the thread runs
 	// (no need for extra locking — only ThreadBody touches on Add).
 	std::vector<std::unique_ptr<ibSessionPolicy>>                m_policies;
@@ -490,6 +537,16 @@ private:
 	// instead of leaving a dangling pointer. GetFallback locks under shared
 	// lock and returns nullptr on expiry.
 	std::weak_ptr<ibSession>                                     m_fallback;
+
+	// --- debug thread → parked session redirection ---
+	// Single-writer (script thread on park / debug worker on register)
+	// multi-reader (Current() on debug thread). FIFO queue of parked
+	// sessions; front is the active target. Set of debug-thread tids
+	// is the lookup the Current() path uses to decide redirection vs
+	// regular per-thread binding.
+	mutable std::shared_mutex                                    m_debugMtx;
+	std::deque<std::weak_ptr<ibSession>>                         m_debugQueue;
+	std::unordered_set<std::thread::id>                          m_debugThreads;
 
 	// Lifecycle event listeners. Mutated only at app bootstrap (single
 	// thread); read at notify time. Mutex guards both the lists and
@@ -542,13 +599,14 @@ private:
 	// sys_session row I/O + pessimistic row locks.
 	bool                                                         m_ownsSysSession = false;
 
-	// Separate pool checkouts — lock-conn holds the long-running TX
-	// that pins `HoldRowLocks` for every row in m_own; write-conn
-	// executes INSERT / UPDATE / DELETE outside that TX. Probe-conn
-	// runs `TryProbeRowLock` via its own NOWAIT TX. All three come
-	// from `ibApplicationData::GetConnectionPool()` on Start when
-	// m_ownsSysSession is true; nullptr otherwise.
-	std::shared_ptr<ibDatabaseLayer>                             m_lockConn;
+	// Separate pool checkouts — write-conn executes INSERT / UPDATE /
+	// DELETE on sys_session + JobRefreshSnapshot SELECT; probe-conn
+	// runs `TryProbeRowLock` via its own NOWAIT TX so the probe doesn't
+	// contend with concurrent writes. Both come from
+	// `ibApplicationData::GetConnectionPool()` on Start when
+	// m_ownsSysSession is true; nullptr otherwise. Liveness is now
+	// heartbeat-based (see "HoldRowLocks self-deadlock" memory note),
+	// so the historical third "lock-conn" was retired.
 	std::shared_ptr<ibDatabaseLayer>                             m_writeConn;
 	std::shared_ptr<ibDatabaseLayer>                             m_probeConn;
 

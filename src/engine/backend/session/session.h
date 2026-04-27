@@ -15,10 +15,13 @@
 #include "backend/appData.h"      // ibRunMode
 #include "backend/backend_exception.h"
 #include "backend/compiler/value.h" // ibValue (base for ibValuePtr)
+#include "backend/compiler/procUnitState.h"   // ibProcUnitState — per-session interpreter swap target
 #include "backend/value_ptr.h"    // ibValuePtr for m_root
 
 #include <atomic>
 #include <condition_variable>
+#include <functional>
+#include <future>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -357,6 +360,61 @@ public:
 	void            SetSessionRawPassword(const wxString& pwd) { m_sessionRawPassword = pwd; }
 	void            ClearSessionRawPassword() { m_sessionRawPassword.clear(); }
 
+	// Cancellation flag — async hint to interrupt a long-running script
+	// on this session. Pool's CancelSession (or admin Kick on a busy
+	// session) sets it; the interpreter checks it at loop boundaries
+	// inside ibProcUnit::Execute and throws ibBackendInterruptException
+	// when set. Atomic so the cancel request can come from any thread
+	// while the script thread reads on its hot loop. Cleared at the
+	// start of every Execute so a stale set from a prior task doesn't
+	// interrupt the next one.
+	void RequestCancel()           { m_cancelRequested.store(true,  std::memory_order_release); }
+	void ClearCancel()             { m_cancelRequested.store(false, std::memory_order_release); }
+	bool IsCancelRequested() const { return m_cancelRequested.load(std::memory_order_acquire); }
+
+	// Force-exit flag — "voluntary kick" of this session. The interpreter
+	// breaks out of its loop at the next iteration; OnForceExit() then
+	// fires the per-kind action: GUI session exits the wx main loop,
+	// web client session schedules its Close, plain server-side sessions
+	// just stop running scripts. Atomic + cooperative (script-thread
+	// checks the flag); blocking I/O won't notice. Kept distinct from
+	// Cancel because cancel says "interrupt this task" while ForceExit
+	// says "stop running on this session for the rest of its life".
+	void RequestForceExit();
+	bool IsForceExit() const { return m_forceExit.load(std::memory_order_acquire); }
+
+	// Eval-mode flag — set during debug-watch / Eval evaluation so
+	// side-effecting calls (UpdateForm, dialogs, OLE calls) self-suppress.
+	// Per-session because two concurrent web sessions can each be in/out
+	// of eval independently — a debug-watch on tab 1 must not silence
+	// tab 2's regular OnWrite. Replaces the thread_local gs_evalMode in
+	// backend_exception.cpp.
+	bool IsEvalMode()       const { return m_evalMode.load(std::memory_order_acquire); }
+	void SetEvalMode(bool m)      { m_evalMode.store(m, std::memory_order_release); }
+
+	// Processing-backend-error flag — re-entrancy guard for
+	// ibBackendException::ProcessError so a logging path can't re-throw
+	// into itself. Same per-session rationale as eval-mode.
+	bool IsProcessingBackendError()       const { return m_processingBackendError.load(std::memory_order_acquire); }
+	void SetProcessingBackendError(bool m)      { m_processingBackendError.store(m, std::memory_order_release); }
+
+protected:
+	// Per-kind reaction to ForceExit. Default no-op (server-style — just
+	// exit the script loop and let the host do nothing else). ibGUISession
+	// overrides → wxTheApp->Exit; future ibWebClientSession could
+	// override → schedule session Close.
+	virtual void OnForceExit() {}
+
+public:
+
+	// Submit a task to run on the session's worker. Forwards through
+	// the session registry's worker pool (so pool ownership and
+	// configuration stay encapsulated on the registry). When no pool
+	// is configured — single-session GUI hosts — the task runs inline
+	// on the calling thread and the returned future is fulfilled
+	// before Submit returns.
+	std::future<void> Submit(std::function<void()> task);
+
 	// Per-session "working date" — the conceptual business-date used by
 	// script's WorkingDate() helper (reports, document registration,
 	// etc.). Initialized to the session-creation wall-clock; scripts
@@ -372,6 +430,23 @@ public:
 	// practice — value semantics document the invariant.
 	wxDateTime GetWorkDate()         const { return m_workDate; }
 	void       SetWorkDate(const wxDateTime& d) { m_workDate = d; }
+
+	// Per-session interpreter state slot — currentRunModule, runContext
+	// stack, errorPlace, recCount. Single source of truth for the script
+	// interpreter; ibProcUnit forwarders go through this method which
+	// resolves to Current()'s session each call. The session-binding
+	// primitives (ibSessionScope, BindSessionToThread) update the
+	// thread→session map; GetPUState() then sees the new state visible
+	// transparently — no separate cache or activation step.
+	//
+	// On debug-server worker threads Current() redirects to whichever
+	// session is parked at a breakpoint (see m_debugQueue on
+	// ibSessionRegistry); GetPUState() therefore yields the parked
+	// session's stack/locals to debug eval handlers without an explicit
+	// sid threaded through.
+	//
+	// Returns nullptr when no session is bound on this thread.
+	static ibProcUnitState* GetPUState();
 
 	// State accessors — lock-free reads.
 	ibSessionState State() const { return m_state.load(std::memory_order_acquire); }
@@ -473,6 +548,27 @@ public:
 	// Null when no scope is active or when the scoped session is
 	// frameless (web-server, headless, codeRunner).
 	static ibBackendDocFrame* CurrentFrame();
+
+	// Convenience: debug runContext of the currently-scoped session.
+	// On a debug-server worker thread Current() redirects to the
+	// session parked at a breakpoint; on a script worker thread it's
+	// the session that hit the breakpoint and is now in DoDebugLoop.
+	// Either way this returns that session's per-session debug
+	// runContext (set by DoDebugLoop). Used by debug command handlers
+	// (Eval, ExpandExpression, EvalToolTip, EvalAutocomplete) instead
+	// of the legacy process-level ibDebuggerServer::m_runContext slot.
+	// Null when no session is parked or when the session has no debug
+	// state attached.
+	static ibRunContext* CurrentRunContext();
+
+	// Convenience: whether the currently-scoped session has been
+	// force-exited. Returns false when no session is bound. Drop-in
+	// replacement for the legacy process-level ibApplicationData::
+	// IsForceExit() at frontend / GUI startup checks.
+	static bool IsCurrentForceExit() {
+		auto* s = Current();
+		return s != nullptr && s->IsForceExit();
+	}
 
 private:
 	friend class ibSessionScope;
@@ -577,6 +673,29 @@ private:
 	// Script-visible "working date" — see GetWorkDate/SetWorkDate.
 	// Initialized to the session-creation wall-clock in the ctor.
 	wxDateTime                m_workDate;
+
+	// Cancellation request flag — see RequestCancel / IsCancelRequested.
+	// atomic so set/clear from any thread is safe against the script
+	// thread's check loop in ibProcUnit::Execute.
+	std::atomic<bool>         m_cancelRequested { false };
+
+	// Force-exit request flag — see RequestForceExit / IsForceExit.
+	// One-shot: set once, never cleared. The script thread observes it
+	// and exits its loop; OnForceExit dispatches the per-kind action.
+	std::atomic<bool>         m_forceExit       { false };
+
+	// Eval / processing-backend-error flags — see Get/Set above.
+	std::atomic<bool>         m_evalMode                { false };
+	std::atomic<bool>         m_processingBackendError  { false };
+
+	// Per-session interpreter state (currentRunModule, runContext stack,
+	// errorPlace, recCount). Today the interpreter still reads/writes its
+	// thread_local mirrors in procUnit.cpp; this slot is the staging
+	// ground for the worker pool refactor (docs/worker-pool-tls-audit.md).
+	// Step 1 of that refactor only allocates the slot — the swap helpers
+	// at the worker boundary land in step 2. Default-constructed empty;
+	// no reads from here yet.
+	ibProcUnitState           m_procUnitState;
 
 	// Exclusive mode — see SetExclusive(). True only on the session that
 	// currently holds monopoly. Atomic for lock-free IsExclusive() reads

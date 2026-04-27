@@ -669,16 +669,19 @@ WFRONTEND_API std::string wfrontendConfigName()
 
 WFRONTEND_API void wfrontendSetProcessExitHook(void (*hook)())
 {
-	ibApplicationData::SetProcessExitHook(hook);
+	// Hook parameter accepted for source compatibility, ignored in the
+	// new model — process-level force-exit was removed in favour of
+	// per-session ibSession::Close(true). wes process termination is
+	// driven by main.cpp's signal handlers (Ctrl+C, console close)
+	// directly; designer-side Destroy now kicks one tab rather than
+	// killing the whole wes process.
+	(void)hook;
 	// One-shot wiring of the keep-alive predicate: wes process stays up
 	// while at least one WebClient session is registered against our
 	// WebServer-kind system session. Replaces the pre-2026-04-26
 	// "Count() > 2" heuristic — magic number meant "system + first
 	// browser tab", fragile against any new bookkeeping session
-	// sneaking in. Registry's ServerSession() resolves to wes's system
-	// session (set by ProcessAdd when the WebServer-kind session was
-	// added at wfrontendInit); CountClients answers "how many real tabs
-	// do I have?" directly.
+	// sneaking in.
 	static bool wired = false;
 	if (!wired) {
 		ibSessionRegistry::Instance().OnShouldKeepAlive([]() {

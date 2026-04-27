@@ -72,7 +72,7 @@ ibConnectionPool::~ibConnectionPool()
 	Shutdown();
 }
 
-void ibConnectionPool::Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize)
+void ibConnectionPool::Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize, std::size_t minIdle)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	// Drop existing idle entries on re-init — their shared_ptrs
@@ -80,12 +80,25 @@ void ibConnectionPool::Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_
 	m_idle.clear();
 	m_source   = primary;
 	m_maxSize  = maxSize;
+	m_minIdle  = minIdle;
 	// Master counts as the first live conn. It's also the first idle
 	// entry so the earliest Checkout hands it out directly rather
 	// than paying a Clone() cost.
 	m_live     = primary ? 1 : 0;
+	const auto now = std::chrono::steady_clock::now();
 	if (primary)
-		m_idle.push_back(primary);
+		m_idle.push_back({ primary, now });
+	// Pre-warm — Clone() up to minIdle-1 additional conns so light
+	// bursts don't pay the Open cost. Server modes (wes, future
+	// oes-server) pass minIdle high enough to absorb typical
+	// concurrency; single-session GUI hosts use minIdle=1, which
+	// means the loop below is a no-op.
+	for (std::size_t i = m_live; i < m_minIdle && m_live < m_maxSize; ++i) {
+		ibDatabaseLayer* raw = primary ? primary->Clone() : nullptr;
+		if (raw == nullptr) break;
+		m_idle.push_back({ std::shared_ptr<ibDatabaseLayer>(raw), now });
+		++m_live;
+	}
 	m_shutdown = false;
 	// Wake anyone blocked on Checkout — they'll re-check state and
 	// either get a connection or bail.
@@ -103,9 +116,9 @@ void ibConnectionPool::Shutdown()
 	// hand-outs are a separate concern: their lambda-captured ref
 	// keeps the layer alive until the caller drops it; the deleter
 	// then checks m_shutdown and releases without re-parking.
-	for (auto& sp : m_idle) {
-		if (sp && sp->IsOpen())
-			sp->Close();
+	for (auto& entry : m_idle) {
+		if (entry.conn && entry.conn->IsOpen())
+			entry.conn->Close();
 	}
 	m_idle.clear();
 
@@ -124,10 +137,19 @@ std::shared_ptr<ibDatabaseLayer> ibConnectionPool::Checkout()
 		if (m_shutdown || !m_source)
 			return nullptr;
 
+		// Reap stale idle entries before serving — keeps the pool from
+		// holding onto idle conns that haven't been touched in a while
+		// once load drops back below minIdle.
+		ReapStaleLocked();
+
 		if (!m_idle.empty()) {
-			auto sp = m_idle.front();
-			m_idle.pop_front();
-			return WrapHandout(std::move(sp));
+			// Hand out the most recently parked entry — it's the
+			// hottest (least likely to have stale driver state) and
+			// keeps the front-of-queue old entries available for
+			// future Reap.
+			auto entry = m_idle.back();
+			m_idle.pop_back();
+			return WrapHandout(std::move(entry.conn));
 		}
 		if (m_live < m_maxSize) {
 			// Lazy Clone — only on first demand for this slot. m_source
@@ -148,6 +170,33 @@ std::shared_ptr<ibDatabaseLayer> ibConnectionPool::Checkout()
 		}
 		// Saturated — wait for a Return / Shutdown.
 		m_cv.wait(lock);
+	}
+}
+
+void ibConnectionPool::ReapStaleLocked()
+{
+	const auto now = std::chrono::steady_clock::now();
+	while (m_idle.size() > m_minIdle) {
+		// Oldest sits at the front (push_back on park). Pin the master
+		// — never drop the conn that equals m_source even if it's
+		// front-most, since it's the fallback for legacy db_query.
+		auto& front = m_idle.front();
+		if (front.conn == m_source) {
+			// Master is at the head and we'd drop it — reshuffle: move
+			// it to the back so subsequent Reap sees a non-master at
+			// the front. Mark its lastUsed = now so it doesn't get
+			// re-considered stale next call.
+			front.lastUsed = now;
+			m_idle.push_back(std::move(front));
+			m_idle.pop_front();
+			continue;
+		}
+		if (now - front.lastUsed < kIdleTimeout)
+			break;   // freshest non-master is still warm; everything behind is even warmer
+		if (front.conn && front.conn->IsOpen())
+			front.conn->Close();
+		m_idle.pop_front();
+		--m_live;
 	}
 }
 
@@ -176,7 +225,7 @@ std::shared_ptr<ibDatabaseLayer> ibConnectionPool::WrapHandout(
 		[this, sp = std::move(sp)](ibDatabaseLayer*) mutable {
 			std::lock_guard<std::mutex> lock(m_mutex);
 			if (!m_shutdown) {
-				m_idle.push_back(std::move(sp));
+				m_idle.push_back({ std::move(sp), std::chrono::steady_clock::now() });
 				m_cv.notify_one();
 			}
 			// else: sp released by lambda dtor — layer destructed if

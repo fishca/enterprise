@@ -7,6 +7,7 @@
 
 #include "backend/appData.h"
 #include "backend/debugger/debugClient.h"
+#include "backend/session/sessionRegistry.h"
 
 #include "frontend/window_ptr.h"
 
@@ -285,7 +286,7 @@ void ibFrontendDocMDIFrameDesigner::OnLoadDatabase(wxCommandEvent& event)
 
 	if (appData->LoadDatabase(openFileDialog.GetPath())) {
 		wxMessageBox(_("Loading of tasks completed successful. Restart the program!"));
-		appData->ForceExit();
+		ibSessionRegistry::Instance().CloseAll(true);
 	}
 	else {
 		wxMessageBox(_("Error when trying to load database from a file!!"));

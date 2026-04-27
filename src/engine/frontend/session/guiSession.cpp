@@ -73,6 +73,17 @@ bool ibGUISession::OnShowAuthenticate(const wxString& user, const wxString& pass
 	return ibPromptAuthenticationDialog(user, password);
 }
 
+void ibGUISession::OnForceExit()
+{
+	// Deferred wx exit — CallAfter so the trigger thread (could be the
+	// script thread that just hit a force-exit instruction) doesn't
+	// drain the wx loop while still on its callstack. Mirrors the
+	// process-level path that ibApplicationData::ForceExit used to
+	// follow when no exit hook was installed.
+	if (wxTheApp != nullptr)
+		wxTheApp->CallAfter([]() { wxTheApp->Exit(); });
+}
+
 bool ibGUISession::OnDestroySession(bool force)
 {
 	if (m_frame == nullptr) return true;
@@ -109,7 +120,7 @@ bool ibGUISession::ShowFrame()
 	// Frameless variant of a GUI session shouldn't happen in practice
 	// (designer / enterprise both AttachFrame in OnCreateSession), but
 	// keep it as a tolerant no-op success rather than UAF.
-	if (m_frame == nullptr || ibApplicationData::IsForceExit())
+	if (m_frame == nullptr || ibSession::IsCurrentForceExit())
 		return true;
 	if (m_frame->IsShown())
 		return true;

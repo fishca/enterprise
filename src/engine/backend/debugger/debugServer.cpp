@@ -216,6 +216,12 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 	m_bDebugLoop = true;        // legacy mirror used by ResetDebugger fast-path
 	m_bDebugStopLine = false;
 
+	// Register this session in the registry's debug queue so debug-thread
+	// Current() redirects to it (front-of-queue is the active target).
+	// Multiple sessions can be parked simultaneously — they rotate as
+	// each one resumes and is removed from the queue.
+	ibSessionRegistry::Instance().EnterDebugLoop(sess);
+
 	//create stream for this loop
 #ifdef __WXMSW__
 	ibValueOLE::CreateStreamForDispatch();
@@ -236,6 +242,11 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 		});
 	}
 	dbg->m_debugLoop = false;
+
+	// Symmetric leave — front rotation happens automatically: the next
+	// parked session (if any) becomes the new active target for any
+	// debug-thread Current() lookup.
+	ibSessionRegistry::Instance().LeaveDebugLoop(sess);
 
 #ifdef __WXMSW__
 	ibValueOLE::ReleaseStreamForDispatch();
@@ -285,10 +296,11 @@ void ibDebuggerServer::EnterDebugger(ibRunContext* runContext, const ibByteUnit&
 				m_bDebugStopLine = false;
 				m_bDoLoop = true;
 			}
-			// step through 
-			else if (m_numCurrentNumberStopContext && m_numCurrentNumberStopContext >= ibProcUnit::GetCountRunContext() && byteCode.m_numLine >= 0)
+			// step through
+			else if (auto* st = ibSession::GetPUState();
+				st && m_numCurrentNumberStopContext && m_numCurrentNumberStopContext >= st->GetCountRunContext() && byteCode.m_numLine >= 0)
 			{
-				m_numCurrentNumberStopContext = ibProcUnit::GetCountRunContext();
+				m_numCurrentNumberStopContext = st->GetCountRunContext();
 				m_bDoLoop = true;
 			}
 			else
@@ -408,12 +420,15 @@ void ibDebuggerServer::SendStack()
 {
 	ibWriterMemory commandChannel;
 
+	auto* puState = ibSession::GetPUState();
+	const unsigned int frameCount = puState ? puState->GetCountRunContext() : 0;
+
 	commandChannel.w_u16(CommandId_SetStack);
-	commandChannel.w_u32(ibProcUnit::GetCountRunContext());
+	commandChannel.w_u32(frameCount);
 
-	for (unsigned int i = ibProcUnit::GetCountRunContext(); i > 0; i--) { // walk call stack top-down
+	for (unsigned int i = frameCount; i > 0; i--) { // walk call stack top-down
 
-		ibRunContext* runContext = ibProcUnit::GetRunContext(i - 1);
+		ibRunContext* runContext = puState->GetRunContext(i - 1);
 		ibByteCode* byteCode = runContext->GetByteCode();
 		wxASSERT(runContext && byteCode);
 		ibCompileContext* compileContext = runContext->m_compileContext;
@@ -518,6 +533,14 @@ wxThread::ExitCode ibDebuggerServer::ibDebuggerServerConnection::Entry()
 	}
 #endif // !_WXMSW
 
+	// Mark this OS thread as a debug worker so ibSession::Current()
+	// redirects to whichever script thread is currently parked at a
+	// breakpoint instead of returning nullptr (we never bind an
+	// ibSession to this thread directly). Symmetric Unregister at
+	// every exit path below.
+	const auto debugTid = std::this_thread::get_id();
+	ibSessionRegistry::Instance().RegisterDebugThread(debugTid);
+
 	ExitCode retCode = 0;
 
 	try {
@@ -532,6 +555,8 @@ wxThread::ExitCode ibDebuggerServer::ibDebuggerServerConnection::Entry()
 		::CoUninitialize();
 	}
 #endif // !_WXMSW
+
+	ibSessionRegistry::Instance().UnregisterDebugThread(debugTid);
 
 	if (ms_debugServer != nullptr)
 		ms_debugServer->ResetDebugger();
@@ -765,21 +790,21 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 #endif 
 			//variable
 			commandChannel.w_stringZ(strExpression);
-			if (ibProcUnit::Evaluate(strExpression, ms_debugServer->m_runContext, vResult, false)) {
+			if (ibProcUnit::Evaluate(strExpression, ibSession::CurrentRunContext(), vResult, false)) {
 				commandChannel.w_stringZ(vResult.GetString());
 				commandChannel.w_stringZ(vResult.GetClassName());
-				//count of elemetns 
+				//count of elemetns
 				commandChannel.w_u32(vResult.GetNProps());
 			}
 			else {
 				commandChannel.w_stringZ(ibBackendException::GetLastError());
 				commandChannel.w_stringZ(wxT("<error>"));
-				//count of elemetns 
+				//count of elemetns
 				commandChannel.w_u32(0);
 			}
-			//send expression 
+			//send expression
 			SendCommand(commandChannel.pointer(), commandChannel.size());
-			//set expression in map 
+			//set expression in map
 			ms_debugServer->m_listExpression.insert_or_assign(id, strExpression);
 		}
 		else {
@@ -811,7 +836,7 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 #else 
 			unsigned int id = commandReader.r_u32();
 #endif
-			if (ibProcUnit::Evaluate(strExpression, ms_debugServer->m_runContext, vResult, false)) {
+			if (ibProcUnit::Evaluate(strExpression, ibSession::CurrentRunContext(), vResult, false)) {
 				ibWriterMemory commandChannel;
 				commandChannel.w_u16(CommandId_ExpandExpression);
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
@@ -897,7 +922,7 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 		commandReader.r_stringZ(strExpression);
 		if (ms_debugServer->IsDebugLooped()) {
 			ibValue vResult;
-			if (ibProcUnit::Evaluate(strExpression, ms_debugServer->m_runContext, vResult, false)) {
+			if (ibProcUnit::Evaluate(strExpression, ibSession::CurrentRunContext(), vResult, false)) {
 				ibWriterMemory commandChannel;
 				commandChannel.w_u16(CommandId_EvalToolTip);
 				commandChannel.w_stringZ(strFileName);
@@ -912,11 +937,20 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 	}
 	else if (commandFromClient == CommandId_SetStack) {
 		unsigned int stackLevel = commandReader.r_u32();
+		auto* puState = ibSession::GetPUState();
 		ibRunContext* newRunContext =
-			ibProcUnit::GetRunContext(stackLevel);
+			puState ? puState->GetRunContext(stackLevel) : nullptr;
 		if (newRunContext) {
+			// Update the parked session's debug runContext so subsequent
+			// Eval / ExpandExpression go against the caller-selected
+			// stack frame. Legacy server-level mirror still set so
+			// SendExpressions / SendLocalVariables (which read m_runContext
+			// directly) reflect the new frame too.
+			if (auto* sess = ibSession::Current())
+				if (auto* dbg = sess->Debug())
+					dbg->m_runContext = newRunContext;
 			ms_debugServer->m_runContext = newRunContext;
-			//send expressions from user 
+			//send expressions from user
 			ms_debugServer->SendExpressions();
 			//send local variable
 			ms_debugServer->SendLocalVariables();
@@ -934,7 +968,7 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 		s32 currPos = commandReader.r_s32();
 		if (ms_debugServer->IsDebugLooped()) {
 			ibValue vResult;
-			if (ibProcUnit::Evaluate(strExpression, ms_debugServer->m_runContext, vResult, false)) {
+			if (ibProcUnit::Evaluate(strExpression, ibSession::CurrentRunContext(), vResult, false)) {
 
 				ibWriterMemory commandChannel;
 				commandChannel.w_u16(CommandId_EvalAutocomplete);
@@ -985,7 +1019,8 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 	else if (commandFromClient == CommandId_StepOver) {
 		wxString sid; commandReader.r_stringZ(sid);
 		if (ms_debugServer->IsDebugLooped()) {
-			ms_debugServer->m_numCurrentNumberStopContext = ibProcUnit::GetCountRunContext();
+			auto* puState = ibSession::GetPUState();
+			ms_debugServer->m_numCurrentNumberStopContext = puState ? puState->GetCountRunContext() : 0;
 			ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
 			ms_debugServer->WakeDebugSession(sid);
 			ms_debugServer->m_debugLoopCV.notify_all();
@@ -1029,7 +1064,13 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 
 		// Note: CoUninitialize() is already done in Entry() epilogue (line ~472).
 		// Doing it again here would give a double-uninit on the worker thread.
-		ibApplicationData::ForceExit();
+		// Force-close the parked session — Current() on the debug thread
+		// redirects to the session at the front of the debug queue, so
+		// this targets the right one. Per-kind OnForceExit dispatches:
+		// GUI desktop session quits wx; web per-tab session just kicks
+		// itself; wes process keeps running for other tabs.
+		if (auto* s = ibSession::Current())
+			s->Close(true);
 	}
 	else if (commandFromClient == CommandId_DeleteAllBreakpoints) {
 		ms_debugServer->m_listBreakpoint.clear();

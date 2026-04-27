@@ -346,7 +346,7 @@ bool ibValueModuleManagerConfiguration::StartMainModule(bool force)
 		result = true;
 	}
 
-	if (ibApplicationData::IsForceExit())
+	if (ibSession::IsCurrentForceExit())
 		return false;
 
 	return result;
@@ -366,7 +366,7 @@ bool ibValueModuleManagerConfiguration::ExitMainModule(bool force)
 		OnExit(); /*m_initialized = false;*/ result = true;
 	}
 
-	if (ibApplicationData::IsForceExit())
+	if (ibSession::IsCurrentForceExit())
 		return true;
 
 	return result;

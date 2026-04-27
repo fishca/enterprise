@@ -1,0 +1,220 @@
+#include "workerPoolHeadless.h"
+
+#include "backend/session/session.h"   // ibSessionScope
+
+#include <chrono>
+#include <stdexcept>
+
+namespace {
+
+// Tracks which session the current worker thread is leasing. Used by
+// Submit to detect reentrant submission on the same session and run
+// the task inline (avoids the worker-blocking-on-itself deadlock).
+thread_local ibSession* tl_currentLease = nullptr;
+
+// Idle worker self-exits after this much inactivity, unless it's one
+// of the last kMinIdle survivors which stay alive for fast response
+// on the next Submit.
+constexpr auto       kIdleTimeout = std::chrono::seconds(30);
+constexpr std::size_t kMinIdle    = 1;
+
+} // namespace
+
+ibWorkerPoolHeadless::ibWorkerPoolHeadless(std::size_t maxWorkers)
+	: m_maxWorkers(maxWorkers > 0 ? maxWorkers : 1)
+{
+	// Lazy spawn — no workers at construction. The first Submit kicks
+	// the first worker into existence; load growth spawns more up to
+	// m_maxWorkers; idle ones eventually self-exit via timeout.
+}
+
+ibWorkerPoolHeadless::~ibWorkerPoolHeadless()
+{
+	Stop();
+}
+
+void ibWorkerPoolHeadless::TrySpawnWorker()
+{
+	std::lock_guard<std::mutex> lk(m_workersMtx);
+	// Re-check inside the lock so two concurrent Submits don't both
+	// spawn past the cap.
+	if (m_aliveWorkers.load(std::memory_order_acquire) >= m_maxWorkers)
+		return;
+	if (m_stop.load(std::memory_order_acquire))
+		return;
+	m_aliveWorkers.fetch_add(1, std::memory_order_acq_rel);
+	// Detached: the thread takes care of its own lifetime; Stop() waits
+	// on m_stopCv until m_aliveWorkers reaches 0. Avoids tracking handles
+	// in a vector that has to be cleaned up when workers self-exit.
+	std::thread(&ibWorkerPoolHeadless::WorkerLoop, this).detach();
+}
+
+std::future<void> ibWorkerPoolHeadless::Submit(ibSession* session, Task task)
+{
+	auto promise = std::make_shared<std::promise<void>>();
+	auto future  = promise->get_future();
+
+	// Pool already stopped — reject submission with a ready exception
+	// future rather than enqueuing a task no one will ever run.
+	if (m_stop.load(std::memory_order_acquire)) {
+		promise->set_exception(std::make_exception_ptr(
+			std::runtime_error("worker pool is stopped")));
+		return future;
+	}
+
+	// Reentrant Submit on the same session running on this worker —
+	// run inline. The worker is already leasing this session and would
+	// otherwise wait forever for itself to release.
+	if (tl_currentLease != nullptr && tl_currentLease == session) {
+		try {
+			task();
+			promise->set_value();
+		}
+		catch (...) {
+			promise->set_exception(std::current_exception());
+		}
+		return future;
+	}
+
+	{
+		std::unique_lock<std::mutex> lk(m_mtx);
+		auto& slot = m_sessions[session];
+		if (!slot) slot = std::make_unique<ibSessionQueue>();
+		slot->tasks.push_back({ std::move(task), std::move(promise) });
+	}
+	m_cv.notify_one();
+
+	// Lazy spawn. If no worker is currently idle and we're below the
+	// cap, kick a new one into existence. m_idleWorkers is incremented
+	// in WorkerLoop right before the CV wait and decremented on wake-up
+	// — so "idle == 0" means every alive worker is busy on a session.
+	if (m_idleWorkers.load(std::memory_order_acquire) == 0
+	 && m_aliveWorkers.load(std::memory_order_acquire) < m_maxWorkers) {
+		TrySpawnWorker();
+	}
+
+	return future;
+}
+
+void ibWorkerPoolHeadless::DropSession(ibSession* session)
+{
+	std::unique_lock<std::mutex> lk(m_mtx);
+	m_sessions.erase(session);
+}
+
+void ibWorkerPoolHeadless::CancelSession(ibSession* session)
+{
+	if (session == nullptr) return;
+	session->RequestCancel();
+	// Notify in case a worker is parked on the CV (no work for any
+	// session) — wake-up gives the interpreter a chance to observe the
+	// flag immediately if a script in this session is running on the
+	// hot loop. The flag itself is the actual cancel signal; the notify
+	// is just to shorten the latency.
+	m_cv.notify_all();
+}
+
+std::pair<ibSession*, ibWorkerPoolHeadless::ibSessionQueue*>
+ibWorkerPoolHeadless::ClaimSessionLocked()
+{
+	for (auto& kv : m_sessions) {
+		ibSessionQueue* q = kv.second.get();
+		if (q->tasks.empty()) continue;
+		bool expected = false;
+		if (q->leased.compare_exchange_strong(expected, true))
+			return { kv.first, q };
+	}
+	return { nullptr, nullptr };
+}
+
+void ibWorkerPoolHeadless::WorkerLoop()
+{
+	for (;;) {
+		ibSession*       session = nullptr;
+		ibSessionQueue*  q       = nullptr;
+		bool             gotWork = false;
+
+		{
+			std::unique_lock<std::mutex> lk(m_mtx);
+			m_idleWorkers.fetch_add(1, std::memory_order_acq_rel);
+			gotWork = m_cv.wait_for(lk, kIdleTimeout, [this, &session, &q]() {
+				if (m_stop.load(std::memory_order_acquire)) return true;
+				auto pair = ClaimSessionLocked();
+				session = pair.first;
+				q       = pair.second;
+				return q != nullptr;
+			});
+			m_idleWorkers.fetch_sub(1, std::memory_order_acq_rel);
+		}
+
+		if (m_stop.load(std::memory_order_acquire))
+			break;
+
+		if (!gotWork || q == nullptr) {
+			// Idle timeout fired with no work waiting. Self-exit unless
+			// we're among the last kMinIdle survivors — keep at least
+			// one warm worker so the next Submit isn't paying the
+			// thread-creation cost.
+			if (m_aliveWorkers.load(std::memory_order_acquire) > kMinIdle)
+				break;
+			continue;
+		}
+
+		// Bind session for the duration of the lease — Current() and
+		// GetPUState() resolve to this session inside every task.
+		ibSessionScope scope(session);
+		tl_currentLease = session;
+
+		while (true) {
+			ibSessionTask item;
+			{
+				std::unique_lock<std::mutex> lk(m_mtx);
+				if (q->tasks.empty()) break;
+				item = std::move(q->tasks.front());
+				q->tasks.pop_front();
+			}
+			try {
+				item.task();
+				item.promise->set_value();
+			}
+			catch (...) {
+				item.promise->set_exception(std::current_exception());
+			}
+		}
+
+		tl_currentLease = nullptr;
+
+		// Release lease; another worker may claim this session if new
+		// tasks arrived while we were draining.
+		q->leased.store(false);
+		m_cv.notify_one();
+	}
+
+	// Detached exit — bookkeeping for Stop()'s wait.
+	if (m_aliveWorkers.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+		// We were the last worker — wake any Stop() waiter.
+		std::lock_guard<std::mutex> lk(m_stopMtx);
+		m_stopCv.notify_all();
+	}
+	else {
+		// Notify anyway; Stop's predicate will re-check the count.
+		std::lock_guard<std::mutex> lk(m_stopMtx);
+		m_stopCv.notify_all();
+	}
+}
+
+void ibWorkerPoolHeadless::Stop()
+{
+	{
+		std::unique_lock<std::mutex> lk(m_mtx);
+		m_stop.store(true);
+	}
+	m_cv.notify_all();
+
+	// Wait for every detached worker to exit. m_aliveWorkers decrements
+	// at the end of each WorkerLoop and notifies m_stopCv.
+	std::unique_lock<std::mutex> lk(m_stopMtx);
+	m_stopCv.wait(lk, [this]() {
+		return m_aliveWorkers.load(std::memory_order_acquire) == 0;
+	});
+}

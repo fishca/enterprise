@@ -6,6 +6,7 @@
 #include "docView.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "backend/metaCollection/metaObject.h"
 
 #ifdef OES_USE_WEB
@@ -81,7 +82,7 @@ ibMetaDocument::~ibMetaDocument()
 
 bool ibMetaDocument::OnCreate(const wxString& path, long flags)
 {
-	if (ibApplicationData::IsForceExit())
+	if (ibSession::IsCurrentForceExit())
 		return false;
 
 	wxScopedPtr<ibMetaView> view(DoCreateView());
@@ -142,7 +143,7 @@ bool ibMetaDocument::OnCreate(const wxString& path, long flags)
 
 bool ibMetaDocument::OnSaveModified()
 {
-	if (ibApplicationData::IsForceExit())
+	if (ibSession::IsCurrentForceExit())
 		return true;
 
 	if (m_metaObject != nullptr)
@@ -153,7 +154,7 @@ bool ibMetaDocument::OnSaveModified()
 
 bool ibMetaDocument::OnSaveDocument(const wxString& filename)
 {
-	if (ibApplicationData::IsForceExit())
+	if (ibSession::IsCurrentForceExit())
 		return false;
 
 	if (m_metaObject != nullptr)
@@ -207,7 +208,7 @@ bool ibMetaDocument::IsModified() const
 
 void ibMetaDocument::Modify(bool modify)
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!ibSession::IsCurrentForceExit()) {
 		
 		if (m_metaObject != nullptr) {
 			ibMetaData* metaData = m_metaObject->GetMetaData();
@@ -228,7 +229,7 @@ void ibMetaDocument::Modify(bool modify)
 
 bool ibMetaDocument::Save()
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!ibSession::IsCurrentForceExit()) {
 
 		if (AlreadySaved())
 			return true;
@@ -255,7 +256,7 @@ bool ibMetaDocument::Save()
 
 bool ibMetaDocument::SaveAs()
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!ibSession::IsCurrentForceExit()) {
 	
 		if (m_metaObject != nullptr)
 			return true;

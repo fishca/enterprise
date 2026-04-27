@@ -3,6 +3,9 @@
 
 #include "backend/moduleManager/moduleManager.h"
 #include "backend/metadataConfiguration.h"
+#include "backend/compiler/procUnit.h"
+#include "backend/compiler/procUnitState.h"
+#include "workerPool.h"
 
 #include <utility>
 #include <chrono>
@@ -58,6 +61,16 @@ ibValueModuleManagerConfiguration* ibSession::GetModuleManager() const
 
 void ibSession::Close(bool force)
 {
+	// Force close cuts the session's runtime everywhere: any in-flight
+	// script breaks out of its interpreter loop on the next opcode
+	// (m_forceExit flag, checked in ibProcUnit::Execute), and OnForceExit
+	// fires the per-kind side effect (GUI exits wxApp; web/server just
+	// stops running). Hard-close path was previously achieved through
+	// the process-level ibApplicationData::ForceExit; folding it into
+	// Close(true) keeps a single "kick this session" entry point.
+	if (force)
+		RequestForceExit();
+
 	// Main-thread teardown hook — wx frame destruction must run on the
 	// thread that created the frame. Derived ibGUISession overrides
 	// OnDestroySession to schedule frame->Destroy() through wx's event
@@ -178,7 +191,29 @@ void ibSession::EnsureRoot()
 
 ibSession* ibSession::Current()
 {
-	const auto mode = ibSessionRegistry::Instance().GetAccessMode();
+	auto& reg = ibSessionRegistry::Instance();
+	const auto tid = std::this_thread::get_id();
+
+	// Debug-thread redirection: a thread registered as a debug-server
+	// worker resolves Current() to "whichever script thread is parked
+	// at a breakpoint right now" (front of the FIFO queue maintained
+	// by EnterDebugLoop / LeaveDebugLoop). Lets debug command handlers
+	// (Eval, ExpandExpression, EvalToolTip, EvalAutocomplete) reach
+	// the right session through the same Current() call other code
+	// uses, without an explicit sid threaded through every handler.
+	if (reg.IsDebugThread(tid)) {
+		// shared_ptr<...>::get() — caller holds nothing; returned raw
+		// is valid as long as some other strong-ref keeps the session
+		// alive (registry's m_own typically). Debug commands run
+		// synchronously while the script thread is parked, so the
+		// session is alive for the duration of the handler.
+		if (auto sp = reg.GetActiveDebugTarget()) return sp.get();
+		// No session parked → fall through to the regular path below
+		// so a debug worker can still observe its own Designer-side
+		// connection on a thread that was bound separately.
+	}
+
+	const auto mode = reg.GetAccessMode();
 	std::shared_lock<std::shared_mutex> lk(s_currentMutex);
 	switch (mode) {
 	case AccessMode::Single:
@@ -192,10 +227,10 @@ ibSession* ibSession::Current()
 		// Per-thread lookup with fallback to the registry's system session.
 		// Expired binding (session destroyed without explicit Unbind) →
 		// fall through to fallback, same as no binding at all.
-		if (auto it = s_currentByThread.find(std::this_thread::get_id()); it != s_currentByThread.end()) {
+		if (auto it = s_currentByThread.find(tid); it != s_currentByThread.end()) {
 			if (auto sp = it->second.lock()) return sp.get();
 		}
-		return ibSessionRegistry::Instance().GetFallback();
+		return reg.GetFallback();
 	}
 	return nullptr;
 }
@@ -266,6 +301,9 @@ void ibSession::BindSessionToThread(ibSession* s, std::thread::id tid)
 		s_currentByThread[tid] = s->weak_from_this();
 	else
 		s_currentByThread.erase(tid);
+	// Interpreter state needs no separate setup — ibSession::GetPUState()
+	// resolves via Current() each call, so the binding above is the
+	// single point that "switches" the state visible to this thread.
 }
 
 void ibSession::UnbindThread(std::thread::id tid)
@@ -294,6 +332,48 @@ ibBackendDocFrame* ibSession::CurrentFrame()
 {
 	ibSession* s = Current();
 	return s != nullptr ? s->GetFrame() : nullptr;
+}
+
+ibRunContext* ibSession::CurrentRunContext()
+{
+	if (ibSession* s = Current())
+		if (auto* dbg = s->Debug())
+			return dbg->m_runContext;
+	return nullptr;
+}
+
+ibProcUnitState* ibSession::GetPUState()
+{
+	if (ibSession* s = Current())
+		return &s->m_procUnitState;
+	return nullptr;
+}
+
+void ibSession::RequestForceExit()
+{
+	// Set first, then dispatch. The interpreter check observes the
+	// flag on its next opcode loop iteration; OnForceExit dispatches
+	// the per-kind side effect (wx exit, schedule Close, etc.).
+	if (m_forceExit.exchange(true, std::memory_order_acq_rel))
+		return;   // already requested — don't fire OnForceExit twice
+	OnForceExit();
+}
+
+std::future<void> ibSession::Submit(std::function<void()> task)
+{
+	auto* pool = ibSessionRegistry::Instance().GetWorkerPool();
+	if (pool != nullptr)
+		return pool->Submit(this, std::move(task));
+
+	// No pool — single-session GUI host. Run the task inline so the
+	// caller's future contract still holds (call returns with the
+	// future already fulfilled or carrying the exception). When the
+	// GUI worker pool lands later, this fallback turns into a
+	// CallAfter-backed dispatch on the wx main thread.
+	std::promise<void> p;
+	try { task(); p.set_value(); }
+	catch (...) { p.set_exception(std::current_exception()); }
+	return p.get_future();
 }
 
 wxString ibSession::Reason() const
@@ -429,6 +509,9 @@ ibSessionScope::ibSessionScope(ibSession* s)
 		s_currentByThread[tid] = s->weak_from_this();
 	else
 		s_currentByThread.erase(tid);
+	// Interpreter state — no separate cache to manage. ibSession::GetPUState()
+	// resolves through Current() each call; the binding update above is
+	// what makes the new session's state visible.
 }
 
 ibSessionScope::~ibSessionScope()

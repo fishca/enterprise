@@ -87,12 +87,12 @@ static wxString gs_listErrorString[] =
 
 //////////////////////////////////////////////////////////////////////
 
-// Per-thread flags. On desktop (single wx event-loop thread) behaviour is
-// unchanged. On web each session worker / HTTP handler / debug-watch thread
-// gets its own independent flag — otherwise a debug-watch eval on one
-// session would silence side-effects (UpdateForm, dialogs, OLE calls) on
-// other sessions running regular business logic.
-thread_local static bool gs_evalMode = false, gs_processBackendError = false;
+// Eval-mode and processing-backend-error flags moved from thread_local
+// onto ibSession (m_evalMode, m_processingBackendError). Per-session
+// scope means three sessions in debug-watch don't silence the other
+// two running regular business logic, and a debug worker thread can
+// read the parked session's eval-mode through Current() redirect
+// instead of seeing its own (always-false) thread_local.
 
 //////////////////////////////////////////////////////////////////////
 // Error handling
@@ -105,7 +105,8 @@ ibBackendException::ibBackendException(const wxString& strErrorDescription)
 	wxLogDebug(strErrorDescription);
 #endif // !DEBUG
 
-	ibProcUnit::Raise();
+	if (auto* puState = ibSession::GetPUState())
+		puState->Raise();
 
 	ms_strError = strErrorDescription;
 }
@@ -191,13 +192,14 @@ wxString ibBackendException::ProcessExceptionError(const wxString& strFileName,
 {
 	wxString strErrorMessage;
 
-	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (gs_evalMode ? wxString(wxT(" ")) : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
+	const bool isEvalMode = ibBackendException::IsEvalMode();
+	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (isEvalMode ? wxString(wxT(" ")) : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
 	strErrorMessage += (codeError > 0 ? ibBackendException::Format(codeError, strErrorDesc) : strErrorDesc) + wxT("\n");
-	strErrorMessage += (gs_evalMode ? wxString(wxEmptyString) : strCodeError);
+	strErrorMessage += (isEvalMode ? wxString(wxEmptyString) : strCodeError);
 
-	if (gs_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
+	if (isEvalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
 
-	if (!gs_evalMode) {
+	if (!isEvalMode) {
 
 		// Frame via the session pinned by the worker scope — single
 		// canonical entry point through ibSession::CurrentFrame.
@@ -208,8 +210,10 @@ wxString ibBackendException::ProcessExceptionError(const wxString& strFileName,
 			// set stack
 			wxString strStackMessage;
 
-			for (unsigned int i = 0; i < ibProcUnit::GetCountRunContext(); i++) {
-				const ibRunContext* stackContext = ibProcUnit::GetRunContext(i);
+			auto* puState = ibSession::GetPUState();
+			const unsigned int frameCount = puState ? puState->GetCountRunContext() : 0;
+			for (unsigned int i = 0; i < frameCount; i++) {
+				const ibRunContext* stackContext = puState->GetRunContext(i);
 				wxASSERT(stackContext);
 				const ibByteCode* stackByteCode = stackContext->GetByteCode();
 				wxASSERT(stackByteCode);
@@ -220,7 +224,8 @@ wxString ibBackendException::ProcessExceptionError(const wxString& strFileName,
 				);
 			}
 
-			gs_processBackendError = true;
+			if (auto* sess = ibSession::Current())
+				sess->SetProcessingBackendError(true);
 
 			//show message
 			frame->BackendError(
@@ -230,7 +235,8 @@ wxString ibBackendException::ProcessExceptionError(const wxString& strFileName,
 				strErrorMessage + (strStackMessage.IsEmpty() ? wxT("") : wxT("\n\nCall stack:") + strStackMessage)
 			);
 
-			gs_processBackendError = false;
+			if (auto* sess = ibSession::Current())
+				sess->SetProcessingBackendError(false);
 		}
 	}
 
@@ -256,17 +262,20 @@ const wxString& ibBackendException::GetErrorDesc(int codeError)
 
 bool ibBackendException::IsErrorOutputProcessing()
 {
-	return gs_processBackendError;
+	auto* sess = ibSession::Current();
+	return sess != nullptr && sess->IsProcessingBackendError();
 }
 
 void ibBackendException::SetEvalMode(bool mode)
 {
-	gs_evalMode = mode;
+	if (auto* sess = ibSession::Current())
+		sess->SetEvalMode(mode);
 }
 
 bool ibBackendException::IsEvalMode()
 {
-	return gs_evalMode;
+	auto* sess = ibSession::Current();
+	return sess != nullptr && sess->IsEvalMode();
 }
 
 ////////////////////////////////////////////////////////////////////

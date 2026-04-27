@@ -620,7 +620,8 @@ void ibValueSystemFunction::Raise(const wxString& strError)
 	if (!wxIsMainThread())
 		return;
 
-	ibProcUnit::Raise();
+	if (auto* puState = ibSession::GetPUState())
+		puState->Raise();
 	ibBackendCoreException::Error(strError);
 }
 
@@ -639,8 +640,9 @@ bool ibValueSystemFunction::IsEmptyValue(const ibValue& cData)
 
 ibValue ibValueSystemFunction::Evaluate(const wxString& strExpression)
 {
+	auto* puState = ibSession::GetPUState();
 	ibValue retValue;
-	ibProcUnit::Evaluate(strExpression, ibProcUnit::GetCurrentRunContext(), retValue, false);
+	ibProcUnit::Evaluate(strExpression, puState ? puState->GetCurrentRunContext() : nullptr, retValue, false);
 	return retValue;
 }
 
@@ -648,8 +650,9 @@ void ibValueSystemFunction::Execute(const wxString& strExpression)
 {
 	if (ibBackendException::IsEvalMode())
 		return;
+	auto* puState = ibSession::GetPUState();
 	ibValue retValue;
-	ibProcUnit::Evaluate(strExpression, ibProcUnit::GetCurrentRunContext(), retValue, true);
+	ibProcUnit::Evaluate(strExpression, puState ? puState->GetCurrentRunContext() : nullptr, retValue, true);
 }
 
 //boolean 

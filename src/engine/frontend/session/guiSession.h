@@ -68,6 +68,11 @@ public:
 	// session uses its own HTTP login-form flow instead.
 	bool OnShowAuthenticate(const wxString& user, const wxString& password) override;
 
+	// GUI side of force-exit: schedule wxTheApp::Exit on the main thread
+	// so the wx event loop drains and the process terminates after all
+	// in-flight wx callbacks complete.
+	void OnForceExit() override;
+
 protected:
 	// Non-owning at rest; OnDestroySession deletes. Dtor clears the back-link
 	// but doesn't delete (wx widgets must be destroyed on the main thread,

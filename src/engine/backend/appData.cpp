@@ -13,6 +13,9 @@
 #include "backend/plugin/pluginManager.h"
 #include "backend/session/session.h"
 #include "backend/session/sessionRegistry.h"
+
+#include <thread>
+#include <algorithm>
 #include "backend/moduleManager/moduleManager.h"
 
 //databases
@@ -164,18 +167,43 @@ ibApplicationData* ibApplicationData::s_instance = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool ibApplicationData::m_forceExit = false;
-wxCriticalSection ibApplicationData::m_cs_force_exit;
-ibApplicationData::ProcessExitHook ibApplicationData::s_processExitHook = nullptr;
+// Pick the worker-pool cap based on run mode. Single-session GUI hosts
+// (designer/enterprise/launcher) don't need a pool at all — return 0
+// and the registry leaves m_workerPool nullptr. Headless multi-session
+// hosts (wes, future oes-server) get 4 × CPU cores up to 32.
+static std::size_t PickWorkerCount(ibRunMode runMode)
+{
+	if (runMode != eWEB_ENTERPRISE_MODE) return 0;
+	const std::size_t hw = std::thread::hardware_concurrency();
+	return std::min<std::size_t>(32, std::max<std::size_t>(4, hw * 4));
+}
 
-///////////////////////////////////////////////////////////////////////////////
+// Pick the connection-pool idle floor based on run mode. Sets two
+// things at once: how many conns get pre-warmed at Init (so first
+// requests don't pay the Open cost), and the floor below which idle
+// shrinking won't go.
+//
+// Baseline = 2 for GUI: one for the session manager's persistent
+// bookkeeping connections (write / probe — registry checks them out
+// at Start and never returns), one for the script thread's actual
+// UI work. Server modes scale higher because tab counts amplify both
+// concurrency and burst rate; pool grows past minIdle up to maxSize
+// under load and shrinks back here on idle timeout.
+static std::size_t PickConnectionMinIdle(ibRunMode runMode)
+{
+	switch (runMode) {
+	case eWEB_ENTERPRISE_MODE: return 4;
+	case eSERVICE_MODE:        return 2;
+	default:                   return 2;   // designer / enterprise / launcher / classChecker
+	}
+}
 
 ibApplicationData::ibApplicationData(ibRunMode runMode) :
 	m_runMode(runMode),
 	m_strComputer(wxGetHostName()),
 	m_pluginManager(std::make_unique<ibPluginManager>()),
 	m_connectionPool(std::make_unique<ibConnectionPool>()),
-	m_sessionRegistry(std::make_unique<ibSessionRegistry>()),
+	m_sessionRegistry(std::make_unique<ibSessionRegistry>(PickWorkerCount(runMode))),
 	m_dbMode(ibDatabaseMode::eNONE),
 	m_locale_lang(wxLanguage::wxLANGUAGE_UNKNOWN)
 {
@@ -191,6 +219,9 @@ ibApplicationData::ibApplicationData(ibRunMode runMode) :
 	switch (runMode) {
 	case eWEB_ENTERPRISE_MODE:
 		m_sessionRegistry->SetAccessMode(ibSession::AccessMode::Shared);
+		// Worker pool was allocated by the registry ctor (PickWorkerCount
+		// returned a positive cap for this mode) — registry owns its own
+		// pool lifecycle, no further setup here.
 		break;
 	case eLAUNCHER_MODE:
 		// Launcher has no session — leave default; Current() returns
@@ -301,7 +332,7 @@ void ibApplicationData::WireSessionEvents()
 		// wxTheApp->Exit (desktop), with ShouldKeepAlive declining when
 		// non-debug clients are still live.
 		if (!ibSessionRegistry::Instance().ShouldKeepAlive())
-			ForceExit();
+			ibSessionRegistry::Instance().CloseAll(true);
 	});
 }
 
@@ -315,10 +346,14 @@ ibApplicationData::~ibApplicationData()
 	// at the end of this dtor; its own dtor calls Stop again best-effort.
 	if (m_sessionRegistry) m_sessionRegistry->Stop();
 
+	// Worker pool is stopped inside the registry's own Stop() above —
+	// pool lives on the registry. No separate teardown needed here.
+
 	// Explicit early unload so plugins see Destroy() while the host is still
 	// alive; also clears the vector before appData's other members die.
 	if (m_pluginManager) m_pluginManager->UnloadAll();
 }
+
 
 // ---------------------------------------------------------------------------
 // User-identity accessors — route through the current thread's ibSession
@@ -431,10 +466,10 @@ bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& 
 			// process. `db` here is the master — the pool holds it as
 			// m_source for Clone() and also as the first idle entry so
 			// the earliest Checkout hands it out directly. Size=32 —
-			// slack over ~20 concurrent User sessions. Pool allocates
-			// clones lazily so single-threaded runs (designer,
-			// classChecker) open zero extra FB handles.
-			s_instance->m_connectionPool->Init(db, 32);
+			// slack over ~20 concurrent User sessions. minIdle picked
+			// per runMode (server pre-warms; GUI doesn't). Beyond
+			// minIdle clones grow lazily and shrink on idle timeout.
+			s_instance->m_connectionPool->Init(db, 32, PickConnectionMinIdle(runMode));
 
 			if (runMode == ibRunMode::eDESIGNER_MODE && !ibApplicationData::TableAlreadyCreated()) {
 				ibApplicationData::CreateTableSession();
@@ -489,10 +524,10 @@ bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString
 
 			// Pool owns every connection. `db` becomes the master (source
 			// for Clone + first hand-out). maxSize=32 covers heartbeat +
-			// metadata watcher + ~20 concurrent sessions/SSE + slack. CLI
-			// override can land later; lazy allocation keeps unused
-			// capacity free.
-			s_instance->m_connectionPool->Init(db, 32);
+			// metadata watcher + ~20 concurrent sessions/SSE + slack.
+			// minIdle picked per runMode (server pre-warms; GUI doesn't).
+			// Beyond minIdle clones grow lazily and shrink on idle timeout.
+			s_instance->m_connectionPool->Init(db, 32, PickConnectionMinIdle(runMode));
 
 			if (!SetLocaleAppDataEnv(strLocale))
 				return false;

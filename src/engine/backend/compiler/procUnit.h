@@ -3,6 +3,8 @@
 
 #include "procContext.h"
 
+struct ibProcUnitState;   // procUnitState.h — forward decl; full type via ibSession::GetPUState()
+
 class BACKEND_API ibProcUnit {
 public:
 
@@ -16,26 +18,7 @@ public:
 	virtual ~ibProcUnit() { Clear(); }
 
 	//Methods
-	void Reset() {
-
-		if (m_pppArrayList != nullptr) {
-			wxDELETEA(m_pppArrayList);
-		}
-
-		if (m_ppArrayCode != nullptr) {
-			wxDELETEA(m_ppArrayCode);
-		}
-
-		if (GetCurrentRunModule() == this) {
-			ClearCurrentRunModule();
-		}
-
-		m_numAutoDeleteParent = 0;
-
-		m_pppArrayList = nullptr;
-		m_ppArrayCode = nullptr;
-		m_pByteCode = nullptr;
-	}
+	void Reset();
 
 	void Clear() {
 		m_procParent.clear();
@@ -114,27 +97,13 @@ public:
 	bool GetPropVal(const wxString& strPropName, ibValue& pvarPropVal);
 	bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);//attribute value
 
-	//run module — thread_local storage in procUnit.cpp
-	static ibProcUnit* GetCurrentRunModule();
-	static void SetCurrentRunModule(ibProcUnit* unit);
-	static void ClearCurrentRunModule();
-
-	//run context — thread_local storage in procUnit.cpp
-	static void AddRunContext(ibRunContext* runContext);
-	static unsigned int GetCountRunContext();
-	static ibRunContext* GetPrevRunContext();
-	static ibRunContext* GetCurrentRunContext();
-	static ibRunContext* GetRunContext(unsigned int idx);
-	static void BackRunContext();
-
-	static ibByteCode* GetCurrentByteCode() {
-		const ibRunContext* runContext = GetCurrentRunContext();
-		if (runContext != nullptr)
-			return runContext->GetByteCode();
-		return nullptr;
-	}
-
-	static void Raise();
+	// Interpreter state (currentRunModule, runContext stack, errorPlace,
+	// recCount) lives on ibProcUnitState — accessed through
+	// ibSession::GetPUState()->X. The previous static forwarders on
+	// ibProcUnit (GetCurrentRunModule / GetCurrentRunContext / Raise /
+	// ...) were removed; callers go through GetPUState() directly,
+	// which returns nullptr when no session is bound and lets the
+	// caller decide on the null-handling policy explicitly.
 
 protected:
 

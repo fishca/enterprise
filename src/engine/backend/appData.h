@@ -411,31 +411,17 @@ public:
 
 #pragma endregion
 
-	static bool IsForceExit() {
-		wxCriticalSectionLocker enter(m_cs_force_exit);
-		return m_forceExit;
-	}
-
-	// Optional hook called inside ForceExit before the wxApp path. Used by
-	// hosts whose main loop is not wxApp's (wenterprise-server runs an
-	// httplib listen_after_bind in the main thread, so wxTheApp->Exit()
-	// would fire into a queue nobody is draining). wes's main installs a
-	// hook that calls svr->stop() — listen_after_bind returns, the rest
-	// of main runs wfrontendShutdown which DELETEs sys_session rows and
-	// joins workers cleanly. Set ONCE, ideally right after wfrontendInit.
-	using ProcessExitHook = void (*)();
-	static void SetProcessExitHook(ProcessExitHook hook) { s_processExitHook = hook; }
-
-	static void ForceExit() {
-		wxCriticalSectionLocker enter(m_cs_force_exit);
-		if (!m_forceExit) {
-			if (s_processExitHook != nullptr)
-				s_processExitHook();
-			else if (wxTheApp != nullptr)
-				wxTheApp->CallAfter([]() { wxTheApp->Exit(); });
-			m_forceExit = true;
-		}
-	}
+	// Process-level force-exit machinery (m_forceExit, ForceExit,
+	// IsForceExit, SetProcessExitHook) was removed — force-exit is now
+	// per-session. ibSession::Close(true) / RequestForceExit set the
+	// session's flag; OnForceExit (overridden on ibGUISession) dispatches
+	// the per-kind action (wxTheApp::Exit on desktop GUI; per-tab
+	// shutdown on web; no-op on headless). The interpreter loop checks
+	// the session's flag, not a global one.
+	//
+	// wes-specific concern: when the wes process needs to shut down on
+	// signal (Ctrl+C, console close), main.cpp wires that path
+	// directly — no longer through this class.
 
 #pragma region user  
 	ibApplicationDataUserInfo ReadUserData(const ibGuid& userGuid) const;
@@ -491,10 +477,6 @@ private:
 	ibApplicationDataConfigInfo m_configInfo;
 #pragma endregion
 
-	static bool m_forceExit;
-	static wxCriticalSection m_cs_force_exit;
-	static ProcessExitHook s_processExitHook;
-
 	std::unique_ptr<class ibPluginManager> m_pluginManager;
 	// Connection pool — the sole owner of every ibDatabaseLayer in
 	// the process. Master (opened at Init) plus lazy clones up to
@@ -505,7 +487,8 @@ private:
 	// Session manager (registry). Owned here — created in ctor, destroyed
 	// in dtor. Process-wide singleton in practice (appData itself is one),
 	// accessed via ibSessionRegistry::Instance() facade or directly via
-	// GetSessionRegistry().
+	// GetSessionRegistry(). Owns the per-session worker pool too — pool
+	// is an extension of session-management infrastructure.
 	std::unique_ptr<class ibSessionRegistry> m_sessionRegistry;
 
 public:

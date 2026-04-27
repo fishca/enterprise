@@ -17,14 +17,12 @@
 
 #include "backend/metadataConfiguration.h"
 #include "backend/moduleManager/moduleManager.h"
-#include "backend/metaCollection/metaFormObject.h"
 #include "backend/session/session.h"
 #include "backend/metaCollection/metaObject.h"
 
 #include "webClientSession.h"
 #include "webFrame.h"
 #include "webChildFrame.h"
-#include "webTimer.h"
 #include "webWindow.h"
 
 #include "visualView/ctrl/form.h"
@@ -247,10 +245,10 @@ bool ibWebApplication::OnInit()
 		return false;
 	}
 
-	// Start the worker thread now that bootstrap is done. From here
-	// on, HTTP handlers route through RunOnWorker and timer ticks
-	// post via PostWork — the worker is the sole script-runner.
-	StartWorker();
+	// Worker dispatch goes through the process-wide ibWorkerPool
+	// (appData->GetWorkerPool()) — no per-session thread to start.
+	// Per-session FIFO + lease inside the pool preserves the script
+	// invariant that one task at a time runs on m_sessionContext.
 
 	m_initialized = true;
 	return true;
@@ -331,77 +329,16 @@ uint64_t ibWebApplication::WaitForChange(uint64_t lastSeen, int timeoutMs)
 
 void ibWebApplication::PostWork(std::function<void()> fn)
 {
-	{
-		std::lock_guard<std::mutex> lk(m_workerMtx);
-		// If stopping, drop the task. Session teardown is in progress
-		// and the worker won't drain anything new.
-		if (m_workerStop.load())
-			return;
-		m_workerQueue.push_back(std::move(fn));
-	}
-	m_workerCv.notify_one();
-}
-
-void ibWebApplication::StartWorker()
-{
-	m_workerStop.store(false);
-	m_worker = std::thread(&ibWebApplication::WorkerLoop, this);
-}
-
-void ibWebApplication::StopWorker()
-{
-	{
-		std::lock_guard<std::mutex> lk(m_workerMtx);
-		m_workerStop.store(true);
-	}
-	m_workerCv.notify_all();
-	if (m_worker.joinable())
-		m_worker.join();
-}
-
-void ibWebApplication::WorkerLoop()
-{
-	// Pin THIS session's ibSession as Current() for the worker thread.
-	// The frame is reached via the session (m_sessionContext->GetFrame()),
-	// no thread-local frame slot — frame ownership lives in the session.
-	// Scope lives for the entire worker lifetime, stays active across
-	// every task dispatched here.
-	ibSessionScope sessionScope(m_sessionContext);
-
-	// One thread, one drain cycle: grab one task at a time (to let
-	// ProcessPendingEvents run after each so queued wxTimerEvents
-	// interleave with HTTP work), run it, then drain any pending
-	// wx events. Exit when the queue is empty AND m_workerStop is
-	// set — ensures posted-before-stop tasks still execute.
-	for (;;) {
-		std::function<void()> task;
-		{
-			std::unique_lock<std::mutex> lk(m_workerMtx);
-			m_workerCv.wait(lk, [this] {
-				return !m_workerQueue.empty() || m_workerStop.load();
-			});
-			if (!m_workerQueue.empty()) {
-				task = std::move(m_workerQueue.front());
-				m_workerQueue.pop_front();
-			} else if (m_workerStop.load()) {
-				break;
-			}
-		}
-		if (task) {
-			try { task(); }
-			catch (const ibBackendException& err) {
-				wxLogWarning(wxT("worker task threw: %s"),
-					err.GetErrorDescription());
-			}
-			catch (...) {
-				wxLogWarning(wxT("worker task threw unknown"));
-			}
-		}
-		// ProcessPendingEvents is called by the timer thread's
-		// per-tick work item explicitly (see ibWebTimer::TickLoop)
-		// — doing it unconditionally here trips wx's "no pending
-		// events" assert on ticks that come from HTTP-only paths.
-	}
+	// Hand off to the session — it forwards through the registry's
+	// worker pool. Per-session FIFO + lease inside the pool preserves
+	// the "single in-flight task per session" invariant that the old
+	// per-session worker thread provided. The pool worker binds the
+	// session via ibSessionScope at lease start, so script-side
+	// Current()/GetPUState() see this session.
+	if (m_sessionContext == nullptr) return;
+	// Discard the future — PostWork is fire-and-forget; exceptions are
+	// captured in the promise state, which we ignore here.
+	(void)m_sessionContext->Submit(std::move(fn));
 }
 
 void ibWebApplication::OnExit()
@@ -420,7 +357,7 @@ void ibWebApplication::OnExit()
 	// it on the HTTP thread (the one that reached OnExit via
 	// ibSessionRegistry::Destroy → ~ibWebSession) would hand procUnit a
 	// thread_local state set up for the session's worker and crash on
-	// deref. Enqueue BEFORE StopWorker so the worker still picks it up.
+	// deref. Drain via RunOnWorker(...).get() before DropSession below.
 	if (m_frame != nullptr) {
 		RunOnWorker([this]() {
 			if (m_frame == nullptr) return true;
@@ -435,10 +372,9 @@ void ibWebApplication::OnExit()
 		}).get();
 	}
 
-	// Stop the worker: signals stop, wakes the cv, joins. Any
-	// tasks still queued at this point are drained first — we
-	// don't drop them just because OnExit started.
-	StopWorker();
+	// Pool's per-session queue entry is dropped automatically by the
+	// session registry when ProcessRemove fires (downstream of
+	// ibWebSession::Close). No explicit teardown needed here.
 
 	// Shared moduleManager lives in metadata — don't Destroy it, just
 	// fire per-session Exit events. GetProcUnit() in the event handlers

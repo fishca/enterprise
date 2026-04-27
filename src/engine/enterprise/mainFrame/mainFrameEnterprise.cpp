@@ -39,6 +39,7 @@ ibFrontendDocMDIFrameEnterprise::~ibFrontendDocMDIFrameEnterprise()
 #include "frontend/win/dlgs/errorDialog.h"
 
 #include "backend/appData.h"
+#include "backend/session/sessionRegistry.h"
 
 void ibFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, const wxString& strDocPath, const long currLine, const wxString& strErrorMessage) const
 {
@@ -66,9 +67,13 @@ void ibFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, 
 		);
 	}
 
-	//close window
+	//close window — force-close every session the registry owns:
+	// each session's m_forceExit flag interrupts any running script,
+	// OnForceExit (overridden on ibGUISession) schedules wxTheApp::Exit
+	// once, Remove submitted for each session row. GUI ends with the
+	// app exiting through wx's normal teardown.
 	if (retCode == 3) {
-		ibApplicationData::ForceExit();
+		ibSessionRegistry::Instance().CloseAll(true);
 	}
 }
 

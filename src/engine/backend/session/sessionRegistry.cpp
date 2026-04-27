@@ -7,6 +7,8 @@
 #include "backend/guid.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/databaseLayer/databaseLayer.h"
+#include "workerPool.h"
+#include "workerPoolHeadless.h"
 
 #include <chrono>
 #include <iostream>
@@ -66,7 +68,34 @@ ibSessionRegistry& ibSessionRegistry::Instance()
 	return *appData->GetSessionRegistry();
 }
 
-ibSessionRegistry::ibSessionRegistry() = default;
+ibSessionRegistry::ibSessionRegistry(std::size_t maxWorkers)
+{
+	// Allocate the worker pool here so registry owns the whole
+	// session-management subsystem end-to-end: pool stops before
+	// sessions tear down inside our Stop(). maxWorkers == 0 means
+	// "no pool" — desktop GUI modes that run a single session on the
+	// wx main thread don't need a thread pool at all.
+	if (maxWorkers > 0)
+		m_workerPool = std::make_unique<ibWorkerPoolHeadless>(maxWorkers);
+}
+
+void ibSessionRegistry::CloseAll(bool force)
+{
+	// Snapshot under shared lock — Close() submits Remove which acquires
+	// m_ownMutex unique-locked from the registry thread, so we can't
+	// hold the snapshot lock while calling Close. shared_ptr keeps
+	// each session alive across the iteration even if the registry
+	// drops its strong-ref via ProcessRemove mid-loop.
+	std::vector<std::shared_ptr<ibSession>> snapshot;
+	{
+		std::shared_lock<std::shared_mutex> lk(m_ownMutex);
+		snapshot.reserve(m_own.size());
+		for (auto& kv : m_own)
+			if (kv.second) snapshot.push_back(kv.second);
+	}
+	for (auto& s : snapshot)
+		s->Close(force);
+}
 
 ibSessionRegistry::~ibSessionRegistry()
 {
@@ -243,14 +272,18 @@ void ibSessionRegistry::Start()
 	if (m_threadAlive.load(std::memory_order_acquire)) return;
 	if (m_fatal.load(std::memory_order_acquire))       return;
 
-	// When we own sys_session, grab three dedicated pool connections:
-	// one for the persistent lock TX, one for INSERT/UPDATE/DELETE
-	// outside it, one for NOWAIT probes during Sweep. nullptr-tolerant
-	// downstream — if the pool is not yet initialised (early startup /
-	// test harness) the DB ops no-op gracefully.
+	// When we own sys_session, grab two dedicated pool connections:
+	// one for INSERT/UPDATE/DELETE + JobRefreshSnapshot SELECT, one for
+	// NOWAIT probes during Sweep. nullptr-tolerant downstream — if the
+	// pool is not yet initialised (early startup / test harness) the DB
+	// ops no-op gracefully.
+	//
+	// The historical third connection (m_lockConn for HoldRowLocks +
+	// pessimistic-lock liveness) was removed when liveness moved to the
+	// heartbeat-on-lastActive model — see "HoldRowLocks self-deadlock"
+	// memory note. Frees a pool slot for productive use.
 	if (m_ownsSysSession) {
 		if (auto* pool = ibApplicationData::GetConnectionPool()) {
-			m_lockConn  = pool->Checkout();
 			m_writeConn = pool->Checkout();
 			m_probeConn = pool->Checkout();
 		}
@@ -277,7 +310,26 @@ void ibSessionRegistry::Start()
 
 void ibSessionRegistry::Stop()
 {
-	if (!m_thread.joinable()) return;
+	if (!m_thread.joinable()) {
+		// Even with no registry thread running, the pool may be live —
+		// the appData ctor allocates it before the registry starts. Stop
+		// anyway so workers join before the host returns from Stop.
+		if (m_workerPool) {
+			m_workerPool->Stop();
+			m_workerPool.reset();
+		}
+		return;
+	}
+
+	// Drain worker pool BEFORE killing sessions: tasks in flight reference
+	// session pointers; if we tear sessions down first, the pool's worker
+	// threads are left calling into freed memory. After Stop, the pool's
+	// worker threads have joined and no new task can be submitted (Submit
+	// rejects with set_exception on a stopped pool).
+	if (m_workerPool) {
+		m_workerPool->Stop();
+		m_workerPool.reset();
+	}
 
 	// Submit Remove for every session still in m_own (the wes process's
 	// technical WebServer session, stranded per-tab sessions on a hard
@@ -309,13 +361,9 @@ void ibSessionRegistry::Stop()
 	m_submitCv.notify_all();
 	m_thread.join();
 
-	// Release row locks + drop pool checkouts. shared_ptr custom deleter
-	// on pool connections reparks them on the pool's idle list — no
-	// explicit pool-side Return call needed.
-	if (m_lockConn) {
-		m_lockConn->ReleaseRowLocks();
-		m_lockConn.reset();
-	}
+	// Drop pool checkouts. shared_ptr custom deleter on pool connections
+	// reparks them on the pool's idle list — no explicit pool-side
+	// Return call needed.
 	m_writeConn.reset();
 	m_probeConn.reset();
 }
@@ -673,6 +721,61 @@ ibSession* ibSessionRegistry::GetFallback() const
 	return m_fallback.lock().get();
 }
 
+// --- debug thread → parked session redirection --------------------------
+
+void ibSessionRegistry::RegisterDebugThread(std::thread::id tid)
+{
+	std::unique_lock<std::shared_mutex> lk(m_debugMtx);
+	m_debugThreads.insert(tid);
+}
+
+void ibSessionRegistry::UnregisterDebugThread(std::thread::id tid)
+{
+	std::unique_lock<std::shared_mutex> lk(m_debugMtx);
+	m_debugThreads.erase(tid);
+}
+
+bool ibSessionRegistry::IsDebugThread(std::thread::id tid) const
+{
+	std::shared_lock<std::shared_mutex> lk(m_debugMtx);
+	return m_debugThreads.find(tid) != m_debugThreads.end();
+}
+
+void ibSessionRegistry::EnterDebugLoop(ibSession* s)
+{
+	if (s == nullptr) return;
+	std::unique_lock<std::shared_mutex> lk(m_debugMtx);
+	// Idempotent — drop any expired or duplicate entry pointing at s
+	// before pushing. Re-entrant breakpoint shouldn't happen but we
+	// stay correct if it does.
+	for (auto it = m_debugQueue.begin(); it != m_debugQueue.end();) {
+		auto cur = it->lock();
+		if (!cur || cur.get() == s) it = m_debugQueue.erase(it);
+		else                        ++it;
+	}
+	m_debugQueue.push_back(s->weak_from_this());
+}
+
+void ibSessionRegistry::LeaveDebugLoop(ibSession* s)
+{
+	if (s == nullptr) return;
+	std::unique_lock<std::shared_mutex> lk(m_debugMtx);
+	for (auto it = m_debugQueue.begin(); it != m_debugQueue.end();) {
+		auto cur = it->lock();
+		if (!cur || cur.get() == s) it = m_debugQueue.erase(it);
+		else                        ++it;
+	}
+}
+
+std::shared_ptr<ibSession> ibSessionRegistry::GetActiveDebugTarget() const
+{
+	std::shared_lock<std::shared_mutex> lk(m_debugMtx);
+	for (const auto& w : m_debugQueue) {
+		if (auto sp = w.lock()) return sp;
+	}
+	return nullptr;
+}
+
 // --- Handlers ------------------------------------------------------------
 
 static bool InsertSessionRow(ibDatabaseLayer* db, const ibSession& s, const wxString& userName)
@@ -957,6 +1060,14 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 	const bool wasAuthenticated = (s.Auth() == ibAuthState::Authenticated);
 	s.Transition(ibSessionState::Stopping);
 
+	// Drop the session's queue from the worker pool so any pending tasks
+	// for this session don't hold its slot once the session itself goes
+	// away. Caller flow (ibWebSession::OnExit) drains via blocking
+	// RunOnWorker(...).get() before Close, so by this point there are
+	// no in-flight tasks; DropSession just removes the empty queue
+	// entry from the pool's per-session map.
+	if (m_workerPool) m_workerPool->DropSession(&s);
+
 	// If this session was holding exclusive mode, release it before the
 	// row teardown so any parked Adds resume. Drop the weak under the
 	// dedicated mutex, then drain outside the lock — DrainPendingExclusive
@@ -1189,23 +1300,6 @@ void ibSessionRegistry::ProcessSetActivity(ibRegistryRequest& req)
 	stmt->SetParamString(1, req.activity);
 	stmt->SetParamString(2, guidStr);
 	try { stmt->RunQuery(); } catch (...) {}
-}
-
-void ibSessionRegistry::RebuildLockHold()
-{
-	if (!m_lockConn) return;
-
-	std::vector<wxString> guids;
-	guids.reserve(m_own.size());
-	for (const auto& kv : m_own) {
-		if (kv.second && kv.second->Inserted())
-			guids.push_back(wxString::FromUTF8(kv.first.c_str()));
-	}
-
-	// HoldRowLocks commits the prior TX and reopens. Not all drivers
-	// implement row locks (SQLite / PG / MySQL / ODBC default to false);
-	// skip silently — registry stays in "state-only" mode for them.
-	(void)m_lockConn->HoldRowLocks(session_table, wxT("session"), guids);
 }
 
 // --- Periodic jobs (placeholders) ----------------------------------------

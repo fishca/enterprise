@@ -34,6 +34,7 @@
 
 #include "backend/backend.h"
 
+#include <chrono>
 #include <condition_variable>
 #include <deque>
 #include <memory>
@@ -55,13 +56,19 @@ public:
 	// the pool takes shared ownership and also uses it as the first
 	// hand-out-able conn. `maxSize` caps total live conns; once
 	// reached, Checkout blocks until a prior borrower releases.
+	// `minIdle` is the floor for idle-shrink: idle clones beyond this
+	// count get closed after `kIdleTimeout` of inactivity, keeping
+	// at least minIdle conns warm for fast re-acquire. Default 2 —
+	// hot enough to absorb light bursts without paying Open cost,
+	// cheap enough that single-session GUI hosts (which may only
+	// ever check out 1 conn) effectively don't shrink.
 	//
 	// Re-initialising replaces m_source and resets the idle set. Any
 	// previously handed-out shared_ptrs stay valid (their deleter
 	// captures their original pool's shared_ptr and parks it back on
 	// drop, but into THIS fresh state — harmless; the new pool just
 	// sees an extra idle entry).
-	void Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize);
+	void Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize, std::size_t minIdle = 2);
 
 	// Close and drop every connection the pool holds. Idle and
 	// outstanding checkouts are both invalidated — callers must be
@@ -162,13 +169,29 @@ private:
 	// a live source even when every clone is currently checked out.
 	std::shared_ptr<ibDatabaseLayer>              m_source;
 
-	// Idle clones — owning shared_ptrs. Checkout pops the front,
-	// hand-out's deleter pushes back.
-	std::deque<std::shared_ptr<ibDatabaseLayer>>  m_idle;
+	// Idle pool entries — each tagged with the moment it became idle so
+	// Reap can drop conns that have been sitting unused for too long.
+	// Checkout pops from the back (most recently parked = hottest);
+	// Reap walks from the front (oldest first) and Closes entries
+	// older than kIdleTimeout, never letting m_idle drop below
+	// m_minIdle. The master entry (whose conn equals m_source) is
+	// pinned — never reaped, even if "old".
+	struct ibIdleEntry {
+		std::shared_ptr<ibDatabaseLayer>      conn;
+		std::chrono::steady_clock::time_point lastUsed;
+	};
+	std::deque<ibIdleEntry>         m_idle;
+	static constexpr std::chrono::seconds kIdleTimeout { 60 };
 
 	std::size_t                     m_maxSize   = 0;
+	std::size_t                     m_minIdle   = 2;
 	std::size_t                     m_live      = 0;  // total clones created (idle + checked-out)
 	bool                            m_shutdown  = false;
+
+	// Drop idle entries older than kIdleTimeout, keeping at least
+	// m_minIdle alive and never dropping the master. Caller must hold
+	// m_mutex. Decrements m_live and Closes the dropped conns.
+	void ReapStaleLocked();
 };
 
 // The canonical per-function RAII scope that ALSO installs the

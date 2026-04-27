@@ -34,7 +34,7 @@ void ibFrontendDocMDIFrame::InitFrame(ibFrontendDocMDIFrame* frame)
 
 bool ibFrontendDocMDIFrame::ShowFrame()
 {
-	if (s_instance != nullptr && !s_instance->IsShown() && !ibApplicationData::IsForceExit()) {
+	if (s_instance != nullptr && !s_instance->IsShown() && !ibSession::IsCurrentForceExit()) {
 
 		s_instance->CreateGUI();
 
@@ -148,7 +148,7 @@ void ibFrontendDocMDIFrame::RaiseFrame()
 {
 	if (!m_callRaiseFrame && ibFrontendDocMDIFrame::IsFocusable()) {
 		CallAfter([&]() {
-			if (!ibApplicationData::IsForceExit())
+			if (!ibSession::IsCurrentForceExit())
 				ibFrontendDocMDIFrame::Raise();
 			m_callRaiseFrame = false;
 			}

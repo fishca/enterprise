@@ -5,9 +5,11 @@
 
 #include "compileCode.h"
 #include "procUnit.h"
+#include "procUnitState.h"
 
 #include "debugger/debugServer.h"
 #include "system/systemManager.h"
+#include "session/session.h"   // ibSession::GetPUState()
 
 #include "appData.h"
 
@@ -39,78 +41,61 @@
 //*                                              support error place                                           *
 //**************************************************************************************************************
 
-// Per-thread execution state. Kept as file-static thread_local and
-// accessed through ibProcUnit's static methods below, because MSVC C2492
-// forbids thread_local on class statics that inherit a DLL export.
-// Previous design was plain statics — multiple threads calling Execute
-// concurrently (main UI + background codeRunner + daemon tasks) stomped
-// on each other's call stack, error site, and recursion counter.
-static thread_local ibProcUnit* tl_currentRunModule = nullptr;
-static thread_local std::vector<ibRunContext*> tl_runContext;
+// Interpreter-state methods on ibProcUnitState — the canonical access
+// point is ibSession::GetPUState()->X. Out-of-line here because they
+// need the full ibRunContext / ibByteCode types (procUnitState.h only
+// forward-declares them).
 
-ibProcUnit* ibProcUnit::GetCurrentRunModule() { return tl_currentRunModule; }
-void ibProcUnit::SetCurrentRunModule(ibProcUnit* unit) { tl_currentRunModule = unit; }
-void ibProcUnit::ClearCurrentRunModule() { tl_currentRunModule = nullptr; }
-
-void ibProcUnit::AddRunContext(ibRunContext* runContext) { tl_runContext.push_back(runContext); }
-unsigned int ibProcUnit::GetCountRunContext() { return static_cast<unsigned int>(tl_runContext.size()); }
-
-ibRunContext* ibProcUnit::GetPrevRunContext() {
-	if (tl_runContext.size() < 2)
-		return nullptr;
-	return tl_runContext[tl_runContext.size() - 2];
+ibByteCode* ibProcUnitState::GetCurrentByteCode() const
+{
+	const ibRunContext* rc = GetCurrentRunContext();
+	return rc != nullptr ? rc->GetByteCode() : nullptr;
 }
 
-ibRunContext* ibProcUnit::GetCurrentRunContext() {
-	if (tl_runContext.empty())
-		return nullptr;
-	return tl_runContext.back();
+void ibProcUnitState::Raise()
+{
+	m_errorPlace.Reset();
+	m_errorPlace.m_skipByteCode = GetCurrentByteCode();
 }
 
-ibRunContext* ibProcUnit::GetRunContext(unsigned int idx) {
-	if (tl_runContext.size() < idx)
-		return nullptr;
-	return tl_runContext[idx];
-}
-
-void ibProcUnit::BackRunContext() { tl_runContext.pop_back(); }
-
-struct ibErrorPlace {
-
-	bool IsEmpty() const { return m_errorLine == wxNOT_FOUND; }
-
-	void Reset() {
-		m_byteCode = m_skipByteCode = nullptr;
-		m_errorLine = wxNOT_FOUND;
+void ibProcUnit::Reset()
+{
+	if (m_pppArrayList != nullptr) {
+		wxDELETEA(m_pppArrayList);
 	}
 
-	long m_errorLine = wxNOT_FOUND;
+	if (m_ppArrayCode != nullptr) {
+		wxDELETEA(m_ppArrayCode);
+	}
 
-	ibByteCode* m_byteCode = nullptr;
-	ibByteCode* m_skipByteCode = nullptr;
-};
+	// Clear the active session's currentRunModule pointer if it was us.
+	// Hits the per-session interpreter state directly through GetPUState
+	// rather than going through any TLS forwarder.
+	if (auto* state = ibSession::GetPUState()) {
+		if (state->GetCurrentRunModule() == this)
+			state->ClearCurrentRunModule();
+	}
 
-static thread_local ibErrorPlace s_errorPlace;
+	m_numAutoDeleteParent = 0;
 
-void ibProcUnit::Raise() {
-
-	s_errorPlace.Reset(); //initialize the error place
-	s_errorPlace.m_skipByteCode = ibProcUnit::GetCurrentByteCode(); //return back to the called module (if any)
+	m_pppArrayList = nullptr;
+	m_ppArrayCode = nullptr;
+	m_pByteCode = nullptr;
 }
 
 //**************************************************************************************************************
 //*                                              stack support                                                 *
 //**************************************************************************************************************
 
-// Per-thread recursion counter.
-static thread_local short s_nRecCount = 0; //control looping
-
-inline void BeginByteCode(ibRunContext* pCode) { ibProcUnit::AddRunContext(pCode); }
+inline void BeginByteCode(ibRunContext* pCode) {
+	if (auto* st = ibSession::GetPUState()) st->AddRunContext(pCode);
+}
 inline bool EndByteCode()
 {
-	unsigned int n = ibProcUnit::GetCountRunContext();
-	if (n > 0)
-		ibProcUnit::BackRunContext();
+	auto* st = ibSession::GetPUState();
+	unsigned int n = st ? st->GetCountRunContext() : 0;
+	if (n > 0 && st)
+		st->BackRunContext();
 	n--;
 	if (n <= 0)
 		return false;
@@ -123,10 +108,14 @@ inline void ResetByteCode() { while (EndByteCode()); }
 struct ibProcStackGuard {
 
 	ibProcStackGuard(ibRunContext* runContext) {
-		if (s_nRecCount > MAX_REC_COUNT) { //critical error
+		// Active state is required — ibProcUnit::Execute is reached only
+		// through a bound session (ibSessionScope / ibSessionThreadBinding).
+		auto* state = ibSession::GetPUState();
+		wxASSERT(state != nullptr);
+		if (state->m_recCount > MAX_REC_COUNT) { //critical error
 			wxString strError;
-			for (unsigned int i = 0; i < ibProcUnit::GetCountRunContext(); i++) {
-				const ibRunContext* stackContext = ibProcUnit::GetRunContext(i);
+			for (unsigned int i = 0; i < state->GetCountRunContext(); i++) {
+				const ibRunContext* stackContext = state->GetRunContext(i);
 				wxASSERT(stackContext);
 				const ibByteCode* stackByteCode = stackContext->GetByteCode();
 				wxASSERT(stackByteCode);
@@ -137,12 +126,15 @@ struct ibProcStackGuard {
 			}
 			ibBackendCoreException::Error(_("Number of recursive calls exceeded the maximum allowed value!\nCall stack :") + strError);
 		}
-		s_nRecCount++;
+		state->m_recCount++;
 		m_currentContext = runContext;
 		BeginByteCode(runContext);
 	}
 
-	~ibProcStackGuard() { s_nRecCount--; EndByteCode(); }
+	~ibProcStackGuard() {
+		if (auto* state = ibSession::GetPUState()) state->m_recCount--;
+		EndByteCode();
+	}
 
 private:
 	ibRunContext* m_currentContext;
@@ -556,6 +548,14 @@ void ibProcUnit::Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDe
 
 	std::vector<ibTryLabel> tryList;
 
+	// Cache once per Execute — interpreter state pointer + session
+	// pointer. Both stable for the whole Execute (binding doesn't
+	// change while the script thread runs); going through GetPUState
+	// per opcode would pay shared_lock + map find via Current() each
+	// time. Single cache-line reads in the hot loop instead.
+	ibSession*       const cancelSession = ibSession::Current();
+	ibProcUnitState* const state         = ibSession::GetPUState();
+
 start_label:
 
 	try { //slower by 2-3% for each nested module
@@ -563,12 +563,26 @@ start_label:
 
 			if (!ibBackendException::IsEvalMode()) {
 				pContext->m_lCurLine = lCodeLine;
-				SetCurrentRunModule(this);
+				if (state != nullptr) state->SetCurrentRunModule(this);
 			}
 
-			//if force exit - terminate 
-			if (ibApplicationData::IsForceExit())
+			// Per-session force-exit — voluntary kick. Flag set by
+			// ibSession::Close(true) / RequestForceExit (admin kick, GUI
+			// close, debug Destroy, etc.); OnForceExit fired the per-kind
+			// action; here we just break out of the loop and let the host
+			// clean up. Atomic load per opcode — same cost class as the
+			// cancel check below.
+			if (cancelSession != nullptr && cancelSession->IsForceExit())
 				break;
+
+			// Cooperative cancellation — admin Kick / pool CancelSession
+			// flips the flag; the interpreter notices on its next loop
+			// iteration and unwinds via ibBackendInterruptException.
+			// One atomic load per opcode — single cache-line read.
+			if (cancelSession != nullptr && cancelSession->IsCancelRequested()) {
+				cancelSession->ClearCancel();
+				ibBackendInterruptException::Error();
+			}
 
 			//enter in debugger
 			if (debugServer != nullptr && !ibBackendException::IsEvalMode())
@@ -922,7 +936,8 @@ start_label:
 			}
 		}
 
-		s_errorPlace.Reset(); //Error is handled in this module - erase the error location
+		if (auto* state = ibSession::GetPUState())
+			state->m_errorPlace.Reset(); //Error is handled in this module - erase the error location
 
 	}
 	catch (const ibBackendException& err) {
@@ -930,7 +945,8 @@ start_label:
 		const long trySize = tryList.size() - 1;
 		if (trySize >= 0) {
 
-			s_errorPlace.Reset(); //Error is handled in this module - erase the error location
+			if (auto* state = ibSession::GetPUState())
+				state->m_errorPlace.Reset(); //Error is handled in this module - erase the error location
 
 			const long tryCodeLine = tryList[trySize].m_lEndLine;
 			tryList.resize(trySize);
@@ -940,11 +956,13 @@ start_label:
 
 		//there is no handler in this module - save the error location for the following modules
 		//But we don't throw an error right away, because we don't know if there are any handlers further
-		if (s_errorPlace.m_byteCode == nullptr && m_pByteCode != s_errorPlace.m_skipByteCode) { //the Error system function throws an exception only for child modules
+		if (auto* state = ibSession::GetPUState()) {
+			if (state->m_errorPlace.m_byteCode == nullptr && m_pByteCode != state->m_errorPlace.m_skipByteCode) { //the Error system function throws an exception only for child modules
 
-			//previously saved the original error location (i.e. the error didn't occur in this module)
-			s_errorPlace.m_byteCode = m_pByteCode;
-			s_errorPlace.m_errorLine = lCodeLine;
+				//previously saved the original error location (i.e. the error didn't occur in this module)
+				state->m_errorPlace.m_byteCode = m_pByteCode;
+				state->m_errorPlace.m_errorLine = lCodeLine;
+			}
 		}
 
 		//show and throw error message (ProcessError rethrows via `throw;`)
@@ -962,7 +980,17 @@ void ibProcUnit::Execute(ibByteCode& cByteCode, ibValue* pvarRetValue, bool bRun
 	if (!cByteCode.m_bCompile)
 		ibBackendCoreException::Error(_("Module: %s not compiled!"), cByteCode.m_strModuleName);
 
-	s_nRecCount = 0;
+	auto* state = ibSession::GetPUState();
+	wxASSERT(state != nullptr);
+	if (state != nullptr) state->m_recCount = 0;
+
+	// Clear any leftover cancel request from a previous task that may
+	// have set the flag right after that task already exited the loop.
+	// Each Execute starts with a clean slate; the flag is only checked
+	// inside the dispatch loop below.
+	if (auto* s = ibSession::Current())
+		s->ClearCancel();
+
 	m_pByteCode = &cByteCode;
 
 	//check the conformity of modules (compiled and running)
@@ -1257,8 +1285,10 @@ bool ibProcUnit::GetPropVal(const wxString& strPropName, ibValue& pvarPropVal) /
 
 bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunContext, ibValue& pvarRetValue, bool compileBlock)
 {
-	if (pRunContext == nullptr)
-		pRunContext = ibProcUnit::GetCurrentRunContext();
+	if (pRunContext == nullptr) {
+		if (auto* st = ibSession::GetPUState())
+			pRunContext = st->GetCurrentRunContext();
+	}
 
 	if (strExpression.IsEmpty() || pRunContext == nullptr)
 		return false;

@@ -1,11 +1,61 @@
 # Next-session plan
 
-State at the end of the worker-pool / per-session-state landing
-(commit `97344bbf` on develop). This file is the picking-up point for
-the next round — not "everything ever planned", just what is
-actionable now and easy to forget.
+State at the end of the API-sweep landing (worker-pool +
+per-session-state still in `97344bbf`; this update is on top of that
+with API-shrink and naming clean-ups). This file is the picking-up
+point for the next round — not "everything ever planned", just what
+is actionable now and easy to forget.
 
-## What landed today
+## API-sweep — landed 2026-04-27
+
+`ibApplicationData` is no longer the proxy / gateway for types that
+have a logical home of their own. Each domain object now owns its
+own table-level operations.
+
+- **`ibSession` API-shrink.** Registry-only state-machine
+  (`Transition`, `TransitionAuth`, `SetIdentity`, `SetInserted`,
+  `Inserted`, `WaitForState`, `WaitForAuth`) and auth-flow setters
+  (`SetUserInfo`, `SetSessionRawPassword`,
+  `ClearSessionRawPassword`, `EnableDebug`, `DisableDebug`) moved to
+  `private` under `friend ibSessionRegistry`. Public surface for
+  external code is now ~15 methods (identity / state reads / control
+  flags / `Submit` / `Open` / `Close` / `Detach` / `SetActivity`).
+- **Registry façades for auth.** `ibSessionRegistry::InstallUser(s,
+  info, pwd)` and `EnableDebugForSession(s)` are the single public
+  entry points for what used to be ad-hoc poking at session
+  internals from `appData::InstallUser` / `appData::Connect`.
+- **`ibUserInfo`** (was `ibApplicationDataUserInfo`). Renamed,
+  relocated DB / buffer I/O onto the type itself:
+  `ibUserInfo::Read(guid|name)`, `Save`, `Serialize`, `Deserialize`,
+  `HasAny`, `ListAll` (returns nested `Brief` projection — replaces
+  `ibApplicationDataShortUserInfo`). `appData` no longer mediates
+  any sys_user query.
+- **`ibSessionSnapshot`** (was `ibApplicationDataSessionArray`).
+  Renamed and relocated to `backend/session/sessionSnapshot.{h,cpp}`.
+  `appData::GetSessionArray()` removed — call sites use
+  `ibSessionRegistry::Instance().GetClusterSnapshot()` directly.
+  Added cluster-wide aggregate helpers: `HasActiveUsers`,
+  `IsUserActive(name)`, `CountByKind(ibSessionKind)`.
+- **Per-session configuration language.**
+  `ibSession::m_languageCode` (explicit override) +
+  `m_resolvedLanguageCode` (cached `override || user-default`) —
+  `GetLanguageCode()` is inline `const wxString&`, single field
+  load, refreshed only by `SetLanguageCode` / `SetUserInfo`.
+  `ibBackendLocalization::GetActiveLanguage()` /
+  `SetActiveLanguage()` route through the bound session, with
+  `ms_strUserLanguage` as process-default fallback. Closes the web
+  multi-tab last-language-wins symptom (every tab now renders its
+  own user's synonym translations).
+
+Files touched: `session.{h,cpp}`, `sessionRegistry.{h,cpp}`,
+`userInfo.{h,cpp}` (new .cpp), `sessionSnapshot.{h,cpp}` (new),
+`appData.{h,cpp}`, `appDataQuery.cpp`,
+`backend_localization.{h,cpp}`, `metadataConfiguration.cpp`,
+`metaObjectMetadataProperty.cpp`, `userItem.cpp`,
+`authorization.cpp`, `wfrontend.cpp`, `activeUser.cpp`,
+`backend.vcxproj` / `.filters`.
+
+## What landed earlier
 
 - **Per-session interpreter state.** `ibSession::m_procUnitState`
   (`procUnitState.h`) holds `m_currentRunModule`, `m_runContext`

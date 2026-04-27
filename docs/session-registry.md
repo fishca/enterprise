@@ -373,6 +373,132 @@ class; every driver flips the flag in `BeginTransaction` /
 `Commit` / `RollBack`. Firebird keeps its native-handle override as a
 belt-and-suspenders check.
 
+## Public API surface — registry as single mutator (2026-04-27)
+
+`ibSession` exports a deliberately narrow public surface; all state
+mutation runs through `ibSessionRegistry`. The split lets the
+single-consumer registry thread own the state machine without
+external code sneaking writes that race with it.
+
+Public on `ibSession` (~15 methods):
+- Identity / state reads: `GetId`, `GetKind`, `Identity`, `State`,
+  `Auth`, `Reason`, `GetUserInfo` (const), `GetWorkDate`,
+  `GetSessionRawPassword` (const), `GetLanguageCode` (const ref).
+- Lifecycle for clients: `Open(user, pwd)`, `Close(force)`,
+  `Detach`, `SetActivity`.
+- Control flags: `RequestCancel` / `IsCancelRequested` /
+  `ClearCancel`, `RequestForceExit` / `IsForceExit`, `IsEvalMode` /
+  `SetEvalMode`, `IsProcessingBackendError` /
+  `SetProcessingBackendError`.
+- Public hooks: `Submit(task)`, `IsExclusive` / `SetExclusive`,
+  `Server` / `SetServer`, `IsDebug` / `Debug` (debugServer reads
+  the debug-loop CV through this).
+- Static lookup: `Current`, `CurrentFrame`, `CurrentRunContext`,
+  `GetByThread`, `BindSessionToThread` / `UnbindThread`,
+  `SetAccessMode` / `GetAccessMode`, `SetFallback` / `ClearFallback`.
+
+Private under `friend ibSessionRegistry`:
+- State machine: `Transition`, `TransitionAuth`,
+  `WaitForState`, `WaitForAuth`.
+- Identity / row tracking: `SetIdentity`, `Inserted`, `SetInserted`.
+- Auth-flow mutators (driven only through the façades below):
+  `SetUserInfo`, `SetSessionRawPassword`, `ClearSessionRawPassword`,
+  `EnableDebug`, `DisableDebug`.
+
+Registry façades — the only public entry points for auth bring-up:
+
+```cpp
+ibSessionRegistry::InstallUser(s, info, rawPassword);
+//   Writes m_userInfo + raw-password cache. Caller (appData /
+//   login dialog) must already be under SessionScope(s).
+ibSessionRegistry::EnableDebugForSession(s);
+//   Allocates per-session debug slot when --debug starts the session.
+```
+
+`appData::Login` / `appData::Connect` route through these instead of
+calling session setters directly, so the registry remains the only
+mutator of session state.
+
+## Per-session configuration language (2026-04-27)
+
+`ibSession::m_languageCode` (explicit override) plus
+`m_resolvedLanguageCode` (cache) replace the old process-static
+`ms_strUserLanguage` for *configuration* localization (synonym
+translations, form-label picks). Platform localization (wxLocale via
+`--locale=`) stays process-wide — those are gettext .mo catalogs and
+Web tabs share the same UI translation.
+
+Resolution chain (read-only, hit per metadata-synonym lookup —
+millions of times on a 10k-row report):
+
+```
+ibSession::GetLanguageCode() const      // inline, single field load
+  → m_resolvedLanguageCode               // pre-computed cache
+  ← refreshed by SetLanguageCode / SetUserInfo only
+
+ibBackendLocalization::GetActiveLanguage()  // const wxString&
+  → if (auto* s = ibSession::Current())
+        return s->GetLanguageCode();
+    return ms_strUserLanguage;            // process-default fallback
+```
+
+`SetActiveLanguage(code)` writes the bound session's language code
+when a session is scoped, otherwise updates the process default.
+Used by:
+- `metadataConfiguration.cpp` — after auth, picks user's preferred
+  language or the configuration's default.
+- `metaObjectMetadataProperty.cpp` — designer's "Default Language"
+  property change.
+- Bootstrap (`appData::CreateAppDataEnv`) keeps using
+  `SetUserLanguage` directly — no session is bound yet.
+
+## ibUserInfo as the sys_user gateway (2026-04-27)
+
+`ibUserInfo` (renamed from `ibApplicationDataUserInfo`) owns every
+sys_user query and serialization path. `appData` is no longer
+involved in user CRUD.
+
+```cpp
+// Per-record DB I/O
+static ibUserInfo Read(const ibGuid&);
+static ibUserInfo Read(const wxString& userName);
+static bool       Save(const ibUserInfo&);
+
+// Table-wide queries
+static bool                HasAny();              // open-access check
+static std::vector<Brief>  ListAll();             // login dialog source
+                                                  // Brief = guid+name+fullName
+
+// Buffer I/O (configuration export/import)
+void              Serialize(ibWriterMemory&) const;
+static ibUserInfo Deserialize(ibReaderMemory&);
+```
+
+`Brief` replaces the historical `ibApplicationDataShortUserInfo` —
+projection of guid/name/fullName, no binaryData blob crack.
+
+## ibSessionSnapshot (2026-04-27)
+
+Cluster-wide sys_session snapshot — renamed from
+`ibApplicationDataSessionArray` and relocated to
+`backend/session/sessionSnapshot.{h,cpp}`. Producer is the registry's
+`JobRefreshSnapshot`; consumers call
+`ibSessionRegistry::Instance().GetClusterSnapshot()` directly
+(`appData::GetSessionArray` removed — it was a thin proxy).
+
+Aggregate helpers added on top of per-row accessors:
+
+```cpp
+bool         HasActiveUsers();           // any non-empty userName
+                                         // (excludes technical wes-server row)
+bool         IsUserActive(name);          // user logged in anywhere in cluster
+unsigned int CountByKind(ibSessionKind);  // rows of given kind
+```
+
+Header stays independent of `session.h` — `ibSessionKind` is
+forward-declared with explicit `int` underlying type, full enum
+needed only in `.cpp` for `static_cast`.
+
 ## Session list label
 
 `ibApplicationDataSessionArray::GetApplication(idx)` must disambiguate WebServer vs WebClient on web because both share `ibRunMode::eWEB_ENTERPRISE_MODE`. Implementation: when the stored run-mode is `eWEB_ENTERPRISE_MODE`, pick "Web client" if `m_kind == ibSessionKind::WebClient (100)`, otherwise "Web server". Other run modes fall through to `GetRunModeDescr`. `m_kind` is kept as `int` in `ibApplicationDataSessionUnit` to avoid pulling `session.h` into `appData.h`.

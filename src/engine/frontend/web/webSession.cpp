@@ -8,20 +8,19 @@
 #include "backend/moduleManager/moduleManager.h"
 
 #include "webApplication.h"
+#include "webClientSession.h"
+#include "webFrame.h"
 #include "wfrontend.h"
 
-// ibWebClientSession — concrete per-tab session class for the wes web
-// frontend. Defined in this .cpp (not in a dedicated header) because
-// only ibWebSession::Login ever instantiates it through
-// appData->CreateSession<ibWebClientSession>(presetGuid, address).
-// Marker subtype today — no overrides; ibSession's base behaviour suffices
-// (no main frame, OnDestroySession is a no-op true). Kept as a real class
-// so ibSession::Current() resolves to a typed pointer when web-specific
-// behaviour needs to differ from desktop later.
-class ibWebClientSession : public ibSession {
-public:
-	using ibSession::ibSession;   // (std::string, ibSessionKind) ctor
-};
+ibBackendDocFrame* ibWebClientSession::GetFrame() const
+{
+	return m_frame;   // ibWebFrame* → ibBackendDocFrame* (implicit upcast)
+}
+
+void ibWebClientSession::SetFrame(ibWebFrame* f)
+{
+	m_frame = f;
+}
 
 namespace {
 
@@ -96,7 +95,7 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	// the most recent WebServer-kind session — wes's system session,
 	// already added at wfrontendInit — so keep-alive hook sees this tab
 	// as a real client without an explicit pointer here.
-	ibSession* sessionRaw = nullptr;
+	ibWebClientSession* sessionRaw = nullptr;
 	try {
 		sessionRaw = appData->CreateSession<ibWebClientSession>(presetGuid, address);
 	} catch (const ibBackendException&) {
@@ -131,7 +130,9 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	// Spin up the per-cookie application. Session lifetime tied to
 	// m_session — explicitly Close()d in OnExit / dtor.
 	auto app = std::make_unique<ibWebApplication>();
-	app->SetSessionContext(m_session.get());
+	// sessionRaw is typed ibWebClientSession*; SetSessionContext takes the
+	// same type so SetFrame later doesn't need a cast.
+	app->SetSessionContext(sessionRaw);
 
 	// CreateRoot / CompileRoot / InitRuntimeForSession are driven by
 	// ibSessionRegistry::NotifyAuthenticated → appData::WireSessionEvents

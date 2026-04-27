@@ -35,18 +35,14 @@ ibSession::ibSession(std::string id, ibSessionKind kind)
 
 ibSession::~ibSession()
 {
-	// Safety net for thread→session bindings. The normal teardown path
-	// runs UnbindSession(this) from ibApplicationData's OnDisconnect
-	// listener, fired by ibSessionRegistry::ProcessRemove. But a session
-	// can also be destroyed without going through that path — e.g. when
-	// ProcessAdd's `m_own[guid] = req.session` overwrites an entry whose
-	// shared_ptr was the last strong reference to the previous session
-	// (refresh cycle reusing the same tabSid as the freshly-removed
-	// session). Without this guard, `s_currentByThread` keeps a raw
-	// pointer to the destroyed session and the next Current() / GetFrame()
-	// from any worker that was bound to it dereferences freed memory.
-	// Idempotent — UnbindSession is a no-op when no bindings target this.
-	UnbindSession(this);
+	// s_currentByThread holds weak_ptr<ibSession>; when the last strong
+	// reference drops, every entry pointing here auto-expires. Subsequent
+	// Current() calls do lock() and observe nullptr. The normal teardown
+	// path also calls UnbindSession(this) explicitly from appData's
+	// OnDisconnect listener — that's the place that does the cleanup;
+	// duplicating it here would only walk the bindings map under a unique
+	// lock on every destruction, contending with Current() readers, with
+	// no correctness benefit.
 
 	// Ensure the destruction chain for objects created by this session
 	// runs even when the session falls off without an explicit ClearRoot

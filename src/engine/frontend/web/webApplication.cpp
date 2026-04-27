@@ -21,6 +21,7 @@
 #include "backend/session/session.h"
 #include "backend/metaCollection/metaObject.h"
 
+#include "webClientSession.h"
 #include "webFrame.h"
 #include "webChildFrame.h"
 #include "webTimer.h"
@@ -148,6 +149,13 @@ static bool ExitMainModuleSafe(ibValueModuleManagerConfiguration* mgr)
 }
 
 } // anonymous namespace
+
+ibSession* ibWebApplication::GetSessionContext() const
+{
+	// Implicit upcast ibWebClientSession* -> ibSession*. Out-of-line
+	// because the header only forward-declares ibWebClientSession.
+	return m_sessionContext;
+}
 
 ibWebApplication::ibWebApplication() = default;
 

@@ -152,7 +152,17 @@ protected:
 	}
 
 	virtual bool AllowRun() const { return true; }
+
+public:
+	// Soft-close veto hook. Called from wx's EVT_CLOSE_WINDOW handler when
+	// the user clicks [X], and from ibGUISession::OnDestroySession when
+	// EndJob(false) lands from script — both flows must consult the same
+	// veto (BeforeExit script for enterprise; unsaved-config dialog for
+	// designer). Default true means "allow close"; subclass returns false
+	// to cancel.
 	virtual bool AllowClose() const { return true; }
+
+protected:
 
 	// Lazy runtime start — first Show() after LoadMetadata creates the
 	// root module manager and wires per-session ProcUnits onto the

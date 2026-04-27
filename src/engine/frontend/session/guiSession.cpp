@@ -15,7 +15,7 @@ ibGUISession::~ibGUISession()
 	// DO NOT delete the frame here — wx widgets must be torn down on the
 	// main thread, and ~ibGUISession can run on the registry worker
 	// thread if the last shared_ptr drop happens there (force-exit path).
-	// The graceful path runs OnDestroySession first and nulls m_frame
+	// The graceful path runs OnDestroySession first and clears m_frame
 	// before the dtor ever sees it.
 	if (m_frame != nullptr) m_frame->SetGUISession(nullptr);
 }
@@ -34,17 +34,17 @@ void ibGUISession::AttachFrame(ibFrontendDocMDIFrame* frame)
 	// frame. Keeps frame event handlers reaching per-session runtime
 	// (module manager, ProcUnit map, ibValueSystemFunction once it goes
 	// non-static) without detouring through wxApp singletons.
-	m_frame->SetGUISession(this);
+	frame->SetGUISession(this);
 
 	// Bind ibSession* on the frame too, so legacy GetSession() (used by
 	// AllowRun/AllowClose and session-aware UI) resolves immediately —
 	// Initialize() is otherwise a separate explicit step in mainApp.
-	m_frame->Initialize(this);
+	frame->Initialize(this);
 
 	// Register the singleton ibFrontendDocMDIFrame::s_instance so legacy
 	// `backend_mainFrame` macro / ibFrontendDocMDIFrame::GetFrame() keep
 	// resolving to the same window that session now owns.
-	ibFrontendDocMDIFrame::InitFrame(m_frame);
+	ibFrontendDocMDIFrame::InitFrame(frame);
 
 	// Reload listener — admin's "reload" signal on this session's
 	// sys_session row fires NotifyReload from the registry worker.
@@ -75,17 +75,30 @@ bool ibGUISession::OnShowAuthenticate(const wxString& user, const wxString& pass
 
 bool ibGUISession::OnDestroySession(bool force)
 {
-	(void)force;  // GUI sessions don't yet veto — frame->AllowClose hook lives on wx frame's Close cycle.
 	if (m_frame == nullptr) return true;
 
+	// Soft-close path mirrors the wx [X]-button path: AllowClose runs
+	// the same hook that fires from wxEVT_CLOSE_WINDOW, so EndJob(false)
+	// from script and the user clicking [X] go through the same veto:
+	//   - enterprise: ExitMainModule -> BeforeExit / OnExit script events
+	//   - designer:   unsaved-configuration confirmation dialog
+	// A veto (return false) propagates up through ibSession::Close,
+	// which short-circuits without submitting Remove — the session
+	// stays Added and the frame keeps running. force=true skips this
+	// path entirely; used by debug Destroy, admin Kick, and shutdown
+	// flows where the close cannot be cancelled.
+	if (!force && !m_frame->AllowClose())
+		return false;
+
 	// Clear back-link first so any wx event that fires during Destroy()
-	// (close vetoes, pane teardown) sees a detached session rather than
-	// a half-torn-down one.
+	// (pane teardown, child-frame close cascade) sees a detached session
+	// rather than a half-torn-down one.
 	m_frame->SetGUISession(nullptr);
 
 	// wx-idiomatic shutdown — Destroy() schedules deletion through the
-	// event loop, then the frame dtor runs on the main thread. After
-	// that s_instance is null-cleared by ~ibFrontendDocMDIFrame.
+	// event loop. wxFrame::Destroy does NOT fire EVT_CLOSE_WINDOW, so
+	// AllowClose won't double-fire from this path. The frame dtor runs
+	// on the main thread; s_instance is null-cleared by ~ibFrontendDocMDIFrame.
 	m_frame->Destroy();
 	m_frame = nullptr;
 	return true;

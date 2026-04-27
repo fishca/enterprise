@@ -41,6 +41,7 @@ class ibValueModuleManagerConfiguration;
 class ibWebFrame;
 class ibWebTimer;
 class ibSession;
+class ibWebClientSession;
 
 class ibWebApplication : public wxEvtHandler {
 public:
@@ -67,9 +68,11 @@ public:
 	// ibWebSession right after construction; worker loop installs it
 	// onto its thread via ibSessionScope so any descriptor-level
 	// GetProcUnit call delegates through the session. nullptr until
-	// the session wires it up.
-	ibSession*                  GetSessionContext() const { return m_sessionContext; }
-	void                               SetSessionContext(ibSession* ctx) { m_sessionContext = ctx; }
+	// the session wires it up. Stored typed so SetFrame can dispatch
+	// to ibWebClientSession's typed setter without a cast.
+	ibSession*           GetSessionContext()       const;   // upcast from m_sessionContext
+	ibWebClientSession*  GetClientSessionContext() const { return m_sessionContext; }
+	void                 SetSessionContext(ibWebClientSession* ctx) { m_sessionContext = ctx; }
 
 	// Active tab's visual host, or nullptr if no tab is open. The HTTP
 	// layer uses this to serialise the current tree into the response
@@ -160,7 +163,7 @@ private:
 	// Borrowed — owned by ibSessionRegistry keyed by cookie. Survives this
 	// app because Destroy is driven by the session teardown that runs
 	// after OnExit joins the worker thread.
-	ibSession*                             m_sessionContext = nullptr;
+	ibWebClientSession*                    m_sessionContext = nullptr;
 
 	// Live-update state. See MarkDirty/WaitForChange docs above.
 	std::atomic<uint64_t>                         m_seq { 1 };

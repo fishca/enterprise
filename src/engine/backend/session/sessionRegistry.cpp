@@ -144,14 +144,18 @@ std::size_t ibSessionRegistry::Count() const
 
 bool ibSessionRegistry::HasClients() const
 {
-	ibSession* server = m_currentServer;
-	if (server == nullptr) return false;
+	std::shared_ptr<ibSession> server;
+	{
+		std::shared_lock<std::shared_mutex> lk(m_serverMutex);
+		server = m_currentServer.lock();
+	}
+	if (!server) return false;
 	std::shared_lock<std::shared_mutex> lock(m_ownMutex);
 	for (const auto& kv : m_own) {
 		const ibSession* s = kv.second.get();
-		if (s == nullptr || s == server) continue;
+		if (s == nullptr || s == server.get()) continue;
 		auto srv = s->Server();
-		if (srv && srv.get() == server)
+		if (srv && srv.get() == server.get())
 			return true;
 	}
 	return false;
@@ -654,19 +658,19 @@ ibSession::AccessMode ibSessionRegistry::GetAccessMode() const
 void ibSessionRegistry::SetFallback(ibSession* s)
 {
 	std::unique_lock<std::shared_mutex> lk(m_accessMutex);
-	m_fallback = s;
+	m_fallback = s ? s->weak_from_this() : std::weak_ptr<ibSession>{};
 }
 
 void ibSessionRegistry::ClearFallback()
 {
 	std::unique_lock<std::shared_mutex> lk(m_accessMutex);
-	m_fallback = nullptr;
+	m_fallback.reset();
 }
 
 ibSession* ibSessionRegistry::GetFallback() const
 {
 	std::shared_lock<std::shared_mutex> lk(m_accessMutex);
-	return m_fallback;
+	return m_fallback.lock().get();
 }
 
 // --- Handlers ------------------------------------------------------------
@@ -773,10 +777,17 @@ void ibSessionRegistry::ProcessAdd(ibRegistryRequest& req)
 	// the caller threading the pointer through. Single-session apps
 	// (desktop GUI, daemon, codeRunner) never add a WebServer-kind
 	// session, so m_currentServer stays nullptr and Server() does too.
-	if (s.GetKind() == ibSessionKind::WebServer)
-		m_currentServer = &s;
-	else if (m_currentServer != nullptr)
-		s.SetServer(m_currentServer);
+	if (s.GetKind() == ibSessionKind::WebServer) {
+		std::unique_lock<std::shared_mutex> lk(m_serverMutex);
+		m_currentServer = s.weak_from_this();
+	} else {
+		std::shared_ptr<ibSession> srv;
+		{
+			std::shared_lock<std::shared_mutex> lk(m_serverMutex);
+			srv = m_currentServer.lock();
+		}
+		if (srv) s.SetServer(srv.get());
+	}
 
 	// Exclusive (monopoly) gate — if another session holds the IB in
 	// exclusive mode, park the request. The session stays in Created
@@ -784,8 +795,12 @@ void ibSessionRegistry::ProcessAdd(ibRegistryRequest& req)
 	// the holder releases (ProcessSetExclusive(off)) or the holder's
 	// Remove fires — both drain m_pendingExclusive and re-run ProcessAdd
 	// on the parked requests.
-	ibSession* holder = m_exclusiveSession.load(std::memory_order_acquire);
-	if (holder != nullptr && holder != &s) {
+	std::shared_ptr<ibSession> holder;
+	{
+		std::shared_lock<std::shared_mutex> lk(m_exclusiveMutex);
+		holder = m_exclusiveSession.lock();
+	}
+	if (holder && holder.get() != &s) {
 		m_pendingExclusive.push_back(std::move(req));
 		return;
 	}
@@ -943,9 +958,19 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 	s.Transition(ibSessionState::Stopping);
 
 	// If this session was holding exclusive mode, release it before the
-	// row teardown so any parked Adds resume. Atomic store + drain.
-	if (m_exclusiveSession.load(std::memory_order_acquire) == &s) {
-		m_exclusiveSession.store(nullptr, std::memory_order_release);
+	// row teardown so any parked Adds resume. Drop the weak under the
+	// dedicated mutex, then drain outside the lock — DrainPendingExclusive
+	// re-enters ProcessAdd which acquires m_exclusiveMutex shared.
+	bool wasExclusiveHolder = false;
+	{
+		std::unique_lock<std::shared_mutex> lk(m_exclusiveMutex);
+		auto cur = m_exclusiveSession.lock();
+		if (cur && cur.get() == &s) {
+			m_exclusiveSession.reset();
+			wasExclusiveHolder = true;
+		}
+	}
+	if (wasExclusiveHolder) {
 		s.m_exclusive.store(false, std::memory_order_release);
 		DrainPendingExclusive();
 	}
@@ -953,8 +978,11 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 	// If the leaving session was the registered server, drop the
 	// auto-tracking pointer. Subsequent CreateSession calls will leave
 	// Server() null until another WebServer-kind session is added.
-	if (m_currentServer == &s)
-		m_currentServer = nullptr;
+	{
+		std::unique_lock<std::shared_mutex> lk(m_serverMutex);
+		if (auto cur = m_currentServer.lock(); cur && cur.get() == &s)
+			m_currentServer.reset();
+	}
 
 	// Fire Disconnect listeners while session is still alive (between
 	// Stopping and Gone) — they may need to query session identity.
@@ -1040,9 +1068,13 @@ void ibSessionRegistry::ProcessSetExclusive(ibRegistryRequest& req)
 
 	if (req.exclusiveOn) {
 		// Acquire path.
-		ibSession* holder = m_exclusiveSession.load(std::memory_order_acquire);
-		if (holder != nullptr) {
-			if (holder == &s) {
+		std::shared_ptr<ibSession> holder;
+		{
+			std::shared_lock<std::shared_mutex> lk(m_exclusiveMutex);
+			holder = m_exclusiveSession.lock();
+		}
+		if (holder) {
+			if (holder.get() == &s) {
 				// Re-acquiring our own — idempotent success.
 				setResult(ibSession::ibExclusiveResult::Granted);
 				return;
@@ -1102,7 +1134,10 @@ void ibSessionRegistry::ProcessSetExclusive(ibRegistryRequest& req)
 			}
 		}
 
-		m_exclusiveSession.store(&s, std::memory_order_release);
+		{
+			std::unique_lock<std::shared_mutex> lk(m_exclusiveMutex);
+			m_exclusiveSession = s.weak_from_this();
+		}
 		s.m_exclusive.store(true, std::memory_order_release);
 		writeExclusiveColumn(1);
 		setResult(ibSession::ibExclusiveResult::Granted);
@@ -1110,9 +1145,18 @@ void ibSessionRegistry::ProcessSetExclusive(ibRegistryRequest& req)
 	}
 
 	// Release path — only the holder can release. Releasing while not
-	// the holder is a silent success (idempotent).
-	if (m_exclusiveSession.load(std::memory_order_acquire) == &s) {
-		m_exclusiveSession.store(nullptr, std::memory_order_release);
+	// the holder is a silent success (idempotent). Drain outside the
+	// lock (DrainPendingExclusive re-enters ProcessAdd).
+	bool wasHolder = false;
+	{
+		std::unique_lock<std::shared_mutex> lk(m_exclusiveMutex);
+		auto cur = m_exclusiveSession.lock();
+		if (cur && cur.get() == &s) {
+			m_exclusiveSession.reset();
+			wasHolder = true;
+		}
+	}
+	if (wasHolder) {
 		s.m_exclusive.store(false, std::memory_order_release);
 		writeExclusiveColumn(0);
 		DrainPendingExclusive();

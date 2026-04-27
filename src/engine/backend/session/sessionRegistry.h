@@ -435,10 +435,11 @@ public:
 	}
 
 	// Process-wide "is anyone exclusive?" — read by appData->ExclusiveMode()
-	// facade. atomic load of the holder pointer, snapshot-style. Cluster-
-	// aware variant (sys_session.exclusive column) lands separately.
+	// facade. weak_ptr expiration check under shared lock, snapshot-style.
+	// Cluster-aware variant (sys_session.exclusive column) lands separately.
 	bool HasExclusiveSession() const {
-		return m_exclusiveSession.load(std::memory_order_acquire) != nullptr;
+		std::shared_lock<std::shared_mutex> lk(m_exclusiveMutex);
+		return !m_exclusiveSession.expired();
 	}
 
 	// Synchronous acquire/release of exclusive (monopoly) mode for the
@@ -485,7 +486,10 @@ private:
 	// from ibSession::Current.
 	mutable std::shared_mutex                                    m_accessMutex;
 	ibSession::AccessMode                                        m_accessMode = ibSession::AccessMode::Single;
-	ibSession*                                                   m_fallback = nullptr;
+	// weak_ptr (not raw) so a destroyed fallback session expires harmlessly
+	// instead of leaving a dangling pointer. GetFallback locks under shared
+	// lock and returns nullptr on expiry.
+	std::weak_ptr<ibSession>                                     m_fallback;
 
 	// Lifecycle event listeners. Mutated only at app bootstrap (single
 	// thread); read at notify time. Mutex guards both the lists and
@@ -507,17 +511,25 @@ private:
 	// Most recent session added with kind == WebServer. ProcessAdd uses
 	// it to auto-populate Server() on subsequent (non-server) sessions
 	// so wes per-tab clients link to the wes system session without the
-	// caller threading a parameter through. nullptr in single-session
+	// caller threading a parameter through. Empty weak in single-session
 	// apps (desktop GUI, daemon, codeRunner) — no WebServer kind ever
 	// registers, no auto-attach happens.
-	ibSession*                                                   m_currentServer = nullptr;
+	//
+	// weak_ptr (not raw) — single writer (registry thread in ProcessAdd /
+	// ProcessRemove), multi reader (HasClients from any thread). m_serverMutex
+	// guards both. lock().get() returns nullptr if the server session was
+	// destroyed before ProcessRemove cleared the slot (crash path).
+	mutable std::shared_mutex                                    m_serverMutex;
+	std::weak_ptr<ibSession>                                     m_currentServer;
 
 	// --- exclusive (monopoly) mode ---
-	// Current holder (registry-thread writes; readers via HasExclusiveSession
-	// load atomically). std::atomic<ibSession*> so the read path is lock-
-	// free; producer threads see the answer to "is anyone exclusive?"
-	// without contending with the registry thread's bookkeeping.
-	std::atomic<ibSession*>                                      m_exclusiveSession { nullptr };
+	// Current holder. Writes happen on the registry thread (ProcessAdd /
+	// ProcessRemove / ProcessSetExclusive); the only cross-thread reader is
+	// HasExclusiveSession via appData->ExclusiveMode(). weak_ptr (not raw)
+	// so a holder destroyed without an explicit release expires harmlessly;
+	// a dedicated shared_mutex guards weak_ptr's non-atomic members.
+	mutable std::shared_mutex                                    m_exclusiveMutex;
+	std::weak_ptr<ibSession>                                     m_exclusiveSession;
 
 	// Adds parked while m_exclusiveSession is held by another session.
 	// Drained on release (ProcessSetExclusive(off) or holder's Remove).

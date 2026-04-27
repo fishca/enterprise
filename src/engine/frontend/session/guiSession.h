@@ -27,9 +27,8 @@ public:
 
 	~ibGUISession() override;
 
-	// Returns the owned frame or nullptr when OnCreateSession never ran
-	// (session in error / still anonymous phase). Downcasters interested
-	// in ibFrontendDocMDIFrame specifically use GetFrontendFrame().
+	// Returns the owned frame as the backend abstraction; same pointer as
+	// GetFrontendFrame, just typed for backend callers (CurrentFrame).
 	ibBackendDocFrame* GetFrame() const override;
 
 	// Typed accessor — returns the concrete frontend frame, not the

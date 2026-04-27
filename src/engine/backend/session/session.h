@@ -160,19 +160,14 @@ public:
 	ibSession(const ibSession&)            = delete;
 	ibSession& operator=(const ibSession&) = delete;
 
-	// Main UI frame this session owns. Default returns the session-stored
-	// pointer (set via SetFrame from non-derived owners like ibWebSession),
-	// derived GUI sessions (ibGUISession) override to return their typed
-	// frame and ignore m_frame. Frameless sessions (WebServer, WebCompute,
-	// Service headless) inherit null because nothing calls SetFrame on them.
-	virtual ibBackendDocFrame* GetFrame() const { return m_frame; }
-
-	// Setter for non-derived owners that build the frame separately
-	// (ibWebSession owns ibWebApplication which owns ibWebFrame; the
-	// session itself is plain ibSession, so it needs a way to publish
-	// the frame for ibSession::CurrentFrame() lookups from script-side
-	// CreateNewForm / FindFormByUniqueKey calls).
-	void SetFrame(ibBackendDocFrame* f) { m_frame = f; }
+	// Main UI frame this session owns. Read-only contract for backend
+	// code (CurrentFrame() lookups, script-side CreateNewForm, etc.).
+	// Default null — frameless sessions (daemon, codeRunner, classChecker,
+	// future compute server, WebServer technical row) have no UI and never
+	// override. Sessions that own a frame (ibGUISession with
+	// ibFrontendDocMDIFrame, ibWebClientSession with ibWebFrame) carry
+	// their own typed storage and override GetFrame to expose it.
+	virtual ibBackendDocFrame* GetFrame() const { return nullptr; }
 
 	// Lifecycle event hooks. OnCreateSession fires once on the main
 	// (caller) thread after the registry has Added the session — GUI
@@ -234,12 +229,29 @@ public:
 	// Explicit close — fires OnDestroySession on the calling thread
 	// (main-thread wx frame teardown for GUI sessions) and submits
 	// Remove@Urgent to the registry so this session is dropped from
-	// m_own. After Close returns, the session pointer may dangle once
-	// the registry processes the Remove; callers should null their
-	// pointer immediately after Close.
+	// m_own.
+	//
+	// Lifetime contract. Close uses shared_from_this internally to keep
+	// the session alive across the registry's async ProcessRemove. The
+	// caller's pointer (raw or shared_ptr) is what determines safety
+	// AFTER Close returns:
+	//   - Raw `ibSession*` (desktop main, EndJob, internal helpers):
+	//     do NOT touch the pointer after Close. Once registry processes
+	//     Remove and drops m_own's strong-ref, if no other shared_ptr
+	//     holds the session, ~ibSession runs and the raw pointer
+	//     dangles. The standard pattern is "Close, then return / let
+	//     the local variable go out of scope".
+	//   - shared_ptr<ibSession> (ibWebSession::m_session):
+	//     after Close, call reset() on your shared_ptr to release
+	//     your strong-ref symmetrically. The registry's strong-ref
+	//     was already dropped during ProcessRemove; your reset is the
+	//     final drop and triggers ~ibSession.
 	//
 	// force=false (default) — soft close. OnDestroySession may run veto
-	//                         checks (AllowClose / unsaved-data prompts).
+	//                         checks (AllowClose / unsaved-data prompts);
+	//                         a veto leaves the session Added and the
+	//                         caller's pointer stays valid. Submit only
+	//                         happens when the veto passes.
 	// force=true             — hard close. Skips veto, always destroys —
 	//                         used by debug-Destroy and shutdown paths
 	//                         where the close cannot be cancelled.
@@ -321,7 +333,23 @@ public:
 	// already exist). No-op when m_root already set or activeMetaData null.
 	void EnsureRoot();
 
-	ibApplicationDataUserInfo&       GetUserInfo()       { return m_userInfo; }
+	// Read access — single overload, const only. The non-const reference
+	// overload was removed to enforce "userInfo is mutated only via
+	// SetUserInfo on the registry thread"; external callers (script-side
+	// AppUser readers, GUI title-bar updaters) must not mutate fields
+	// directly because that would race with concurrent SetUserInfo calls
+	// on registry thread without any synchronization.
+	//
+	// Thread safety. Writes (SetUserInfo) run only on the registry thread
+	// during ProcessAttach (Authenticated transition) or ProcessDetach
+	// (Authenticated -> Anonymous transition). Readers from any thread
+	// observe Auth() == Authenticated before relying on the contents:
+	// pre-Auth the struct is empty by ctor; post-Detach the struct is
+	// reset to empty and the script worker is supposed to stop. The
+	// gap window during which a script could see a partially-assigned
+	// wxString is narrow and bounded by the auth state machine; if a
+	// stricter guarantee is needed later, switch m_userInfo to
+	// shared_ptr<const ...> with atomic_load/store.
 	const ibApplicationDataUserInfo& GetUserInfo() const { return m_userInfo; }
 	void SetUserInfo(const ibApplicationDataUserInfo& info) { m_userInfo = info; }
 
@@ -335,8 +363,15 @@ public:
 	// that want a pinned past/future date call SetWorkDate. Replaces
 	// the legacy static ibValueSystemFunction::ms_workDate so two web
 	// sessions in the same process don't step on each other's value.
-	const wxDateTime& GetWorkDate() const { return m_workDate; }
-	void              SetWorkDate(const wxDateTime& d) { m_workDate = d; }
+	//
+	// Returned by value (not const ref) so a concurrent SetWorkDate can
+	// never race with a long-lived caller-side reference. wxDateTime is
+	// a small POD-like value, copy is cheap. Both Get and Set are
+	// expected to be called from the per-session script thread (single
+	// in-flight per session), so the copy itself is also race-free in
+	// practice — value semantics document the invariant.
+	wxDateTime GetWorkDate()         const { return m_workDate; }
+	void       SetWorkDate(const wxDateTime& d) { m_workDate = d; }
 
 	// State accessors — lock-free reads.
 	ibSessionState State() const { return m_state.load(std::memory_order_acquire); }
@@ -446,11 +481,6 @@ private:
 	std::string    m_id;
 	ibSessionKind  m_kind;
 
-	// Non-owning. Set via SetFrame by ibWebSession after ibWebApplication
-	// builds its ibWebFrame; ibGUISession ignores this and returns its own
-	// typed pointer through GetFrame() override.
-	ibBackendDocFrame* m_frame = nullptr;
-
 public:
 	// Per-session debug state. nullptr -> session is not being debugged
 	// (ibProcUnit::Execute skips breakpoint checks fast). Allocated by
@@ -482,6 +512,22 @@ public:
 		std::map<unsigned long long, wxString> m_expressions;
 	};
 
+	// Thread safety for the four accessors below.
+	//
+	// EnableDebug runs exactly once per session, on the registry thread,
+	// inside the OnAuthenticated listener BEFORE TransitionAuth flips
+	// m_auth to Authenticated. IsDebug / Debug are read by debug-server
+	// connection threads, web HTTP handlers, and ibProcUnit on script
+	// threads — all of which only run after the session reaches
+	// Authenticated. Happens-before via the auth state machine
+	// (release-store on m_auth followed by acquire-load) makes the
+	// non-atomic m_debug write visible to readers; no explicit mutex.
+	//
+	// DisableDebug is currently unused — the unique_ptr is released by
+	// ~ibSession. Kept on the API for future "detach debugger mid-
+	// session" scenarios; if it gains a real caller, the timing
+	// argument above no longer holds and m_debug needs atomic
+	// shared_ptr or a mutex.
 	bool IsDebug() const     { return m_debug != nullptr; }
 	ibDebugSession* Debug()  { return m_debug.get(); }
 	void EnableDebug()       { if (!m_debug) m_debug = std::make_unique<ibDebugSession>(); }

@@ -1,5 +1,5 @@
-#ifndef _AUTOCOMPLETE_PARSER_H__ibModuleElementInfo
-#define _AUTOCOMPLETE_PARSER_H__
+#ifndef __IB_CODE_EDITOR_PARSER_H__
+#define __IB_CODE_EDITOR_PARSER_H__
 
 #include "codeEditor.h"
 

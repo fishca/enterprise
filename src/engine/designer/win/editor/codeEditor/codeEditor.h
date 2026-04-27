@@ -1,5 +1,5 @@
-#ifndef _AUTOCOMPLETIONCTRL_H__
-#define _AUTOCOMPLETIONCTRL_H__
+#ifndef __IB_CODE_EDITOR_H__
+#define __IB_CODE_EDITOR_H__
 
 #include <wx/docview.h>
 #include <wx/cmdproc.h>

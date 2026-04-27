@@ -281,33 +281,35 @@ void ibCallTip::PaintCT(wxDC& dc)
 	if (val.empty())
 		return;
 
-	wxSize sz = m_callTip->GetClientSize();
-	wxRect rcClientPos(0, 0, sz.x, sz.y);
-
-	wxRect rcClientSize(0.0f, 0.0f, rcClientPos.GetRight() - rcClientPos.GetLeft(),
-		rcClientPos.GetBottom() - rcClientPos.GetTop());
-
-	wxRect rcClient(0.0f, 0.0f, rcClientSize.GetRight(), rcClientSize.GetBottom());
+	// Fill the entire backing bitmap. The previous version threaded the
+	// client size through wxRect::GetRight()/GetBottom(), which return
+	// `x + w - 1` (last pixel inside), and treated those as width/height —
+	// the resulting fill was (sz.x-2) × (sz.y-2), leaving a 2-pixel-wide
+	// black strip at the bottom and right edge of the bitmap (wxBitmap
+	// is default-initialized to black on MSW GDI).
+	const wxSize sz = m_callTip->GetClientSize();
 
 	dc.SetBrush(wxBrush(colourBG));
 	dc.SetPen(*wxTRANSPARENT_PEN);
-	dc.DrawRectangle(rcClient);
+	dc.DrawRectangle(0, 0, sz.x, sz.y);
 
 	offsetMain = insetX;    // initial alignment assuming no arrows
 	PaintContents(dc, true);
 
 #ifndef __APPLE__
 
-	// OSX doesn't put borders on "help tags"
-	// Draw a raised border around the edges of the wxWindow
-	dc.SetPen(wxPen(colourLight));
+	// OSX doesn't put borders on "help tags".
+	// Draw a 1-pixel border on the inner edge of the bitmap. xMax/yMax
+	// are the last-pixel-inside coordinates — wxDC::DrawLine takes a
+	// pixel range and is inclusive of both endpoints.
+	const int xMax = sz.x - 1;
+	const int yMax = sz.y - 1;
 
-	dc.DrawLine(0, rcClientSize.GetBottom(), rcClientSize.GetRight(), rcClientSize.GetBottom());
-	dc.DrawLine(rcClientSize.GetRight(), rcClientSize.GetBottom(), rcClientSize.GetRight(), 0);
-
 	dc.SetPen(wxPen(colourLight));
-	dc.DrawLine(rcClientSize.GetRight(), 0, 0, 0);
-	dc.DrawLine(0, 0, 0, rcClientSize.GetBottom());
+	dc.DrawLine(0,    yMax, xMax, yMax);  // bottom
+	dc.DrawLine(xMax, yMax, xMax, 0);     // right
+	dc.DrawLine(xMax, 0,    0,    0);     // top
+	dc.DrawLine(0,    0,    0,    yMax);  // left
 
 #endif
 }

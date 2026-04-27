@@ -1,5 +1,5 @@
-#ifndef AUTOCOMPLETE_H__
-#define AUTOCOMPLETE_H__
+#ifndef __IB_AUTOCOMPLETE_H__
+#define __IB_AUTOCOMPLETE_H__
 
 #include "helpers/popupWnd.h"
 

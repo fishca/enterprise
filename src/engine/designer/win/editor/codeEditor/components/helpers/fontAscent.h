@@ -1,5 +1,5 @@
-#ifndef _FONT_ASCENT_H__
-#define _FONT_ASCENT_H__
+#ifndef __IB_FONT_ASCENT_H__
+#define __IB_FONT_ASCENT_H__
 
 #include <wx/font.h>
 

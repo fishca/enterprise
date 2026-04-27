@@ -1,5 +1,5 @@
-#ifndef CALLTIP_H
-#define CALLTIP_H
+#ifndef __IB_CALL_TIP_H__
+#define __IB_CALL_TIP_H__
 
 #include <wx/wx.h>
 #include <wx/dcbuffer.h>

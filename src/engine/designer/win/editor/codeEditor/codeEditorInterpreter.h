@@ -1,5 +1,5 @@
-#ifndef _AUTOCOMPLETE_COMPILE_H__
-#define _AUTOCOMPLETE_COMPILE_H__
+#ifndef __IB_CODE_EDITOR_INTERPRETER_H__
+#define __IB_CODE_EDITOR_INTERPRETER_H__
 
 #include "backend/moduleInfo.h"
 #include "backend/compiler/compileCode.h"

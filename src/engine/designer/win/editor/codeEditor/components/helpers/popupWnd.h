@@ -1,5 +1,5 @@
-#ifndef _POPUPWND_H__
-#define _POPUPWND_H__
+#ifndef __IB_POPUP_WND_H__
+#define __IB_POPUP_WND_H__
 
 #include <wx/wx.h>
 #include <wx/stc/stc.h>

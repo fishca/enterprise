@@ -1,5 +1,5 @@
-#ifndef _LISTBOX_VISUALDATA_H__
-#define _LISTBOX_VISUALDATA_H__
+#ifndef __IB_LISTBOX_VISUAL_DATA_H__
+#define __IB_LISTBOX_VISUAL_DATA_H__
 
 #include <wx/wx.h>
 

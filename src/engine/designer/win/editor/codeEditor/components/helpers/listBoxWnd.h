@@ -1,5 +1,5 @@
-#ifndef _LISTBOX_H__
-#define _LISTBOX_H__
+#ifndef __IB_LISTBOX_WND_H__
+#define __IB_LISTBOX_WND_H__
 
 #include <wx/wx.h>
 #include <wx/hashset.h>

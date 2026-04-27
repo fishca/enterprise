@@ -1,5 +1,5 @@
-#ifndef _EDIT_H_
-#define _EDIT_H_
+#ifndef __IB_CODE_EDITOR_PRINTOUT_H__
+#define __IB_CODE_EDITOR_PRINTOUT_H__
 
 #include "codeEditor.h"
 

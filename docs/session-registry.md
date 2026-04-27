@@ -37,8 +37,8 @@ ibSession* s = appData->CreateSession<ibEnterpriseSession>();
 │   ├── registry.EnableSysSessionOwnership(true)         # one-shot
 │   ├── (designer only) registry.AddPolicy(DesignerExclusivePolicy)
 │   ├── registry.EnsureStarted()                         # spawn thread,
-│   │                                                    # 3 pool checkouts
-│   │                                                    # (lock / write / probe)
+│   │                                                    # 2 pool checkouts
+│   │                                                    # (write / probe)
 │   ├── registry.CreateSessionWithFactory(...)            # builds typed ibSession
 │   ├── registry.Connect(req)                             # Submit(Add, Normal) → Wait
 │   │   └── ProcessAdd:
@@ -111,12 +111,16 @@ POST /login { user, password }
 
 **Registry thread** (single consumer) owns:
 - `m_own : unordered_map<guid, shared_ptr<ibSession>>` — sessions this process tracks.
-- 3 pool-checkout'ed connections:
-  - `m_lockConn` — reserved, не использовать для WITH LOCK-hold'а (см. гиотча-dictionary ниже).
+- 2 pool-checkout'ed connections:
   - `m_writeConn` — INSERT / UPDATE / DELETE + JobRefreshSnapshot SELECT.
   - `m_probeConn` — `TryProbeRowLock` NOWAIT probe.
+  - (Historical `m_lockConn` retired together with the pessimistic-lock
+    liveness model; the third pool slot is now free for productive use.)
 - `m_snapshot` под RW mutex — публично через `GetClusterSnapshot()`.
 - Priority queue bins (Urgent / Normal / Low / Background).
+- `m_workerPool : unique_ptr<ibWorkerPool>` — per-session task dispatcher.
+  Allocated by the ctor when `maxWorkers > 0` (server modes); GUI hosts
+  pass 0 and dispatch through `ibSession::Submit`'s inline fallback.
 
 **Tick schedule:**
 

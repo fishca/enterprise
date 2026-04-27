@@ -126,8 +126,12 @@ the unit of ownership and the transaction the unit of bookkeeping.
 ```cpp
 class BACKEND_API ibConnectionPool {
 public:
-    // Lifecycle
-    void Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize);
+    // Lifecycle. minIdle is the floor for idle-shrink: idle clones
+    // beyond this count get closed after kIdleTimeout (60s); pool
+    // pre-warms minIdle clones at Init so first requests don't pay
+    // the Open cost. Per runMode: 2 for desktop GUI (manager + UI
+    // baseline), 4 for web, 2 for daemon.
+    void Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize, std::size_t minIdle = 2);
     void Shutdown();
 
     // Low-level checkout — does NOT touch TL. For registry-style
@@ -508,11 +512,34 @@ return GetPrimaryConnection();             // legacy m_db fallback
 
 ---
 
+## Lazy growth + idle-shrink
+
+Pool starts with the master connection (always alive — `m_source`) plus
+`minIdle - 1` pre-warmed clones. Subsequent demand growth is lazy:
+`Checkout` clones the master on first miss, up to `maxSize`. When load
+drops back, idle clones older than `kIdleTimeout` (60s) get closed by
+`ReapStaleLocked` on the next Checkout — but never below `minIdle` and
+never the master itself (pinned, repositioned to the back of the idle
+deque if it would otherwise be reaped).
+
+Per-runMode `minIdle` defaults are picked by `appData::PickConnectionMinIdle`:
+
+| runMode | minIdle | rationale |
+|---|---|---|
+| `eWEB_ENTERPRISE_MODE` (wes) | 4 | multi-tab burst absorption |
+| `eSERVICE_MODE` (daemon) | 2 | background tasks, modest load |
+| desktop GUI / launcher | 2 | session-manager bookkeeping conn + UI thread |
+
+`maxSize` stays at 32 across modes for now; CLI override is a future
+addition.
+
+---
+
 ## Future work
 
-- **`minIdle` pre-warm option.** `Init(primary, maxSize, minIdle)` —
-  eagerly clone `minIdle` conns at Init so first N Checkouts are
-  fast. For benchmark / high-burst scenarios.
+- **CLI override for `maxSize` / `minIdle`.** Hosts pass them through
+  appData ctor; expose as `--db-pool-max=N --db-pool-min=M` flags so
+  ops can tune without rebuilding.
 
 - **CheckoutWithTimeout.** `Checkout(std::chrono::milliseconds)`
   returning nullptr if pool saturated. Debug safety net.

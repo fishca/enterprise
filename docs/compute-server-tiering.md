@@ -182,25 +182,27 @@ Landed. See `connection-pool.md`.
 - TL TX pinning (thread sticks to conn during active TX)
 - Mutation entry points (object Write/Delete) migrated
 
-### Phase 2 — Request dispatcher (in-process, same binary)
+### ✅ Phase 2 — Request dispatcher (in-process, same binary)
 
-Target: within existing `enterprise.exe` and `wenterprise-server.exe`,
-replace per-session worker threads with shared worker pool + per-session
-queue. Still in-process; no new binaries; no network protocol.
+Largely landed (commit `97344bbf`). Per-session worker threads on the
+web side are gone; sessions share a process-wide `ibWorkerPool` owned
+by `ibSessionRegistry`. Components as built:
 
-Components:
-- `ibWorkerPool` — fixed N threads, task queue.
-- `ibSessionRequestQueue` — FIFO per session, single-in-flight.
-- `ibRequestDispatcher` — singleton, owns workerPool and
-  session→queue map.
-- Adapt `ibWebSession`:
-  - remove `StartWorker` / `StopWorker` (no per-session thread).
-  - HTTP handler → parse request → `dispatcher->Submit(sid, req)`.
-  - response comes back via std::future / channel.
-- Adapt desktop `enterprise.exe`:
-  - main GUI thread for UI only.
-  - long-running object operations dispatch through the same
-    `ibRequestDispatcher` → don't freeze UI.
+- `ibWorkerPool` (abstract, in `backend/session/`) +
+  `ibWorkerPoolHeadless` (concrete, lazy-spawn up to `maxWorkers`,
+  idle-shrink at 60s, per-session FIFO + lease, reentrant Submit
+  inline). `ibWorkerPoolGUI` scaffold lives in `frontend/session/`,
+  not auto-installed.
+- The "session request queue" lives inside the pool (per-session
+  `ibSessionQueue`). No separate `ibRequestDispatcher` class — the
+  pool itself is the dispatcher; `ibSession::Submit(task)` is the
+  public entry.
+- `ibWebApplication` migrated: `StartWorker` / `StopWorker` /
+  `WorkerLoop` deleted; `PostWork` / `RunOnWorker` forward through
+  `m_sessionContext->Submit(...)`.
+- Desktop side keeps the wx main thread as its sole script executor
+  (no need to dispatch through the pool). The `ibWorkerPoolGUI`
+  scaffold is ready when async dispatch becomes a concrete need.
 
 **Testable outcome:** web server handles 100+ concurrent sessions on
 16 threads without per-session thread overhead. Desktop UI stays

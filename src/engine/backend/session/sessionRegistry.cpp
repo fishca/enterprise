@@ -3,6 +3,7 @@
 #include "designerExclusivePolicy.h"
 
 #include "backend/appData.h"
+#include "sessionSnapshot.h"
 #include "backend/backend_exception.h"
 #include "backend/guid.h"
 #include "backend/databaseLayer/connectionPool.h"
@@ -95,6 +96,21 @@ void ibSessionRegistry::CloseAll(bool force)
 	}
 	for (auto& s : snapshot)
 		s->Close(force);
+}
+
+void ibSessionRegistry::InstallUser(ibSession* s,
+                                     const ibUserInfo& info,
+                                     const wxString& rawPassword)
+{
+	if (s == nullptr) return;
+	s->SetUserInfo(info);
+	s->SetSessionRawPassword(rawPassword);
+}
+
+void ibSessionRegistry::EnableDebugForSession(ibSession* s)
+{
+	if (s == nullptr) return;
+	s->EnableDebug();
 }
 
 ibSessionRegistry::~ibSessionRegistry()
@@ -991,7 +1007,7 @@ void ibSessionRegistry::ProcessAttach(ibRegistryRequest& req)
 	// m_userInfo / m_sessionRawPassword onto the target session via
 	// InstallUser. Pin scope to the target so InstallUser routes to this
 	// session, not whatever the registry thread last touched.
-	ibApplicationDataUserInfo info;
+	ibUserInfo info;
 	bool ok;
 	{
 		ibSessionScope scope(&s);
@@ -1515,7 +1531,7 @@ void ibSessionRegistry::JobRefreshSnapshot()
 	// Re-SELECT the full table. Fresh snapshot built outside the lock;
 	// swap it in under the writer lock so readers see either the old
 	// or new one, never a half-mutated array.
-	auto fresh = std::make_unique<ibApplicationDataSessionArray>();
+	auto fresh = std::make_unique<ibSessionSnapshot>();
 	unsigned rowCount = 0;
 	try {
 		// kind column may be missing on pre-migration schemas — fall back
@@ -1599,7 +1615,7 @@ void ibSessionRegistry::JobRefreshSnapshot()
 	m_snapshot = std::move(fresh);
 }
 
-ibApplicationDataSessionArray ibSessionRegistry::GetClusterSnapshot() const
+ibSessionSnapshot ibSessionRegistry::GetClusterSnapshot() const
 {
 	std::shared_lock<std::shared_mutex> lk(m_snapshotMtx);
 	if (!m_snapshot) return {};

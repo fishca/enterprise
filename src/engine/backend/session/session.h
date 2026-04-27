@@ -353,12 +353,14 @@ public:
 	// wxString is narrow and bounded by the auth state machine; if a
 	// stricter guarantee is needed later, switch m_userInfo to
 	// shared_ptr<const ...> with atomic_load/store.
-	const ibApplicationDataUserInfo& GetUserInfo() const { return m_userInfo; }
-	void SetUserInfo(const ibApplicationDataUserInfo& info) { m_userInfo = info; }
+	const ibUserInfo& GetUserInfo() const { return m_userInfo; }
 
+	// Plain-text password cached for the Designer "Start debugging" path —
+	// the spawned child re-authenticates without prompting. Public read
+	// because the writer (SetSessionRawPassword in registry-driven
+	// InstallUser) is single-threaded; readers observe Auth() ==
+	// Authenticated before relying on the value.
 	const wxString& GetSessionRawPassword() const { return m_sessionRawPassword; }
-	void            SetSessionRawPassword(const wxString& pwd) { m_sessionRawPassword = pwd; }
-	void            ClearSessionRawPassword() { m_sessionRawPassword.clear(); }
 
 	// Cancellation flag — async hint to interrupt a long-running script
 	// on this session. Pool's CancelSession (or admin Kick on a busy
@@ -397,6 +399,26 @@ public:
 	// into itself. Same per-session rationale as eval-mode.
 	bool IsProcessingBackendError()       const { return m_processingBackendError.load(std::memory_order_acquire); }
 	void SetProcessingBackendError(bool m)      { m_processingBackendError.store(m, std::memory_order_release); }
+
+	// Configuration-language code for this session — selects which
+	// metadata synonym / form-label translation is shown. Distinct from
+	// the platform's wxLocale (UI gettext, process-wide via --locale=).
+	// Set after auth from the user's preferred language (or the config's
+	// default when the user has none); script can override via the
+	// CurrentLanguage() builtin. Empty => fall back to the process-wide
+	// default (ibBackendLocalization::GetUserLanguage), which is what
+	// pre-auth and headless contexts use.
+	//
+	// Hot path: this getter is hit per metadata-synonym lookup, hundreds
+	// of times during a single form open. m_resolvedLanguageCode is the
+	// pre-computed answer — refreshed only when the override or the user
+	// record changes (SetLanguageCode / SetUserInfo). Inline + by-const-ref
+	// keeps the read at one field load with no logic.
+	const wxString& GetLanguageCode() const { return m_resolvedLanguageCode; }
+	void            SetLanguageCode(const wxString& code) {
+		m_languageCode = code;
+		m_resolvedLanguageCode = code.IsEmpty() ? m_userInfo.m_strLanguageCode : code;
+	}
 
 protected:
 	// Per-kind reaction to ForceExit. Default no-op (server-style — just
@@ -453,39 +475,11 @@ public:
 	ibAuthState    Auth()  const { return m_auth.load(std::memory_order_acquire); }
 
 	const ibSessionIdentity& Identity() const { return m_identity; }
-	void                     SetIdentity(const ibSessionIdentity& id) { m_identity = id; }
-
-	// Has the registry INSERT'd the sys_session row for this session?
-	// Written only by the registry thread; read by ProcessAttach (to
-	// decide INSERT vs UPDATE — deferred-INSERT path when creds were
-	// supplied at Connect time) and by ProcessRemove (to skip DELETE
-	// when no row was ever created). No mutex — registry thread is the
-	// only writer and the only reader outside that thread is for
-	// diagnostics, where a torn read is harmless.
-	bool Inserted()      const { return m_inserted; }
-	void SetInserted(bool v)   { m_inserted = v; }
 
 	// Diagnostic string set by the registry thread on Rejected / AuthFailed
 	// transitions. Read after State() / Auth() changes to report the
 	// reason to producers. Returned by value to avoid exposing the mutex.
 	wxString Reason() const;
-
-	// Registry-thread-only mutators. Take the session's mutex, store the
-	// new state, and cv.notify_all so producers waiting on WaitForState
-	// wake up. Declared public so the registry (a different class) can
-	// call them; call sites outside the registry thread are bugs.
-	void Transition(ibSessionState next, const wxString& reason = wxEmptyString);
-	void TransitionAuth(ibAuthState   next, const wxString& reason = wxEmptyString);
-
-	// Block the calling thread until the lifecycle state changes away
-	// from `from` (or timeout). Returns the new state on success, `from`
-	// on timeout. Producers use this to wait for Add/Attach to settle.
-	ibSessionState WaitForState(ibSessionState from, std::chrono::milliseconds timeout);
-
-	// Block the calling thread until the auth state changes away from
-	// `from` (or timeout). Same contract as WaitForState but on the auth
-	// axis.
-	ibAuthState    WaitForAuth(ibAuthState from, std::chrono::milliseconds timeout);
 
 	// Access mode — set once by the application at startup, before any
 	// session is created.
@@ -577,6 +571,49 @@ private:
 	std::string    m_id;
 	ibSessionKind  m_kind;
 
+	// Registry-only API. Takes m_mtx, mutates the state machine, and
+	// cv.notify_all so producers waiting on WaitForState* wake up.
+	// Call sites outside ibSessionRegistry's single-consumer thread are
+	// bugs by construction — that's why the friend declaration above is
+	// the only access path.
+	void Transition(ibSessionState next, const wxString& reason = wxEmptyString);
+	void TransitionAuth(ibAuthState   next, const wxString& reason = wxEmptyString);
+
+	// Block the calling thread until the lifecycle state changes away
+	// from `from` (or timeout). Returns the new state on success, `from`
+	// on timeout. Producers (registry-internal only) use this to wait for
+	// Add/Attach to settle.
+	ibSessionState WaitForState(ibSessionState from, std::chrono::milliseconds timeout);
+	ibAuthState    WaitForAuth (ibAuthState    from, std::chrono::milliseconds timeout);
+
+	// Identity / sys_session-row tracking. Identity is filled in by the
+	// registry as the session moves through Add → Attach; the inserted
+	// flag tracks whether a sys_session row has actually been INSERTed
+	// (relevant when creds-at-Connect defers INSERT to Attach success).
+	void SetIdentity(const ibSessionIdentity& id) { m_identity = id; }
+	bool Inserted()      const { return m_inserted; }
+	void SetInserted(bool v)   { m_inserted = v; }
+
+	// Auth-flow mutators. Driven only through ibSessionRegistry façades
+	// (InstallUser, EnableDebugForSession) — registry is the single
+	// mutator of session state, callers from appData / login dialogs
+	// route through it. SetSessionRawPassword writes the plain-text
+	// cache used by the Designer "Start debugging" child spawn; the
+	// matching read accessor stays public (registry-thread is the sole
+	// writer, reads from any thread are race-free against atomic-flag
+	// observation of Auth() == Authenticated).
+	void SetUserInfo(const ibUserInfo& info) {
+		m_userInfo = info;
+		// Refresh cached language: explicit SetLanguageCode override
+		// wins; otherwise the new user's preferred language.
+		if (m_languageCode.IsEmpty())
+			m_resolvedLanguageCode = info.m_strLanguageCode;
+	}
+	void SetSessionRawPassword(const wxString& pwd) { m_sessionRawPassword = pwd; }
+	void ClearSessionRawPassword() { m_sessionRawPassword.clear(); }
+	void EnableDebug()  { if (!m_debug) m_debug = std::make_unique<ibDebugSession>(); }
+	void DisableDebug() { m_debug.reset(); }
+
 public:
 	// Per-session debug state. nullptr -> session is not being debugged
 	// (ibProcUnit::Execute skips breakpoint checks fast). Allocated by
@@ -624,10 +661,13 @@ public:
 	// session" scenarios; if it gains a real caller, the timing
 	// argument above no longer holds and m_debug needs atomic
 	// shared_ptr or a mutex.
+	// Public reads — used by debug-server worker threads and HTTP handlers
+	// to discover whether a session is attached for debugging and to
+	// access its watch list / debug-loop CV. Mutators (EnableDebug /
+	// DisableDebug) are restricted to the auth flow — see private block
+	// further down with friend ibApplicationData.
 	bool IsDebug() const     { return m_debug != nullptr; }
 	ibDebugSession* Debug()  { return m_debug.get(); }
-	void EnableDebug()       { if (!m_debug) m_debug = std::make_unique<ibDebugSession>(); }
-	void DisableDebug()      { m_debug.reset(); }
 
 private:
 	// nullptr unless the session was created with debug attached.
@@ -667,12 +707,22 @@ private:
 	// checks. m_sessionRawPassword caches the plain-text for Designer
 	// "Start debugging" — handed to spawned child processes so they can
 	// re-authenticate without prompting.
-	ibApplicationDataUserInfo m_userInfo;
+	ibUserInfo m_userInfo;
 	wxString                  m_sessionRawPassword;
 
 	// Script-visible "working date" — see GetWorkDate/SetWorkDate.
 	// Initialized to the session-creation wall-clock in the ctor.
 	wxDateTime                m_workDate;
+
+	// Per-session active configuration-language code.
+	// m_languageCode = explicit override from SetLanguageCode (empty =
+	// no override, use the user's preferred language).
+	// m_resolvedLanguageCode = pre-computed answer for GetLanguageCode —
+	// either m_languageCode if non-empty, or m_userInfo.m_strLanguageCode.
+	// Refreshed on every SetLanguageCode / SetUserInfo call so the hot
+	// read path is a single field load, no fallback logic per call.
+	wxString                  m_languageCode;
+	wxString                  m_resolvedLanguageCode;
 
 	// Cancellation request flag — see RequestCancel / IsCancelRequested.
 	// atomic so set/clear from any thread is safe against the script

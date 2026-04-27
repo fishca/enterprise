@@ -42,7 +42,7 @@
 #include <unordered_set>
 #include <vector>
 
-class ibApplicationDataSessionArray;
+class ibSessionSnapshot;
 
 // -------------------------------------------------------------------
 // Request types + payload. Producers fill a request and Submit it with
@@ -263,7 +263,7 @@ public:
 	// admin endpoint) polls this; no blocking on the registry thread.
 	// Returns an empty array before the first refresh or when
 	// m_ownsSysSession is false (the registry isn't reading the table).
-	ibApplicationDataSessionArray GetClusterSnapshot() const;
+	ibSessionSnapshot GetClusterSnapshot() const;
 
 	// Policy-facing probe — wraps TryProbeRowLock on the registry's
 	// dedicated probe connection. Returns true when the row is NOT
@@ -345,6 +345,28 @@ public:
 	// session has cleaned up — without the host having to enumerate
 	// sessions itself.
 	void CloseAll(bool force);
+
+	// ---- Session-state mutators (single-authority entry points) ----
+	// Registry is the only mutator of ibSession internals. Auth flow
+	// (appData / login dialog) and debug bring-up route through here
+	// instead of poking the session directly — keeps SetUserInfo /
+	// SetSessionRawPassword / EnableDebug under one friend declaration
+	// (friend class ibSessionRegistry) and out of the public ibSession
+	// surface.
+
+	// Install authenticated user identity on a session. Writes the user
+	// info struct + caches the plain-text password for Designer "Start
+	// debugging" child spawn. Caller must already be under a
+	// ibSessionScope bound to the target session (registry's
+	// ProcessAttach, or the GUI login dialog on the main thread).
+	void InstallUser(ibSession* s,
+	                 const ibUserInfo& info,
+	                 const wxString& rawPassword);
+
+	// Allocate the per-session debug slot. Called from appData's
+	// OnAuthenticated listener when the process started with --debug.
+	// Idempotent — second call is a no-op.
+	void EnableDebugForSession(ibSession* s);
 
 	// ---- Session access mode + fallback ----
 	// Process-wide flag describing how ibSession::Current() resolves the
@@ -638,7 +660,7 @@ private:
 	// via GetClusterSnapshot() on any thread. shared_mutex: writers are
 	// rare (~3s), readers may be frequent (polling dialogs).
 	mutable std::shared_mutex                              m_snapshotMtx;
-	std::unique_ptr<ibApplicationDataSessionArray>         m_snapshot;
+	std::unique_ptr<ibSessionSnapshot>         m_snapshot;
 };
 
 // ---------------------------------------------------------------------

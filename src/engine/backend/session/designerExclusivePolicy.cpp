@@ -1,5 +1,6 @@
 #include "designerExclusivePolicy.h"
 #include "sessionRegistry.h"
+#include "sessionSnapshot.h"
 
 #include "backend/appData.h"
 

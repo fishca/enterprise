@@ -43,86 +43,10 @@ class BACKEND_API ibDatabaseLayer;
 class BACKEND_API ibSession;
 enum class ibSessionKind : int;   // defined in backend/session/session.h
 
-#pragma region session  
-class BACKEND_API ibApplicationDataSessionArray {
-
-	struct ibApplicationDataSessionUnit {
-
-		ibApplicationDataSessionUnit(ibRunMode runMode, int kind, const wxDateTime& startedDateTime,
-			const wxString& strUserName, const wxString& strComputerName, const wxString& strSession) :
-			m_runMode(runMode), m_kind(kind), m_startedDate(startedDateTime), m_strUserName(strUserName), m_strComputerName(strComputerName), m_strSession(strSession)
-		{
-		}
-
-		ibRunMode m_runMode;
-		// session-layer role, numeric ibSessionKind. Stored as int so the
-		// header stays independent of session.h (appData.h is included
-		// from backend-wide code that predates session-registry).
-		int m_kind;
-		wxDateTime m_startedDate;
-		wxString m_strUserName;
-		wxString m_strComputerName;
-		wxString m_strSession;
-		// Process-wide exclusive (monopoly) flag — true when this row
-		// holds it. Filled in by JobRefreshSnapshot from sys_session.exclusive.
-		bool m_exclusive = false;
-	};
-
-public:
-
-	ibApplicationDataSessionArray() : m_sessionArrayHash(wxNewUniqueGuid) {}
-
-	void AppendSession(ibRunMode runMode, int kind, const wxDateTime& startedTime,
-		const wxString& strUserName, const wxString& strComputerName, const wxString& strSession) {
-		m_listSession.emplace_back(runMode, kind, startedTime, strUserName, strComputerName, strSession);
-	}
-
-	wxString GetSessionArrayHash() const { return wxString(m_sessionArrayHash.str()); }
-
-	wxString GetUserName(unsigned int idx) const;
-	wxString GetComputerName(unsigned int idx) const;
-	wxString GetSession(unsigned int idx) const;
-	wxString GetStartedDate(unsigned int idx) const;
-	wxString GetApplication(unsigned int idx) const;
-
-	void ClearSession() {
-		m_sessionArrayHash = wxNewUniqueGuid;
-		m_listSession.clear();
-	}
-
-	ibRunMode GetSessionApplication(unsigned int idx) const;
-	int       GetSessionKind(unsigned int idx) const;
-	// Short "Server" / "Client" label derived from (runMode, kind):
-	//   Web runtime + kind=WebClient (100) → "Client"
-	//   Web runtime + kind=WebServer (5) or legacy 0 → "Server"
-	//   Any desktop runtime → "Client"
-	// Used by designer's Active Users dialog.
-	wxString  GetSessionKindDescr(unsigned int idx) const;
-	unsigned int const GetSessionCount() const { return m_listSession.size(); }
-
-	// Back-fill kinds after rows were appended — used by the registry
-	// snapshot builder to tolerate legacy schemas where the `kind`
-	// column lives in a second optional SELECT.
-	void SetKindsFromMap(const std::unordered_map<std::string, int>& kindBySession);
-
-	// Back-fill exclusive flags from a second optional SELECT — same
-	// pattern as kinds, tolerant of pre-migration schemas where the
-	// column doesn't exist yet.
-	void SetExclusiveFromMap(const std::unordered_map<std::string, bool>& exclusiveBySession);
-
-	// Per-row exclusive flag accessor — returns the holder session (the
-	// only one with m_exclusive==true), if any. Used by ProcessAdd's
-	// cross-process exclusive gate and by ProcessSetExclusive's
-	// sole-live check.
-	bool        IsExclusive(unsigned int idx) const;
-	wxString    ExclusiveHolderSession() const;
-	wxString    ExclusiveHolderUser() const;
-
-private:
-	ibGuid m_sessionArrayHash;
-	std::vector<ibApplicationDataSessionUnit> m_listSession;
-};
-#pragma endregion
+// ibSessionSnapshot — cluster-wide sys_session snapshot — moved to
+// backend/session/sessionSnapshot.h. Producer is ibSessionRegistry's
+// JobRefreshSnapshot; consumers (designer Active Users dialog) read
+// it through ibSessionRegistry::Instance().GetClusterSnapshot().
 
 #pragma region config
 struct ibApplicationDataConfigInfo {
@@ -135,16 +59,10 @@ struct ibApplicationDataConfigInfo {
 #pragma endregion 
 
 #pragma region user
-struct ibApplicationDataShortUserInfo {
-	wxString m_strUserGuid;
-	wxString m_strUserName;
-	wxString m_strUserFullName;
-};
-
-// ibApplicationDataUserInfo moved to backend/userInfo.h so ibSession
-// can reach it without pulling all of appData.h. Include kept for source
-// compatibility — call sites that already saw the struct through appData.h
-// continue to do so.
+// ibUserInfo lives in backend/userInfo.h so ibSession can reach it
+// without pulling all of appData.h. Carries the full record plus
+// nested Brief projection for table-wide listings (replaces the
+// historical ibApplicationDataShortUserInfo).
 #include "backend/userInfo.h"
 #pragma endregion
 
@@ -348,7 +266,7 @@ public:
 	// Returns false on bad creds; outInfo is left untouched.
 	bool Login(const wxString& strUserName,
 	           const wxString& strUserPassword,
-	           ibApplicationDataUserInfo& outInfo);
+	           ibUserInfo& outInfo);
 
 	// Pure credential check used by Login above. Looks up the user, verifies
 	// the password (PBKDF2 with silent MD5→PBKDF2 upgrade via NeedsRehash),
@@ -360,7 +278,7 @@ public:
 	// pinning a session scope.
 	bool AuthenticateUser(const wxString& strUserName,
 	                      const wxString& strUserPassword,
-	                      ibApplicationDataUserInfo& outInfo);
+	                      ibUserInfo& outInfo);
 
 	// Commit side of Login. Writes the resolved user onto the current
 	// ibSessionScope's ibSession. `rawPassword` is cached for Designer
@@ -369,7 +287,7 @@ public:
 	// No-op when no session is scoped — the caller is in a pre-auth path
 	// that has no business installing a user. Most callers should go
 	// through Login above instead of invoking this directly.
-	void InstallUser(const ibApplicationDataUserInfo& info,
+	void InstallUser(const ibUserInfo& info,
 	                 const wxString& rawPassword);
 
 	// Process-wide exclusive (monopoly) mode — true when any session
@@ -383,26 +301,24 @@ public:
 	// only by pre-auth bootstrap and standalone tools (codeRunner).
 	const wxString& GetUserName()     const;
 	const wxString& GetUserPassword() const;
-	const ibApplicationDataUserInfo& GetUserInfo() const;
+	const ibUserInfo& GetUserInfo() const;
 
 	wxString GetComputerName() const { return m_strComputer; }
 
 	wxString GetLocale() const { return m_locale.GetCanonicalName(); }
 
-	std::vector<ibApplicationDataShortUserInfo> GetAllowedUser() const;
-
 #pragma region session
 
-	// Cluster-wide sys_session snapshot, refreshed by the registry
-	// background sweep (~3s). Defined out-of-line in appData.cpp so this
-	// header doesn't need to pull sessionRegistry.h.
-	ibApplicationDataSessionArray GetSessionArray() const;
+	// Cluster-wide sys_session snapshot — readers go through
+	// ibSessionRegistry::Instance().GetClusterSnapshot() directly.
+	// Snapshot type ibSessionSnapshot lives in
+	// backend/session/sessionSnapshot.h.
 
 	class ibPluginManager* GetPluginManager() const { return m_pluginManager.get(); }
 
 #pragma endregion
 
-	const std::vector<ibApplicationDataUserInfo::ibApplicationDataUserRole>& GetUserRoleArray() const;
+	const std::vector<ibUserInfo::ibUserRole>& GetUserRoleArray() const;
 
 #pragma region language
 
@@ -423,11 +339,10 @@ public:
 	// signal (Ctrl+C, console close), main.cpp wires that path
 	// directly — no longer through this class.
 
-#pragma region user  
-	ibApplicationDataUserInfo ReadUserData(const ibGuid& userGuid) const;
-	ibApplicationDataUserInfo ReadUserData(const wxString& userName) const;
-	bool SaveUserData(const ibApplicationDataUserInfo& userInfo) const;
-#pragma endregion
+	// User-record DB I/O lives on ibUserInfo as static factories
+	// (see backend/userInfo.h). ibApplicationData is no longer the
+	// gateway to sys_user — call sites use ibUserInfo::Read /
+	// ibUserInfo::Save directly.
 
 #pragma region database
 
@@ -442,16 +357,9 @@ public:
 
 private:
 
-	bool HasAllowedUser() const;
-
-	void ReadUserData_Password(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
-	void ReadUserData_Role(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
-	void ReadUserData_Language(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const;
-
-	wxMemoryBuffer SaveUserData_Password(const ibApplicationDataUserInfo& userInfo) const;
-	wxMemoryBuffer SaveUserData_Role(const ibApplicationDataUserInfo& userInfo) const;
-	wxMemoryBuffer SaveUserData_Language(const ibApplicationDataUserInfo& userInfo) const;
-
+	// Buffer-level user-table export / import. Per-record serialization
+	// lives on ibUserInfo (Serialize / Deserialize); these methods just
+	// drive the iteration over the sys_user table.
 	bool LoadUserInfoFromBuffer(wxMemoryBuffer& buffer);
 	bool SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const;
 

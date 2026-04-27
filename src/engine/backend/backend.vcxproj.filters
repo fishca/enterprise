@@ -874,6 +874,7 @@
     <ClCompile Include="metadataConfiguration.cpp" />
     <ClCompile Include="roleHelper.cpp" />
     <ClCompile Include="appDataQuery.cpp" />
+    <ClCompile Include="userInfo.cpp" />
     <ClCompile Include="metadataConfigurationQuery.cpp" />
     <ClCompile Include="metaCollection\metaObjectMetadataQuery.cpp">
       <Filter>metaCollection</Filter>

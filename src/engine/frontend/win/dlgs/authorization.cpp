@@ -23,7 +23,7 @@ ibDialogAuthentication::ibDialogAuthentication(wxWindow* parent, wxWindowID id, 
 
 	m_staticTextLogin = new wxStaticText(this, wxID_ANY, _("Login:"));
 	m_comboBoxLogin   = new wxBitmapComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize);
-	for (const auto userInfo : appData->GetAllowedUser())
+	for (const auto& userInfo : ibUserInfo::ListAll())
 		m_comboBoxLogin->Append(userInfo.m_strUserName, ibBackendPicture::GetPicture(g_picUserCLSID));
 
 	m_staticTextPassword = new wxStaticText(this, wxID_ANY, _("Password:"));
@@ -66,7 +66,7 @@ ibDialogAuthentication::ibDialogAuthentication(wxWindow* parent, wxWindowID id, 
 
 	// Connect Events
 	m_buttonOK->Bind(wxEVT_COMMAND_BUTTON_CLICKED, [&](wxCommandEvent& event) {
-		ibApplicationDataUserInfo info;
+		ibUserInfo info;
 		if (!appData->Login(m_comboBoxLogin->GetValue(), m_textCtrlPassword->GetValue(), info)) {
 			wxMessageBox(_("Wrong user or password entered!"));
 			return;

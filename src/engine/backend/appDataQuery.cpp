@@ -178,131 +178,12 @@ bool ibApplicationData::ClearTableUser()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-enum
-{
-	eBlockPswd = 0x0234530,
-	eBlockRole = 0x0234540,
-	eBlockLang = 0x0234550,
-};
-
 #include "fileSystem/fs.h"
 
-ibApplicationDataUserInfo ibApplicationData::ReadUserData(const ibGuid& userGuid) const
-{
-	ibApplicationDataUserInfo userInfo;
-	if (!userGuid.isValid())
-		return userInfo;
-
-	ibStatementGuard stmt(db_query,
-		db_query->PrepareStatement(wxT("SELECT * FROM %s WHERE guid = ?;"), user_table));
-	if (stmt)
-		stmt->SetParamString(1, userGuid.str());
-
-	ibResultSetGuard result(db_query,
-		stmt ? stmt->RunQueryWithResults() : nullptr);
-
-	if (result && result->Next()) {
-
-		userInfo.m_strUserGuid = result->GetResultString(wxT("guid"));
-		userInfo.m_strUserName = result->GetResultString(wxT("name"));
-		userInfo.m_strUserFullName = result->GetResultString(wxT("fullName"));
-
-		wxMemoryBuffer buffer;
-		result->GetResultBlob(wxT("binaryData"), buffer);
-		ibReaderMemory userReader(buffer);
-
-		wxMemoryBuffer bufferPassword;
-		if (userReader.r_chunk(eBlockPswd, bufferPassword)) {
-			ReadUserData_Password(bufferPassword, userInfo);
-		}
-
-		wxMemoryBuffer bufferRole;
-		if (userReader.r_chunk(eBlockRole, bufferRole)) {
-			ReadUserData_Role(bufferRole, userInfo);
-		}
-
-		wxMemoryBuffer bufferLang;
-		if (userReader.r_chunk(eBlockLang, bufferLang)) {
-			ReadUserData_Language(bufferLang, userInfo);
-		}
-	}
-
-	return userInfo;
-}
-
-ibApplicationDataUserInfo ibApplicationData::ReadUserData(const wxString& strUserName) const
-{
-	ibApplicationDataUserInfo userInfo;
-	if (strUserName.IsEmpty())
-		return userInfo;
-
-	ibStatementGuard stmt(db_query,
-		db_query->PrepareStatement(wxT("SELECT * FROM %s WHERE name = ?;"), user_table));
-	if (stmt)
-		stmt->SetParamString(1, strUserName);
-
-	ibResultSetGuard result(db_query,
-		stmt ? stmt->RunQueryWithResults() : nullptr);
-
-	if (result && result->Next()) {
-
-		userInfo.m_strUserGuid = result->GetResultString(wxT("guid"));
-		userInfo.m_strUserName = result->GetResultString(wxT("name"));
-		userInfo.m_strUserFullName = result->GetResultString(wxT("fullName"));
-
-		wxMemoryBuffer buffer;
-		result->GetResultBlob(wxT("binaryData"), buffer);
-		ibReaderMemory userReader(buffer);
-
-		wxMemoryBuffer bufferPassword;
-		if (userReader.r_chunk(eBlockPswd, bufferPassword)) {
-			ReadUserData_Password(bufferPassword, userInfo);
-		}
-
-		wxMemoryBuffer bufferRole;
-		if (userReader.r_chunk(eBlockRole, bufferRole)) {
-			ReadUserData_Role(bufferRole, userInfo);
-		}
-
-		wxMemoryBuffer bufferLang;
-		if (userReader.r_chunk(eBlockLang, bufferLang)) {
-			ReadUserData_Language(bufferLang, userInfo);
-		}
-	}
-
-	return userInfo;
-}
-
-bool ibApplicationData::SaveUserData(const ibApplicationDataUserInfo& userInfo) const
-{
-	ibStatementGuard stmt(db_query,
-		db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD
-			? db_query->PrepareStatement(
-				wxT("INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT (guid) DO UPDATE SET guid = excluded.guid, name = excluded.name, fullName = excluded.fullName, changed = excluded.changed, dataSize = excluded.dataSize, binaryData = excluded.binaryData; "), user_table)
-			: db_query->PrepareStatement(
-				wxT("UPDATE OR INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) MATCHING (guid);"), user_table)
-	);
-
-	if (!stmt)
-		return false;
-
-	stmt->SetParamString(1, userInfo.m_strUserGuid);
-	stmt->SetParamString(2, userInfo.m_strUserName);
-	stmt->SetParamString(3, userInfo.m_strUserFullName);
-	stmt->SetParamDate(4, wxDateTime::Now());
-
-	ibWriterMemory writer;
-
-	writer.w_chunk(eBlockPswd, SaveUserData_Password(userInfo));
-	writer.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
-	writer.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
-
-	stmt->SetParamNumber(5, writer.size());
-	stmt->SetParamBlob(6, writer.pointer(), writer.size());
-
-	const int result = stmt->RunQuery();
-	return result != DATABASE_LAYER_QUERY_RESULT_ERROR;
-}
+// User-record DB I/O moved onto ibUserInfo as static factories; see
+// backend/userInfo.{h,cpp}. ibApplicationData no longer mediates the
+// sys_user round-trip — call sites use ibUserInfo::Read / Save / Serialize
+// / Deserialize directly.
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -318,28 +199,7 @@ bool ibApplicationData::LoadUserInfoFromBuffer(wxMemoryBuffer& buffer)
 		if (!readerMemory)
 			break;
 
-		ibApplicationDataUserInfo userInfo;
-
-		userInfo.m_strUserGuid = readerMemory->r_stringZ();
-		userInfo.m_strUserName = readerMemory->r_stringZ();
-		userInfo.m_strUserFullName = readerMemory->r_stringZ();
-
-		wxMemoryBuffer bufferPassword;
-		if (readerMemory->r_chunk(eBlockPswd, bufferPassword)) {
-			ReadUserData_Password(bufferPassword, userInfo);
-		}
-
-		wxMemoryBuffer bufferRole;
-		if (readerMemory->r_chunk(eBlockRole, bufferRole)) {
-			ReadUserData_Role(bufferRole, userInfo);
-		}
-
-		wxMemoryBuffer bufferLang;
-		if (readerMemory->r_chunk(eBlockLang, bufferLang)) {
-			ReadUserData_Language(bufferLang, userInfo);
-		}
-
-		SaveUserData(userInfo);
+		ibUserInfo::Save(ibUserInfo::Deserialize(*readerMemory));
 
 		prevReaderMemory = readerMemory;
 	};
@@ -358,19 +218,9 @@ bool ibApplicationData::SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const
 	ibWriterMemory writer; unsigned int idx = 0;
 
 	while (result->Next()) {
-
-		const ibApplicationDataUserInfo& userInfo = ReadUserData(ibGuid(result->GetResultString(wxT("guid"))));
-
 		ibWriterMemory userWriter;
-
-		userWriter.w_stringZ(userInfo.m_strUserGuid);
-		userWriter.w_stringZ(userInfo.m_strUserName);
-		userWriter.w_stringZ(userInfo.m_strUserFullName);
-
-		userWriter.w_chunk(eBlockPswd, SaveUserData_Password(userInfo));
-		userWriter.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
-		userWriter.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
-
+		ibUserInfo::Read(ibGuid(result->GetResultString(wxT("guid"))))
+			.Serialize(userWriter);
 		writer.w_chunk(idx++, userWriter.buffer());
 	}
 
@@ -380,36 +230,9 @@ bool ibApplicationData::SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool ibApplicationData::HasAllowedUser() const
-{
-	ibResultSetGuard result(db_query,
-		db_query->RunQueryWithResults(wxT("SELECT name FROM %s;"), user_table));
-
-	if (!result) return false;
-	return result->Next();
-}
-
-std::vector<ibApplicationDataShortUserInfo> ibApplicationData::GetAllowedUser() const
-{
-	ibResultSetGuard result(db_query,
-		db_query->RunQueryWithResults(wxT("SELECT guid, name, fullName FROM %s;"), user_table));
-
-	std::vector<ibApplicationDataShortUserInfo> userInfo;
-
-	if (!result)
-		return userInfo;
-
-	while (result->Next()) {
-
-		ibApplicationDataShortUserInfo entry;
-		entry.m_strUserGuid = result->GetResultString(wxT("guid"));
-		entry.m_strUserName = result->GetResultString(wxT("name"));
-		entry.m_strUserFullName = result->GetResultString(wxT("fullName"));
-		userInfo.push_back(entry);
-	}
-
-	return userInfo;
-}
+// HasAllowedUser / GetAllowedUser moved onto ibUserInfo as
+// ibUserInfo::HasAny / ibUserInfo::ListAll — sys_user table-wide
+// queries belong with the type, not on the singleton.
 
 // -----------------------------------------------------------------------
 // Phased session lifecycle — apps compose CreateSession (or the typed

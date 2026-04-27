@@ -597,8 +597,10 @@ bool ibMetaDataConfiguration::OnInitialize(const int flags)
 	// Check current language
 	const ibValueMetaObject* foundedLanguage =
 		ibMetaData::FindAnyObjectByFilter(appData->GetUserLanguageGuid(), g_metaLanguageCLSID);
-	// Initialize localization engine  
-	ibBackendLocalization::SetUserLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
+	// Initialize localization engine — per-session if a session is bound,
+	// otherwise the process-wide default. Web tabs each set their own
+	// active language without overwriting peers.
+	ibBackendLocalization::SetActiveLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
 #pragma endregion
 
 	if ((flags & _app_start_create_debug_server_flag) != 0) {
@@ -664,8 +666,8 @@ bool ibMetaDataConfigurationStorage::OnInitialize(const int flags)
 
 #pragma region language  
 
-	// Initialize localization engine 
-	ibBackendLocalization::SetUserLanguage(GetLangCode());
+	// Initialize localization engine — per-session when bound.
+	ibBackendLocalization::SetActiveLanguage(GetLangCode());
 
 #pragma endregion
 

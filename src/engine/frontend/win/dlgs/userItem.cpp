@@ -11,7 +11,7 @@ bool ibDialogUserItem::ReadUserData(const ibGuid& userGuid, bool copy)
 	if (m_userGuid.isValid())
 		return false;
 
-	const ibApplicationDataUserInfo& userInfo = appData->ReadUserData(userGuid);
+	const ibUserInfo userInfo = ibUserInfo::Read(userGuid);
 	if (userInfo.IsOk()) {
 
 		m_textName->SetValue(userInfo.m_strUserName);
@@ -228,7 +228,7 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 			if (!m_userGuid.isValid())
 				m_userGuid = wxNewUniqueGuid;
 
-			ibApplicationDataUserInfo userInfo;
+			ibUserInfo userInfo;
 
 			userInfo.m_strUserGuid = m_userGuid.str();
 			userInfo.m_strUserName = m_textName->GetValue();
@@ -265,11 +265,11 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 			}
 
 			if (!access_right) {
-				for (const auto userInfo : appData->GetAllowedUser()) {
-					const ibGuid& userGuid = userInfo.m_strUserGuid;
+				for (const auto& userInfo : ibUserInfo::ListAll()) {
+					const ibGuid userGuid(userInfo.m_strUserGuid);
 					if (userGuid == m_userGuid)
 						continue;
-					const ibApplicationDataUserInfo& userEntry = appData->ReadUserData(userGuid);
+					const ibUserInfo userEntry = ibUserInfo::Read(userGuid);
 					for (const auto role : userEntry.m_roleArray) {
 						access_right = commonObject->AccessRight_Administration(role.m_miRoleId) &&
 							commonObject->AccessRight_DataAdministration(role.m_miRoleId);
@@ -283,7 +283,7 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 				return;
 			}
 
-			if (!appData->SaveUserData(userInfo))
+			if (!ibUserInfo::Save(userInfo))
 				return;
 
 			event.Skip();

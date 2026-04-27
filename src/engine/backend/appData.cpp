@@ -37,127 +37,8 @@ std::shared_ptr<ibDatabaseLayer> ibApplicationData::GetDatabaseLayer()
 //sandbox
 #include "metadataConfiguration.h"
 
-///////////////////////////////////////////////////////////////////////////////
-//								ibApplicationDataSessionArray
-///////////////////////////////////////////////////////////////////////////////
-
-wxString ibApplicationDataSessionArray::GetUserName(unsigned int idx) const {
-	if (idx > m_listSession.size())
-		return wxEmptyString;
-	return m_listSession[idx].m_strUserName;
-}
-
-wxString ibApplicationDataSessionArray::GetComputerName(unsigned int idx) const {
-	if (idx > m_listSession.size())
-		return wxEmptyString;
-	return m_listSession[idx].m_strComputerName;
-}
-
-wxString ibApplicationDataSessionArray::GetSession(unsigned int idx) const {
-	if (idx > m_listSession.size())
-		return wxEmptyString;
-	return m_listSession[idx].m_strSession;
-}
-
-wxString ibApplicationDataSessionArray::GetStartedDate(unsigned int idx) const {
-	if (idx > m_listSession.size())
-		return wxEmptyString;
-	const wxDateTime& startedDate = m_listSession[idx].m_startedDate;
-	return startedDate.Format(wxT("%d.%m.%Y %H:%M:%S"));
-}
-
-wxString ibApplicationDataSessionArray::GetApplication(unsigned int idx) const {
-	if (idx > m_listSession.size())
-		return wxEmptyString;
-	const auto& row = m_listSession[idx];
-	// ibSessionKind values mirror ibRunMode for 1:1 cases (Launcher /
-	// Designer / Enterprise / Service), plus two web roles that share
-	// the same ibRunMode::eWEB_ENTERPRISE_MODE. Pick a web-specific
-	// label when the kind disambiguates, otherwise fall back to the
-	// run-mode description.
-	if (row.m_runMode == ibRunMode::eWEB_ENTERPRISE_MODE) {
-		// ibSessionKind::WebServer = 5, WebClient = 100.
-		if (row.m_kind == 100) return _("Web client");
-		return _("Web server");
-	}
-	return appData->GetRunModeDescr(row.m_runMode);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-ibRunMode ibApplicationDataSessionArray::GetSessionApplication(unsigned int idx) const
-{
-	if (idx > m_listSession.size())
-		return ibRunMode::eLAUNCHER_MODE;
-	return m_listSession[idx].m_runMode;
-}
-
-int ibApplicationDataSessionArray::GetSessionKind(unsigned int idx) const
-{
-	if (idx > m_listSession.size())
-		return 0;
-	return m_listSession[idx].m_kind;
-}
-
-wxString ibApplicationDataSessionArray::GetSessionKindDescr(unsigned int idx) const
-{
-	if (idx >= m_listSession.size())
-		return wxEmptyString;
-	const auto& row = m_listSession[idx];
-	// Only web runtime carries the server/client split; desktop modes
-	// are always user-facing, reported as "Client" for consistency in
-	// the Active Users dialog. Legacy schemas (no `kind` column) read
-	// m_kind = 0; interpret that as Server when run-mode is web (the
-	// historic behaviour before per-tab sessions landed) and Client
-	// otherwise.
-	if (row.m_runMode == ibRunMode::eWEB_ENTERPRISE_MODE) {
-		// ibSessionKind::WebClient = 100.
-		return (row.m_kind == 100) ? _("Client") : _("Server");
-	}
-	return _("Client");
-}
-
-void ibApplicationDataSessionArray::SetKindsFromMap(
-	const std::unordered_map<std::string, int>& kindBySession)
-{
-	for (auto& u : m_listSession) {
-		auto it = kindBySession.find(std::string(u.m_strSession.ToUTF8().data()));
-		if (it != kindBySession.end())
-			u.m_kind = it->second;
-	}
-}
-
-void ibApplicationDataSessionArray::SetExclusiveFromMap(
-	const std::unordered_map<std::string, bool>& exclusiveBySession)
-{
-	for (auto& u : m_listSession) {
-		auto it = exclusiveBySession.find(std::string(u.m_strSession.ToUTF8().data()));
-		if (it != exclusiveBySession.end())
-			u.m_exclusive = it->second;
-	}
-}
-
-bool ibApplicationDataSessionArray::IsExclusive(unsigned int idx) const
-{
-	if (idx >= m_listSession.size()) return false;
-	return m_listSession[idx].m_exclusive;
-}
-
-wxString ibApplicationDataSessionArray::ExclusiveHolderSession() const
-{
-	for (const auto& u : m_listSession)
-		if (u.m_exclusive)
-			return u.m_strSession;
-	return wxEmptyString;
-}
-
-wxString ibApplicationDataSessionArray::ExclusiveHolderUser() const
-{
-	for (const auto& u : m_listSession)
-		if (u.m_exclusive)
-			return u.m_strUserName;
-	return wxEmptyString;
-}
+// ibSessionSnapshot moved to backend/session/sessionSnapshot.{h,cpp}
+// — implementation lives next to ibSessionRegistry that produces it.
 
 ///////////////////////////////////////////////////////////////////////////////
 //								ibApplicationData
@@ -277,7 +158,7 @@ void ibApplicationData::WireSessionEvents()
 		// breakpoint dispatch + DoDebugLoop's CV wait route through the
 		// session's own state instead of the legacy server-singleton.
 		if ((m_loadMetadataFlags & _app_start_create_debug_server_flag) != 0)
-			s->EnableDebug();
+			registry->EnableDebugForSession(s);
 		if (activeMetaData != nullptr) {
 			// Root mm is already allocated by ibSession::EnsureRoot — the
 			// registry calls it between OnFirstConnect (metadataCreate) and
@@ -363,11 +244,11 @@ ibApplicationData::~ibApplicationData()
 // that depend on a real user must arrange a session scope first.
 // ---------------------------------------------------------------------------
 
-const ibApplicationDataUserInfo& ibApplicationData::GetUserInfo() const
+const ibUserInfo& ibApplicationData::GetUserInfo() const
 {
 	if (auto* ctx = ibSession::Current())
 		return ctx->GetUserInfo();
-	static const ibApplicationDataUserInfo s_empty;
+	static const ibUserInfo s_empty;
 	return s_empty;
 }
 
@@ -391,7 +272,7 @@ const wxString& ibApplicationData::GetUserPassword() const
 	return GetUserInfo().m_strUserFullName;
 }
 
-const std::vector<ibApplicationDataUserInfo::ibApplicationDataUserRole>&
+const std::vector<ibUserInfo::ibUserRole>&
 ibApplicationData::GetUserRoleArray() const
 {
 	return GetUserInfo().m_roleArray;
@@ -410,14 +291,6 @@ wxString ibApplicationData::GetUserLanguageCode() const
 wxString ibApplicationData::ComputeMd5() const
 {
 	return ComputeMd5(GetUserInfo().m_strUserPassword);
-}
-
-// Out-of-line so callers don't need to include sessionRegistry.h just to
-// read the snapshot. Forwards to the registry's cluster-wide cache
-// maintained by JobRefreshSnapshot.
-ibApplicationDataSessionArray ibApplicationData::GetSessionArray() const
-{
-	return ibSessionRegistry::Instance().GetClusterSnapshot();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -885,15 +758,15 @@ long ibApplicationData::SpawnWebServerWithManifest(wxString cmd, bool searchDebu
 
 bool ibApplicationData::AuthenticateUser(const wxString& strUserName,
                                           const wxString& strUserPassword,
-                                          ibApplicationDataUserInfo& outInfo)
+                                          ibUserInfo& outInfo)
 {
 	// Open-access mode — no sys_user rows at all AND caller did not
 	// supply a user name. Historical behaviour is "pass through";
 	// outInfo stays default-constructed (IsOk() false).
-	if (strUserName.IsEmpty() && !HasAllowedUser())
+	if (strUserName.IsEmpty() && !ibUserInfo::HasAny())
 		return true;
 
-	outInfo = ReadUserData(strUserName);
+	outInfo = ibUserInfo::Read(strUserName);
 	if (!outInfo.IsOk())
 		return false;
 
@@ -907,7 +780,7 @@ bool ibApplicationData::AuthenticateUser(const wxString& strUserName,
 	if (ibPasswordHash::NeedsRehash(outInfo.m_strUserPassword)) {
 		try {
 			outInfo.m_strUserPassword = ibPasswordHash::Hash(strUserPassword);
-			(void)SaveUserData(outInfo);
+			(void)ibUserInfo::Save(outInfo);
 		} catch (...) {
 			// ignore — login already succeeded
 		}
@@ -916,7 +789,7 @@ bool ibApplicationData::AuthenticateUser(const wxString& strUserName,
 	return true;
 }
 
-void ibApplicationData::InstallUser(const ibApplicationDataUserInfo& info,
+void ibApplicationData::InstallUser(const ibUserInfo& info,
                                      const wxString& rawPassword)
 {
 	// User identity now lives only on the ibSession. The registry thread
@@ -926,14 +799,14 @@ void ibApplicationData::InstallUser(const ibApplicationDataUserInfo& info,
 	// session there is nowhere to install — the caller is in a pre-auth
 	// path that has no business calling this.
 	if (auto* ctx = ibSession::Current()) {
-		ctx->SetUserInfo(info);
-		ctx->SetSessionRawPassword(rawPassword);
+		if (auto* registry = GetSessionRegistry())
+			registry->InstallUser(ctx, info, rawPassword);
 	}
 }
 
 bool ibApplicationData::Login(const wxString& strUserName,
                               const wxString& strUserPassword,
-                              ibApplicationDataUserInfo& outInfo)
+                              ibUserInfo& outInfo)
 {
 	if (!AuthenticateUser(strUserName, strUserPassword, outInfo))
 		return false;
@@ -1112,70 +985,6 @@ wxString ibApplicationData::GetDatabaseDescription()
 		return m_strServer + wxT(":") + m_strPort + wxT("/") + m_strDatabase;
 
 	return wxT("");
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-void ibApplicationData::ReadUserData_Password(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const
-{
-	ibReaderMemory reader(buffer);
-
-	userInfo.m_strUserGuid = reader.r_stringZ();
-	userInfo.m_strUserName = reader.r_stringZ();
-	userInfo.m_strUserFullName = reader.r_stringZ();
-	userInfo.m_strUserPassword = reader.r_stringZ();
-}
-
-void ibApplicationData::ReadUserData_Role(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const
-{
-	ibReaderMemory reader(buffer);
-
-	unsigned int count = reader.r_u32();
-	userInfo.m_roleArray.reserve(count);
-	for (unsigned int idx = 0; idx < count; idx++) {
-		ibApplicationDataUserInfo::ibApplicationDataUserRole entry;
-		entry.m_strRoleGuid = reader.r_stringZ();
-		entry.m_miRoleId = reader.r_s32();
-		userInfo.m_roleArray.emplace_back(std::move(entry));
-	}
-}
-
-void ibApplicationData::ReadUserData_Language(const wxMemoryBuffer& buffer, ibApplicationDataUserInfo& userInfo) const
-{
-	ibReaderMemory reader(buffer);
-	userInfo.m_strLanguageGuid = reader.r_stringZ();
-	userInfo.m_strLanguageCode = reader.r_stringZ();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-wxMemoryBuffer ibApplicationData::SaveUserData_Password(const ibApplicationDataUserInfo& userInfo) const
-{
-	ibWriterMemory writer;
-	writer.w_stringZ(userInfo.m_strUserGuid);
-	writer.w_stringZ(userInfo.m_strUserName);
-	writer.w_stringZ(userInfo.m_strUserFullName);
-	writer.w_stringZ(userInfo.m_strUserPassword);
-	return writer.buffer();
-}
-
-wxMemoryBuffer ibApplicationData::SaveUserData_Role(const ibApplicationDataUserInfo& userInfo) const
-{
-	ibWriterMemory writer;
-	writer.w_u32(userInfo.m_roleArray.size());
-	for (const auto& role : userInfo.m_roleArray) {
-		writer.w_stringZ(role.m_strRoleGuid);
-		writer.w_s32(role.m_miRoleId);
-	}
-	return writer.buffer();
-}
-
-wxMemoryBuffer ibApplicationData::SaveUserData_Language(const ibApplicationDataUserInfo& userInfo) const
-{
-	ibWriterMemory writer;
-	writer.w_stringZ(userInfo.m_strLanguageGuid);
-	writer.w_stringZ(userInfo.m_strLanguageCode);
-	return writer.buffer();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

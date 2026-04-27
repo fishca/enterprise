@@ -713,9 +713,7 @@ WFRONTEND_API bool wfrontendHasUsers()
 {
 	if (!g_initialized.load() || appData == nullptr)
 		return false;
-	// HasAllowedUser() is private — use the public user list getter
-	// instead and treat any entry as "auth required".
-	return !appData->GetAllowedUser().empty();
+	return ibUserInfo::HasAny();
 }
 
 namespace {

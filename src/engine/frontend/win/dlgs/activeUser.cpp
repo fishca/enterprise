@@ -4,12 +4,13 @@
 #include "backend/appData.h"
 #include "backend/session/session.h"
 #include "backend/session/sessionRegistry.h"
+#include "backend/session/sessionSnapshot.h"
 
 #include <wx/menu.h>
 
 void ibDialogActiveUser::RefreshActiveUserTable()
 {
-	const ibApplicationDataSessionArray& arr = appData->GetSessionArray();
+	const ibSessionSnapshot arr = ibSessionRegistry::Instance().GetClusterSnapshot();
 
 	if (m_sessionArrayHash != arr.GetSessionArrayHash()) {
 

@@ -593,15 +593,13 @@ bool ibMetaDataConfiguration::OnInitialize(const int flags)
 	if (!LoadDatabase())
 		return false;
 
-#pragma region language  
-	// Check current language
-	const ibValueMetaObject* foundedLanguage =
-		ibMetaData::FindAnyObjectByFilter(appData->GetUserLanguageGuid(), g_metaLanguageCLSID);
-	// Initialize localization engine — per-session if a session is bound,
-	// otherwise the process-wide default. Web tabs each set their own
-	// active language without overwriting peers.
-	ibBackendLocalization::SetActiveLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
-#pragma endregion
+	// Localization: pin the process-wide default to the configuration's
+	// main language code (metadata short-code form ru/en/uk). Pre-auth
+	// callers without a session bound — launcher / login screen — read
+	// through this default. Per-session active language is assigned
+	// later by SetUserInfo on authentication and stays cached on the
+	// session for its whole life.
+	ibBackendLocalization::SetUserLanguage(GetLangCode());
 
 	if ((flags & _app_start_create_debug_server_flag) != 0) {
 		// wait=true blocks bootstrap until the designer's debugClient
@@ -664,12 +662,10 @@ bool ibMetaDataConfigurationStorage::OnInitialize(const int flags)
 	}
 #pragma endregion
 
-#pragma region language  
-
-	// Initialize localization engine — per-session when bound.
-	ibBackendLocalization::SetActiveLanguage(GetLangCode());
-
-#pragma endregion
+	// Localization: pin the process-wide default to the configuration's
+	// main language code — designer always works with the editorial
+	// baseline of the configuration regardless of OS locale.
+	ibBackendLocalization::SetUserLanguage(GetLangCode());
 
 	return true;
 }

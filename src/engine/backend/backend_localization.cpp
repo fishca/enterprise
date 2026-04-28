@@ -19,31 +19,19 @@ void ibBackendLocalization::SetUserLanguage(const wxString& strUserLanguage)
 
 const wxString& ibBackendLocalization::GetUserLanguage()
 {
-	return ms_strUserLanguage;
-}
-
-const wxString& ibBackendLocalization::GetActiveLanguage()
-{
-	// Hot path. ibSession::GetLanguageCode is a single field load
-	// (m_resolvedLanguageCode is pre-computed by SetLanguageCode /
-	// SetUserInfo); the return is by const reference so callers in the
-	// inner loop of a multi-thousand-row report don't pay a wxString
-	// CoW-copy per cell. ms_strUserLanguage is a namespace static —
-	// reference outlives the call.
+	// Hot path — two slots only:
+	//   1. ibSession::Current()->GetLanguageCode() — per-session,
+	//      pre-computed m_resolvedLanguageCode (single field load),
+	//      set in SetUserInfo on authentication.
+	//   2. ms_strUserLanguage — process-wide default. Pinned by
+	//      metadata OnInitialize to the configuration's main language
+	//      code (metadata short-code form ru/en/uk).
 	if (auto* s = ibSession::Current()) {
 		const wxString& code = s->GetLanguageCode();
 		if (!code.IsEmpty())
 			return code;
 	}
 	return ms_strUserLanguage;
-}
-
-void ibBackendLocalization::SetActiveLanguage(const wxString& strLanguage)
-{
-	if (auto* s = ibSession::Current())
-		s->SetLanguageCode(strLanguage);
-	else
-		SetUserLanguage(strLanguage);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +123,7 @@ bool ibBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale
 wxString ibBackendLocalization::CreateLocalizationRawLocText(const wxString& strLocale)
 {
 	thread_local ibBackendLocalizationEntryArray array;
-	const wxString& activeLang = GetActiveLanguage();
+	const wxString& activeLang = GetUserLanguage();
 	if (CreateLocalizationArray(strLocale, array))
 		return GetTranslateFromArray(activeLang, array);
 
@@ -221,7 +209,7 @@ bool ibBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLoca
 		else if (open_text && !open_symbol && c == wxT(';')) {
 			open_text = open_symbol = false;
 			success = true;
-			if (stringUtils::CompareString(GetActiveLanguage(), code))
+			if (stringUtils::CompareString(GetUserLanguage(), code))
 				break;
 			continue;
 		}
@@ -232,7 +220,7 @@ bool ibBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLoca
 			code += c;
 	}
 
-	if (success && stringUtils::CompareString(GetActiveLanguage(), code))
+	if (success && stringUtils::CompareString(GetUserLanguage(), code))
 		return data.IsEmpty();
 	
 	return true; 
@@ -240,7 +228,7 @@ bool ibBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLoca
 
 bool ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale, wxString& strResult)
 {
-	return GetTranslateGetRawLocText(GetActiveLanguage(), strRawLocale, strResult);
+	return GetTranslateGetRawLocText(GetUserLanguage(), strRawLocale, strResult);
 }
 
 bool ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale, wxString& strResult)
@@ -274,7 +262,7 @@ wxString ibBackendLocalization::GetTranslateGetRawLocText(const wxString& strLan
 
 void ibBackendLocalization::SetArrayTranslate(ibBackendLocalizationEntryArray& array, const wxString& strResult)
 {
-	SetArrayTranslate(GetActiveLanguage(), array, strResult);
+	SetArrayTranslate(GetUserLanguage(), array, strResult);
 }
 
 void ibBackendLocalization::SetArrayTranslate(const wxString& strLangCode, ibBackendLocalizationEntryArray& array, const wxString& strResult)
@@ -306,7 +294,7 @@ bool ibBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, c
 			return true;
 		}
 		else {
-			const wxString& strActiveLang = GetActiveLanguage();
+			const wxString& strActiveLang = GetUserLanguage();
 			if (!stringUtils::CompareString(strActiveLang, strLangCode)) {
 				const auto iterator_by_default_lang = std::find_if(array.begin(), array.end(),
 					[&strActiveLang](const ibBackendLocalizationEntry& entry) {
@@ -319,7 +307,7 @@ bool ibBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, c
 		}
 	}
 	else {
-		const wxString& strActiveLang = GetActiveLanguage();
+		const wxString& strActiveLang = GetUserLanguage();
 		const auto iterator_by_default_lang = std::find_if(array.begin(), array.end(),
 			[&strActiveLang](const ibBackendLocalizationEntry& entry) {
 				return stringUtils::CompareString(entry.m_code, strActiveLang); });

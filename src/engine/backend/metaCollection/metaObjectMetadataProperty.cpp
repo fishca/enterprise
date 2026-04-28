@@ -4,7 +4,7 @@
 void ibValueMetaObjectConfiguration::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_propertyDefLanguage == property)
-		ibBackendLocalization::SetActiveLanguage(GetLangCode());
+		ibBackendLocalization::SetUserLanguage(GetLangCode());
 	
 	if (m_propertySyntax == property)
 		ibCompileCode::SetCodeStyle(m_propertySyntax->GetValueAsEnum());

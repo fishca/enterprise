@@ -8,7 +8,7 @@ class BACKEND_API ibPropertyStringBase : public ibProperty {
 public:
 
 	wxString GetValueAsString() const {
-		static wxString result;
+		static thread_local wxString result;
 		GetValueAsString(result);
 		return std::move(result);
 	}
@@ -141,7 +141,7 @@ class BACKEND_API ibPropertyTString : public ibPropertyStringBase {
 public:
 
 	wxString GetValueAsTranslateString() const {
-		static wxString result;
+		static thread_local wxString result;
 		GetValueAsTranslateString(result);
 		return std::move(result);
 	}

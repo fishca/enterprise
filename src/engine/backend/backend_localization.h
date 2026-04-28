@@ -14,36 +14,26 @@ class BACKEND_API ibBackendLocalization {
 	ibBackendLocalization() = delete;
 public:
 
-	// Process-wide configuration-language default. Set once during
-	// CreateAppDataEnv from the platform locale; later auth flows route
-	// through SetActiveLanguage (per-session) instead so each web tab can
-	// render its own user's language without overwriting peers.
-	// Get is by-const-ref because it sits on the hot translate path
-	// (callers that only want the process default skip GetActiveLanguage's
-	// session check).
+	// Process-wide configuration-language default. Pinned by metadata
+	// OnInitialize to the configuration's main language code (the
+	// metadata short-code form ru/en/uk that localization arrays are
+	// keyed on); set once at boot from the platform locale before
+	// metadata loads.
 	static void SetUserLanguage(const wxString& strUserLanguage);
+
+	// Active configuration-language for the calling thread — session's
+	// GetLanguageCode() if a session is bound and it has a code,
+	// otherwise the process-wide default above. Every internal lookup
+	// (synonym translate, raw-loc encode/decode) and the designer's
+	// advprop string editor route through here.
+	//
+	// HOT PATH. A single report line / form synonym lookup hits this
+	// once per translatable field, multiplied by row count — easily
+	// millions of calls on a 10k-row report. The implementation must
+	// stay at (const wxString&) return + cached session-side value +
+	// no logic per call.
 	static const wxString& GetUserLanguage();
 
-	// Active configuration-language for the calling thread — picks the
-	// scoped session's GetLanguageCode() if any (per-tab), otherwise the
-	// process-wide default. Every internal lookup (synonym translate,
-	// raw-loc encode/decode) routes through here.
-	//
-	// HOT PATH. A single report line / form synonym lookup hits this once
-	// per translatable field, multiplied by row count — easily millions
-	// of calls on a 10k-row report. The implementation must stay at
-	// (const wxString&) return + cached session-side value + no logic per
-	// call. Do not let this slip back to by-value or to per-call fallback
-	// chains.
-	static const wxString& GetActiveLanguage();
-
-	// Write configuration-language for the calling context. If a session
-	// is bound on this thread, writes onto it (per-session); otherwise
-	// updates the process-wide default. Use during auth handlers and
-	// designer property-change sites — keeps the per-session vs global
-	// decision in one place.
-	static void SetActiveLanguage(const wxString& strLanguage);
-	
 	static bool CreateLocalizationArray(const wxString& strRawTranslate,
 		ibBackendLocalizationEntryArray& array);
 

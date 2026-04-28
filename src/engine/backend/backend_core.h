@@ -67,7 +67,7 @@ enum ibValueTypes {
 
 #define _USE_CONTROL_VALUECAST 1 
 //firebird doesn't support multiple transaction 
-#define _USE_SAVE_METADATA_IN_TRANSACTION 1 
+#define _USE_SAVE_METADATA_IN_TRANSACTION 1
 // full parser is very slowly ...
 #define _USE_OLD_TEXT_PARSER_IN_CODE_EDITOR 0
 //debugger

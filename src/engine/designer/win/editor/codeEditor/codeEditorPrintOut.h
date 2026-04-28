@@ -23,14 +23,14 @@ public:
 	void GetPageInfo(int *minPage, int *maxPage, int *selPageFrom, int *selPageTo) wxOVERRIDE;
 
 private:
-	wxStyledTextCtrl*m_edit;
-	wxArrayInt m_pageEnds;
-	wxRect m_pageRect;
-	wxRect m_printRect;
+	wxStyledTextCtrl* m_edit = nullptr;
+	wxArrayInt        m_pageEnds;
+	wxRect            m_pageRect;
+	wxRect            m_printRect;
 
-	bool PrintScaling(wxDC *dc);
+	bool PrintScaling(wxDC* dc);
 };
 
 #endif // wxUSE_PRINTING_ARCHITECTURE
 
-#endif // _EDIT_H_
+#endif // __IB_CODE_EDITOR_PRINTOUT_H__

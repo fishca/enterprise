@@ -1,4 +1,4 @@
-﻿////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : autoComplete loader  
 ////////////////////////////////////////////////////////////////////////////
@@ -45,25 +45,25 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 				ibParserModule cParser;
 				if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
 					for (auto code : cParser.GetAllContent()) {
-						if (code.eType == eExportVariable) {
+						if (code.m_eType == eExportVariable) {
 							m_ac.Append(
 								ibContentType::eExportVariable,
-								code.strName,
+								code.m_name,
 								wxEmptyString
 							);
 						}
-						else if (code.eType == eExportProcedure) {
+						else if (code.m_eType == eExportProcedure) {
 							m_ac.Append(
 								ibContentType::eExportFunction,
-								code.strName,
-								code.strShortDescription
+								code.m_name,
+								code.m_shortDescription
 							);
 						}
-						else if (code.eType == eExportFunction) {
+						else if (code.m_eType == eExportFunction) {
 							m_ac.Append(
 								ibContentType::eExportFunction,
-								code.strName,
-								code.strShortDescription
+								code.m_name,
+								code.m_shortDescription
 							);
 						}
 					}
@@ -77,14 +77,14 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 				ibParserModule cParser;
 				if (cParser.ParseModule(computeManagerModule->GetModuleText())) {
 					for (auto code : cParser.GetAllContent()) {
-						if (code.eType == eExportVariable) {
-							m_ac.Append(ibContentType::eExportVariable, code.strName, wxEmptyString);
+						if (code.m_eType == eExportVariable) {
+							m_ac.Append(ibContentType::eExportVariable, code.m_name, wxEmptyString);
 						}
-						else if (code.eType == eExportProcedure) {
-							m_ac.Append(ibContentType::eExportFunction, code.strName, code.strShortDescription);
+						else if (code.m_eType == eExportProcedure) {
+							m_ac.Append(ibContentType::eExportFunction, code.m_name, code.m_shortDescription);
 						}
-						else if (code.eType == eExportFunction) {
-							m_ac.Append(ibContentType::eExportFunction, code.strName, code.strShortDescription);
+						else if (code.m_eType == eExportFunction) {
+							m_ac.Append(ibContentType::eExportFunction, code.m_name, code.m_shortDescription);
 						}
 					}
 				}
@@ -92,358 +92,270 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 		}
 	}
 	else if (debugClient->IsEnterLoop()) {
-		CPrecompileContext* currContext = m_precompileModule->GetCurrentContext();
-		if (currContext && currContext->FindVariable(m_precompileModule->m_strLastParentKeyword)) {
+		ibPrecompileContext* currContext = m_precompileModule->GetCurrentContext();
+		if (currContext && currContext->FindVariable(m_precompileModule->GetLastParentKeyword())) {
 			m_ac.Cancel();
 			const ibValueMetaObject* metaObject = m_document->GetMetaObject();
 			wxASSERT(metaObject);
 			debugClient->EvaluateAutocomplete(
 				metaObject->GetFileName(),
 				metaObject->GetDocPath(),
-				m_precompileModule->m_strLastExpression,
-				m_precompileModule->m_strLastKeyword,
+				m_precompileModule->GetLastExpression(),
+				m_precompileModule->GetLastKeyword(),
 				GetCurrentPos()
 			);
 		}
 	}
 }
 
-bool ibCodeEditor::PrepareExpression(unsigned int currPos, wxString& strExpression, wxString& strKeyWord, wxString& sCurrWord, bool& hPoint)
+bool ibCodeEditor::PrepareExpression(unsigned int currPos, wxString& expression, wxString& keyword, wxString& currentWord, bool& outHasPoint)
 {
 	bool hasPoint = false, hasKeyword = false;
-	for (unsigned int i = 0; i < m_precompileModule->m_listLexem.size(); i++)
+	for (unsigned int i = 0; i < m_precompileModule->GetLexems().size(); i++)
 	{
-		if (m_precompileModule->m_listLexem[i].m_lexType == IDENTIFIER)
+		if (m_precompileModule->GetLexems()[i].m_lexType == IDENTIFIER)
 		{
-			if (hasPoint) strExpression += m_precompileModule->m_listLexem[i].m_valData.GetString();
-			else strExpression = m_precompileModule->m_listLexem[i].m_valData.GetString();
+			if (hasPoint) expression += m_precompileModule->GetLexems()[i].m_valData.GetString();
+			else expression = m_precompileModule->GetLexems()[i].m_valData.GetString();
 
-			sCurrWord = m_precompileModule->m_listLexem[i].m_valData.GetString();
+			currentWord = m_precompileModule->GetLexems()[i].m_valData.GetString();
 
-			if (i < m_precompileModule->m_listLexem.size() - 1) {
-				if (m_precompileModule->m_listLexem[i + 1].m_numString >= currPos)
+			if (i < m_precompileModule->GetLexems().size() - 1) {
+				if (m_precompileModule->GetLexems()[i + 1].m_numString >= currPos)
 					break;
-				const ibLexem& lex = m_precompileModule->m_listLexem[i + 1];
+				const ibLexem& lex = m_precompileModule->GetLexems()[i + 1];
 				if (lex.m_lexType == DELIMITER && lex.m_numData == '(')
-					strExpression = wxEmptyString;
+					expression = wxEmptyString;
 				if (lex.m_lexType == DELIMITER && lex.m_numData == '(' && !hasPoint)
-					strKeyWord = sCurrWord;
+					keyword = currentWord;
 
 				if (lex.m_lexType != ENDPROGRAM)
 					hasPoint = lex.m_lexType == DELIMITER && lex.m_numData == '.';
 			}
 
-			hasKeyword = hasKeyword ? i == m_precompileModule->m_listLexem.size() - 1 : false;
+			hasKeyword = hasKeyword ? i == m_precompileModule->GetLexems().size() - 1 : false;
 		}
-		else if (m_precompileModule->m_listLexem[i].m_lexType == KEYWORD && m_precompileModule->m_listLexem[i].m_numData == KEY_NEW)
+		else if (m_precompileModule->GetLexems()[i].m_lexType == KEYWORD && m_precompileModule->GetLexems()[i].m_numData == KEY_NEW)
 		{
-			strExpression = wxEmptyString; sCurrWord = wxEmptyString;
-			strKeyWord = m_precompileModule->m_listLexem[i].m_valData.GetString(); hasKeyword = true;
+			expression = wxEmptyString; currentWord = wxEmptyString;
+			keyword = m_precompileModule->GetLexems()[i].m_valData.GetString(); hasKeyword = true;
 		}
-		else if (m_precompileModule->m_listLexem[i].m_lexType == CONSTANT)
+		else if (m_precompileModule->GetLexems()[i].m_lexType == CONSTANT)
 		{
-			sCurrWord = m_precompileModule->m_listLexem[i].m_valData.GetString();
-			hasKeyword = stringUtils::CompareString(strKeyWord, wxT("type")) || stringUtils::CompareString(strKeyWord, wxT("showCommonForm")) || stringUtils::CompareString(strKeyWord, wxT("getCommonForm")) && !hasPoint;
-		}
-		else if (m_precompileModule->m_listLexem[i].m_lexType == DELIMITER
-			&& m_precompileModule->m_listLexem[i].m_numData == '.')
-		{
-			if (!strExpression.IsEmpty())
-				strExpression += '.';
+			// Special-keyword contexts where the autocomplete dropdown
+			// should be filtered by the literal currently being typed
+			// inside the call's argument string — e.g.
+			// showCommonForm("...|") completes against form names.
+			//
+			// Outside those contexts a literal MUST NOT leak into
+			// currentWord — otherwise an unrelated string constant
+			// earlier in the source (var = "hello"; <caret>) would
+			// poison the autocomplete filter and hide everything.
+			const bool inSpecialCall =
+				stringUtils::CompareString(keyword, wxT("type"))
+				|| stringUtils::CompareString(keyword, wxT("showCommonForm"))
+				|| (stringUtils::CompareString(keyword, wxT("getCommonForm")) && !hasPoint);
 
-			sCurrWord = wxEmptyString; hasPoint = true; hasKeyword = false;
+			if (inSpecialCall) {
+				currentWord = m_precompileModule->GetLexems()[i].m_valData.GetString();
+				hasKeyword = true;
+			}
+			else {
+				currentWord = wxEmptyString;
+				hasKeyword = false;
+			}
+		}
+		else if (m_precompileModule->GetLexems()[i].m_lexType == DELIMITER
+			&& m_precompileModule->GetLexems()[i].m_numData == '.')
+		{
+			if (!expression.IsEmpty())
+				expression += '.';
+
+			currentWord = wxEmptyString; hasPoint = true; hasKeyword = false;
 		}
 		else
 		{
-			if (m_precompileModule->m_listLexem[i].m_lexType != ENDPROGRAM) {
-				strExpression = wxEmptyString; sCurrWord = wxEmptyString;
+			if (m_precompileModule->GetLexems()[i].m_lexType != ENDPROGRAM) {
+				expression = wxEmptyString; currentWord = wxEmptyString;
 			}
 
 			hasKeyword = false;
 		}
 
-		if (i < m_precompileModule->m_listLexem.size() - 1 &&
-			m_precompileModule->m_listLexem[i + 1].m_numString >= currPos) break;
+		if (i < m_precompileModule->GetLexems().size() - 1 &&
+			m_precompileModule->GetLexems()[i + 1].m_numString >= currPos) break;
 	}
 
-	hPoint = hasPoint; return hasKeyword;
+	outHasPoint = hasPoint; return hasKeyword;
 }
 
-void ibCodeEditor::PrepareTooTipExpression(unsigned int currPos, wxString& strExpression, wxString& sCurrWord, bool& hPoint)
+void ibCodeEditor::PrepareTooTipExpression(unsigned int currPos, wxString& expression, wxString& currentWord, bool& outHasPoint)
 {
 	bool hasPoint = false;
 
-	for (unsigned int i = 0; i < m_precompileModule->m_listLexem.size(); i++)
+	for (unsigned int i = 0; i < m_precompileModule->GetLexems().size(); i++)
 	{
-		if (m_precompileModule->m_listLexem[i].m_numString > currPos
+		if (m_precompileModule->GetLexems()[i].m_numString > currPos
 			&& !hasPoint) break;
 
-		if (m_precompileModule->m_listLexem[i].m_lexType == IDENTIFIER)
+		if (m_precompileModule->GetLexems()[i].m_lexType == IDENTIFIER)
 		{
-			if (hasPoint) strExpression += m_precompileModule->m_listLexem[i].m_valData.GetString();
-			else strExpression = m_precompileModule->m_listLexem[i].m_valData.GetString();
+			if (hasPoint) expression += m_precompileModule->GetLexems()[i].m_valData.GetString();
+			else expression = m_precompileModule->GetLexems()[i].m_valData.GetString();
 
-			sCurrWord = m_precompileModule->m_listLexem[i].m_valData.GetString();
+			currentWord = m_precompileModule->GetLexems()[i].m_valData.GetString();
 
-			if (i < m_precompileModule->m_listLexem.size() - 1) {
-				const ibLexem& lex = m_precompileModule->m_listLexem[i + 1];
+			if (i < m_precompileModule->GetLexems().size() - 1) {
+				const ibLexem& lex = m_precompileModule->GetLexems()[i + 1];
 				if (lex.m_lexType == DELIMITER && lex.m_numData == '(')
-					strExpression = wxEmptyString;
+					expression = wxEmptyString;
 				hasPoint = lex.m_lexType == DELIMITER && lex.m_numData == '.';
 			}
 			else hasPoint = false;
 		}
-		else if (m_precompileModule->m_listLexem[i].m_lexType == DELIMITER
-			&& m_precompileModule->m_listLexem[i].m_numData == '.')
+		else if (m_precompileModule->GetLexems()[i].m_lexType == DELIMITER
+			&& m_precompileModule->GetLexems()[i].m_numData == '.')
 		{
-			if (!strExpression.IsEmpty())
-				strExpression += '.';
+			if (!expression.IsEmpty())
+				expression += '.';
 
-			sCurrWord = wxEmptyString; hasPoint = true;
+			currentWord = wxEmptyString; hasPoint = true;
 		}
 		else
 		{
-			strExpression = wxEmptyString; sCurrWord = wxEmptyString;
+			expression = wxEmptyString; currentWord = wxEmptyString;
 		}
 	}
 
-	hPoint = hasPoint;
+	outHasPoint = hasPoint;
 }
 
-void ibCodeEditor::PrepareTABs()
+namespace {
+
+// Strip EOL markers in-place per the editor's current EOL mode so the
+// leading-whitespace scan that follows doesn't trip over `\r`/`\n`.
+void StripEOL(std::string& s, int eolMode)
 {
-	const int curr_position = ibCodeEditor::GetCurrentPos();
-	const int curr_line =
-		ibCodeEditor::LineFromPosition(curr_position);
-
-	const int start_line_pos = ibCodeEditor::PositionFromLine(curr_line);
-	const int level = m_fp.GetFoldMask(curr_line);
-
-	std::string rawBufferLine;
-
-	if (start_line_pos != curr_position)
-		rawBufferLine = ibCodeEditor::GetTextRangeRaw(start_line_pos, curr_position);
-
-	int fold_level = level ^ wxSTC_FOLDLEVELBASE_FLAG;
-	int current_fold = 0, replace_pos = 0;
-
-	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
-
-		fold_level = (fold_level ^ wxSTC_FOLDLEVELHEADER_FLAG);
-
-		std::string strBuffer = rawBufferLine;
-
-		switch (ibCodeEditor::GetEOLMode())
-		{
-		case wxSTC_EOL_CRLF:
-			strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
-			strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
-			break;
-		case wxSTC_EOL_CR:
-			strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
-			break;
-		default:
-			strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
-			break;
-		}
-
-		const int length = curr_position - start_line_pos;
-		for (int i = 0; i < length; i++) {
-			if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-				current_fold++; replace_pos = i + 1;
-			}
-			else break;
-		}
-
-		if (current_fold != fold_level) {
-
-			(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
-
-			unsigned short replace_correct =
-				(replace_pos > fold_level ? replace_pos - fold_level : 0);
-			rawBufferLine.replace(
-				0, replace_correct + strBuffer.length(), strBuffer);
-		}
-
-		if (start_line_pos + fold_level != curr_position) fold_level++;
-	}
-	else if ((level & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
-
-		fold_level = (fold_level ^ wxSTC_FOLDLEVELELSE_FLAG);
-
-		if (fold_level >= 0) {
-
-			const int len = ibCodeEditor::LineLength(curr_line);
-			if (len > 0) {
-
-				std::string strBuffer = rawBufferLine;
-
-				switch (ibCodeEditor::GetEOLMode())
-				{
-				case wxSTC_EOL_CRLF:
-					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
-					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
-					break;
-				case wxSTC_EOL_CR:
-					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
-					break;
-				default:
-					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
-					break;
-				}
-
-				const int length = curr_position - start_line_pos;
-
-				for (int i = 0; i < length; i++) {
-					if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-						current_fold++; replace_pos = i + 1;
-					}
-					else break;
-				}
-
-				if (current_fold != (fold_level - 1) && fold_level > 0) {
-
-					(void)strBuffer.replace(0, replace_pos, fold_level - 1, '\t');
-
-					unsigned short replace_correct =
-						(replace_pos > fold_level - 1 ? replace_pos - fold_level - 1 : 0);
-					rawBufferLine.replace(
-						0, replace_correct + strBuffer.length(), strBuffer);
-				}
-				else if (current_fold != 0 && fold_level == 0) {
-
-					(void)strBuffer.replace(0, replace_pos, 0, '\t');
-
-					unsigned short replace_correct =
-						(replace_pos > 0 ? replace_pos : 0);
-
-					rawBufferLine.replace(
-						0, replace_correct + strBuffer.length(), strBuffer);
-				}
-			}
-
-			if (start_line_pos + fold_level - 1 == curr_position) fold_level--;
-		}
-	}
-	else if ((level & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
-
-		fold_level = (fold_level ^ wxSTC_FOLDLEVELWHITE_FLAG) - 1;
-
-		if (fold_level >= 0) {
-
-			const int len = ibCodeEditor::LineLength(curr_line);
-			if (len > 0) {
-
-				std::string strBuffer = rawBufferLine;
-
-				switch (ibCodeEditor::GetEOLMode())
-				{
-				case wxSTC_EOL_CRLF:
-					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
-					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
-					break;
-				case wxSTC_EOL_CR:
-					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
-					break;
-				default:
-					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
-					break;
-				}
-
-				const int length = curr_position - start_line_pos;
-				for (int i = 0; i < length; i++) {
-					if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-						current_fold++; replace_pos = i + 1;
-					}
-					else break;
-				}
-
-				if (current_fold != fold_level) {
-
-					(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
-
-					unsigned short replace_correct =
-						(replace_pos > fold_level ? replace_pos - fold_level : 0);
-					rawBufferLine.replace(
-						0, replace_correct + strBuffer.length(), strBuffer);
-				}
-				else if (current_fold != 0 && fold_level == 0) {
-
-					(void)strBuffer.replace(0, replace_pos, 0, '\t');
-
-					unsigned short replace_correct =
-						(replace_pos > 0 ? replace_pos : 0);
-
-					rawBufferLine.replace(
-						0, replace_correct + strBuffer.length(), strBuffer);
-				}
-			}
-		}
-	}
-	else if ((level & wxSTC_FOLDLEVELBASE_FLAG) != 0) {
-
-		if (fold_level >= 0) {
-
-			const int len = ibCodeEditor::LineLength(curr_line);
-
-			if (len > 0) {
-
-				std::string strBuffer = rawBufferLine;
-
-				const int length = curr_position - start_line_pos;
-				for (int i = 0; i < length; i++) {
-					if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-						current_fold++; replace_pos = i + 1;
-					}
-					else break;
-				}
-
-				if (current_fold != fold_level) {
-
-					(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
-
-					unsigned short replace_correct =
-						(replace_pos > fold_level ? replace_pos - fold_level : 0);
-					rawBufferLine.replace(
-						0, replace_correct + strBuffer.length(), strBuffer);
-				}
-				else if (current_fold != 0 && fold_level == 0) {
-
-					(void)strBuffer.replace(0, replace_pos, 0, '\t');
-
-					unsigned short replace_correct =
-						(replace_pos > 0 ? replace_pos : 0);
-
-					rawBufferLine.replace(
-						0, replace_correct + strBuffer.length(), strBuffer);
-				}
-			}
-		}
-	}
-
-	switch (ibCodeEditor::GetEOLMode())
-	{
+	switch (eolMode) {
 	case wxSTC_EOL_CRLF:
-		rawBufferLine.push_back('\r');
-		rawBufferLine.push_back('\n');
+		s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
+		s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
 		break;
 	case wxSTC_EOL_CR:
-		rawBufferLine.push_back('\r');
+		s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
 		break;
 	default:
-		rawBufferLine.push_back('\n');
+		s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
 		break;
 	}
+}
 
-	rawBufferLine.append(fold_level, '\t');
+// Append the editor's EOL marker(s).
+void AppendEOL(std::string& s, int eolMode)
+{
+	switch (eolMode) {
+	case wxSTC_EOL_CRLF: s.push_back('\r'); s.push_back('\n'); break;
+	case wxSTC_EOL_CR:   s.push_back('\r'); break;
+	default:             s.push_back('\n'); break;
+	}
+}
 
-	ibCodeEditor::SetTargetStart((int)start_line_pos);
-	ibCodeEditor::SetTargetEnd((int)curr_position);
-	ibCodeEditor::ReplaceTargetRaw(rawBufferLine.c_str(), rawBufferLine.length());
+// Count leading '\t'/' ' chars; outReplacePos receives one past the last
+// whitespace character (the splice end for indent rewrite below).
+int CountLeadingIndent(const std::string& s, int& outReplacePos)
+{
+	int count = 0;
+	outReplacePos = 0;
+	const int len = (int)s.length();
+	for (int i = 0; i < len; ++i) {
+		if (s[i] == '\t' || s[i] == ' ') {
+			count++;
+			outReplacePos = i + 1;
+		}
+		else break;
+	}
+	return count;
+}
+
+} // namespace
+
+/**
+ * PrepareTABs
+ *   Auto-indent the current line on Enter:
+ *     1. Read the cached fold mask for the line.
+ *     2. Compute the target indent for the CURRENT line based on the
+ *        fold flag — HEADER aligns to its own level, ELSE/EndXxx (WHITE)
+ *        align to the parent indent.
+ *     3. Rewrite the current line's leading tabs to match.
+ *     4. Append EOL + indent for the NEW line that Enter is about to
+ *        produce, and replace the line slice through STC's target API.
+ */
+void ibCodeEditor::PrepareTABs()
+{
+	const int currPosition = GetCurrentPos();
+	const int currLine     = LineFromPosition(currPosition);
+	const int startLinePos = PositionFromLine(currLine);
+	const int level        = m_fp.GetFoldMask(currLine);
+	const int eolMode      = GetEOLMode();
+
+	std::string rawBufferLine;
+	if (startLinePos != currPosition)
+		rawBufferLine = GetTextRangeRaw(startLinePos, currPosition);
+
+	// Strip any EOL chars upfront so the indent rewrite operates on a
+	// pure (whitespace-prefix + text) buffer. Typically the line slice
+	// before the caret has none, but this also closes a latent bug where
+	// the previous version could leave duplicated EOLs when no fold flag
+	// matched (cursor on a free-form line with stray CR/LF).
+	StripEOL(rawBufferLine, eolMode);
+
+	int foldLevel = level ^ wxSTC_FOLDLEVELBASE_FLAG;
+
+	auto rewriteIndent = [&](int targetTabs) {
+		int replacePos = 0;
+		const int currentIndent = CountLeadingIndent(rawBufferLine, replacePos);
+		if (currentIndent != targetTabs)
+			rawBufferLine.replace(0, replacePos, targetTabs, '\t');
+	};
+
+	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
+		// Procedure/Function/If/While/Try header — line itself sits at
+		// foldLevel; Enter on the header opens its body, +1 indent.
+		foldLevel ^= wxSTC_FOLDLEVELHEADER_FLAG;
+		rewriteIndent(foldLevel);
+		if (startLinePos + foldLevel != currPosition) foldLevel++;
+	}
+	else if ((level & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
+		// Else/ElseIf/Except — pseudo-header at child indent; visually
+		// aligns to parent indent (foldLevel - 1).
+		foldLevel ^= wxSTC_FOLDLEVELELSE_FLAG;
+		if (foldLevel >= 0 && LineLength(currLine) > 0)
+			rewriteIndent(std::max(0, foldLevel - 1));
+		if (startLinePos + foldLevel - 1 == currPosition) foldLevel--;
+	}
+	else if ((level & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
+		// EndProcedure/EndFunction/EndIf/EndDo/EndTry — closer at parent
+		// indent; the WHITE flag's level is already child, so subtract 1.
+		foldLevel = (foldLevel ^ wxSTC_FOLDLEVELWHITE_FLAG) - 1;
+		if (foldLevel >= 0 && LineLength(currLine) > 0)
+			rewriteIndent(foldLevel);
+	}
+	else if ((level & wxSTC_FOLDLEVELBASE_FLAG) != 0) {
+		// Plain code line inside a block — indent matches foldLevel.
+		if (foldLevel >= 0 && LineLength(currLine) > 0)
+			rewriteIndent(foldLevel);
+	}
+
+	AppendEOL(rawBufferLine, eolMode);
+	rawBufferLine.append(foldLevel, '\t');
+
+	SetTargetStart((int)startLinePos);
+	SetTargetEnd((int)currPosition);
+	ReplaceTargetRaw(rawBufferLine.c_str(), rawBufferLine.length());
 
 	const size_t length = rawBufferLine.length();
-	ibCodeEditor::GotoLine(ibCodeEditor::LineFromPosition(start_line_pos + length));
-	ibCodeEditor::SetEmptySelection(start_line_pos + length);
+	GotoLine(LineFromPosition(startLinePos + length));
+	SetEmptySelection(startLinePos + length);
 }
 
 void ibCodeEditor::LoadAutoComplete()
@@ -459,13 +371,13 @@ void ibCodeEditor::LoadAutoComplete()
 	// Display the autocompletion list
 	int lenEntered = currentPos - wordStartPos;
 
-	wxString strExpression, strKeyWord, strCurWord; bool hasPoint = true;
+	wxString expression, keyword, currentWord; bool hasPoint = true;
 
 	if (m_ct.Active())
 		m_ct.Cancel();
 
-	if (!PrepareExpression(realPos, strExpression, strKeyWord, strCurWord, hasPoint)) {
-		m_ac.Start(strCurWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
+	if (!PrepareExpression(realPos, expression, keyword, currentWord, hasPoint)) {
+		m_ac.Start(currentWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
 		if (hasPoint) {
 			LoadIntelliList();
 		}
@@ -474,8 +386,8 @@ void ibCodeEditor::LoadAutoComplete()
 		}
 	}
 	else {
-		m_ac.Start(strCurWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
-		LoadFromKeyWord(strKeyWord);
+		m_ac.Start(currentWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
+		LoadFromKeyWord(keyword);
 	}
 
 	wxPoint position = PointFromPosition(wordStartPos);
@@ -488,33 +400,22 @@ void ibCodeEditor::LoadToolTip(const wxPoint& pos)
 	if (debugClient->IsEnterLoop()) {
 
 		int currentPos = GetRealPositionFromPoint(pos);
-		wxString strExpression, strCurWord; bool hasPoint = false;
-		PrepareTooTipExpression(currentPos, strExpression, strCurWord, hasPoint);
+		wxString expression, currentWord; bool hasPoint = false;
+		PrepareTooTipExpression(currentPos, expression, currentWord, hasPoint);
 
-		strExpression.Trim(true).Trim(false);
+		expression.Trim(true).Trim(false);
 
-		if (strExpression.IsEmpty()) {
+		if (expression.IsEmpty()) {
 			SetToolTip(nullptr); return;
 		}
 
-		auto it = std::find_if(m_expressions.begin(), m_expressions.end(),
-			[strExpression](const std::pair<wxString, wxString>& p) {
-				return stringUtils::CompareString(strExpression, p.first);
-			}
+		const ibValueMetaObject* metaObject = m_document->GetMetaObject();
+		wxASSERT(metaObject);
+		debugClient->EvaluateToolTip(
+			metaObject->GetFileName(),
+			metaObject->GetDocPath(),
+			expression
 		);
-
-		if (it == m_expressions.end()) {
-			const ibValueMetaObject* metaObject = m_document->GetMetaObject();
-			wxASSERT(metaObject);
-			debugClient->EvaluateToolTip(
-				metaObject->GetFileName(),
-				metaObject->GetDocPath(),
-				strExpression
-			);
-		}
-		else {
-			SetToolTip(it->second);
-		}
 	}
 }
 
@@ -523,17 +424,17 @@ void ibCodeEditor::LoadCallTip()
 	// Find the word start
 	int currentPos = GetRealPosition();
 
-	wxString strExpression, strKeyWord, strCurWord, sDescription; bool hasPoint = true;
+	wxString expression, keyword, currentWord, sDescription; bool hasPoint = true;
 
-	if (!PrepareExpression(currentPos, strExpression, strKeyWord, strCurWord, hasPoint)) {
+	if (!PrepareExpression(currentPos, expression, keyword, currentWord, hasPoint)) {
 		if (hasPoint) {
-			m_precompileModule->m_nCurrentPos = GetRealPosition();
-			//Cобираем текст
+			m_precompileModule->SetCurrentPos(GetRealPosition());
+			//Collect text
 			if (m_precompileModule->Compile()) {
 				ibValue vObject = m_precompileModule->GetComputeValue();
 				for (long i = 0; i < vObject.GetNMethods(); i++) {
 					wxString sMethod = vObject.GetMethodName(i);
-					if (stringUtils::CompareString(sMethod, strCurWord)) {
+					if (stringUtils::CompareString(sMethod, currentWord)) {
 						sDescription = vObject.GetMethodHelper(i);
 						break;
 					}
@@ -546,9 +447,9 @@ void ibCodeEditor::LoadCallTip()
 						ibParserModule cParser;
 						if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
 							for (auto code : cParser.GetAllContent()) {
-								if (code.eType == eExportProcedure || code.eType == eExportFunction) {
-									if (stringUtils::CompareString(code.strName, strCurWord)) {
-										sDescription = code.strShortDescription;
+								if (code.m_eType == eExportProcedure || code.m_eType == eExportFunction) {
+									if (stringUtils::CompareString(code.m_name, currentWord)) {
+										sDescription = code.m_shortDescription;
 										break;
 									}
 								}
@@ -564,8 +465,8 @@ void ibCodeEditor::LoadCallTip()
 						ibParserModule cParser;
 						if (cParser.ParseModule(computeManagerModule->GetModuleText())) {
 							for (auto code : cParser.GetAllContent()) {
-								if (stringUtils::CompareString(code.strName, strCurWord)) {
-									sDescription = code.strShortDescription;
+								if (stringUtils::CompareString(code.m_name, currentWord)) {
+									sDescription = code.m_shortDescription;
 									break;
 								}
 							}
@@ -576,15 +477,15 @@ void ibCodeEditor::LoadCallTip()
 		}
 		else
 		{
-			//Cобираем текст
-			m_precompileModule->m_nCurrentPos = GetRealPosition();
+			//Collect text
+			m_precompileModule->SetCurrentPos(GetRealPosition());
 
 			if (m_precompileModule->Compile()) {
-				CPrecompileContext* m_pContext = m_precompileModule->GetContext();
-				for (auto function : m_pContext->cFunctions) {
-					CPrecompileFunction* functionContext = function.second;
-					if (stringUtils::CompareString(function.first, strCurWord)) {
-						sDescription = functionContext->strShortDescription;
+				ibPrecompileContext* rootContext = m_precompileModule->GetContext();
+				for (auto function : rootContext->m_functions) {
+					ibPrecompileFunction* functionContext = function.second;
+					if (stringUtils::CompareString(function.first, currentWord)) {
+						sDescription = functionContext->m_shortDescription;
 						break;
 					}
 				}
@@ -593,10 +494,10 @@ void ibCodeEditor::LoadCallTip()
 	}
 	else {
 
-		if (stringUtils::CompareString(strKeyWord, wxT("new"))) {
-			if (ibValue::IsRegisterCtor(strExpression)) {
+		if (stringUtils::CompareString(keyword, wxT("new"))) {
+			if (ibValue::IsRegisterCtor(expression)) {
 				const ibCtorAbstractType* objectValueAbstract =
-					ibValue::GetAvailableCtor(strExpression);
+					ibValue::GetAvailableCtor(expression);
 				ibValue* newObject = objectValueAbstract->CreateObject();
 				ibValue::ibValueMethodHelper* methodHelper = newObject->GetPMethods();
 				if (methodHelper != nullptr) {
@@ -618,7 +519,7 @@ void ibCodeEditor::LoadCallTip()
 
 void ibCodeEditor::LoadSysKeyword()
 {
-	m_precompileModule->m_nCurrentPos = GetRealPosition();
+	m_precompileModule->SetCurrentPos(GetRealPosition());
 
 	for (int i = 0; i < LastKeyWord; i++) {
 		m_ac.Append(ibContentType::eVariable,
@@ -628,37 +529,37 @@ void ibCodeEditor::LoadSysKeyword()
 	}
 
 	if (m_precompileModule->Compile()) {
-		CPrecompileContext* m_pContext = m_precompileModule->GetContext();
-		for (auto variable : m_pContext->cVariables) {
-			CPrecompileVariable m_variable = variable.second;
-			if (m_variable.bTempVar)
+		ibPrecompileContext* rootContext = m_precompileModule->GetContext();
+		for (const auto& variable : rootContext->m_variables) {
+			const ibPrecompileVariable& v = variable.second;
+			if (v.m_isTempVar)
 				continue;
-			m_ac.Append(m_variable.bExport ?
-				ibContentType::eExportVariable : ibContentType::eVariable, m_variable.strRealName, wxEmptyString
+			m_ac.Append(v.m_isExport ?
+				ibContentType::eExportVariable : ibContentType::eVariable, v.m_realName, wxEmptyString
 			);
 		}
 
-		for (auto function : m_pContext->cFunctions) {
-			CPrecompileFunction* functionContext = function.second;
-			if (functionContext->m_pContext) {
-				if (functionContext->m_pContext->nReturn == RETURN_FUNCTION) {
-					m_ac.Append(functionContext->bExport ? ibContentType::eExportFunction : ibContentType::eFunction, functionContext->strRealName, functionContext->strShortDescription);
+		for (auto function : rootContext->m_functions) {
+			ibPrecompileFunction* functionContext = function.second;
+			if (functionContext->m_context) {
+				if (functionContext->m_context->m_returnKind == RETURN_FUNCTION) {
+					m_ac.Append(functionContext->m_isExport ? ibContentType::eExportFunction : ibContentType::eFunction, functionContext->m_realName, functionContext->m_shortDescription);
 				}
 				else {
-					m_ac.Append(functionContext->bExport ? ibContentType::eExportProcedure : ibContentType::eProcedure, functionContext->strRealName, functionContext->strShortDescription);
+					m_ac.Append(functionContext->m_isExport ? ibContentType::eExportProcedure : ibContentType::eProcedure, functionContext->m_realName, functionContext->m_shortDescription);
 				}
 			}
 			else {
-				m_ac.Append(functionContext->bExport ? ibContentType::eExportFunction : ibContentType::eFunction, functionContext->strRealName, functionContext->strShortDescription);
+				m_ac.Append(functionContext->m_isExport ? ibContentType::eExportFunction : ibContentType::eFunction, functionContext->m_realName, functionContext->m_shortDescription);
 			}
 
-			if (m_precompileModule->m_pCurrentContext && m_precompileModule->m_pCurrentContext == functionContext->m_pContext) {
-				for (auto variable : m_precompileModule->m_pCurrentContext->cVariables) {
-					CPrecompileVariable m_variable = variable.second;
-					if (m_variable.bTempVar)
+			if (m_precompileModule->GetCurrentContext() && m_precompileModule->GetCurrentContext() == functionContext->m_context) {
+				for (const auto& variable : m_precompileModule->GetCurrentContext()->m_variables) {
+					const ibPrecompileVariable& v = variable.second;
+					if (v.m_isTempVar)
 						continue;
-					m_ac.Append(m_variable.bExport ?
-						ibContentType::eExportVariable : ibContentType::eVariable, m_variable.strRealName, wxEmptyString
+					m_ac.Append(v.m_isExport ?
+						ibContentType::eExportVariable : ibContentType::eVariable, v.m_realName, wxEmptyString
 					);
 				}
 			}
@@ -670,28 +571,28 @@ void ibCodeEditor::LoadSysKeyword()
 
 void ibCodeEditor::LoadIntelliList()
 {
-	m_precompileModule->m_nCurrentPos = GetRealPosition();
-	m_precompileModule->m_bCalcValue = true;
+	m_precompileModule->SetCurrentPos(GetRealPosition());
+	m_precompileModule->SetCalcValue(true);
 
-	//Cобираем текст
+	//Collect text
 	if (m_precompileModule->Compile()) {
 		AddKeywordFromObject(m_precompileModule->GetComputeValue());
 	}
 
-	m_precompileModule->m_bCalcValue = false;
+	m_precompileModule->SetCalcValue(false);
 	m_precompileModule->Clear();
 }
 
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-void ibCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
+void ibCodeEditor::LoadFromKeyWord(const wxString& keyword)
 {
-	if (stringUtils::CompareString(strKeyWord, wxT("new"))) {
+	if (stringUtils::CompareString(keyword, wxT("new"))) {
 		for (auto class_obj : ibValue::GetListCtorsByType(ibCtorObjectType::ibCtorObjectType_object_value))
 			m_ac.Append(ibContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 	}
-	else if (stringUtils::CompareString(strKeyWord, wxT("type")))
+	else if (stringUtils::CompareString(keyword, wxT("type")))
 	{
 		for (auto class_obj : ibValue::GetListCtorsByType(ibCtorObjectType::ibCtorObjectType_object_primitive))
 			m_ac.Append(ibContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
@@ -727,8 +628,8 @@ void ibCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 			}
 		}
 	}
-	else if (stringUtils::CompareString(strKeyWord, wxT("showCommonForm"))
-		|| stringUtils::CompareString(strKeyWord, wxT("getCommonForm")))
+	else if (stringUtils::CompareString(keyword, wxT("showCommonForm"))
+		|| stringUtils::CompareString(keyword, wxT("getCommonForm")))
 	{
 		const ibValueMetaObject* metaObject = m_document->GetMetaObject();
 		wxASSERT(metaObject);

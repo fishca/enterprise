@@ -7,8 +7,6 @@
  */
 class ibAutoComplete
 {
-	bool active;
-
 	struct ibKeywordElement {
 		short m_type;
 		wxString m_name;
@@ -25,32 +23,7 @@ class ibAutoComplete
 		eExportFunction,
 	};
 
-	std::vector<ibKeywordElement> m_aKeywords;
-
 public:
-
-	int posStart;
-	int startLen;
-
-	wxString strCurrentWord;
-
-	ibOESListBoxWin* lb;
-	ibListBoxVisualData* m_visualData;
-	wxStyledTextCtrl* m_owner;
-
-	wxEvtHandler* m_evtHandler;
-
-	/// Should autocompletion be canceled if editor's currentPos <= startPos?
-	bool cancelAtStartPos;
-	bool dropRestOfWord;
-	int widthLBDefault;
-	int heightLBDefault;
-
-	/** SC_ORDER_PRESORTED:   Assume the list is presorted; selection will fail if it is not alphabetical<br />
-	 *  SC_ORDER_PERFORMSORT: Sort the list alphabetically; start up performance cost for sorting<br />
-	 *  SC_ORDER_CUSTOM:      Handle non-alphabetical entries; start up performance cost for generating a sorted lookup table
-	 */
-	int autoSort;
 
 	ibAutoComplete(wxStyledTextCtrl* textCtrl);
 	virtual ~ibAutoComplete();
@@ -59,8 +32,8 @@ public:
 	bool Active() const;
 
 	/// Display the auto completion list positioned to be near a character position
-	void Start(const wxString& strCurrentWord, int position,
-		int startLen_, int lineHeight);
+	void Start(const wxString& currentWord, int position,
+		int startLen, int lineHeight);
 
 	/// The append string contains a sequence of words separated by the separator character
 	void Append(short type, const wxString& strName, const wxString& sDescription);
@@ -81,7 +54,7 @@ public:
 	/// Select a list element that starts with word as the current element
 	void Select(int index);
 
-	///Process event 
+	///Process event
 	bool CallEvent(wxEvent& event);
 
 protected:
@@ -97,6 +70,32 @@ protected:
 	void OnProcessChildFocus(wxChildFocusEvent& event);
 	void OnProcessSize(wxSizeEvent& event);
 	void OnProcessMouse(wxMouseEvent& event);
+
+private:
+
+	bool                          m_active           = false;
+	int                           m_posStart         = 0;
+	int                           m_startLen         = 0;
+	wxString                      m_currentWord;
+
+	std::vector<ibKeywordElement> m_aKeywords;
+
+	ibOESListBoxWin*              m_listBoxWin       = nullptr;
+	ibListBoxVisualData*          m_visualData       = nullptr;
+	wxStyledTextCtrl*             m_owner            = nullptr;
+	wxEvtHandler*                 m_evtHandler       = nullptr;
+
+	/// Should autocompletion be canceled if editor's currentPos <= startPos?
+	bool                          m_cancelAtStartPos = true;
+	bool                          m_dropRestOfWord   = false;
+	int                           m_widthLBDefault   = 0;
+	int                           m_heightLBDefault  = 0;
+
+	/** SC_ORDER_PRESORTED:   Assume the list is presorted; selection will fail if it is not alphabetical<br />
+	 *  SC_ORDER_PERFORMSORT: Sort the list alphabetically; start up performance cost for sorting<br />
+	 *  SC_ORDER_CUSTOM:      Handle non-alphabetical entries; start up performance cost for generating a sorted lookup table
+	 */
+	int                           m_autoSort         = 0;
 };
 
 #endif

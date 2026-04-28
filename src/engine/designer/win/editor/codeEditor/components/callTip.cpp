@@ -16,40 +16,20 @@ inline int RoundXYPosition(float xyPos) {
 #define EXTENT_TEST wxT(" `~!@#$%^&*()-_=+\\|[]{};:\"\'<,>.?/1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 ibCallTip::ibCallTip(wxStyledTextCtrl* owner)
+	: m_owner(owner)
 {
-	m_callTip = nullptr;
-	m_evtHandler = nullptr;
-	inCallTipMode = false;
-	posStartCallTip = 0;
-	rectUp = wxRect(0, 0, 0, 0);
-	rectDown = wxRect(0, 0, 0, 0);
-	m_owner = owner;
-	lineHeight = 1;
-	offsetMain = 0;
-	startHighlight = 0;
-	endHighlight = 0;
-	tabSize = 0;
-	useStyleCallTip = false;    // for backwards compatibility
-
-	insetX = 5;
-	widthArrow = 14;
-	borderHeight = 2; // Extra line for border and an empty line at top and bottom.
-	verticalOffset = 1;
-
 #ifdef __APPLE__
 	// proper apple colours for the default
-	colourBG = wxColour(0xff, 0xff, 0xc6);
-	colourUnSel = wxColour(0, 0, 0);
+	m_colourBG    = wxColour(0xff, 0xff, 0xc6);
+	m_colourUnSel = wxColour(0, 0, 0);
 #else
-	colourBG = wxColour(0xff, 0xff, 0xff);
-	colourUnSel = wxColour(0x80, 0x80, 0x80);
+	m_colourBG    = wxColour(0xff, 0xff, 0xff);
+	m_colourUnSel = wxColour(0x80, 0x80, 0x80);
 #endif
 
-	colourSel = wxColour(0, 0, 0x80);
-	colourShade = wxColour(0, 0, 0);
-	colourLight = wxColour(0xc0, 0xc0, 0xc0);
-
-	clickPlace = 0;
+	m_colourSel    = wxColour(0, 0, 0x80);
+	m_colourShade  = wxColour(0, 0, 0);
+	m_colourLight  = wxColour(0xc0, 0xc0, 0xc0);
 }
 
 ibCallTip::~ibCallTip()
@@ -66,15 +46,15 @@ static bool IsArrowCharacter(char ch)
 // We ignore tabs unless a tab width has been set.
 bool ibCallTip::IsTabCharacter(const char& ch) const
 {
-	return (tabSize > 0) && (ch == '\t');
+	return (m_tabSize > 0) && (ch == '\t');
 }
 
 int ibCallTip::NextTabPos(int x) const
 {
-	if (tabSize > 0) {              // paranoia... not called unless this is true
-		x -= insetX;                // position relative to text
-		x = (x + tabSize) / tabSize;  // tab "number"
-		return tabSize * x + insetX;  // position of next tab
+	if (m_tabSize > 0) {              // paranoia... not called unless this is true
+		x -= m_insetX;                // position relative to text
+		x = (x + m_tabSize) / m_tabSize;  // tab "number"
+		return m_tabSize * x + m_insetX;  // position of next tab
 	}
 	else {
 		return x + 1;                 // arbitrary
@@ -113,27 +93,24 @@ void ibCallTip::DrawChunk(wxDC& dc, int& x, const char* s,
 		int endSeg = ends[seg];
 		if (endSeg > startSeg) {
 			if (IsArrowCharacter(s[startSeg])) {
-				xEnd = x + widthArrow;
+				xEnd = x + m_widthArrow;
 				bool upArrow = s[startSeg] == '\001';
 				rcClient.SetLeft(x);
 				rcClient.SetRight(xEnd);
 				if (draw) {
-					const int halfWidth = widthArrow / 2 - 3;
+					const int halfWidth = m_widthArrow / 2 - 3;
 					const int quarterWidth = halfWidth / 2;
-					const int centreX = x + widthArrow / 2 - 1;
+					const int centreX = x + m_widthArrow / 2 - 1;
 					const int centreY = static_cast<int>(rcClient.GetTop() + rcClient.GetBottom()) / 2;
 
-					//dc.FillRectangle(rcClient, colourBG);
-					dc.SetBrush(wxBrush(colourBG));
+					dc.SetBrush(wxBrush(m_colourBG));
 					dc.SetPen(*wxTRANSPARENT_PEN);
 					dc.DrawRectangle(rcClient);
 
 					wxRect rcClientInner(rcClient.GetLeft() + 1, rcClient.GetTop() + 1,
 						rcClient.GetRight() - 2, rcClient.GetBottom() - 1);
 
-					//dc.FillRectangle(rcClientInner, colourUnSel);
-
-					dc.SetBrush(wxBrush(colourUnSel));
+					dc.SetBrush(wxBrush(m_colourUnSel));
 					dc.SetPen(*wxTRANSPARENT_PEN);
 					dc.DrawRectangle(rcClientInner);
 
@@ -144,9 +121,8 @@ void ibCallTip::DrawChunk(wxDC& dc, int& x, const char* s,
 							wxPoint(centreX, centreY - halfWidth + quarterWidth),
 						};
 
-						//dc.Polygon(pts, ELEMENTS(pts), colourBG, colourBG);
-						dc.SetPen(wxPen(colourBG));
-						dc.SetBrush(wxBrush(colourBG));
+						dc.SetPen(wxPen(m_colourBG));
+						dc.SetBrush(wxBrush(m_colourBG));
 						dc.DrawPolygon(3, pts);
 					}
 					else {            // Down arrow
@@ -156,21 +132,20 @@ void ibCallTip::DrawChunk(wxDC& dc, int& x, const char* s,
 							wxPoint(centreX, centreY + halfWidth - quarterWidth),
 						};
 
-						//dc.Polygon(pts, ELEMENTS(pts), colourBG, colourBG);	
-						dc.SetPen(wxPen(colourBG));
-						dc.SetBrush(wxBrush(colourBG));
+						dc.SetPen(wxPen(m_colourBG));
+						dc.SetBrush(wxBrush(m_colourBG));
 						dc.DrawPolygon(3, pts);
 
 					}
 				}
-				offsetMain = xEnd;
+				m_offsetMain = xEnd;
 				if (upArrow)
 				{
-					rectUp = rcClient;
+					m_rectUp = rcClient;
 				}
 				else
 				{
-					rectDown = rcClient;
+					m_rectDown = rcClient;
 				}
 			}
 			else if (IsTabCharacter(s[startSeg]))
@@ -179,9 +154,7 @@ void ibCallTip::DrawChunk(wxDC& dc, int& x, const char* s,
 			}
 			else
 			{
-				//xEnd = x + RoundXYPosition(dc.WidthText(font, s + startSeg, endSeg - startSeg));
-
-				dc.SetFont(font);
+				dc.SetFont(m_font);
 				int w, h;
 				dc.GetTextExtent(wxString::FromUTF8(s + startSeg, endSeg - startSeg), &w, &h);
 
@@ -191,17 +164,14 @@ void ibCallTip::DrawChunk(wxDC& dc, int& x, const char* s,
 				{
 					rcClient.SetLeft(x);
 					rcClient.SetRight(xEnd);
-					//dc.DrawTextTransparent(rcClient, font, static_cast<float>(ytext),
-					//	s + startSeg, endSeg - startSeg,
-					//	highlight ? colourSel : colourUnSel);
 
-					dc.SetFont(font);
-					dc.SetTextForeground(highlight ? colourSel : colourUnSel);
+					dc.SetFont(m_font);
+					dc.SetTextForeground(highlight ? m_colourSel : m_colourUnSel);
 					dc.SetBackgroundMode(wxBRUSHSTYLE_TRANSPARENT);
 
 					// ybase is where the baseline should be, but wxWin uses the upper left
 					// corner, so I need to calculate the real position for the text...
-					dc.DrawText(wxString::FromUTF8(s, len), rcClient.GetLeft(), static_cast<float>(ytext) - font.GetAscent());
+					dc.DrawText(wxString::FromUTF8(s, len), rcClient.GetLeft(), static_cast<float>(ytext) - m_font.GetAscent());
 					dc.SetBackgroundMode(wxBRUSHSTYLE_SOLID);
 				}
 			}
@@ -221,21 +191,20 @@ int ibCallTip::PaintContents(wxDC& dc, bool draw)
 	wxRect rcClient(0.0f, 0.0f, rcClientSize.GetRight(), rcClientSize.GetBottom());
 
 	// To make a nice small call tip wxWindow, it is only sized to fit most normal characters without accents
-	int ascent = RoundXYPosition(font.GetAscent() - 0);
+	int ascent = RoundXYPosition(m_font.GetAscent() - 0);
 
 	// For each line...
 	// Draw the definition in three parts: before highlight, highlighted, after highlight
 	int ytext = static_cast<int>(rcClient.GetTop()) + ascent + 1;
 
-	//rcClient.SetBottom(ytext + dc.Descent(font) + 1;
-	dc.SetFont(font);
+	dc.SetFont(m_font);
 
 	int w, h, d, e;
 	dc.GetTextExtent(EXTENT_TEST, &w, &h, &d, &e);
 
 	rcClient.SetBottom(ytext + d + 1);
 
-	const char* chunkVal = val.c_str();
+	const char* chunkVal = m_val.c_str();
 	bool moreChunks = true;
 	int maxWidth = 0;
 
@@ -247,18 +216,18 @@ int ibCallTip::PaintContents(wxDC& dc, bool draw)
 			chunkEnd = chunkVal + strlen(chunkVal);
 			moreChunks = false;
 		}
-		int chunkOffset = static_cast<int>(chunkVal - val.c_str());
+		int chunkOffset = static_cast<int>(chunkVal - m_val.c_str());
 		int chunkLength = static_cast<int>(chunkEnd - chunkVal);
 		int chunkEndOffset = chunkOffset + chunkLength;
-		int thisStartHighlight = std::max(startHighlight, chunkOffset);
+		int thisStartHighlight = std::max(m_startHighlight, chunkOffset);
 		thisStartHighlight = std::min(thisStartHighlight, chunkEndOffset);
 		thisStartHighlight -= chunkOffset;
-		int thisEndHighlight = std::max(endHighlight, chunkOffset);
+		int thisEndHighlight = std::max(m_endHighlight, chunkOffset);
 		thisEndHighlight = std::min(thisEndHighlight, chunkEndOffset);
 		thisEndHighlight -= chunkOffset;
 		rcClient.SetTop(ytext - ascent - 1);
 
-		int x = insetX;     // start each line at this inset
+		int x = m_insetX;     // start each line at this inset
 
 		DrawChunk(dc, x, wxString(chunkVal), 0, thisStartHighlight,
 			ytext, rcClient, false, draw);
@@ -268,8 +237,8 @@ int ibCallTip::PaintContents(wxDC& dc, bool draw)
 			ytext, rcClient, false, draw);
 
 		chunkVal = chunkEnd + 1;
-		ytext += lineHeight;
-		rcClient.SetBottom(rcClient.GetBottom() + lineHeight);
+		ytext += m_lineHeight;
+		rcClient.SetBottom(rcClient.GetBottom() + m_lineHeight);
 		maxWidth = std::max(maxWidth, x);
 	}
 
@@ -278,7 +247,7 @@ int ibCallTip::PaintContents(wxDC& dc, bool draw)
 
 void ibCallTip::PaintCT(wxDC& dc)
 {
-	if (val.empty())
+	if (m_val.empty())
 		return;
 
 	// Fill the entire backing bitmap. The previous version threaded the
@@ -289,11 +258,11 @@ void ibCallTip::PaintCT(wxDC& dc)
 	// is default-initialized to black on MSW GDI).
 	const wxSize sz = m_callTip->GetClientSize();
 
-	dc.SetBrush(wxBrush(colourBG));
+	dc.SetBrush(wxBrush(m_colourBG));
 	dc.SetPen(*wxTRANSPARENT_PEN);
 	dc.DrawRectangle(0, 0, sz.x, sz.y);
 
-	offsetMain = insetX;    // initial alignment assuming no arrows
+	m_offsetMain = m_insetX;    // initial alignment assuming no arrows
 	PaintContents(dc, true);
 
 #ifndef __APPLE__
@@ -305,7 +274,7 @@ void ibCallTip::PaintCT(wxDC& dc)
 	const int xMax = sz.x - 1;
 	const int yMax = sz.y - 1;
 
-	dc.SetPen(wxPen(colourLight));
+	dc.SetPen(wxPen(m_colourLight));
 	dc.DrawLine(0,    yMax, xMax, yMax);  // bottom
 	dc.DrawLine(xMax, yMax, xMax, 0);     // right
 	dc.DrawLine(xMax, 0,    0,    0);     // top
@@ -316,18 +285,18 @@ void ibCallTip::PaintCT(wxDC& dc)
 
 void ibCallTip::MouseClick(wxPoint pt)
 {
-	clickPlace = 0;
+	m_clickPlace = 0;
 
-	if (rectUp.Contains(pt))
-		clickPlace = 1;
+	if (m_rectUp.Contains(pt))
+		m_clickPlace = 1;
 
-	if (rectDown.Contains(pt))
-		clickPlace = 2;
+	if (m_rectDown.Contains(pt))
+		m_clickPlace = 2;
 }
 
 bool ibCallTip::Active() const
 {
-	return inCallTipMode;
+	return m_inCallTipMode;
 }
 
 void ibCallTip::Show(int currentPos, const wxString& sTitleText)
@@ -337,8 +306,8 @@ void ibCallTip::Show(int currentPos, const wxString& sTitleText)
 		wxDELETE(m_evtHandler);
 	}
 
-	clickPlace = 0;
-	val = sTitleText;
+	m_clickPlace = 0;
+	m_val = sTitleText;
 
 	m_callTip = new wxSTCCallTip(m_owner, this);
 
@@ -350,7 +319,7 @@ void ibCallTip::Show(int currentPos, const wxString& sTitleText)
 	m_evtHandler->Bind(wxEVT_KILL_FOCUS, &ibCallTip::OnProcessFocus, this);
 	m_evtHandler->Bind(wxEVT_CHILD_FOCUS, &ibCallTip::OnProcessChildFocus, this);
 
-	//on sizing 
+	//on sizing
 	m_evtHandler->Bind(wxEVT_SIZE, &ibCallTip::OnProcessSize, this);
 	m_evtHandler->Bind(wxEVT_SIZING, &ibCallTip::OnProcessSize, this);
 
@@ -370,45 +339,45 @@ void ibCallTip::Show(int currentPos, const wxString& sTitleText)
 	wxPoint pt = m_owner->PointFromPosition(currentPos);
 	int textHeight = m_owner->TextHeight(m_owner->GetCurrentLine());
 
-	wxBitmap m_bitmap(1, 1);
-	wxMemoryDC dc(m_bitmap);
+	wxBitmap bitmap(1, 1);
+	wxMemoryDC dc(bitmap);
 
-	startHighlight = 0;
-	endHighlight = 0;
-	inCallTipMode = true;
-	posStartCallTip = currentPos;
+	m_startHighlight = 0;
+	m_endHighlight = 0;
+	m_inCallTipMode = true;
+	m_posStartCallTip = currentPos;
 
-	font = wxFontWithAscent(m_owner->StyleGetFont(wxSTC_STYLE_DEFAULT));
-	dc.SetFont(font);
+	// Match the editor's currently displayed font size (base + zoom delta);
+	// see ibAutoComplete::Start for the same pattern.
+	wxFont baseFont = m_owner->StyleGetFont(wxSTC_STYLE_DEFAULT);
+	baseFont.SetPointSize(std::max(1, baseFont.GetPointSize() + m_owner->GetZoom()));
+	m_font = wxFontWithAscent(baseFont);
+	dc.SetFont(m_font);
 
 	// Look for multiple lines in the text
 	// Only support \n here - simply means container must avoid \r!
 	int numLines = 1;
 	const char* newline;
-	const char* look = val.c_str();
-	rectUp = wxRect(0, 0, 0, 0);
-	rectDown = wxRect(0, 0, 0, 0);
-	offsetMain = insetX;            // changed to right edge of any arrows
-	int width_ = PaintContents(dc, false) + insetX;
+	const char* look = m_val.c_str();
+	m_rectUp = wxRect(0, 0, 0, 0);
+	m_rectDown = wxRect(0, 0, 0, 0);
+	m_offsetMain = m_insetX;            // changed to right edge of any arrows
+	int width_ = PaintContents(dc, false) + m_insetX;
 	while ((newline = strchr(look, '\n')) != nullptr)
 	{
 		look = newline + 1;
 		numLines++;
 	}
 
-	//lineHeight = RoundXYPosition(dc.Height(font));
-	lineHeight = RoundXYPosition(dc.GetCharHeight() + 1);// rectangle is aligned to the right edge of the last arrow encountered in
+	m_lineHeight = RoundXYPosition(dc.GetCharHeight() + 1);
 
-	// The returned
-	// rectangle is aligned to the right edge of the last arrow encountered in
-	// the tip text, else to the tip text left edge.
-	int height_ = lineHeight * numLines + borderHeight * 2;
+	// The returned rectangle is aligned to the right edge of the last
+	// arrow encountered in the tip text, else to the tip text left edge.
+	int height_ = m_lineHeight * numLines + m_borderHeight * 2;
 
-	//wxRect rc = { pt.x - offsetMain, pt.y + verticalOffset + textHeight, (pt.x + width_ - offsetMain) - (pt.x - offsetMain), (pt.y + verticalOffset + textHeight + height_) - (pt.y + verticalOffset + textHeight) };
-	wxRect rc = { pt.x + offsetMain, pt.y - verticalOffset - height_, (pt.x + width_ + offsetMain) - (pt.x + offsetMain), (pt.y - verticalOffset) - (pt.y + verticalOffset - height_) };
+	wxRect rc = { pt.x + m_offsetMain, pt.y - m_verticalOffset - height_, (pt.x + width_ + m_offsetMain) - (pt.x + m_offsetMain), (pt.y - m_verticalOffset) - (pt.y + m_verticalOffset - height_) };
 
-	// If the call-tip window would be out of the client
-	// space
+	// If the call-tip window would be out of the client space
 	wxSize sz = m_owner->GetClientSize();
 	wxRect rcClient = { 0, 0, sz.x, sz.y };
 
@@ -435,7 +404,7 @@ void ibCallTip::Show(int currentPos, const wxString& sTitleText)
 	if (position.x < displayRect.GetLeft())
 		position.x = displayRect.GetLeft();
 
-	dc.SetFont(font);
+	dc.SetFont(m_font);
 
 	const int width = rc.width;
 	if (width > displayRect.GetWidth())
@@ -458,7 +427,7 @@ void ibCallTip::Show(int currentPos, const wxString& sTitleText)
 
 void ibCallTip::Cancel()
 {
-	inCallTipMode = false;
+	m_inCallTipMode = false;
 
 	if (m_callTip)
 	{
@@ -472,10 +441,10 @@ void ibCallTip::Cancel()
 void ibCallTip::SetHighlight(int start, int end)
 {
 	// Avoid flashing by checking something has really changed
-	if ((start != startHighlight) || (end != endHighlight))
+	if ((start != m_startHighlight) || (end != m_endHighlight))
 	{
-		startHighlight = start;
-		endHighlight = (end > start) ? end : start;
+		m_startHighlight = start;
+		m_endHighlight = (end > start) ? end : start;
 		if (m_callTip)
 		{
 			m_callTip->Refresh(false);
@@ -487,21 +456,21 @@ void ibCallTip::SetHighlight(int start, int end)
 // use of the STYLE_CALLTIP.
 void ibCallTip::SetTabSize(int tabSz)
 {
-	tabSize = tabSz;
-	useStyleCallTip = true;
+	m_tabSize = tabSz;
+	m_useStyleCallTip = true;
 }
 
 // It might be better to have two access functions for this and to use
 // them for all settings of colours.
 void ibCallTip::SetForeBack(const wxColour& fore, const wxColour& back)
 {
-	colourBG = back;
-	colourUnSel = fore;
+	m_colourBG = back;
+	m_colourUnSel = fore;
 }
 
 bool ibCallTip::CallEvent(wxEvent& event)
 {
-	if (!inCallTipMode) return false;
+	if (!m_inCallTipMode) return false;
 	bool result = m_evtHandler->ProcessEvent(event);
 	if (m_evtHandler) return result;
 	return false;
@@ -537,4 +506,3 @@ void ibCallTip::OnProcessMouse(wxMouseEvent& event)
 {
 	if (event.GetEventType() != wxEVT_LEFT_UP) Cancel();
 }
-

@@ -1,4 +1,4 @@
-﻿////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : autoComplete window 
 ////////////////////////////////////////////////////////////////////////////
@@ -18,12 +18,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ibCodeEditor::ibCodeEditor()
-	: wxStyledTextCtrl(), m_document(nullptr), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false), m_lineBreakpoint(wxNOT_FOUND)
+	: wxStyledTextCtrl(), m_ac(this), m_ct(this), m_fp(this)
 {
 }
 
 ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
-	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false), m_lineBreakpoint(wxNOT_FOUND)
+	: wxStyledTextCtrl(parent, id, pos, size, style, name),
+	  m_document(document), m_ac(this), m_ct(this), m_fp(this)
 {
 	// initialize styles
 	StyleClearAll();
@@ -42,6 +43,27 @@ ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowI
 
 	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(ibCodeEditor::OnKeyDown), nullptr, this);
 	Connect(wxEVT_MOTION, wxMouseEventHandler(ibCodeEditor::OnMouseMove), nullptr, this);
+
+	// On zoom step the line height jumps immediately while STC's per-page
+	// width cache repaints column widths only on the next scroll. Re-fit
+	// the margins (line-number / breakpoint / fold) against the now-
+	// zoomed text metrics and force a single repaint — keeps vertical
+	// and horizontal scaling visually in sync without re-running the
+	// lexer over the whole document on every wheel tick.
+	Bind(wxEVT_STC_ZOOM, [this](wxStyledTextEvent& evt) {
+		if (GetMarginWidth(DEF_LINENUMBER_ID) > 0)
+			SetMarginWidth(DEF_LINENUMBER_ID, TextWidth(wxSTC_STYLE_LINENUMBER, "_9999999"));
+
+		const int symbolMargin = std::max(FromDIP(16), TextHeight(0));
+		if (GetMarginWidth(DEF_BREAKPOINT_ID) > 0)
+			SetMarginWidth(DEF_BREAKPOINT_ID, symbolMargin);
+		if (GetMarginWidth(DEF_FOLDING_ID) > 0)
+			SetMarginWidth(DEF_FOLDING_ID, symbolMargin);
+
+		Refresh();
+		Update();
+		evt.Skip();
+	});
 
 	//set edge mode
 	SetEdgeMode(wxSTC_EDGE_MULTILINE);
@@ -161,10 +183,10 @@ void ibCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
 
 void ibCodeEditor::SetEditorSettings(const ibEditorSettings& settings)
 {
-	m_bIndentationSize = settings.GetIndentSize();
+	m_indentationSize = settings.GetIndentSize();
 
-	SetIndent(m_bIndentationSize);
-	SetTabWidth(m_bIndentationSize);
+	SetIndent(m_indentationSize);
+	SetTabWidth(m_indentationSize);
 
 	bool useTabs = settings.GetUseTabs();
 	bool showWhiteSpace = settings.GetShowWhiteSpace();
@@ -179,38 +201,33 @@ void ibCodeEditor::SetEditorSettings(const ibEditorSettings& settings)
 
 	if (settings.GetShowLineNumbers()) {
 		// Figure out how wide the margin needs to be do display
-		// the most number of linqes we'd reasonbly have.
+		// the most m_number of linqes we'd reasonbly have.
 		SetMarginWidth(DEF_LINENUMBER_ID, TextWidth(wxSTC_STYLE_LINENUMBER, "_9999999"));
 	}
 
-	// set margin as unused
+	// Symbol margins (breakpoint + fold) sized off the current line
+	// height so they scale together with the editor zoom — using a
+	// fixed FromDIP(16) baseline left the gutter too narrow when the
+	// font was zoomed in, with icons floating in a tiny strip next to
+	// large text. The wxEVT_STC_ZOOM handler refreshes the same widths
+	// on every wheel tick.
+	const int symbolMargin = std::max(FromDIP(16), TextHeight(0));
+
 	SetMarginType(DEF_BREAKPOINT_ID, wxSTC_MARGIN_SYMBOL);
 	SetMarginMask(DEF_BREAKPOINT_ID, ~(1024 | 256 | 512 | 128 | 64 | wxSTC_MASK_FOLDERS));
 	StyleSetBackground(DEF_BREAKPOINT_ID, *wxWHITE);
 
-	SetMarginWidth(DEF_BREAKPOINT_ID, 0);
-	SetMarginSensitive(DEF_BREAKPOINT_ID, false);
-
-	if (true) {
-		int foldingMargin = FromDIP(16);
-		SetMarginWidth(DEF_BREAKPOINT_ID, foldingMargin);
-		SetMarginSensitive(DEF_BREAKPOINT_ID, true);
-	}
+	SetMarginWidth(DEF_BREAKPOINT_ID, symbolMargin);
+	SetMarginSensitive(DEF_BREAKPOINT_ID, true);
 
 	// folding
 	SetMarginType(DEF_FOLDING_ID, wxSTC_MARGIN_SYMBOL);
 	SetMarginMask(DEF_FOLDING_ID, wxSTC_MASK_FOLDERS);
 
-	SetMarginWidth(DEF_FOLDING_ID, 0);
-	SetMarginSensitive(DEF_FOLDING_ID, false);
+	SetMarginWidth(DEF_FOLDING_ID, symbolMargin);
+	SetMarginSensitive(DEF_FOLDING_ID, true);
 
-	if (true) {
-		int foldingMargin = FromDIP(16);
-		SetMarginWidth(DEF_FOLDING_ID, foldingMargin);
-		SetMarginSensitive(DEF_FOLDING_ID, true);
-	}
-
-	m_bEnableAutoComplete = settings.GetEnableAutoComplete();
+	m_enableAutoComplete = settings.GetEnableAutoComplete();
 }
 
 inline wxColour GetInverse(const wxColour& color)
@@ -304,7 +321,7 @@ void ibCodeEditor::SetFontColorSettings(const ibFontColorSettings& settings)
 	StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).foreColor);
 	StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(ibFontColorSettings::DisplayItem_Number).backColor);
 
-	// Apply the full font to the line-number margin, not just its size — otherwise
+	// Apply the full font to the line-m_number margin, not just its size — otherwise
 	// the margin keeps the default monospace face until a style cascade refresh
 	// (e.g. user opens Settings and saves) happens to pull it through.
 	StyleSetFont(wxSTC_STYLE_LINENUMBER, font);
@@ -325,11 +342,11 @@ bool ibCodeEditor::LoadModule()
 			m_precompileModule = new ibPrecompileCode(moduleObject);
 
 			if (IsEditable()) {
-				SetText(moduleObject->GetModuleText()); m_bInitialized = true;
+				SetText(moduleObject->GetModuleText()); m_initialized = true;
 			}
 			else {
 				SetReadOnly(false);
-				SetText(moduleObject->GetModuleText()); m_bInitialized = true;
+				SetText(moduleObject->GetModuleText()); m_initialized = true;
 				SetReadOnly(true);
 			}
 
@@ -518,7 +535,7 @@ void ibCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const
 	ibCodeEditor::StartStyling(fromPos); //from here
 	ibCodeEditor::SetStyling(toPos - fromPos, wxSTC_C_COMMENT); //with that length and style -> cleared
 
-	wxString strWord;
+	wxString word;
 	unsigned int currPos = fromPos;
 
 	while (!m_tc.IsEnd()) {
@@ -528,10 +545,10 @@ void ibCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const
 		currPos = fromPos + m_tc.GetCurrentPos();
 #endif 
 		if (m_tc.IsWord()) {
-			(void)m_tc.GetWord(strWord, false, true);
-			const short keyWord = ibTranslateCode::IsKeyWord(strWord);
+			(void)m_tc.GetWord(word, false, true);
+			const short keyWord = ibTranslateCode::IsKeyWord(word);
 			if (keyWord != wxNOT_FOUND) {
-				if (strWord.Left(1) == '#') {
+				if (word.Left(1) == '#') {
 					appendStyle(wxSTC_C_PREPROCESSOR);
 				}
 				else {
@@ -652,7 +669,7 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 		(modFlags & (wxSTC_MOD_DELETETEXT)) == 0)
 		return;
 
-	if (m_bInitialized) {
+	if (m_initialized) {
 
 		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
 
@@ -680,9 +697,9 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 				}
 
 				try {
-#if _USE_OLD_TEXT_PARSER_IN_CODE_EDITOR == 0	
-					const wxString& strPatch = event.GetString();
-					const int str_length = strPatch.Length();
+#if _USE_OLD_TEXT_PARSER_IN_CODE_EDITOR == 0
+					const wxString& patchText = event.GetString();
+					const int str_length = patchText.Length();
 					const int str_utf8_length = event.GetLength();
 					if ((modFlags & (wxSTC_MOD_INSERTTEXT)) != 0) {
 						m_precompileModule->PrepareLexem(line,
@@ -700,7 +717,7 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 							event.m_linesAdded, -str_length);
 #endif
 					}
-#else 
+#else
 					m_precompileModule->PrepareLexem();
 #endif
 				}
@@ -800,9 +817,9 @@ void ibCodeEditor::OnKeyDown(wxKeyEvent& event)
 	}
 	case WXK_NUMPAD_ENTER:
 	case WXK_RETURN: PrepareTABs(); break;
-	case ' ': if (m_bEnableAutoComplete && event.ControlDown()) LoadAutoComplete(); event.Skip(); break;
-	case '9': if (m_bEnableAutoComplete && event.ShiftDown()) LoadCallTip(); event.Skip(); break;
-	case '0': if (m_bEnableAutoComplete && event.ShiftDown()) m_ct.Cancel(); event.Skip(); break;
+	case ' ': if (m_enableAutoComplete && event.ControlDown()) LoadAutoComplete(); event.Skip(); break;
+	case '9': if (m_enableAutoComplete && event.ShiftDown()) LoadCallTip(); event.Skip(); break;
+	case '0': if (m_enableAutoComplete && event.ShiftDown()) m_ct.Cancel(); event.Skip(); break;
 
 	case WXK_F8:
 	{

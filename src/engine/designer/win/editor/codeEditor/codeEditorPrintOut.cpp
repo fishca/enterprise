@@ -21,7 +21,7 @@ ibCodeEditorPrintout::ibCodeEditorPrintout(wxStyledTextCtrl*edit, const wxString
 bool ibCodeEditorPrintout::OnPrintPage(int page) {
 
 	wxDC *dc = GetDC();
-	if (!dc) 
+	if (!dc)
 		return false;
 
 	// scale DC

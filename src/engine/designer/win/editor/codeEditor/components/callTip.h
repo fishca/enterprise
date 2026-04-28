@@ -11,65 +11,25 @@ class wxSTCCallTip;
 
 /**
  */
-class ibCallTip 
+class ibCallTip
 {
-	int startHighlight;    // character offset to start and...
-	int endHighlight;      // ...end of highlighted text
-
-	std::string val;
-	wxFontWithAscent font;
-	wxRect rectUp;      // rectangle of last up angle in the tip
-	wxRect rectDown;    // rectangle of last down arrow in the tip
-
-	int lineHeight;         // vertical line spacing
-	int offsetMain;         // The alignment point of the call tip
-	int tabSize;            // Tab size in pixels, <=0 no TAB expand
-	bool useStyleCallTip;   // if true, STYLE_CALLTIP should be used
-
-	wxStyledTextCtrl *m_owner;
-
-	// Private so ibCallTip objects can not be copied
-	ibCallTip(const ibCallTip &);
-
-	void DrawChunk(wxDC &dc, int &x, const char *s,
-		int posStart, int posEnd, int ytext, wxRect rcClient,
-		bool highlight, bool draw);
-	int PaintContents(wxDC &dc, bool draw);
-	bool IsTabCharacter(const char &c) const;
-	int NextTabPos(int x) const;
-
 public:
-	
-	wxSTCCallTip *m_callTip;
-	wxEvtHandler *m_evtHandler;
 
-	bool inCallTipMode;
-	int posStartCallTip;
-	wxColour colourBG;
-	wxColour colourUnSel;
-	wxColour colourSel;
-	wxColour colourShade;
-	wxColour colourLight;
-
-	int clickPlace;
-
-	int insetX; // text inset in x from calltip border
-	int widthArrow;
-	int borderHeight;
-	int verticalOffset; // pixel offset up or down of the calltip with respect to the line
-
-	ibCallTip(wxStyledTextCtrl *owner);
+	ibCallTip(wxStyledTextCtrl* owner);
 	~ibCallTip();
 
-	void PaintCT(wxDC &dc);
+	// Disable copy — owns m_callTip / m_evtHandler.
+	ibCallTip(const ibCallTip&) = delete;
+	ibCallTip& operator=(const ibCallTip&) = delete;
 
+	void PaintCT(wxDC& dc);
 	void MouseClick(wxPoint pt);
 
 	/// Is the auto calltip list displayed?
 	bool Active() const;
-	
+
 	/// Setup the calltip and return a rectangle of the area required.
-	void Show(int currentPos, const wxString &defn);
+	void Show(int currentPos, const wxString& defn);
 	void Cancel();
 
 	/// Set a range of characters to be displayed in a highlight style.
@@ -80,12 +40,12 @@ public:
 	void SetTabSize(int tabSz);
 
 	/// Used to determine which STYLE_xxxx to use for call tip information
-	bool UseStyleCallTip() const { return useStyleCallTip; }
+	bool UseStyleCallTip() const { return m_useStyleCallTip; }
 
 	// Modify foreground and background colours
-	void SetForeBack(const wxColour &fore, const wxColour &back);
+	void SetForeBack(const wxColour& fore, const wxColour& back);
 
-	///Process event 
+	///Process event
 	bool CallEvent(wxEvent& event);
 
 	void OnKeyDown(wxKeyEvent& event);
@@ -94,11 +54,54 @@ public:
 	void OnProcessChildFocus(wxChildFocusEvent& event);
 	void OnProcessSize(wxSizeEvent& event);
 	void OnProcessMouse(wxMouseEvent& event);
+
+private:
+
+	void DrawChunk(wxDC& dc, int& x, const char* s,
+		int posStart, int posEnd, int ytext, wxRect rcClient,
+		bool highlight, bool draw);
+	int  PaintContents(wxDC& dc, bool draw);
+	bool IsTabCharacter(const char& c) const;
+	int  NextTabPos(int x) const;
+
+	int               m_startHighlight   = 0;     // character offset to start and...
+	int               m_endHighlight     = 0;     // ...end of highlighted text
+
+	std::string       m_val;
+	wxFontWithAscent  m_font;
+	wxRect            m_rectUp           = wxRect(0, 0, 0, 0);  // last up arrow rectangle in the tip
+	wxRect            m_rectDown         = wxRect(0, 0, 0, 0);  // last down arrow rectangle in the tip
+
+	int               m_lineHeight       = 1;     // vertical line spacing
+	int               m_offsetMain       = 0;     // The alignment point of the call tip
+	int               m_tabSize          = 0;     // Tab size in pixels, <=0 no TAB expand
+	bool              m_useStyleCallTip  = false; // if true, STYLE_CALLTIP should be used
+
+	wxStyledTextCtrl* m_owner            = nullptr;
+
+	wxSTCCallTip*     m_callTip          = nullptr;
+	wxEvtHandler*     m_evtHandler       = nullptr;
+
+	bool              m_inCallTipMode    = false;
+	int               m_posStartCallTip  = 0;
+
+	wxColour          m_colourBG;
+	wxColour          m_colourUnSel;
+	wxColour          m_colourSel;
+	wxColour          m_colourShade;
+	wxColour          m_colourLight;
+
+	int               m_clickPlace       = 0;
+
+	int               m_insetX           = 5;     // text inset in x from calltip border
+	int               m_widthArrow       = 14;
+	int               m_borderHeight     = 2;     // border + empty line at top & bottom
+	int               m_verticalOffset   = 1;     // pixel offset of the calltip vs the line
 };
 
 #include "helpers/popupWnd.h"
 
-class wxSTCCallTip : public ibOESPopupWindow 
+class wxSTCCallTip : public ibOESPopupWindow
 {
 public:
 	wxSTCCallTip(wxWindow* parent, ibCallTip* ct) :
@@ -121,12 +124,12 @@ public:
 	void DrawBack(const wxSize& size)
 	{
 		m_back = wxBitmap(size);
-		
+
 		wxMemoryDC mem(m_back);
 		m_ct->PaintCT(mem);
 	}
 
-	virtual void Refresh(bool eraseBg = true, const wxRect *rect = nullptr) override
+	virtual void Refresh(bool eraseBg = true, const wxRect* rect = nullptr) override
 	{
 		if (rect == nullptr)
 			DrawBack(GetSize());
@@ -177,8 +180,8 @@ public:
 
 private:
 
-	ibCallTip*      m_ct;
-	wxBitmap      m_back;
+	ibCallTip* m_ct;
+	wxBitmap   m_back;
 };
 
 #endif

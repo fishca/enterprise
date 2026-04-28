@@ -11,25 +11,18 @@
 #include <vector>
 #include <algorithm>
 
-ibAutoComplete::ibAutoComplete(wxStyledTextCtrl* textCtrl) :
-	active(false),
-	lb(nullptr),
-	m_visualData(new ibListBoxVisualData(5)),
-	m_evtHandler(nullptr),
-	m_owner(textCtrl),
-	posStart(0),
-	startLen(0),
-	cancelAtStartPos(true),
-	dropRestOfWord(false)
+ibAutoComplete::ibAutoComplete(wxStyledTextCtrl* textCtrl)
+	: m_visualData(new ibListBoxVisualData(5)),
+	  m_owner(textCtrl)
 {
 }
 
 ibAutoComplete::~ibAutoComplete()
 {
-	if (lb)
+	if (m_listBoxWin)
 	{
-		lb->GetListBox()->Destroy();
-		lb->Destroy();
+		m_listBoxWin->GetListBox()->Destroy();
+		m_listBoxWin->Destroy();
 	}
 
 	delete m_visualData;
@@ -37,31 +30,46 @@ ibAutoComplete::~ibAutoComplete()
 
 bool ibAutoComplete::Active() const
 {
-	return active;
+	return m_active;
 }
 
-void ibAutoComplete::Start(const wxString& strCurWord,
-	int position, int startLen_,
+void ibAutoComplete::Start(const wxString& currentWord,
+	int position, int startLen,
 	int lineHeight)
 {
-	if (active) Cancel();
+	if (m_active) Cancel();
 
-	lb = new ibOESListBoxWin(m_owner, m_visualData, m_owner->TextHeight(m_owner->GetCurrentLine()));
-	lb->SetSize(225, 200);
+	m_listBoxWin = new ibOESListBoxWin(m_owner, m_visualData, m_owner->TextHeight(m_owner->GetCurrentLine()));
 
-	active = true;
-	startLen = startLen_;
-	posStart = position;
+	// Scale the dropdown box together with the editor's zoom so the
+	// listbox stays proportional to the font — at default zoom the box
+	// is 225x200; zooming in/out grows or shrinks it by the same factor
+	// the font does (clamped against a 1pt floor).
+	const int basePts = std::max(1, m_owner->StyleGetFont(wxSTC_STYLE_DEFAULT).GetPointSize());
+	const int actualPts = std::max(1, basePts + m_owner->GetZoom());
+	const double scale = double(actualPts) / double(basePts);
+	m_listBoxWin->SetSize(int(225 * scale), int(200 * scale));
 
-	strCurrentWord = strCurWord;
+	m_active = true;
+	m_startLen = startLen;
+	m_posStart = position;
 
-	ibListBox* m_listBox = lb->GetListBox();
-	m_listBox->SetListBoxFont(m_owner->StyleGetFont(wxSTC_STYLE_DEFAULT));
+	m_currentWord = currentWord;
 
-	m_listBox->Bind(wxEVT_LISTBOX, &ibAutoComplete::OnSelection, this);
-	m_listBox->Bind(wxEVT_LISTBOX_DCLICK, &ibAutoComplete::OnSelection, this);
+	ibListBox* listBox = m_listBoxWin->GetListBox();
 
-	m_listBox->Bind(wxEVT_MOTION, &ibAutoComplete::OnMouseMotion, this);
+	// Match the editor's currently displayed font size — STC stores the
+	// base font in StyleGetFont and renders it scaled by GetZoom(). Without
+	// applying the zoom delta, the dropdown stays at the unzoomed size and
+	// looks tiny next to a zoomed-in editor (or oversized when zoomed out).
+	wxFont font = m_owner->StyleGetFont(wxSTC_STYLE_DEFAULT);
+	font.SetPointSize(std::max(1, font.GetPointSize() + m_owner->GetZoom()));
+	listBox->SetListBoxFont(font);
+
+	listBox->Bind(wxEVT_LISTBOX, &ibAutoComplete::OnSelection, this);
+	listBox->Bind(wxEVT_LISTBOX_DCLICK, &ibAutoComplete::OnSelection, this);
+
+	listBox->Bind(wxEVT_MOTION, &ibAutoComplete::OnMouseMotion, this);
 
 	m_evtHandler = new wxEvtHandler;
 	m_evtHandler->Bind(wxEVT_KEY_DOWN, &ibAutoComplete::OnKeyDown, this);
@@ -71,7 +79,7 @@ void ibAutoComplete::Start(const wxString& strCurWord,
 	m_evtHandler->Bind(wxEVT_KILL_FOCUS, &ibAutoComplete::OnProcessFocus, this);
 	m_evtHandler->Bind(wxEVT_CHILD_FOCUS, &ibAutoComplete::OnProcessChildFocus, this);
 
-	//on sizing 
+	//on sizing
 	m_evtHandler->Bind(wxEVT_SIZE, &ibAutoComplete::OnProcessSize, this);
 	m_evtHandler->Bind(wxEVT_SIZING, &ibAutoComplete::OnProcessSize, this);
 
@@ -90,9 +98,18 @@ void ibAutoComplete::Append(short type, const wxString& strName, const wxString&
 	if (strName.IsEmpty())
 		return;
 
-	if (!strCurrentWord.IsEmpty()) {
-		const wxString &nameUpper = stringUtils::MakeUpper(strName);
-		if (nameUpper.Find(stringUtils::MakeUpper(strCurrentWord.Upper())) < 0)
+	// Filter only against the visible portion of the typed word — strip
+	// control / whitespace chars (`\r`, `\n`, `\t`, spaces). Without the
+	// trim a stray newline / CR that PrepareExpression leaves in
+	// m_currentWord when the caret is on a blank line slips past
+	// IsEmpty() (length > 0), the Upper'd Find sees no match against
+	// real identifiers, and the dropdown ends up empty.
+	wxString filterWord = m_currentWord;
+	filterWord.Trim(true).Trim(false);
+
+	if (!filterWord.IsEmpty()) {
+		const wxString& nameUpper = stringUtils::MakeUpper(strName);
+		if (nameUpper.Find(stringUtils::MakeUpper(filterWord)) < 0)
 			return;
 	}
 
@@ -107,22 +124,22 @@ void ibAutoComplete::Append(short type, const wxString& strName, const wxString&
 
 int ibAutoComplete::GetSelection() const
 {
-	return lb->GetListBox()->GetSelection();
+	return m_listBoxWin->GetListBox()->GetSelection();
 }
 
 wxString ibAutoComplete::GetValue(int item) const
 {
-	return lb->GetListBox()->GetValue(item);
+	return m_listBoxWin->GetListBox()->GetValue(item);
 }
 
 void ibAutoComplete::Show(const wxPoint& position)
 {
-	if (!active) return;
+	if (!m_active) return;
 	if (!m_aKeywords.size()) {
 		Cancel(); return;
 	}
 
-	ibListBox* m_listBox = lb->GetListBox();
+	ibListBox* listBox = m_listBoxWin->GetListBox();
 
 	std::sort(m_aKeywords.begin(), m_aKeywords.end(),
 		[](ibKeywordElement a, ibKeywordElement b) {
@@ -130,33 +147,33 @@ void ibAutoComplete::Show(const wxPoint& position)
 		}
 	);
 
-	lb->SetPosition(position);
+	m_listBoxWin->SetPosition(position);
 
 	for (auto keyword : m_aKeywords)
-		m_listBox->Append(keyword.m_name, keyword.m_type);
+		listBox->Append(keyword.m_name, keyword.m_type);
 
 	if (m_aKeywords.size() == 1) Select(0);
-	else if (lb->Show()) m_listBox->Select(0);
+	else if (m_listBoxWin->Show()) listBox->Select(0);
 }
 
 void ibAutoComplete::Cancel()
 {
-	active = false;
-	strCurrentWord = wxEmptyString;
+	m_active = false;
+	m_currentWord = wxEmptyString;
 	m_aKeywords.clear();
 
-	if (lb) {
-		lb->GetListBox()->Clear();
-		lb->GetListBox()->Destroy();
-		wxDELETE(lb);
+	if (m_listBoxWin) {
+		m_listBoxWin->GetListBox()->Clear();
+		m_listBoxWin->GetListBox()->Destroy();
+		wxDELETE(m_listBoxWin);
 	}
 	wxDELETE(m_evtHandler);
 }
 
 void ibAutoComplete::MoveUp()
 {
-	int count = lb->GetListBox()->Length();
-	int current = lb->GetListBox()->GetSelection();
+	int count = m_listBoxWin->GetListBox()->Length();
+	int current = m_listBoxWin->GetListBox()->GetSelection();
 	current -= 1;
 
 	if (current >= count)
@@ -165,13 +182,13 @@ void ibAutoComplete::MoveUp()
 	if (current < 0)
 		current = 0;
 
-	lb->GetListBox()->Select(current);
+	m_listBoxWin->GetListBox()->Select(current);
 }
 
 void ibAutoComplete::MoveDown()
 {
-	int count = lb->GetListBox()->Length();
-	int current = lb->GetListBox()->GetSelection();
+	int count = m_listBoxWin->GetListBox()->Length();
+	int current = m_listBoxWin->GetListBox()->GetSelection();
 	current += 1;
 
 	if (current >= count)
@@ -180,52 +197,53 @@ void ibAutoComplete::MoveDown()
 	if (current < 0)
 		current = 0;
 
-	lb->GetListBox()->Select(current);
+	m_listBoxWin->GetListBox()->Select(current);
 }
 
 #include "../codeEditor.h"
 
 void ibAutoComplete::Select(int index)
 {
-	wxString sDescription; bool m_bNeedCallTip = false;
+	wxString sDescription;
+	bool needCallTip = false;
 
-	std::vector< ibKeywordElement>::iterator m_selectedKeyword = m_aKeywords.begin() + index;
+	std::vector<ibKeywordElement>::iterator selectedKeyword = m_aKeywords.begin() + index;
 
-	if (m_selectedKeyword != m_aKeywords.end())
+	if (selectedKeyword != m_aKeywords.end())
 	{
-		wxString sTextComplete = m_selectedKeyword->m_name;
-		wxString strShortDescription = m_selectedKeyword->m_shortDescription;
+		wxString textComplete = selectedKeyword->m_name;
+		wxString shortDescription = selectedKeyword->m_shortDescription;
 
-		if (m_selectedKeyword->m_type != eVariable && m_selectedKeyword->m_type != eExportVariable)
+		if (selectedKeyword->m_type != eVariable && selectedKeyword->m_type != eExportVariable)
 		{
-			if (strShortDescription.IsEmpty()) {
-				sTextComplete += "()";
+			if (shortDescription.IsEmpty()) {
+				textComplete += "()";
 			}
 			else {
-				sTextComplete += "(";
-				if (strShortDescription.Find("()") > 0) sTextComplete += ")";
-				else m_bNeedCallTip = true;
+				textComplete += "(";
+				if (shortDescription.Find("()") > 0) textComplete += ")";
+				else needCallTip = true;
 			}
 		}
 
-		m_owner->Replace(posStart - startLen, posStart, sTextComplete);
-		m_owner->SetEmptySelection(posStart - startLen + sTextComplete.ToUTF8().length());
+		m_owner->Replace(m_posStart - m_startLen, m_posStart, textComplete);
+		m_owner->SetEmptySelection(m_posStart - m_startLen + textComplete.ToUTF8().length());
 
-		sDescription = strShortDescription;
+		sDescription = shortDescription;
 	}
 
 	Cancel();
 
-	if (m_bNeedCallTip)
+	if (needCallTip)
 	{
-		ibCodeEditor* m_autoComplete = dynamic_cast<ibCodeEditor*>(m_owner);
-		if (m_autoComplete) m_autoComplete->ShowCallTip(sDescription);
+		ibCodeEditor* autoComplete = dynamic_cast<ibCodeEditor*>(m_owner);
+		if (autoComplete) autoComplete->ShowCallTip(sDescription);
 	}
 }
 
 bool ibAutoComplete::CallEvent(wxEvent& event)
 {
-	if (!active) return false;
+	if (!m_active) return false;
 	bool result = m_evtHandler->ProcessEvent(event);
 	if (m_evtHandler) return result;
 
@@ -258,7 +276,7 @@ void ibAutoComplete::OnSelection(wxCommandEvent& event)
 
 void ibAutoComplete::OnKeyDown(wxKeyEvent& event)
 {
-	ibListBox* m_listBox = lb->GetListBox();
+	ibListBox* listBox = m_listBoxWin->GetListBox();
 
 	switch (event.GetKeyCode())
 	{
@@ -266,7 +284,7 @@ void ibAutoComplete::OnKeyDown(wxKeyEvent& event)
 	case WXK_DOWN: MoveDown(); break;
 	case WXK_NUMPAD_ENTER:
 	case WXK_RETURN:
-		Select(m_listBox->GetSelection());
+		Select(listBox->GetSelection());
 		break;
 	default: Cancel(); break;
 	}
@@ -274,10 +292,10 @@ void ibAutoComplete::OnKeyDown(wxKeyEvent& event)
 
 void ibAutoComplete::OnMouseMotion(wxMouseEvent& event)
 {
-	ibListBox* listBox = lb->GetListBox();
+	ibListBox* listBox = m_listBoxWin->GetListBox();
 	int currentRow = listBox->VirtualHitTest(event.GetY());
 	if (currentRow != wxNOT_FOUND) {
-		std::vector< ibKeywordElement>::iterator selectedKeyword = m_aKeywords.begin() + currentRow;
+		std::vector<ibKeywordElement>::iterator selectedKeyword = m_aKeywords.begin() + currentRow;
 
 		if (selectedKeyword->m_shortDescription.IsEmpty())
 			listBox->SetToolTip(nullptr);

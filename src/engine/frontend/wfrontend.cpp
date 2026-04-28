@@ -23,6 +23,7 @@
 #include "backend/session/session.h"
 #include "backend/session/sessionRegistry.h"
 #include "backend/backend_exception.h"
+#include "backend/databaseLayer/connectionHolder.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseResultSet.h"
@@ -70,9 +71,15 @@ public:
 
 	~SessionManager()
 	{
-		// Signal stop + wake the sweep so program shutdown doesn't
-		// block on the full interval. Clear() below runs OnExit on
-		// every surviving session.
+		StopSweep();
+	}
+
+	// Idempotent — wfrontendShutdown calls this BEFORE appDataDestroy
+	// so the sweep thread can't dereference a torn-down registry on
+	// its next tick. dtor calls it too for the natural process-exit
+	// path.
+	void StopSweep()
+	{
 		{
 			std::lock_guard<std::mutex> lk(m_sweepMtx);
 			m_sweepStop = true;
@@ -304,6 +311,15 @@ private:
 					return;  // stopped
 			}
 
+			// Guard against shutdown that landed between wait and the
+			// registry / metadata accesses below. wfrontendShutdown
+			// destroys appData; if the sweep fires its first call after
+			// that point ibSessionRegistry::Instance()'s assert would
+			// trip and the host crashes during orderly teardown
+			// (debug-spawn wes svr.stop path).
+			if (appData == nullptr)
+				return;
+
 			// 1) Idle eviction.
 			const std::int64_t nowMs = duration_cast<milliseconds>(
 				system_clock::now().time_since_epoch()).count();
@@ -363,10 +379,12 @@ private:
 	{
 		if (activeMetaData == nullptr) return;
 
-		ibConnectionPool* pool = ibApplicationData::GetConnectionPool();
-		if (pool == nullptr) return;
-
-		std::shared_ptr<ibDatabaseLayer> conn = pool->Checkout();
+		// Per-sweep checkout via the metadata-watcher's own holder
+		// identity; static so the same entry is reused across sweeps
+		// (cheaper than Open + Clone every tick). Pool's IsBusy()
+		// guard keeps it exclusive while the result set is iterated.
+		static ibSingleConnectionHolder s_metaWatchHolder;
+		std::shared_ptr<ibDatabaseLayer> conn = s_metaWatchHolder.AcquireFreeConnection();
 		if (conn == nullptr) return;
 
 		wxString currentGuid;
@@ -648,6 +666,11 @@ WFRONTEND_API void wfrontendShutdown()
 	std::lock_guard<std::mutex> lock(g_initMutex);
 	if (!g_initialized.exchange(false))
 		return;
+	// Stop the sweep thread BEFORE destroying appData / the registry.
+	// Otherwise an in-flight tick would access ibSessionRegistry::
+	// Instance() / ConsumeReloadRequest() against a half-torn-down
+	// process and trip the assert in Instance().
+	Sessions().StopSweep();
 	Sessions().Clear();
 	appDataDestroy();
 	g_lastError.clear();
@@ -667,26 +690,62 @@ WFRONTEND_API std::string wfrontendConfigName()
 	return std::string(n.mb_str(wxConvUTF8));
 }
 
+// Stored exit hook (wes hands in `[]() { g_svr->stop(); }`). Fired
+// from the registry OnDisconnect listener wired below: if the wes was
+// spawned with --debug ("Start debugging → Web client" from designer),
+// any WebClient disconnect is treated as "debug session over" — the
+// debug-spawn wes is one-shot and has no reason to outlive its only
+// debug session. Sticky `s_processExitFired` prevents re-entry if
+// further disconnects fire after we've already requested stop.
+static void (*s_processExitHook)() = nullptr;
+static std::atomic<bool> s_processExitFired{false};
+
+// Intra-DLL: callable from ibWebClientSession::OnForceExit (and the
+// OnLastDisconnect listener below). Sticky single-shot via
+// s_processExitFired so a cascade of force-exits during shutdown
+// doesn't re-invoke svr.stop().
+void wfrontendCallProcessExitHook()
+{
+	if (s_processExitFired.exchange(true, std::memory_order_acq_rel))
+		return;
+	if (s_processExitHook != nullptr)
+		s_processExitHook();
+}
+
 WFRONTEND_API void wfrontendSetProcessExitHook(void (*hook)())
 {
-	// Hook parameter accepted for source compatibility, ignored in the
-	// new model — process-level force-exit was removed in favour of
-	// per-session ibSession::Close(true). wes process termination is
-	// driven by main.cpp's signal handlers (Ctrl+C, console close)
-	// directly; designer-side Destroy now kicks one tab rather than
-	// killing the whole wes process.
-	(void)hook;
-	// One-shot wiring of the keep-alive predicate: wes process stays up
-	// while at least one WebClient session is registered against our
-	// WebServer-kind system session. Replaces the pre-2026-04-26
-	// "Count() > 2" heuristic — magic number meant "system + first
-	// browser tab", fragile against any new bookkeeping session
-	// sneaking in.
+	s_processExitHook = hook;
+
 	static bool wired = false;
 	if (!wired) {
+		// Keep-alive predicate: wes process stays up while at least
+		// one WebClient session is registered against the WebServer.
 		ibSessionRegistry::Instance().OnShouldKeepAlive([]() {
 			return ibSessionRegistry::Instance().HasClients();
 		});
+
+		// Last-disconnect listener: in a debug-spawned wes the registry
+		// signals "no live authenticated sessions" once the cascade
+		// from designer's kill-debug + the trailing tab teardown has
+		// drained. That's the right moment to break listen_after_bind
+		// — fire the host's exit hook (svr.stop). Non-debug wes
+		// (regular multi-user) leaves wfrontendDebugMode() false → no
+		// kill. Sticky atomic guards against re-entry if the cascade
+		// fires multiple last-disconnects during shutdown.
+		ibSessionRegistry::Instance().OnLastDisconnect([]() {
+			if (wfrontendDebugMode())
+				wfrontendCallProcessExitHook();
+		});
+
+		// Force-exit listener — fires regardless of session kind.
+		// Picks up the wes-WebServer fallback case (debug-thread
+		// Current() resolves to the system row when the queue is
+		// empty; that bare ibSession's virtual OnForceExit is empty).
+		ibSessionRegistry::Instance().OnForceExit([](ibSession*) {
+			if (wfrontendDebugMode())
+				wfrontendCallProcessExitHook();
+		});
+
 		wired = true;
 	}
 }

@@ -299,10 +299,14 @@ void ibSessionRegistry::Start()
 	// heartbeat-on-lastActive model — see "HoldRowLocks self-deadlock"
 	// memory note. Frees a pool slot for productive use.
 	if (m_ownsSysSession) {
-		if (auto* pool = ibApplicationData::GetConnectionPool()) {
-			m_writeConn = pool->Checkout();
-			m_probeConn = pool->Checkout();
-		}
+		// Each conn through its own holder identity — write-channel
+		// and probe-channel are distinct so any future scope-binding
+		// (or diagnostics that key on holder address) sees two
+		// separate registry tags instead of one shared one. Sharing
+		// a holder would also mean a future BindScopeHolder for one
+		// conn would refuse to bind the other (first-bind-wins).
+		m_writeConn = m_writeHolder.AcquireFreeConnection();
+		m_probeConn = m_probeHolder.AcquireFreeConnection();
 	}
 
 	m_stop.store(false, std::memory_order_release);
@@ -602,6 +606,23 @@ void ibSessionRegistry::OnShouldKeepAlive(KeepAliveHook h)
 {
 	std::lock_guard<std::mutex> lk(m_eventMutex);
 	m_listKeepAlive.push_back(std::move(h));
+}
+
+void ibSessionRegistry::OnForceExit(SessionCallback cb)
+{
+	std::lock_guard<std::mutex> lk(m_eventMutex);
+	m_listForceExit.push_back(std::move(cb));
+}
+
+void ibSessionRegistry::NotifyForceExit(ibSession* s)
+{
+	std::vector<SessionCallback> hooks;
+	{
+		std::lock_guard<std::mutex> lk(m_eventMutex);
+		hooks = m_listForceExit;
+	}
+	for (const auto& cb : hooks)
+		if (cb) cb(s);
 }
 
 bool ibSessionRegistry::ShouldKeepAlive() const

@@ -28,6 +28,9 @@
 WX_DECLARE_HASH_SET(ibDatabaseResultSet*, wxPointerHash, wxPointerEqual, DatabaseResultSetHashSet);
 WX_DECLARE_HASH_SET(ibPreparedStatement*, wxPointerHash, wxPointerEqual, DatabaseStatementHashSet);
 
+class ibDatabaseConnectionHolder;
+class ibConnectionPool;
+
 class BACKEND_API ibDatabaseLayer
 	: public ibDatabaseErrorReporter
 	, public ibDatabaseStringConverter
@@ -105,6 +108,25 @@ public:
 	/// Is a transaction currently open on this layer? Derived from the
 	/// depth counter so nested levels report active correctly.
 	bool IsActiveTransaction() { return m_txDepth > 0; }
+
+	/// Holder that currently has this layer reserved for an active TX,
+	/// or nullptr if the layer is not pinned. Set by the connection
+	/// pool's ReserveTx (depth 0→1 on Begin), cleared by ReleaseTx
+	/// (1→0 on Commit/RollBack). Identity-only — the layer doesn't
+	/// share-own the holder; the holder calls ReleaseTx before its
+	/// dtor so this back-pointer is always valid while non-null.
+	ibDatabaseConnectionHolder* GetHolder() const { return m_holder; }
+
+	/// True while at least one ibPreparedStatement / ibDatabaseResultSet
+	/// is alive on this layer. The pool consults this in Checkout so a
+	/// conn whose result set is mid-iteration cannot be handed to
+	/// another caller — the driver-side cursor would race. Goes back
+	/// to false when every tracked stmt/rs has been closed or
+	/// destructed (LogStatementForCleanup / LogResultSetForCleanup
+	/// pair with the set-removal in Close()).
+	bool IsBusy() const {
+		return !m_ResultSets.empty() || !m_Statements.empty();
+	}
 
 	// Define formatted run query 
 
@@ -304,6 +326,12 @@ protected:
 	/// so an inner failure can poison an otherwise successful outer
 	/// commit.
 	bool m_txAborted = false;
+
+	/// Back-pointer to the holder that has this layer reserved for an
+	/// active TX. Maintained exclusively by ibConnectionPool — see
+	/// ReserveTx / ReleaseTx. nullptr when not pinned.
+	ibDatabaseConnectionHolder* m_holder = nullptr;
+	friend class ibConnectionPool;
 
 	/// Add result set object pointer to the list for "garbage collection"
 	void LogResultSetForCleanup(ibDatabaseResultSet* pResultSet) { m_ResultSets.insert(pResultSet); }

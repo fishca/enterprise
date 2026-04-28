@@ -37,6 +37,8 @@ class ibValueModuleManager;
 class ibValueModuleManagerConfiguration;
 class ibRuntimeModuleDataObject;
 class ibProcUnit;
+
+#include "backend/databaseLayer/connectionHolder.h"
 struct ibRunContext;
 class ibMetaData;
 class ibValueMetaObjectConfiguration;
@@ -147,7 +149,9 @@ struct BACKEND_API ibSessionIdentity {
 // shared_from_this(), safe because every ibSession instance is created
 // via std::make_shared (registry path) or the typed factory.
 // ------------------------------------------------------------------
-class BACKEND_API ibSession : public std::enable_shared_from_this<ibSession> {
+class BACKEND_API ibSession
+	: public std::enable_shared_from_this<ibSession>
+	, public ibDatabaseConnectionHolder {
 public:
 	// kind = what this session does in the running process. The process-
 	// level run mode (how the exe was launched) lives on appData and is

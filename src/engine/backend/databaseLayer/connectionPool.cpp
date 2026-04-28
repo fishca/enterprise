@@ -1,40 +1,256 @@
 #include "connectionPool.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
+#include "connectionHolder.h"
 #include "databaseLayer.h"
 
-// --- Thread-local connection slots -----------------------------------------
-//
-// Per-thread views of the pool:
-//   s_tlCurrent — set by ibConnectionScope for its lifetime.
-//   s_tlActiveTx — set by ibDatabaseLayer::BeginTransaction when depth
-//                  goes 0→1; cleared on the matching Commit/RollBack.
-// The active-TX slot holds a shared_ptr tied to the pool's control
-// block (via enable_shared_from_this), so the layer stays alive even
-// if the hand-out that originally checked it out has been dropped.
-namespace {
-	thread_local std::shared_ptr<ibDatabaseLayer> s_tlCurrent;
-	thread_local std::shared_ptr<ibDatabaseLayer> s_tlActiveTx;
+ibDatabaseConnectionHolder* ibConnectionPool::DbQueryHolder()
+{
+	// Process-wide singleton — one identity shared by every non-session
+	// db_query / default ibConnectionScope() call. Block-local static
+	// guarantees zero-init on first use, no global ctor ordering.
+	static ibSingleConnectionHolder s_singleton;
+	return &s_singleton;
 }
 
-std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetCurrentConnection()
+ibDatabaseConnectionHolder* ibConnectionPool::CurrentHolder()
 {
-	return s_tlCurrent;
-}
-
-void ibConnectionPool::SetCurrentConnection(std::shared_ptr<ibDatabaseLayer> conn)
-{
-	s_tlCurrent = std::move(conn);
+	// Two channels:
+	//   - Session: ibSession::Current() when a session is bound to the
+	//     thread (runtime / web / GUI / debug eval all run inside a
+	//     SessionScope). Reservation table lookups return the
+	//     session's pinned/scope-bound conn.
+	//   - db_query: the singleton holder above. All non-session work
+	//     converges onto one pool entry, serialising on that conn.
+	//     Subsystems that need parallel isolation pass their own
+	//     per-thread / per-call holder to ibConnectionScope.
+	if (auto* s = ibSession::Current())
+		return static_cast<ibDatabaseConnectionHolder*>(s);
+	return DbQueryHolder();
 }
 
 std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetActiveTxConnection()
 {
-	return s_tlActiveTx;
+	auto* pool = ibApplicationData::GetConnectionPool();
+	if (pool == nullptr) return nullptr;
+	auto* holder = CurrentHolder();
+	if (holder == nullptr) return nullptr;
+	return pool->GetReservedTx(holder);
 }
 
 void ibConnectionPool::SetActiveTxConnection(std::shared_ptr<ibDatabaseLayer> conn)
 {
-	s_tlActiveTx = std::move(conn);
+	if (!conn) return;
+	auto* pool = ibApplicationData::GetConnectionPool();
+	if (pool == nullptr) return;
+	// Resolve the holder for the TX pin, in priority:
+	//   1. CurrentHolder() — session if bound, else db_query singleton.
+	//   2. The conn's already-pinned holder (set by an earlier ReserveTx
+	//      on a different thread).
+	//   3. The conn's scope-binding — lets an ad-hoc holder that
+	//      opened a scope still pin its TX correctly.
+	ibDatabaseConnectionHolder* holder = CurrentHolder();
+	if (holder == nullptr) {
+		if (auto* h = conn->GetHolder()) holder = h;
+		else                             holder = pool->FindBoundHolder(conn.get());
+	}
+	if (holder == nullptr) return;
+	pool->ReserveTx(holder, std::move(conn));
+}
+
+void ibConnectionPool::ClearActiveTxConnection(ibDatabaseLayer* conn)
+{
+	if (conn == nullptr) return;
+	auto* pool = ibApplicationData::GetConnectionPool();
+	if (pool == nullptr) return;
+	// The holder that pinned this layer is the source of truth — set
+	// by ReserveTx, cleared by ReleaseTx. Read it before calling
+	// release (ReleaseTx will null it out).
+	if (auto* h = conn->GetHolder())
+		pool->ReleaseTx(h);
+}
+
+ibDatabaseConnectionHolder* ibConnectionPool::FindBoundHolder(ibDatabaseLayer* conn) const
+{
+	if (conn == nullptr) return nullptr;
+	std::lock_guard<std::mutex> lock(m_mutex);
+	for (const auto& e : m_entries) {
+		if (e.conn.get() == conn) {
+			if (e.txHolder)    return e.txHolder;
+			if (e.scopeHolder) return e.scopeHolder;
+			return nullptr;
+		}
+	}
+	return nullptr;
+}
+
+void ibConnectionPool::ReserveTx(ibDatabaseConnectionHolder* holder,
+                                 std::shared_ptr<ibDatabaseLayer> conn)
+{
+	if (holder == nullptr || !conn) return;
+	std::lock_guard<std::mutex> lock(m_mutex);
+	const auto now = std::chrono::steady_clock::now();
+
+	for (auto& e : m_entries) {
+		if (e.conn.get() == conn.get()) {
+			// Defensive: re-pin if the entry was already reserved by
+			// another holder (paired Begin without Commit). Drop the
+			// stale back-pointer first.
+			if (e.txHolder && e.txHolder != holder && e.conn)
+				e.conn->m_holder = nullptr;
+			e.txHolder  = holder;
+			e.startedAt = now;
+			conn->m_holder = holder;
+			return;
+		}
+	}
+	// Conn isn't in our registry — register as a reserved entry.
+	// Happens when a holder begins a TX on a layer the pool didn't hand
+	// out (Designer single-conn mode, externally-supplied conn).
+	conn->m_holder = holder;
+	ibConnectionEntry e;
+	e.conn      = std::move(conn);
+	e.txHolder  = holder;
+	e.startedAt = now;
+	e.lastUsed  = now;
+	m_entries.push_back(std::move(e));
+}
+
+void ibConnectionPool::ReleaseTx(ibDatabaseConnectionHolder* holder)
+{
+	if (holder == nullptr) return;
+	std::lock_guard<std::mutex> lock(m_mutex);
+	for (auto& e : m_entries) {
+		if (e.txHolder == holder) {
+			if (e.conn) e.conn->m_holder = nullptr;
+			e.txHolder  = nullptr;
+			e.startedAt = {};
+			e.lastUsed  = std::chrono::steady_clock::now();
+			// Available again iff nothing else still holds the entry.
+			if (!e.inUse && e.scopeHolder == nullptr)
+				m_cv.notify_one();
+			return;
+		}
+	}
+}
+
+std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetReservedTx(
+	ibDatabaseConnectionHolder* holder) const
+{
+	if (holder == nullptr) return nullptr;
+	std::lock_guard<std::mutex> lock(m_mutex);
+	for (const auto& e : m_entries) {
+		if (e.txHolder == holder)
+			return e.conn;
+	}
+	return nullptr;
+}
+
+void ibConnectionPool::ReleaseAll(ibDatabaseConnectionHolder* holder)
+{
+	if (holder == nullptr) return;
+
+	// Capture every conn keyed on this holder before clearing the
+	// reservations — we'll close statements/result sets after dropping
+	// the pool lock so driver calls don't run under m_mutex.
+	std::vector<std::shared_ptr<ibDatabaseLayer>> conns;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		for (auto& e : m_entries) {
+			if ((e.txHolder == holder || e.scopeHolder == holder) && e.conn)
+				conns.push_back(e.conn);
+		}
+	}
+
+	ReleaseTx(holder);
+	UnbindScopeHolder(holder);
+
+	// Close any result sets / prepared statements the holder left
+	// behind on its conn. Layers are returned to the idle pool after
+	// release; the next checkout must not inherit dangling cursors or
+	// pending statements from the previous user.
+	for (auto& c : conns) {
+		if (!c) continue;
+		try { c->CloseResultSets(); } catch (...) {}
+		try { c->CloseStatements(); } catch (...) {}
+	}
+}
+
+ibSingleConnectionHolder::ibSingleConnectionHolder() = default;
+
+ibSingleConnectionHolder::~ibSingleConnectionHolder()
+{
+	// Self-clean on dtor — covers static instance teardown at process
+	// exit and stack-local scope unwind. ReleaseAll is idempotent:
+	// no-op if this holder never reserved anything.
+	if (auto* pool = ibApplicationData::GetConnectionPool())
+		pool->ReleaseAll(this);
+}
+
+std::shared_ptr<ibDatabaseLayer> ibDatabaseConnectionHolder::GetConnection() const
+{
+	auto* pool = ibApplicationData::GetConnectionPool();
+	if (pool == nullptr) return nullptr;
+	// Pool-side lookup: TX pin > scope binding. Const-cast on `this` is
+	// safe — pool keys reservations by address, never mutates the
+	// holder through the pointer.
+	auto* self = const_cast<ibDatabaseConnectionHolder*>(this);
+	if (auto tx = pool->GetReservedTx(self)) return tx;
+	return pool->GetScopeConn(self);
+}
+
+std::shared_ptr<ibDatabaseLayer> ibDatabaseConnectionHolder::AcquireFreeConnection() const
+{
+	// Plain Checkout — no holder binding. The wrapped shared_ptr's
+	// deleter parks the entry back in the pool when the caller drops
+	// the last reference. Side-channel for work that must NOT join
+	// the holder's current TX (parallel side query, async refresh).
+	auto* pool = ibApplicationData::GetConnectionPool();
+	return pool != nullptr ? pool->Checkout() : nullptr;
+}
+
+void ibConnectionPool::BindScopeHolder(ibDatabaseConnectionHolder* holder,
+                                       std::shared_ptr<ibDatabaseLayer> conn)
+{
+	if (holder == nullptr || !conn) return;
+	std::lock_guard<std::mutex> lock(m_mutex);
+	for (auto& e : m_entries) {
+		if (e.conn.get() == conn.get()) {
+			// First-bind wins — nested ibConnectionScope ctors observe
+			// scopeHolder!=nullptr and inherit instead of attempting to
+			// rebind. The outermost scope's dtor calls Unbind.
+			if (e.scopeHolder == nullptr)
+				e.scopeHolder = holder;
+			return;
+		}
+	}
+}
+
+void ibConnectionPool::UnbindScopeHolder(ibDatabaseConnectionHolder* holder)
+{
+	if (holder == nullptr) return;
+	std::lock_guard<std::mutex> lock(m_mutex);
+	for (auto& e : m_entries) {
+		if (e.scopeHolder == holder) {
+			e.scopeHolder = nullptr;
+			if (!e.inUse && e.txHolder == nullptr)
+				m_cv.notify_one();
+			return;
+		}
+	}
+}
+
+std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetScopeConn(
+	ibDatabaseConnectionHolder* holder) const
+{
+	if (holder == nullptr) return nullptr;
+	std::lock_guard<std::mutex> lock(m_mutex);
+	for (const auto& e : m_entries) {
+		if (e.scopeHolder == holder)
+			return e.conn;
+	}
+	return nullptr;
 }
 
 std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetPrimaryConnection()
@@ -45,23 +261,29 @@ std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetPrimaryConnection()
 
 std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetDatabaseLayer()
 {
-	if (auto txConn = GetActiveTxConnection())
-		return txConn;
-	if (auto scopeConn = GetCurrentConnection())
-		return scopeConn;
-	return GetPrimaryConnection();
+	auto* pool = ibApplicationData::GetConnectionPool();
+	if (pool == nullptr) return nullptr;
+	if (auto* holder = CurrentHolder()) {
+		// Holder priority: TX-pinned conn first, then scope-bound conn.
+		if (auto txConn = pool->GetReservedTx(holder))
+			return txConn;
+		if (auto scopeConn = pool->GetScopeConn(holder))
+			return scopeConn;
+	}
+	return pool->m_source;
 }
 
 ibConnectionScope ibConnectionPool::GetFreeConnection()
 {
-	// The full priority chain (TX > scope TL > Checkout) is
-	// implemented inside ibConnectionScope's default ctor. Returning
-	// the scope directly lets callers write the natural RAII form
+	// The full priority chain (TX > scope > Checkout) is implemented
+	// inside ibConnectionScope's default ctor. Returning the scope
+	// directly lets callers write the natural RAII form
 	// `ibConnectionScope scope = GetFreeConnection()` without an
-	// intermediate shared_ptr round-trip. Mandatory copy elision
-	// in C++17 means no move actually happens for prvalue returns.
+	// intermediate shared_ptr round-trip. Mandatory copy elision in
+	// C++17 means no move actually happens for prvalue returns.
 	return ibConnectionScope();
 }
+
 
 ibConnectionPool::ibConnectionPool() = default;
 
@@ -75,33 +297,37 @@ ibConnectionPool::~ibConnectionPool()
 void ibConnectionPool::Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize, std::size_t minIdle)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	// Drop existing idle entries on re-init — their shared_ptrs
-	// release, layers that no other handout captured are destructed.
-	m_idle.clear();
+	for (auto& e : m_entries) {
+		if (e.conn) e.conn->m_holder = nullptr;
+	}
+	m_entries.clear();
 	m_source   = primary;
 	m_maxSize  = maxSize;
 	m_minIdle  = minIdle;
-	// Master counts as the first live conn. It's also the first idle
-	// entry so the earliest Checkout hands it out directly rather
-	// than paying a Clone() cost.
-	m_live     = primary ? 1 : 0;
 	const auto now = std::chrono::steady_clock::now();
-	if (primary)
-		m_idle.push_back({ primary, now });
-	// Pre-warm — Clone() up to minIdle-1 additional conns so light
-	// bursts don't pay the Open cost. Server modes (wes, future
-	// oes-server) pass minIdle high enough to absorb typical
-	// concurrency; single-session GUI hosts use minIdle=1, which
-	// means the loop below is a no-op.
-	for (std::size_t i = m_live; i < m_minIdle && m_live < m_maxSize; ++i) {
+	if (primary) {
+		// Master is the first entry and the seed for Clone(). Marked
+		// idle (no holder, not in-use) so the earliest Checkout hands
+		// it out directly rather than paying a Clone() cost.
+		ibConnectionEntry e;
+		e.conn     = primary;
+		e.lastUsed = now;
+		m_entries.push_back(std::move(e));
+	}
+	// Pre-warm — Clone() up to minIdle additional conns so light bursts
+	// don't pay the Open cost. Server modes (wes, future oes-server)
+	// pass minIdle high enough to absorb typical concurrency;
+	// single-session GUI hosts use minIdle=1, which means the loop
+	// below is a no-op.
+	while (m_entries.size() < m_minIdle && m_entries.size() < m_maxSize) {
 		ibDatabaseLayer* raw = primary ? primary->Clone() : nullptr;
 		if (raw == nullptr) break;
-		m_idle.push_back({ std::shared_ptr<ibDatabaseLayer>(raw), now });
-		++m_live;
+		ibConnectionEntry e;
+		e.conn     = std::shared_ptr<ibDatabaseLayer>(raw);
+		e.lastUsed = now;
+		m_entries.push_back(std::move(e));
 	}
 	m_shutdown = false;
-	// Wake anyone blocked on Checkout — they'll re-check state and
-	// either get a connection or bail.
 	m_cv.notify_all();
 }
 
@@ -110,23 +336,25 @@ void ibConnectionPool::Shutdown()
 	std::unique_lock<std::mutex> lock(m_mutex);
 	m_shutdown = true;
 
-	// Explicitly Close() every idle conn before dropping our
-	// shared_ptrs — drivers don't always Close in their dtor (some
-	// only release native handles on explicit Close). Outstanding
-	// hand-outs are a separate concern: their lambda-captured ref
-	// keeps the layer alive until the caller drops it; the deleter
-	// then checks m_shutdown and releases without re-parking.
-	for (auto& entry : m_idle) {
-		if (entry.conn && entry.conn->IsOpen())
-			entry.conn->Close();
+	// Explicitly Close() every conn before dropping our shared_ptrs —
+	// drivers don't always Close in their dtor (some only release
+	// native handles on explicit Close). Outstanding hand-outs are a
+	// separate concern: their lambda-captured ref keeps the layer
+	// alive until the caller drops it; the deleter then sees
+	// m_shutdown and just lets the captured sp die with the lambda.
+	for (auto& e : m_entries) {
+		if (e.conn) {
+			e.conn->m_holder = nullptr;
+			if (e.conn->IsOpen())
+				e.conn->Close();
+		}
 	}
-	m_idle.clear();
+	m_entries.clear();
 
 	if (m_source && m_source->IsOpen())
 		m_source->Close();
 	m_source.reset();
 
-	m_live = 0;
 	m_cv.notify_all();
 }
 
@@ -142,33 +370,39 @@ std::shared_ptr<ibDatabaseLayer> ibConnectionPool::Checkout()
 		// once load drops back below minIdle.
 		ReapStaleLocked();
 
-		if (!m_idle.empty()) {
-			// Hand out the most recently parked entry — it's the
-			// hottest (least likely to have stale driver state) and
-			// keeps the front-of-queue old entries available for
-			// future Reap.
-			auto entry = m_idle.back();
-			m_idle.pop_back();
-			return WrapHandout(std::move(entry.conn));
+		// Linear scan for an available entry — small N (m_maxSize is
+		// typically low double-digits). Walk from back to front so the
+		// hottest (most recently parked) entry is served first.
+		// `conn->IsBusy()` is the safety net for callers that obtained
+		// the layer via bare db_query (no scope, no reservation) and
+		// then created a stmt / result set: while those live, no
+		// other thread can take the conn — driver-side cursors would
+		// race otherwise.
+		for (auto it = m_entries.rbegin(); it != m_entries.rend(); ++it) {
+			if (it->txHolder == nullptr && it->scopeHolder == nullptr
+			    && !it->inUse && it->conn && !it->conn->IsBusy()) {
+				it->inUse    = true;
+				it->lastUsed = std::chrono::steady_clock::now();
+				return WrapHandout(it->conn);
+			}
 		}
-		if (m_live < m_maxSize) {
-			// Lazy Clone — only on first demand for this slot. m_source
-			// stays alive (separate member) so Clone() has a live
-			// subject to copy from even when every previously-cloned
-			// conn is currently checked out.
+
+		if (m_entries.size() < m_maxSize) {
 			ibDatabaseLayer* raw = m_source->Clone();
 			if (raw == nullptr)
 				return nullptr;
-			// This is the FIRST shared_ptr wrapping `raw`. It is the
-			// shared_ptr that initialises the weak_ptr inside
-			// std::enable_shared_from_this on the layer, so subsequent
-			// `shared_from_this()` calls route through this control
-			// block for the lifetime of the pool.
+			// FIRST shared_ptr wrapping `raw` — initialises the weak_ptr
+			// inside std::enable_shared_from_this so future
+			// shared_from_this() calls route through this control block.
 			auto sp = std::shared_ptr<ibDatabaseLayer>(raw);
-			++m_live;
+			ibConnectionEntry e;
+			e.conn     = sp;
+			e.inUse    = true;
+			e.lastUsed = std::chrono::steady_clock::now();
+			m_entries.push_back(std::move(e));
 			return WrapHandout(std::move(sp));
 		}
-		// Saturated — wait for a Return / Shutdown.
+		// Saturated — wait for a Return / ReleaseTx / Unbind / Shutdown.
 		m_cv.wait(lock);
 	}
 }
@@ -176,27 +410,23 @@ std::shared_ptr<ibDatabaseLayer> ibConnectionPool::Checkout()
 void ibConnectionPool::ReapStaleLocked()
 {
 	const auto now = std::chrono::steady_clock::now();
-	while (m_idle.size() > m_minIdle) {
-		// Oldest sits at the front (push_back on park). Pin the master
-		// — never drop the conn that equals m_source even if it's
-		// front-most, since it's the fallback for legacy db_query.
-		auto& front = m_idle.front();
-		if (front.conn == m_source) {
-			// Master is at the head and we'd drop it — reshuffle: move
-			// it to the back so subsequent Reap sees a non-master at
-			// the front. Mark its lastUsed = now so it doesn't get
-			// re-considered stale next call.
-			front.lastUsed = now;
-			m_idle.push_back(std::move(front));
-			m_idle.pop_front();
-			continue;
-		}
-		if (now - front.lastUsed < kIdleTimeout)
-			break;   // freshest non-master is still warm; everything behind is even warmer
-		if (front.conn && front.conn->IsOpen())
-			front.conn->Close();
-		m_idle.pop_front();
-		--m_live;
+	std::size_t idleCount = 0;
+	for (const auto& e : m_entries) {
+		if (e.txHolder == nullptr && e.scopeHolder == nullptr
+		    && !e.inUse && e.conn && !e.conn->IsBusy())
+			++idleCount;
+	}
+	if (idleCount <= m_minIdle) return;
+
+	for (auto it = m_entries.begin(); it != m_entries.end() && idleCount > m_minIdle; ) {
+		const bool reapable = (it->txHolder == nullptr)
+			&& (it->scopeHolder == nullptr) && !it->inUse
+			&& it->conn && it->conn != m_source && !it->conn->IsBusy()
+			&& (now - it->lastUsed >= kIdleTimeout);
+		if (!reapable) { ++it; continue; }
+		if (it->conn->IsOpen()) it->conn->Close();
+		it = m_entries.erase(it);
+		--idleCount;
 	}
 }
 
@@ -208,40 +438,40 @@ void ibConnectionPool::Return(std::shared_ptr<ibDatabaseLayer> conn)
 	conn.reset();
 }
 
-
 std::shared_ptr<ibDatabaseLayer> ibConnectionPool::WrapHandout(
 	std::shared_ptr<ibDatabaseLayer> sp)
 {
 	// Hand-out shared_ptr has its OWN control block (constructed here
-	// via the (raw, deleter) ctor). When the caller drops the last
-	// ref, the deleter runs: parks the pool-owned `sp` back on the
-	// idle queue (or releases it silently if the pool is shutting
-	// down). The raw pointer is NEVER deleted by the hand-out — the
-	// layer's actual destruction is driven by the pool-owned
-	// shared_ptr in `sp` / m_idle.
+	// via the (raw, deleter) ctor). On drop the deleter clears the
+	// entry's inUse flag so it's available for the next Checkout. The
+	// closure captures `sp` by value — that strong ref keeps the layer
+	// alive even if Shutdown ran while the hand-out was outstanding.
+	// The raw pointer is NEVER deleted by the hand-out itself; the
+	// layer's destruction is driven by the entry's shared_ptr in
+	// m_entries (or, post-Shutdown, the closure-captured sp).
 	ibDatabaseLayer* raw = sp.get();
 	return std::shared_ptr<ibDatabaseLayer>(
 		raw,
-		[this, sp = std::move(sp)](ibDatabaseLayer*) mutable {
+		[this, sp](ibDatabaseLayer*) {
 			std::lock_guard<std::mutex> lock(m_mutex);
-			if (!m_shutdown) {
-				m_idle.push_back({ std::move(sp), std::chrono::steady_clock::now() });
-				m_cv.notify_one();
+			if (m_shutdown) return;   // sp drops with the lambda
+			for (auto& e : m_entries) {
+				if (e.conn.get() == sp.get()) {
+					e.inUse    = false;
+					e.lastUsed = std::chrono::steady_clock::now();
+					// Wake one Checkout waiter only if the entry is now
+					// fully available (no TX, no scope binding).
+					if (e.txHolder == nullptr && e.scopeHolder == nullptr)
+						m_cv.notify_one();
+					return;
+				}
 			}
-			// else: sp released by lambda dtor — layer destructed if
-			// it was the last ref, nothing to park into.
 		}
 	);
 }
 
-std::size_t ibConnectionPool::LiveSize() const
+bool ibConnectionPool::IsInitialised() const
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	return m_live;
-}
-
-std::size_t ibConnectionPool::IdleSize() const
-{
-	std::lock_guard<std::mutex> lock(m_mutex);
-	return m_idle.size();
+	return !m_shutdown && m_source != nullptr;
 }

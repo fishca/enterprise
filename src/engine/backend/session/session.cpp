@@ -357,6 +357,12 @@ void ibSession::RequestForceExit()
 	if (m_forceExit.exchange(true, std::memory_order_acq_rel))
 		return;   // already requested — don't fire OnForceExit twice
 	OnForceExit();
+
+	// Registry fan-out — covers session kinds whose virtual OnForceExit
+	// is the empty base (wes' WebServer technical session). Without it,
+	// a debug-thread Current() that falls back to the system row would
+	// close it but no host listener would learn about it.
+	ibSessionRegistry::Instance().NotifyForceExit(this);
 }
 
 std::future<void> ibSession::Submit(std::function<void()> task)
@@ -460,6 +466,10 @@ bool ibSession::Open(const wxString& user, const wxString& password)
 		//   3. OnAuthenticated listeners — per-session bring-up
 		//      (RunDatabase fires OnBefore/AfterRunMetaObject which read
 		//      session->mm; CompileRoot; InitRuntimeForSession).
+		// Note: NotifyAuthenticated already calls BindSessionToThread
+		// before firing listeners, so any breakpoint hit inside them
+		// resolves Current() to THIS session (the registry-fallback
+		// trap is closed at that level, no extra scope needed here).
 		reg.NotifyAuthenticated(this);
 		return true;
 	}

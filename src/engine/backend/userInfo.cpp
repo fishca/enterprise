@@ -165,6 +165,9 @@ std::vector<ibUserInfo::Brief> ibUserInfo::ListAll()
 
 bool ibUserInfo::Save(const ibUserInfo& info)
 {
+	// db_query routes through the process-wide singleton holder —
+	// the dedicated channel for DDL and infra-level writes that must
+	// stay out of any user session's TX.
 	ibStatementGuard stmt(db_query,
 		db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD
 			? db_query->PrepareStatement(

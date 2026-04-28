@@ -6,43 +6,49 @@
 // The pool owns the master connection (passed to Init as a shared_ptr)
 // plus up to maxSize-1 clones created lazily on demand. Every check-out
 // hands the caller a shared_ptr<ibDatabaseLayer> with a custom deleter
-// that does NOT actually destroy the layer — instead it parks the
-// pool's long-lived shared_ptr back on the idle queue. Because the
-// layer object is always reachable through at least one pool-held
-// shared_ptr, the first-shared_ptr-wins rule of
-// std::enable_shared_from_this is satisfied once and stays satisfied:
-// callers inside the layer can rely on `shared_from_this()` for the
-// lifetime of the pool.
+// that does NOT actually destroy the layer — instead it flips the
+// owning entry's inUse flag back to false so the entry becomes
+// available for the next Checkout. Because the layer object is always
+// reachable through the entry's pool-held shared_ptr (or, post-
+// Shutdown, the closure-captured `sp`), the first-shared_ptr-wins
+// rule of std::enable_shared_from_this is satisfied once and stays
+// satisfied: callers inside the layer can rely on
+// `shared_from_this()` for the lifetime of the pool.
 //
-// Lifecycle:
-//   Init(primary, maxSize)    — store the already-opened master as
-//                               m_source (used for Clone) and push a
-//                               copy into m_idle so the first Checkout
-//                               pops it. No extra clones yet — lazy.
-//   Checkout()                — return an idle clone. Clones the
-//                               master via ibDatabaseLayer::Clone() on
-//                               first demand, up to maxSize. Blocks
-//                               briefly until one is available once the
-//                               pool is saturated.
-//   Return(conn)              — drop the caller's shared_ptr (its
-//                               deleter parks the pool's ref). Does
-//                               NOT Close() — the connection stays
-//                               open for the next checkout.
-//   Shutdown()                — close + drop every connection the pool
-//                               holds. Called from
-//                               ibApplicationData::Disconnect.
+// All conns the pool knows about live in a single registry —
+// m_entries. Each entry encodes its current state through the
+// txHolder / scopeHolder / inUse triple; see the struct comment
+// below for the IDLE / BORROWED / RESERVED states. Active-transaction
+// reservation is a property of the entry, not a separate map:
+// BeginTransaction sets entry.txHolder, Commit/RollBack clears it.
+//
+// Public surface — minimal:
+//
+//   Init / Shutdown            — lifecycle (driven by ibApplicationData).
+//   IsInitialised()            — lifecycle probe.
+//   GetFreeConnection()        — RAII scope factory; same as a
+//                                default ibConnectionScope().
+//   GetDatabaseLayer()         — backs the global `db_query` macro.
+//
+// Everything else (CurrentHolder, DbQueryHolder, GetPrimaryConnection,
+// Checkout, holder-keyed reservation primitives, scope-binding) is
+// internal. End users go through the holder methods
+// (GetConnection / AcquireFreeConnection) or ibConnectionScope, never
+// through the pool directly.
 
 #include "backend/backend.h"
 
 #include <chrono>
 #include <condition_variable>
-#include <deque>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 #include "connectionScope.h"
 
 class ibDatabaseLayer;
+class ibDatabaseConnectionHolder;
+class ibSingleConnectionHolder;
 
 class BACKEND_API ibConnectionPool {
 public:
@@ -58,16 +64,11 @@ public:
 	// reached, Checkout blocks until a prior borrower releases.
 	// `minIdle` is the floor for idle-shrink: idle clones beyond this
 	// count get closed after `kIdleTimeout` of inactivity, keeping
-	// at least minIdle conns warm for fast re-acquire. Default 2 —
-	// hot enough to absorb light bursts without paying Open cost,
-	// cheap enough that single-session GUI hosts (which may only
-	// ever check out 1 conn) effectively don't shrink.
+	// at least minIdle conns warm for fast re-acquire.
 	//
-	// Re-initialising replaces m_source and resets the idle set. Any
-	// previously handed-out shared_ptrs stay valid (their deleter
-	// captures their original pool's shared_ptr and parks it back on
-	// drop, but into THIS fresh state — harmless; the new pool just
-	// sees an extra idle entry).
+	// Re-initialising replaces m_source and resets the entry list.
+	// Previously handed-out shared_ptrs stay valid via the closure-
+	// captured master ref in their deleter.
 	void Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize, std::size_t minIdle = 2);
 
 	// Close and drop every connection the pool holds. Idle and
@@ -75,92 +76,126 @@ public:
 	// stopped before this is called. Idempotent.
 	void Shutdown();
 
-	// Borrow a connection from this pool instance. Blocks if all
-	// clones are checked out and the pool is at maxSize. Returns
-	// nullptr if Shutdown has been called or Init was never called.
-	//
-	// Does NOT touch any thread-local slot — callers receive a raw
-	// shared_ptr they own exclusively. Used by consumers that
-	// legitimately need multiple parallel conns on one thread and
-	// therefore can't go through ibConnectionScope (e.g.
-	// ibSessionRegistry holds three persistent checkouts — lock /
-	// write / probe). Prefer ibConnectionScope::GetFreeConnection
-	// for normal code; reach for Checkout only when you explicitly
-	// want a conn independent of the thread's TL state.
-	std::shared_ptr<ibDatabaseLayer> Checkout();
-
-	// Acquire a connection scope for the current thread's work.
-	// Returns a fully-constructed ibConnectionScope by value — the
+	// Acquire a connection scope for the calling holder's work. The
 	// scope's ctor handles the priority chain internally:
-	//   1. Inherit parent scope's conn if one is active on this
-	//      thread.
-	//   2. Else adopt the thread's active-TX conn if any (raw
-	//      db_query->BeginTransaction() outside a scope still pins
-	//      the thread to its TX conn).
-	//   3. Else Checkout a fresh clone from the pool.
+	//   1. Inherit a scope already bound to the holder (nested
+	//      scopes share one checkout).
+	//   2. Else adopt the holder's active-TX conn if any.
+	//   3. Else Checkout a fresh clone and bind it to the holder.
 	//
 	// Typical usage:
 	//   ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
 	//
-	// The returned scope is move-constructed (or elided) into the
-	// caller's variable. Its lifetime governs the thread's TL slot;
-	// on scope dtor the TL is restored.
+	// On dtor the scope-binding for the holder is cleared and the
+	// entry's inUse flag flips back.
 	static ibConnectionScope GetFreeConnection();
 
-	// Primary connection accessor — the master that the pool Clone()s
-	// from. Also serves as the fallback used by GetDatabaseLayer
-	// when no thread-local connection is active on the calling
-	// thread. Returns nullptr when the pool is not initialised.
-	static std::shared_ptr<ibDatabaseLayer> GetPrimaryConnection();
+	// Lifecycle probe — true after Init has set up a master conn and
+	// before Shutdown has dropped it. Used by appData's destroy path
+	// to short-circuit teardown when the pool was never wired up
+	// (e.g. CLI invocation that exits before connecting to a DB).
+	bool IsInitialised() const;
 
-	// The `db_query` entry point. Returns the connection the current
-	// thread should use, following the priority chain:
-	//   1. Active transaction on this thread (TX pinning).
-	//   2. Active ibConnectionScope on this thread (scope TL).
+	// The `db_query` entry point. Returns the conn the calling
+	// holder should use, with priority:
+	//   1. Active TX pin for the holder.
+	//   2. Active scope binding for the holder.
 	//   3. Primary / master conn (legacy fallback).
 	// Returns nullptr only when the pool is not initialised.
 	static std::shared_ptr<ibDatabaseLayer> GetDatabaseLayer();
 
-	// Thread-local active-transaction connection accessors — set by
-	// ibDatabaseLayer::BeginTransaction (depth 0→1), cleared by the
-	// matching Commit/RollBack (depth 1→0). While set, every
-	// db_query access on the thread must route to this conn so the
-	// TX stays connection-local. Stored shared_ptr holds the layer
-	// alive through the pool's control block (via
-	// enable_shared_from_this), pinning the TX to this thread even
-	// when the scope that started it has been dropped.
-	static std::shared_ptr<ibDatabaseLayer> GetActiveTxConnection();
-	static void SetActiveTxConnection(std::shared_ptr<ibDatabaseLayer> conn);
+private:
+	// --- Internal API -------------------------------------------------------
 
-	std::size_t MaxSize()    const { return m_maxSize; }
-	std::size_t LiveSize()   const;
-	std::size_t IdleSize()   const;
+	// Resolve the holder for the calling context — session if bound,
+	// else the db_query singleton. Two channels only; subsystems
+	// needing parallel non-session isolation declare their own static
+	// holder and pass it to `ibConnectionScope(&customHolder)`.
+	static ibDatabaseConnectionHolder* CurrentHolder();
 
-	// Return a previously-checked-out connection. Equivalent to
-	// letting the caller's shared_ptr go out of scope — kept for the
-	// symmetric "Return" wording; most callers just drop the
-	// shared_ptr and let its deleter re-park.
+	// db_query channel singleton identity. Used internally by
+	// CurrentHolder; external explicit-channel access goes through
+	// `ibConnectionScope(ibConnectionPool::DbQueryHolder())` if
+	// needed (currently no such caller).
+	static ibDatabaseConnectionHolder* DbQueryHolder();
+
+	// Master connection accessor — the conn that the pool Clone()s
+	// from. Used as a fallback by GetDatabaseLayer.
+	static std::shared_ptr<ibDatabaseLayer> GetPrimaryConnection();
+
+	// Borrow a connection. Blocks if all clones are checked out and
+	// the pool is at maxSize. Returns nullptr after Shutdown.
+	// External use is funneled through ibDatabaseConnectionHolder::
+	// AcquireFreeConnection (raw borrow) and ibConnectionScope (RAII
+	// scope-bound borrow); both are friends.
+	std::shared_ptr<ibDatabaseLayer> Checkout();
+
+	// Symmetric counterpart to Checkout — drops the caller's
+	// shared_ptr (its deleter clears entry.inUse). Most callers just
+	// let the shared_ptr drop on scope exit; kept for symmetry.
 	void Return(std::shared_ptr<ibDatabaseLayer> conn);
 
-private:
-	// ibConnectionScope is the sole consumer of the per-thread
-	// current-connection slot — its ctor / dtor push-save-restore
-	// the slot and need direct access to it.
-	friend class ibConnectionScope;
+	// Active-transaction state — driven by ibDatabaseLayer's
+	// BeginTransaction / Commit / RollBack at depth 0↔1 transitions.
+	// SetActiveTxConnection resolves the holder via CurrentHolder()
+	// (or the conn's existing scope-binding for the ad-hoc holder
+	// pattern); ClearActiveTxConnection reads conn->GetHolder() and
+	// releases that holder's pin. Internal — exposed only to the
+	// layer through static-method visibility.
+	static std::shared_ptr<ibDatabaseLayer> GetActiveTxConnection();
+	static void SetActiveTxConnection(std::shared_ptr<ibDatabaseLayer> conn);
+	static void ClearActiveTxConnection(ibDatabaseLayer* conn);
 
-	// Raw TL-slot accessors for the scope-owned "current" conn. Not
-	// public: callers should acquire conns via GetFreeConnection
-	// (RAII scope) rather than poking the slot directly.
-	static std::shared_ptr<ibDatabaseLayer> GetCurrentConnection();
-	static void SetCurrentConnection(std::shared_ptr<ibDatabaseLayer> conn);
+	// Holder-keyed reservation primitives. Used by SetActive*/Clear*
+	// above and by ibConnectionScope (via friend) to bind / unbind /
+	// look up.
+	void ReserveTx(ibDatabaseConnectionHolder* holder,
+	               std::shared_ptr<ibDatabaseLayer> conn);
+	void ReleaseTx(ibDatabaseConnectionHolder* holder);
+	std::shared_ptr<ibDatabaseLayer> GetReservedTx(
+	               ibDatabaseConnectionHolder* holder) const;
+
+	void BindScopeHolder(ibDatabaseConnectionHolder* holder,
+	                     std::shared_ptr<ibDatabaseLayer> conn);
+	void UnbindScopeHolder(ibDatabaseConnectionHolder* holder);
+	std::shared_ptr<ibDatabaseLayer> GetScopeConn(
+	                     ibDatabaseConnectionHolder* holder) const;
+
+	// Reverse lookup — given a conn, return the holder bound to it
+	// (txHolder if pinned, otherwise scopeHolder). Used by
+	// SetActiveTxConnection to resolve the right holder when the
+	// calling thread has no Current() session.
+	ibDatabaseConnectionHolder* FindBoundHolder(ibDatabaseLayer* conn) const;
+
+	// Convenience: release every pool registration keyed on `holder`
+	// (TX pin + scope binding) and close any leftover stmt/rs on
+	// the conn. Idempotent. Used by ibSingleConnectionHolder's dtor
+	// for self-cleanup.
+	void ReleaseAll(ibDatabaseConnectionHolder* holder);
 
 	// Wrap a pool-owned shared_ptr as a hand-out for a caller. The
 	// returned shared_ptr has its own control block whose custom
-	// deleter parks the pool's shared_ptr back on the idle queue when
-	// the caller drops it. The lambda captures `sp` by value so the
-	// pool-owned layer stays alive for the hand-out's whole life.
+	// deleter clears entry.inUse when the caller drops it. The lambda
+	// captures `sp` by value so the layer stays alive for the
+	// hand-out's whole life (covers post-Shutdown drops).
 	std::shared_ptr<ibDatabaseLayer> WrapHandout(
 		std::shared_ptr<ibDatabaseLayer> sp);
+
+	// Drop idle entries older than kIdleTimeout, keeping at least
+	// m_minIdle alive and never dropping the master. Caller must hold
+	// m_mutex. Closes and erases the dropped entries.
+	void ReapStaleLocked();
+
+	// Friends — exposed so the implementation can call private
+	// internals without going through static facades. ibSession is
+	// already a holder by inheritance; named here only for
+	// documentation.
+	friend class ibConnectionScope;
+	friend class ibDatabaseConnectionHolder;
+	friend class ibSingleConnectionHolder;
+	friend class ibDatabaseLayer;
+
+	// --- Storage ------------------------------------------------------------
 
 	mutable std::mutex              m_mutex;
 	std::condition_variable         m_cv;
@@ -169,36 +204,40 @@ private:
 	// a live source even when every clone is currently checked out.
 	std::shared_ptr<ibDatabaseLayer>              m_source;
 
-	// Idle pool entries — each tagged with the moment it became idle so
-	// Reap can drop conns that have been sitting unused for too long.
-	// Checkout pops from the back (most recently parked = hottest);
-	// Reap walks from the front (oldest first) and Closes entries
-	// older than kIdleTimeout, never letting m_idle drop below
-	// m_minIdle. The master entry (whose conn equals m_source) is
-	// pinned — never reaped, even if "old".
-	struct ibIdleEntry {
+	// Single connection registry — every conn the pool knows about
+	// lives here. Three logical states are encoded by the entry's flags:
+	//
+	//   txHolder == nullptr && scopeHolder == nullptr && !inUse
+	//                                  →  IDLE (available for Checkout)
+	//   txHolder == nullptr && scopeHolder == nullptr &&  inUse
+	//                                  →  BORROWED (handed out, no
+	//                                      holder reservation yet)
+	//   txHolder != nullptr            →  RESERVED for active TX;
+	//                                      survives drop of the hand-
+	//                                      out that started it
+	//   scopeHolder != nullptr         →  scope-bound to the holder;
+	//                                      nested scopes inherit
+	//
+	// Example: maxSize=6, 3 sessions with open TX, 3 conns idle —
+	// m_entries has 6 rows; 3 with txHolder set + their startedAt, 3
+	// with everything null. A watchdog walks m_entries looking for
+	// txHolder!=null && now-startedAt > threshold to surface hung
+	// transactions per holder.
+	struct ibConnectionEntry {
 		std::shared_ptr<ibDatabaseLayer>      conn;
+		ibDatabaseConnectionHolder*           txHolder    = nullptr;
+		ibDatabaseConnectionHolder*           scopeHolder = nullptr;
 		std::chrono::steady_clock::time_point lastUsed;
+		std::chrono::steady_clock::time_point startedAt;  // when txHolder was set
+		bool                                  inUse   = false;
+		bool                                  noWait  = false;
 	};
-	std::deque<ibIdleEntry>         m_idle;
+	std::vector<ibConnectionEntry>  m_entries;
 	static constexpr std::chrono::seconds kIdleTimeout { 60 };
 
 	std::size_t                     m_maxSize   = 0;
 	std::size_t                     m_minIdle   = 2;
-	std::size_t                     m_live      = 0;  // total clones created (idle + checked-out)
 	bool                            m_shutdown  = false;
-
-	// Drop idle entries older than kIdleTimeout, keeping at least
-	// m_minIdle alive and never dropping the master. Caller must hold
-	// m_mutex. Decrements m_live and Closes the dropped conns.
-	void ReapStaleLocked();
 };
-
-// The canonical per-function RAII scope that ALSO installs the
-// connection as the thread-local current for the duration of the
-// scope (so `db_query->...` inside the scope routes to it) lives in
-// connectionScope.h — ibConnectionScope. The earlier low-level
-// pool-only RAII previously declared here was redundant with
-// shared_ptr's pool-deleter and had no call sites.
 
 #endif  // __IB_CONNECTION_POOL_H__

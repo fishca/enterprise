@@ -60,50 +60,78 @@ the unit of ownership and the transaction the unit of bookkeeping.
 
 ## Architecture
 
+> **Update 2026-04-28**: holder-keyed model — pool no longer uses
+> thread-local slots. Reservations are keyed on
+> `ibDatabaseConnectionHolder*` identity. Three runtime channels:
+> per-`ibSession` (DML), session-registry (sys_session I/O,
+> two-holder split write/probe), process-wide singleton (DDL /
+> `db_query`). Public pool API shrunk to 4 methods.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  ibApplicationData (singleton)                                  │
 │    • holds std::unique_ptr<ibConnectionPool>                    │
-│    • NO direct m_db — pool is the sole owner of every conn      │
+│    • Pool::Shutdown driven by ~ibApplicationData (RAII)         │
 └──────────────────────┬──────────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────────┐
 │  ibConnectionPool                                               │
-│    • m_source : shared_ptr<ibDatabaseLayer>   (master, alive)   │
-│    • m_idle   : deque<shared_ptr<ibDatabaseLayer>>              │
+│    • m_source  : shared_ptr<ibDatabaseLayer>   (master)         │
+│    • m_entries : vector<ibConnectionEntry>     (single registry)│
+│        each entry: { conn, txHolder*, scopeHolder*, lastUsed,   │
+│                      startedAt, inUse, noWait }                 │
+│        states encoded by triple (no separate idle/borrow lists) │
 │    • lazy Clone() on demand up to maxSize                       │
 │    • thread-safe via mutex + cv                                 │
-│    • thread-local slots for scope + active-TX tracking          │
+│    • Public API: Init/Shutdown/IsInitialised/                   │
+│      GetFreeConnection/GetDatabaseLayer (rest is private+friend)│
 └──────────────────────┬──────────────────────────────────────────┘
-                       │ Checkout + custom-deleter hand-out
+                       │ holder->Get/AcquireConnection or scope ctor
                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
+│  ibDatabaseConnectionHolder (identity tag)                      │
+│    • virtual dtor only — empty marker base                      │
+│    • GetConnection()        → reserved/scope-bound conn or null │
+│    • AcquireFreeConnection()→ wrapped Checkout, no binding      │
+│                                                                 │
+│  Channels (concrete holder instances):                          │
+│   ┌─ ibSession                                                  │
+│   │     inherits holder; one identity per session;              │
+│   │     m_resolvedLanguageCode set in SetUserInfo on auth       │
+│   ├─ ibSessionRegistry::m_writeHolder  (typed                   │
+│   │  ibSessionRegistry::m_probeHolder   ibSessionRegistry-      │
+│   │     ConnectionHolder × 2 — sys_session I/O channel)         │
+│   └─ ibConnectionPool::DbQueryHolder() (process-wide singleton  │
+│        ibSingleConnectionHolder; backs db_query macro for DDL   │
+│        and infra-level writes)                                  │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────────┐
 │  ibConnectionScope (RAII)                                       │
-│    • ctor: inherit parent's TL conn OR Checkout fresh           │
-│    • installs scope's conn on thread-local slot                 │
-│    • SafeBeginTransaction / SafeCommitTransaction /             │
-│      SafeRollBackTransaction (merged from legacy TransactionGuard)│
-│    • dtor: restores TL slot, drops shared_ptr → pool reparks    │
-│    • dtor safety-net: any unmatched SafeBegin → RollBack        │
+│    • ctor: holder = customHolder ?? Pool::CurrentHolder()       │
+│       (= session ?? singleton)                                  │
+│       1. inherit holder's existing scope-bound conn, OR         │
+│       2. adopt holder's TX-pinned conn, OR                      │
+│       3. fresh Checkout + BindScopeHolder                       │
+│    • SafeBeginTransaction / SafeCommit / SafeRollBack            │
+│    • dtor: UnbindScopeHolder + drop conn (deleter clears inUse) │
 └──────────────────────┬──────────────────────────────────────────┘
                        │ scope->X() / db_query->X()
                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  ibDatabaseLayer (base)                                         │
-│    • inherits std::enable_shared_from_this<ibDatabaseLayer>     │
-│    • public non-virtual Begin/Commit/RollBack wrappers:         │
-│        - counter m_txDepth + flag m_txAborted                   │
-│        - only depth 0→1 fires DoBeginTransaction                │
-│        - only depth 1→0 fires DoCommit (or DoRollBack if        │
-│          aborted → "inner rollback poisons outer commit")       │
-│        - sets/clears pool's active-TX TL slot on transitions    │
-│    • protected pure-virtual Do* — implemented by 5 drivers      │
+│    • enable_shared_from_this                                    │
+│    • Begin/Commit/RollBack wrappers (counter m_txDepth +         │
+│      flag m_txAborted; depth 0→1 → ReserveTx, 1→0 → ReleaseTx)  │
+│    • m_holder back-pointer (set by pool's ReserveTx)            │
+│    • IsBusy() — true while any stmt/rs is alive (m_Statements + │
+│      m_ResultSets non-empty); pool's Checkout/Reap skip busy    │
+│      entries → bare db_query->PrepareStatement(...) is safe     │
 └──────────────────────┬──────────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────────┐
 │  Driver implementations (firebird/postgres/sqlite/mysql/odbc)   │
 │    • DoBeginTransaction/DoCommit/DoRollBack — real SQL/native   │
-│    • no m_transaction_is_active flag (removed); base owns state │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -111,65 +139,107 @@ the unit of ownership and the transaction the unit of bookkeeping.
 
 | File | Purpose |
 |---|---|
-| `backend/databaseLayer/connectionPool.{h,cpp}` | Pool + TL slots |
-| `backend/databaseLayer/connectionScope.{h,cpp}` | RAII scope + merged Safe* tx API |
-| `backend/databaseLayer/databaseLayer.{h,cpp}` | Base counter layer + wrapper methods |
-| `backend/databaseLayer/{firebird,postgres,sqllite,mysql,odbc}/*` | 5 drivers — DoBegin/DoCommit/DoRollBack protected virtual |
-| `backend/appData.{h,cpp}` | Pool owner, `GetDatabaseLayer()` resolving priority chain |
+| `backend/databaseLayer/connectionHolder.h` | Holder base + `ibSingleConnectionHolder` |
+| `backend/databaseLayer/connectionPool.{h,cpp}` | Pool + `m_entries` registry + private holder primitives |
+| `backend/databaseLayer/connectionScope.{h,cpp}` | RAII scope; resolves holder via `Pool::CurrentHolder()` |
+| `backend/databaseLayer/databaseLayer.{h,cpp}` | Base counter layer + `m_holder` back-pointer + `IsBusy()` |
+| `backend/databaseLayer/{firebird,postgres,sqllite,mysql,odbc}/*` | 5 drivers — `Do*` overrides only |
+| `backend/session/session.h` | `ibSession : public ibDatabaseConnectionHolder` |
+| `backend/session/sessionRegistry.h` | `ibSessionRegistryConnectionHolder` × 2 — write + probe |
+| `backend/appData.{h,cpp}` | Pool owner, `GetDatabaseLayer()` delegate |
 
 ---
 
 ## Public API
 
-### `ibConnectionPool`
+### `ibDatabaseConnectionHolder` (canonical user-facing API)
+
+```cpp
+class BACKEND_API ibDatabaseConnectionHolder {
+public:
+    virtual ~ibDatabaseConnectionHolder() = default;
+
+    // Conn currently reserved (TX) or scope-bound to this holder. TX
+    // pin wins over scope binding. Returns nullptr when nothing is
+    // pinned. Resolves through ibConnectionPool internally.
+    std::shared_ptr<ibDatabaseLayer> GetConnection() const;
+
+    // Fresh checkout — wrapped shared_ptr, NOT bound to this holder.
+    // Used for parallel side queries that must NOT join the holder's
+    // current TX. Released back to the pool on shared_ptr drop.
+    std::shared_ptr<ibDatabaseLayer> AcquireFreeConnection() const;
+};
+
+class BACKEND_API ibSingleConnectionHolder : public ibDatabaseConnectionHolder {
+public:
+    ibSingleConnectionHolder();
+    ~ibSingleConnectionHolder() override;   // self-cleans pool reservations
+};
+```
+
+Usage:
+
+```cpp
+// Session-bound conn (during script work):
+ibSession::Current()->GetConnection()->RunQuery(...);
+
+// Side-channel parallel conn from a session worker:
+auto fresh = ibSession::Current()->AcquireFreeConnection();
+fresh->BeginTransaction();
+fresh->RunQuery(...);
+fresh->Commit();
+
+// Session-registry persistent conns (registry-internal):
+m_writeConn = m_writeHolder.AcquireFreeConnection();
+m_probeConn = m_probeHolder.AcquireFreeConnection();
+
+// db_query global routes through DbQueryHolder():
+db_query->RunQuery(...);                       // process-wide singleton channel
+```
+
+### `ibConnectionPool` (public surface — minimal)
 
 ```cpp
 class BACKEND_API ibConnectionPool {
 public:
-    // Lifecycle. minIdle is the floor for idle-shrink: idle clones
-    // beyond this count get closed after kIdleTimeout (60s); pool
-    // pre-warms minIdle clones at Init so first requests don't pay
-    // the Open cost. Per runMode: 2 for desktop GUI (manager + UI
-    // baseline), 4 for web, 2 for daemon.
-    void Init(std::shared_ptr<ibDatabaseLayer> primary, std::size_t maxSize, std::size_t minIdle = 2);
+    void Init(std::shared_ptr<ibDatabaseLayer> primary,
+              std::size_t maxSize, std::size_t minIdle = 2);
     void Shutdown();
+    bool IsInitialised() const;
 
-    // Low-level checkout — does NOT touch TL. For registry-style
-    // consumers that need N parallel conns on one thread.
-    std::shared_ptr<ibDatabaseLayer> CheckoutIndependent();
-
-    // Canonical RAII factory. Returns an ibConnectionScope by value.
+    // Canonical RAII factory. Returns an ibConnectionScope by value;
+    // scope's ctor resolves holder via CurrentHolder().
     static ibConnectionScope GetFreeConnection();
 
-    // Master connection — the fallback used by GetDatabaseLayer
-    // when no thread-local slot is set.
-    static std::shared_ptr<ibDatabaseLayer> GetPrimaryConnection();
-
-    // The `db_query` resolution function. Priority chain:
-    //   1. Active-TX TL (if any)
-    //   2. Active-scope TL (if any)
-    //   3. Primary conn
+    // The `db_query` resolution function. Priority:
+    //   1. CurrentHolder()'s reserved-TX conn
+    //   2. CurrentHolder()'s scope-bound conn
+    //   3. Primary master conn (fallback)
     static std::shared_ptr<ibDatabaseLayer> GetDatabaseLayer();
-
-    // Thread-local active-transaction accessors — set by
-    // ibDatabaseLayer::BeginTransaction on depth 0→1, cleared on 1→0.
-    static std::shared_ptr<ibDatabaseLayer> GetActiveTxConnection();
-    static void SetActiveTxConnection(std::shared_ptr<ibDatabaseLayer>);
-
-    // Observability
-    std::size_t MaxSize()  const;
-    std::size_t LiveSize() const;
-    std::size_t IdleSize() const;
 };
 ```
+
+Holder-keyed primitives (`ReserveTx`, `Bind/UnbindScopeHolder`,
+`Checkout`, `ClearActiveTxConnection`, `CurrentHolder`,
+`DbQueryHolder`, etc.) are private with friend access for
+`ibConnectionScope`, `ibDatabaseConnectionHolder`,
+`ibSingleConnectionHolder`, `ibDatabaseLayer`. End-user code goes
+through holder methods or `ibConnectionScope`.
 
 ### `ibConnectionScope`
 
 ```cpp
 class BACKEND_API ibConnectionScope {
 public:
-    ibConnectionScope();        // inherit TL or Checkout + install TL
-    ~ibConnectionScope();       // rollback unmatched Begin + restore TL + drop conn
+    // Default ctor: holder = ibConnectionPool::CurrentHolder()
+    //   (= ibSession::Current() if bound, else DbQueryHolder() singleton).
+    ibConnectionScope();
+
+    // Custom-holder ctor: target an explicit channel (e.g. registry-
+    // owned holder). Same Acquire flow, just with a different holder.
+    explicit ibConnectionScope(ibDatabaseConnectionHolder* customHolder);
+
+    ~ibConnectionScope();      // unbind scope holder + drop conn (deleter clears inUse)
     // move-only
 
     // Driver access — scope->X() / (*scope).X()
@@ -177,17 +247,14 @@ public:
     ibDatabaseLayer* get() const;
     explicit operator bool() const;
 
-    // Underlying shared_ptr — for code that needs shared ownership
     const std::shared_ptr<ibDatabaseLayer>& shared() const;
 
-    // Scope-tracked transactions (safety-net: dtor rolls back any
-    // unresolved SafeBegin)
     void SafeBeginTransaction(const ibDatabaseLayer::ibTxOptions& = {});
     void SafeCommitTransaction();
     void SafeRollBackTransaction();
 
     bool HasActiveTransaction() const;
-    bool Owns() const;  // true = outer-most scope, false = inherited
+    bool Owns() const;  // true = outer-most scope for the holder
 };
 ```
 
@@ -196,20 +263,30 @@ public:
 ```cpp
 class ibDatabaseLayer : public std::enable_shared_from_this<ibDatabaseLayer> {
 public:
-    // Public non-virtual wrappers — counter + aborted-flag semantics
     void BeginTransaction(const ibTxOptions& opts = {});
     void Commit();
     void RollBack();
-    bool IsActiveTransaction();   // m_txDepth > 0
+    bool IsActiveTransaction();    // m_txDepth > 0
+
+    // Holder that has this layer reserved for an active TX (set by
+    // pool's ReserveTx, cleared by ReleaseTx). Identity-only.
+    ibDatabaseConnectionHolder* GetHolder() const;
+
+    // Pool's hand-out / Reap predicate consults this — true while any
+    // ibPreparedStatement / ibDatabaseResultSet is alive on the
+    // layer. Keeps a conn whose result set is mid-iteration from
+    // being handed to another caller (cursor would race).
+    bool IsBusy() const;
 
 protected:
-    // Driver hooks — dialect-specific SQL / native API
     virtual void DoBeginTransaction(const ibTxOptions& opts) = 0;
     virtual void DoCommit() = 0;
     virtual void DoRollBack() = 0;
 
     int  m_txDepth   = 0;
     bool m_txAborted = false;
+    ibDatabaseConnectionHolder* m_holder = nullptr;
+    friend class ibConnectionPool;
 };
 ```
 
@@ -384,29 +461,43 @@ exposed through `ibDatabaseLayer`.
 
 ---
 
-## Thread-local slots
+## Holder reservation slots (post 2026-04-28)
 
-Two distinct TL slots on `ibConnectionPool` (defined in
-`connectionPool.cpp` as namespace-local `thread_local shared_ptr`):
+> **Replaces the prior "two TL slots" model.** Both reservations
+> live in `ibConnectionPool::m_entries[i]` as `txHolder` and
+> `scopeHolder` fields (raw `ibDatabaseConnectionHolder*`). Pool's
+> `m_mutex` synchronises both reads and writes. Identity-by-pointer:
+> different holder addresses are different channels.
 
-1. **`s_tlCurrent`** — scope's current conn. Set by `ibConnectionScope`
-   ctor (if outer-most), cleared by dtor. Private to the
-   pool/scope friend pair.
+Each `ibConnectionEntry` carries:
 
-2. **`s_tlActiveTx`** — active-TX conn. Set by
-   `ibDatabaseLayer::BeginTransaction` when `m_txDepth 0→1` via
-   `shared_from_this()`. Cleared when `m_txDepth 1→0` in Commit or
-   RollBack. Holds the layer alive through the pool's control block
-   (via `enable_shared_from_this`) — the layer survives even if the
-   hand-out shared_ptr that started the TX has been dropped.
+| Field | Set by | Cleared by | Meaning |
+|---|---|---|---|
+| `txHolder` | `Pool::ReserveTx(holder, conn)` (called from `BeginTransaction` 0→1) | `Pool::ReleaseTx(holder)` (called from `Commit/RollBack` 1→0) | Active transaction pinned to holder; entry stays reserved across worker thread crossings |
+| `scopeHolder` | `Pool::BindScopeHolder(holder, conn)` (called from `ibConnectionScope` ctor when it owns the borrow) | `Pool::UnbindScopeHolder(holder)` (called from `ibConnectionScope` dtor) | Outer scope marker; nested scopes for the same holder inherit by lookup, no second checkout |
+| `inUse` | `Checkout` flips on, hand-out deleter flips off | — | Borrowed flag; pool's Checkout/Reap skip while true |
 
 **Priority chain for `GetDatabaseLayer()`:**
 
 ```
-if (s_tlActiveTx)  return s_tlActiveTx;    // TX pin — connection-local
-if (s_tlCurrent)   return s_tlCurrent;     // scope inheritance
-return GetPrimaryConnection();             // legacy m_db fallback
+holder = CurrentHolder();        // ibSession::Current() ?? DbQueryHolder()
+if (holder->GetReservedTx())   return reserved-tx-conn;    // TX pin
+if (holder->GetScopeConn())    return scope-bound-conn;    // scope binding
+return GetPrimaryConnection();                              // master fallback
 ```
+
+**Identity scope cheat-sheet:**
+
+| Channel | Holder type | Identity | Lifecycle |
+|---|---|---|---|
+| Per-session DML | `ibSession` (inherits holder) | one per session | session ctor → registry-managed Close |
+| Session-registry I/O | `ibSessionRegistryConnectionHolder × 2` (`m_writeHolder`, `m_probeHolder`) | two per registry instance | registry's lifetime |
+| DDL / `db_query` | `ibSingleConnectionHolder` (singleton) | process-wide single | block-local static, never freed |
+
+For a parallel non-session channel that needs its own identity (rare),
+declare a static `ibSingleConnectionHolder` and pass its address to
+`ibConnectionScope(&customHolder)` — see
+`wfrontend.cpp::CheckMetadataAndEvict` for the canonical example.
 
 ---
 
@@ -435,12 +526,12 @@ return GetPrimaryConnection();             // legacy m_db fallback
 | `*Manager_impl.cpp` (catalog, document, register managers) | Read-only `FindByCode` / `FindByName` etc. No TX. Migration gives parallelism but isn't correctness-critical. Low priority. |
 | `objectListQuery.cpp`, `*MetadataQuery.cpp` | Read-only SELECTs. Same as above. |
 
-### Consumers using `CheckoutIndependent`
+### Direct-checkout consumers (post 2026-04-28: via own holder + AcquireFreeConnection)
 
-| File | Purpose |
-|---|---|
-| `sessionRegistry.cpp` | 3 persistent conns (lock / write / probe) on registry thread |
-| `wfrontend.cpp::CheckMetadataAndEvict` | 15s metadata-watcher per-tick |
+| File | Holder | Purpose |
+|---|---|---|
+| `sessionRegistry.cpp` | `m_writeHolder`, `m_probeHolder` | 2 persistent conns (sys_session writes + NOWAIT row-lock probe) |
+| `wfrontend.cpp::CheckMetadataAndEvict` | `static ibSingleConnectionHolder` (function-local) | 15s metadata-watcher per-tick |
 
 ---
 

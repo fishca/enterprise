@@ -23,6 +23,7 @@
 //     Submit after that point must not pretend to succeed.
 
 #include "backend/backend.h"
+#include "backend/databaseLayer/connectionHolder.h"   // ibSingleConnectionHolder base
 #include "session.h"
 #include "sessionPolicy.h"   // unique_ptr<ibSessionPolicy> needs complete type
 
@@ -43,6 +44,15 @@
 #include <vector>
 
 class ibSessionSnapshot;
+
+// Connection-holder identity for ibSessionRegistry's pool checkouts.
+// Empty subclass — exists purely so the type itself names the owner,
+// which makes pool diagnostics ("which holder is hogging an entry?")
+// and future per-channel quotas trivially attributable to the
+// registry rather than to a generic ibSingleConnectionHolder. No
+// behaviour beyond what the base provides.
+class BACKEND_API ibSessionRegistryConnectionHolder : public ibSingleConnectionHolder {
+};
 
 // -------------------------------------------------------------------
 // Request types + payload. Producers fill a request and Submit it with
@@ -309,6 +319,15 @@ public:
 	// Fires when the registry transitions from non-empty to empty.
 	// Use case: unload metadata when no users remain.
 	void OnLastDisconnect(VoidCallback cb);
+
+	// Fires from ibSession::RequestForceExit on any session kind.
+	// Per-class virtual OnForceExit only covers ibGUISession (wxApp
+	// quit) and ibWebClientSession (svr.stop via wfrontend). Designer's
+	// CommandId_Destroy lands on Current(), which for wes falls back to
+	// the WebServer technical session whose OnForceExit is the empty
+	// base — this listener picks up THAT case.
+	void OnForceExit(SessionCallback cb);
+	void NotifyForceExit(ibSession* s);
 
 	// Fires from mm::CreateMainModule after compile succeeded — handy
 	// for post-compile diagnostics, AOT-cache writes, etc.
@@ -582,6 +601,7 @@ private:
 	std::vector<VoidCallback>           m_listLastDisconnect;
 	std::vector<SessionCallback>        m_listAfterCompile;
 	std::vector<KeepAliveHook>          m_listKeepAlive;
+	std::vector<SessionCallback>        m_listForceExit;
 	std::vector<SessionCallback>        m_listReload;
 	std::size_t                         m_authenticatedCount = 0;
 	bool                                m_firstConnectFired  = false;
@@ -621,14 +641,24 @@ private:
 	// sys_session row I/O + pessimistic row locks.
 	bool                                                         m_ownsSysSession = false;
 
+	// Registry's connection-holder identities — one per persistent
+	// conn. Distinct identities so pool diagnostics can attribute an
+	// entry to the specific role (write vs probe) instead of one
+	// blanket "registry" tag. Both share the same class (the role
+	// distinction lives in the member name); subclassing per-role
+	// would only matter if the holders carried role-specific dtor
+	// behaviour, which they don't.
+	ibSessionRegistryConnectionHolder                            m_writeHolder;
+	ibSessionRegistryConnectionHolder                            m_probeHolder;
+
 	// Separate pool checkouts — write-conn executes INSERT / UPDATE /
 	// DELETE on sys_session + JobRefreshSnapshot SELECT; probe-conn
 	// runs `TryProbeRowLock` via its own NOWAIT TX so the probe doesn't
-	// contend with concurrent writes. Both come from
-	// `ibApplicationData::GetConnectionPool()` on Start when
-	// m_ownsSysSession is true; nullptr otherwise. Liveness is now
-	// heartbeat-based (see "HoldRowLocks self-deadlock" memory note),
-	// so the historical third "lock-conn" was retired.
+	// contend with concurrent writes. Acquired via the matching
+	// holder's AcquireFreeConnection() on Start when m_ownsSysSession
+	// is true; nullptr otherwise. Liveness is heartbeat-based (see
+	// "HoldRowLocks self-deadlock" memory note), so the historical
+	// third "lock-conn" was retired.
 	std::shared_ptr<ibDatabaseLayer>                             m_writeConn;
 	std::shared_ptr<ibDatabaseLayer>                             m_probeConn;
 

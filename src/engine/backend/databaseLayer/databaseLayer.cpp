@@ -27,12 +27,13 @@ void ibDatabaseLayer::BeginTransaction(const ibTxOptions& opts)
 	if (m_txDepth == 0) {
 		DoBeginTransaction(opts);   // may throw — depth stays 0, state clean
 		m_txAborted = false;
-		// Pin this conn to the thread for the whole TX. While set,
-		// ibApplicationData::GetDatabaseLayer and the pool's
-		// GetFreeConnection will return this exact conn for the
-		// current thread — any db_query access on this thread lands
-		// on the TX's conn regardless of whether the caller had a
-		// scope open.
+		// Pin this conn to the current holder (ibSession::Current())
+		// for the whole TX. While set, every db_query call from the
+		// same session — across threads, across worker dispatch —
+		// resolves to this exact conn. SetActiveTxConnection is a
+		// no-op on threads that have no Current() session bound; in
+		// that mode the TX runs at the driver level only and the
+		// caller's own scope is responsible for routing.
 		ibConnectionPool::SetActiveTxConnection(shared_from_this());
 	}
 	++m_txDepth;
@@ -55,12 +56,12 @@ void ibDatabaseLayer::Commit()
 	m_txDepth = 0;
 	const bool aborted = m_txAborted;
 	m_txAborted = false;
-	// Release the thread's TX pin BEFORE the driver call. The layer
+	// Release the holder's TX pin BEFORE the driver call. The layer
 	// stays alive through whatever other shared_ptr the caller holds
-	// (scope, pool's m_idle after drop, etc.); if this was the only
+	// (scope, pool entry after drop, etc.); if this was the only
 	// reference it will be released after the driver op completes
 	// naturally via RAII.
-	ibConnectionPool::SetActiveTxConnection(nullptr);
+	ibConnectionPool::ClearActiveTxConnection(this);
 	if (aborted) DoRollBack();
 	else         DoCommit();
 }
@@ -79,7 +80,7 @@ void ibDatabaseLayer::RollBack()
 
 	m_txDepth = 0;
 	m_txAborted = false;
-	ibConnectionPool::SetActiveTxConnection(nullptr);
+	ibConnectionPool::ClearActiveTxConnection(this);
 	DoRollBack();
 }
 

@@ -2,11 +2,24 @@
 #define __IB_CONNECTION_SCOPE_H__
 
 // ibConnectionScope — per-function / per-block RAII that ACQUIRES a
-// connection from ibConnectionPool and pins it as the thread-local
-// current connection for the duration of the scope. While the scope
-// is alive, the `db_query` macro on the same thread resolves to this
-// scope's connection; other threads that ask the pool for a fresh
-// checkout get a different idle connection.
+// connection from ibConnectionPool and pins it to a holder for the
+// duration of the scope. The scope's `operator->` exposes the
+// underlying ibDatabaseLayer, so a temporary like
+//   ibConnectionScope()->RunQuery(...)
+// is the canonical replacement for the legacy `db_query->RunQuery(...)`
+// on any non-session call site. While the scope is alive, db_query
+// access from the same holder resolves to this scope's connection
+// regardless of which thread the call lands on (worker dispatch,
+// debug eval); other holders see their own scope or a fresh
+// checkout.
+//
+// Holder selection priority inside the ctor:
+//   1. Explicit `customHolder` argument — for subsystems that need a
+//      dedicated non-default channel.
+//   2. ibConnectionPool::CurrentHolder() — session if bound, else the
+//      process-wide db_query singleton. Same identity that the
+//      `db_query` macro routes through, so the global and the scope
+//      always land on the same pool entry on non-session threads.
 //
 //   bool ibValueRecordDataObjectCatalog::DeleteObject() {
 //       ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
@@ -15,12 +28,12 @@
 //       scope.SafeCommitTransaction();
 //   }                                         // ~scope → pool repark
 //
-// Nested scopes share the parent's connection. Only the outer-most
-// scope actually performs a pool Checkout; inner scopes observe the
-// thread-local slot, reuse the same connection, and do NOT touch the
-// pool at their own ctor / dtor. Nested Safe*Transaction calls collapse
-// onto one real driver transaction through the base-class counter
-// layer (see databaseLayer.h — nested-safe Begin/Commit/RollBack).
+// Nested scopes for the same holder share the parent's connection.
+// Only the outer-most scope actually performs a pool Checkout; inner
+// scopes look up the holder's bound entry, reuse the same connection,
+// and do NOT touch the pool at their own ctor / dtor. Nested
+// Safe*Transaction calls collapse onto one real driver transaction
+// through the base-class counter layer (see databaseLayer.h).
 //
 // Transaction API is merged into the scope via Safe{Begin,Commit,
 // RollBack}Transaction. The dtor rolls back any unresolved Begin so
@@ -41,13 +54,16 @@
 
 #include "databaseLayer.h"
 
+class ibDatabaseConnectionHolder;
+
 class BACKEND_API ibConnectionScope
 {
 public:
-	// Acquire a connection. TL-aware: if another scope is already
-	// active on this thread, inherit its connection (nested scopes
-	// share one pool checkout); otherwise perform a pool Checkout
-	// and install this conn as the thread's TL-current.
+	// Acquire a connection. Holder-aware: if a scope is already active
+	// for ibSession::Current(), inherit its connection (nested scopes
+	// share one pool checkout per holder); otherwise reuse the holder's
+	// TX-pinned conn if any, or fall through to a fresh pool Checkout
+	// bound to the holder.
 	//
 	// Usage — direct or via the factory on ibConnectionPool:
 	//   ibConnectionScope scope;
@@ -57,6 +73,16 @@ public:
 	// constructed once at the caller's variable location. No
 	// intermediate shared_ptr round-trip.
 	ibConnectionScope();
+
+	// Acquire a connection bound to an explicit private holder instead
+	// of the calling thread's session. Useful for subsystems whose DB
+	// work cannot live inside a session (admin commands, daemon job
+	// runners, infrastructure save paths — see ibUserInfo::Save). The
+	// holder is typically a thread_local singleton owned by the
+	// subsystem; the scope reserves a conn against it and releases on
+	// dtor. Nested ibConnectionScope instances using the same custom
+	// holder inherit (passive) the same conn.
+	explicit ibConnectionScope(ibDatabaseConnectionHolder* customHolder);
 
 	~ibConnectionScope();
 
@@ -71,7 +97,7 @@ public:
 	ibConnectionScope& operator=(ibConnectionScope&& other) noexcept;
 
 	// Accessors — scope->Foo() and db_query->Foo() both reach the
-	// same driver while the scope is on the TL stack.
+	// same driver while the scope is bound to the holder.
 	ibDatabaseLayer* operator->() const { return m_conn.get(); }
 	ibDatabaseLayer* get()        const { return m_conn.get(); }
 	explicit operator bool()      const { return m_conn != nullptr; }
@@ -102,15 +128,21 @@ public:
 	bool HasActiveTransaction() const { return m_activeTx; }
 
 	// True if this scope actually owns a pool checkout (i.e. is the
-	// outer-most scope on its thread). Inner scopes that inherit
+	// outer-most scope for its holder). Inner scopes that inherit
 	// their parent's connection return false. Informational — most
 	// callers don't need to distinguish.
 	bool Owns() const { return m_ownsConn; }
 
 private:
-	std::shared_ptr<ibDatabaseLayer> m_prev;      // saved TL slot (restored on dtor)
+	// Acquire from pool, optionally bound to an explicit holder; if
+	// `customHolder` is null, the holder is resolved from the current
+	// session (or nothing for non-session threads). Shared by both
+	// public ctors.
+	void Acquire(ibDatabaseConnectionHolder* customHolder);
+
 	std::shared_ptr<ibDatabaseLayer> m_conn;      // checked-out (owner) OR inherited (nested)
-	bool                             m_ownsConn;  // true = pool checkout, false = inherited
+	ibDatabaseConnectionHolder*      m_holder = nullptr;  // bound holder (for owner dtor unbind)
+	bool                             m_ownsConn;  // true = pool checkout / scope-bind, false = inherited
 	bool                             m_activeTx = false;  // unmatched BeginTransaction
 };
 

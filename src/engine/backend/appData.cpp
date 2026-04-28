@@ -233,6 +233,13 @@ ibApplicationData::~ibApplicationData()
 	// Explicit early unload so plugins see Destroy() while the host is still
 	// alive; also clears the vector before appData's other members die.
 	if (m_pluginManager) m_pluginManager->UnloadAll();
+
+	// Pool shutdown — close every connection it owns (master + clones),
+	// invalidate outstanding hand-outs via m_shutdown so their deleters
+	// drop the captured ref instead of re-parking. Run AFTER the
+	// session registry's Stop so any session-bound DB work has
+	// completed; before m_connectionPool's own destruction below.
+	if (m_connectionPool) m_connectionPool->Shutdown();
 }
 
 
@@ -440,7 +447,7 @@ bool ibApplicationData::SetLocaleAppDataEnv(const wxString& strLocale)
 bool ibApplicationData::DestroyAppDataEnv()
 {
 	if (s_instance != nullptr && s_instance->m_connectionPool != nullptr &&
-	    ibConnectionPool::GetPrimaryConnection() != nullptr) {
+	    s_instance->m_connectionPool->IsInitialised()) {
 
 		// The active session itself is closed by its holder
 		// (mainApp/webSession) via ibSession::Close(), which clears the
@@ -454,12 +461,8 @@ bool ibApplicationData::DestroyAppDataEnv()
 		s_instance->m_strPassword = wxEmptyString;
 		s_instance->m_strDatabase = wxEmptyString;
 
-		// Pool shutdown closes every connection it owns — the master
-		// (m_source) and every clone in m_idle. Outstanding hand-outs
-		// are invalidated via the m_shutdown flag — their deleter
-		// drops the captured pool ref instead of re-parking.
-		s_instance->m_connectionPool->Shutdown();
-
+		// Pool shutdown is now driven by ~ibApplicationData (RAII) —
+		// see the dtor for the ordering rationale.
 		wxDELETE(s_instance);
 		return true;
 	}
@@ -525,7 +528,7 @@ bool ibApplicationData::InitLocale(const wxString& locale)
 		// Initialize the catalogs we'll be using.
 		m_locale.AddCatalog(wxT("open_es"));
 
-		// Initialize localization engine 
+		// Initialize localization engine
 		ibBackendLocalization::SetUserLanguage(m_locale.GetName());
 
 		//Set default time 

@@ -1,10 +1,109 @@
 # Next-session plan
 
-State at the end of the API-sweep landing (worker-pool +
-per-session-state still in `97344bbf`; this update is on top of that
-with API-shrink and naming clean-ups). This file is the picking-up
-point for the next round — not "everything ever planned", just what
-is actionable now and easy to forget.
+State at the end of the codeEditor cleanup landing (on top of the
+API-sweep in `c6299de6` + callTip fix in `b3d9f03d`). This file is
+the picking-up point for the next round — not "everything ever
+planned", just what is actionable now and easy to forget.
+
+## Designer codeEditor cleanup — landed 2026-04-28
+
+End-to-end pass over the autocomplete / IntelliSense / fold / print
+path in `src/engine/designer/win/editor/codeEditor`. Purely internal
+refactoring + a handful of real bug fixes; no public API change for
+the rest of the designer.
+
+### Bug fixes
+
+- **`m_currentPos` shadow bug** (critical). Derived
+  `ibPrecompileCode::m_nCurrentPos` was renamed to `m_currentPos`
+  during the Hungarian sweep — but base `ibTranslateCode` already
+  has an `m_currentPos` field (lexer's tokenize cursor). Derived
+  shadowed base, derived field stayed at NSDMI 0, base stayed
+  uninitialised (Debug heap pattern `0xCDCDCDCD`). Result:
+  `ibTranslateCode::IsEnd()` returned true on the first call,
+  `PrepareLexem` while-loop never ran, `m_listLexem` ended up with
+  only the ENDPROGRAM marker. Symptom: fold and Enter-indent broken
+  on every module load. Fix: derived renamed to `m_caretPos`
+  (semantically distinct — the user's caret position for the
+  IntelliSense walk, not the lexer cursor); `Clear()` and lexer
+  paths once again resolve to the base field.
+- **Autocomplete dropdown empty on blank lines.** `strCurrentWord`
+  could carry stray `\r` / `\n` from `PrepareExpression` walking
+  through whitespace lexems; `IsEmpty()` returned false on the
+  control-char-only string, the `Find` filter rejected every real
+  identifier, `m_aKeywords` stayed empty. Fix: `Append` trims
+  whitespace before the filter check; if the trimmed word is empty
+  the filter is skipped (show all items).
+- **`PrepareExpression` CONSTANT branch leak.** A string literal
+  appearing earlier in the source (e.g. `var = "hello"`) leaked into
+  `currentWord` regardless of context — autocomplete then filtered
+  every entry against `"hello"` and showed nothing. Fix: gate the
+  literal capture on the `type` / `showCommonForm` / `getCommonForm`
+  context, parenthesise the operator-precedence-bug `&& !hasPoint`.
+- **Error message — NUL bytes between marker and code line.**
+  `ibBackendException::FindErrorCodeLine` called
+  `strError.Replace('\r', '\0')` — the char overload of
+  `wxString::Replace` promotes the second arg to a 1-char string
+  containing NUL, so every `\r` became a NUL in the user-visible
+  error text. Fix: `Replace(wxT("\r"), wxEmptyString)`.
+
+### Refactoring
+
+- **`ibPrecompileCode` / `ibParserModule`.** Renamed from
+  `CPrecompile*`. Hungarian stripped (`m_nCurrentPos` →
+  `m_caretPos`, `m_pContext` → `m_activeContext`,
+  `m_pCurrentContext` → `m_cursorContext`, `m_numCurrentCompile` →
+  `m_cursor`, etc.). Modern C++17 init, NSDMI defaults, deleted
+  copy-ctor on owning structs (`ibPrecompileFunction`).
+- **`ibFoldLevelParser` (in `codeEditor.h`).** Replaced 5 separate
+  `m_proc_count` / `m_func_count` / … fields with a single
+  `std::array<short, FoldKindCount> m_counts`; chained `if/else`
+  trees in `OpenFold` / `CloseFold` collapsed into table lookups
+  (`OpenKindFor` / `CloseKindFor`). `FoldPoint` struct replaces the
+  `std::pair<int, short>` magic.
+- **`PrepareTABs` (codeEditorLoader.cpp).** ~230 LOC → ~80. Four
+  near-identical branches now share a single `rewriteIndent` lambda
+  + 3 free-function helpers (`StripEOL`, `AppendEOL`,
+  `CountLeadingIndent`). Dead `else if (current_fold != 0 &&
+  fold_level == 0)` branches in WHITE/BASE removed (unreachable).
+- **Incremental `PrepareLexem(line, line_offset, …)`.** Empty-array
+  guard at top (avoids `size() - 1` underflow on `unsigned int`).
+  Confused `lexem_start_idx` (compared to a line number, used as an
+  index) replaced with direct `i - 1` rewind. ENDPROGRAM branch
+  merged with the trigger-line branch via an `atEndProgram` flag.
+- **Autocomplete + calltip widgets.** Members of `ibAutoComplete` /
+  `ibCallTip` got `m_`-prefix + private + NSDMI defaults; ctor body
+  ditched explicit zero-init for fields that now have NSDMI.
+- **Cyrillic comment cleanup.** Empty doc-stub blocks (`/** *
+  IsNextDelimeter * : * - */`-style remnants from a cp1251 →
+  UTF-8 conversion) replaced with real one-line summaries.
+
+### Visual / UX polish
+
+- **Autocomplete + calltip follow the editor zoom.** Font size and
+  the listbox window size both scale with `wxStyledTextCtrl::GetZoom()`,
+  so the dropdown / tip stay proportional when the user zooms the
+  editor with `Ctrl+wheel`.
+- **Zoom-event handler.** Margins (line-number, breakpoint, fold)
+  are recomputed on `wxEVT_STC_ZOOM` so the gutter scales together
+  with the font instead of staying at the unzoomed baseline width.
+  `SetEditorSettings` uses the same `max(FromDIP(16),
+  TextHeight(0))` formula for the initial sizing, so a saved zoom
+  loaded from settings produces a correctly-sized gutter without
+  waiting for the first wheel tick.
+
+### Open / known issues
+
+- **Print preview — sub-pixel gaps between characters.** wxSTC /
+  Scintilla on Windows + GDI rounds per-glyph advance widths at the
+  print-DC scale, producing visible spaces inside words on the
+  preview page (e.g. `P rocedure`, `S howC omm onForm`). Switching
+  to `wxSTC_TECHNOLOGY_DIRECTWRITE` fixes the rendering but breaks
+  the font binding from settings — `SetFontColorSettings` calls
+  `StyleSetFont(style, wxFont)` which Scintilla doesn't propagate
+  the face name from under DirectWrite. Real fix needs to rewrite
+  `SetFontColorSettings` to use explicit `StyleSetFaceName` /
+  `StyleSetSize` instead of `StyleSetFont(wxFont&)`. Deferred.
 
 ## API-sweep — landed 2026-04-27
 

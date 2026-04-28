@@ -140,10 +140,13 @@ void ibControlButton::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	const bool enabled = m_enabledIntent;
 
-	// Base fill: subtle surface that shifts on hover/pressed. Keep it close
-	// to system face so the button feels native without mimicking the
-	// heavy themed bevel.
-	wxColour base = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE);
+	// Base fill: subtle surface that shifts on hover/pressed. Use the
+	// control's own background colour when the form has customised it
+	// via property; otherwise the system button face so the button
+	// feels native without mimicking the heavy themed bevel.
+	const wxColour systemFace = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE);
+	const wxColour ownBg      = GetBackgroundColour();
+	wxColour base = (ownBg.IsOk() && ownBg != systemFace) ? ownBg : systemFace;
 	wxColour fill = base;
 	if (enabled) {
 		if (m_pressed || m_keyPressed)     fill = base.ChangeLightness(85);

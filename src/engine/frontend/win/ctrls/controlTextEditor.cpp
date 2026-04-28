@@ -536,10 +536,18 @@ void ibControlTextEditor::OnPaint(wxPaintEvent& WXUNUSED(event))
 		dc.DrawText(label, m_labelRect.x, centerY - th / 2);
 	}
 
-	// unified frame around text + buttons: white interior (for text area) and a single border
+	// unified frame around text + buttons: interior mirrors m_text's
+	// own bg colour (SetBackgroundColour delegates onto m_text). When
+	// the form sets a custom property colour both ends up equal —
+	// frame fills as one solid block. When no custom colour is set
+	// m_text keeps wxTextCtrl's native white, so the frame stays white
+	// too (the original behaviour). Querying m_text directly avoids
+	// having to distinguish "explicit" vs "inherited" bg on this
+	// composite control.
 	if (!m_frameRect.IsEmpty()) {
 		const wxColour interior = m_enabledIntent
-			? wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)
+			? (m_text != nullptr ? m_text->GetBackgroundColour()
+			                     : wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW))
 			: wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE);
 		dc.SetBrush(interior);
 		dc.SetPen(*wxTRANSPARENT_PEN);

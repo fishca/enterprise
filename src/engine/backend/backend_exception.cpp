@@ -340,8 +340,8 @@ wxString ibBackendException::FindErrorCodeLine(const wxString& strBuffer, unsign
 	unsigned int currLine = 1 + strBuffer.Left(startPos).Replace(wxT('\n'), wxT('\n'));
 
 	wxString strError = wxString::Format(wxT("%s <<?>> %s"), strBuffer.Mid(startPos, currPos - startPos), strBuffer.Mid(currPos, endPos - currPos));
-	strError.Replace('\r', '\0');
-	strError.Replace('\t', ' ');
+	strError.Replace(wxT("\r"), wxEmptyString);
+	strError.Replace(wxT("\t"), wxT(" "));
 
 	stringUtils::TrimAll(strError);
 

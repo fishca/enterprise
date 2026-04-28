@@ -17,50 +17,46 @@ enum ibContentType
 
 struct ibModuleElement
 {
-	ibModuleElement() : 
-		eType(eEmpty), nImage(0), nLineStart(-1), nLineEnd(-1) {};
+	wxString      m_name;            // element identifier (function / procedure / variable name)
+	wxString      m_shortDescription;  // object kind label (one-line tooltip)
 
-	wxString strName;//имя элемента
-	wxString strShortDescription;//тип объекта
+	int           m_imageIndex = 0;    // icon index in the autocomplete image list
+	int           m_lineStart  = -1;   // first source line where the element appears
+	int           m_lineEnd    = -1;   // last source line where the element appears
 
-	int nImage;//номер картинки
-	int nLineStart;//номер строки кода, где находится элемент
-	int nLineEnd;//номер строки кода, где находится элемент
-
-	wxString sModuleName;//Имя модуля
-	ibContentType eType;
+	wxString      m_moduleName;        // owning module name
+	ibContentType m_eType      = eEmpty;
 };
 
 class ibParserModule : public ibTranslateCode
 {
-	int m_numCurrentCompile;//текущее положение в массиве лексем
-	std::vector<ibModuleElement> m_aContentModule;
+	int                          m_cursor = wxNOT_FOUND;  // current position in the lexem array
+	std::vector<ibModuleElement> m_content;
 
 protected:
 
-	ibLexem PreviewGetLexem();
-	ibLexem GetLexem();
-	ibLexem GETLexem();
-	void GETDelimeter(const wxUniChar &c);
+	const ibLexem& PreviewGetLexem();
+	const ibLexem& GetLexem();
+	const ibLexem& ExpectLexem();
+	void           ExpectDelimeter(const wxUniChar& c);
 
-	bool IsNextDelimeter(const wxUniChar &c);
-	bool IsNextKeyWord(int nKey);
-	void GETKeyWord(int nKey);
-	wxString GETIdentifier(bool strRealName = false);
-	ibValue GETConstant();
+	bool           IsNextDelimeter(const wxUniChar& c);
+	bool           IsNextKeyWord(int keyword);
+	void           ExpectKeyword(int keyword);
+	wxString       ExpectIdentifier(bool strRealName = false);
+	ibValue        ExpectConstant();
 
 public:
 
 	ibParserModule();
-	bool ParseModule(const wxString &sModule);
+	bool ParseModule(const wxString& sModule);
 
-	//all data
-	std::vector<ibModuleElement> &GetAllContent() { return m_aContentModule; }
-	//variables
-	wxArrayString GetVariables(bool bOnlyExport = true);
-	//functions & procedures 
-	wxArrayString GetFunctions(bool bOnlyExport = true);
-	wxArrayString GetProcedures(bool bOnlyExport = true);
+	// Module elements collected by ParseModule — list of every
+	// procedure / function / variable declaration found in the source.
+	// Callers iterate and filter themselves; the dedicated GetVariables
+	// / GetFunctions / GetProcedures helpers were unreachable and got
+	// removed.
+	std::vector<ibModuleElement>& GetAllContent() { return m_content; }
 };
 
 #endif 

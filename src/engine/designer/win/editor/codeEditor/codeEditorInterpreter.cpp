@@ -14,12 +14,16 @@
 //array of mathematical operation priorities
 static std::array<int, 256> gs_operPriority = { 0 };
 
-ibPrecompileCode::ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject) :
-	ibTranslateCode(moduleObject->GetFullName(), moduleObject->GetDocPath()),
-	m_moduleObject(moduleObject), m_pContext(nullptr), m_pCurrentContext(nullptr),
-	m_numCurrentCompile(wxNOT_FOUND), m_nCurrentPos(0), nLastPosition(0),
-	m_bCalcValue(false)
+ibPrecompileCode::ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject)
+	: ibTranslateCode(moduleObject->GetFullName(), moduleObject->GetDocPath()),
+	  m_moduleObject(moduleObject)
 {
+	// Wire the root context's back-pointer to this module once at
+	// construction. Used to live as a side effect inside GetContext()
+	// (mutated state on every read); single setter call up front keeps
+	// the same effect with const-correct getter.
+	m_rootContext.SetModule(this);
+
 	if (!gs_operPriority[gs_operPriority.size() - 1]) {
 
 		gs_operPriority['+'] = 10;
@@ -48,19 +52,19 @@ ibPrecompileCode::ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject) :
 
 ibPrecompileCode::~ibPrecompileCode() {}
 
-void ibPrecompileCode::Clear() //����� ������ ��� ���������� ������������� �������
+void ibPrecompileCode::Clear()
 {
-	m_pCurrentContext = nullptr;
+	m_cursorContext = nullptr;
 	if (m_defineList != nullptr) m_defineList->Clear();
 #ifdef UTF8_LEXEM_TRANSLATE
 	m_bufferSize = m_currentLine = m_currentPos = m_currentUtf8Pos = 0;
 #else 
 	m_bufferSize = m_currentLine = m_currentPos = 0;
 #endif
-	for (auto& function : m_cContext.cFunctions) wxDELETE(function.second);
-	m_numCurrentCompile = wxNOT_FOUND;
-	m_cContext.cVariables.clear();
-	m_cContext.cFunctions.clear();
+	for (auto& function : m_rootContext.m_functions) wxDELETE(function.second);
+	m_cursor = wxNOT_FOUND;
+	m_rootContext.m_variables.clear();
+	m_rootContext.m_functions.clear();
 
 	m_valObject.Reset();
 }
@@ -83,43 +87,42 @@ void ibPrecompileCode::PrepareModuleData()
 			wxASSERT_MSG(false, "ibPrecompileCode::PrepareModuleData");
 		}
 		for (auto pair : moduleManager->GetContextVariables()) {
-			//��������� ���������� �� ���������
+
 			ibValue* managerVariable = pair.second;
 			managerVariable->PrepareNames();
 			for (unsigned int i = 0; i < managerVariable->GetNProps(); i++) {
 				const wxString& strAttributeName = managerVariable->GetPropName(i);
-				//determine the number and type of the variable
-				CPrecompileVariable cVariables;
-				cVariables.strName = strAttributeName;
-				cVariables.strRealName = strAttributeName;
+				//determine the m_number and type of the variable
+				ibPrecompileVariable variables;
+				variables.m_name = strAttributeName;
+				variables.m_realName = strAttributeName;
 
-				cVariables.nNumber = i;
-				cVariables.bContext = true;
-				cVariables.bExport = true;
+				variables.m_number = i;
+				variables.m_isContext = true;
+				variables.m_isExport = true;
 
-				cVariables.m_valContext = managerVariable;
+				variables.m_valContext = managerVariable;
 
-				GetContext()->cVariables[stringUtils::MakeUpper(strAttributeName)] = cVariables;
+				GetContext()->m_variables[stringUtils::MakeUpper(strAttributeName)] = variables;
 			}
-			//��������� ������ �� ���������
+
 			for (unsigned int i = 0; i < managerVariable->GetNMethods(); i++) {
 				const wxString& strMethodName = managerVariable->GetMethodName(i);
 
-				CPrecompileContext* compileContext = new CPrecompileContext();
-				compileContext->nReturn = managerVariable->HasRetVal(i) ? RETURN_FUNCTION : RETURN_PROCEDURE;
-				compileContext->pModule = this;
+				ibPrecompileContext* compileContext = new ibPrecompileContext();
+				compileContext->m_returnKind = managerVariable->HasRetVal(i) ? RETURN_FUNCTION : RETURN_PROCEDURE;
+				compileContext->m_module = this;
 
-				CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, compileContext);
-				pFunction->strRealName = strMethodName;
-				pFunction->strShortDescription = managerVariable->GetMethodHelper(i);
-				pFunction->nStart = i;
-				pFunction->bContext = true;
-				pFunction->bExport = true;
+				ibPrecompileFunction* pFunction = new ibPrecompileFunction(strMethodName, compileContext);
+				pFunction->m_realName = strMethodName;
+				pFunction->m_shortDescription = managerVariable->GetMethodHelper(i);
+				pFunction->m_isContext = true;
+				pFunction->m_isExport = true;
 
 				pFunction->m_valContext = managerVariable;
 
 				// check for typing
-				GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction;
+				GetContext()->m_functions[stringUtils::MakeUpper(strMethodName)] = pFunction;
 			}
 		}
 		unsigned int nNumberAttr = 0;
@@ -129,64 +132,60 @@ void ibPrecompileCode::PrepareModuleData()
 				ibParserModule cParser;
 				if (cParser.ParseModule(module->GetModuleText())) {
 					for (auto code : cParser.GetAllContent()) {
-						if (code.eType == eExportVariable) {
-							wxString strAttributeName = code.strName;
-							if (m_cContext.FindVariable(strAttributeName))
+						if (code.m_eType == eExportVariable) {
+							wxString strAttributeName = code.m_name;
+							if (m_rootContext.FindVariable(strAttributeName))
 								continue;
-							//determine the number and type of the variable
-							CPrecompileVariable cVariables;
-							cVariables.strName = strAttributeName;
-							cVariables.strRealName = strAttributeName;
+							//determine the m_number and type of the variable
+							ibPrecompileVariable variables;
+							variables.m_name = strAttributeName;
+							variables.m_realName = strAttributeName;
 
-							cVariables.nNumber = nNumberAttr;
-							cVariables.bContext = true;
-							cVariables.bExport = true;
+							variables.m_number = nNumberAttr;
+							variables.m_isContext = true;
+							variables.m_isExport = true;
 
-							cVariables.m_valContext = module;
+							variables.m_valContext = module;
 
-							GetContext()->cVariables[stringUtils::MakeUpper(strAttributeName)] = cVariables;	nNumberAttr++;
+							GetContext()->m_variables[stringUtils::MakeUpper(strAttributeName)] = variables;	nNumberAttr++;
 						}
-						else if (code.eType == eExportProcedure) {
-							wxString strMethodName = code.strName;
-							if (m_cContext.FindFunction(strMethodName))
+						else if (code.m_eType == eExportProcedure) {
+							wxString strMethodName = code.m_name;
+							if (m_rootContext.FindFunction(strMethodName))
 								continue;
-							CPrecompileContext* procContext = new CPrecompileContext(GetContext());//������� ����� ��������, � ������� ����� ������������� ���� �������
+							ibPrecompileContext* procContext = new ibPrecompileContext(GetContext());
 							procContext->SetModule(this);
-							procContext->nReturn = RETURN_PROCEDURE;
+							procContext->m_returnKind = RETURN_PROCEDURE;
 
-							CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
-							pFunction->strRealName = strMethodName;
-							pFunction->strShortDescription = code.strShortDescription;
-
-							pFunction->nStart = nNumberFunc;
-							pFunction->bContext = true;
-							pFunction->bExport = true;
+							ibPrecompileFunction* pFunction = new ibPrecompileFunction(strMethodName, procContext);
+							pFunction->m_realName = strMethodName;
+							pFunction->m_shortDescription = code.m_shortDescription;
+							pFunction->m_isContext = true;
+							pFunction->m_isExport = true;
 
 							pFunction->m_valContext = module;
 
 							// check for typing
-							GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
+							GetContext()->m_functions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
 						}
-						else if (code.eType == eExportFunction) {
-							wxString strMethodName = code.strName;
-							if (m_cContext.FindFunction(strMethodName)) continue;
+						else if (code.m_eType == eExportFunction) {
+							wxString strMethodName = code.m_name;
+							if (m_rootContext.FindFunction(strMethodName)) continue;
 
-							CPrecompileContext* procContext = new CPrecompileContext(GetContext());//������� ����� ��������, � ������� ����� ������������� ���� �������
+							ibPrecompileContext* procContext = new ibPrecompileContext(GetContext());
 							procContext->SetModule(this);
-							procContext->nReturn = RETURN_FUNCTION;
+							procContext->m_returnKind = RETURN_FUNCTION;
 
-							CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
-							pFunction->strRealName = strMethodName;
-							pFunction->strShortDescription = code.strShortDescription;
-
-							pFunction->nStart = nNumberFunc;
-							pFunction->bContext = true;
-							pFunction->bExport = true;
+							ibPrecompileFunction* pFunction = new ibPrecompileFunction(strMethodName, procContext);
+							pFunction->m_realName = strMethodName;
+							pFunction->m_shortDescription = code.m_shortDescription;
+							pFunction->m_isContext = true;
+							pFunction->m_isExport = true;
 
 							pFunction->m_valContext = module;
 
 							// check for typing
-							GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
+							GetContext()->m_functions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
 						}
 					}
 				}
@@ -207,48 +206,47 @@ void ibPrecompileCode::PrepareModuleData()
 					//adding variables from context
 					for (long i = 0; i < pRefData->GetNProps(); i++) {
 						wxString strAttributeName = pRefData->GetPropName(i);
-						if (m_cContext.FindVariable(strAttributeName))
+						if (m_rootContext.FindVariable(strAttributeName))
 							continue;
 
-						//determine the number and type of the variable
-						CPrecompileVariable cVariables;
-						cVariables.strName = strAttributeName;
-						cVariables.strRealName = strAttributeName;
+						//determine the m_number and type of the variable
+						ibPrecompileVariable variables;
+						variables.m_name = strAttributeName;
+						variables.m_realName = strAttributeName;
 
-						cVariables.nNumber = i;
-						cVariables.bContext = true;
-						cVariables.bExport = true;
+						variables.m_number = i;
+						variables.m_isContext = true;
+						variables.m_isExport = true;
 
-						cVariables.m_valContext = pRefData;
+						variables.m_valContext = pRefData;
 
-						GetContext()->cVariables[stringUtils::MakeUpper(strAttributeName)] = cVariables;
+						GetContext()->m_variables[stringUtils::MakeUpper(strAttributeName)] = variables;
 					}
 
 					// add methods from context
 					for (long i = 0; i < pRefData->GetNMethods(); i++) {
 						wxString strMethodName = pRefData->GetMethodName(i);
-						if (m_cContext.FindFunction(strMethodName))
+						if (m_rootContext.FindFunction(strMethodName))
 							continue;
 
-						CPrecompileContext* procContext = new CPrecompileContext(GetContext());//������� ����� ��������, � ������� ����� ������������� ���� �������
+						ibPrecompileContext* procContext = new ibPrecompileContext(GetContext());
 						procContext->SetModule(this);
 
 						if (pRefData->HasRetVal(i))
-							procContext->nReturn = RETURN_FUNCTION;
+							procContext->m_returnKind = RETURN_FUNCTION;
 						else
-							procContext->nReturn = RETURN_PROCEDURE;
+							procContext->m_returnKind = RETURN_PROCEDURE;
 
-						CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
-						pFunction->strRealName = strMethodName;
-						pFunction->strShortDescription = pRefData->GetMethodHelper(i);
-						pFunction->nStart = i;
-						pFunction->bContext = true;
-						pFunction->bExport = true;
+						ibPrecompileFunction* pFunction = new ibPrecompileFunction(strMethodName, procContext);
+						pFunction->m_realName = strMethodName;
+						pFunction->m_shortDescription = pRefData->GetMethodHelper(i);
+						pFunction->m_isContext = true;
+						pFunction->m_isExport = true;
 
 						pFunction->m_valContext = pRefData;
 
 						// check for typing
-						GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction;
+						GetContext()->m_functions[stringUtils::MakeUpper(strMethodName)] = pFunction;
 					}
 
 					if (moduleObject != nullptr) {
@@ -257,66 +255,62 @@ void ibPrecompileCode::PrepareModuleData()
 							unsigned int nNumberAttr = pRefData->GetNProps() + 1;
 							unsigned int nNumberFunc = pRefData->GetNMethods() + 1;
 							for (auto code : cParser.GetAllContent()) {
-								if (code.eType == eExportVariable) {
-									const wxString& strAttributeName = code.strName;
-									if (m_cContext.FindVariable(strAttributeName))
+								if (code.m_eType == eExportVariable) {
+									const wxString& strAttributeName = code.m_name;
+									if (m_rootContext.FindVariable(strAttributeName))
 										continue;
-									//determine the number and type of the variable
-									CPrecompileVariable cVariable;
-									cVariable.strName = strAttributeName;
-									cVariable.strRealName = strAttributeName;
+									//determine the m_number and type of the variable
+									ibPrecompileVariable cVariable;
+									cVariable.m_name = strAttributeName;
+									cVariable.m_realName = strAttributeName;
 
-									cVariable.nNumber = nNumberAttr;
-									cVariable.bContext = true;
-									cVariable.bExport = true;
+									cVariable.m_number = nNumberAttr;
+									cVariable.m_isContext = true;
+									cVariable.m_isExport = true;
 
 									cVariable.m_valContext = pRefData;
 
-									GetContext()->cVariables[stringUtils::MakeUpper(strAttributeName)] = cVariable;	nNumberAttr++;
+									GetContext()->m_variables[stringUtils::MakeUpper(strAttributeName)] = cVariable;	nNumberAttr++;
 								}
-								else if (code.eType == eExportProcedure) {
-									const wxString& strMethodName = code.strName;
-									if (m_cContext.FindFunction(strMethodName))
+								else if (code.m_eType == eExportProcedure) {
+									const wxString& strMethodName = code.m_name;
+									if (m_rootContext.FindFunction(strMethodName))
 										continue;
 
-									CPrecompileContext* procContext = new CPrecompileContext(GetContext());//������� ����� ��������, � ������� ����� ������������� ���� �������
+									ibPrecompileContext* procContext = new ibPrecompileContext(GetContext());
 									procContext->SetModule(this);
-									procContext->nReturn = RETURN_PROCEDURE;
+									procContext->m_returnKind = RETURN_PROCEDURE;
 
-									CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
-									pFunction->strRealName = strMethodName;
-									pFunction->strShortDescription = code.strShortDescription;
-
-									pFunction->nStart = nNumberFunc;
-									pFunction->bContext = true;
-									pFunction->bExport = true;
+									ibPrecompileFunction* pFunction = new ibPrecompileFunction(strMethodName, procContext);
+									pFunction->m_realName = strMethodName;
+									pFunction->m_shortDescription = code.m_shortDescription;
+									pFunction->m_isContext = true;
+									pFunction->m_isExport = true;
 
 									pFunction->m_valContext = pRefData;
 
 									// check for typing
-									GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
+									GetContext()->m_functions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
 								}
-								else if (code.eType == eExportFunction) {
-									const wxString& strMethodName = code.strName;
-									if (m_cContext.FindFunction(strMethodName))
+								else if (code.m_eType == eExportFunction) {
+									const wxString& strMethodName = code.m_name;
+									if (m_rootContext.FindFunction(strMethodName))
 										continue;
 
-									CPrecompileContext* procContext = new CPrecompileContext(GetContext());//������� ����� ��������, � ������� ����� ������������� ���� �������
+									ibPrecompileContext* procContext = new ibPrecompileContext(GetContext());
 									procContext->SetModule(this);
-									procContext->nReturn = RETURN_FUNCTION;
+									procContext->m_returnKind = RETURN_FUNCTION;
 
-									CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
-									pFunction->strRealName = strMethodName;
-									pFunction->strShortDescription = code.strShortDescription;
-
-									pFunction->nStart = nNumberFunc;
-									pFunction->bContext = true;
-									pFunction->bExport = true;
+									ibPrecompileFunction* pFunction = new ibPrecompileFunction(strMethodName, procContext);
+									pFunction->m_realName = strMethodName;
+									pFunction->m_shortDescription = code.m_shortDescription;
+									pFunction->m_isContext = true;
+									pFunction->m_isExport = true;
 
 									pFunction->m_valContext = pRefData;
 
 									// check for typing
-									GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
+									GetContext()->m_functions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
 								}
 							}
 						}
@@ -338,7 +332,7 @@ bool ibPrecompileCode::PrepareLexem()
 		m_current_lex.m_strModuleName = m_strModuleName;
 
 		m_current_lex.m_numLine = m_currentLine;
-		m_current_lex.m_numString = m_currentPos;//���� � ���������� ���������� ������, �� ������ ��� ������ ����� ������ ������������
+		m_current_lex.m_numString = m_currentPos;
 #ifdef UTF8_LEXEM_TRANSLATE
 		m_current_lex.m_numUtf8String = m_currentUtf8Pos;
 #endif // UTF8_LEXEM_TRANSLATE	
@@ -419,7 +413,7 @@ bool ibPrecompileCode::PrepareLexem()
 		else if (IsByte('~')) {
 			s.clear();
 
-			GetByte();//���������� ����������� � �������. ������ ����� (��� ������)
+			GetByte();
 			continue;
 		}
 		else {
@@ -436,11 +430,11 @@ bool ibPrecompileCode::PrepareLexem()
 		m_current_lex.m_strData = s;
 		if (m_current_lex.m_lexType == KEYWORD)
 		{
-			if (m_current_lex.m_numData == KEY_DEFINE)continue; //������� ������������� ��������������
-			else if (m_current_lex.m_numData == KEY_UNDEF) continue; //�������� ��������������
-			else if (m_current_lex.m_numData == KEY_IFDEF || m_current_lex.m_numData == KEY_IFNDEF) continue; //�������� ��������������
-			else if (m_current_lex.m_numData == KEY_ENDIFDEF) continue; //����� ��������� ��������������
-			else if (m_current_lex.m_numData == KEY_ELSEDEF) continue; //"�����" ��������� ��������������
+			if (m_current_lex.m_numData == KEY_DEFINE)continue;
+			else if (m_current_lex.m_numData == KEY_UNDEF) continue;
+			else if (m_current_lex.m_numData == KEY_IFDEF || m_current_lex.m_numData == KEY_IFNDEF) continue;
+			else if (m_current_lex.m_numData == KEY_ENDIFDEF) continue;
+			else if (m_current_lex.m_numData == KEY_ELSEDEF) continue;
 			else if (m_current_lex.m_numData == KEY_REGION) continue;
 			else if (m_current_lex.m_numData == KEY_ENDREGION) continue;
 		}
@@ -464,44 +458,43 @@ void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const in
 void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int& pos_offset)
 #endif
 {
+	// Defensive: a fresh ibPrecompileCode without a prior full PrepareLexem
+	// would have an empty m_listLexem; the index math below assumes at
+	// least the trailing ENDPROGRAM marker is present.
+	if (m_listLexem.empty())
+		return;
+
 	m_currentLine = m_currentPos = 0;
 
-	unsigned int lexem_idx = 0, lexem_line = 0, lexem_start_idx = 0;
+	// Rewind the tokenizer to one lexem BEFORE the first lexem at or
+	// past `line` (or before the ENDPROGRAM marker if the edit is past
+	// the last real lexem). Re-tokenization restarts at that lexem's
+	// start position — the erase pass below drops it together with the
+	// edited region, and the tokenizer then re-emits it as the first
+	// new lexem. This minimises the rewind to a single lexem of replay.
+	unsigned int lexem_idx = 0;
 	bool insert_after = false;
 	auto hint = m_listLexem.begin();
 
-	for (unsigned int i = 0; i <= m_listLexem.size() - 1; i++) {
+	for (size_t i = 0; i < m_listLexem.size(); ++i) {
 
-		if (m_listLexem[i].m_numLine != lexem_start_idx) {
-			lexem_line = m_listLexem[i].m_numLine; lexem_start_idx = i;
-		}
+		const bool atTriggerLine = m_listLexem[i].m_numLine >= line;
+		const bool atEndProgram  = m_listLexem[i].m_lexType == ENDPROGRAM;
 
-		if (m_listLexem[i].m_numLine >= line) {
-			if (i > 0) {
-				m_currentLine = m_listLexem[lexem_start_idx - 1].m_numLine;
-				m_currentPos = m_listLexem[lexem_start_idx - 1].m_numString;
+		if (!atTriggerLine && !atEndProgram)
+			continue;
+
+		if (i > 0) {
+			m_currentLine = m_listLexem[i - 1].m_numLine;
+			m_currentPos  = m_listLexem[i - 1].m_numString;
 #ifdef UTF8_LEXEM_TRANSLATE
-				m_currentUtf8Pos = m_listLexem[lexem_start_idx - 1].m_numUtf8String;
+			m_currentUtf8Pos = m_listLexem[i - 1].m_numUtf8String;
 #endif
-				lexem_idx = lexem_start_idx - 1;
-				if (lexem_idx > 0) std::advance(hint, lexem_idx - 1);
-				insert_after = lexem_idx > 0;
-			}
-			break;
+			lexem_idx = (unsigned int)(i - 1);
+			if (lexem_idx > 0) std::advance(hint, lexem_idx - 1);
+			insert_after = atEndProgram ? true : (lexem_idx > 0);
 		}
-		else if (m_listLexem[i].m_lexType == ENDPROGRAM) {
-			if (i > 0) {
-				m_currentLine = m_listLexem[i - 1].m_numLine;
-				m_currentPos = m_listLexem[i - 1].m_numString;
-#ifdef UTF8_LEXEM_TRANSLATE
-				m_currentUtf8Pos = m_listLexem[i - 1].m_numUtf8String;
-#endif
-				lexem_idx = i - 1;
-				if (lexem_idx > 0) std::advance(hint, lexem_idx - 1);
-				insert_after = true;
-			}
-			break;
-		}
+		break;
 	}
 
 	wxString s;
@@ -532,7 +525,7 @@ void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const in
 		m_current_lex.m_strModuleName = m_strModuleName;
 
 		m_current_lex.m_numLine = m_currentLine;
-		m_current_lex.m_numString = m_currentPos; //���� � ���������� ���������� ������, �� ������ ��� ������ ����� ������ ������������
+		m_current_lex.m_numString = m_currentPos;
 #ifdef UTF8_LEXEM_TRANSLATE
 		m_current_lex.m_numUtf8String = m_currentUtf8Pos;
 #endif // UTF8_LEXEM_TRANSLATE	
@@ -615,7 +608,7 @@ void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const in
 		}
 		else if (IsByte('~')) {
 			s.clear();
-			GetByte();//���������� ����������� � �������. ������ ����� (��� ������)
+			GetByte();
 			continue;
 		}
 		else {
@@ -631,11 +624,11 @@ void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const in
 		m_current_lex.m_strData = s;
 		if (m_current_lex.m_lexType == KEYWORD) {
 			if (
-				m_current_lex.m_numData == KEY_DEFINE //������� ������������� ��������������
-				|| m_current_lex.m_numData == KEY_UNDEF //�������� ��������������
-				|| (m_current_lex.m_numData == KEY_IFDEF || m_current_lex.m_numData == KEY_IFNDEF)  //�������� ��������������
-				|| m_current_lex.m_numData == KEY_ENDIFDEF  //����� ��������� ��������������
-				|| m_current_lex.m_numData == KEY_ELSEDEF  //"�����" ��������� ��������������
+				m_current_lex.m_numData == KEY_DEFINE
+				|| m_current_lex.m_numData == KEY_UNDEF
+				|| (m_current_lex.m_numData == KEY_IFDEF || m_current_lex.m_numData == KEY_IFNDEF)
+				|| m_current_lex.m_numData == KEY_ENDIFDEF
+				|| m_current_lex.m_numData == KEY_ELSEDEF
 				|| m_current_lex.m_numData == KEY_REGION
 				|| m_current_lex.m_numData == KEY_ENDREGION
 				)
@@ -681,7 +674,7 @@ bool ibPrecompileCode::Compile()
 {
 	Clear();
 
-	//���������� ���������� ��������
+
 	ibMetaData* metaData = m_moduleObject->GetMetaData();
 	wxASSERT(metaData);
 	ibSession* session = ibSession::Current();
@@ -699,7 +692,7 @@ bool ibPrecompileCode::Compile()
 
 bool ibPrecompileCode::CompileModule()
 {
-	m_pContext = GetContext();// context of the module itself
+	m_activeContext = GetContext();// context of the module itself
 
 	ibLexem lex;
 
@@ -720,18 +713,18 @@ bool ibPrecompileCode::CompileModule()
 		}
 	}
 
-	int nStartContext = m_numCurrentCompile >= 0 ? m_listLexem[m_numCurrentCompile].m_numString : 0;
+	int nStartContext = m_cursor >= 0 ? m_listLexem[m_cursor].m_numString : 0;
 
 	// load the executable body of the module
-	m_pContext = GetContext();// context of the module itself
+	m_activeContext = GetContext();// context of the module itself
 
 	CompileBlock();
 
-	if (m_numCurrentCompile + 1 < m_listLexem.size() - 1) return false;
+	if (m_cursor + 1 < m_listLexem.size() - 1) return false;
 
-	if (m_nCurrentPos >= nStartContext && m_nCurrentPos <= m_listLexem[m_numCurrentCompile].m_numString)
+	if (m_caretPos >= nStartContext && m_caretPos <= m_listLexem[m_cursor].m_numString)
 	{
-		m_pCurrentContext = m_pContext;
+		m_cursorContext = m_activeContext;
 	}
 
 	return true;
@@ -743,19 +736,19 @@ bool ibPrecompileCode::CompileFunction()
 	ibLexem lex;
 	if (IsNextKeyWord(KEY_FUNCTION))
 	{
-		GETKeyWord(KEY_FUNCTION);
+		ExpectKeyword(KEY_FUNCTION);
 
-		m_pContext = new CPrecompileContext(GetContext());//������� ����� ��������, � ������� ����� ������������� ���� �������
-		m_pContext->SetModule(this);
-		m_pContext->nReturn = RETURN_FUNCTION;
+		m_activeContext = new ibPrecompileContext(GetContext());
+		m_activeContext->SetModule(this);
+		m_activeContext->m_returnKind = RETURN_FUNCTION;
 	}
 	else if (IsNextKeyWord(KEY_PROCEDURE))
 	{
-		GETKeyWord(KEY_PROCEDURE);
+		ExpectKeyword(KEY_PROCEDURE);
 
-		m_pContext = new CPrecompileContext(GetContext());//������� ����� ��������, � ������� ����� ������������� ���� ���������
-		m_pContext->SetModule(this);
-		m_pContext->nReturn = RETURN_PROCEDURE;
+		m_activeContext = new ibPrecompileContext(GetContext());
+		m_activeContext->SetModule(this);
+		m_activeContext->m_returnKind = RETURN_PROCEDURE;
 	}
 	else
 	{
@@ -765,167 +758,162 @@ bool ibPrecompileCode::CompileFunction()
 
 	// pull out the text of the function declaration
 	lex = PreviewGetLexem();
-	wxString strShortDescription;
-	int m_numLine = lex.m_numLine;
+	wxString shortDescription;
+	int      numLine = lex.m_numLine;
 	int nRes = m_strBuffer.find('\n', lex.m_numString);
 	if (nRes >= 0)
 	{
-		strShortDescription = m_strBuffer.substr(lex.m_numString, nRes - lex.m_numString - 1);
-		nRes = strShortDescription.find_first_of('/');
+		shortDescription = m_strBuffer.substr(lex.m_numString, nRes - lex.m_numString - 1);
+		nRes = shortDescription.find_first_of('/');
 		if (nRes > 0)
 		{
-			if (strShortDescription[nRes - 1] == '/')// so this is a comment
+			if (shortDescription[nRes - 1] == '/')// so this is a comment
 			{
-				strShortDescription = strShortDescription.substr(nRes + 1);
+				shortDescription = shortDescription.substr(nRes + 1);
 			}
 		}
 		else
 		{
-			nRes = strShortDescription.find_first_of(')');
-			strShortDescription = strShortDescription.substr(0, nRes + 1);
+			nRes = shortDescription.find_first_of(')');
+			shortDescription = shortDescription.substr(0, nRes + 1);
 		}
 	}
 
 	// get the function name
-	wxString csFuncName0 = GETIdentifier(true);
-	wxString strFuncName = stringUtils::MakeUpper(csFuncName0);
-	int nError = m_numCurrentCompile;
+	wxString csFuncName0 = ExpectIdentifier(true);
+	wxString funcName = stringUtils::MakeUpper(csFuncName0);
+	int nError = m_cursor;
 
-	CPrecompileFunction* pFunction = new CPrecompileFunction(strFuncName, m_pContext);
+	ibPrecompileFunction* pFunction = new ibPrecompileFunction(funcName, m_activeContext);
 
-	pFunction->strRealName = csFuncName0;
-	pFunction->strShortDescription = strShortDescription;
-	pFunction->nNumberLine = m_numLine;
-
+	pFunction->m_realName = csFuncName0;
+	pFunction->m_shortDescription = shortDescription;
 	// compile the list of formal parameters + register them as local
-	GETDelimeter('(');
-	while (m_numCurrentCompile + 1 < m_listLexem.size()
+	ExpectDelimeter('(');
+	while (m_cursor + 1 < m_listLexem.size()
 		&& !IsNextDelimeter(')'))
 	{
-		while (m_numCurrentCompile + 1 < m_listLexem.size())
+		while (m_cursor + 1 < m_listLexem.size())
 		{
-			wxString strType;
+			wxString type;
 			// check for typing
 			if (IsTypeVar())
 			{
-				strType = GetTypeVar();
+				type = GetTypeVar();
 			}
 
 			ibParamValue variable;
 
 			if (IsNextKeyWord(KEY_VAL))
 			{
-				GETKeyWord(KEY_VAL);
+				ExpectKeyword(KEY_VAL);
 			}
 
-			wxString strRealName = GETIdentifier(true);
-			variable.m_paramName = stringUtils::MakeUpper(strRealName);
+			wxString realName = ExpectIdentifier(true);
+			variable.m_paramName = stringUtils::MakeUpper(realName);
 
 			// register this variable as local
-			if (m_pContext->FindVariable(variable.m_paramName)) return false;//���� ���������� + ��������� ���������� = ������
+			if (m_activeContext->FindVariable(variable.m_paramName)) return false;
 
 			if (IsNextDelimeter('[')) { // this is an array
-				GETDelimeter('[');
-				GETDelimeter(']');
+				ExpectDelimeter('[');
+				ExpectDelimeter(']');
 			}
 			else if (IsNextDelimeter('=')) {
-				GETDelimeter('=');
-				GETConstant();
+				ExpectDelimeter('=');
+				ExpectConstant();
 			}
 
 			ibValue valObject;
 
-			if (!strType.IsEmpty()) {
+			if (!type.IsEmpty()) {
 				try {
-					valObject = ibValue::CreateObject(strType);
+					valObject = ibValue::CreateObject(type);
 				}
 				catch (...)
 				{
 				}
 			}
 
-			m_pContext->AddVariable(strRealName, strType, false, false, valObject);
-			variable.m_paramType = strType;
+			m_activeContext->AddVariable(realName, type, false, false, valObject);
+			variable.m_paramType = type;
 
-			pFunction->aParamList.push_back(variable);
+			pFunction->m_params.push_back(variable);
 
 			if (IsNextDelimeter(')'))
 				break;
 
-			GETDelimeter(',');
+			ExpectDelimeter(',');
 		}
 	}
 
-	GETDelimeter(')');
+	ExpectDelimeter(')');
 
 	if (IsNextKeyWord(KEY_EXPORT)) {
-		GETKeyWord(KEY_EXPORT);
-		pFunction->bExport = true;
+		ExpectKeyword(KEY_EXPORT);
+		pFunction->m_isExport = true;
 	}
 
 	// check for typing
-	GetContext()->cFunctions[strFuncName] = pFunction;
+	GetContext()->m_functions[funcName] = pFunction;
 
-	int nStartContext = m_listLexem[m_numCurrentCompile].m_numString;
+	int nStartContext = m_listLexem[m_cursor].m_numString;
 
-	GetContext()->sCurFuncName = strFuncName;
+	GetContext()->m_currentFunctionName = funcName;
 	CompileBlock();
-	GetContext()->sCurFuncName = wxEmptyString;
+	GetContext()->m_currentFunctionName = wxEmptyString;
 
-	if (m_pContext->nReturn == RETURN_FUNCTION) GETKeyWord(KEY_ENDFUNCTION);
-	else GETKeyWord(KEY_ENDPROCEDURE);
+	if (m_activeContext->m_returnKind == RETURN_FUNCTION) ExpectKeyword(KEY_ENDFUNCTION);
+	else ExpectKeyword(KEY_ENDPROCEDURE);
 
-	if (m_nCurrentPos >= nStartContext && m_nCurrentPos <= m_listLexem[m_numCurrentCompile].m_numString) m_pCurrentContext = m_pContext;
+	if (m_caretPos >= nStartContext && m_caretPos <= m_listLexem[m_cursor].m_numString) m_cursorContext = m_activeContext;
 	return true;
 }
 
 bool ibPrecompileCode::CompileDeclaration()
 {
-	wxString strType;
+	wxString type;
 	const ibLexem& lex = PreviewGetLexem();
 
-	if (IDENTIFIER == lex.m_lexType) strType = GetTypeVar(); // typed setting of variables
-	else GETKeyWord(KEY_VAR);
+	if (IDENTIFIER == lex.m_lexType) type = GetTypeVar(); // typed setting of variables
+	else ExpectKeyword(KEY_VAR);
 
-	while (m_numCurrentCompile + 1 < m_listLexem.size())
+	while (m_cursor + 1 < m_listLexem.size())
 	{
-		wxString strName = GETIdentifier(true);
+		wxString name = ExpectIdentifier(true);
 
 		int nArrayCount = wxNOT_FOUND;
 		if (IsNextDelimeter('['))// this is an array declaration
 		{
 			nArrayCount = 0;
-			GETDelimeter('[');
+			ExpectDelimeter('[');
 			if (!IsNextDelimeter(']')) {
-				ibValue vConst = GETConstant();
+				ibValue vConst = ExpectConstant();
 				if (vConst.GetType() != ibValueTypes::TYPE_NUMBER || vConst.GetNumber() < 0)
 					return false;
 				nArrayCount = vConst.GetInteger();
 			}
-			GETDelimeter(']');
+			ExpectDelimeter(']');
 		}
 
-		bool bExport = false;
-
+		bool isExport = false;
 		if (IsNextKeyWord(KEY_EXPORT)) {
-			if (bExport) break;// there was an Export announcement
-			GETKeyWord(KEY_EXPORT);
-			bExport = true;
+			ExpectKeyword(KEY_EXPORT);
+			isExport = true;
 		}
 
-		// there was no variable declaration yet - add
-		m_pContext->AddVariable(strName, strType, bExport);
+		m_activeContext->AddVariable(name, type, isExport);
 
 		if (IsNextDelimeter('='))// initial initialization - works only inside the text of modules (but not re-declaring procedures and functions)
 		{
-			if (nArrayCount >= 0) GETDelimeter(',');//Error!
-			GETDelimeter('=');
+			if (nArrayCount >= 0) ExpectDelimeter(',');//Error!
+			ExpectDelimeter('=');
 		}
 
 		if (!IsNextDelimeter(','))
 			break;
 
-		GETDelimeter(',');
+		ExpectDelimeter(',');
 	}
 
 	return true;
@@ -966,40 +954,41 @@ bool ibPrecompileCode::CompileBlock()
 				break;
 			case KEY_RETURN:
 			{
-				GETKeyWord(KEY_RETURN);
+				ExpectKeyword(KEY_RETURN);
 
-				if (m_pContext->nReturn == RETURN_NONE)
+				if (m_activeContext->m_returnKind == RETURN_NONE)
 					return false;
 
-				if (m_pContext->nReturn == RETURN_FUNCTION)//������������ �����-�� ��������
+				if (m_activeContext->m_returnKind == RETURN_FUNCTION)
 				{
 					if (IsNextDelimeter(';')) return false;
 
 					ibParamValue returnValue = GetExpression();
 
-					if (!m_cContext.sCurFuncName.IsEmpty())
+					if (!m_rootContext.m_currentFunctionName.IsEmpty())
 					{
-						CPrecompileFunction* m_precompile = static_cast<CPrecompileFunction*>(m_cContext.cFunctions[m_cContext.sCurFuncName]);
-						m_precompile->RealRetValue = returnValue;
+						ibPrecompileFunction* function = m_rootContext.m_functions[m_rootContext.m_currentFunctionName];
+						if (function)
+							function->m_returnValue = returnValue;
 					}
 				}
 				break;
 			}
 			case KEY_TRY:
 			{
-				GETKeyWord(KEY_TRY);
+				ExpectKeyword(KEY_TRY);
 				CompileBlock();
 
-				GETKeyWord(KEY_EXCEPT);
+				ExpectKeyword(KEY_EXCEPT);
 				CompileBlock();
-				GETKeyWord(KEY_ENDTRY);
+				ExpectKeyword(KEY_ENDTRY);
 
 				break;
 			}
 
-			case KEY_RAISE: GETKeyWord(KEY_RAISE); break;
-			case KEY_CONTINUE: GETKeyWord(KEY_CONTINUE); break;
-			case KEY_BREAK: GETKeyWord(KEY_BREAK); break;
+			case KEY_RAISE: ExpectKeyword(KEY_RAISE); break;
+			case KEY_CONTINUE: ExpectKeyword(KEY_CONTINUE); break;
+			case KEY_BREAK: ExpectKeyword(KEY_BREAK); break;
 
 			case KEY_FUNCTION:
 			case KEY_PROCEDURE:
@@ -1019,28 +1008,28 @@ bool ibPrecompileCode::CompileBlock()
 				if (IsNextDelimeter(':'))// this is a label task encountered
 				{
 					// write the address of the label:
-					GETDelimeter(':');
+					ExpectDelimeter(':');
 				}
-				else//����� �������������� ������ �������, �������, ������������� ���������
+				else
 				{
-					m_numCurrentCompile--;// step back
+					m_cursor--;// step back
 
 					int nSet = 1;
-					ibParamValue variable = GetCurrentIdentifier(nSet);//�������� ����� ����� ��������� (�� ����� '=')
-					if (nSet)//���� ���� ������ �����, �.�. ���� '='
+					ibParamValue variable = GetCurrentIdentifier(nSet);
+					if (nSet)
 					{
-						GETDelimeter('=');//��� ������������ ���������� ������-�� ���������
+						ExpectDelimeter('=');
 
 						ibParamValue expression = GetExpression();
 						variable.m_paramType = expression.m_paramType;
 						variable.m_paramObject = expression.m_paramObject;
 
-						if (m_pContext->FindVariable(variable.m_paramName)) {
-							m_pContext->cVariables[variable.m_paramName].m_valObject = expression.m_paramObject;
+						if (m_activeContext->FindVariable(variable.m_paramName)) {
+							m_activeContext->m_variables[variable.m_paramName].m_valObject = expression.m_paramObject;
 						}
 						else
 						{
-							m_pContext->AddVariable(variable.m_paramName, expression.m_paramType, false, false, expression.m_paramObject);
+							m_activeContext->AddVariable(variable.m_paramName, expression.m_paramType, false, false, expression.m_paramObject);
 						}
 					}
 				}
@@ -1056,18 +1045,18 @@ bool ibPrecompileCode::CompileBlock()
 
 bool ibPrecompileCode::CompileNewObject()
 {
-	GETKeyWord(KEY_NEW);
+	ExpectKeyword(KEY_NEW);
 
-	wxString objectName = GETIdentifier(true);
-	int nNumber = GetConstString(objectName);
+	wxString objectName = ExpectIdentifier(true);
+	(void)GetConstString(objectName);
 
 	std::vector <ibParamValue> listParam;
 
 	if (IsNextDelimeter('('))// this is a method call
 	{
-		GETDelimeter('(');
+		ExpectDelimeter('(');
 
-		while (m_numCurrentCompile + 1 < m_listLexem.size()
+		while (m_cursor + 1 < m_listLexem.size()
 			&& !IsNextDelimeter(')'))
 		{
 			if (IsNextDelimeter(','))
@@ -1081,10 +1070,10 @@ bool ibPrecompileCode::CompileNewObject()
 
 				if (IsNextDelimeter(')')) break;
 			}
-			GETDelimeter(',');
+			ExpectDelimeter(',');
 		}
 
-		GETDelimeter(')');
+		ExpectDelimeter(')');
 	}
 
 	return true;
@@ -1092,105 +1081,104 @@ bool ibPrecompileCode::CompileNewObject()
 
 bool ibPrecompileCode::CompileGoto()
 {
-	GETKeyWord(KEY_GOTO);
+	ExpectKeyword(KEY_GOTO);
 	return true;
 }
 
 bool ibPrecompileCode::CompileIf()
 {
-	GETKeyWord(KEY_IF);
+	ExpectKeyword(KEY_IF);
 
 	GetExpression();
 
-	GETKeyWord(KEY_THEN);
+	ExpectKeyword(KEY_THEN);
 	CompileBlock();
 
 	while (IsNextKeyWord(KEY_ELSEIF))
 	{
 		// write the output from all checks for the previous block
-		GETKeyWord(KEY_ELSEIF);
+		ExpectKeyword(KEY_ELSEIF);
 
 		GetExpression();
 
-		GETKeyWord(KEY_THEN);
+		ExpectKeyword(KEY_THEN);
 		CompileBlock();
 	}
 
 	if (IsNextKeyWord(KEY_ELSE))
 	{
 		// write the output from all checks for the previous block
-		GETKeyWord(KEY_ELSE);
+		ExpectKeyword(KEY_ELSE);
 		CompileBlock();
 	}
 
-	GETKeyWord(KEY_ENDIF);
+	ExpectKeyword(KEY_ENDIF);
 	return true;
 }
 
 bool ibPrecompileCode::CompileWhile()
 {
-	GETKeyWord(KEY_WHILE);
+	ExpectKeyword(KEY_WHILE);
 
 	GetExpression();
 
-	GETKeyWord(KEY_DO);
+	ExpectKeyword(KEY_DO);
 	CompileBlock();
-	GETKeyWord(KEY_ENDDO);
+	ExpectKeyword(KEY_ENDDO);
 
 	return true;
 }
 
 bool ibPrecompileCode::CompileFor()
 {
-	GETKeyWord(KEY_FOR);
+	ExpectKeyword(KEY_FOR);
 
-	int nStartPos = m_listLexem[m_numCurrentCompile].m_numString;
+	int nStartPos = m_listLexem[m_cursor].m_numString;
 
-	wxString strRealName = GETIdentifier(true);
-	//wxString strName = stringUtils::MakeUpper(strRealName);
+	wxString realName = ExpectIdentifier(true);
 
-	ibParamValue variable = GetVariable(strRealName);
+	GetVariable(realName);  // ensures loop var is registered as a local
 
 	if (IsNextDelimeter('='))
-		GETDelimeter('=');
+		ExpectDelimeter('=');
 
 	GetExpression();
 
-	GETKeyWord(KEY_TO);
-	ibParamValue VariableTo = GetExpression();
+	ExpectKeyword(KEY_TO);
+	GetExpression();
 
-	GETKeyWord(KEY_DO);
+	ExpectKeyword(KEY_DO);
 	CompileBlock();
-	GETKeyWord(KEY_ENDDO);
+	ExpectKeyword(KEY_ENDDO);
 
-	if (!(nStartPos < m_nCurrentPos && m_listLexem[m_numCurrentCompile].m_numString > m_nCurrentPos))
-		m_pContext->RemoveVariable(strRealName);
+	if (!(nStartPos < m_caretPos && m_listLexem[m_cursor].m_numString > m_caretPos))
+		m_activeContext->RemoveVariable(realName);
 
 	return true;
 }
 
 bool ibPrecompileCode::CompileForeach()
 {
-	GETKeyWord(KEY_FOREACH);
+	ExpectKeyword(KEY_FOREACH);
 
-	int nStartPos = m_listLexem[m_numCurrentCompile].m_numString;
+	int nStartPos = m_listLexem[m_cursor].m_numString;
 
-	wxString strRealName = GETIdentifier(true);
-	wxString strName = stringUtils::MakeUpper(strRealName);
+	wxString realName = ExpectIdentifier(true);
+	wxString name = stringUtils::MakeUpper(realName);
 
-	ibParamValue variable = GetVariable(strRealName);
+	GetVariable(realName);  // ensures iteration var is registered as a local
 
-	GETKeyWord(KEY_IN);
+	ExpectKeyword(KEY_IN);
 
-	ibParamValue VariableTo = GetExpression();
-	m_pContext->cVariables[strName].m_valObject = VariableTo.m_paramObject.GetIteratorEmpty();
+	ibParamValue collection = GetExpression();
+	m_activeContext->m_variables[name].m_valObject = collection.m_paramObject.GetIteratorEmpty();
 
-	GETKeyWord(KEY_DO);
+	ExpectKeyword(KEY_DO);
 	CompileBlock();
-	GETKeyWord(KEY_ENDDO);
+	ExpectKeyword(KEY_ENDDO);
 
-	if (!(nStartPos < m_nCurrentPos && m_listLexem[m_numCurrentCompile].m_numString > m_nCurrentPos))
-		m_pContext->RemoveVariable(strRealName);
+	if (!(nStartPos < m_caretPos && m_listLexem[m_cursor].m_numString > m_caretPos))
+		m_activeContext->RemoveVariable(realName);
 
 	return true;
 }
@@ -1201,76 +1189,75 @@ bool ibPrecompileCode::CompileForeach()
 
 /**
  * GetLexem
- * ����������:
- * �������� ��������� ������� �� ������ ���� ���� � �������� ������� ������� ������� �� 1
- * ������������ ��������:
- * 0 ��� ��������� �� �������
+ *   Advance to the next lexem and return it. Returns gs_nullLexem if the
+ *   cursor is past the end of the list.
  */
-ibLexem ibPrecompileCode::GetLexem()
+const ibLexem& ibPrecompileCode::GetLexem()
 {
-	ibLexem lex;
-	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		lex = m_listLexem[++m_numCurrentCompile];
-	}
-	return lex;
+	if (m_cursor + 1 < m_listLexem.size())
+		return m_listLexem[++m_cursor];
+	return gs_nullLexem;
 }
 
-//�������� ��������� ������� �� ������ ���� ���� ��� ���������� �������� ������� �������
-ibLexem ibPrecompileCode::PreviewGetLexem()
+/**
+ * PreviewGetLexem
+ *   Peek the next non-trivial lexem without advancing the cursor.
+ *   Designer-side skips both ';' and '\n' delimiters so IntelliSense
+ *   walk-ahead steps over whitespace tokens; production ibCompileCode
+ *   skips only ';' (statement separator).
+ */
+const ibLexem& ibPrecompileCode::PreviewGetLexem()
 {
-	ibLexem lex;
 	while (true) {
-		lex = GetLexem();
-		if (!(lex.m_lexType == DELIMITER && (lex.m_numData == ';' || lex.m_numData == '\n')))
-			break;
+		const ibLexem& lex = GetLexem();
+		if (!(lex.m_lexType == DELIMITER && (lex.m_numData == ';' || lex.m_numData == '\n'))) {
+			m_cursor--;
+			return lex;
+		}
 	}
-	m_numCurrentCompile--;
-	return lex;
+	return gs_nullLexem;
 }
 
 /**
- * GETLexem
- * ����������:
- * �������� ��������� ������� �� ������ ���� ���� � �������� ������� ������� ������� �� 1
- * ������������ ��������:
- * ��� (� ������ ������� ��������� ����������)
+ * ExpectLexem
+ *   Same as GetLexem but treats ERRORTYPE silently — designer's
+ *   IntelliSense walk doesn't surface compile errors, the caller simply
+ *   accepts incomplete results.
  */
-ibLexem ibPrecompileCode::GETLexem()
+const ibLexem& ibPrecompileCode::ExpectLexem()
 {
-	const ibLexem& lex = GetLexem();
-	if (lex.m_lexType == ERRORTYPE) {}
-	return lex;
+	return GetLexem();
 }
+
 /**
- * GETDELIMITER
- * ����������:
- * �������� ��������� ������� ��� �������� �����������
- * ������������ ��������:
- * ��� (� ������ ������� ��������� ����������)
+ * ExpectDelimeter
+ *   Consume lexems until the matching delimiter is found. If the very
+ *   first lexem already matches, append it to the IntelliSense
+ *   "last expression" buffer. The append-only-on-first-match behaviour
+ *   mirrors the original code.
  */
-void ibPrecompileCode::GETDelimeter(const wxUniChar& c)
+void ibPrecompileCode::ExpectDelimeter(const wxUniChar& c)
 {
-	ibLexem lex = GETLexem();
+	const ibLexem& first = ExpectLexem();
+	if (first.m_lexType == DELIMITER && c == first.m_numData) {
+		m_lastExpression += c;
+		return;
+	}
 
-	if (lex.m_lexType == DELIMITER && c == lex.m_numData)
-		m_strLastExpression += c;
-
-	while (!(lex.m_lexType == DELIMITER && c == lex.m_numData)) {
-		if (m_numCurrentCompile + 1 >= m_listLexem.size()) break;
-		lex = GETLexem();
+	while (m_cursor + 1 < m_listLexem.size()) {
+		const ibLexem& lex = ExpectLexem();
+		if (lex.m_lexType == DELIMITER && c == lex.m_numData)
+			return;
 	}
 }
 /**
- * IsNextDELIMITER
- * ����������:
- * ��������� �������� �� ��������� ������� ����-���� �������� ������������
- * ������������ ��������:
- * true,false
+ * IsNextDelimeter
+ *   Predicate: is the next lexem the given delimiter? Does not advance.
  */
 bool ibPrecompileCode::IsNextDelimeter(const wxUniChar& c)
 {
-	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		ibLexem lex = m_listLexem[m_numCurrentCompile + 1];
+	if (m_cursor + 1 < m_listLexem.size()) {
+		ibLexem lex = m_listLexem[m_cursor + 1];
 		if (lex.m_lexType == DELIMITER && c == lex.m_numData)
 			return true;
 	}
@@ -1280,16 +1267,13 @@ bool ibPrecompileCode::IsNextDelimeter(const wxUniChar& c)
 
 /**
  * IsNextKeyWord
- * ����������:
- * ��������� �������� �� ��������� ������� ����-���� �������� �������� ������
- * ������������ ��������:
- * true,false
+ *   Predicate: is the next lexem the given keyword? Does not advance.
  */
-bool ibPrecompileCode::IsNextKeyWord(int nKey)
+bool ibPrecompileCode::IsNextKeyWord(int keyword)
 {
-	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		const ibLexem& lex = m_listLexem[m_numCurrentCompile + 1];
-		if (lex.m_lexType == KEYWORD && lex.m_numData == nKey)
+	if (m_cursor + 1 < m_listLexem.size()) {
+		const ibLexem& lex = m_listLexem[m_cursor + 1];
+		if (lex.m_lexType == KEYWORD && lex.m_numData == keyword)
 			return true;
 
 	}
@@ -1297,83 +1281,82 @@ bool ibPrecompileCode::IsNextKeyWord(int nKey)
 }
 
 /**
- * GETKeyWord
- * �������� ��������� ������� ��� �������� �������� �����
- * ������������ ��������:
- * ��� (� ������ ������� ��������� ����������)
+ * ExpectKeyword
+ *   Consume lexems until the given keyword is matched, or the lexem
+ *   list is exhausted.
  */
-void ibPrecompileCode::GETKeyWord(int nKey)
+void ibPrecompileCode::ExpectKeyword(int keyword)
 {
-	ibLexem lex = GETLexem();
-	while (!(lex.m_lexType == KEYWORD && lex.m_numData == nKey)) {
-		if (m_numCurrentCompile + 1 >= m_listLexem.size())
+	ibLexem lex = ExpectLexem();
+	while (!(lex.m_lexType == KEYWORD && lex.m_numData == keyword)) {
+		if (m_cursor + 1 >= m_listLexem.size())
 			break;
-		lex = GETLexem();
+		lex = ExpectLexem();
 	}
 }
 
 /**
- * GETIdentifier
- * �������� ��������� ������� ��� �������� �������� �����
- * ������������ ��������:
- * ������-�������������
+ * ExpectIdentifier
+ *   Consume the next lexem as an identifier. With realName=true the
+ *   original-case spelling is returned; otherwise the upper-cased form.
+ *   Keywords are accepted in real-name mode (designer-side autocomplete
+ *   still wants to surface them).
  */
-wxString ibPrecompileCode::GETIdentifier(bool strRealName)
+wxString ibPrecompileCode::ExpectIdentifier(bool realName)
 {
-	const ibLexem& lex = GETLexem();
+	const ibLexem& lex = ExpectLexem();
 	if (lex.m_lexType != IDENTIFIER) {
-		if (strRealName && lex.m_lexType == KEYWORD)
+		if (realName && lex.m_lexType == KEYWORD)
 			return lex.m_strData;
 		return wxEmptyString;
 	}
 
-	if (strRealName) return lex.m_valData.m_sData;
+	if (realName) return lex.m_valData.m_sData;
 	else return lex.m_strData;
 }
 
 /**
- * GETConstant
- * �������� ��������� ������� ��� ���������
- * ������������ ��������:
- * ���������
+ * ExpectConstant
+ *   Consume the next lexem as a (possibly signed) numeric constant.
+ *   Handles unary +/- prefix and flips the sign on negation.
  */
-ibValue ibPrecompileCode::GETConstant()
+ibValue ibPrecompileCode::ExpectConstant()
 {
 	ibLexem lex;
-	int iNumRequire = 0;
+	int sign = 0;
 	if (IsNextDelimeter('-') || IsNextDelimeter('+')) {
-		iNumRequire = 1;
+		sign = 1;
 		if (IsNextDelimeter('-'))
-			iNumRequire = wxNOT_FOUND;
-		lex = GETLexem();
+			sign = wxNOT_FOUND;
+		lex = ExpectLexem();
 	}
 
-	lex = GETLexem();
+	lex = ExpectLexem();
 
-	if (iNumRequire) {
-		// check that the constant is of numeric type	
-		if (lex.m_valData.GetType() != ibValueTypes::TYPE_NUMBER) {}
-		// change sign for minus
-		if (iNumRequire == wxNOT_FOUND)
+	if (sign) {
+		// Flip the sign on numeric negation. Non-numeric constants with a
+		// leading +/- silently fall through unchanged — designer-side
+		// IntelliSense doesn't report grammar errors here.
+		if (sign == wxNOT_FOUND)
 			lex.m_valData.m_fData = -lex.m_valData.m_fData;
 	}
 	return lex.m_valData;
 }
 
-// getting the number with a string constant (to determine the method number)
-int ibPrecompileCode::GetConstString(const wxString& sMethod)
+// getting the m_number with a string constant (to determine the method m_number)
+int ibPrecompileCode::GetConstString(const wxString& method)
 {
-	if (!m_aHashConstList[sMethod])
+	if (!m_constHashes[method])
 	{
-		m_aHashConstList[sMethod] = m_aHashConstList.size();
+		m_constHashes[method] = m_constHashes.size();
 	}
-	return ((int)m_aHashConstList[sMethod]) - 1;
+	return ((int)m_constHashes[method]) - 1;
 }
 
-int ibPrecompileCode::IsTypeVar(const wxString& strType)
+int ibPrecompileCode::IsTypeVar(const wxString& type)
 {
-	if (!strType.IsEmpty()) {
-		if (ibValue::IsRegisterCtor(strType, ibCtorObjectType::ibCtorObjectType_object_primitive))
+	if (!type.IsEmpty()) {
+		if (ibValue::IsRegisterCtor(type, ibCtorObjectType::ibCtorObjectType_object_primitive))
 			return true;
 	}
 	else {
@@ -1385,14 +1368,14 @@ int ibPrecompileCode::IsTypeVar(const wxString& strType)
 	return false;
 }
 
-wxString ibPrecompileCode::GetTypeVar(const wxString& strType)
+wxString ibPrecompileCode::GetTypeVar(const wxString& type)
 {
-	if (!strType.IsEmpty()) {
-		if (ibValue::IsRegisterCtor(strType, ibCtorObjectType::ibCtorObjectType_object_primitive))
-			return strType.Upper();
+	if (!type.IsEmpty()) {
+		if (ibValue::IsRegisterCtor(type, ibCtorObjectType::ibCtorObjectType_object_primitive))
+			return type.Upper();
 	}
 	else {
-		const ibLexem& lex = GETLexem();
+		const ibLexem& lex = ExpectLexem();
 		if (ibValue::IsRegisterCtor(lex.m_strData, ibCtorObjectType::ibCtorObjectType_object_primitive)) {
 			return stringUtils::MakeUpper(lex.m_strData);
 		}
@@ -1404,12 +1387,12 @@ wxString ibPrecompileCode::GetTypeVar(const wxString& strType)
 #define SetOper(x) nOper=x;
 
 /**
- * ���������� ������������� ��������� (��������� ������ �� ����� �������)
+ *    (    )
  */
-ibParamValue ibPrecompileCode::GetExpression(int nPriority)
+ibParamValue ibPrecompileCode::GetExpression(int priority)
 {
 	ibParamValue variable;
-	ibLexem lex = GETLexem();
+	ibLexem lex = ExpectLexem();
 
 	// first we process Left operators
 	if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NOT) ||
@@ -1420,13 +1403,13 @@ ibParamValue ibPrecompileCode::GetExpression(int nPriority)
 	}
 	else if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NEW)) {
 
-		const wxString& objectName = GETIdentifier();
+		const wxString& objectName = ExpectIdentifier();
 		std::vector <ibParamValue> listParam;
 
 
 		if (IsNextDelimeter('(')) { // this is a method call	
-			GETDelimeter('(');
-			while (m_numCurrentCompile + 1 < m_listLexem.size()
+			ExpectDelimeter('(');
+			while (m_cursor + 1 < m_listLexem.size()
 				&& !IsNextDelimeter(')')) {
 				if (IsNextDelimeter(',')) {
 					ibParamValue data;
@@ -1438,9 +1421,9 @@ ibParamValue ibPrecompileCode::GetExpression(int nPriority)
 					listParam.emplace_back(GetExpression());
 					if (IsNextDelimeter(')')) break;
 				}
-				GETDelimeter(',');
+				ExpectDelimeter(',');
 			}
-			GETDelimeter(')');
+			ExpectDelimeter(')');
 		}
 
 		ibValue** pRefLocVars = listParam.size() ? 
@@ -1465,7 +1448,7 @@ ibParamValue ibPrecompileCode::GetExpression(int nPriority)
 	else if (lex.m_lexType == DELIMITER && lex.m_numData == '(')
 	{
 		variable = GetExpression();
-		GETDelimeter(')');
+		ExpectDelimeter(')');
 	}
 	else if (lex.m_lexType == DELIMITER && lex.m_numData == '?')
 	{
@@ -1474,18 +1457,18 @@ ibParamValue ibPrecompileCode::GetExpression(int nPriority)
 		//AddLineInfo(code);
 		//code.nOper = OPER_ITER;
 		/*code.Param1 = variable;*/
-		GETDelimeter('(');
+		ExpectDelimeter('(');
 		/*code.Param2 =*/ GetExpression();
-		GETDelimeter(',');
+		ExpectDelimeter(',');
 		/*code.Param3 *=*/ GetExpression();
-		GETDelimeter(',');
+		ExpectDelimeter(',');
 		/*code.Param4 = */GetExpression();
-		GETDelimeter(')');
+		ExpectDelimeter(')');
 		//cByteCode.CodeList.push_back(code);
 	}
 	else if (lex.m_lexType == IDENTIFIER)
 	{
-		m_numCurrentCompile--;// step back
+		m_cursor--;// step back
 		int nSet = 0;
 		variable = GetCurrentIdentifier(nSet);
 	}
@@ -1495,16 +1478,16 @@ ibParamValue ibPrecompileCode::GetExpression(int nPriority)
 	}
 	else if ((lex.m_lexType == DELIMITER && lex.m_numData == '+') || (lex.m_lexType == DELIMITER && lex.m_numData == '-'))
 	{
-		//��������� ������������ ������ // check the admissibility of such assignment
+
 		int nCurPriority = gs_operPriority[lex.m_numData];
 
-		if (nPriority >= nCurPriority)
-			return variable; //���������� ���������� ����� (���������� ��������) � ������� ����������� ��������
+		if (priority >= nCurPriority)
+			return variable;
 
-		//��� ������� ������������� ����� ���������
+
 		if (lex.m_numData == '+')// do nothing (ignore)
 		{
-			variable = GetExpression(nPriority);
+			variable = GetExpression(priority);
 			variable.m_paramType = wxT("NUMBER");
 			return variable;
 		}
@@ -1516,8 +1499,8 @@ ibParamValue ibPrecompileCode::GetExpression(int nPriority)
 		}
 	}
 
-	//������ ������������ ������ ���������
-	//���� � variable ����� ������ ������ ���������� ���������
+
+
 
 MOperation:
 
@@ -1525,14 +1508,14 @@ MOperation:
 
 	if (lex.m_lexType == DELIMITER && lex.m_numData == ')') return variable;
 
-	//������� ���� �� ����� ��������� ���������� �������� ��� ������ ����������
+
 	if ((lex.m_lexType == DELIMITER && lex.m_numData != ';') || (lex.m_lexType == KEYWORD && lex.m_numData == KEY_AND) || (lex.m_lexType == KEYWORD && lex.m_numData == KEY_OR))
 	{
 		if (lex.m_numData >= 0 && lex.m_numData <= 255)
 		{
 			int nCurPriority = gs_operPriority[lex.m_numData]; int nOper = 0;
 
-			if (nPriority < nCurPriority)//���������� ���������� ����� (���������� ��������) � ������� ����������� ��������
+			if (priority < nCurPriority)
 			{
 				lex = GetLexem();
 
@@ -1570,7 +1553,7 @@ MOperation:
 
 					if (IsNextDelimeter('='))
 					{
-						GETDelimeter('=');
+						ExpectDelimeter('=');
 						SetOper(OPER_GE);
 					}
 				}
@@ -1579,12 +1562,12 @@ MOperation:
 					SetOper(OPER_LS);
 					if (IsNextDelimeter('='))
 					{
-						GETDelimeter('=');
+						ExpectDelimeter('=');
 						SetOper(OPER_LE);
 					}
 					else if (IsNextDelimeter('>'))
 					{
-						GETDelimeter('>');
+						ExpectDelimeter('>');
 						SetOper(OPER_NE);
 					}
 
@@ -1599,7 +1582,7 @@ MOperation:
 				ibParamValue sVariable2 = variable;
 				ibParamValue sVariable3 = GetExpression(nCurPriority);
 
-				//���. �������� �� ����������� ��������
+
 				if (sVariable2.m_paramType == wxT("STRING")) {
 					if (OPER_DIV == nOper ||
 						OPER_MOD == nOper ||
@@ -1630,42 +1613,42 @@ MOperation:
  * numIsSet - at the input: 1 - a sign that an expression assignment may be expected (if the '=' sign is encountered)
  * Return value:
  * numIsSet - at the output: 1 - a sign that the assignment of the expression is exactly expected (i.e. the '=' sign must be encountered)
- * index number of the variable where the identifier value lies
+ * index m_number of the variable where the identifier value lies
 */
 
-ibParamValue ibPrecompileCode::GetCurrentIdentifier(int& nIsSet)
+ibParamValue ibPrecompileCode::GetCurrentIdentifier(int& isSet)
 {
-	int nPrevSet = nIsSet;
+	int nPrevSet = isSet;
 
 	ibParamValue variable = GetVariable();
 
-	const wxString& strRealName = GETIdentifier(true);
-	const wxString& strName = stringUtils::MakeUpper(strRealName);
+	const wxString& realName = ExpectIdentifier(true);
+	const wxString& name = stringUtils::MakeUpper(realName);
 
-	const int nStartPos = m_listLexem[m_numCurrentCompile].m_numString;
+	const int nStartPos = m_listLexem[m_cursor].m_numString;
 
-	if (!m_bCalcValue && (nStartPos + strRealName.length() == m_nCurrentPos ||
-		nStartPos + strRealName.length() == m_nCurrentPos - 1)) {
+	if (!m_calcValue && (nStartPos + realName.length() == m_caretPos ||
+		nStartPos + realName.length() == m_caretPos - 1)) {
 		unsigned int endContext = 0;
-		for (unsigned int i = m_numCurrentCompile; i < m_listLexem.size(); i++) {
+		for (unsigned int i = m_cursor; i < m_listLexem.size(); i++) {
 			if (m_listLexem[i].m_lexType == KEYWORD && (m_listLexem[i].m_numData == KEY_ENDPROCEDURE || m_listLexem[i].m_numData == KEY_ENDFUNCTION))
 				endContext = i;
 			if (m_listLexem[i].m_lexType == ENDPROGRAM)
 				endContext = i;
 		}
-		nIsSet = 0; m_numCurrentCompile = endContext; return variable;
+		isSet = 0; m_cursor = endContext; return variable;
 	}
 
-	m_strLastExpression = strRealName;
+	m_lastExpression = realName;
 
 	if (IsNextDelimeter('('))// this is a function call
 	{
 		ibValue valContext;
-		if (m_cContext.FindFunction(strRealName, valContext, true))
+		if (m_rootContext.FindFunction(realName, valContext, true))
 		{
 			std::vector <ibParamValue> listParam;
-			GETDelimeter('(');
-			while (m_numCurrentCompile + 1 < m_listLexem.size()
+			ExpectDelimeter('(');
+			while (m_cursor + 1 < m_listLexem.size()
 				&& !IsNextDelimeter(')'))
 			{
 				if (IsNextDelimeter(','))
@@ -1678,12 +1661,12 @@ ibParamValue ibPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 					listParam.emplace_back(GetExpression());
 					if (IsNextDelimeter(')')) break;
 				}
-				GETDelimeter(',');
+				ExpectDelimeter(',');
 			}
 
-			GETDelimeter(')');
+			ExpectDelimeter(')');
 
-			const long lMethodNum = valContext.FindMethod(strName);
+			const long lMethodNum = valContext.FindMethod(name);
 			if (lMethodNum != wxNOT_FOUND && valContext.HasRetVal(lMethodNum)) {
 				
 				size_t paramCount = valContext.GetNParams(lMethodNum) > 0 ?
@@ -1714,35 +1697,35 @@ ibParamValue ibPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 		}
 		else
 		{
-			variable = GetCallFunction(strName);
+			variable = GetCallFunction(name);
 		}
 
-		if (IsTypeVar(strName)) { // this is a type cast
-			variable.m_paramObject = GetTypeVar(strName);
+		if (IsTypeVar(name)) { // this is a type cast
+			variable.m_paramObject = GetTypeVar(name);
 		}
 
-		nIsSet = 0;
+		isSet = 0;
 	}
-	else//��� ����� ����������
+	else
 	{
-		m_strLastParentKeyword = strRealName;
+		m_lastParentKeyword = realName;
 
-		bool bCheckError = !nPrevSet;
+		bool checkError = !nPrevSet;
 
-		if (IsNextDelimeter('.'))//��� ���������� �������� ����� ������
-			bCheckError = true;
+		if (IsNextDelimeter('.'))
+			checkError = true;
 
 		ibValue valContext;
-		if (m_cContext.FindVariable(strRealName, valContext, true)) {
-			nIsSet = 0;
+		if (m_rootContext.FindVariable(realName, valContext, true)) {
+			isSet = 0;
 			if (IsNextDelimeter('=') && nPrevSet == 1) {
-				GETDelimeter('=');
+				ExpectDelimeter('=');
 				ibParamValue sParam = GetExpression();
 				variable.m_paramObject = sParam.m_paramObject;
 				return variable;
 			}
 			else {
-				const long lPropNum = valContext.FindProp(strName);
+				const long lPropNum = valContext.FindProp(name);
 				if (lPropNum != wxNOT_FOUND) {
 					try {
 						valContext.GetPropVal(lPropNum, variable.m_paramObject);
@@ -1754,8 +1737,8 @@ ibParamValue ibPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 			}
 		}
 		else {
-			nIsSet = 1;
-			variable = GetVariable(strRealName, bCheckError);
+			isSet = 1;
+			variable = GetVariable(realName, checkError);
 		}
 	}
 
@@ -1763,23 +1746,21 @@ loopLabel:
 
 	if (IsNextDelimeter('['))// this is an array
 	{
-		GETDelimeter('[');
+		ExpectDelimeter('[');
 		ibParamValue sKey = GetExpression();
-		GETDelimeter(']');
+		ExpectDelimeter(']');
 
-		//���������� ��� ������ (�.�. ��� ��������� �������� ������� ��� ���������)
-		//������:
-		//���[10]=12; - Set
-		//�=���[10]; - Get
-		//���[10][2]=12; - Get,Set
 
-		nIsSet = 0;
 
-		if (IsNextDelimeter('[')) {}//�������� ���� ���������� ������� (��������� ����������� ��������)
+
+
+
+
+		isSet = 0;
 
 		if (IsNextDelimeter('=') && nPrevSet == 1)
 		{
-			GETDelimeter('=');
+			ExpectDelimeter('=');
 
 			ibParamValue sData = GetExpression();
 			return variable;
@@ -1789,40 +1770,40 @@ loopLabel:
 		goto loopLabel;
 	}
 
-	if (IsNextDelimeter('.'))// this is a method call ��� �������� ����������� �������
+	if (IsNextDelimeter('.'))
 	{
-		wxString sTempExpression = m_strLastExpression;
+		wxString sTempExpression = m_lastExpression;
 
-		GETDelimeter('.');
+		ExpectDelimeter('.');
 
-		wxString strRealMethod = GETIdentifier(true);
-		wxString sMethod = stringUtils::MakeUpper(strRealMethod);
+		wxString strRealMethod = ExpectIdentifier(true);
+		wxString method = stringUtils::MakeUpper(strRealMethod);
 
-		if (m_listLexem[m_numCurrentCompile].m_numString > m_nCurrentPos
-			|| m_listLexem[m_numCurrentCompile].m_lexType == KEYWORD) {
-			strRealMethod = sMethod = wxEmptyString;
+		if (m_listLexem[m_cursor].m_numString > m_caretPos
+			|| m_listLexem[m_cursor].m_lexType == KEYWORD) {
+			strRealMethod = method = wxEmptyString;
 		}
 
-		m_strLastExpression += strRealMethod;
+		m_lastExpression += strRealMethod;
 
-		if (m_listLexem[m_numCurrentCompile].m_numString > (m_nCurrentPos - strRealMethod.length() - 1))
+		if (m_listLexem[m_cursor].m_numString > (m_caretPos - strRealMethod.length() - 1))
 		{
-			m_strLastExpression = sTempExpression; nLastPosition = m_numCurrentCompile; m_strLastKeyword = strRealMethod;
-			m_valObject = variable.m_paramObject; m_numCurrentCompile = m_listLexem.size() - 1; nIsSet = 0;
+			m_lastExpression = sTempExpression; m_lastPosition = m_cursor; m_lastKeyword = strRealMethod;
+			m_valObject = variable.m_paramObject; m_cursor = m_listLexem.size() - 1; isSet = 0;
 			return variable;
 		}
-		else if (m_listLexem[m_numCurrentCompile].m_lexType == ENDPROGRAM)
+		else if (m_listLexem[m_cursor].m_lexType == ENDPROGRAM)
 		{
-			m_strLastExpression = sTempExpression; nLastPosition = m_numCurrentCompile; m_strLastKeyword = strRealMethod;
-			m_valObject = variable.m_paramObject; m_numCurrentCompile = m_listLexem.size() - 1; nIsSet = 0;
+			m_lastExpression = sTempExpression; m_lastPosition = m_cursor; m_lastKeyword = strRealMethod;
+			m_valObject = variable.m_paramObject; m_cursor = m_listLexem.size() - 1; isSet = 0;
 			return variable;
 		}
 
 		if (IsNextDelimeter('('))// this is a method call
 		{
 			std::vector <ibParamValue> listParam;
-			GETDelimeter('(');
-			while (m_numCurrentCompile + 1 < m_listLexem.size()
+			ExpectDelimeter('(');
+			while (m_cursor + 1 < m_listLexem.size()
 				&& !IsNextDelimeter(')'))
 			{
 				if (IsNextDelimeter(','))
@@ -1837,16 +1818,16 @@ loopLabel:
 					listParam.emplace_back(GetExpression());
 					if (IsNextDelimeter(')')) break;
 				}
-				GETDelimeter(',');
+				ExpectDelimeter(',');
 			}
 
-			GETDelimeter(')');
+			ExpectDelimeter(')');
 
 			ibValue parentValueObject = variable.m_paramObject;
 
 			variable = GetVariable();
 
-			const long lMethodNum = parentValueObject.FindMethod(sMethod);
+			const long lMethodNum = parentValueObject.FindMethod(method);
 			if (lMethodNum != wxNOT_FOUND && parentValueObject.HasRetVal(lMethodNum)) {
 
 				size_t paramCount = parentValueObject.GetNParams(lMethodNum) > 0 ?
@@ -1877,20 +1858,20 @@ loopLabel:
 				wxDELETEA(pRefLocVars);
 			}
 
-			nIsSet = 0;
+			isSet = 0;
 		}
-		else//����� - ����� ��������
+		else
 		{
-			//���������� ��� ������ (�.�. ��� ��������� �������� ��� ���������)
-			//������:
-			//�=���.�����; - Get
-			//���.�����=0; - Set
-			//���.�����.���=0;  - Get,Set
 
-			nIsSet = 0;
+
+
+
+
+
+			isSet = 0;
 
 			if (IsNextDelimeter('=') && nPrevSet == 1) {
-				GETDelimeter('=');
+				ExpectDelimeter('=');
 				ibValue parentValueObject = variable.m_paramObject;
 				ibParamValue sParam = GetExpression();
 				const long lPropNum = parentValueObject.FindProp(strRealMethod);
@@ -1906,7 +1887,7 @@ loopLabel:
 			else {
 				ibValue parentValueObject = variable.m_paramObject;
 				variable = GetVariable();
-				const long lPropNum = parentValueObject.FindProp(sMethod);
+				const long lPropNum = parentValueObject.FindProp(method);
 				if (lPropNum != wxNOT_FOUND) {
 					try {
 						parentValueObject.GetPropVal(lPropNum, variable.m_paramObject);
@@ -1925,15 +1906,15 @@ loopLabel:
 }//GetCurrentIdentifier
 
 /**
- * ��������� ������ ������� ��� ���������
+ *     
  */
-ibParamValue ibPrecompileCode::GetCallFunction(const wxString& strName)
+ibParamValue ibPrecompileCode::GetCallFunction(const wxString& name)
 {
 	std::vector<ibParamValue> listParam;
 
-	GETDelimeter('(');
+	ExpectDelimeter('(');
 
-	while (m_numCurrentCompile + 1 < m_listLexem.size()
+	while (m_cursor + 1 < m_listLexem.size()
 		&& !IsNextDelimeter(')'))
 	{
 		if (IsNextDelimeter(','))
@@ -1949,16 +1930,16 @@ ibParamValue ibPrecompileCode::GetCallFunction(const wxString& strName)
 
 			if (IsNextDelimeter(')')) break;
 		}
-		GETDelimeter(',');
+		ExpectDelimeter(',');
 	}
-	GETDelimeter(')');
+	ExpectDelimeter(')');
 
 	ibValue retValue;
 
-	if (m_cContext.cFunctions.find(strName) != m_cContext.cFunctions.end()) {
-		CPrecompileFunction* pDefFunction = m_cContext.cFunctions[strName];
-		pDefFunction->aParamList = listParam;
-		retValue = pDefFunction->RealRetValue.m_paramObject;
+	if (m_rootContext.m_functions.find(name) != m_rootContext.m_functions.end()) {
+		ibPrecompileFunction* pDefFunction = m_rootContext.m_functions[name];
+		pDefFunction->m_params = listParam;
+		retValue = pDefFunction->m_returnValue.m_paramObject;
 	}
 
 	ibParamValue variable = GetVariable();
@@ -1968,51 +1949,54 @@ ibParamValue ibPrecompileCode::GetCallFunction(const wxString& strName)
 
 /**
  * AddVariable
- * ����������:
- * �������� ��� � ����� ������� ��������� � ����������� ������ ��� ����������� �������������
+ *   Register a variable in the root context (module scope). Empty
+ *   names are ignored. Used to surface externally-supplied locals
+ *   (e.g. parent module's exports) before compilation starts.
  */
-void ibPrecompileCode::AddVariable(const wxString& strVarName, const ibValue& varVal)
+void ibPrecompileCode::AddVariable(const wxString& varName, const ibValue& value)
 {
-	if (strVarName.IsEmpty())
+	if (varName.IsEmpty())
 		return;
 
-	// take into account external variables during compilation
-	m_cContext.GetVariable(strVarName, false, false, varVal);
+	m_rootContext.GetVariable(varName, false, false, value);
 }
 
 /**
- * ������� ���������� ����� ���������� �� ���������� �����
+ * GetVariable
+ *   Resolve a variable by name in the active context, walking parent
+ *   scopes. checkError=true suppresses auto-declaration on miss.
  */
-ibParamValue ibPrecompileCode::GetVariable(const wxString& strName, bool bCheckError)
+ibParamValue ibPrecompileCode::GetVariable(const wxString& name, bool checkError)
 {
-	return m_pContext->GetVariable(strName, true, bCheckError);
+	return m_activeContext->GetVariable(name, true, checkError);
 }
 
 /**
- * C������ ����� ������������� ����������
+ * GetVariable (anonymous)
+ *   Allocate the next temporary `@N` slot in the active context.
  */
 ibParamValue ibPrecompileCode::GetVariable()
 {
-	const wxString& strVarName = wxString::Format("@%d", m_pContext->nTempVar); //@ - ��� �������� ������������ �����
-	ibParamValue variable = m_pContext->GetVariable(strVarName, false);//��������� ���������� ���� ������ � ��������� ���������
-	m_pContext->nTempVar++;
+	const wxString& varName = wxString::Format("@%d", m_activeContext->m_tempVarCounter);
+	ibParamValue variable = m_activeContext->GetVariable(varName, false);
+	m_activeContext->m_tempVarCounter++;
 	return variable;
 }
 
-void ibPrecompileCode::SetVariable(const wxString& strVarName, const ibValue& varVal)
+void ibPrecompileCode::SetVariable(const wxString& varName, const ibValue& value)
 {
-	m_pContext->SetVariable(strVarName, varVal);
+	m_activeContext->SetVariable(varName, value);
 }
 
 /**
- * �������� ����� ��������� �� ����������� ������ ��������
- * (���� ������ �������� � ������ ���, �� ��� ���������)
+ * FindConst
+ *   Wrap a literal ibValue as an ibParamValue with its type tag set.
  */
 ibParamValue ibPrecompileCode::FindConst(ibValue& vData)
 {
 	ibParamValue Const;
-	wxString strType = vData.GetClassName();
-	Const.m_paramType = GetTypeVar(strType);
+	wxString type = vData.GetClassName();
+	Const.m_paramType = GetTypeVar(type);
 	Const.m_paramObject = vData;
 	return Const;
 }

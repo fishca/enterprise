@@ -2,162 +2,172 @@
 #include "backend/system/systemManager.h"
 
 //////////////////////////////////////////////////////////////////////
-// CPrecompileContext CPrecompileContext CPrecompileContext CPrecompileContext  //
+// ibPrecompileContext ibPrecompileContext ibPrecompileContext ibPrecompileContext  //
 //////////////////////////////////////////////////////////////////////
 
 /**
- * ����� ���������� � ��� �������
- * ���������� 1 - ���� ���������� �������
+ * FindVariable
+ *   Look up a variable by name. When isContext=true, additionally
+ *   reports whether the variable is bound to a context value via
+ *   the out-parameter vContext.
  */
-bool CPrecompileContext::FindVariable(const wxString& strName, ibValue& vContext, bool bContext)
+bool ibPrecompileContext::FindVariable(const wxString& name, ibValue& vContext, bool isContext)
 {
-	if (bContext)
+	if (isContext)
 	{
-		auto it = cVariables.find(stringUtils::MakeUpper(strName));
-		if (it != cVariables.end())
+		auto it = m_variables.find(stringUtils::MakeUpper(name));
+		if (it != m_variables.end())
 		{
 			vContext = it->second.m_valContext;
-			return it->second.bContext;
+			return it->second.m_isContext;
 		}
 		return false;
 	}
 	else
 	{
-		return cVariables.find(stringUtils::MakeUpper(strName)) != cVariables.end();
+		return m_variables.find(stringUtils::MakeUpper(name)) != m_variables.end();
 	}
 }
 
 /**
- * ����� ���������� � ��� �������
- * ���������� 1 - ���� ���������� �������
+ * FindFunction
+ *   Look up a function by name. When isContext=true, reports whether
+ *   the function is bound to a context value via the out-parameter
+ *   vContext.
  */
-bool CPrecompileContext::FindFunction(const wxString& strName, ibValue& vContext, bool bContext)
+bool ibPrecompileContext::FindFunction(const wxString& name, ibValue& vContext, bool isContext)
 {
-	if (bContext)
+	if (isContext)
 	{
-		auto it = cFunctions.find(stringUtils::MakeUpper(strName));
-		if (it != cFunctions.end() && it->second)
+		auto it = m_functions.find(stringUtils::MakeUpper(name));
+		if (it != m_functions.end() && it->second)
 		{
 			vContext = it->second->m_valContext;
-			return it->second->bContext;
+			return it->second->m_isContext;
 		}
 		return false;
 	}
 	else
 	{
-		return cFunctions.find(stringUtils::MakeUpper(strName)) != cFunctions.end();
+		return m_functions.find(stringUtils::MakeUpper(name)) != m_functions.end();
 	}
 }
 
-void CPrecompileContext::RemoveVariable(const wxString& strName)
+void ibPrecompileContext::RemoveVariable(const wxString& name)
 {
-	auto it = cVariables.find(stringUtils::MakeUpper(strName));
-	if (it != cVariables.end()) {
-		cVariables.erase(it);
+	auto it = m_variables.find(stringUtils::MakeUpper(name));
+	if (it != m_variables.end()) {
+		m_variables.erase(it);
 	}
 }
 
 /**
- * ��������� ����� ���������� � ������
- * ���������� ����������� ���������� � ���� ibParamValue
+ * AddVariable
+ *   Register a new variable in the context. Returns its descriptor
+ *   wrapped as an ibParamValue. Re-declarations are rejected — when
+ *   a variable with the same name already exists the function returns
+ *   an empty ibParamValue.
  */
-ibParamValue CPrecompileContext::AddVariable(const wxString& paramName, const wxString& paramType, bool bExport, bool bTempVar, const ibValue& valVar)
+ibParamValue ibPrecompileContext::AddVariable(const wxString& paramName, const wxString& paramType, bool isExport, bool isTempVar, const ibValue& value)
 {
-	if (FindVariable(paramName)) //���� ���������� + ��������� ���������� = ������
+	if (FindVariable(paramName))   // already exists — re-declaration is an error
 		return ibParamValue();
 
-	CPrecompileVariable currentVar;
-	currentVar.bContext = false;
-	currentVar.strName = stringUtils::MakeUpper(paramName);
-	currentVar.strRealName = paramName;
-	currentVar.bExport = bExport;
-	currentVar.bTempVar = bTempVar;
-	currentVar.strType = paramType;
-	currentVar.m_valObject = valVar;
-	currentVar.nNumber = cVariables.size();
+	ibPrecompileVariable currentVar;
+	currentVar.m_isContext = false;
+	currentVar.m_name = stringUtils::MakeUpper(paramName);
+	currentVar.m_realName = paramName;
+	currentVar.m_isExport = isExport;
+	currentVar.m_isTempVar = isTempVar;
+	currentVar.m_type = paramType;
+	currentVar.m_valObject = value;
+	currentVar.m_number = m_variables.size();
 
-	cVariables[stringUtils::MakeUpper(paramName)] = currentVar;
+	m_variables[stringUtils::MakeUpper(paramName)] = currentVar;
 
 	ibParamValue paramValue;
 	paramValue.m_paramType = paramType;
-	paramValue.m_paramObject = valVar;
+	paramValue.m_paramObject = value;
 	return paramValue;
 }
 
-void CPrecompileContext::SetVariable(const wxString& strVarName, const ibValue& valVar)
+void ibPrecompileContext::SetVariable(const wxString& varName, const ibValue& value)
 {
-	if (FindVariable(strVarName)) {
-		cVariables[stringUtils::MakeUpper(strVarName)].m_valObject = valVar;
+	if (FindVariable(varName)) {
+		m_variables[stringUtils::MakeUpper(varName)].m_valObject = value;
 	}
 }
 
 /**
- * ������� ���������� ����� ���������� �� ���������� �����
- * ����� ����������� ����������, ������� � �������� ��������� �� ���� ������������
- * ���� ��������� ���������� ���, �� ��������� ����� ����������� ����������
+ * GetVariable
+ *   Resolve a variable by name. If not found in this context and
+ *   findInParent is true, walk up the enclosing contexts (skipping
+ *   contexts marked as "stop boundaries" — see m_stopParent /
+ *   m_continueParent). When the name is not resolvable and checkError
+ *   is false, the variable is auto-declared as a fresh local.
  */
-ibParamValue CPrecompileContext::GetVariable(const wxString& strName, bool bFindInParent, bool bCheckError, const ibValue& valVar)
+ibParamValue ibPrecompileContext::GetVariable(const wxString& name, bool findInParent, bool checkError, const ibValue& value)
 {
-	int numCanUseLocalInParent = nFindLocalInParent;
+	int numCanUseLocalInParent = m_findLocalInParent;
 	ibParamValue Variable;
-	Variable.m_paramName = stringUtils::MakeUpper(strName);
-	if (!FindVariable(strName)) {
-		if (bFindInParent) {//���� � ������������ ����������(�������)
+	Variable.m_paramName = stringUtils::MakeUpper(name);
+	if (!FindVariable(name)) {
+		if (findInParent) {                                       // walk up the parent chain
 			int nParentNumber = 0;
-			CPrecompileContext* pCurContext = pParent;
-			CPrecompileContext* pNotParent = pStopParent;
+			ibPrecompileContext* pCurContext = m_parent;
+			ibPrecompileContext* pNotParent = m_stopParent;
 			while (pCurContext) {
 				nParentNumber++;
 				if (nParentNumber > MAX_OBJECTS_LEVEL) {
-					ibValueSystemFunction::Message(pCurContext->pModule->GetModuleName());
+					ibValueSystemFunction::Message(pCurContext->m_module->GetModuleName());
 					if (nParentNumber > 2 * MAX_OBJECTS_LEVEL)
 						break;
 				}
 
-				if (pCurContext == pNotParent) {//������� ������ != ����������� �����������
-					//��������� ��������� ��������
-					pNotParent = pCurContext->pParent;
-					if (pNotParent == pContinueParent)//������� �� ���������� - ��� ����������� ���������
+				if (pCurContext == pNotParent) {                  // stop-boundary hit — skip lookup, advance the boundary
+					pNotParent = pCurContext->m_parent;
+					if (pNotParent == m_continueParent)             // continue-boundary reached — clear the marker
 						pNotParent = nullptr;
 				}
 				else {
-					if (pCurContext->FindVariable(strName)) {// found
-						CPrecompileVariable currentVar = pCurContext->cVariables[stringUtils::MakeUpper(strName)];
-						//������� ��� ���������� ���������� ��� ��� (���� nFindLocalInParent=true, �� ����� ����� ��������� ���������� ��������)
-						if (numCanUseLocalInParent > 0 || currentVar.bExport) {
-							//���������� ����� ����������
-							Variable.m_paramType = currentVar.strType;
+					if (pCurContext->FindVariable(name)) {        // found in an outer scope
+						ibPrecompileVariable currentVar = pCurContext->m_variables[stringUtils::MakeUpper(name)];
+						// Use locals from outer scope only while the
+						// findLocalInParent budget allows it; export
+						// variables are always visible.
+						if (numCanUseLocalInParent > 0 || currentVar.m_isExport) {
+							Variable.m_paramType = currentVar.m_type;
 							Variable.m_paramObject = currentVar.m_valObject;
 							return Variable;
 						}
 					}
 				}
 				numCanUseLocalInParent--;
-				pCurContext = pCurContext->pParent;
+				pCurContext = pCurContext->m_parent;
 			}
 		}
 
-		if (bCheckError)
+		if (checkError)
 			return Variable;
 
-		bool bTempVar = strName.Left(1) == "@";
-		// there was no variable declaration yet - add
-		AddVariable(strName, wxEmptyString, false, bTempVar, valVar);
+		bool isTempVar = name.Left(1) == "@";
+		// There was no declaration yet — auto-add it as a local.
+		AddVariable(name, wxEmptyString, false, isTempVar, value);
 	}
 
-	//determine the number and type of the variable
-	CPrecompileVariable currentVar = cVariables[stringUtils::MakeUpper(strName)];
-	Variable.m_paramType = currentVar.strType;
+	//determine the m_number and type of the variable
+	ibPrecompileVariable currentVar = m_variables[stringUtils::MakeUpper(name)];
+	Variable.m_paramType = currentVar.m_type;
 	Variable.m_paramObject = currentVar.m_valObject;
 	return Variable;
 }
 
-CPrecompileContext::~CPrecompileContext()
+ibPrecompileContext::~ibPrecompileContext()
 {
-	for (auto it = cFunctions.begin(); it != cFunctions.end(); it++) {
-		CPrecompileFunction* pFunction = (CPrecompileFunction*)it->second;
+	for (auto it = m_functions.begin(); it != m_functions.end(); it++) {
+		ibPrecompileFunction* pFunction = (ibPrecompileFunction*)it->second;
 		if (pFunction)
 			delete pFunction;
 	}
-	cFunctions.clear();
+	m_functions.clear();
 }

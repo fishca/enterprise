@@ -11,169 +11,169 @@ struct ibParamValue {
 };
 
 class ibPrecompileCode;
-struct CPrecompileFunction;
+struct ibPrecompileFunction;
 
-struct CPrecompileVariable
+struct ibPrecompileVariable
 {
-	bool bExport;
-	bool bContext;
-	bool bTempVar;
+	bool m_isExport  = false;
+	bool m_isContext = false;
+	bool m_isTempVar = false;
 
-	int nNumber;
+	int  m_number    = 0;
 
-	wxString strName;//��� ����������
-	wxString strType;//��� ��������
-	wxString strRealName;
+	wxString m_name;     // variable name
+	wxString m_type;     // variable type (in english notation, when typed)
+	wxString m_realName;
 
 	ibValue m_valContext;
 	ibValue m_valObject;
 
-	CPrecompileVariable() : bExport(false), bContext(false), bTempVar(false), nNumber(0) {};
-	CPrecompileVariable(wxString csVarName) : strName(csVarName), bExport(false), bContext(false), bTempVar(false), nNumber(0) {};
+	ibPrecompileVariable() = default;
+	explicit ibPrecompileVariable(wxString varName) : m_name(std::move(varName)) {}
 };
 
-struct CPrecompileContext
+struct ibPrecompileContext
 {
-	ibPrecompileCode* pModule;
-	void SetModule(ibPrecompileCode* pSetModule) { pModule = pSetModule; }
+	ibPrecompileCode*    m_module         = nullptr;
+	ibPrecompileContext* m_parent         = nullptr;  // enclosing context
+	ibPrecompileContext* m_stopParent     = nullptr;  // target for `Break` (enclosing loop)
+	ibPrecompileContext* m_continueParent = nullptr;  // target for `Continue` (enclosing loop)
 
-	CPrecompileContext* pParent;//������������ ��������
-	CPrecompileContext* pStopParent;//������ ����������� ������� �����������
-	CPrecompileContext* pContinueParent;//������ ����������� ������� �����������
-	bool bStaticVariable;		//��� ���������� ���������
+	std::map<wxString, ibPrecompileVariable> m_variables;
+	std::map<wxString, ibPrecompileFunction*> m_functions;  // compiled functions/procedures registered in this scope
 
-	//����������
-	std::map <wxString, CPrecompileVariable> cVariables;
+	int      m_tempVarCounter      = 0;   // running id for synthesised temporary variables
+	int      m_findLocalInParent   = 1;   // 1: walk into parent scopes when resolving names; 0: stop at this scope
+	int      m_returnKind          = 0;   // last seen RETURN kind: RETURN_NONE / RETURN_PROCEDURE / RETURN_FUNCTION
+	wxString m_currentFunctionName;       // name of the currently-compiled function (for recursive-call handling)
 
-	ibParamValue GetVariable(const wxString& strVarName, bool bFindInParent = true, bool bCheckError = false, const ibValue& valVar = ibValue());
-	ibParamValue AddVariable(const wxString& strVarName, const wxString& varType = wxEmptyString, bool bExport = false, bool bTempVar = false, const ibValue& valVar = ibValue());
-	void SetVariable(const wxString& strVarName, const ibValue& valVar);
+	void SetModule(ibPrecompileCode* setModule) { m_module = setModule; }
 
-	bool FindVariable(const wxString& strName, ibValue& valContext = ibValue(), bool bContext = false);
-	bool FindFunction(const wxString& strName, ibValue& valContext = ibValue(), bool bContext = false);
+	ibParamValue GetVariable(const wxString& varName, bool findInParent = true, bool checkError = false, const ibValue& value = ibValue());
+	ibParamValue AddVariable(const wxString& varName, const wxString& varType = wxEmptyString, bool isExport = false, bool isTempVar = false, const ibValue& value = ibValue());
+	void         SetVariable(const wxString& varName, const ibValue& value);
 
-	void RemoveVariable(const wxString& strName);
+	bool FindVariable(const wxString& name, ibValue& valContext = ibValue(), bool isContext = false);
+	bool FindFunction(const wxString& name, ibValue& valContext = ibValue(), bool isContext = false);
 
-	int nTempVar;//����� ������� ��������� ����������
-	int nFindLocalInParent;//������� ������ ���������� � �������� (�� ���� �������), � ��������� ������� � ��������� ������ ������ ���������� ����������)
+	void RemoveVariable(const wxString& name);
 
-	//������� � ���������
-	std::map<wxString, CPrecompileFunction*> cFunctions;//������ ������������� ����������� �������
-	int nReturn;//����� ��������� ��������� RETURN : RETURN_NONE,RETURN_PROCEDURE,RETURN_FUNCTION
-	wxString sCurFuncName;//��� ������� ������������� ������� (��� ��������� �������� ������ ����������� �������)
+	explicit ibPrecompileContext(ibPrecompileContext* setParent = nullptr)
+		: m_parent(setParent),
+		  m_stopParent    (setParent ? setParent->m_stopParent     : nullptr),
+		  m_continueParent(setParent ? setParent->m_continueParent : nullptr)
+	{
+	}
 
-	CPrecompileContext(CPrecompileContext* hSetParent = nullptr) {
-		pParent = hSetParent;
-
-		nReturn = 0;
-		nFindLocalInParent = 1;
-		pModule = nullptr;
-
-		pStopParent = nullptr;
-		pContinueParent = nullptr;
-
-		if (hSetParent) {
-			pStopParent = hSetParent->pStopParent;
-			pContinueParent = hSetParent->pContinueParent;
-		}
-
-		nTempVar = 0;
-		bStaticVariable = false;
-
-	};
-
-	~CPrecompileContext();
+	~ibPrecompileContext();
 };
 
-//����������� �������
-struct CPrecompileFunction
+// Compiled-function descriptor — IntelliSense-side mirror of a script
+// procedure or function declaration. Owns its private context if any.
+struct ibPrecompileFunction
 {
-	wxString strRealName;//��� �������
-	wxString strName;//��� ������� � ������� ��������
-	std::vector<ibParamValue> aParamList;
-	bool bExport;
-	bool bContext;
-	CPrecompileContext* m_pContext;//������� ����������
-	int nVarCount;// number of local variables
-	int nStart;// starting position � ������� ����-�����
-	int nFinish;//�������� ������� � ������� ����-�����
+	wxString m_realName;                     // function identifier as written
+	wxString m_name;                         // upper-cased name (matching key)
+	std::vector<ibParamValue> m_params;
+	bool m_isExport  = false;
+	bool m_isContext = false;
+	ibPrecompileContext* m_context = nullptr; // private function context (locals + params); owned
 
 	ibValue m_valContext;
 
-	ibParamValue RealRetValue;//��� �������� ���������� ��� �������� ������
-	bool bSysFunction;
-	wxString strType;		//��� (� ����. �������), ���� ��� �������������� �������
+	ibParamValue m_returnValue;              // return-value placeholder for the walker
+	wxString m_type;                         // type (in english notation) when typed
 
-	//��� IntelliSense
-	int	nNumberLine;	//source line number (for breakpoints)
-	wxString strShortDescription;//�������� � ���� ��� ������ ����� ��������� ����� �������(���������)
-	wxString sLongDescription;//�������� � ���� ���� ������� (�.�.� ��� ������ �����) ���� ����������� �� ����������� ������� (���������)
+	// IntelliSense:
+	wxString m_shortDescription;               // short tooltip (one line)
 
-	CPrecompileFunction(const wxString& strFuncName, CPrecompileContext* pSetContext = nullptr)
+	explicit ibPrecompileFunction(const wxString& funcName, ibPrecompileContext* setContext = nullptr)
+		: m_name(funcName), m_context(setContext)
 	{
-		strName = strFuncName;
-		m_pContext = pSetContext;
-		bExport = false;
-		bContext = false;
-		nVarCount = 0;
-		nStart = 0;
-		nFinish = 0;
-		bSysFunction = false;
-		nNumberLine = -1;
-	};
+	}
 
-	~CPrecompileFunction()
-	{
-		if (m_pContext)//������� ����������� �������� (� ������ ������� ���� ������ ����� � ��������� ����������)
-			delete m_pContext;
-	};
+	~ibPrecompileFunction() { delete m_context; }
+
+	ibPrecompileFunction(const ibPrecompileFunction&)            = delete;
+	ibPrecompileFunction& operator=(const ibPrecompileFunction&) = delete;
 };
 
 //*******************************************************************
-//*                         �����: ���-����������                   *
+//*                       Class: precompiler walker                 *
 //*******************************************************************
 class ibPrecompileCode : public ibTranslateCode
 {
-	int m_numCurrentCompile;		//������� ��������� � ������� ������
+	int m_cursor = wxNOT_FOUND;        // current position in the lexem array
 
-	ibValueMetaObjectModuleBase* m_moduleObject;
+	ibValueMetaObjectModuleBase* m_moduleObject = nullptr;
 
-	std::map<wxString, unsigned int> m_aHashConstList;
+	std::map<wxString, unsigned int> m_constHashes;
 
-	CPrecompileContext	m_cContext;
-	CPrecompileContext* m_pContext;
-	CPrecompileContext* m_pCurrentContext;
+	// Context tree owned by the precompiler:
+	//   m_rootContext     — module-level scope (always live; root of the tree).
+	//   m_activeContext   — context currently being compiled (during
+	//                       CompileFunction it points at a freshly allocated
+	//                       child of root for the function's locals; outside
+	//                       of CompileFunction it equals &m_rootContext).
+	//   m_cursorContext   — context at the user's caret position; used by
+	//                       IntelliSense to expose the locals of the
+	//                       function the caret is inside.
+	ibPrecompileContext  m_rootContext;
+	ibPrecompileContext* m_activeContext = nullptr;
+	ibPrecompileContext* m_cursorContext = nullptr;
 
 	ibValue m_valObject;
 
-	unsigned int nLastPosition;
+	unsigned int m_lastPosition = 0;
 
-	wxString m_strLastExpression;
-	wxString m_strLastKeyword;
-	wxString m_strLastParentKeyword;
+	wxString m_lastExpression;
+	wxString m_lastKeyword;
+	wxString m_lastParentKeyword;
 
-	bool m_bCalcValue;
-
-	unsigned int m_nCurrentPos;
-
-	friend class ibCodeEditor;
+	bool         m_calcValue = false;
+	// User caret position in the buffer (set externally via
+	// SetCurrentPos) — distinct from the base class's m_currentPos which
+	// is the lexer's running tokenize cursor. The two MUST stay separate;
+	// shadowing them silently breaks ibTranslateCode::IsEnd() (it would
+	// read the derived caret value instead of the lexer's progress).
+	unsigned int m_caretPos = 0;
 
 public:
 
-	//�������� ������:
-	virtual void Clear();//����� ������ ��� ���������� ������������� �������
+	// IntelliSense state — last expression / keyword / parent keyword
+	// the walk has populated. Read by codeEditorLoader to drive
+	// auto-complete suggestions; written by ExpectDelimeter and the
+	// expression-walk methods. Read-only accessors keep these private
+	// without requiring `friend ibCodeEditor`.
+	const wxString& GetLastExpression()    const { return m_lastExpression; }
+	const wxString& GetLastKeyword()       const { return m_lastKeyword; }
+	const wxString& GetLastParentKeyword() const { return m_lastParentKeyword; }
+
+	// Lexem stream produced by PrepareLexem — read-only view for
+	// fold-level scanning and intellisense walkers.
+	const std::vector<ibLexem>& GetLexems() const { return m_listLexem; }
+
+	// Cursor + computation-mode setters — driven by codeEditorLoader to
+	// pin the IntelliSense walk to the user's cursor position and to
+	// signal whether ibValue computation should run (debugger watch
+	// path) or be skipped (autocomplete preview).
+	void SetCurrentPos(unsigned int pos) { m_caretPos = pos; }
+	void SetCalcValue (bool value)        { m_calcValue  = value; }
+
+	// Cleanup for reuse:
+	virtual void Clear();// resets state for repeated translation calls
 	void PrepareModuleData();
 
 	ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject);
 	virtual ~ibPrecompileCode();
 
 	ibValue GetComputeValue() const { return m_valObject; }
-	CPrecompileContext* GetContext() {
-		m_cContext.SetModule(this);
-		return &m_cContext;
-	};
 
-	CPrecompileContext* GetCurrentContext() const { return m_pCurrentContext; }
+	// Pure getters. The root context's back-pointer to this module is
+	// wired once in the constructor — no longer mutated on every read.
+	ibPrecompileContext*       GetContext()              { return &m_rootContext; }
+	const ibPrecompileContext* GetContext()       const  { return &m_rootContext; }
+	ibPrecompileContext*       GetCurrentContext() const { return m_cursorContext; }
 
 	bool Compile();
 
@@ -202,32 +202,32 @@ protected:
 
 	bool CompileModule();
 
-	ibLexem PreviewGetLexem();
-	ibLexem GetLexem();
-	ibLexem GETLexem();
-	void GETDelimeter(const wxUniChar& c);
+	const ibLexem& PreviewGetLexem();
+	const ibLexem& GetLexem();
+	const ibLexem& ExpectLexem();
+	void ExpectDelimeter(const wxUniChar& c);
 
 	bool IsNextDelimeter(const wxUniChar& c);
-	bool IsNextKeyWord(int nKey);
-	void GETKeyWord(int nKey);
-	wxString GETIdentifier(bool strRealName = false);
-	ibValue GETConstant();
-	int GetConstString(const wxString& sMethod);
+	bool IsNextKeyWord(int keyword);
+	void ExpectKeyword(int keyword);
+	wxString ExpectIdentifier(bool realName = false);
+	ibValue ExpectConstant();
+	int GetConstString(const wxString& method);
 
-	int IsTypeVar(const wxString& strType = wxEmptyString);
-	wxString GetTypeVar(const wxString& strType = wxEmptyString);
+	int IsTypeVar(const wxString& type = wxEmptyString);
+	wxString GetTypeVar(const wxString& type = wxEmptyString);
 
-	ibParamValue GetExpression(int nPriority = 0);
+	ibParamValue GetExpression(int priority = 0);
 
-	ibParamValue GetCurrentIdentifier(int& nIsSet);
-	ibParamValue GetCallFunction(const wxString& strName);
+	ibParamValue GetCurrentIdentifier(int& isSet);
+	ibParamValue GetCallFunction(const wxString& name);
 
-	void AddVariable(const wxString& strVarName, const ibValue& varVal);
+	void AddVariable(const wxString& varName, const ibValue& value);
 
-	ibParamValue GetVariable(const wxString& strVarName, bool bCheckError = false);
+	ibParamValue GetVariable(const wxString& varName, bool checkError = false);
 	ibParamValue GetVariable();
 
-	void SetVariable(const wxString& strVarName, const ibValue& varVal);
+	void SetVariable(const wxString& varName, const ibValue& value);
 
 	ibParamValue FindConst(ibValue& vData);
 };

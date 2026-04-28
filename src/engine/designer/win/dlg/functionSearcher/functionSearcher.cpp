@@ -45,34 +45,34 @@ CFunctionList::CFunctionList(ibMetaDocument* moduleDoc, ibCodeEditor* parent)
 	if (moduleParser.ParseModule(metaModule->GetModuleText())) {
 		for (auto content : moduleParser.GetAllContent()) {
 
-			if (content.eType == ibContentType::eExportFunction ||
-				content.eType == ibContentType::eFunction ||
-				content.eType == ibContentType::eExportProcedure ||
-				content.eType == ibContentType::eProcedure) {
+			if (content.m_eType == ibContentType::eExportFunction ||
+				content.m_eType == ibContentType::eFunction ||
+				content.m_eType == ibContentType::eExportProcedure ||
+				content.m_eType == ibContentType::eProcedure) {
 				wxListItem info;
-				info.m_text = content.strName;
+				info.m_text = content.m_name;
 				info.m_mask = wxLIST_MASK_TEXT | wxLIST_MASK_IMAGE | wxLIST_MASK_DATA;
 				info.m_itemId = m_listProcedures->GetItemCount();
 				info.m_col = 0;
 
-				if (content.eType == ibContentType::eExportFunction ||
-					content.eType == ibContentType::eFunction)
+				if (content.m_eType == ibContentType::eExportFunction ||
+					content.m_eType == ibContentType::eFunction)
 					info.m_image = funcRed;
 				else
 					info.m_image = procRed;
 
 				long item = m_listProcedures->InsertItem(info);
-				m_listProcedures->SetItemData(item, content.nLineStart + 1);
+				m_listProcedures->SetItemData(item, content.m_lineStart + 1);
 
 				m_aOffsets.insert_or_assign(item,
 					offset_proc_t{
-						content.nLineStart + 1,
-						content.nLineEnd - content.nLineStart
+						content.m_lineStart + 1,
+						content.m_lineEnd - content.m_lineStart
 					}
 				);
 
-				maxLine = content.nLineEnd;
-				arrayProcedures.push_back(content.strName);
+				maxLine = content.m_lineEnd;
+				arrayProcedures.push_back(content.m_name);
 			}
 		}
 	}

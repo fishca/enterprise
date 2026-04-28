@@ -7,15 +7,13 @@
 
 #pragma warning(disable : 4018)
 
-ibParserModule::ibParserModule() : ibTranslateCode(), m_numCurrentCompile(wxNOT_FOUND)
-{
-}
+ibParserModule::ibParserModule() = default;
 
 bool ibParserModule::ParseModule(const wxString& sModule)
 {
-	m_aContentModule.clear();
+	m_content.clear();
 
-	//1. Затем разбиваем на лексемы
+	// 1. Tokenize the source into the lexem stream.
 	Load(sModule);
 
 	try {
@@ -28,317 +26,260 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 
 	ibLexem lex;
 
-	while ((lex = GETLexem()).m_lexType != ERRORTYPE)
+	while ((lex = ExpectLexem()).m_lexType != ERRORTYPE)
 	{
-		//пропускаем условие
+		// Skip the IF condition: walk to its THEN.
 		if (lex.m_lexType == KEYWORD && lex.m_numData == KEY_IF)
 		{
-			while (m_numCurrentCompile + 1 < m_listLexem.size())
+			while (m_cursor + 1 < m_listLexem.size())
 			{
-				lex = GETLexem();
+				lex = ExpectLexem();
 				if (lex.m_lexType == KEYWORD && lex.m_numData == KEY_THEN) break;
 			}
 
-			lex = GETLexem();
+			lex = ExpectLexem();
 		}
 
-		//пропускаем заголовок циклов WHILE
+		// Skip the WHILE header: walk to its DO.
 		if (lex.m_lexType == KEYWORD && lex.m_numData == KEY_WHILE)
 		{
-			while (m_numCurrentCompile + 1 < m_listLexem.size())
+			while (m_cursor + 1 < m_listLexem.size())
 			{
-				lex = GETLexem();
+				lex = ExpectLexem();
 				if (lex.m_lexType == KEYWORD && lex.m_numData == KEY_DO) break;
 			}
-			lex = GETLexem();
+			lex = ExpectLexem();
 		}
 
-		//пропускаем тернарное выражение
+		// Skip a ternary expression: walk to the closing ';'.
 		if (lex.m_lexType == DELIMITER && lex.m_numData == '?')
 		{
-			while (m_numCurrentCompile + 1 < m_listLexem.size())
+			while (m_cursor + 1 < m_listLexem.size())
 			{
-				lex = GETLexem();
+				lex = ExpectLexem();
 				if (lex.m_lexType == DELIMITER && lex.m_numData == ';') break;
 			}
-			lex = GETLexem();
+			lex = ExpectLexem();
 		}
 
-		//Объявление переменных
+		// Variable declaration: collect names + optional array size + export flag.
 		if (lex.m_lexType == KEYWORD && lex.m_numData == KEY_VAR) {
-			while (m_numCurrentCompile + 1 < m_listLexem.size()) {
-				wxString strName = GETIdentifier(true);
+			while (m_cursor + 1 < m_listLexem.size()) {
+				wxString name = ExpectIdentifier(true);
 				int nArrayCount = -1;
 				if (IsNextDelimeter('[')) { // this is an array declaration
 					nArrayCount = 0;
-					GETDelimeter('[');
+					ExpectDelimeter('[');
 					if (!IsNextDelimeter(']')) {
-						ibValue vConst = GETConstant();
+						ibValue vConst = ExpectConstant();
 						if (vConst.GetType() != ibValueTypes::TYPE_NUMBER || vConst.GetNumber() < 0)
 							continue;
 						nArrayCount = vConst.GetInteger();
 					}
-					GETDelimeter(']');
+					ExpectDelimeter(']');
 				}
 
-				bool bExport = false;
+				bool isExport = false;
 
 				if (IsNextKeyWord(KEY_EXPORT))
 				{
-					GETKeyWord(KEY_EXPORT);
-					bExport = true;
+					ExpectKeyword(KEY_EXPORT);
+					isExport = true;
 				}
 
 				if (IsNextDelimeter('='))// initial initialization - works only inside the text of modules (but not re-declaring procedures and functions)
 				{
-					if (nArrayCount >= 0) GETDelimeter(',');//Error!
-					GETDelimeter('=');
+					if (nArrayCount >= 0) ExpectDelimeter(',');//Error!
+					ExpectDelimeter('=');
 				}
 
 				ibModuleElement data;
-				data.strName = strName;
-				data.nLineStart = lex.m_numLine;
-				data.nLineEnd = lex.m_numLine;
-				data.nImage = 358;
+				data.m_name = name;
+				data.m_lineStart = lex.m_numLine;
+				data.m_lineEnd = lex.m_numLine;
+				data.m_imageIndex = 358;
 
-				if (bExport)
-					data.eType = ibContentType::eExportVariable;
-				else data.eType = ibContentType::eVariable;
+				if (isExport)
+					data.m_eType = ibContentType::eExportVariable;
+				else data.m_eType = ibContentType::eVariable;
 
-				m_aContentModule.push_back(data);
+				m_content.push_back(data);
 
 				if (!IsNextDelimeter(',')) break;
-				GETDelimeter(',');
+				ExpectDelimeter(',');
 			}
 		}
 
-		//Объявление функций и процедур 
+		// Function / procedure declaration: pull header text + collect params.
 		if (lex.m_lexType == KEYWORD && (lex.m_numData == KEY_FUNCTION || lex.m_numData == KEY_PROCEDURE)) {
 			bool isFunction = lex.m_numData == KEY_FUNCTION;
 			// pull out the text of the function declaration
 			lex = PreviewGetLexem();
-			wxString strShortDescription;
-			int m_numLine = lex.m_numLine;
+			wxString shortDescription;
 			int nRes = m_strBuffer.find('\n', lex.m_numString);
 			if (nRes >= 0) {
-				strShortDescription = m_strBuffer.substr(lex.m_numString, nRes - lex.m_numString - 1);
-				nRes = strShortDescription.find_first_of('/');
+				shortDescription = m_strBuffer.substr(lex.m_numString, nRes - lex.m_numString - 1);
+				nRes = shortDescription.find_first_of('/');
 				if (nRes > 0)
 				{
-					if (strShortDescription[nRes - 1] == '/') {// so this is a comment
-						strShortDescription = strShortDescription.substr(nRes + 1);
+					if (shortDescription[nRes - 1] == '/') {// so this is a comment
+						shortDescription = shortDescription.substr(nRes + 1);
 					}
 				}
 				else
 				{
-					nRes = strShortDescription.find_first_of(')');
-					strShortDescription = strShortDescription.substr(0, nRes + 1);
+					nRes = shortDescription.find_first_of(')');
+					shortDescription = shortDescription.substr(0, nRes + 1);
 				}
 			}
 
-			wxString strFuncName = GETIdentifier(true);
+			wxString strFuncName = ExpectIdentifier(true);
 
 			// compile the list of formal parameters + register them as local
-			GETDelimeter('(');
+			ExpectDelimeter('(');
 			if (!IsNextDelimeter(')'))
 			{
-				while (m_numCurrentCompile + 1 < m_listLexem.size())
+				while (m_cursor + 1 < m_listLexem.size())
 				{
 					if (IsNextKeyWord(KEY_VAL))
 					{
-						GETKeyWord(KEY_VAL);
+						ExpectKeyword(KEY_VAL);
 					}
 
-					/*wxString strName =*/ (void)GETIdentifier(true);
+					/*wxString name =*/ (void)ExpectIdentifier(true);
 
 					if (IsNextDelimeter('['))// this is an array
 					{
-						GETDelimeter('[');
-						GETDelimeter(']');
+						ExpectDelimeter('[');
+						ExpectDelimeter(']');
 					}
 					else if (IsNextDelimeter('='))
 					{
-						GETDelimeter('=');
-						ibValue vConstant = GETConstant();
+						ExpectDelimeter('=');
+						ibValue vConstant = ExpectConstant();
 					}
 
 					if (IsNextDelimeter(')')) break;
 
-					GETDelimeter(',');
+					ExpectDelimeter(',');
 				}
 			}
 
-			GETDelimeter(')');
+			ExpectDelimeter(')');
 
-			bool bExport = false;
+			bool isExport = false;
 
 			if (IsNextKeyWord(KEY_EXPORT))
 			{
-				GETKeyWord(KEY_EXPORT); bExport = true;
+				ExpectKeyword(KEY_EXPORT); isExport = true;
 			}
 
 			ibModuleElement data;
-			data.strName = strFuncName;
-			data.strShortDescription = strShortDescription;
-			data.nLineStart = lex.m_numLine;
-			data.nLineEnd = lex.m_numLine;
+			data.m_name = strFuncName;
+			data.m_shortDescription = shortDescription;
+			data.m_lineStart = lex.m_numLine;
+			data.m_lineEnd = lex.m_numLine;
 
 			if (isFunction) {
-				data.nImage = 353;
-				if (bExport) {
-					data.eType = ibContentType::eExportFunction;
+				data.m_imageIndex = 353;
+				if (isExport) {
+					data.m_eType = ibContentType::eExportFunction;
 				}
 				else {
-					data.eType = ibContentType::eFunction;
+					data.m_eType = ibContentType::eFunction;
 				}
 			}
 			else {
-				data.nImage = 352;
-				if (bExport) { data.eType = ibContentType::eExportProcedure; }
-				else { data.eType = ibContentType::eProcedure; }
+				data.m_imageIndex = 352;
+				if (isExport) { data.m_eType = ibContentType::eExportProcedure; }
+				else { data.m_eType = ibContentType::eProcedure; }
 			}
 
-			while (m_numCurrentCompile < (m_listLexem.size() - 1)) {
+			while (m_cursor < (m_listLexem.size() - 1)) {
 
 				if (IsNextKeyWord(KEY_ENDFUNCTION)) {
-					data.nLineEnd = m_listLexem[m_numCurrentCompile + 1].m_numLine;
-					GETKeyWord(KEY_ENDFUNCTION); break;
+					data.m_lineEnd = m_listLexem[m_cursor + 1].m_numLine;
+					ExpectKeyword(KEY_ENDFUNCTION); break;
 				}
 				else if (IsNextKeyWord(KEY_ENDPROCEDURE)) {
-					data.nLineEnd = m_listLexem[m_numCurrentCompile + 1].m_numLine;
-					GETKeyWord(KEY_ENDPROCEDURE); break;
+					data.m_lineEnd = m_listLexem[m_cursor + 1].m_numLine;
+					ExpectKeyword(KEY_ENDPROCEDURE); break;
 				}
 
-				lex = GETLexem();
+				lex = ExpectLexem();
 			}
 
-			m_aContentModule.push_back(data);
+			m_content.push_back(data);
 		}
 	}
 
-	if (m_numCurrentCompile + 1 < m_listLexem.size() - 1)
+	if (m_cursor + 1 < m_listLexem.size() - 1)
 		return false;
 	return true;
 }
 
-//variables
-wxArrayString ibParserModule::GetVariables(bool bOnlyExport)
-{
-	wxArrayString aVariables;
-	for (auto code : m_aContentModule) {
-		if (bOnlyExport && code.eType == ibContentType::eExportVariable) {
-			aVariables.push_back(code.strName);
-		}
-		else if (!bOnlyExport && (code.eType == ibContentType::eExportVariable ||
-			code.eType == ibContentType::eVariable)) {
-			aVariables.push_back(code.strName);
-		}
-	}
-	return aVariables;
-}
-
-//functions & procedures 
-wxArrayString ibParserModule::GetFunctions(bool bOnlyExport)
-{
-	wxArrayString aFunctions;
-	for (auto code : m_aContentModule) {
-		if (bOnlyExport && code.eType == ibContentType::eExportFunction) {
-			aFunctions.push_back(code.strName);
-		}
-		else if (!bOnlyExport && (code.eType == ibContentType::eExportFunction ||
-			code.eType == ibContentType::eFunction)) {
-			aFunctions.push_back(code.strName);
-		}
-	}
-	return aFunctions;
-}
-
-wxArrayString ibParserModule::GetProcedures(bool bOnlyExport)
-{
-	wxArrayString aProcedures;
-
-	for (auto code : m_aContentModule) {
-		if (bOnlyExport && code.eType == ibContentType::eExportProcedure) {
-			aProcedures.push_back(code.strName);
-		}
-		else if (!bOnlyExport && (code.eType == ibContentType::eExportProcedure ||
-			code.eType == ibContentType::eProcedure)) {
-			aProcedures.push_back(code.strName);
-		}
-	}
-
-	return aProcedures;
-}
-
 /**
  * GetLexem
- * Назначение:
- * Получить следующую лексему из списка байт кода и увеличть счетчик текущей позиции на 1
- * Возвращаемое значение:
- * 0 или указатель на лексему
+ *   Advance to the next lexem and return it. Returns gs_nullLexem if
+ *   the cursor is past the end of the list.
  */
-ibLexem ibParserModule::GetLexem()
+const ibLexem& ibParserModule::GetLexem()
 {
-	ibLexem lex;
-	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		lex = m_listLexem[++m_numCurrentCompile];
-	}
-	return lex;
+	if (m_cursor + 1 < m_listLexem.size())
+		return m_listLexem[++m_cursor];
+	return gs_nullLexem;
 }
 
-//Получить следующую лексему из списка байт кода без увеличения счетчика текущей позиции
-ibLexem ibParserModule::PreviewGetLexem()
+/**
+ * PreviewGetLexem
+ *   Peek the next non-trivial lexem without advancing the cursor.
+ *   Skips both ';' and '\n' delimiters — same designer-side behaviour
+ *   as ibPrecompileCode::PreviewGetLexem.
+ */
+const ibLexem& ibParserModule::PreviewGetLexem()
 {
-	ibLexem lex;
 	while (true) {
-		lex = GetLexem();
-		if (!(lex.m_lexType == DELIMITER && (lex.m_numData == ';' || lex.m_numData == '\n')))
-			break;
+		const ibLexem& lex = GetLexem();
+		if (!(lex.m_lexType == DELIMITER && (lex.m_numData == ';' || lex.m_numData == '\n'))) {
+			m_cursor--;
+			return lex;
+		}
 	}
-	m_numCurrentCompile--;
-	return lex;
+	return gs_nullLexem;
 }
 
 /**
- * GETLexem
- * Назначение:
- * Получить следующую лексему из списка байт кода и увеличть счетчик текущей позиции на 1
- * Возвращаемое значение:
- * нет (в случае неудачи генерится исключение)
+ * ExpectLexem
+ *   Same as GetLexem; ERRORTYPE is treated silently because the
+ *   parser walk only collects module elements and doesn't surface
+ *   compile errors to the user.
  */
-ibLexem ibParserModule::GETLexem()
+const ibLexem& ibParserModule::ExpectLexem()
 {
-	const ibLexem& lex = GetLexem();
-	if (lex.m_lexType == ERRORTYPE) {}
-	return lex;
+	return GetLexem();
 }
+
 /**
- * GETDelimeter
- * Назначение:
- * Получить следующую лексему как заданный разделитель
- * Возвращаемое значение:
- * нет (в случае неудачи генерится исключение)
+ * ExpectDelimeter
+ *   Consume lexems until the matching delimiter is found, or the lexem
+ *   list is exhausted.
  */
-void ibParserModule::GETDelimeter(const wxUniChar& c)
+void ibParserModule::ExpectDelimeter(const wxUniChar& c)
 {
-	ibLexem lex = GETLexem();
-	while (!(lex.m_lexType == DELIMITER && c == lex.m_numData)) {
-		if (m_numCurrentCompile + 1 >= m_listLexem.size())
-			break;
-		lex = GETLexem();
+	while (m_cursor + 1 < m_listLexem.size()) {
+		const ibLexem& lex = ExpectLexem();
+		if (lex.m_lexType == DELIMITER && c == lex.m_numData)
+			return;
 	}
 }
 /**
  * IsNextDelimeter
- * Назначение:
- * Проверить является ли следующая лексема байт-кода заданным разделителем
- * Возвращаемое значение:
- * true,false
+ *   Predicate: is the next lexem the given delimiter? Does not advance.
  */
 bool ibParserModule::IsNextDelimeter(const wxUniChar& c)
 {
-	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		const ibLexem& lex = m_listLexem[m_numCurrentCompile + 1];
+	if (m_cursor + 1 < m_listLexem.size()) {
+		const ibLexem& lex = m_listLexem[m_cursor + 1];
 		if (lex.m_lexType == DELIMITER && c == lex.m_numData)
 			return true;
 	}
@@ -347,15 +288,12 @@ bool ibParserModule::IsNextDelimeter(const wxUniChar& c)
 
 /**
  * IsNextKeyWord
- * Назначение:
- * Проверить является ли следующая лексема байт-кода заданным ключевым словом
- * Возвращаемое значение:
- * true,false
+ *   Predicate: is the next lexem the given keyword? Does not advance.
  */
 bool ibParserModule::IsNextKeyWord(int nKey)
 {
-	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		const ibLexem& lex = m_listLexem[m_numCurrentCompile + 1];
+	if (m_cursor + 1 < m_listLexem.size()) {
+		const ibLexem& lex = m_listLexem[m_cursor + 1];
 		if (lex.m_lexType == KEYWORD && lex.m_numData == nKey)
 			return true;
 	}
@@ -363,30 +301,29 @@ bool ibParserModule::IsNextKeyWord(int nKey)
 }
 
 /**
- * GETKeyWord
- * Получить следующую лексему как заданное ключевое слово
- * Возвращаемое значение:
- * нет (в случае неудачи генерится исключение)
+ * ExpectKeyword
+ *   Consume lexems until the given keyword is matched, or the lexem
+ *   list is exhausted.
  */
-void ibParserModule::GETKeyWord(int nKey)
+void ibParserModule::ExpectKeyword(int nKey)
 {
-	ibLexem lex = GETLexem();
+	ibLexem lex = ExpectLexem();
 	while (!(lex.m_lexType == KEYWORD && lex.m_numData == nKey)) {
-		if (m_numCurrentCompile + 1 >= m_listLexem.size())
+		if (m_cursor + 1 >= m_listLexem.size())
 			break;
-		lex = GETLexem();
+		lex = ExpectLexem();
 	}
 }
 
 /**
- * GETIdentifier
- * Получить следующую лексему как заданное ключевое слово
- * Возвращаемое значение:
- * строка-идентификатор
+ * ExpectIdentifier
+ *   Consume the next lexem as an identifier. Returns the identifier
+ *   string (real-cased version when strRealName=true), or empty
+ *   string if the next lexem is not an identifier.
  */
-wxString ibParserModule::GETIdentifier(bool strRealName)
+wxString ibParserModule::ExpectIdentifier(bool strRealName)
 {
-	const ibLexem& lex = GETLexem();
+	const ibLexem& lex = ExpectLexem();
 
 	if (lex.m_lexType != IDENTIFIER) {
 		if (strRealName && lex.m_lexType == KEYWORD)
@@ -401,33 +338,32 @@ wxString ibParserModule::GETIdentifier(bool strRealName)
 }
 
 /**
- * GETConstant
- * Получить следующую лексему как константу
- * Возвращаемое значение:
- * константа
+ * ExpectConstant
+ *   Consume the next lexem as a (possibly signed) numeric constant.
+ *   Handles unary +/- prefix and flips the sign on negation.
  */
-ibValue ibParserModule::GETConstant()
+ibValue ibParserModule::ExpectConstant()
 {
 	ibLexem lex;
-	int iNumRequire = 0;
+	int sign = 0;
 	if (IsNextDelimeter('-') || IsNextDelimeter('+')) {
-		iNumRequire = 1;
+		sign = 1;
 		if (IsNextDelimeter('-'))
-			iNumRequire = -1;
-		lex = GETLexem();
+			sign = -1;
+		lex = ExpectLexem();
 	}
 
-	lex = GETLexem();
+	lex = ExpectLexem();
 
 	if (lex.m_lexType != CONSTANT)
 		return lex.m_valData;
 
-	if (iNumRequire) {
+	if (sign) {
 		// check that the constant is of numeric type	
 		if (lex.m_valData.GetType() != ibValueTypes::TYPE_NUMBER)
 			return lex.m_valData;
 		// change sign for minus
-		if (iNumRequire == -1)
+		if (sign == -1)
 			lex.m_valData.m_fData = -lex.m_valData.m_fData;
 	}
 	return lex.m_valData;

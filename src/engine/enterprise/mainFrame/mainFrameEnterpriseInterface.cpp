@@ -741,26 +741,65 @@ class ibSubSystemWindow : public wxWindow {
 
 			SetSizer(bSizer1);
 			Layout();
+
+			// Fade animation. Start fully transparent — the timer ramps
+			// alpha up to 255 on Popup and back to 0 on Dismiss, with
+			// the actual base-class Dismiss deferred until the fade-out
+			// finishes. Switching subsystem tabs cross-fades the popups
+			// because the framework dismisses the previous one (its
+			// fade-out runs in parallel with the new one's fade-in).
+			m_fadeTimer.SetOwner(this, m_fadeTimerId);
+			SetTransparent(0);
+			Bind(wxEVT_TIMER, &ibPopupSubWindow::OnFadeTick, this, m_fadeTimerId);
 		}
 
 		// Implement base class pure virtuals.
 		virtual void Popup(wxWindow* focus = nullptr) override {
 			m_currentButton->SetPopupWindow(this);
 			wxPopupTransientWindow::Popup(focus);
-			wxLogDebug(wxT("wxPopupTransientWindow::Popup"));
+			StartFade(255);
 		}
 
 		virtual void Dismiss() override {
 			m_currentButton->SetPopupWindow(nullptr);
-			wxPopupTransientWindow::Dismiss();
-			wxLogDebug(wxT("wxPopupTransientWindow::Dismiss"));
+			m_dismissPending = true;
+			StartFade(0);
 		}
 
 	private:
 
-		wxWindow* m_staticLine;
-		ibSubSystemButton* m_currentButton;
-		wxScrolledWindow* m_mainWindow;
+		void StartFade(int target) {
+			m_targetAlpha = target;
+			if (!m_fadeTimer.IsRunning())
+				m_fadeTimer.Start(15);  // ~60 FPS
+		}
+
+		void OnFadeTick(wxTimerEvent&) {
+			constexpr int step = 48;  // ~5 ticks for full 0..255 transition
+			if (m_currentAlpha < m_targetAlpha)
+				m_currentAlpha = std::min(m_targetAlpha, m_currentAlpha + step);
+			else
+				m_currentAlpha = std::max(m_targetAlpha, m_currentAlpha - step);
+
+			SetTransparent(m_currentAlpha);
+
+			if (m_currentAlpha == m_targetAlpha) {
+				m_fadeTimer.Stop();
+				if (m_dismissPending && m_currentAlpha == 0)
+					wxPopupTransientWindow::Dismiss();
+			}
+		}
+
+		static constexpr int m_fadeTimerId = wxID_HIGHEST + 4001;
+
+		wxWindow*          m_staticLine    = nullptr;
+		ibSubSystemButton* m_currentButton = nullptr;
+		wxScrolledWindow*  m_mainWindow    = nullptr;
+
+		wxTimer m_fadeTimer;
+		int     m_currentAlpha   = 0;
+		int     m_targetAlpha    = 255;
+		bool    m_dismissPending = false;
 	};
 
 	ibSubSystemButton* CreateSubMenu(const ibValueMetaObjectInterface* object) {

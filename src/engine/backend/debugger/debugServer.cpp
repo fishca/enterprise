@@ -78,6 +78,24 @@ bool ibDebuggerServer::CreateServer(const wxString& hostName, unsigned short sta
 		wxASSERT_MSG(m_socketConnectionThread != nullptr
 			&& m_socketConnectionThread->m_socket != nullptr, _("Client not connected!"));
 	}
+	else {
+		// Non-blocking server (wes / designer auto-debug): wait for the
+		// worker thread to finish binding a port before returning.
+		// Caller (e.g. wes's manifest write + listen_after_bind) can now
+		// rely on the debug listener already being live, removing the
+		// race that left designer's SearchServer scanning empty ports.
+		// 500 ms cap is enough for a successful bind in practice — if
+		// every port in the diapason is taken the loop exits with the
+		// flag still set (worker stores it after the loop terminates,
+		// successful or not, see EntryClient).
+		const int kBindTimeoutMs = 500;
+		for (int waited = 0; waited < kBindTimeoutMs; waited += 5) {
+			if (m_socketConnectionThread == nullptr) break;
+			if (m_socketConnectionThread->m_bindReady.load(std::memory_order_acquire))
+				break;
+			wxMilliSleep(5);
+		}
+	}
 
 	return m_socketConnectionThread != nullptr;
 }
@@ -608,6 +626,11 @@ void ibDebuggerServer::ibDebuggerServerConnection::EntryClient()
 			break;
 	}
 
+	// Signal the spawning thread that the listener is now bound — the
+	// wes manifest path uses this to avoid writing the URL before the
+	// debug port is actually accepting connections.
+	m_bindReady.store(true, std::memory_order_release);
+
 	while (!TestDestroy()) {
 
 		if (m_socketServer == nullptr)
@@ -1053,22 +1076,14 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 
 		// Destroy = process exit, but hosts can decline. wes registers a
 		// keep-alive hook that returns true while user tabs are still
-		// connected (work in progress); enterprise.exe never registers
-		// one, so this is a no-op there. Unified ForceExit path:
-		//  - Desktop: wxTheApp->Exit() drains the GUI loop.
-		//  - Web (wes): process-exit hook installed by wes's main
-		//    calls svr->stop(), listen_after_bind returns,
-		//    wfrontendShutdown runs the same teardown as Ctrl+C.
-		if (ibSessionRegistry::Instance().ShouldKeepAlive())
-			return;
-
-		// Note: CoUninitialize() is already done in Entry() epilogue (line ~472).
-		// Doing it again here would give a double-uninit on the worker thread.
-		// Force-close the parked session — Current() on the debug thread
-		// redirects to the session at the front of the debug queue, so
-		// this targets the right one. Per-kind OnForceExit dispatches:
-		// GUI desktop session quits wx; web per-tab session just kicks
-		// itself; wes process keeps running for other tabs.
+		// connected. Drop the gate and just Close(true) the parked
+		// session — its ProcessRemove → NotifyDisconnect cascade is
+		// what drives the OnLastDisconnect / wes exit hook chain.
+		// Note: CoUninitialize() is already done in Entry() epilogue
+		// (line ~472). Doing it again here would give a double-uninit
+		// on the worker thread. Per-kind OnForceExit dispatches:
+		// GUI desktop session quits wx; web per-tab session just
+		// kicks itself.
 		if (auto* s = ibSession::Current())
 			s->Close(true);
 	}

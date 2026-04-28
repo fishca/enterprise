@@ -76,6 +76,14 @@ class BACKEND_API ibDebuggerServer {
 		// (e.g. designer closing rewrote enough memory).
 		std::atomic<bool> m_acceptConnection;
 
+		// Worker thread sets true once a wxSocketServer has successfully
+		// bound a port (the listener is now Listening). Used by
+		// CreateServer(wait=false) to make the manifest-write path
+		// deterministic — without it, the designer's SearchServer can
+		// race with wes's bind-loop and the connect refused that
+		// follows leaves the loop reaching round-budget exhaustion.
+		std::atomic<bool> m_bindReady{false};
+
 		wxSocketServer* m_socketServer;
 		wxSocketBase* m_socket;
 

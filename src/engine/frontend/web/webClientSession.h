@@ -29,6 +29,14 @@ public:
 	// Typed accessor for web-internal callers (no cast).
 	ibWebFrame* Frame() const { return m_frame; }
 
+	// Per-kind force-exit dispatch — counterpart to ibGUISession's
+	// override (which schedules wxTheApp::Exit). For wes a force-exit
+	// on the parked WebClient session means "designer killed debug" →
+	// break listen_after_bind through the wfrontend exit hook
+	// (svr.stop). Filtered to wfrontendDebugMode() so a regular multi-
+	// user wes doesn't die when one tab gets force-closed.
+	void OnForceExit() override;
+
 private:
 	ibWebFrame* m_frame = nullptr;
 };

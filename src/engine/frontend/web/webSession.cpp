@@ -22,6 +22,20 @@ void ibWebClientSession::SetFrame(ibWebFrame* f)
 	m_frame = f;
 }
 
+extern void wfrontendCallProcessExitHook();
+
+void ibWebClientSession::OnForceExit()
+{
+	// Web counterpart to ibGUISession's wxTheApp::Exit. Fires from
+	// ibSession::RequestForceExit (called by Close(true)). Now that
+	// Open/Close pin this session via ibSessionScope, the debug
+	// thread's Current() resolves to the right WebClient — designer
+	// kill-debug ends up here, not on the wes system row.
+	if (!wfrontendDebugMode())
+		return;
+	wfrontendCallProcessExitHook();
+}
+
 namespace {
 
 std::int64_t NowMs()

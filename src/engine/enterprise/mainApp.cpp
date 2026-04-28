@@ -176,22 +176,41 @@ int ibAppEnterprise::OnRun()
 	InstallPersistentCrashDump();
 #endif
 
-	// Get the data directory
+	// Decide whether this is a file-based launch (Firebird embedded /
+	// SQLite — `--file=…`) or a server launch (`--server=… --db=…`).
+	// Reject the no-arg case explicitly: the previous behaviour fell
+	// through to appDataCreateServer with empty server/port/db, the
+	// PostgreSQL driver opened a connection with all-empty credentials
+	// and the resulting ThrowDatabaseException re-entered the
+	// half-initialised session registry. Surfacing the missing-arg case
+	// here is far easier to diagnose than the assertion behind it.
 	bool ret = false;
 
-	if (m_strFile.IsEmpty()) {
+	if (!m_strFile.IsEmpty()) {
+		ret = appDataCreateFile(ibRunMode::eENTERPRISE_MODE,
+			m_strFile, m_strLocale
+		);
+	}
+	else if (!m_strServer.IsEmpty() && !m_strDatabase.IsEmpty()) {
 		ret = appDataCreateServer(ibRunMode::eENTERPRISE_MODE,
 			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase, m_strLocale
 		);
 	}
 	else {
-		ret = appDataCreateFile(ibRunMode::eENTERPRISE_MODE,
-			m_strFile, m_strLocale
+		wxMessageBox(
+			_("Cannot start enterprise.exe — no infobase specified.\n\n"
+			  "Provide one of:\n"
+			  "  --file=<path>          (Firebird embedded / SQLite file)\n"
+			  "  --server=<host> --db=<name> [--dbport=…] [--user=…] [--password=…]\n\n"
+			  "Or launch through launcher.exe to pick a saved infobase."),
+			_("OES Enterprise"),
+			wxOK | wxICON_ERROR
 		);
+		return 1;
 	}
 
 	if (!ret) {
-		const wxString &strLastError = ibBackendException::GetLastError(); 
+		const wxString &strLastError = ibBackendException::GetLastError();
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		return 1;
 	}

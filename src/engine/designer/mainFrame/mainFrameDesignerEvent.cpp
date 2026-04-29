@@ -220,9 +220,9 @@ void ibFrontendDocMDIFrameDesigner::OnUpdateConfiguration(wxCommandEvent& event)
 	// stage one - save database  
 	if (canSave && !activeMetaData->SaveDatabase()) {
 
-		for (unsigned int idx = 0; idx < s_restructureInfo.GetCount(); idx++) {
-			if (s_restructureInfo.GetType(idx) == ibRestructure::restructure_error)
-				outputWindow->OutputError(s_restructureInfo.GetDescription(idx));
+		for (const auto& entry : s_restructureInfo) {
+			if (entry.type == ibRestructure::error)
+				outputWindow->OutputError(entry.descr);
 		}
 
 		wxMessageBox(_("Failed to save database!"),

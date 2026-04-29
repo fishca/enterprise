@@ -5,6 +5,7 @@
 
 #include "backend/utils/md5.hpp"
 #include "backend/appData.h"
+#include "backend/backend_exception.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 #include <wx/base64.h>
@@ -94,12 +95,38 @@ bool ibMetaDataConfigurationStorage::OnBeforeSaveDatabase(int flags)
 	if (db_query->IsActiveTransaction())
 		return false;
 
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1	
-	//begin transaction 
-	db_query->BeginTransaction();
-#endif 
+	s_restructureInfo.Clear();
 
-	s_restructureInfo.ResetRestructureInfo();
+	// Apply-flow always touches DDL (CREATE/ALTER/DROP TABLE). Gate here once
+	// before opening the transaction — if exclusive isn't held, log the error
+	// to the restructure ledger and bail out. Designer's apply pipeline
+	// surfaces s_restructureInfo errors to the user. Code-only updates
+	// (modules, form layouts) don't reach this entry point, so they remain
+	// unblocked by exclusive mode.
+	//
+	// Catch ALL exception types — the gate may delegate to
+	// ibSessionRegistry::SetExclusive which has its own error paths (queue
+	// rejection, session-not-registered race during bootstrap). Letting
+	// any of those escape would crash enterprise.exe via wxApp's
+	// OnUnhandledException.
+	try {
+		ibRestructureInfo::RequireExclusiveForDDL();
+	} catch (const ibBackendException& e) {
+		s_restructureInfo.AppendError(e.GetErrorDescription());
+		return false;
+	} catch (const std::exception& e) {
+		s_restructureInfo.AppendError(wxString::FromUTF8(e.what()));
+		return false;
+	} catch (...) {
+		s_restructureInfo.AppendError(_("Unknown error acquiring exclusive mode"));
+		return false;
+	}
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+	//begin transaction
+	db_query->BeginTransaction();
+#endif
+
 	return db_query->IsActiveTransaction();
 }
 
@@ -269,12 +296,18 @@ bool ibMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 
 bool ibMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags)
 {
+	// Pair release for the auto-acquire in OnBeforeSaveDatabase. No-op if
+	// exclusive mode was held by the caller before the apply started.
+	struct AutoRelease {
+		~AutoRelease() { ibRestructureInfo::ReleaseAutoExclusive(); }
+	} autoRelease;
+
 	if (roolback) {
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 		if (db_query->IsActiveTransaction())
 			db_query->RollBack();
-#endif 
+#endif
 
 		return !db_query->IsActiveTransaction();
 	}

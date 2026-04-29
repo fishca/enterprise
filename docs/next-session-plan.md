@@ -1,9 +1,276 @@
 # Next-session plan
 
-State at the end of the codeEditor cleanup landing (on top of the
-API-sweep in `c6299de6` + callTip fix in `b3d9f03d`). This file is
-the picking-up point for the next round — not "everything ever
-planned", just what is actionable now and easy to forget.
+State at the end of the ibNumber + DDL-gate landing on top of the
+codeEditor cleanup in `2026-04-28`. This file is the picking-up
+point for the next round — not "everything ever planned", just what
+is actionable now and easy to forget.
+
+## ibNumber lazy-grow exact decimal + ttmath removal — landed 2026-04-29
+
+Replacement of `typedef ttmath::Big<128,128> ibNumber` with a
+self-contained 8-byte tagged-immediate / heap-vector class. Full
+rewrite of the number type plus follow-on cleanup of every call site
+across backend / frontend / designer / launcher / codeRunner /
+classChecker / wfrontend / wenterprise-server. ttmath library
+removed from the tree entirely (13 files).
+
+### What ibNumber is
+
+- **`sizeof == 8`** on stack, regardless of value. Single `uint64_t`
+  payload with bit-tagged immediate or pointer-to-heap.
+- **Inline tier**: 47-bit signed mantissa + 16-bit signed exp10 +
+  1-bit tag. Covers ±70 трлн × 10^±32767 — most business numbers
+  never allocate.
+- **Heap tier**: `BigImpl { std::vector<uint32_t> limbs; bool
+  negative; int32_t exp; }`. Magnitude grows by demand, exact
+  decimal preserved. Tested at 200-digit (100 fractional).
+- **Self-contained**: zero `#include` of ttmath; all bigint
+  algorithms (Add/Sub/Mul/Div/Compare, decimal ToString/FromString)
+  live in `backend/number.cpp` as schoolbook routines. MSVC x86/x64
+  Add/Sub use `_addcarry_u32`/`_subborrow_u32` intrinsics; portable
+  64-bit fallback for clang/gcc/ARM.
+- **Public API** (final):
+  - Construction: `int`, `unsigned int`, `int64_t`, `uint64_t`,
+    `double`, `wxString`, copy/move.
+  - Arithmetic: `+ - * / %` and compound, pre/post `++`, unary `-`.
+  - Compare: `== != < > <= >=`.
+  - Conversions: `ToInt` / `ToUInt` (clamped) / `ToInt(int64_t&)`
+    (overflow-detecting) / `ToInt64` (throws) / `ToDouble` /
+    `ToFloat` / `ToString` / `ToWString` / `ToString(Format&)`.
+  - Math compat: `Round` / `Round(n)` / `Trunc` / `Pow(int)` /
+    `Pow(ibNumber)` / `Sqrt` / `Log(base)` / `Ln` / `Exp` / `Abs` /
+    `IsSign` / `ChangeSign` / `SetZero` / `IsZero` / `IsNan` (always
+    false — exact decimal has no NaN).
+  - Buffer / stream:
+    - `wxMemoryBuffer GetBuffer()` (returning) /
+      `void GetBuffer(wxMemoryBuffer&)` (overwrite caller's buffer).
+    - `bool GetBuffer(ibWriterMemory&)` — chunked stream write,
+      uses internal `kIbNumberChunk` ID, hidden from callers.
+    - `bool SetBuffer(const wxMemoryBuffer&)` /
+      `bool SetBuffer(const void*, size_t)` /
+      `bool SetBuffer(const ibReaderMemory&)`.
+  - 128-bit raw: `To128Bytes(uint8_t[16])` /
+    `From128Bytes(const uint8_t[16])` — for Firebird SQL_INT128.
+  - Stream: `operator<<(std::ostream&, ibNumber)` and wide variant.
+  - Format struct: `ibNumber::Format` with `fracDigits`,
+    `precision`, `decimalSep`, `groupSep`, `groupSize` for OES
+    `Format()` system function.
+
+### Optimisations
+
+- **Compact-zero encoding**: `GetBuffer()` for zero produces
+  zero-byte buffer (no allocation, no header). `SetBuffer(empty) →
+  zero`. `w_chunk` of zero is just 8-byte chunk header, zero
+  payload. Saves IO on millions-of-zero DB columns.
+- **No-churn-on-zero arithmetic**: `StoreBig` with zero result
+  keeps the heap allocation if any (just clears limbs in place).
+  Accumulator patterns (`ibNumber sum;` then `+= ...` with
+  occasional reset to zero) don't thrash heap.
+- **Single-pass `ToString` / `ToString(Format&)`**: digits generated
+  backward into a `wchar_t` buffer, walked forward emitting sign,
+  groups, decimal sep, fraction. No `std::string`, no `Mid`/`Find`,
+  no UTF-8 round-trip. Direct `wxString(wchar_t*, len)` ctor.
+- **Parser walks `wchar_t` directly** via `wxString::wc_str()` — no
+  UTF-8 conversion, since digits/sign/sep/exp marker are all ASCII.
+
+### Tests
+
+- `enterprise/tests/test_number.cpp` — GoogleTest, ~50 `TEST(...)`
+  cases covering layout, ctors, parser edges, ToString round-trip,
+  arithmetic, compare across tiers, rounding, conversions, math
+  compat, Get/SetBuffer (incl. compact-zero), 128-byte API, stream
+  operators. Hooked into the existing `tests/CMakeLists.txt`
+  alongside `test_clsid.cpp` / `test_value.cpp` (target `oes_tests`,
+  GoogleTest fetched via FetchContent v1.14.0). Build with
+  `cmake -B build -DBUILD_TESTING=ON`.
+- `enterprise/src/engine/test/numberTest/numberTest.{cpp,vcxproj}` —
+  temporary MSBuild stop-gap (custom main, wxEntryStart, prints to
+  stdout + `numberTest.log`). Used while CMake build wasn't set up
+  to include backend with `OES_USE_FIREBIRD=ON`. Run from
+  `bin/Win32/Debug/numberTest.exe`. Most recent run: 111/111 PASS.
+  Delete this project after CMake-side gtest is wired and proven.
+
+### DDL gate via exclusive mode
+
+`ibRestructureInfo::RequireExclusiveForDDL()` static helper —
+checks `appData->ExclusiveMode()`, throws
+`ibBackendCoreException::Error` if not set. Single call site at the
+top of `OnBeforeSaveDatabase` (before `BeginTransaction`). Applies
+to every Apply / save-database flow.
+
+`ibRestructureInfo` itself was tidied:
+- `enum class ibRestructure { info, warning, error }` (was bare
+  enum with `restructure_*` prefixes).
+- Inner type renamed `ibRestructureData` → `Entry { type, descr }`.
+- Range-based for support (`begin()`/`end()`).
+- Severity counters (`HasErrors()`, `HasWarnings()`, `IsEmpty()`).
+- Legacy methods (`GetCount`, `GetType`, `GetDescription`,
+  `HasRestructureInfo`, `ResetRestructureInfo`) preserved as thin
+  aliases for back-compat with `applyChange.cpp`.
+
+### Other cleanup
+
+- `db_query` macro now resolves through `ThreadHolder` (per-thread
+  reservation) instead of `CurrentHolder` (session-aware). Semantic
+  split — runtime calls go through `Current()->X()`, service / DDL
+  calls keep `db_query`. See
+  `memory/project_db_query_runtime_split.md` for migration plan.
+- `ibConnectionPool::DbQueryHolder` renamed to
+  `ibConnectionPool::ThreadHolder`, made `static thread_local` —
+  no longer process-wide singleton.
+- `StrGetLine` rewritten — fixed `nIndex < 0` unsigned bug,
+  thread-local cache (was process-wide static), handles `\r\n` /
+  `\n` / `\r` line endings, no per-call source-string copy.
+
+### Open items / known risks
+
+- **Apply-flow UX**: gate is backend-only. Designer Apply still
+  needs the user-flow described in
+  `memory/project_apply_exclusive_ux.md` — pre-detect DDL vs
+  code-only, kick-users dialog, auto-set exclusive. Without this,
+  Apply on a multi-user system silently throws when DDL is
+  attempted.
+- **Wire-format break**: serialized blobs from the old ttmath::Big
+  layout are not readable by `SetBuffer`. Production DBs with
+  pre-existing TYPE_NUMBER blobs need migration. Fresh DBs OK.
+- **CMake build with DB drivers OFF** fails to link backend
+  (appData.cpp references Firebird/Postgres unconditionally). Test
+  exe currently rides MSBuild; CMake gtest path needs
+  `-DOES_USE_FIREBIRD=ON` or a structural fix that conditionally
+  excludes the driver references.
+- **Round-half mode parity**: `ibNumber::Round` is half-away-from-
+  zero. Old ttmath default was round-half-down. `systemManagerFunc`
+  emulates the latter via −0.4 nudge for the default branch — needs
+  golden-test verification on financial 0.5-копеечные cases.
+- **Performance**: not yet benchmarked. Div is base-2 long division
+  (O(bits·limbs)); for 200-digit dividends this is microseconds —
+  fine for typical workloads, but if a hot loop hits it, switch to
+  Knuth Algorithm D (~50× speedup).
+
+## Session-lifecycle hardening — landed 2026-04-29 (same day)
+
+Pile of fixes around session creation / exclusive-mode flow that
+surfaced during ibNumber's manual smoke testing. All bundled because
+they share the apply-flow code path.
+
+### Bug fixes
+
+- **Designer-exclusive policy was permitting second designer.** The
+  `ibDesignerExclusivePolicy` used `ProbeSessionRowLock`/`TryProbeRowLock`
+  to decide alive vs zombie row. The historical `HoldRowLocks`
+  liveness model was retired in favour of heartbeat (`lastActive`
+  column updated by registry refresh tick; sweep deletes rows older
+  than `kStaleCutoffSec`). With no row locks ever held, the probe
+  always succeeded → policy treated every live designer as a zombie
+  → permitted the new designer.
+  Fix: any other `eDESIGNER_MODE` row visible in the snapshot now
+  vetoes the new designer; sweep clears stale rows within ~30s for
+  honest cleanup. `designerExclusivePolicy.cpp`.
+- **Snapshot was stale during ProcessAdd policy check.** Race window
+  between first session's INSERT and the periodic 1 Hz refresh tick
+  meant the second arrival saw a stale snapshot and policies couldn't
+  veto. `ProcessAdd` now calls `JobRefreshSnapshot()` (best-effort,
+  caught) right before the policy chain. `sessionRegistry.cpp`.
+- **`Failed to create session` swallowed the real reason.**
+  `CreateSessionWithFactory` returned `nullptr` when `Connect` came
+  back as `RejectedPolicy` / exclusive-mode block / etc., dropping
+  `result.m_reason` on the floor. `FinishCreateSession` then threw the
+  generic wrapper. Both `CreateSessionWithFactory` overloads now
+  throw `ibBackendCoreException::Error(result.m_reason)` when the
+  reason is non-empty, so the caller's `catch` shows
+  `Another designer process is already running: <date>, <pc>, <user>`
+  or `Database is in exclusive mode (...)` instead of the placeholder.
+  `sessionRegistry.cpp`.
+- **`enterprise.exe` and `designer.exe` crashed on session
+  rejection.** The throw from `FinishCreateSession` /
+  `CreateSessionWithFactory` propagated past `CreateSession<T>()` to
+  wxApp's event loop → `OnUnhandledException` → wxDebugReport → crash
+  dialog. Both main apps now wrap the `CreateSession + Open` pair in
+  try/catch (covering `ibBackendException` and `std::exception`),
+  display the actual rejection reason in a `wxMessageBox`, and exit 1
+  cleanly. Web (`webSession.cpp`) was already wrapped — http handlers
+  expected bool return, so this was always fixed there.
+- **`ibAppEnterprise::OnUnhandledException` lost the exception
+  type/message.** Stack trace at the catch site is past unwind, so
+  the dump showed only wx's debug-report machinery and the original
+  throw site was already gone. The handler now rethrows
+  `std::current_exception()` to identify the type, writes a one-line
+  diagnostic to `enterprise_unhandled.log` next to the exe (timestamp +
+  exception class + message), and falls through to the existing dump
+  path. Made finding "Failed to create session" possible.
+- **DDL exclusive-mode gate was throwing through bootstrap path.**
+  `RequireExclusiveForDDL` skips when `ibSession::Current() == nullptr`
+  or registry isn't ready — this happens during first-open auto-save
+  (`m_configNew=true` triggers `LoadDatabase → SaveDatabase` before
+  any session is attached). Without the skip, fresh-IB open by
+  `enterprise.exe` faulted instantly. `metaObject.cpp`.
+- **`OnBeforeSaveDatabase` propagated unhandled exceptions to designer.**
+  Catch widened to `ibBackendException` + `std::exception` + `(...)`;
+  on any catch, error is appended to `s_restructureInfo` and the
+  function returns false. Designer's apply pipeline already surfaces
+  the ledger to the user. `metadataConfigurationQuery.cpp`.
+- **`ProcessAdd` same-process exclusive parking → reject.** Briefly
+  changed and reverted — parking is the documented in-process flow
+  for re-entry under SetExclusive; broke testing scenarios so
+  reverted. The cross-process gate (lines ~954-968) already does
+  proper Reject with reason for peer holders.
+
+### New design — exclusive-mode auto-acquire/release
+
+`ibRestructureInfo::RequireExclusiveForDDL`:
+- If `appData->ExclusiveMode()` already true → no-op (caller manually
+  acquired earlier).
+- Else if `ibSession::Current()` and registry available → submit
+  `SetExclusive(session, true)` through the registry queue, block on
+  verdict. Granted → mark `thread_local ts_acquiredByGate=true`,
+  proceed. NotSole / HeldByOther → throw with clear reason ("other
+  sessions are connected — disconnect them and try again").
+- Else (bootstrap) → no-op.
+
+`ibRestructureInfo::ReleaseAutoExclusive` releases iff `ts_acquiredByGate`
+was set on this thread. Paired in `OnAfterSaveDatabase` via RAII
+`AutoRelease` guard so even a throw from `OnSaveDatabase` between
+acquire and after-save cleanly drops the flag.
+
+### Optimisations (unrelated but bundled)
+
+- **`StrGetLine` rewritten.** `systemManagerFunc.cpp:194`.
+  - Replaced process-wide `static wxString _csStaticSource` cache
+    (race in worker pool) with `thread_local Cache`.
+  - Fixed `if (nIndex < 0)` bug — `find` returns `size_t`/`wxString::npos`,
+    so the unsigned check never tripped; loop could read past end.
+  - Replaced fixed `\r\n` separator with `find_first_of(wxT("\r\n"))`
+    so Unix `\n`-only and old-Mac `\r`-only line endings work.
+  - Dropped per-call `stringValue + "\r\n"` copy; works on `const
+    wxString& src` directly.
+
+### `ibRestructureInfo` tidy
+
+- `enum ibRestructure` → `enum class ibRestructure { info, warning, error }`
+  (was `restructure_info` etc with prefix).
+- Inner `ibRestructureData` → `Entry { type, descr }`.
+- Added `IsEmpty()`, `HasErrors()`, `HasWarnings()`, `Count()`,
+  `At(idx)`, range-for `begin/end`. Severity counters maintained on
+  `Append*`.
+- Legacy methods (`GetCount`, `GetType`, `GetDescription`,
+  `HasRestructureInfo`, `ResetRestructureInfo`) preserved as thin
+  aliases for `applyChange.cpp` and other call sites.
+- One direct-enum caller (`mainFrameDesignerEvent.cpp`) migrated to
+  range-for + new enum literals.
+
+### Open items
+
+- Apply-flow UX (kick-users dialog, code-only-update branch, auto-set
+  exclusive) still backend-only. See
+  `memory/project_apply_exclusive_ux.md`.
+- `db_query` → `Current()` runtime migration deferred. See
+  `memory/project_db_query_runtime_split.md`.
+- `ibConnectionPool` API surface (16 public methods including the
+  TX trio and three release variants) — name-by-implementation
+  rather than name-by-lifecycle. Cleanup pass deferred.
+- ttmath credit in `frontend/win/dlgs/about.cpp:10` and stale
+  ttmath-compat comments in number.h/cpp/systemManagerFunc.cpp/
+  firebirdResultSet.cpp left as cosmetic followup.
 
 ## Designer codeEditor cleanup — landed 2026-04-28
 

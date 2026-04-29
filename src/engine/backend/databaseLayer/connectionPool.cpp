@@ -5,13 +5,16 @@
 #include "connectionHolder.h"
 #include "databaseLayer.h"
 
-ibDatabaseConnectionHolder* ibConnectionPool::DbQueryHolder()
+ibDatabaseConnectionHolder* ibConnectionPool::ThreadHolder()
 {
-	// Process-wide singleton — one identity shared by every non-session
-	// db_query / default ibConnectionScope() call. Block-local static
-	// guarantees zero-init on first use, no global ctor ordering.
-	static ibSingleConnectionHolder s_singleton;
-	return &s_singleton;
+	// Per-thread holder identity for non-session db_query / default
+	// ibConnectionScope() calls. Each thread gets its own reservation key,
+	// so concurrent db_query work from different threads acquires
+	// independent pool connections rather than serialising on one singleton.
+	// Block-local thread_local static guarantees zero-init on first use per
+	// thread, no global ctor ordering.
+	static thread_local ibSingleConnectionHolder ts_holder;
+	return &ts_holder;
 }
 
 ibDatabaseConnectionHolder* ibConnectionPool::CurrentHolder()
@@ -21,13 +24,14 @@ ibDatabaseConnectionHolder* ibConnectionPool::CurrentHolder()
 	//     thread (runtime / web / GUI / debug eval all run inside a
 	//     SessionScope). Reservation table lookups return the
 	//     session's pinned/scope-bound conn.
-	//   - db_query: the singleton holder above. All non-session work
-	//     converges onto one pool entry, serialising on that conn.
-	//     Subsystems that need parallel isolation pass their own
-	//     per-thread / per-call holder to ibConnectionScope.
+	//   - db_query: the per-thread holder above. Each calling thread has
+	//     its own reservation key, so concurrent non-session work runs on
+	//     independent pool connections without serialising on one
+	//     singleton. Subsystems that need explicit per-call isolation pass
+	//     their own holder to ibConnectionScope.
 	if (auto* s = ibSession::Current())
 		return static_cast<ibDatabaseConnectionHolder*>(s);
-	return DbQueryHolder();
+	return ThreadHolder();
 }
 
 std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetActiveTxConnection()
@@ -261,15 +265,23 @@ std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetPrimaryConnection()
 
 std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetDatabaseLayer()
 {
+	// `db_query` macro target — always ThreadHolder. Resolution is fixed to
+	// the calling thread's own reservation key:
+	//   1. TX-pinned conn  (ThreadHolder's BeginTransaction)
+	//   2. Scope-bound conn (ThreadHolder's outer ibConnectionScope)
+	//   3. Primary fallback (m_source)
+	// Session-aware paths (ibConnectionScope by default, ibProcUnit script
+	// access) go through CurrentHolder which prefers ibSession::Current()
+	// over ThreadHolder. db_query intentionally bypasses session lookup so
+	// background / utility callers operate on their own thread, not on the
+	// session that happens to be bound at the call site.
 	auto* pool = ibApplicationData::GetConnectionPool();
 	if (pool == nullptr) return nullptr;
-	if (auto* holder = CurrentHolder()) {
-		// Holder priority: TX-pinned conn first, then scope-bound conn.
-		if (auto txConn = pool->GetReservedTx(holder))
-			return txConn;
-		if (auto scopeConn = pool->GetScopeConn(holder))
-			return scopeConn;
-	}
+	auto* holder = ThreadHolder();
+	if (auto txConn = pool->GetReservedTx(holder))
+		return txConn;
+	if (auto scopeConn = pool->GetScopeConn(holder))
+		return scopeConn;
 	return pool->m_source;
 }
 
@@ -474,4 +486,34 @@ bool ibConnectionPool::IsInitialised() const
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	return !m_shutdown && m_source != nullptr;
+}
+
+std::size_t ibConnectionPool::LiveSize() const
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	return m_entries.size();
+}
+
+std::size_t ibConnectionPool::IdleSize() const
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	std::size_t idle = 0;
+	for (const auto& e : m_entries) {
+		if (e.txHolder == nullptr && e.scopeHolder == nullptr
+		    && !e.inUse && e.conn && !e.conn->IsBusy())
+			++idle;
+	}
+	return idle;
+}
+
+std::size_t ibConnectionPool::MaxSize() const
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	return m_maxSize;
+}
+
+std::size_t ibConnectionPool::MinIdle() const
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	return m_minIdle;
 }

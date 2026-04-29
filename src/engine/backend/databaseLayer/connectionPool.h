@@ -30,7 +30,7 @@
 //                                default ibConnectionScope().
 //   GetDatabaseLayer()         — backs the global `db_query` macro.
 //
-// Everything else (CurrentHolder, DbQueryHolder, GetPrimaryConnection,
+// Everything else (CurrentHolder, ThreadHolder, GetPrimaryConnection,
 // Checkout, holder-keyed reservation primitives, scope-binding) is
 // internal. End users go through the holder methods
 // (GetConnection / AcquireFreeConnection) or ibConnectionScope, never
@@ -96,6 +96,18 @@ public:
 	// (e.g. CLI invocation that exits before connecting to a DB).
 	bool IsInitialised() const;
 
+	// Diagnostics — current pool sizing. LiveSize counts every entry
+	// the pool knows about (idle + borrowed + tx-pinned + scope-bound);
+	// IdleSize counts entries available for an immediate Checkout
+	// (txHolder == nullptr && scopeHolder == nullptr && !inUse).
+	// MaxSize / MinIdle return the configured caps. Used by /admin
+	// diagnostics and load tests; cheap (single mutex acquire + linear
+	// scan over a small vector).
+	std::size_t LiveSize() const;
+	std::size_t IdleSize() const;
+	std::size_t MaxSize() const;
+	std::size_t MinIdle() const;
+
 	// The `db_query` entry point. Returns the conn the calling
 	// holder should use, with priority:
 	//   1. Active TX pin for the holder.
@@ -113,11 +125,13 @@ private:
 	// holder and pass it to `ibConnectionScope(&customHolder)`.
 	static ibDatabaseConnectionHolder* CurrentHolder();
 
-	// db_query channel singleton identity. Used internally by
+	// db_query channel — per-thread holder identity. Used internally by
 	// CurrentHolder; external explicit-channel access goes through
-	// `ibConnectionScope(ibConnectionPool::DbQueryHolder())` if
-	// needed (currently no such caller).
-	static ibDatabaseConnectionHolder* DbQueryHolder();
+	// `ibConnectionScope(ibConnectionPool::ThreadHolder())` if needed
+	// (currently no such caller). Each thread gets its own pool
+	// reservation key, so concurrent non-session db_query calls run on
+	// independent connections instead of serialising on a singleton.
+	static ibDatabaseConnectionHolder* ThreadHolder();
 
 	// Master connection accessor — the conn that the pool Clone()s
 	// from. Used as a fallback by GetDatabaseLayer.

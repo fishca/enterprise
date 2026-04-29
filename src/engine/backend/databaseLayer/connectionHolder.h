@@ -57,8 +57,8 @@ public:
 };
 
 // ibSingleConnectionHolder — generic empty holder. The OES runtime
-// uses a single process-wide instance as the db_query channel
-// (ibConnectionPool::DbQueryHolder); subsystems that need an
+// uses one per-thread instance as the db_query channel
+// (ibConnectionPool::ThreadHolder); subsystems that need an
 // alternate non-session channel (parallel isolation, dedicated
 // quota) instantiate their own static instance and pass its address
 // to ibConnectionScope(&customHolder).

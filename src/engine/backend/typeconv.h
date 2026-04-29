@@ -813,7 +813,7 @@ namespace typeConv
 
 	inline ibNumber StringToNumber(const wxString& str) {
 		ibNumber out;
-		out.FromString(str.ToStdWstring());
+		out.FromString(str);
 		return out;
 	}
 

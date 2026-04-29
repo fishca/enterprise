@@ -171,15 +171,18 @@ long long ibDatabaseResultSetFirebird::GetResultLong(int nField)
 		}
 		else if (nType == SQL_INT64)
 		{
-			ttmath::Int<TTMATH_BITS(64)> int64val;
-			memcpy(&int64val, pVar->sqldata, sizeof(int64val));
-			int64val.ToInt(nReturn);
+			int64_t v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			nReturn = static_cast<long>(v);
 		}
 		else if (nType == SQL_INT128)
 		{
-			ttmath::Int<TTMATH_BITS(128)> int128val;
-			memcpy(&int128val, pVar->sqldata, sizeof(int128val));
-			int128val.ToInt(nReturn);
+			// Caller wants `long` (32-bit) — read low 64 bits of the 128-bit
+			// integer and cast down. Same silent high-bit truncation as the
+			// old ttmath::Int<128>::ToInt(long&) path.
+			int64_t lo = 0;
+			memcpy(&lo, pVar->sqldata, sizeof(lo));
+			nReturn = static_cast<long>(lo);
 		}
 		else
 		{
@@ -355,17 +358,15 @@ ibNumber ibDatabaseResultSetFirebird::GetResultNumber(int nField)
 		}
 		else if (nType == SQL_INT64)
 		{
-			ttmath::Int<TTMATH_BITS(64)> int64val;
+			int64_t int64val = 0;
 			memcpy(&int64val, pVar->sqldata, sizeof(int64val));
-			dblReturn.FromInt(int64val);
+			dblReturn = ibNumber(int64val);
 			for (int i = 0; i < -pVar->sqlscale; i++)
 				dblReturn /= 10;
 		}
 		else if (nType == SQL_INT128)
 		{
-			ttmath::Int<TTMATH_BITS(128)> int128val;
-			memcpy(&int128val, pVar->sqldata, sizeof(int128val));
-			dblReturn.FromInt(int128val);
+			dblReturn.From128Bytes(reinterpret_cast<const uint8_t*>(pVar->sqldata));
 			for (int i = 0; i < -pVar->sqlscale; i++)
 				dblReturn /= 10;
 		}

@@ -3,6 +3,8 @@
 
 #include <wx/wx.h>
 
+#include <map>
+
 #include "backend.h"
 
 extern BACKEND_API unsigned int GetBuildId();

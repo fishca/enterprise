@@ -40,18 +40,10 @@ bool ibPropertyNumber::GetDataValue(ibValue& pvarPropVal) const
 
 bool ibPropertyNumber::LoadData(ibReaderMemory& reader)
 {
-	ibNumber& value = GetValueAsNumber();
-	reader.r(&value.exponent, sizeof(value.exponent));
-	reader.r(&value.mantissa, sizeof(value.mantissa));
-	reader.r(&value.info, sizeof(value.info));
-	return true;
+	return GetValueAsNumber().SetBuffer(reader);
 }
 
 bool ibPropertyNumber::SaveData(ibWriterMemory& writer)
 {
-	const ibNumber& value = GetValueAsNumber();
-	writer.w(&value.exponent, sizeof(value.exponent));
-	writer.w(&value.mantissa, sizeof(value.mantissa));
-	writer.w(&value.info, sizeof(value.info));
-	return true;
+	return GetValueAsNumber().GetBuffer(writer);
 }

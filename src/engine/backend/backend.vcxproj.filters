@@ -218,45 +218,6 @@
     <ClInclude Include="stringUtils.h" />
     <ClInclude Include="typeconv.h" />
     <ClInclude Include="clsid.h" />
-    <ClInclude Include="compiler\ttmath\ttmath.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathbig.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathdec.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathint.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathmisc.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathobjects.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathparser.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmaththreads.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathtypes.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathuint.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathuint_noasm.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathuint_x86.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathuint_x86_64.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
     <ClInclude Include="number.h" />
     <ClInclude Include="fileSystem\fs.h">
       <Filter>fileSystem</Filter>
@@ -1344,6 +1305,7 @@
     </ClCompile>
     <ClCompile Include="tableInfo.cpp" />
     <ClCompile Include="moduleInfo.cpp" />
+    <ClCompile Include="number.cpp" />
     <ClCompile Include="compiler\value_res.cpp">
       <Filter>compiler</Filter>
     </ClCompile>
@@ -1572,9 +1534,6 @@
     <Filter Include="databaseLayer\postgres">
       <UniqueIdentifier>{d30249ca-7a5a-4c3a-a1ec-b642a76dc60b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="compiler\ttmath">
-      <UniqueIdentifier>{11f6fbf3-fc95-4f2a-9d6d-c9ef57c273a3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="fileSystem">
       <UniqueIdentifier>{abe9471e-5391-4bba-a9f7-6f050759d4b2}</UniqueIdentifier>
     </Filter>
@@ -1740,11 +1699,6 @@
       <Filter>databaseLayer\firebird\engine\dll</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="backend.conf" />
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="compiler\ttmath\ttmathuint_x86_64_msvc.asm">
-      <Filter>compiler\ttmath</Filter>
-    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\backend.rc">

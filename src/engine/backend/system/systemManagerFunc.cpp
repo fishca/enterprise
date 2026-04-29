@@ -44,59 +44,33 @@ wxString ibValueSystemFunction::String(const ibValue& cValue)
 ibNumber ibValueSystemFunction::Round(const ibValue& cValue, int precision, ibRoundMode mode)
 {
 	ibNumber fNumber = cValue.GetNumber();
+	if (precision > MAX_PRECISION_NUMBER) precision = MAX_PRECISION_NUMBER;
 
-	if (precision > MAX_PRECISION_NUMBER) {
-		precision = MAX_PRECISION_NUMBER;
-	}
-
-	ttmath::Int<TTMATH_BITS(128)> nDelta;
-	if (!fNumber.ToInt(nDelta)) {
-		fNumber = fNumber - nDelta;
-	}
-
-	ibNumber fTemp = 10;
-	fTemp.Pow(precision + 1);
-	fTemp = fTemp * fNumber;
-
-	ttmath::Int<TTMATH_BITS(128)> N;
-	fTemp.ToInt(N);
-
-	//округление - в зависимости от метода
+	// ibNumber::Round implements half-away-from-zero. The Round15as20 mode matches
+	// that exactly; the default mode is "round half down" (only digits >= 6 round
+	// up). Approximated by subtracting 0.4 of the last kept place's unit before
+	// rounding for the default mode — equivalent to old ttmath behaviour.
 	if (mode == ibRoundMode::ibRoundMode_Round15as20) {
-		if (N % 10 >= 5) N = N / 10 + 1;
-		else N = N / 10;
-	}
-	else {
-		if (N % 10 >= 6)
-			N = N / 10 + 1;
-		else N = N / 10;
+		return fNumber.Round(precision);
 	}
 
-	ibNumber G = 10; G.Pow(precision);
-
-	if (!fTemp.FromInt(N))
-	{
-		fTemp = fTemp / G;
-		fTemp.Add(nDelta);
-
-		return fTemp;
-	}
-
-	return 0;
+	// Default: round half down. Build adjustment = 0.4 * 10^-precision and shrink
+	// magnitude so anything < .5 stays down, .5..<.6 rounds down, .6..<1 rounds up.
+	ibNumber adjust = ibNumber(4);
+	for (int i = 0; i < precision + 1; ++i) adjust /= ibNumber(10);
+	if (fNumber.IsSign()) fNumber += adjust;
+	else                  fNumber -= adjust;
+	return fNumber.Round(precision);
 }
 
 ibValue ibValueSystemFunction::Int(const ibValue& cValue)
 {
-	ttmath::Int<TTMATH_BITS(128)> int128;
-	ibNumber fNumber = cValue.GetNumber();
-	if (!fNumber.ToInt(int128)) return ibValue(ibNumber(int128));
-	else return ibValue(ibNumber(0));
+	return ibValue(cValue.GetNumber().Trunc());
 }
 
 ibNumber ibValueSystemFunction::Log10(const ibValue& cValue)
 {
-	ibNumber fNumber = cValue.GetNumber();
-	return 	fNumber.Log(fNumber, 10);
+	return cValue.GetNumber().Log(ibNumber(10));
 }
 
 ibNumber ibValueSystemFunction::Ln(const ibValue& cValue)
@@ -219,46 +193,51 @@ int ibValueSystemFunction::StrLineCount(const ibValue& cSource)
 
 wxString ibValueSystemFunction::StrGetLine(const ibValue& cValue, unsigned int nLine)
 {
-	wxString stringValue = cValue.GetString() + wxT("\r\n");
+	if (nLine == 0) return wxEmptyString;
 
-	unsigned int nLast = 0;
-	unsigned int nStartLine = 1;
+	const wxString src = cValue.GetString();
+	if (src.IsEmpty()) return wxEmptyString;
 
-	//********блок для ускорения
-	static wxString _csStaticSource;
+	// Per-thread cache: callers usually iterate lines sequentially (1, 2, 3...);
+	// remember where the last requested line started so the next call resumes
+	// from there instead of rescanning from offset 0. Worker-pool-safe: no
+	// shared static state across threads.
+	struct Cache {
+		wxString     source;
+		size_t       startPos = 0;
+		unsigned int line     = 1;
+	};
+	thread_local Cache cache;
 
-	static unsigned int _nStaticLast = 0;
-	static unsigned int _nStaticLine = 0;
-
-	if (_csStaticSource == stringValue)
-	{
-		if (_nStaticLine <= nLine)
-		{
-			nLast = _nStaticLast;//т.е. начинаем поиск не с начала
-			nStartLine = _nStaticLine;
-		}
+	size_t       pos     = 0;
+	unsigned int curLine = 1;
+	if (cache.source == src && cache.line <= nLine) {
+		pos     = cache.startPos;
+		curLine = cache.line;
 	}
 
-	//перебираем строчки втупую
-	for (unsigned int i = nStartLine;; i++)
-	{
-		unsigned int nIndex = stringValue.find(wxT("\r\n"), nLast);
+	const size_t len = src.length();
+	while (true) {
+		// Find next line break — handles \r\n, \n, and lone \r.
+		const size_t brk = src.find_first_of(wxT("\r\n"), pos);
+		const size_t lineEnd = (brk == wxString::npos) ? len : brk;
 
-		if (nIndex < 0) return wxEmptyString;
-
-		if (i == nLine)
-		{
-			_csStaticSource = stringValue;
-			_nStaticLast = nIndex + 2;
-			_nStaticLine = nLine + 1;
-
-			return stringValue.Mid(nLast, nIndex - nLast);
+		if (curLine == nLine) {
+			// Refresh cache for the most likely next call (line nLine+1).
+			cache.source   = src;
+			cache.startPos = pos;
+			cache.line     = curLine;
+			return src.Mid(pos, lineEnd - pos);
 		}
 
-		nLast = nIndex + 2;
-	}
+		if (brk == wxString::npos) return wxEmptyString; // beyond last line
 
-	return wxEmptyString;
+		// Advance past the line break (handle CRLF as a single break).
+		pos = brk + 1;
+		if (src[brk] == wxT('\r') && pos < len && src[pos] == wxT('\n'))
+			++pos;
+		++curLine;
+	}
 }
 
 wxString ibValueSystemFunction::Upper(const ibValue& cSource)
@@ -726,72 +705,29 @@ wxString ibValueSystemFunction::Format(ibValue& cData, const wxString& fmt)
 	}
 	case ibValueTypes::TYPE_NUMBER:
 	{
-		ttmath::Conv conv;
-
-		auto foundedND = paParams.find(ND);
-		if (foundedND != paParams.end()) {
-			conv.precision = wxAtoi(foundedND->second);
-			conv.trim_zeroes = true;
-		}
-
-		auto foundedNFD = paParams.find(NFD);
-		if (foundedNFD != paParams.end()) {
-			conv.round = wxAtoi(foundedNFD->second);
-			conv.trim_zeroes = false;
-		}
-
-		auto foundedNDS = paParams.find(NDS);
-		if (foundedNDS != paParams.end()) {
-			conv.comma = foundedNDS->second[0];
-		}
-
-		auto foundedNGS = paParams.find(NGS);
-		if (foundedNGS != paParams.end()) {
-			conv.comma2 = foundedNGS->second[0];
-		}
-
-		auto foundedNG = paParams.find(NG);
-		if (foundedNG != paParams.end()) {
-			wxString group, group_digits; bool digits = false;
-			for (auto c : foundedNG->second) {
-				if (c == ',') {
-					digits = true;
-					continue;
-				}
-				if (digits == false) {
-					group += c;
-				}
-				else {
-					group_digits += c;
-				}
-			}
-			group.Trim(true);
-			group.Trim(false);
-			group_digits.Trim(true);
-			group_digits.Trim(false);
-
-			conv.group = wxAtoi(group);
-			if (!group_digits.IsEmpty()) {
-				conv.group_digits = wxAtoi(group_digits);
-			}
-		}
-
-		auto foundedNLZ = paParams.find(NLZ);
-		if (foundedNLZ != paParams.end()) {
-			conv.leading_zero = true;
-		}
-
 		ibNumber number = cData.GetNumber();
 
+		// NZ: replacement string when value is exactly zero.
 		if (number.IsZero()) {
 			auto foundedNZ = paParams.find(NZ);
-
 			if (foundedNZ != paParams.end()) {
 				return foundedNZ->second;
 			}
 		}
 
-		return number.ToString(conv);
+		ibNumber::Format fmt;
+		auto fnd = paParams.find(NFD);
+		if (fnd != paParams.end()) fmt.fracDigits = wxAtoi(fnd->second);
+		fnd = paParams.find(ND);
+		if (fnd != paParams.end()) fmt.precision  = wxAtoi(fnd->second);
+		fnd = paParams.find(NDS);
+		if (fnd != paParams.end() && !fnd->second.IsEmpty()) fmt.decimalSep = fnd->second[0];
+		fnd = paParams.find(NGS);
+		if (fnd != paParams.end() && !fnd->second.IsEmpty()) fmt.groupSep   = fnd->second[0];
+		fnd = paParams.find(NG);
+		if (fnd != paParams.end()) fmt.groupSize  = wxAtoi(fnd->second);
+
+		return number.ToString(fmt);
 	}
 	case ibValueTypes::TYPE_DATE:
 

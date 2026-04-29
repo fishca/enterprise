@@ -459,8 +459,7 @@ bool ibValue::SetNumber(const wxString& strNumber)
 	Reset();
 
 	ibNumber fData = 0;
-	unsigned int nSuccessful = fData.FromString(strNumber.ToStdWstring());
-	if (nSuccessful > 0)
+	if (!fData.FromString(strNumber))
 		return false;
 
 	m_typeClass = ibValueTypes::TYPE_NUMBER;
@@ -615,8 +614,8 @@ ibNumber ibValue::GetNumber() const
 		strVal.Trim(false);
 		strVal.MakeUpper();
 		ibNumber number;
-		unsigned int nSuccessful = number.FromString(strVal.ToStdWstring());
-		if (nSuccessful > 0) ibBackendCoreException::Error(_("Cannot convert string to number!"));
+		if (!number.FromString(strVal))
+			ibBackendCoreException::Error(_("Cannot convert string to number!"));
 		return number;
 	}
 	case ibValueTypes::TYPE_DATE:

@@ -51,19 +51,6 @@
     <ClInclude Include="compiler\procContext.h" />
     <ClInclude Include="compiler\procUnit.h" />
     <ClInclude Include="compiler\translateCode.h" />
-    <ClInclude Include="compiler\ttmath\ttmath.h" />
-    <ClInclude Include="compiler\ttmath\ttmathbig.h" />
-    <ClInclude Include="compiler\ttmath\ttmathdec.h" />
-    <ClInclude Include="compiler\ttmath\ttmathint.h" />
-    <ClInclude Include="compiler\ttmath\ttmathmisc.h" />
-    <ClInclude Include="compiler\ttmath\ttmathobjects.h" />
-    <ClInclude Include="compiler\ttmath\ttmathparser.h" />
-    <ClInclude Include="compiler\ttmath\ttmaththreads.h" />
-    <ClInclude Include="compiler\ttmath\ttmathtypes.h" />
-    <ClInclude Include="compiler\ttmath\ttmathuint.h" />
-    <ClInclude Include="compiler\ttmath\ttmathuint_noasm.h" />
-    <ClInclude Include="compiler\ttmath\ttmathuint_x86.h" />
-    <ClInclude Include="compiler\ttmath\ttmathuint_x86_64.h" />
     <ClInclude Include="compiler\typeCtor.h" />
     <ClInclude Include="compiler\value.h" />
     <ClInclude Include="databaseLayer\databaseErrorCodes.h" />
@@ -526,6 +513,7 @@
     <ClCompile Include="metadataReport.cpp" />
     <ClCompile Include="metadataReportFactory.cpp" />
     <ClCompile Include="moduleInfo.cpp" />
+    <ClCompile Include="number.cpp" />
     <ClCompile Include="moduleManager\moduleManager.cpp" />
     <ClCompile Include="moduleManager\moduleManagerEvent.cpp" />
     <ClCompile Include="moduleManager\moduleManagerExt.cpp" />
@@ -606,11 +594,6 @@
     <ClCompile Include="value_cast.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="compiler\ttmath\ttmathuint_x86_64_msvc.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <FileType>Document</FileType>
-    </MASM>
     <CopyFileToFolders Include="databaseLayer\postgres\engine\dll\libcrypto-3-x64.dll">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <FileType>Document</FileType>

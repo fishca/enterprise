@@ -296,7 +296,7 @@ int ibValueMetaObjectAttributeBase::ProcessAttribute(const wxString& tableName,
 				return retCode;
 		}
 	}
-	// update 
+	// update
 	else if (srcAttr != nullptr) {
 		if (srcAttr->GetTypeDesc() != dstAttr->GetTypeDesc()) {
 			const ibTypeDescription& srcTypeDesc = srcAttr->GetTypeDesc();
@@ -445,7 +445,7 @@ int ibValueMetaObjectAttributeBase::ProcessAttribute(const wxString& tableName,
 			}
 		}
 	}
-	//delete 
+	//delete
 	else if (srcAttr == nullptr) {
 		const wxString& fieldName = dstAttr->GetFieldNameDB(); bool removeReference = false; ibMetaData* metaData = dstAttr->GetMetaData();
 		retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_TYPE;", tableName, fieldName);
@@ -907,13 +907,11 @@ void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttrib
 			statement->SetParamBool(position++, false); //DATA binary 
 
 		if (metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)) {
-
 			ibNumber value;
-			reader.r(&value.exponent, sizeof(value.exponent));
-			reader.r(&value.mantissa, sizeof(value.mantissa));
-			reader.r(&value.info, sizeof(value.info));
-
-			statement->SetParamNumber(position++, value); //DATA number 
+			if (!value.SetBuffer(reader)) {
+				wxLogError(wxT("metaAttribute: failed to read TYPE_NUMBER from stream"));
+			}
+			statement->SetParamNumber(position++, value); //DATA number
 		}
 
 		if (metaAttr->ContainType(ibValueTypes::TYPE_DATE))
@@ -1050,20 +1048,16 @@ void ibValueMetaObjectAttributeBase::GetBinaryData(const ibValueMetaObjectAttrib
 		writer.w_u8(false);
 	}
 
-	//DATA number 
+	//DATA number
 	if (fieldType == ibFieldTypes_Number
 		&& metaAttr->ContainType(ibValueTypes::TYPE_NUMBER)
 		&& resultSet != nullptr) {
-		const ibNumber& value = resultSet->GetResultNumber(fieldName + wxT("_N"));
-		writer.w(&value.exponent, sizeof(value.exponent));
-		writer.w(&value.mantissa, sizeof(value.mantissa));
-		writer.w(&value.info, sizeof(value.info));
+		if (!resultSet->GetResultNumber(fieldName + wxT("_N")).GetBuffer(writer))
+			wxLogError(wxT("metaAttribute: failed to write TYPE_NUMBER to stream"));
 	}
 	else if (fieldType == ibFieldTypes_Number) {
-		const ibNumber& value = 0;
-		writer.w(&value.exponent, sizeof(value.exponent));
-		writer.w(&value.mantissa, sizeof(value.mantissa));
-		writer.w(&value.info, sizeof(value.info));
+		if (!ibNumber().GetBuffer(writer))
+			wxLogError(wxT("metaAttribute: failed to write empty TYPE_NUMBER to stream"));
 	}
 
 	//DATA date 

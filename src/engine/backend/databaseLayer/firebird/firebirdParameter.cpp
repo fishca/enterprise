@@ -66,20 +66,18 @@ ibDatatabaseParameterFirebird::ibDatatabaseParameterFirebird(ibInterfaceFirebird
 	else if (nType == SQL_INT64)
 	{
 		m_numValue = dblValue;
-		for (int i = 0; i < -pVar->sqlscale; i++) 
+		for (int i = 0; i < -pVar->sqlscale; i++)
 			m_numValue *= 10;
-		ttmath::Int<TTMATH_BITS(64)> int64val;
+		int64_t int64val = 0;
 		m_numValue.ToInt(int64val);
 		memcpy(m_pParameter->sqldata, &int64val, sizeof(int64val));
 	}
 	else if (nType == SQL_INT128)
 	{
 		m_numValue = dblValue;
-		for (int i = 0; i < -pVar->sqlscale; i++) 
+		for (int i = 0; i < -pVar->sqlscale; i++)
 			m_numValue *= 10;
-		ttmath::Int<TTMATH_BITS(128)> int128val;
-		m_numValue.ToInt(int128val);
-		memcpy(m_pParameter->sqldata, &int128val, sizeof(int128val));
+		m_numValue.To128Bytes(reinterpret_cast<uint8_t*>(m_pParameter->sqldata));
 	}
 	else
 	{

@@ -241,12 +241,11 @@ inline void ModValue(ibValue& cValue1, const ibValue& cValue2, const ibValue& cV
 	CHECK_READONLY(ModValue);
 	cValue1.m_typeClass = cValue2.GetType();
 	if (cValue1.m_typeClass == ibValueTypes::TYPE_NUMBER) {
-		ttmath::Int<TTMATH_BITS(128)> val128_2, val128_3;
-		const ibNumber& flNumber3 = cValue3.GetNumber(); flNumber3.ToInt(val128_3);
-		if (val128_3.IsZero())
+		const ibNumber num3 = cValue3.GetNumber();
+		if (num3.IsZero())
 			ibBackendCoreException::Error(_("Divide by zero"));
-		const ibNumber& flNumber2 = cValue2.GetNumber(); flNumber2.ToInt(val128_2);
-		cValue1.m_fData = val128_2 % val128_3;
+		const ibNumber num2 = cValue2.GetNumber();
+		cValue1.m_fData = num2 % num3;
 	}
 	else {
 		ibBackendCoreException::Error(_("Modulo operation cannot be applied for this type (%s)"), cValue2.GetClassName());

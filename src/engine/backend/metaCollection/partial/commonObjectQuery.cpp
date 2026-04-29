@@ -5,6 +5,9 @@
 
 #include "commonObject.h"
 
+#include <iomanip>
+#include <sstream>
+
 #include "backend/appData.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
@@ -84,7 +87,7 @@ int ibValueMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularN
 				return retCode;
 		}
 	}
-	//delete 
+	//delete
 	else if (srcTable == nullptr) {
 
 		s_restructureInfo.AppendInfo(_("Removed tabular section ") + dstTable->GetFullName());

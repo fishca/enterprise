@@ -12,6 +12,7 @@
 #include <wx/clipbrd.h>
 #include <wx/debugrpt.h>
 #include <wx/filename.h>
+#include <wx/file.h>
 #include <wx/fs_arc.h>
 #include <wx/fs_filter.h>
 #include <wx/fs_mem.h>
@@ -288,11 +289,28 @@ int ibAppEnterprise::OnRun()
 	// listeners (wired in appData ctor) handle BindSessionToThread,
 	// LoadMetadata, CreateRoot + CompileRoot + InitRuntimeForSession
 	// through OnFirstConnect / OnAuthenticated.
-	ibSession* session = appData->CreateSession<ibEnterpriseSession>();
-	if (session == nullptr || !session->Open(m_strIBUser, m_strIBPassword)) {
-		if (session != nullptr) session->Close();
+	ibSession* session = nullptr;
+	wxString openError;
+	try {
+		session = appData->CreateSession<ibEnterpriseSession>();
+		if (session != nullptr && !session->Open(m_strIBUser, m_strIBPassword)) {
+			session->Close();
+			session = nullptr;
+		}
+	} catch (const ibBackendException& e) {
+		openError = e.GetErrorDescription();
+		session   = nullptr;
+	} catch (const std::exception& e) {
+		openError = wxString::FromUTF8(e.what());
+		session   = nullptr;
+	}
+
+	if (session == nullptr) {
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
-		wxMessageBox(_("Authentication failed"));
+		const wxString message = openError.IsEmpty()
+			? wxString(_("Authentication failed"))
+			: openError;
+		wxMessageBox(message, _("OES Enterprise"), wxOK | wxICON_ERROR);
 		return 1;
 	}
 
@@ -304,8 +322,30 @@ int ibAppEnterprise::OnRun()
 void ibAppEnterprise::OnUnhandledException()
 {
 	// Reached when a C++ exception escapes to wxApp's event loop (not a
-	// structured exception — that goes through OnFatalException). Same
-	// treatment: capture context + minidump, offer the report.
+	// structured exception — that goes through OnFatalException). Try to
+	// surface the actual exception text first — without this, the caller
+	// sees only the wxDebugReport's generic dump and the throw site is
+	// already unwound, making post-mortem analysis hard.
+	wxString diag = wxT("Unhandled exception: <unknown>");
+	try {
+		auto p = std::current_exception();
+		if (p) std::rethrow_exception(p);
+	} catch (const ibBackendException& e) {
+		diag = wxT("Unhandled ibBackendException: ") + e.GetErrorDescription();
+	} catch (const std::exception& e) {
+		diag = wxT("Unhandled std::exception: ") + wxString::FromUTF8(e.what());
+	} catch (...) {
+	}
+
+	// Persist to a file next to the exe so users can include it with the
+	// crash report; also surface a message box so the user knows.
+	wxFile f(wxT("enterprise_unhandled.log"), wxFile::write_append);
+	if (f.IsOpened()) {
+		f.Write(wxDateTime::Now().FormatISOCombined() + wxT("  ") + diag + wxT("\n"));
+		f.Close();
+	}
+	wxLogError("%s", diag);
+
 	wxDebugReportCompress report;
 	report.AddAll(wxDebugReport::Context_Current);
 

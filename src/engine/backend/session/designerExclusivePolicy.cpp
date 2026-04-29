@@ -17,12 +17,19 @@ bool ibDesignerExclusivePolicy::CanAdd(const ibSession& session, wxString& reaso
 		return true;
 
 	if (m_registry == nullptr)
-		return true;   // no registry to probe through — be permissive
+		return true;   // no registry to scan through — be permissive
 
-	// Scan the cluster snapshot for other designer rows. Each candidate
-	// gets one row-lock probe to decide alive vs zombie. Skip our own
-	// row (might be in the snapshot if a prior sweep raced the
-	// INSERT — harmless).
+	// Scan the cluster snapshot for other designer rows. Liveness model
+	// is heartbeat-based now (sys_session.lastActive updated each refresh
+	// tick by the owner; sweep deletes rows whose lastActive is older
+	// than kStaleCutoffSec). The historical TryProbeRowLock probe was
+	// dropped from the registry's own bookkeeping and produces false
+	// positives here — no row lock is ever held, so the probe always
+	// succeeds and policy treats every live designer as a zombie.
+	//
+	// New rule: any other designer row visible in the snapshot vetoes
+	// the new designer. If the owner is dead, sweep DELETEs its stale
+	// row within ~kStaleCutoffSec (≈30s); user can retry after that.
 	const auto snap       = m_registry->GetClusterSnapshot();
 	const std::string ownId = session.GetId();
 	for (unsigned int i = 0; i < snap.GetSessionCount(); ++i) {
@@ -34,14 +41,7 @@ bool ibDesignerExclusivePolicy::CanAdd(const ibSession& session, wxString& reaso
 		if (otherId == ownId)
 			continue;
 
-		if (m_registry->ProbeSessionRowLock(otherGuid)) {
-			// Probe took the lock → no one else holds it → zombie row.
-			// Sweep will DELETE it on its next pass. Don't block the new
-			// designer.
-			continue;
-		}
-
-		// Probe failed → owner is alive → veto.
+		// Another designer row visible — veto.
 		reason = wxString::Format(
 			_("Another designer process is already running:\n%s, %s, %s"),
 			snap.GetStartedDate(i),

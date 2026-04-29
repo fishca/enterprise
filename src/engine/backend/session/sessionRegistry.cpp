@@ -247,8 +247,15 @@ ibSession* ibSessionRegistry::CreateSessionWithFactory(ibRunMode runMode,
 	req.m_sessionFactory = std::move(factory);
 
 	auto result = Connect(req);
-	if (result.m_code != ibConnectResult::Ok)
+	if (result.m_code != ibConnectResult::Ok) {
+		// Surface the actual rejection reason (e.g. designer-exclusive
+		// policy veto, exclusive-mode block, registry-down) so the caller's
+		// catch shows something better than the generic "Failed to create
+		// session" wrapper in FinishCreateSession.
+		if (!result.m_reason.IsEmpty())
+			ibBackendCoreException::Error(result.m_reason);
 		return nullptr;
+	}
 	// Registry's m_own holds the shared_ptr; result.m_session is a raw
 	// observer. Lifecycle is driven by ibSession::Close() from the holder
 	// (mainApp, webSession).
@@ -276,8 +283,11 @@ ibSession* ibSessionRegistry::CreateSessionWithFactory(ibRunMode runMode,
 	req.m_sessionFactory = std::move(factory);
 
 	auto result = Connect(req);
-	if (result.m_code != ibConnectResult::Ok)
+	if (result.m_code != ibConnectResult::Ok) {
+		if (!result.m_reason.IsEmpty())
+			ibBackendCoreException::Error(result.m_reason);
 		return nullptr;
+	}
 	return result.m_session;
 }
 
@@ -968,6 +978,14 @@ void ibSessionRegistry::ProcessAdd(ibRegistryRequest& req)
 			}
 		}
 	}
+
+	// Refresh the cluster snapshot before consulting policies — closes the
+	// race where a second designer starts up faster than the first refresh
+	// tick (~3s) and the cached snapshot doesn't yet show the first
+	// designer's INSERTed row, so the exclusion policy permits the second
+	// instance. Refresh is on this thread (consumer), so it can't deadlock
+	// with itself.
+	try { JobRefreshSnapshot(); } catch (...) {}
 
 	// Policy veto chain — first reject wins.
 	for (auto& p : m_policies) {

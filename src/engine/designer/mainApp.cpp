@@ -5,6 +5,7 @@
 
 #include "mainApp.h"
 #include "backend/appData.h"
+#include "backend/backend_exception.h"
 #include "backend/backend_mainFrame.h"
 #include "backend/debugger/debugClientBridge.h"
 #include "frontend/session/guiSession.h"   // transitively pulls backend/session/session.h
@@ -267,11 +268,28 @@ int ibAppDesigner::OnRun()
 	// listeners (wired in appData ctor) handle BindSessionToThread,
 	// LoadMetadata, CreateRoot + CompileRoot through OnFirstConnect /
 	// OnAuthenticated — nothing to compose here.
-	ibSession* session = appData->CreateSession<ibDesignerSession>();
-	if (session == nullptr || !session->Open(m_strIBUser, m_strIBPassword)) {
-		if (session != nullptr) session->Close();
+	ibSession* session = nullptr;
+	wxString openError;
+	try {
+		session = appData->CreateSession<ibDesignerSession>();
+		if (session != nullptr && !session->Open(m_strIBUser, m_strIBPassword)) {
+			session->Close();
+			session = nullptr;
+		}
+	} catch (const ibBackendException& e) {
+		openError = e.GetErrorDescription();
+		session   = nullptr;
+	} catch (const std::exception& e) {
+		openError = wxString::FromUTF8(e.what());
+		session   = nullptr;
+	}
+
+	if (session == nullptr) {
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
-		wxMessageBox(_("Authentication failed"));
+		const wxString message = openError.IsEmpty()
+			? wxString(_("Authentication failed"))
+			: openError;
+		wxMessageBox(message, _("OES Designer"), wxOK | wxICON_ERROR);
 		return 1;
 	}
 

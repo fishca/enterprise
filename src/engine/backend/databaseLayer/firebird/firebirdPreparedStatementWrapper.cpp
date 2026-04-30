@@ -177,6 +177,13 @@ int ibPreparedStatementFirebirdWrapper::DoRunQuery()
 		return DATABASE_LAYER_QUERY_RESULT_ERROR;
 	}
 
+	// isc_info_sql_records is a separate round-trip after Execute; on a
+	// SELECT it returns nothing useful (insert/update/delete counts are
+	// all 0) — skip the call entirely. Saves a network/IPC hop on every
+	// query for the most common path.
+	if (IsSelectQuery())
+		return 0;
+
 	long nRows = 0;
 	static char requestedInfoTypes[] = { isc_info_sql_records, isc_info_end };
 	char resultBuffer[1024];

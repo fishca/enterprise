@@ -25,8 +25,15 @@ ibDatatabaseParameterFirebird::ibDatatabaseParameterFirebird(ibInterfaceFirebird
 
 	m_pParameter->sqltype = SQL_TEXT | 1;
 
-	wxStrncpy((wxChar*)m_pParameter->sqldata, (wxChar*)(const char*)valueBuffer, length);
-	m_pParameter->sqllen = length;
+	// Raw bytes — wxStrncpy would treat the buffer as wide chars and either
+	// copy half the data (Windows: wxChar==wchar_t==2 bytes) or read past
+	// the end. The driver hands UTF-8 to FB, so a plain memcpy is correct.
+	// Clamp to the column's declared length to avoid running past the
+	// allocation done in firebirdParameterCollection::AllocateParameterSpace.
+	const unsigned int cap = (unsigned int)m_pParameter->sqllen;
+	const unsigned int n = (length > cap) ? cap : length;
+	memcpy(m_pParameter->sqldata, (const char*)valueBuffer, n);
+	m_pParameter->sqllen = (ISC_SHORT)n;
 
 	m_nNullFlag = 0;
 	m_pParameter->sqlind = &m_nNullFlag; // NULL indicator

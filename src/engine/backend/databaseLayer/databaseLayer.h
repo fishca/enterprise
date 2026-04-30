@@ -58,18 +58,25 @@ public:
 	// transaction support
 
 	// Optional transaction attributes. Struct so future knobs (lock
-	// timeout, isolation level override, read-only hint) can land without
-	// changing the BeginTransaction signature again. Default-constructed
-	// value preserves historical behaviour — every existing caller works
+	// timeout, isolation level override) can land without changing the
+	// BeginTransaction signature again. Default-constructed value
+	// preserves historical behaviour — every existing caller works
 	// unchanged.
 	//
 	// `noWait` — when true, row-lock contention raises a lock conflict
 	// immediately instead of blocking. Used by row-lock probes
 	// (TryProbeRowLock). On FB maps to `isc_tpb_nowait`; other drivers
 	// approximate via session-level lock_timeout settings or ignore.
+	//
+	// `readOnly` — caller promises this TX won't issue DML. The driver
+	// can then pick an isolation that doesn't acquire write-intent locks
+	// (FB 4+: read_committed + read_consistency for snapshot-style
+	// reads without long-running snapshot TX; PostgreSQL: SET TRANSACTION
+	// READ ONLY). Drivers that don't have a cheap read-only mode silently
+	// ignore the flag.
 	struct ibTxOptions {
 		bool noWait = false;
-		// int  lockTimeoutMs = -1;  // placeholder — add when a caller needs it
+		bool readOnly = false;
 	};
 
 	// Transaction support — nested-safe counter layer.

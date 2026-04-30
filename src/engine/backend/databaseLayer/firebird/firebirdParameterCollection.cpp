@@ -101,11 +101,19 @@ bool ibDatatabaseParameterFirebirdCollection::ResetBlobParameters(isc_db_handle 
 
 	while (start != stop)
 	{
-		const XSQLVAR* pVar = ((ibDatatabaseParameterFirebird*)(*start))->GetFirebirdSqlVarPtr();
-		if ((pVar->sqltype & ~1) == SQL_BLOB)
+		ibDatatabaseParameterFirebird* p = (ibDatatabaseParameterFirebird*)(*start);
+		// NULL slot — caller never bound a value at this position. Skip
+		// rather than dereferencing a null pointer.
+		if (p == nullptr)
 		{
-			bool result = ((ibDatatabaseParameterFirebird*)(*start))->ResetBlob(database, transaction);
-			if (!result)
+			start++;
+			continue;
+		}
+		const XSQLVAR* pVar = p->GetFirebirdSqlVarPtr();
+		const bool isNullBound = (pVar->sqlind != nullptr) && (*pVar->sqlind < 0);
+		if ((pVar->sqltype & ~1) == SQL_BLOB && !isNullBound)
+		{
+			if (!p->ResetBlob(database, transaction))
 				return false;
 		}
 		start++;
@@ -140,12 +148,12 @@ void ibDatatabaseParameterFirebirdCollection::AllocateParameterSpace()
 			memset(pVar->sqldata, 0, sizeof(ISC_DATE));
 			break;
 		case SQL_TEXT:
-			pVar->sqldata = (char*)new wxChar[pVar->sqllen + 1];
+			pVar->sqldata = new char[pVar->sqllen + 1];
 			memset(pVar->sqldata, '\0', pVar->sqllen);
 			pVar->sqldata[pVar->sqllen] = '\0';
 			break;
 		case SQL_VARYING:
-			pVar->sqldata = (char*)new wxChar[pVar->sqllen + 3];
+			pVar->sqldata = new char[pVar->sqllen + 3];
 			memset(pVar->sqldata, 0, 2);
 			memset(pVar->sqldata + 2, '\0', pVar->sqllen);
 			pVar->sqldata[pVar->sqllen + 2] = '\0';
@@ -157,10 +165,12 @@ void ibDatatabaseParameterFirebirdCollection::AllocateParameterSpace()
 			pVar->sqldata = nullptr;
 			break;
 		case SQL_INT64:
-			pVar->sqldata = (char*)new wxChar[pVar->sqllen];
+			pVar->sqldata = new char[pVar->sqllen];
+			memset(pVar->sqldata, 0, pVar->sqllen);
 			break;
 		case SQL_INT128:
-			pVar->sqldata = (char*)new wxChar[pVar->sqllen];
+			pVar->sqldata = new char[pVar->sqllen];
+			memset(pVar->sqldata, 0, pVar->sqllen);
 			break;
 		case SQL_FLOAT:
 			pVar->sqldata = nullptr;
@@ -230,7 +240,12 @@ void ibDatatabaseParameterFirebirdCollection::FreeParameterSpace()
 			  //delete pVar->sqlind;
 			//wxDELETE(pVar->sqlind);
 		}
-		wxDELETEA(m_FirebirdParameters);
+		// XSQLDA is allocated with malloc() in firebirdPreparedStatementWrapper;
+		// pair the release with free(). delete[] here was UB (undefined for
+		// malloc'd memory) and silently worked only because the runtime
+		// happened to keep the block intact long enough for the process.
+		free(m_FirebirdParameters);
+		m_FirebirdParameters = nullptr;
 	}
 
 }

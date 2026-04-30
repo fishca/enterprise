@@ -645,6 +645,31 @@ int ibValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const
 	//is null - create
 	if (dstPredefined == nullptr) {
 
+		// Idempotency: this branch is the seed path (initial creation of a
+		// table). It can fire repeatedly across Apply runs — either
+		// intentionally (self-heal a table left empty by a prior partial
+		// failure) or accidentally (gate above lifted in metadataConfig).
+		// Cheapest reliable check is "row already there?" before the
+		// INSERT — keeps the multi-column INSERT shape unchanged and
+		// preserves any user edits to code/description on existing rows.
+		// Two round-trips per row, but only during Apply (rare, manual).
+		{
+			ibPreparedStatement* probe = db_query->PrepareStatement(
+				wxT("SELECT 1 FROM ") + tableName + wxT(" WHERE uuid = ?"));
+			if (probe == nullptr)
+				return false;
+			probe->SetParamString(1, srcPredefined->GetPredefinedGuid().str());
+			ibDatabaseResultSet* probeRs = probe->ExecuteQuery();
+			bool rowExists = (probeRs != nullptr) && probeRs->Next();
+			if (probeRs) {
+				probeRs->Close();
+				db_query->CloseResultSet(probeRs);
+			}
+			db_query->CloseStatement(probe);
+			if (rowExists)
+				return 1;
+		}
+
 		wxString queryText;
 
 		queryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");

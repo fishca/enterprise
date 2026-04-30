@@ -318,10 +318,19 @@ bool ibMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flag
 
 		if ((flags & saveConfigFlag) != 0) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+			// Two-phase apply on Firebird: DDL (the metadata-config write
+			// just done above + CreateMetaTable schema in OnBeforeSave) must
+			// commit before any seed INSERTs into freshly-created enum
+			// tables — FB's legacy isc_* API can't safely mix CREATE TABLE
+			// and prepared INSERT-with-bind in the same TX (metadata-cache
+			// race; INSERT silently drops rows or surfaces "table not
+			// exist" on prepare). After this commit, the seed phase runs
+			// in its own TX so a seed failure doesn't leave half-populated
+			// tables straddling auto-commit boundaries.
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->Commit();
-#endif 
+#endif
 
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1	
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
 
@@ -329,6 +338,28 @@ bool ibMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flag
 
 				ibValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 				wxASSERT(commonObject);
+
+				// Atomic seed phase wrapped in its own TX: a partial failure
+				// rolls back every UPSERT done so far instead of stranding
+				// rows committed by ProcessEnumeration's per-statement
+				// "quickie transactions" (which auto-commit each row).
+				db_query->BeginTransaction();
+
+				// Gate by foundedMeta==nullptr: only newly-introduced
+				// objects need this pass. The repairMetaTable flag has
+				// mixed semantics across types — for enum-refs it's
+				// data-seed (idempotent UPSERT, safe to re-run), but for
+				// constants it's deferred ALTER TABLE ADD COLUMN which is
+				// NOT idempotent on FB (would error on existing columns).
+				// Until we split the flag (seedMetaTable for data,
+				// repairMetaTable for schema), keep the original gate.
+				//
+				// TODO: split the flag and re-run a data-only seed pass
+				// unconditionally to self-heal tables that a prior Apply
+				// created but left empty (current edge case: total seed
+				// failure → empty table → metadata-reload sees
+				// foundedMeta != nullptr → never reseeded).
+				bool seedOk = true;
 				for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
 					auto child = m_commonObject->GetChild(idx);
 					if (!m_commonObject->FilterChild(child->GetClassType()))
@@ -337,22 +368,23 @@ bool ibMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flag
 						commonObject->FindAnyObjectByFilter(child->GetGuid());
 					wxASSERT(child);
 					if (foundedMeta == nullptr) {
-						bool ret = child->CreateMetaTable(m_configMetadata, repairMetaTable);
-						if (!ret) {
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-							db_query->RollBack(); return false;
-#else
-							return false;
-#endif
+						if (!child->CreateMetaTable(m_configMetadata, repairMetaTable)) {
+							seedOk = false;
+							break;
 						}
 					}
 				}
+				if (!seedOk) {
+					db_query->RollBack();
+					return false;
+				}
+				db_query->Commit();
 			}
 #endif
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->BeginTransaction();
-#endif 
+#endif
 			if (!m_configMetadata->LoadDatabase(onlyLoadFlag)) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 				db_query->RollBack();

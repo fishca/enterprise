@@ -1,9 +1,137 @@
 # Next-session plan
 
-State at the end of the ibNumber + DDL-gate landing on top of the
-codeEditor cleanup in `2026-04-28`. This file is the picking-up
-point for the next round — not "everything ever planned", just what
-is actionable now and easy to forget.
+State at the end of the FB driver hardening + register-totals
+strategy discussion on `2026-04-30`, on top of the ibNumber +
+DDL-gate landing of `2026-04-29`. This file is the picking-up point
+for the next round — not "everything ever planned", just what is
+actionable now and easy to forget.
+
+## Web debug F5 / multi-tab stability — landed 2026-04-30
+
+Browser F5 on a tab whose session was parked at a breakpoint hung
+`wenterprise-server` (worker thread parked in `DoDebugLoop`'s CV
+wait, never released; `m_app->OnExit`'s `RunOnWorker(...).get()`
+blocked indefinitely; queued new session waited forever for the
+session row-level lock). With multiple tabs the debugger also
+"detached itself" intermittently — connection listed in designer
+but inert. Fixed by five small changes spanning session destroy,
+the wire protocol, and the read loop:
+
+1. **`ibSession::WakeDebugLoop()`** (session.h / session.cpp) —
+   sets `m_forceExit` on the session (so the opcode loop unwinds
+   on the next iteration after returning from `DoDebugLoop`) and
+   notifies the per-session debug CV. Bypasses
+   `RequestForceExit` — that path's `OnForceExit` would kill the
+   wes process when started with `--debug`. Cancels only THIS
+   session's interpreter.
+2. **`ibWebSession::OnExit`** (webSession.cpp) — calls
+   `WakeDebugLoop` *before* `ExitRuntimeForSession`, then drains
+   the worker via `Submit([]{}).get()`. The FIFO queue guarantees
+   that when the no-op runs, the parked-then-cancelled task has
+   unwound and the worker is idle, so `ExitRuntimeForSession` no
+   longer races the unwinding script over `ProcUnit` destruction.
+3. **`ibDebuggerServerConnection::SendCommand` mutex** (debugServer.h /
+   .cpp) — `std::mutex m_sendMutex` serialises the two-step
+   `WriteMsg(length) + WriteMsg(payload)` pair. Without it,
+   concurrent senders (multiple session workers emitting LeaveLoop
+   on simultaneous F5s, or a worker writing while another emits
+   EnterLoop) interleaved bytes on the wire and the designer
+   dropped the connection on the next garbled frame.
+4. **`IsConnected` no longer filters on `LastError()`**
+   (debugServer.h) — `wxSocketBase::LastError()` is per-socket
+   state, not per-thread. A transient `WOULDBLOCK` / `TIMEDOUT` /
+   `IOERR` left by any operation on any thread leaked into the
+   connection-thread's next liveness check and falsely declared
+   the connection dead. Real disconnects still flip
+   `IsConnected()` / `IsOk()` to false; ReadMsg / WriteMsg own
+   their own short-read / short-write detection.
+5. **Read-loop drops the inner `WaitForRead`** (debugServer.cpp,
+   symmetric in debugClient.cpp) — sockets are constructed with
+   `wxSOCKET_BLOCK | wxSOCKET_WAITALL`, so `ReadMsg` blocks until
+   every requested byte is delivered. The previous
+   `WaitForRead(0, 50ms)` between length and payload timed out
+   under network jitter / multi-tab debug traffic and skipped the
+   payload while the length was already consumed; the next outer
+   iteration read payload bytes as a fresh length, tripped the
+   16 MiB max-packet guard, and broke out → `ResetDebugger`. Side
+   benefit: step commands feel snappier (one less polling cycle
+   per message).
+
+Status: working tree, uncommitted (will be split into a `firebird:`
+group + `metadata: atomic seed` group + `debug: stable wire under
+multi-tab` group + docs, then pushed to `oes/develop` and
+`origin/develop`).
+
+## Firebird driver hardening — landed in working tree 2026-04-30
+
+Audit and fix pass on the FB driver under embedded FB 5.0
+deployment. Full write-up in `firebird-driver-hardening.md`.
+Highlights:
+
+- UB fixes: `XSQLDA` malloc / `delete[]` mismatches in result-set
+  and parameter-collection cleanup; `wxStrncpy` over UTF-8 byte
+  buffer in string-parameter binding.
+- Result-set integer extraction: removed silent SQL_INT64 / INT128
+  → `long` truncation, fixed `abs(scale)*10` scale arithmetic
+  (was wrong for any |scale| ≥ 2), switched LP64-fragile
+  `*(long*)` casts to `int32_t` `memcpy`.
+- DPB additions: `isc_dpb_lc_ctype = UTF8` (charset on attach,
+  `set_db_charset` only honoured at CREATE), `isc_dpb_force_write
+  = 0` (async writes for fresh-CREATE — ~5–10× faster on Win NTFS),
+  `isc_dpb_session_time_zone = UTC`.
+- TPB additions: `isc_tpb_lock_timeout = 30s` on wait-mode (was
+  blocking forever on contention), new read-only mode via
+  `ibTxOptions::readOnly` (FB 4+ `read_consistency` for
+  snapshot-style reads without write-intent locks).
+- Atomic seed phase in `metadataConfigurationQuery::OnAfterSaveDatabase`
+  — wraps the post-DDL repair loop in its own TX so a partial seed
+  failure rolls back instead of leaving half-filled enum tables
+  committed by per-statement quickie transactions.
+- Idempotent probe in `ProcessPredefinedValue` (`SELECT 1 ...
+  WHERE uuid = ?` before plain INSERT) so re-seeding existing tables
+  doesn't PK-violate.
+- `m_pageSize` widened to `int32_t` and bumped 8192 → 16384 (FB 5
+  OLTP recommendation; cache footprint 32 MB per attach is fine).
+- `fb_tr_list` stack collapsed to single `isc_tr_handle
+  m_pTransaction` (base-class nesting counter makes the stack always
+  one node deep).
+- `HoldRowLocks` / `TryProbeRowLock` outer-TX guards (refuse if
+  already in a TX — inner Begin would just bump the counter,
+  silently breaking the lock semantics).
+- `Open()` is now safe to re-call (detaches old handle first);
+  recursive `Mkdir(..., wxPATH_MKDIR_FULL)`.
+
+State: working tree, uncommitted. Next session: review diff,
+commit by topic group (driver fixes / DPB-TPB tuning / metaConfig
+atomic seed / fb_tr_list collapse), build + smoke-test on
+designer.exe + enterprise.exe.
+
+## Register totals — trigger-maintained strategy proposal
+
+Proposal documented in `register-totals-strategy.md`. Move totals
+maintenance from C++ (`*Query.cpp` per-register hand-written
+UPSERT logic) to SQL triggers, keep totals table for read
+performance, expose via views. Removes drift, removes the periodic
+"пересчёт итогов" command, simplifies cross-register code in OES
+core. Production target: PostgreSQL with 10K readers + 100 writers
+profile; FB embedded as smaller-scale companion.
+
+Status: design only. Not started. PoC plan:
+
+1. Single-dim / single-resource accumulation register on PG.
+2. Generate `mov_X` + `totals_X` + 3 triggers + 3 views via
+   templated SQL emitter in `accumulationRegisterQuery::CreateAndUpdateTableDB`.
+3. Read-path migration: `RegisterSet::GetBalance` etc. read
+   through `vw_balance_X`.
+4. Generalise to other register kinds + `updateMetaTable` flow
+   (drop trigger / drop totals / rebuild / regenerate).
+5. Per-driver dialect generator (PSQL for FB, PL/pgSQL for PG, etc).
+
+The plain-VIEW alternative (no totals table, live aggregation only)
+was discussed and rejected for production scale: at 10K readers on
+a multi-million-movements register, live aggregation costs ~20–80
+CPU-cores sustained. Trigger-maintained totals is ~1000× cheaper
+on read at the cost of ~5–15% per-write trigger overhead.
 
 ## ibNumber lazy-grow exact decimal + ttmath removal — landed 2026-04-29
 

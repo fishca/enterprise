@@ -673,24 +673,39 @@ void ibDebuggerServer::ibDebuggerServerConnection::EntryClient()
 				static const unsigned int kMaxDebugPacket = 16u * 1024u * 1024u; // 16 MiB
 				if (length > kMaxDebugPacket)
 					break;
-				if (m_socket && m_socket->WaitForRead(0, waitDebuggerTimeout)) {
-					wxMemoryBuffer bufferData(length);
-					m_socket->ReadMsg(bufferData.GetData(), length);
-					if (m_socket->LastCount() != length)
-						break;
-					if (length > 0) {
+				if (m_socket == nullptr)
+					break;
+				// No second WaitForRead before reading the payload —
+				// the socket was created with wxSOCKET_BLOCK |
+				// wxSOCKET_WAITALL (see m_socketServer construction
+				// above; flags propagate to accepted sockets), so
+				// ReadMsg blocks until every requested byte is
+				// available. The previous WaitForRead(0, 50ms) gate
+				// could time out when the payload was delayed by
+				// even a few tens of ms (network jitter, contention
+				// from multi-tab debug traffic, designer scheduler
+				// hiccups). When that happened the length had already
+				// been consumed but the payload was skipped, so the
+				// next outer iteration read the payload's leading
+				// bytes as a fresh length header — almost always
+				// huge, tripping the kMaxDebugPacket guard, breaking
+				// out of the loop and detaching the debugger.
+				wxMemoryBuffer bufferData(length);
+				m_socket->ReadMsg(bufferData.GetData(), length);
+				if (m_socket->LastCount() != length)
+					break;
+				if (length > 0) {
 #ifdef __WXMSW__
-						ibValueOLE::GetInterfaceAndReleaseStream();
+					ibValueOLE::GetInterfaceAndReleaseStream();
 #endif
 #if _USE_NET_COMPRESSOR == 1
-						BYTE* dest = nullptr; unsigned int dest_sz = 0;
-						_decompressLZ(&dest, &dest_sz, bufferData.GetData(), length);
-						RecvCommand(dest, dest_sz); free(dest);
+					BYTE* dest = nullptr; unsigned int dest_sz = 0;
+					_decompressLZ(&dest, &dest_sz, bufferData.GetData(), length);
+					RecvCommand(dest, dest_sz); free(dest);
 #else
-						RecvCommand(bufferData.GetData(), length);
+					RecvCommand(bufferData.GetData(), length);
 #endif
-						length = 0;
-					}
+					length = 0;
 				}
 			}
 		}
@@ -1094,6 +1109,13 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 
 void ibDebuggerServer::ibDebuggerServerConnection::SendCommand(void* pointer, unsigned int length)
 {
+	// Serialise the two-step WriteMsg pair — multiple web sessions can
+	// emit on the wire concurrently (e.g. parallel breakpoint hits or
+	// LeaveLoop emissions when several tabs are F5'd at once). Without
+	// the lock, header bytes from one sender mix with payload bytes
+	// from another and the designer parser drops the connection on the
+	// next garbled frame.
+	std::lock_guard<std::mutex> lk(m_sendMutex);
 #if _USE_NET_COMPRESSOR == 1
 	BYTE* dest = nullptr; unsigned int dest_sz = 0;
 	_compressLZ(&dest, &dest_sz, pointer, length);

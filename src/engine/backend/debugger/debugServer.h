@@ -31,10 +31,20 @@ class BACKEND_API ibDebuggerServer {
 				return false;
 			if (!m_socket->IsOk())
 				return false;
-			wxSocketError error =
-				m_socket->LastError();
-			return error == wxSOCKET_NOERROR ||
-				error == wxSOCKET_WOULDBLOCK;
+			// Don't include LastError() in the liveness check.
+			// wxSocketBase keeps LastError as per-socket state (NOT
+			// per-thread), so a transient WOULDBLOCK / TIMEDOUT /
+			// IOERR left by any operation on any thread (e.g. a
+			// session worker's SendCommand racing the connection
+			// thread's WaitForRead) leaks into the connection
+			// thread's next IsConnected() check and falsely declares
+			// the connection dead. Real disconnects flip IsConnected
+			// or IsOk to false above; ReadMsg / WriteMsg operations
+			// guard their own short-read / short-write cases via
+			// LastCount checks. This brittle filter caused the
+			// "designer detaches between F5s" reports under multi-tab
+			// breakpoint workloads.
+			return true;
 		}
 
 		void WaitConnection();
@@ -86,6 +96,16 @@ class BACKEND_API ibDebuggerServer {
 
 		wxSocketServer* m_socketServer;
 		wxSocketBase* m_socket;
+
+		// Serialises wire writes. SendCommand does two consecutive
+		// WriteMsg calls (length header + payload); without a mutex,
+		// concurrent senders interleave their bytes and the designer
+		// sees a corrupted frame and drops the connection. Hot path
+		// when several web sessions hit breakpoints in parallel and
+		// each emits LeaveLoop on F5 destroy. Plain mutex — a write
+		// to the socket is already syscall-bound, lock contention is
+		// dwarfed by the I/O cost.
+		std::mutex m_sendMutex;
 
 		friend class ibDebuggerServer;
 	};

@@ -181,6 +181,33 @@ void ibWebSession::OnExit()
 	if (!m_initialized)
 		return;
 
+	// If the script worker is parked at a breakpoint, unpark it before
+	// touching the runtime — ExitRuntimeForSession below resets the
+	// per-session ProcUnit, and m_app->OnExit's RunOnWorker(...) must
+	// dispatch onto an idle worker. A worker stuck inside DoDebugLoop's
+	// CV wait would block both. WakeDebugLoop sets m_forceExit on the
+	// session and pops the debug-park flag, so the parked thread
+	// unwinds out of DoDebugLoop, the next opcode-loop iteration in
+	// ibProcUnit::Execute throws on the cancellation flag, and the
+	// originally-Submit'ed task returns with an exception. Designer
+	// side gets a clean LeaveLoop on the wire — the unpark path inside
+	// DoDebugLoop sends it before returning, just as a designer-issued
+	// Continue would.
+	if (m_session)
+		m_session->WakeDebugLoop();
+
+	// Drain the worker before tearing down the runtime. Submit a no-op
+	// and wait — the per-session worker queue is FIFO, so by the time
+	// our no-op runs, the cancelled breakpoint task has unwound and
+	// every prior task has drained. Without this, ExitRuntimeForSession
+	// would race the unwinding script over ProcUnit destruction.
+	// Swallow any exception (failed task, race with Close) so OnExit
+	// keeps making progress; the rest of teardown is idempotent.
+	if (m_session) {
+		try { m_session->Submit([] {}).get(); }
+		catch (...) { /* drain best-effort */ }
+	}
+
 	// Symmetric teardown — drop this session's ProcUnit entries from the
 	// shared moduleManager before destroying the app + closing the session.
 	// ibSessionScope pinned so ExitRuntimeForSession's bookkeeping is

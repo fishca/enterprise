@@ -654,21 +654,33 @@ void ibDebuggerClient::ibDebuggerClientConnection::EntryClient()
 						static const unsigned int kMaxDebugPacket = 16u * 1024u * 1024u;
 						if (length > kMaxDebugPacket)
 							break;
-						if (m_socketClient != nullptr && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
-							wxMemoryBuffer bufferData(length);
-							m_socketClient->ReadMsg(bufferData.GetData(), length);
-							if (m_socketClient->LastCount() != length)
-								break;
-							if (m_connectionType == ConnectionType::ConnectionType_Debugger && length > 0) {
+						if (m_socketClient == nullptr)
+							break;
+						// No second WaitForRead before the payload —
+						// the socket was created with wxSOCKET_BLOCK |
+						// wxSOCKET_WAITALL so ReadMsg blocks until
+						// every requested byte arrives. The previous
+						// WaitForRead(0, 50ms) gate timed out under
+						// network jitter / multi-tab debug traffic
+						// and skipped the payload while the length
+						// had already been consumed; the next outer
+						// iteration read the payload's first bytes
+						// as a fresh length header (huge value),
+						// tripped the kMaxDebugPacket guard, and
+						// detached. Symmetric fix to the server side.
+						wxMemoryBuffer bufferData(length);
+						m_socketClient->ReadMsg(bufferData.GetData(), length);
+						if (m_socketClient->LastCount() != length)
+							break;
+						if (m_connectionType == ConnectionType::ConnectionType_Debugger && length > 0) {
 #if _USE_NET_COMPRESSOR == 1
-								BYTE* dest = nullptr; unsigned int dest_sz = 0;
-								_decompressLZ(&dest, &dest_sz, bufferData.GetData(), length);
-								RecvCommand(dest, dest_sz); free(dest);
+							BYTE* dest = nullptr; unsigned int dest_sz = 0;
+							_decompressLZ(&dest, &dest_sz, bufferData.GetData(), length);
+							RecvCommand(dest, dest_sz); free(dest);
 #else
-								RecvCommand(bufferData.GetData(), length);
+							RecvCommand(bufferData.GetData(), length);
 #endif
-								length = 0;
-							}
+							length = 0;
 						}
 					}
 

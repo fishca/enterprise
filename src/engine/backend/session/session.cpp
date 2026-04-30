@@ -349,6 +349,30 @@ ibProcUnitState* ibSession::GetPUState()
 	return nullptr;
 }
 
+void ibSession::WakeDebugLoop()
+{
+	// Mark the session for cancellation and pop any parked debug loop.
+	//
+	// Step 1 — set m_forceExit so ibProcUnit::Execute's opcode loop
+	// unwinds on the next iteration (after returning from DoDebugLoop)
+	// instead of resuming user script. We bypass RequestForceExit
+	// because its OnForceExit side effect (web → wfrontendCallProcessExitHook
+	// when wes was started in --debug mode) would kill the entire
+	// process; here we want to cancel only THIS session's interpreter.
+	// Direct atomic store; deduplication against a later RequestForceExit
+	// is fine since the destroy path doesn't follow up with one.
+	m_forceExit.store(true, std::memory_order_release);
+	// Step 2 — flip the debug-park flag and notify the per-session CV
+	// so a script worker parked in ibDebuggerServer::DoDebugLoop
+	// returns immediately. Mirrors the per-session wake performed by
+	// ibDebuggerServer::WakeDebugSession on designer disconnect — same
+	// graceful LeaveLoop is sent on the wire when the loop unwinds.
+	if (m_debug == nullptr) return;
+	m_debug->m_debugLoop = false;
+	std::lock_guard<std::mutex> lk(m_debug->m_mutex);
+	m_debug->m_cv.notify_all();
+}
+
 void ibSession::RequestForceExit()
 {
 	// Set first, then dispatch. The interpreter check observes the

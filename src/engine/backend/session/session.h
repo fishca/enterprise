@@ -673,6 +673,15 @@ public:
 	bool IsDebug() const     { return m_debug != nullptr; }
 	ibDebugSession* Debug()  { return m_debug.get(); }
 
+	// Drop the debug-park flag and notify the per-session CV so any
+	// script worker stopped at a breakpoint inside DoDebugLoop wakes
+	// up immediately and unwinds. Used by session-destroy paths (web
+	// F5 → ibWebSession::OnExit → worker join) so the parked thread
+	// doesn't hold the worker indefinitely while the destroy waits to
+	// release the registry slot. No-op if the session isn't being
+	// debugged.
+	void WakeDebugLoop();
+
 private:
 	// nullptr unless the session was created with debug attached.
 	std::unique_ptr<ibDebugSession> m_debug;

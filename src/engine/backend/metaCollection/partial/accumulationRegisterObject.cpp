@@ -157,7 +157,7 @@ void ibValueRecordSetObjectAccumulationRegister::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("Selected"), wxT("Selected()"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
-	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, prop::eThisObject, wxNOT_FOUND);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, true, prop::eThisObject, wxNOT_FOUND);
 	m_methodHelper->AppendProp(wxT("Filter"), true, false, prop::eFilter, wxNOT_FOUND);
 }
 

@@ -151,27 +151,7 @@ bool ibValueModuleManager::RuntimeUnregisterCommonModule(ibValueMetaObjectCommon
 void ibValueModuleManager::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-			for (auto exportVariable : byteCode->m_listExportVar) {
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 
 	m_objectManager->PrepareNames();
 	m_metaManager->PrepareNames();

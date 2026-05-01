@@ -17,11 +17,23 @@ public:
 	ibCompileModule(const ibValueMetaObjectModuleBase* moduleObject, bool onlyFunction = false);
 	virtual ~ibCompileModule() {}
 
-	virtual ibCompileModule* GetParent() const { return dynamic_cast<ibCompileModule*>(m_parent); }
+	// Parent compile-module — orchestration storage for the compile
+	// cascade (global module recurse, designer recompile, re-set
+	// bytecode parent on Reset). Read via GetParent(); m_parentModule
+	// is private, set only via SetParent.
+	ibCompileModule* GetParent() const { return m_parentModule; }
+	void SetParent(ibCompileCode* parent) /* shadow base — also stores the typed parent */ {
+		ibCompileCode::SetParent(parent);
+		m_parentModule = dynamic_cast<ibCompileModule*>(parent);
+	}
+
 	virtual const ibValueMetaObjectModuleBase* GetModuleObject() const { return m_moduleObject; }
 
 protected:
 	const ibValueMetaObjectModuleBase* m_moduleObject;
+
+private:
+	ibCompileModule* m_parentModule = nullptr;
 };
 
 class BACKEND_API ibCompileCommonModule : public ibCompileModule {

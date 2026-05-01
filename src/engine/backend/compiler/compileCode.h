@@ -56,12 +56,30 @@ public:
 	void RemoveVariable(const wxString& strName);
 
 	void SetParent(ibCompileCode* parent); // setting the parent module and prohibited max. ancestor
-	virtual ibCompileCode* GetParent() const { return m_parent; }
+
+	// Base ibCompileCode has no compile-side parent — only the
+	// ibCompileModule subclass holds a typed `m_parentModule` for
+	// compile-orchestration cascade (parent-recompile in Designer
+	// mode, parent bytecode wire-up on Reset). Subclass call sites
+	// reach `m_parentModule` directly; no virtual on base needed.
+	//
+	// This shape replaces the bytecode → ibCompileCode back-pointer
+	// (`m_compileModule`): parent chain lives entirely on the
+	// ibCompileModule side, bytecode is self-contained — foundation
+	// for AOT cache + production-without-source.
 
 	virtual bool Recompile(); // recompiling a module from a meta object
 
 	virtual bool Compile(); // compiling a module from a meta object
 	virtual bool Compile(const wxString& strCode); // Compiling module
+
+	// Eval host function (the function frame eval expression is opening
+	// into). Non-eval compile modules return nullptr; ibCompileEval
+	// (defined in procUnit.cpp) overrides to return the host fn pointer
+	// captured at ctor time. compileContext.cpp's bc walk reads this to
+	// expose host's params + locals to eval expressions (e.g. watch on
+	// a function parameter `x`).
+	virtual const ibByteCode::ibByteFunction* GetEvalHostFunction() const { return nullptr; }
 
 public:
 
@@ -70,14 +88,36 @@ public:
 
 	ibCompileContext* GetContext() const { return m_rootContext; }
 
+	// Wire one bytecode dependency on this module's bytecode. Forward
+	// to ibByteCode::AddDependency, which atomically pushes pointer
+	// + id + version snapshot. Preferred entry point at compile-time
+	// call sites (CompileExpression eval setup, future common-module
+	// import wiring) — keeps callers from reaching into m_cByteCode
+	// directly.
+	void AddDependency(ibByteCode* dep) {
+		m_cByteCode.AddDependency(dep);
+	}
+
+	// Build a runtime binding session from this compile-code's
+	// extern / context value maps. Forwards to bytecode's CreateBinder
+	// for the empty session, then fills via SetVar() — name → live
+	// ibValue* — so the result is ready for procUnit->Execute().
+	// AOT path bypasses this entirely (manager fills binder directly
+	// from its own registry, no compile-context staging).
+	ibByteBinder CreateBinder(bool delta = true) {
+		ibByteBinder br = m_cByteCode.CreateBinder(delta);
+		for (auto& kv : m_listExternValue)  br.SetVar(kv.first, kv.second);
+		for (auto& kv : m_listContextValue) br.SetVar(kv.first, kv.second);
+		return br;
+	}
+
+
 public:
 
 	ibParamUnit GetExpression(ibCompileContext* context, int priority = 0);
 
 	//attributes:
-	bool m_onlyFunction; // true - only functions and export functions 
-
-	ibCompileCode* m_parent; // parent module (i.e., in relation to the current one, it acts as a global module)
+	bool m_onlyFunction; // true - only functions and export functions
 
 	// current context of variables, functions and labels
 	ibByteCode		m_cByteCode;        // output array of bytecodes for execution by the virtual machine
@@ -85,8 +125,15 @@ public:
 	ibCompileContext* m_rootContext; // root context 
 
 	int				m_numCurrentCompile;		// current position in the token array
-	bool			m_bExpressionOnly;		// expression evaluation only(no new function assignments)
 	bool			m_changedCode;
+
+	// Compile-mode predicate. Default false (regular module compile).
+	// ibCompileEval (procUnit.cpp) overrides to return true so the
+	// "no new function declarations / no GOTO" parser gates fire for
+	// eval / watch expressions. Replaces the legacy m_bExpressionOnly
+	// field — kept off the base class since it's true for exactly one
+	// derived class.
+	virtual bool IsExpressionOnly() const { return false; }
 
 	// matching external variables
 	std::map<wxString, ibValue*> m_listExternValue;

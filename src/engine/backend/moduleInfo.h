@@ -80,6 +80,17 @@ public:
 	// Low-level execute — unconditional (no Designer guard). Prefer
 	// Run() in subclass code; Execute() remains for compatibility and
 	// for paths that re-Execute on already-compiled state.
+	//
+	// Two forms:
+	//   - Execute(binder): caller supplies a fully-populated ibByteBinder
+	//     (descriptor's runtime values for ThisObject / Reference / etc.
+	//     filled via SetVar). Preferred — descriptors fill bindings at
+	//     execution time, not at compile-time staging.
+	//   - Execute(delta): legacy fallback — builds binder from compile-
+	//     side maps (m_listExternValue / m_listContextValue) populated
+	//     by AddContextVariable at module init. Kept for paths that
+	//     haven't migrated to per-execute binding yet.
+	void Execute(ibByteBinder& br);
 	void Execute(bool delta = false);
 
 	ibRuntimeModuleDataObject();
@@ -148,11 +159,50 @@ public:
 	virtual ibRuntimeRoot* GetRoot() const;
 
 protected:
+	// Populate a value's method-helper from this descriptor's bytecode —
+	// every kind=Export entry in m_listFunc / m_listVar is appended as
+	// a method / prop alias eProcUnit (the canonical alias all
+	// descriptor subclasses use for their script-side surface). Replaces
+	// the duplicated pattern that lived in 10 PrepareNames callsites
+	// (catalog/document/constant/.../form/moduleManager*).
+	//
+	// No-op when there's no live ProcUnit or no bytecode (Designer mode,
+	// not-yet-compiled descriptor). Helper is read through GetProcUnit()
+	// to pin the shared_ptr alive for the duration — same pattern as
+	// ExecuteProc / ExecuteFunc above.
+	void ExportNamesToHelper(ibValue::ibValueMethodHelper* helper, long alias) const {
+		if (helper == nullptr) return;
+		const auto pu = GetProcUnit();
+		if (!pu) return;
+		const ibByteCode* bc = pu->GetByteCode();
+		if (bc == nullptr) return;
+		for (const auto& fn : bc->m_listFunc) {
+			if (!fn.IsExport()) continue;
+			helper->AppendMethod(fn.m_strRealName,
+				bc->GetNParams(fn),
+				bc->HasRetVal(fn),
+				(long)fn,
+				alias);
+		}
+		for (const auto& v : bc->m_listVar) {
+			if (!v.IsExport()) continue;
+			helper->AppendProp(v.m_strRealName, v, alias);
+		}
+	}
+
 	ibCompileModule* m_compileModule;
 	// Descriptor owns its runtime slot. shared_ptr so a long-running
 	// CallAsProc can pin the ProcUnit alive even if concurrent teardown
 	// drops the descriptor (project_refresh_execute_crash.md).
 	std::shared_ptr<ibProcUnit> m_procUnit;
+
+	// Per-descriptor binding session — wraps bytecode's manifest +
+	// slot table. Created lazily after compile (manifest is finalized
+	// then). Subclasses populate via SetVar() at any point before
+	// Execute — typical pattern: BindContextVariable() forwards to
+	// m_binder->SetVar() so descriptor-instance values (ThisObject,
+	// Reference) are wired without compile-time staging.
+	std::unique_ptr<ibByteBinder> m_binder;
 
 	// Parent descriptor — set by creation paths (AddCommonModule,
 	// CreateNewForm, AddObject) so scope chain walks up correctly.

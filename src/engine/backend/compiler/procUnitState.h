@@ -24,9 +24,9 @@ struct ibByteCode;
 // definition is published here so the worker boundary save/restore can
 // move the value between session and TLS.
 struct ibErrorPlace {
-	long        m_errorLine    = wxNOT_FOUND;
-	ibByteCode* m_byteCode     = nullptr;
-	ibByteCode* m_skipByteCode = nullptr;
+	long              m_errorLine    = wxNOT_FOUND;
+	const ibByteCode* m_byteCode     = nullptr;
+	const ibByteCode* m_skipByteCode = nullptr;
 
 	bool IsEmpty() const { return m_errorLine == wxNOT_FOUND; }
 	void Reset() {
@@ -89,7 +89,7 @@ struct ibProcUnitState {
 	// Convenience: bytecode of the currently-executing frame (top of
 	// the runContext stack). Out-of-line because ibRunContext::GetByteCode
 	// needs the full type and the forward decl above isn't enough.
-	ibByteCode*   GetCurrentByteCode() const;
+	const ibByteCode* GetCurrentByteCode() const;
 
 	// Compound: reset error site + remember the byteCode the throw
 	// originated in (for the cross-module rethrow check in Execute's

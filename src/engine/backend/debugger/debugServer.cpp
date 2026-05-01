@@ -295,14 +295,35 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 	m_runContext = nullptr;
 }
 
+// Whether an opcode is a "user-stepping" instruction in the debugger
+// sense — i.e. the debugger should consider it when deciding to pause
+// on step-into / step-over / breakpoint hits. Excluded categories:
+//   - Frame-marker opcodes (OPER_FUNC / OPER_END) — synthetic boundaries.
+//   - Param-binding opcodes (OPER_SET / OPER_SETCONST / OPER_SET_TYPE)
+//     emitted at function entry / call sites — not user-visible lines.
+//   - Try/EndTry markers — control-flow brackets.
+//   - Tape declarators (OPER_FUNC_PARAM / FUNC_LOCAL / CTX_BEGIN / CTX_END)
+//     — pure metadata, NOP at runtime, no source position to stop on.
+static bool IsSteppableOpcode(short oper)
+{
+	switch (oper) {
+	case OPER_FUNC:       case OPER_END:
+	case OPER_SET:        case OPER_SETCONST:    case OPER_SET_TYPE:
+	case OPER_TRY:        case OPER_ENDTRY:
+	case OPER_FUNC_PARAM: case OPER_FUNC_LOCAL:
+	case OPER_CTX_BEGIN:  case OPER_CTX_END:
+		return false;
+	default:
+		return true;
+	}
+}
+
 void ibDebuggerServer::EnterDebugger(ibRunContext* runContext, const ibByteUnit& byteCode, long& numPrevLine)
 {
 	if (!m_bUseDebug)
 		return;
 
-	if (byteCode.m_numOper != OPER_FUNC && byteCode.m_numOper != OPER_END
-		&& byteCode.m_numOper != OPER_SET && byteCode.m_numOper != OPER_SETCONST && byteCode.m_numOper != OPER_SET_TYPE
-		&& byteCode.m_numOper != OPER_TRY && byteCode.m_numOper != OPER_ENDTRY) {
+	if (IsSteppableOpcode(byteCode.m_numOper)) {
 
 		if (byteCode.m_numLine != numPrevLine) {
 
@@ -410,25 +431,70 @@ void ibDebuggerServer::SendLocalVariables()
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_SetLocalVariables);
 
-	ibCompileContext* compileContext = m_runContext->m_compileContext;
-	wxASSERT(compileContext);
-	commandChannel.w_u32(compileContext->m_listVariable.size());
+	// Pick the symbol table that matches the running frame:
+	//   - inside a function (m_currentFunction != null) → that function's
+	//     m_listLocals (slot indices index the function's frame).
+	//   - module body (m_currentFunction == null) → bytecode-level m_listVar.
+	// Mixing them would index out-of-bounds (module slots > function
+	// frame size, or vice-versa) — exactly the AV trap we hit before.
+	if (m_runContext == nullptr) {
+		commandChannel.w_u32(0);
+		SendCommand(commandChannel.pointer(), commandChannel.size());
+		return;
+	}
 
-	for (const auto& variable : compileContext->m_listVariable) {
+	const long frameVarCount = m_runContext->GetLocalCount();
 
-		const auto locRefVariable = variable.second;
-		const auto locRefValue = m_runContext->m_pRefLocVars[locRefVariable->m_numVariable];
+	// Show only user-declared frame slots (Local + Export). Excluded:
+	//   - ContextProp: m_slotIndex is a prop-index in the parent's
+	//     helper, not a frame slot; would mis-render ambient data.
+	//   - Context / External: top-level bindings (Manager / ThisForm /
+	//     externs) live in a frame slot but they're ambient symbols,
+	//     not user locals; keep them out of the locals window.
+	auto isLocalsViewable = [](const ibByteCode::ibByteCodeVarInfo& info) {
+		return info.IsUserLocal();
+	};
 
-		//send temp var 
-		commandChannel.w_u8(locRefVariable->m_bTempVar);
+	auto emitVar = [&](const ibByteCode::ibByteCodeVarInfo& info, const wxString& renderedName) {
+		// Defensive bound check — don't deref past the current frame.
+		// Should never fire for well-formed bytecode but if compile
+		// stamping ever drifts we send a placeholder rather than crash.
+		const bool inRange = info.m_slotIndex >= 0 && info.m_slotIndex < frameVarCount;
+		ibValue* locRefValue = inRange
+			? m_runContext->m_pRefLocVars[info.m_slotIndex]
+			: nullptr;
+		commandChannel.w_stringZ(renderedName);
+		commandChannel.w_stringZ(locRefValue ? locRefValue->GetString()    : wxString());
+		commandChannel.w_stringZ(locRefValue ? locRefValue->GetClassName() : wxString());
+		commandChannel.w_u32(locRefValue ? locRefValue->GetNProps() : 0);
+	};
 
-		//send attribute body
-		commandChannel.w_stringZ(locRefVariable->m_strRealName);
-		commandChannel.w_stringZ(locRefValue->GetString());
-		commandChannel.w_stringZ(locRefValue->GetClassName());
+	// Pick the symbol table that matches the running frame:
+	//   - inside a function (m_currentFunction != null) → that function's
+	//     m_listLocals (slot indices relative to the function frame).
+	//   - module body (m_currentFunction == null) → bytecode-level
+	//     m_listVar (slot indices relative to the module frame).
+	// Both are vector<ibByteCodeVarInfo> after the unification — same
+	// iteration shape, single emit loop.
+	const std::vector<ibByteCode::ibByteCodeVarInfo>* table = nullptr;
+	if (m_runContext->m_currentFunction != nullptr)
+		table = &m_runContext->m_currentFunction->m_listLocals;
+	else if (const ibByteCode* bc = m_runContext->GetByteCode())
+		table = &bc->m_listVar;
 
-		//send attribute count 
-		commandChannel.w_u32(locRefValue->GetNProps());
+	if (table == nullptr) {
+		commandChannel.w_u32(0);
+		SendCommand(commandChannel.pointer(), commandChannel.size());
+		return;
+	}
+
+	uint32_t emitCount = 0;
+	for (const auto& v : *table)
+		if (isLocalsViewable(v)) ++emitCount;
+	commandChannel.w_u32(emitCount);
+	for (const auto& v : *table) {
+		if (!isLocalsViewable(v)) continue;
+		emitVar(v, v.m_strRealName);
 	}
 
 	SendCommand(commandChannel.pointer(), commandChannel.size());
@@ -447,41 +513,57 @@ void ibDebuggerServer::SendStack()
 	for (unsigned int i = frameCount; i > 0; i--) { // walk call stack top-down
 
 		ibRunContext* runContext = puState->GetRunContext(i - 1);
-		ibByteCode* byteCode = runContext->GetByteCode();
-		wxASSERT(runContext && byteCode);
-		ibCompileContext* compileContext = runContext->m_compileContext;
-		wxASSERT(compileContext);
-		ibCompileCode* compileCode = compileContext->m_compileModule;
-		wxASSERT(compileCode);
-		if (compileCode->m_bExpressionOnly)
+		const const ibByteCode* byteCode = runContext ? runContext->GetByteCode() : nullptr;
+		if (runContext == nullptr || byteCode == nullptr)
 			continue;
-		if (byteCode != nullptr) {
-			const long lCurLine = runContext->m_lCurLine;
-			if (lCurLine >= 0 && lCurLine <= (long)byteCode->m_listCode.size()) {
-				wxString strFullName = byteCode->m_listCode[lCurLine].m_strModuleName;
-				strFullName += wxT(".");
-				if (compileContext->m_functionContext) {
-					strFullName += compileContext->m_functionContext->m_strRealName;
-					strFullName += wxT("(");
-					for (unsigned int j = 0; j < compileContext->m_functionContext->m_listParam.size(); j++) {
-						const wxString& valStr = runContext->m_pRefLocVars[compileContext->m_listVariable[stringUtils::MakeUpper(compileContext->m_functionContext->m_listParam[j].m_strName)]->m_numVariable]->GetString();
-						if (j != compileContext->m_functionContext->m_listParam.size() - 1) {
-							strFullName += compileContext->m_functionContext->m_listParam[j].m_strName + wxT(" = ") + valStr + wxT(", ");
-						}
-						else {
-							strFullName += compileContext->m_functionContext->m_listParam[j].m_strName + wxT(" = ") + valStr;
-						}
-					}
-					strFullName += wxT(")");
+
+		// Skip eval/expression-only frames — bytecode-side flag, no
+		// compile-context dependency.
+		if (byteCode->m_bExpressionOnly)
+			continue;
+
+		const long lCurLine = runContext->m_lCurLine;
+		if (lCurLine < 0 || lCurLine > (long)byteCode->m_listCode.size())
+			continue;
+
+		wxString strFullName = byteCode->m_listCode[lCurLine].m_strModuleName;
+		strFullName += wxT(".");
+
+		// Function name + parameters from bytecode-side m_currentFunction.
+		// nullptr = module-body (initializer); otherwise render fn signature
+		// using m_strRealName + m_listParamRealName + m_listParam.
+		const ibByteCode::ibByteFunction* fn = runContext->m_currentFunction;
+		if (fn != nullptr) {
+			strFullName += fn->m_strRealName.IsEmpty()
+				? wxString(wxT("<fn>"))
+				: fn->m_strRealName;
+			strFullName += wxT("(");
+			const size_t paramCount = fn->m_listParam.size();
+			const long frameVarCount = runContext->GetLocalCount();
+			for (size_t j = 0; j < paramCount; j++) {
+				const wxString& paramName = (j < fn->m_listParamRealName.size())
+					? fn->m_listParamRealName[j]
+					: wxString::Format(wxT("p%zu"), j);
+				// Params occupy slots [0, paramCount) — defended via
+				// frameVarCount in case a half-initialised frame races
+				// with debugger probe.
+				wxString valStr;
+				if ((long)j < frameVarCount) {
+					ibValue* slot = runContext->m_pRefLocVars[j];
+					if (slot != nullptr) valStr = slot->GetString();
 				}
-				else {
-					strFullName += wxT("<initializer>");
-				}
-				commandChannel.w_stringZ(byteCode->m_listCode[lCurLine].m_strDocPath);
-				commandChannel.w_stringZ(strFullName);
-				commandChannel.w_u32(byteCode->m_listCode[lCurLine].m_numLine + 1);
+				strFullName += paramName + wxT(" = ") + valStr;
+				if (j + 1 < paramCount)
+					strFullName += wxT(", ");
 			}
+			strFullName += wxT(")");
 		}
+		else {
+			strFullName += wxT("<initializer>");
+		}
+		commandChannel.w_stringZ(byteCode->m_listCode[lCurLine].m_strDocPath);
+		commandChannel.w_stringZ(strFullName);
+		commandChannel.w_u32(byteCode->m_listCode[lCurLine].m_numLine + 1);
 	}
 
 	SendCommand(commandChannel.pointer(), commandChannel.size());
@@ -879,14 +961,24 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 				commandChannel.w_u16(CommandId_ExpandExpression);
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
 				commandChannel.w_u64(id);
-#else 
+#else
 				commandChannel.w_u32(id);
-#endif 
-				//count of attribute  
-				commandChannel.w_u32(vResult.GetNProps());
+#endif
+				// Filter out scope-local props (ThisObject / ThisForm /
+				// similar). They're bc-internal — must not surface in
+				// the watch's expanded view of an object the user
+				// reached from outside.
+				const long nPropsAll = vResult.GetNProps();
+				long nPropsVisible = 0;
+				for (long i = 0; i < nPropsAll; i++) {
+					if (!vResult.IsPropScoped(i)) ++nPropsVisible;
+				}
+				//count of attribute
+				commandChannel.w_u32((unsigned int)nPropsVisible);
 
-				//send varables 
+				//send varables
 				for (long i = 0; i < vResult.GetNProps(); i++) {
+					if (vResult.IsPropScoped(i)) continue;
 					const wxString& strPropName = vResult.GetPropName(i); const long lPropNum = vResult.FindProp(strPropName);
 					if (lPropNum != wxNOT_FOUND) {
 

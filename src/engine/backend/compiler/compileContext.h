@@ -3,6 +3,8 @@
 
 #include "backend/compiler/byteCode.h"
 
+class BACKEND_API ibCompileCode;
+
 //function properties:
 enum {
 	RETURN_NONE = 0,//no return (module code)
@@ -32,17 +34,69 @@ struct ibCompileContext {
 	//variable definition
 	struct ibVariable
 	{
-		ibVariable() : m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
-		ibVariable(const wxString& strVariableName) : m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0), m_strName(strVariableName) {}
+		ibVariable() : m_bExport(false), m_bContext(false), m_bExternal(false), m_bTempVar(false), m_bScoped(false), m_numVariable(0), m_clsid(0) {}
+		ibVariable(const wxString& strVariableName) : m_bExport(false), m_bContext(false), m_bExternal(false), m_bTempVar(false), m_bScoped(false), m_numVariable(0), m_clsid(0), m_strName(strVariableName) {}
+
+		// Construct from bytecode-side info — used by FindVariable's
+		// bytecode fallback so eval scopes (no parent compile-context
+		// chain) still produce a transient ibVariable for the caller's
+		// emission path.
+		ibVariable(const wxString& strVariableName, const ibByteCode::ibByteCodeVarInfo& info)
+			// m_bExport on compile-side = "cross-bc visible". For
+			// synth-from-bc entries that's any non-private kind:
+			// Export / External / Context / ContextProp. Plain
+			// kind=Local entries are private — never reach this ctor
+			// (FindVariable filters them).
+			: m_bExport(!info.IsLocal()),
+			  m_bContext(info.IsContext() || info.IsContextProp()),
+			  m_bExternal(info.IsExternal()),
+			  // Temps are filtered out at bc-mirror sites — synth from
+			  // bc-info is never a temp.
+			  m_bTempVar(false),
+			  m_bScoped(info.m_bScoped),
+			  m_numVariable(info.m_slotIndex),
+			  m_clsid(info.m_clsid),
+			  m_strName(strVariableName),
+			  m_strRealName(info.m_strRealName.IsEmpty() ? strVariableName : info.m_strRealName),
+			  m_strContext(info.m_strContext)
+		{
+		}
 
 		bool m_bExport;
 		bool m_bContext;
+		// Set in PrepareModuleData Pass 1 for entries declared via
+		// AddExternalValue. Distinct from m_bContext: externs are bound
+		// by the binder but expose no helper props; contexts (self-ref)
+		// expose props/methods through PrepareNames. Drives kind=External
+		// on the bc mirror so the binder treats them as required-to-bind
+		// alongside Context entries.
+		bool m_bExternal;
 		bool m_bTempVar;
+		// Scope-local marker (e.g. ThisObject / ThisForm) — invisible
+		// to children through cross-bc resolution. Mirrored to
+		// ibByteCode::ibByteCodeVarInfo::m_bScoped at compile finalize.
+		bool m_bScoped;
 		unsigned int m_numVariable;
+		// Target class id for External / Context entries — used by the
+		// runtime pre-flight to verify the bound ibValue matches the
+		// declared type. Stamped in PrepareModuleData from the live
+		// extern / context value's GetClassType(). 0 for plain Locals
+		// (no static type).
+		ibClassID m_clsid;
 		wxString m_strName; // Variable name
 		wxString m_strType; // Value type
 		wxString m_strRealName; // Real variable name
 		wxString m_strContext; //name of the context variable
+
+		// "Is this a context-related entry?" — bare context binding
+		// (Manager / ThisForm, m_bContext=true with empty m_strContext)
+		// or a Pass-3 prop of a binding (Catalogs of Manager, m_strContext
+		// set). Used by the identifier-path emitter to decide between
+		// OPER_GET (bare binding → frame slot) and OPER_GET_A (prop on
+		// parent var) — see compileCode.cpp's isContextProp gate.
+		bool IsContextRelated() const {
+			return m_bContext || !m_strContext.IsEmpty();
+		}
 	};
 
 	//function definition
@@ -55,6 +109,15 @@ struct ibCompileContext {
 				m_puValue.m_numIndex = -1;
 			}
 
+			// Construct from bytecode-side ibByteParam + the param's
+			// real-cased name (stored separately on ibByteFunction).
+			ibParamVariable(const wxString& strParamName, const ibByteCode::ibByteParam& bp)
+				: m_bByRef(bp.m_bByRef),
+				  m_strName(strParamName),
+				  m_puValue(bp.m_defaultValue)
+			{
+			}
+
 			bool m_bByRef;
 			wxString m_strName; // Variable name
 			wxString m_strType; // Value type
@@ -65,29 +128,57 @@ struct ibCompileContext {
 			m_bExport(false),
 			m_bContext(false),
 			m_strName(strFuncName),
-			m_compileContext(compileContext),
 			m_lVarCount(0), m_nStart(0), m_nFinish(0), m_numLine(0)
 		{
-			//Set current context 
+			// Wire the back-pointer (functionContext->m_functionContext = this)
+			// so compile-time scope walks know the active function.
+			// Lifetime of the compile-context is owned by the caller
+			// (CompileFunction's local unique_ptr) — ibFunction no
+			// longer holds or deletes it.
 			if (compileContext != nullptr)
-				m_compileContext->m_functionContext = this;
+				compileContext->m_functionContext = this;
 		}
 
-		~ibFunction()
+		// Construct from bytecode-side ibByteFunction — used by
+		// FindFunction's bytecode fallback. No compile-context to
+		// wire (eval / synthesized path); back-pointer stays null.
+		ibFunction(const wxString& strFuncName, const ibByteCode::ibByteFunction& fn)
+			: m_bExport(fn.IsExport() || fn.IsContextMethod()),
+			  m_bContext(fn.IsContextMethod()),
+			  m_strRealName(fn.m_strRealName.IsEmpty() ? strFuncName : fn.m_strRealName),
+			  m_strName(strFuncName),
+			  m_strContext(fn.m_strContext),
+			  m_bCodeRet(fn.m_bCodeRet),
+			  m_lVarCount(fn.m_lVarCount),
+			  m_nStart(fn.m_lCodeLine), m_nFinish(0), m_numLine(0)
 		{
-			//Delete the subordinate context (each function has its own list of labels and local variables)
-			if (m_compileContext)
-				delete m_compileContext;
+			m_listParam.reserve(fn.m_listParam.size());
+			for (size_t i = 0; i < fn.m_listParam.size(); i++) {
+				const wxString& realName = (i < fn.m_listParamRealName.size())
+					? fn.m_listParamRealName[i]
+					: wxString();
+				m_listParam.emplace_back(realName, fn.m_listParam[i]);
+			}
 		}
+
+		~ibFunction() = default;
 
 		bool m_bExport, m_bContext;
+
+		// Mirror of bytecode-side m_bCodeRet — true for FUNCTION (returns
+		// a value), false for PROCEDURE. Settled at CompileFunction
+		// finalize. Used by PushCallFunction to gate "called as function
+		// without LHS" (only PROCEDURE allowed). Replaces the legacy
+		// m_compileContext->m_numReturn == RETURN_FUNCTION check, so the
+		// synth path in GetFunction (cross-module bytecode-resolved
+		// function) no longer needs a stub ibCompileContext just to
+		// carry the return-kind.
+		bool m_bCodeRet = false;
 
 		wxString m_strRealName; //Function name
 		wxString m_strName; //Function name in uppercase
 		wxString m_strType; //type (in English notation), if it is a typed function
 		wxString m_strContext; //name of the context variable
-
-		ibCompileContext* m_compileContext;//compilation context
 
 		unsigned int m_lVarCount;// number of local variables
 		unsigned int m_nStart;// starting position in bytecode array
@@ -100,6 +191,15 @@ struct ibCompileContext {
 		wxString m_strLongDescription;//includes the entire merged (i.e. without empty lines) comment block before the function (procedure) definition
 
 		std::vector<ibParamVariable> m_listParam;
+
+		// "Is this a context-related entry?" — context-method (bound
+		// to a binding's helper, m_bContext=true with m_strContext set)
+		// or any function with a parent context. Used by the call-path
+		// emitter to decide OPER_CALL vs OPER_CALL_M; mirrors
+		// ibVariable::IsContextRelated().
+		bool IsContextRelated() const {
+			return m_bContext || !m_strContext.IsEmpty();
+		}
 	};
 
 	//label definition

@@ -21,14 +21,15 @@ static std::array<int, 256> gs_operPriority = { 0 };
 // set code style by file extension
 static short gs_codeStyle = CODE_VBS;
 
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction ibCompileCode
 //////////////////////////////////////////////////////////////////////
 
 ibCompileCode::ibCompileCode() :
 	ibTranslateCode(),
-	m_parent(nullptr), m_rootContext(new ibCompileContext(this)),
-	m_bExpressionOnly(false), m_changedCode(false),
+	m_rootContext(new ibCompileContext(this)),
+	m_changedCode(false),
 	m_onlyFunction(false)
 {
 	InitializeCompileModule();
@@ -39,8 +40,8 @@ ibCompileCode::ibCompileCode() :
 
 ibCompileCode::ibCompileCode(const wxString& strModuleName, const wxString& strDocPath, bool onlyFunction) :
 	ibTranslateCode(strModuleName, strDocPath),
-	m_parent(nullptr), m_rootContext(new ibCompileContext(this)),
-	m_bExpressionOnly(false), m_changedCode(false),
+	m_rootContext(new ibCompileContext(this)),
+	m_changedCode(false),
 	m_onlyFunction(onlyFunction)
 {
 	InitializeCompileModule();
@@ -51,8 +52,8 @@ ibCompileCode::ibCompileCode(const wxString& strModuleName, const wxString& strD
 
 ibCompileCode::ibCompileCode(const wxString& strFileName) :
 	ibTranslateCode(strFileName),
-	m_parent(nullptr), m_rootContext(new ibCompileContext(this)),
-	m_bExpressionOnly(false), m_changedCode(false),
+	m_rootContext(new ibCompileContext(this)),
+	m_changedCode(false),
 	m_onlyFunction(false)
 {
 	InitializeCompileModule();
@@ -111,14 +112,46 @@ void ibCompileCode::Reset()
 
 void ibCompileCode::PrepareModuleData()
 {
+	// Helper — locate the freshly-added compile-context entry by name
+	// to stamp post-AddVariable flags (External / clsid / scoped).
+	auto stampOnContext = [&](const wxString& name, auto&& mutate) {
+		auto it = std::find_if(m_rootContext->m_listVariable.begin(), m_rootContext->m_listVariable.end(),
+			[&](const auto& kv) { return stringUtils::CompareString(name, kv.first); });
+		if (it != m_rootContext->m_listVariable.end() && it->second)
+			mutate(*it->second);
+	};
+
+	// Pass 1: external values — kind=External on the bc mirror. Binder
+	// fills the slot at runtime; pre-flight verifies clsid match.
 	for (auto& externValue : m_listExternValue) {
 		m_rootContext->AddVariable(externValue.first, wxEmptyString, true);
-		m_cByteCode.m_listExternValue.emplace_back(externValue.second);
+		const ibClassID clsid = externValue.second ? externValue.second->GetClassType() : ibClassID(0);
+		stampOnContext(externValue.first, [&](ibCompileContext::ibVariable& v) {
+			v.m_bExternal = true;
+			v.m_clsid     = clsid;
+		});
 	}
 
+	// Pass 2: context values — currently all self-referencing.
+	// Stamp scoped (per-instance "self" handles like ThisForm) and
+	// clsid onto the compile-context entry; the bc mirror then carries
+	// these into m_listVar with kind=Context so the binder treats them
+	// as required and resolve walks them visibility-aware.
 	for (auto& contextValue : m_listContextValue) {
 		m_rootContext->AddVariable(contextValue.first, wxEmptyString, true, true);
-		m_cByteCode.m_listExternValue.emplace_back(contextValue.second);
+		bool scoped = false;
+		ibClassID clsid = 0;
+		if (contextValue.second) {
+			contextValue.second->PrepareNames();
+			clsid = contextValue.second->GetClassType();
+			const long selfPropIdx = contextValue.second->FindProp(contextValue.first);
+			if (selfPropIdx >= 0)
+				scoped = contextValue.second->IsPropScoped(selfPropIdx);
+		}
+		stampOnContext(contextValue.first, [&](ibCompileContext::ibVariable& v) {
+			v.m_clsid = clsid;
+			if (scoped) v.m_bScoped = true;
+		});
 	}
 
 	ibCompileContext* mainContext = GetContext();
@@ -131,9 +164,28 @@ void ibCompileCode::PrepareModuleData()
 
 		// adding variables from context
 		for (unsigned int i = 0; i < contextValue->GetNProps(); i++) {
-			// determine the number and type of the variable
-			mainContext->PushVariable(
-				contextValue->GetPropName(i), pair.first, i);
+			const wxString& propName = contextValue->GetPropName(i);
+			// Skip the self-named prop (ThisForm exposes a "ThisForm"
+			// prop pointing at itself; ThisObject does the same). The
+			// binding entry from Pass 2 already owns this name as
+			// kind=Context with a real frame slot — pushing the
+			// self-prop here would overwrite that via PushVariable's
+			// insert_or_assign (Pass-2 entry lost → binder skips the
+			// slot at pre-flight → runtime reads garbage). Scoped
+			// semantics are already on the Pass-2 entry from the
+			// stampOnContext step above.
+			if (stringUtils::CompareString(propName, pair.first))
+				continue;
+			mainContext->PushVariable(propName, pair.first, i);
+			// Non-self per-instance handles (Controls / DataSource of
+			// ThisForm; RegisterRecords of ThisObject) — flag scoped
+			// from helper.
+			if (contextValue->IsPropScoped(i)) {
+				auto pushed = std::find_if(mainContext->m_listVariable.begin(), mainContext->m_listVariable.end(),
+					[&propName](const auto& kv) { return stringUtils::CompareString(propName, kv.first); });
+				if (pushed != mainContext->m_listVariable.end() && pushed->second)
+					pushed->second->m_bScoped = true;
+			}
 		}
 
 		// add methods from context
@@ -488,7 +540,7 @@ void ibCompileCode::AddVariable(const wxString& strVarName, const ibValue& vObje
 		return;
 
 	// take into account external variables during compilation
-	m_listExternValue[strVarName.Upper()] = vObject.m_typeClass == ibValueTypes::TYPE_REFFER
+	m_listExternValue[strVarName] = vObject.m_typeClass == ibValueTypes::TYPE_REFFER
 		? vObject.GetRef() : const_cast<ibValue*>(&vObject);
 
 	//set the flag for recompilation
@@ -507,7 +559,7 @@ void ibCompileCode::AddVariable(const wxString& strVarName, ibValue* pValue)
 		return;
 
 	// take into account external variables during compilation
-	m_listExternValue[strVarName.Upper()] = pValue;
+	m_listExternValue[strVarName] = pValue;
 
 	//set the flag for recompilation
 	m_changedCode = true;
@@ -525,7 +577,7 @@ void ibCompileCode::AddContextVariable(const wxString& strVarName, const ibValue
 		return;
 
 	//adding variables from context
-	m_listContextValue[strVarName.Upper()] = vObject.m_typeClass == ibValueTypes::TYPE_REFFER ? vObject.GetRef() : const_cast<ibValue*>(&vObject);
+	m_listContextValue[strVarName] = vObject.m_typeClass == ibValueTypes::TYPE_REFFER ? vObject.GetRef() : const_cast<ibValue*>(&vObject);
 
 	//set the flag for recompilation
 	m_changedCode = true;
@@ -543,7 +595,7 @@ void ibCompileCode::AddContextVariable(const wxString& strVarName, ibValue* pVal
 		return;
 
 	//adding variables from context
-	m_listContextValue[strVarName.Upper()] = pValue;
+	m_listContextValue[strVarName] = pValue;
 
 	//set the flag for recompilation
 	m_changedCode = true;
@@ -560,8 +612,8 @@ void ibCompileCode::RemoveVariable(const wxString& strVarName)
 	if (strVarName.IsEmpty())
 		return;
 
-	m_listExternValue.erase(strVarName.Upper());
-	m_listContextValue.erase(strVarName.Upper());
+	m_listExternValue.erase(strVarName);
+	m_listContextValue.erase(strVarName);
 
 	//set the flag for recompilation
 	m_changedCode = true;
@@ -719,8 +771,16 @@ bool ibCompileCode::CompileDeclaration(ibCompileContext* context)
 					ibBackendCoreException::Error(_("Recursive call of modules!"));
 				}
 			}
-			std::shared_ptr<ibCompileContext::ibVariable> currentVariable = nullptr;
-			if (pCurContext->FindVariable(strName, currentVariable)) { // found
+			// Dup-check via direct map find — going through FindVariable
+			// would also hit bytecode-fallback (parent module entries),
+			// which over-reports duplicates: declaring `Var X` should
+			// be allowed when a parent's bytecode has X but the parent's
+			// compile-context doesn't (i.e. the parent module isn't
+			// re-compiled along with this one).
+			auto existing = std::find_if(pCurContext->m_listVariable.begin(), pCurContext->m_listVariable.end(),
+				[&strName](const auto& pair) { return stringUtils::CompareString(strName, pair.first); });
+			if (existing != pCurContext->m_listVariable.end()) {
+				const auto& currentVariable = existing->second;
 				if (currentVariable->m_bExport ||
 					pCurContext->m_compileModule == this) {
 					SetError(ERROR_DEF_VARIABLE, strRealName);
@@ -758,6 +818,23 @@ bool ibCompileCode::CompileDeclaration(ibCompileContext* context)
 		// there was no variable declaration yet - add
 		ibParamUnit variable =
 			context->AddVariable(strRealName, strType, bExport);
+
+		// Tape declarator at the natural source position of the
+		// declaration. Caller-side emission keeps ibCompileContext
+		// pure (no bytecode reach from compile-context). Implicit
+		// creates from GetVariable's fallback don't get a tape
+		// declarator — m_listVar mirror at end of CompileModule
+		// covers them; AOT walker prefers tape when present, falls
+		// back to m_listVar otherwise. Skip RETURN_BLOCK contexts —
+		// block-scope @context vars are not real frame slots.
+		if (context->m_numReturn != RETURN_BLOCK) {
+			ibByteUnit declLocal;
+			AddLineInfo(declLocal);
+			declLocal.m_numOper = OPER_FUNC_LOCAL;
+			declLocal.m_param1.m_numIndex = (long)variable.m_numIndex;
+			declLocal.m_param1.m_numArray = bExport ? 1 : 0;
+			m_cByteCode.m_listCode.emplace_back(std::move(declLocal));
+		}
 
 		if (nArrayCount >= 0) { // write information about the arrays
 			ibByteUnit code;
@@ -860,14 +937,87 @@ bool ibCompileCode::CompileModule()
 		}
 	}
 
-	// get a list of variables
+	// Mirror the compile-context symbol table into the bytecode's
+	// unified m_listVar (std::vector).
+	//
+	// Skip only temps (compiler-introduced intermediates; frame size
+	// in OPER_FUNC.m_param3 covers them, no name-based access).
+	//
+	// All other entries land in m_listVar; the kind discriminator is
+	// set by ibByteCodeVarInfo's templated copy ctor:
+	//   - Pass-1 externs                 → kind=External (m_bExternal stamp)
+	//   - Pass-2 top-level context bindings (Manager, ThisForm)
+	//                                     → kind=Context
+	//   - Pass-3 context-props (Catalogs of Manager) → kind=ContextProp
+	//   - User locals / user exports     → kind=Local
+	// Readers filter by m_kind (and m_bExport for cross-bc visibility
+	// of locals). Binder iterates m_listVar filtering kind ∈
+	// {External, Context} — that's the canonical "must-bind" set.
+	//
+	// Iteration order of the source map is lexicographic by name —
+	// stable across recompiles and across runs of the same source,
+	// which is what AOT serialization needs. Frame slots
+	// (m_slotIndex) preserve declaration-order assignment from
+	// AddVariable; vector position is just iteration order.
 	for (auto it : mainContext->m_listVariable) {
-		if (it.second->m_bTempVar || it.second->m_bContext)
-			continue;
-		m_cByteCode.m_listVar[it.first] = it.second->m_numVariable;
-		if (it.second->m_bExport) {
-			m_cByteCode.m_listExportVar[it.first] = it.second->m_numVariable;
-		}
+		if (it.second->m_bTempVar) continue;
+		ibByteCode::ibByteCodeVarInfo info(*it.second);
+		// m_strRealName is the canonical name on the vector entry —
+		// the historical map key. Ctor copies from compile-side
+		// m_strRealName; if that was empty for some legacy path, fall
+		// back to the map key so lookups still match by name.
+		if (info.m_strRealName.IsEmpty())
+			info.m_strRealName = it.first;
+		m_cByteCode.m_listVar.push_back(std::move(info));
+	}
+
+	// Second pass: resolve m_parentRef for ContextProp entries.
+	// `m_strContext` carries the parent binding's name (e.g. "Manager"
+	// for a "Catalogs" prop); convert it to the parent's index in
+	// m_listVar. Linear scan — typical bc has < 100 entries, no hot
+	// path. Leaves m_parentRef = -1 if no matching parent exists.
+	// (kind=ContextProp invariant: m_strContext is non-empty by
+	// templated-ctor construction — no defensive check needed.)
+	for (auto& v : m_cByteCode.m_listVar) {
+		if (!v.IsContextProp()) continue;
+		auto pIt = std::find_if(m_cByteCode.m_listVar.begin(), m_cByteCode.m_listVar.end(),
+			[&](const auto& p) { return stringUtils::CompareString(v.m_strContext, p.m_strRealName); });
+		if (pIt != m_cByteCode.m_listVar.end())
+			v.m_parentRef = static_cast<long>(std::distance(m_cByteCode.m_listVar.begin(), pIt));
+	}
+
+	// Mirror Pass-3 context-methods (m_strContext set) into the
+	// unified m_listFunc (vector) with kind=ContextMethod (set by the
+	// templated ctor based on m_strContext non-empty). Own user-defined
+	// functions are already mirrored per-function by CompileFunction;
+	// this loop completes the table with the binding methods (e.g.
+	// GetForm of Manager). lAddress = -1 marks "no own IP" — runtime
+	// dispatches via OPER_CALL_M on the parent binding instead of
+	// OPER_CALL.
+	//
+	// "User funcs win" — skip the push if a function with the same
+	// name already exists in m_listFunc (was achieved by try_emplace
+	// when storage was a map; replicated here via find_if).
+	for (auto it : mainContext->m_listFunction) {
+		if (!it.second) continue;
+		if (it.second->m_strContext.IsEmpty()) continue;  // own user-defined func
+		const wxString& nameKey = it.first;
+		auto existing = std::find_if(m_cByteCode.m_listFunc.begin(), m_cByteCode.m_listFunc.end(),
+			[&](const auto& fn) { return stringUtils::CompareString(nameKey, fn.m_strRealName); });
+		if (existing != m_cByteCode.m_listFunc.end()) continue;
+		m_cByteCode.m_listFunc.emplace_back(/*lAddress=*/-1, *it.second);
+	}
+
+	// Second pass: resolve m_parentRef on ContextMethod entries —
+	// link to the parent Context binding in m_listVar by name. Mirror
+	// of the m_parentRef resolution for ContextProp vars (above).
+	// (kind=ContextMethod invariant: m_strContext is non-empty.)
+	for (auto& fn : m_cByteCode.m_listFunc) {
+		if (!fn.IsContextMethod()) continue;
+		auto pIt = std::find_if(m_cByteCode.m_listVar.begin(), m_cByteCode.m_listVar.end(),
+			[&](const auto& p) { return stringUtils::CompareString(fn.m_strContext, p.m_strRealName); });
+		if (pIt != m_cByteCode.m_listVar.end())
+			fn.m_parentRef = static_cast<long>(std::distance(m_cByteCode.m_listVar.begin(), pIt));
 	}
 
 	if (m_numCurrentCompile + 1 < m_listLexem.size() - 1) {
@@ -875,7 +1025,12 @@ bool ibCompileCode::CompileModule()
 		return false;
 	}
 
-	m_cByteCode.SetModule(this);
+	// Mark constants read-only — constants are immutable post-compile;
+	// runtime writes through them would corrupt the constant pool.
+	// Done once at compile finalize so Execute doesn't have to mutate
+	// bytecode (bc is a const template at runtime).
+	for (auto& c : m_cByteCode.m_listConst)
+		c.m_bReadOnly = true;
 
 	// compilation completed successfully
 	m_cByteCode.m_bCompile = true;
@@ -886,22 +1041,22 @@ bool ibCompileCode::CompileModule()
 // search for function definition in the current module and all parent ones
 bool ibCompileCode::GetFunction(const wxString& strName, std::shared_ptr<ibCompileContext::ibFunction>& function, int* pNumFunction)
 {
-	int numCanUseLocalInParent = m_rootContext->m_numFindLocalInParent - 1;
 	int numFunction = 0;
 
-	// search in the current module
+	// Search in the current module's compile-context. Cross-module
+	// resolution goes through the bytecode chain below — the legacy
+	// m_parent walk through parent compile-modules is gone in favour
+	// of the dependency-driven path: ResolveFunction recurses through
+	// m_dependencies + m_cByteCode.m_parent chain.
 	if (!GetContext()->FindFunction(strName, function)) {
-		ibCompileCode* pCurModule = m_parent;
-		while (pCurModule != nullptr) {
-			numFunction++;
-			if (pCurModule->GetContext()->FindFunction(strName, function)) { // found
-				// see if this is an export function or not
-				if (numCanUseLocalInParent > 0 || function->m_bExport)
-					break;//��
-				function = nullptr;
-			}
-			numCanUseLocalInParent--;
-			pCurModule = pCurModule->m_parent;
+		const int fullVisDepth = m_rootContext->m_numFindLocalInParent - 1;
+		if (auto found = m_cByteCode.ResolveFunction(strName, fullVisDepth)) {
+			// Synthesized ibFunction from bytecode-resolved descriptor —
+			// ibFunction(name, ibByteFunction) ctor copies all fields
+			// including m_bCodeRet (return-kind that PushCallFunction
+			// needs) and m_listParam (each via ibParamVariable ctor).
+			function = std::make_shared<ibCompileContext::ibFunction>(strName, *found.fn);
+			numFunction = found.depth;
 		}
 	}
 
@@ -925,7 +1080,7 @@ bool ibCompileCode::PushCallFunction(const std::shared_ptr<ibCallFunction>& call
 		return false;
 	}
 
-	if (!callFunction->m_numIsSet && foundedFunc->m_compileContext && foundedFunc->m_compileContext->m_numReturn != RETURN_FUNCTION) {
+	if (!callFunction->m_numIsSet && !foundedFunc->m_bCodeRet) {
 		m_numCurrentCompile = callFunction->m_numError;
 		SetError(ERROR_USE_PROCEDURE_AS_FUNCTION, foundedFunc->m_strRealName);
 		return false;
@@ -1016,18 +1171,25 @@ bool ibCompileCode::PushCallFunction(const std::shared_ptr<ibCallFunction>& call
 
 bool ibCompileCode::CompileFunction(ibCompileContext* context)
 {
+	// functionContext owns the function's compile-time scope (locals,
+	// labels). Lifetime is bounded to this CompileFunction call —
+	// after MakeFunction stamps everything we need into the bytecode,
+	// the compile-context can go away. ibFunction no longer owns it.
+	std::unique_ptr<ibCompileContext> functionContextOwner;
 	ibCompileContext* functionContext = nullptr;
 
 	// we are now at the token level, where the FUNCTION or PROCEDURE keyword is specified
 	if (IsNextKeyWord(KEY_FUNCTION)) {
 		GETKeyWord(KEY_FUNCTION);
 		// create a new context in which we will compile the function body
-		functionContext = context->CreateContext(RETURN_FUNCTION);
+		functionContextOwner.reset(context->CreateContext(RETURN_FUNCTION));
+		functionContext = functionContextOwner.get();
 	}
 	else if (IsNextKeyWord(KEY_PROCEDURE)) {
 		GETKeyWord(KEY_PROCEDURE);
 		// create a new context in which we will compile the body of the procedure
-		functionContext = context->CreateContext(RETURN_PROCEDURE);
+		functionContextOwner.reset(context->CreateContext(RETURN_PROCEDURE));
+		functionContext = functionContextOwner.get();
 	}
 	else {
 		SetError(ERROR_FUNC_DEFINE);
@@ -1056,7 +1218,12 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 
 	// get the function name
 	const wxString& strFuncRealName = GETIdentifier(true);
-	const wxString& strFuncName = stringUtils::MakeUpper(strFuncRealName);
+	// Original-cased name through both the ibFunction storage and the
+	// m_listFunction map key — lookups use stringUtils::CompareString
+	// (case-insensitive), so storage no longer needs to upper-normalize.
+	// Renderers (debugger / catalog object PrepareNames) read map keys
+	// directly and now show the user's source casing.
+	const wxString& strFuncName = strFuncRealName;
 
 	const int errorPlace = m_numCurrentCompile;
 
@@ -1142,55 +1309,51 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 
 	context->m_listFunction[strFuncName] = createdFunction;
 
-	// insert information about the function into the bytecode array:
+	// Function entry — OPER_FUNC marks the tape position. Runtime's
+	// Execute switch sets cRunContext->m_currentFunction here via
+	// FindFunctionByEntry(lCodeLine) — opcode-driven state update,
+	// no external lookup at call sites.
 	ibByteUnit code0;
 	AddLineInfo(code0);
 	code0.m_numOper = OPER_FUNC;
-#if defined(_LP64) || defined(__LP64__) || defined(__arch64__) || defined(_WIN64)
-	code0.m_param1.m_numArray = reinterpret_cast<wxLongLong_t>(functionContext);
-#else
-	code0.m_param1.m_numArray = reinterpret_cast<int>(functionContext);
-#endif
+	code0.m_param1.m_numArray = 0;
 	m_cByteCode.m_listCode.emplace_back(std::move(code0));
 
 	const long lAddress = createdFunction->m_nStart = m_cByteCode.m_listCode.size() - 1;
 
-	m_cByteCode.m_listFunc[strFuncName] = {
-		(long)createdFunction->m_listParam.size(),
-		lAddress,
-		functionContext->m_numReturn == RETURN_FUNCTION
-	};
-
-	if (createdFunction->m_bExport) {
-		m_cByteCode.m_listExportFunc[strFuncName] = {
-			(long)createdFunction->m_listParam.size(),
-			lAddress,
-			functionContext->m_numReturn == RETURN_FUNCTION
-		};
+	// Tape declarators: emit OPER_FUNC_PARAM for each parameter so the
+	// tape is fully self-describing — AOT load can reconstruct
+	// ibByteFunction's m_listParam by walking the tape, no parallel
+	// metadata needed. Runtime treats them as NOP. Operand layout:
+	//   m_param1.m_numIndex = slot (= i, frame position)
+	//   m_param1.m_numArray = byref flag (1 = ByRef, 0 = ByVal)
+	//   m_param2          = m_puValue (default-value descriptor —
+	//                        m_numArray = DEF_VAR_SKIP / DEF_VAR_CONST /
+	//                        ..., m_numIndex = const-pool index when CONST)
+	// Carries the same info that the legacy OPER_SET/SETCONST at
+	// function entry carries (compileCode.cpp:1213+) — those remain
+	// for now as a NOP-equivalent shadow; once nothing reads them
+	// we can drop them entirely (next iteration).
+	for (unsigned int i = 0; i < createdFunction->m_listParam.size(); i++) {
+		ibByteUnit declParam;
+		AddLineInfo(declParam);
+		declParam.m_numOper = OPER_FUNC_PARAM;
+		declParam.m_param1.m_numIndex = (long)i;
+		declParam.m_param1.m_numArray = createdFunction->m_listParam[i].m_bByRef ? 1 : 0;
+		declParam.m_param2 = createdFunction->m_listParam[i].m_puValue;
+		m_cByteCode.m_listCode.emplace_back(std::move(declParam));
 	}
 
+	// Type-check stamping for typed params — kept separate. The legacy
+	// OPER_SET/SETCONST decoration that used to sit between FUNC_PARAM
+	// and AddTypeSet is gone: its full payload (m_puValue, m_bByRef)
+	// now lives on OPER_FUNC_PARAM, and runtime never read those
+	// OPER_SETs anyway (Execute had no case for them — fall-through NOP).
 	for (unsigned int i = 0; i < createdFunction->m_listParam.size(); i++) {
-		//add set oper
-		ibByteUnit code;
-		AddLineInfo(code);
-		if (createdFunction->m_listParam[i].m_puValue.m_numArray == DEF_VAR_CONST) {
-			code.m_numOper = OPER_SETCONST;// parameters are being passed
-		}
-		else {
-			code.m_numOper = OPER_SET;// parameters are being passed
-		}
-		code.m_param1 = createdFunction->m_listParam[i].m_puValue;
-		code.m_param2.m_numIndex = createdFunction->m_listParam[i].m_bByRef;
-		m_cByteCode.m_listCode.emplace_back(std::move(code));
-
-		//Set type variable
 		ibParamUnit variable;
-
 		variable.m_numArray = 0;
-		variable.m_numIndex = i;// index matches the number
-
+		variable.m_numIndex = i;
 		variable.m_strType = createdFunction->m_listParam[i].m_strType;
-
 		AddTypeSet(variable);
 	}
 
@@ -1219,9 +1382,41 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 
 	createdFunction->m_nFinish = m_cByteCode.m_listCode.size() - 1;
 	createdFunction->m_lVarCount = functionContext->m_listVariable.size();
+	createdFunction->m_bCodeRet  = (functionContext->m_numReturn == RETURN_FUNCTION);
 
 	m_cByteCode.m_listCode[lAddress].m_param3.m_numIndex = createdFunction->m_lVarCount;// number of local variables
 	m_cByteCode.m_listCode[lAddress].m_param3.m_numArray = createdFunction->m_listParam.size();//number of formal parameters
+
+	// Bytecode-side function entry — single write at the end when all
+	// fields are settled (lVarCount + per-param info available only
+	// after body compile). The ibByteFunction(long, const CompileFn&)
+	// ctor copies all fields from the compile-side ibFunction.
+	ibByteCode::ibByteFunction byteFn(lAddress, *createdFunction);
+	// Function-scope symbol table — stamped here directly from
+	// functionContext->m_listVariable (params + locals + temps).
+	// Lifetime of functionContext stays bounded to this CompileFunction
+	// call (unique_ptr); ibFunction doesn't own a compile-context.
+	for (auto it : functionContext->m_listVariable) {
+		// Skip temps (compiler-introduced intermediates that hold
+		// values between OPER_*'s — debugger has no use for them and
+		// they're already covered by the function's frame size).
+		if (it.second->m_bTempVar) continue;
+		ibByteCode::ibByteCodeVarInfo info(*it.second);
+		// m_strRealName is the canonical name on the vector entry —
+		// fall back to the compile-context map key if the source's
+		// realName was empty (legacy paths).
+		if (info.m_strRealName.IsEmpty())
+			info.m_strRealName = it.first;
+		byteFn.m_listLocals.push_back(std::move(info));
+	}
+	// Single push to unified m_listFunc — kind (Local / Export) is
+	// derived in the templated ctor from createdFunction->m_bExport.
+	// Ensure m_strRealName is populated; CompareString-based lookup
+	// in m_listFunc reads it as the canonical name.
+	if (byteFn.m_strRealName.IsEmpty())
+		byteFn.m_strRealName = createdFunction->m_strName;
+	m_cByteCode.m_listFunc.push_back(std::move(byteFn));
+
 	return true;
 }
 
@@ -1291,6 +1486,13 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 	if (gs_codeStyle == CODE_CES && (context->m_numReturn != RETURN_NONE && context->m_numReturn != RETURN_BLOCK) || IsNextDelimeter(wxT('{'))) {
 		GETDelimeter(wxT('{'));
 		bCompileBlock = true;
+		// Tape declarator: explicit `{` block scope. AOT loader uses
+		// CTX_BEGIN/CTX_END pairs to reconstruct nested scope ranges
+		// without re-running the compile pass. NOP at runtime.
+		ibByteUnit declCtx;
+		AddLineInfo(declCtx);
+		declCtx.m_numOper = OPER_CTX_BEGIN;
+		m_cByteCode.m_listCode.emplace_back(std::move(declCtx));
 	}
 
 	while (true) {
@@ -1535,8 +1737,15 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 
 	}//while
 
-	if (gs_codeStyle == CODE_CES && bCompileBlock)
+	if (gs_codeStyle == CODE_CES && bCompileBlock) {
 		GETDelimeter(wxT('}'));
+		// Tape declarator: explicit `}` close — pairs with CTX_BEGIN
+		// emitted at `{`. NOP at runtime.
+		ibByteUnit declCtxEnd;
+		AddLineInfo(declCtxEnd);
+		declCtxEnd.m_numOper = OPER_CTX_END;
+		m_cByteCode.m_listCode.emplace_back(std::move(declCtxEnd));
+	}
 
 	return true;
 }//CompileBlock
@@ -1665,8 +1874,7 @@ ibParamUnit ibCompileCode::GetCurrentIdentifier(ibCompileContext* context, int& 
 				GETDelimeter(',');
 			}
 			GETDelimeter(')');
-			if (!numIsSet && foundedFunc != nullptr &&
-				foundedFunc->m_compileContext && foundedFunc->m_compileContext->m_numReturn != RETURN_FUNCTION) {
+			if (!numIsSet && foundedFunc != nullptr && !foundedFunc->m_bCodeRet) {
 				SetError(ERROR_USE_PROCEDURE_AS_FUNCTION, foundedFunc->m_strRealName);
 				return ibParamUnit();
 			}
@@ -1705,7 +1913,20 @@ ibParamUnit ibCompileCode::GetCurrentIdentifier(ibCompileContext* context, int& 
 	}
 	else { //this is a variable call
 		std::shared_ptr<ibCompileContext::ibVariable> foundedVar = nullptr; numIsSet = 1;
-		if (m_rootContext->FindVariable(strRealName, foundedVar, true)) {
+
+		// Kind-aware identifier resolve. Three outcomes:
+		//   - ContextProp (Catalogs of Manager) — m_strContext set on the
+		//     resolved entry → emit OPER_GET_A / OPER_SET_A on the parent
+		//     binding + prop name const.
+		//   - bare binding (ThisForm) or regular var — fall through to
+		//     GetVariable's frame-slot emission (handles Local / Context
+		//     bindings uniformly via the compile-context's slot table).
+		//   - not found — GetVariable also covers the auto-add path.
+		const bool isContextProp =
+			m_rootContext->FindVariable(strRealName, foundedVar, true) &&
+			foundedVar && !foundedVar->m_strContext.IsEmpty();
+
+		if (isContextProp) {
 			ibByteUnit code;
 			AddLineInfo(code);
 			const int numConst = GetConstString(strRealName);
@@ -2267,7 +2488,7 @@ ibParamUnit ibCompileCode::GetCallFunction(ibCompileContext* context, const wxSt
 		return callFunc->m_puRetValue;
 	}
 
-	if (m_bExpressionOnly) {
+	if (IsExpressionOnly()) {
 		SetError(ERROR_CALL_FUNCTION, strRealName);
 		return ibParamUnit();
 	}
@@ -2575,14 +2796,15 @@ delimOperation:
 
 void ibCompileCode::SetParent(ibCompileCode* setParent)
 {
+	// Single source of truth: bytecode parent. Compile-side GetParent()
+	// derives from m_cByteCode.m_parent->m_compileModule.
 	m_cByteCode.m_parent = nullptr;
-
-	m_parent = setParent;
 	m_rootContext->m_parentContext = nullptr;
 
-	if (m_parent != nullptr) {
-		m_cByteCode.m_parent = &m_parent->m_cByteCode;
-		m_rootContext->m_parentContext = m_parent->m_rootContext;
+	if (setParent != nullptr) {
+		m_cByteCode.m_parent = &setParent->m_cByteCode;
+		m_rootContext->m_parentContext = setParent->m_rootContext;
+		AddDependency(&setParent->m_cByteCode);
 	}
 
 	OnSetParent(setParent);

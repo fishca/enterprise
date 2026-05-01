@@ -34,8 +34,12 @@ enum { //instruction types
 	OPER_TRY,
 	OPER_RAISE,
 	OPER_RAISE_T,
-	OPER_FUNC,//29
-	OPER_ENDFUNC,
+	OPER_FUNC,//29 — function/procedure entry (also serves as FUNC_BEGIN tape marker)
+	OPER_ENDFUNC,         // FUNC_END
+	OPER_FUNC_PARAM,      // tape declarator: parameter slot in current function frame
+	OPER_FUNC_LOCAL,      // tape declarator: named local in current function frame
+	OPER_CTX_BEGIN,       // tape declarator: enter block scope ({ ... })
+	OPER_CTX_END,         // tape declarator: exit block scope
 	OPER_CALL,//function call
 	OPER_SET, // setting the parameter as a variable
 	OPER_SETREF,//setting the parameter as a variable by reference

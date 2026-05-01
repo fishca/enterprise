@@ -31,8 +31,13 @@ ibParamUnit ibCompileContext::CreateVariable(const wxString& strPrefix)
 ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
 	const wxString& typeVar, bool exportVar, bool contextVar, bool tempVar)
 {
-	std::shared_ptr<ibVariable> foundedVariable = nullptr;
-	if (FindVariable(strVarName, foundedVariable)) { //there was a declaration + repeated declaration = error
+	// Dup-check is OWN-scope only — direct find_if on m_listVariable.
+	// Going through FindVariable would also hit bytecode-fallback
+	// (parent module entries), which is wrong: declaring `Var X` here
+	// is allowed even if a parent module exports an X.
+	auto existing = std::find_if(m_listVariable.begin(), m_listVariable.end(),
+		[&strVarName](const auto& pair) { return stringUtils::CompareString(strVarName, pair.first); });
+	if (existing != m_listVariable.end()) {
 		m_compileModule->SetError(ERROR_IDENTIFIER_DUPLICATE, strVarName);
 		return ibParamUnit();
 	}
@@ -78,47 +83,88 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 		if (bFindInParent) {
 
 			int numParent = 0, numContext = 0;
-			ibCompileContext* pCurContext = m_parentContext;
-
 			if (m_numReturn == RETURN_BLOCK)
 				numContext++;
 
-			while (pCurContext) {
+			// Bail out on pathological depth — same threshold for every
+			// hop (compile-context walk and bc walk).
+			auto guardRecursion = [&]() {
+				if (numParent > 2 * MAX_OBJECTS_LEVEL)
+					ibBackendCoreException::Error(_("Recursive call of modules!"));
+			};
 
+			// Visibility check + emit. Depth is the runtime frame index
+			// (m_pppArrayList layer); blockReturn switches it to
+			// DEF_VAR_TEMP for through-block reach. Returns true (with
+			// `out` filled) only if visibility budget allows.
+			auto tryEmit = [&](const std::shared_ptr<ibVariable>& cur, int depth, bool blockReturn, ibParamUnit& out) {
+				if (!(m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || cur->m_bExport))
+					return false;
+				out.m_numArray = blockReturn ? (long long)DEF_VAR_TEMP : (long long)depth;
+				out.m_numIndex = cur->m_numVariable;
+				out.m_strType = cur->m_strType;
+				return true;
+			};
+
+			// 1. Compile-context chain (block → function → root of own
+			//    ibCompileCode, then up through parent compile-contexts
+			//    where they are still live).
+			for (ibCompileContext* pCurContext = m_parentContext; pCurContext != nullptr; pCurContext = pCurContext->m_parentContext) {
 				numParent++;
-
 				if (pCurContext->m_numReturn == RETURN_BLOCK)
 					numContext++;
+				guardRecursion();
 
-				if (numParent > MAX_OBJECTS_LEVEL) {
-					//ibValueSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
-					if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-						ibBackendCoreException::Error(_("Recursive call of modules!"));
-					}
-				}
-
-				if (pCurContext->FindVariable(strVarName, currentVariable)) { // found
-
-					//check if this is an export variable or not (if m_numFindLocalInParent=true, then you can take local variables of the parent)
-					if (m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || currentVariable->m_bExport) {
-
-						ibParamUnit variable;
-
-						//determine the variable number
-						if (pCurContext->m_numReturn == RETURN_BLOCK)
-							variable.m_numArray = DEF_VAR_TEMP;
-						else
-							variable.m_numArray = numParent - numContext;
-
-						variable.m_numIndex = currentVariable->m_numVariable;
-						variable.m_strType = currentVariable->m_strType;
-
+				if (pCurContext->FindVariable(strVarName, currentVariable)) {
+					ibParamUnit variable;
+					if (tryEmit(currentVariable, numParent - numContext,
+					            pCurContext->m_numReturn == RETURN_BLOCK, variable))
 						return variable;
-					}
 				}
-
 				numCanUseLocalInParent--;
-				pCurContext = pCurContext->m_parentContext;
+			}
+
+			// 2. Eval host function frame (only when this compile is an
+			//    eval expression opened inside a function). Function
+			//    frame is its own runtime layer between eval and host's
+			//    module body; account for it in numParent so the bc walk
+			//    below emits depths shifted by +1.
+			//    Source: ibCompileCode::GetEvalHostFunction() — virtual,
+			//    returns nullptr for non-eval modules; ibCompileEval
+			//    overrides with the host fn captured at ctor time.
+			if (auto* hostFn = m_compileModule->GetEvalHostFunction()) {
+				const auto& fn = *hostFn;
+				auto fIt = std::find_if(fn.m_listLocals.begin(), fn.m_listLocals.end(),
+					[&strVarName](const auto& v) { return stringUtils::CompareString(strVarName, v.m_strRealName); });
+				if (fIt != fn.m_listLocals.end()) {
+					ibParamUnit variable;
+					variable.m_numArray = (numParent - numContext) + 1;
+					variable.m_numIndex = fIt->m_slotIndex;
+					return variable;
+				}
+				numParent++;  // function frame layer occupied even on miss
+			}
+
+			// 3. Bytecode parent chain (cross-bc — AOT-loaded ancestors
+			//    with no live compile-context, e.g. host module body
+			//    while compiling an eval expression). Emitter decides
+			//    direct OPER_GET vs OPER_GET_A by foundedVar->m_strContext.
+			//    bc.m_parent is constructed genealogically (form →
+			//    object → manager → root for catalogs etc.; eval
+			//    inherits its host's chain) — foreign bcs never appear,
+			//    so scoped bindings (ThisForm / ThisObject) are
+			//    reachable iff they live on a real ancestor.
+			for (const ibByteCode* pCurByteCode = m_compileModule->m_cByteCode.m_parent;
+			     pCurByteCode != nullptr; pCurByteCode = pCurByteCode->m_parent) {
+				numParent++;
+				guardRecursion();
+
+				if (pCurByteCode->FindVariable(strVarName, currentVariable)) {
+					ibParamUnit variable;
+					if (tryEmit(currentVariable, numParent - numContext, /*blockReturn=*/false, variable))
+						return variable;
+				}
+				numCanUseLocalInParent--;
 			}
 		}
 
@@ -135,7 +181,12 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 
 	ibParamUnit variable;
 
-	//determine the number and type of the variable
+	// FindVariable here is own-scope only (no bytecode fallback) —
+	// reaching this branch means the variable lives in this very
+	// compile-context's m_listVariable, so m_numArray=0 is correct.
+	// Cross-frame resolution (host function param / parent module
+	// binding) goes through GetVariable's bytecode fallback below
+	// where found.depth is preserved on ibParamUnit::m_numArray.
 	if (m_numReturn == RETURN_BLOCK)
 		variable.m_numArray = DEF_VAR_TEMP;
 	else
@@ -150,9 +201,12 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 void ibCompileContext::PushVariable(const wxString& strVarName, const wxString& strContextVar, unsigned int numVariable,
 	const wxString& typeVar, bool exportVar, bool contextVar, bool tempVar)
 {
-	std::shared_ptr<ibVariable> currentVariable(
-		new ibVariable(stringUtils::MakeUpper(strVarName))
-	);
+	// Map key is the original-cased name — lookups go through
+	// std::find_if + stringUtils::CompareString (case-insensitive),
+	// so there's no need to upper-normalize storage. Renderers
+	// (debugger / catalog object PrepareNames) read the key directly
+	// and now show the user's source casing instead of UPPERCASE.
+	std::shared_ptr<ibVariable> currentVariable(new ibVariable(strVarName));
 
 	currentVariable->m_strRealName = strVarName;
 	currentVariable->m_bExport = exportVar;
@@ -172,7 +226,7 @@ void ibCompileContext::PushVariable(const wxString& strVarName, const wxString& 
 void ibCompileContext::PushFunction(const wxString& strFuncName, const wxString& strContextVar, const wxString& strShortDescription, unsigned int numFunction, bool hasRetVal, int argCount)
 {
 	std::shared_ptr<ibCompileContext::ibFunction> contextFunction(
-		new ibFunction(stringUtils::MakeUpper(strFuncName), CreateContext(hasRetVal ? RETURN_FUNCTION : RETURN_PROCEDURE))
+		new ibFunction(strFuncName, CreateContext(hasRetVal ? RETURN_FUNCTION : RETURN_PROCEDURE))
 	);
 
 	contextFunction->m_nStart = numFunction;
@@ -218,6 +272,21 @@ bool ibCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<
 		if (m_parentContext && m_parentContext->FindVariable(strVarName, foundedVar, contextVar))
 			return true;
 
+		// Reached the top compile-context. Drop down to the parent
+		// BYTECODE chain and walk it looking for a context-related
+		// entry. Single-hop wouldn't be enough — there may be an
+		// intermediate bc (form bc, object bc) between the eval and
+		// the root common module that holds the bindings. First match
+		// in any ancestor wins; emitter (compileCode.cpp) checks
+		// foundedVar->m_strContext to decide direct vs OPER_GET_A.
+		if (m_parentContext == nullptr) {
+			for (const ibByteCode* bc = m_compileModule->m_cByteCode.m_parent; bc != nullptr; bc = bc->m_parent) {
+				if (bc->FindVariable(strVarName, foundedVar)) {
+					return foundedVar->IsContextRelated();
+				}
+			}
+		}
+
 		foundedVar = nullptr;
 		return false;
 	}
@@ -248,6 +317,18 @@ bool ibCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr
 
 		if (m_parentContext && m_parentContext->FindFunction(strFuncName, foundedFunc, contextVar))
 			return true;
+
+		// Reached the top compile-context. Drop down to the parent
+		// BYTECODE chain — symmetric with FindVariable's fallback.
+		// Emitter (compileCode.cpp) decides direct OPER_CALL vs
+		// OPER_CALL_M based on foundedFunc->m_strContext.
+		if (m_parentContext == nullptr) {
+			for (const ibByteCode* bc = m_compileModule->m_cByteCode.m_parent; bc != nullptr; bc = bc->m_parent) {
+				if (bc->FindFunction(strFuncName, foundedFunc)) {
+					return foundedFunc->IsContextRelated();
+				}
+			}
+		}
 
 		foundedFunc = nullptr;
 		return false;

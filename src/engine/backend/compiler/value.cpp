@@ -1142,6 +1142,25 @@ bool ibValue::IsPropWritable(const long lPropNum) const
 	return true;
 }
 
+bool ibValue::IsPropScoped(const long lPropNum) const
+{
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
+		return m_pRef->IsPropScoped(lPropNum);
+	ibValueMethodHelper* const methodHelper = GetPMethods();
+	if (methodHelper != nullptr)
+		return methodHelper->IsPropScoped(lPropNum);
+	return false;
+}
+
+long ibValue::ibValueMethodHelper::AppendProp(const wxString& strPropName, bool readable, bool writable, bool scoped, const long lPropNum, const long lPropAlias)
+{
+	const unsigned int flags =
+		(readable ? eProp_Readable : 0u) |
+		(writable ? eProp_Writable : 0u) |
+		(scoped   ? eProp_Scoped   : 0u);
+	return AppendProp(strPropName, flags, lPropNum, lPropAlias);
+}
+
 long ibValue::GetNMethods() const
 {
 	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
@@ -1234,10 +1253,10 @@ void ibValue::PrepareNames() const
 }
 
 //get the current value (relevant for aggregate objects or dialog objects)
-ibValue ibValue::GetValue(bool getThis)
+ibValue ibValue::GetValue(bool getThis) const
 {
 	if (getThis)
-		return this;
+		return const_cast<ibValue*>(this);  // legacy: returns this-as-pointer-via-converting-ctor
 	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetValue(true); // true - a sign of creating a new variable - a reference to an aggregate object
 	return *this;

@@ -295,6 +295,20 @@ All 11 business object types with: attributes (full type qualifiers), tabular se
 - **Syntax modes:** VBS-style (`If…Then…EndIf`) and CES-style abbreviations; both compile to the same bytecode
 - **Debugger port:** 1650 (`defaultDebuggerPort` in `src/engine/backend/debugger/debugDefs.h`)
 
+### Bytecode resolver (kind-driven, AOT-ready)
+
+`ibByteCode` carries everything needed for cross-bc resolve, with no runtime dependency on the compile-context.
+
+- `m_listVar`: `std::vector<ibByteCodeVarInfo>` — kinds: `Local / Export / External / Context / ContextProp`.
+- `m_listFunc`: `std::vector<ibByteFunction>` — kinds: `Local / Export / ContextMethod`.
+- `m_listLocals` (per-function): same vector shape as `m_listVar`.
+- Cross-table refs: `ContextProp / ContextMethod` carry `m_parentRef` indexing back into `m_listVar`.
+- `ibByteBinder` reads `m_listVar` directly and binds slots whose kind ∈ `{External, Context}` (`IsBindRequired()`).
+- Eval / watch expressions use `ibCompileEval` (in `procUnit.cpp`); `ibCompileCode::IsExpressionOnly()` and `GetEvalHostFunction()` are virtual hooks the eval class overrides.
+- Descriptors expose `ExportNamesToHelper(helper, alias)` on `ibRuntimeModuleDataObject` to populate a value's helper from the bc's export entries.
+
+See `docs/eval-scope-refactor.md` for the full architecture and `docs/next-session-aot.md` for the persistence-layer plan that builds on this state.
+
 ---
 
 ## What Not To Do

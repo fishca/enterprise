@@ -944,17 +944,17 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 
 		ibLocalWindowData locData;
 
-		//generate event 	
+		//generate event
 		unsigned int attributeCount = commandReader.r_u32();
 		for (unsigned int i = 0; i < attributeCount; i++) {
-			bool tempVar = commandReader.r_u8();
+			// Server pre-filters temps from m_listLocals — every entry
+			// reaching the wire is user-visible.
 			wxString strName, strValue, strType;
 			commandReader.r_stringZ(strName);
 			commandReader.r_stringZ(strValue);
 			commandReader.r_stringZ(strType);
 			unsigned int attributeChildCount = commandReader.r_u32();
-			if (!tempVar)
-				locData.AddLocalVar(strName, strValue, strType, attributeChildCount > 0);
+			locData.AddLocalVar(strName, strValue, strType, attributeChildCount > 0);
 		}
 
 		ms_debugClient->CallAfter(

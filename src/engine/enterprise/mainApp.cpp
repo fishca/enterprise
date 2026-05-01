@@ -359,6 +359,39 @@ void ibAppEnterprise::OnUnhandledException()
 
 void ibAppEnterprise::OnFatalException()
 {
+	// Persistent minidump is already written by the SEH filter
+	// (PersistentCrashDumpFilter) before we get here, so we don't
+	// rely on this path for the dump itself.
+	//
+	// Thread-safety guard: wxSocketBase, wxDebugReport, and the
+	// wxDebugReportPreviewStd dialog are all main-thread-only —
+	// asserting wxIsMainThread() inside them. If the fault happened
+	// on a worker / debug-server / wxThread, going through the wx
+	// path double-faults the process and leaves the user with two
+	// stacked assert dialogs (or, in Release, a silent exit).
+	//
+	// On a non-main thread we keep things minimal and Win32-only:
+	// a MessageBoxW (owner=NULL, no thread affinity) tells the user
+	// the process crashed and where the dump lives, then we abort.
+	// Cleanup (com release, socket shutdown, appData destroy) is
+	// skipped — process state is already unsafe and the OS will
+	// reclaim resources at exit.
+#ifdef __WXMSW__
+	if (!wxIsMainThread()) {
+		const wxString exePath = wxStandardPaths::Get().GetExecutablePath();
+		const wxString crashDir = wxFileName(exePath).GetPath() + wxFILE_SEP_PATH + wxT("crashdumps");
+		const wxString msg = wxString::Format(
+			wxT("A fatal error occurred on a background thread (tid=%lu).\n\n")
+			wxT("A crash dump has been saved to:\n%s\n\n")
+			wxT("The application will now close."),
+			::GetCurrentThreadId(), crashDir);
+		::MessageBoxW(NULL, msg.wc_str(), L"Enterprise — fatal error",
+		              MB_OK | MB_ICONERROR | MB_TASKMODAL);
+		::TerminateProcess(::GetCurrentProcess(), EXIT_FAILURE);
+		return;
+	}
+#endif
+
 	// Collect everything at the exception context: XML report + minidump.
 	// AddAll(Context_Exception) captures state at the fault point (register
 	// values, stack, loaded modules), which is what a debugger needs to

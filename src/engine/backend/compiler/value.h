@@ -65,30 +65,88 @@ public:
 			long m_lAlias, m_lData;
 		};
 
+		// Bit-flags for prop visibility / mutability.
+		enum ibPropFlags : unsigned int {
+			eProp_None     = 0,
+			eProp_Readable = 1u << 0,
+			eProp_Writable = 1u << 1,
+			// Scope-local prop (ThisObject / ThisForm / similar): when
+			// the host bc is mirrored to ibByteCode::m_listVar, this
+			// flag travels into ibByteCodeVarInfo::m_bScoped, and the
+			// cross-bc resolver (template FindVariable) skips the
+			// entry. Children resolving `ThisObject` therefore can't
+			// silently reach the parent's record.
+			eProp_Scoped   = 1u << 2,
+		};
+
 		struct ibValueMethodHelperProperty {
 
-			ibValueMethodHelperProperty(const wxString& strPropName, bool readable, bool writable, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
-				: m_fieldName(strPropName), m_readable(readable), m_writable(writable), m_lAlias(lPropAlias), m_lData(lData)
+			// Flag-based ctor — primary entry point. Use for new
+			// callsites and any prop that needs eProp_Scoped or other
+			// non-readable/writable bits.
+			ibValueMethodHelperProperty(const wxString& strPropName, unsigned int flags, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strPropName), m_flags(flags), m_lAlias(lPropAlias), m_lData(lData)
 			{
 			}
 
+			// Legacy ctor — converts two bools (readable, writable)
+			// into the flags word so existing AppendProp(bool, bool,
+			// ...) overloads keep working without touching every
+			// callsite. Old props default to non-scoped.
+			ibValueMethodHelperProperty(const wxString& strPropName, bool readable, bool writable, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strPropName),
+				  m_flags((readable ? eProp_Readable : 0u) | (writable ? eProp_Writable : 0u)),
+				  m_lAlias(lPropAlias), m_lData(lData)
+			{
+			}
+
+			// 3-bool ctor — same as legacy plus an explicit `scoped`
+			// argument. Readable for callsites that prefer bool args
+			// over OR'd flag literals (ThisObject / ThisForm / etc).
+			ibValueMethodHelperProperty(const wxString& strPropName, bool readable, bool writable, bool scoped, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strPropName),
+				  m_flags((readable ? eProp_Readable : 0u) | (writable ? eProp_Writable : 0u) | (scoped ? eProp_Scoped : 0u)),
+				  m_lAlias(lPropAlias), m_lData(lData)
+			{
+			}
+
+			bool IsReadable() const { return (m_flags & eProp_Readable) != 0; }
+			bool IsWritable() const { return (m_flags & eProp_Writable) != 0; }
+			bool IsScoped()   const { return (m_flags & eProp_Scoped)   != 0; }
+
 			wxString m_fieldName;
-			bool m_readable = true;
-			bool m_writable = true;
+			unsigned int m_flags = eProp_Readable | eProp_Writable;
 			long m_lAlias, m_lData;
+		};
+
+		// Bit-flags for method capabilities — counterpart to ibPropFlags.
+		enum ibMethodFlags : unsigned int {
+			eMethod_None      = 0,
+			eMethod_HasReturn = 1u << 0,   // function (returns) vs procedure (no return)
+			eMethod_Scoped    = 1u << 1,   // bc-local — invisible to children
 		};
 
 		struct ibValueMethodHelperMethod {
 
-			ibValueMethodHelperMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
-				: m_fieldName(strMethodName), m_strHelper(strHelper), m_paramCount(paramCount), m_hasRet(hasRet), m_lAlias(lPropAlias), m_lData(lData)
+			ibValueMethodHelperMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, unsigned int flags, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strMethodName), m_strHelper(strHelper), m_paramCount(paramCount), m_flags(flags), m_lAlias(lPropAlias), m_lData(lData)
 			{
 			}
+
+			// Legacy ctor — convert hasRet bool into the flags word.
+			ibValueMethodHelperMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strMethodName), m_strHelper(strHelper), m_paramCount(paramCount),
+				  m_flags(hasRet ? eMethod_HasReturn : 0u), m_lAlias(lPropAlias), m_lData(lData)
+			{
+			}
+
+			bool HasReturn() const { return (m_flags & eMethod_HasReturn) != 0; }
+			bool IsScoped()  const { return (m_flags & eMethod_Scoped)    != 0; }
 
 			wxString m_fieldName;
 			wxString m_strHelper;
 			long m_paramCount = 0;
-			bool m_hasRet = true;
+			unsigned int m_flags = 0;
 			long m_lAlias, m_lData;
 		};
 
@@ -158,13 +216,27 @@ public:
 		inline long AppendProp(const wxString& strPropName, bool readable, bool writable, const long lPropNum) { return AppendProp(strPropName, readable, writable, lPropNum, wxNOT_FOUND); }
 
 		inline long AppendProp(const wxString& strPropName, bool readable, bool writable, const long lPropNum, const long lPropAlias) {
+			const unsigned int flags = (readable ? eProp_Readable : 0u) | (writable ? eProp_Writable : 0u);
+			return AppendProp(strPropName, flags, lPropNum, lPropAlias);
+		}
+
+		// 3-bool variant — same as legacy plus explicit `scoped`.
+		// Out-of-line so the symbol is properly exported from
+		// backend.dll for wfrontend / other consumers (otherwise MSVC
+		// in Debug emits __imp_ stubs that the inline body can't
+		// satisfy across the DLL boundary).
+		long AppendProp(const wxString& strPropName, bool readable, bool writable, bool scoped, const long lPropNum, const long lPropAlias);
+
+		// Flag-based variant. Use eProp_Readable | eProp_Writable
+		// (or | eProp_Scoped for bc-local entries like ThisObject).
+		inline long AppendProp(const wxString& strPropName, unsigned int flags, const long lPropNum, const long lPropAlias) {
 
 			//auto iterator = std::find_if(m_propHelper.begin(), m_propHelper.end(),
 			//	[strPropName](const auto& f) { return stringUtils::CompareString(f.m_fieldName, strPropName); });
 			//if (iterator != m_propHelper.end())
 			//	return std::distance(m_propHelper.begin(), iterator);
 
-			m_propHelper.emplace_back(strPropName, readable, writable, lPropAlias, lPropNum);
+			m_propHelper.emplace_back(strPropName, flags, lPropAlias, lPropNum);
 			return m_propHelper.size();
 		}
 
@@ -210,13 +282,23 @@ public:
 		virtual bool IsPropReadable(const long lPropNum) const {
 			if (lPropNum > GetNProps())
 				return false;
-			return m_propHelper[lPropNum].m_readable;
+			return m_propHelper[lPropNum].IsReadable();
 		}
 
 		virtual bool IsPropWritable(const long lPropNum) const {
 			if (lPropNum > GetNProps())
 				return false;
-			return m_propHelper[lPropNum].m_writable;
+			return m_propHelper[lPropNum].IsWritable();
+		}
+
+		// Scope-local props (ThisObject / ThisForm / similar) must
+		// not leak across bc boundaries. Pass-3 PrepareModuleData
+		// reads this and stamps ibCompileContext::ibVariable::m_bScoped
+		// on the freshly pushed entry.
+		virtual bool IsPropScoped(const long lPropNum) const {
+			if (lPropNum > GetNProps())
+				return false;
+			return m_propHelper[lPropNum].IsScoped();
 		}
 
 		const long GetNProps() const noexcept { return m_propHelper.size(); }
@@ -300,7 +382,15 @@ public:
 		bool HasRetVal(const long lMethodNum) const {
 			if (lMethodNum > GetNMethods())
 				return true;
-			return m_methodHelper[lMethodNum].m_hasRet;
+			return m_methodHelper[lMethodNum].HasReturn();
+		}
+
+		// Scope-local method (bc-local — invisible to children
+		// through cross-bc resolution). Symmetric with IsPropScoped.
+		bool IsMethodScoped(const long lMethodNum) const {
+			if (lMethodNum > GetNMethods())
+				return false;
+			return m_methodHelper[lMethodNum].IsScoped();
 		}
 
 		long GetNParams(const long lMethodNum) const {
@@ -594,7 +684,28 @@ public:
 
 	void SetData(const ibValue& varValue); //setting the value without changing the type
 
-	virtual ibValue GetValue(bool getThis = false);
+	virtual ibValue GetValue(bool getThis = false) const;
+
+	// Produce a fresh, independent copy of the value. For simple types
+	// (Boolean / Number / String / Date / Null / Empty) the data is
+	// value-copied — caller can mutate without touching the source.
+	// Aggregate / reference types must override to provide their own
+	// clone semantics; the base default returns an undefined value to
+	// surface "tried to clone something that doesn't support it" as
+	// an empty result rather than a silent share.
+	virtual ibValue Clone() const {
+		switch (m_typeClass) {
+		case ibValueTypes::TYPE_EMPTY:
+		case ibValueTypes::TYPE_NULL:
+		case ibValueTypes::TYPE_BOOLEAN:
+		case ibValueTypes::TYPE_NUMBER:
+		case ibValueTypes::TYPE_STRING:
+		case ibValueTypes::TYPE_DATE:
+			return *this;  // value-copy of the simple-type payload
+		default:
+			return ibValue();  // no own clone — undefined
+		}
+	}
 
 	virtual bool GetBoolean() const;
 	virtual int GetInteger() const { return GetNumber().ToInt(); }
@@ -674,6 +785,10 @@ public:
 	 *  @return true if property is writable
 	 */
 	virtual bool IsPropWritable(const long lPropNum) const;
+
+	/// Is property scope-local (bc-local — invisible to children
+	/// through cross-bc resolution; ThisObject / ThisForm / etc.)?
+	virtual bool IsPropScoped(const long lPropNum) const;
 
 	/// Returns number of component methods
 	/**

@@ -205,6 +205,12 @@ void ibPrecompileCode::PrepareModuleData()
 				if (cc && cc->FindCompileModule(moduleObject, pRefData)) {
 					//adding variables from context
 					for (long i = 0; i < pRefData->GetNProps(); i++) {
+						// Scope-local props (ThisObject / ThisForm /
+						// RegisterRecords) are bc-internal — autocomplete
+						// must not surface them when walking another bc's
+						// context value.
+						if (pRefData->IsPropScoped(i))
+							continue;
 						wxString strAttributeName = pRefData->GetPropName(i);
 						if (m_rootContext.FindVariable(strAttributeName))
 							continue;

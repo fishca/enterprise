@@ -317,7 +317,7 @@ void ibValueRecordDataObjectCatalog::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
-	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, eThisObject, eSystem);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, true, eThisObject, eSystem);
 
 	//set object name
 	wxString objectName;
@@ -351,27 +351,7 @@ void ibValueRecordDataObjectCatalog::PrepareNames() const
 			eTable
 		);
 	}
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-			for (auto exportVariable : byteCode->m_listExportVar) {
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
 bool ibValueRecordDataObjectCatalog::SetPropVal(const long lPropNum, const ibValue& varPropVal)

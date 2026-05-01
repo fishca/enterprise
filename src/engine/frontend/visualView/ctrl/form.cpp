@@ -182,9 +182,9 @@ void ibValueForm::PrepareNames() const
 	//default element
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendProp(thisForm, true, false, eThisForm, eSystem);
-	m_methodHelper->AppendProp(wxT("Controls"), true, false, eControls, eSystem);
-	m_methodHelper->AppendProp(wxT("DataSource"), true, false, eDataSource, eSystem);
+	m_methodHelper->AppendProp(thisForm, true, false, true, eThisForm, eSystem);
+	m_methodHelper->AppendProp(wxT("Controls"), true, false, true, eControls, eSystem);
+	m_methodHelper->AppendProp(wxT("DataSource"), true, false, true, eDataSource, eSystem);
 	m_methodHelper->AppendProp(wxT("Modified"), eModified, eSystem);
 	m_methodHelper->AppendProp(wxT("FormOwner"), eFormOwner, eSystem);
 	m_methodHelper->AppendProp(wxT("UniqueKey"), eUniqueKey, eSystem);
@@ -209,25 +209,7 @@ void ibValueForm::PrepareNames() const
 		m_methodHelper->AppendProp(property->GetName(), idx, eProperty);
 	}
 
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportVariable : byteCode->m_listExportVar)
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			for (auto exportFunction : byteCode->m_listExportFunc)
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 
 	for (auto& control : m_listControl) {
 		if (!control->HasValueInControl())

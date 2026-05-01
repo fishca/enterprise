@@ -13,6 +13,47 @@
 
 #include "appData.h"
 
+#include <wx/ffile.h>
+
+// Operand resolution for the bytecode interpreter. Three slot kinds:
+//   slot <= 0           — local frame (mutable).
+//   slot == DEF_VAR_CONST — constant in the bytecode template (read-only).
+//   else                — outer frame (mutable).
+//
+// Two access flavours, picked at the call site by the opcode handler:
+//   variable(x)  — write target / read-modify-write. const-slot is a
+//                  logic error (writing to a constant); throws.
+//   cvariable(x) — read-only source. const-slot is returned directly,
+//                  no copy and no const_cast.
+namespace {
+
+inline ibValue& ResolveWrite(int slot, int idx,
+							  ibValue** pRefLocVars,
+							  ibValue*** pppArrayList,
+							  bool bDelta)
+{
+	if (slot <= 0)
+		return *pRefLocVars[idx];
+	if (slot == DEF_VAR_CONST)
+		ibBackendCoreException::Error(_("Attempt to write to a constant value"));
+	return *pppArrayList[slot + (bDelta ? 1 : 0)][idx];
+}
+
+inline const ibValue& ResolveRead(int slot, int idx,
+								   ibValue** pRefLocVars,
+								   ibValue*** pppArrayList,
+								   const ibByteCode* pByteCode,
+								   bool bDelta)
+{
+	if (slot <= 0)
+		return *pRefLocVars[idx];
+	if (slot == DEF_VAR_CONST)
+		return pByteCode->m_listConst[idx];
+	return *pppArrayList[slot + (bDelta ? 1 : 0)][idx];
+}
+
+} // namespace
+
 #define curCode	m_pByteCode->m_listCode[lCodeLine]
 
 #define index1	curCode.m_param1.m_numIndex
@@ -30,12 +71,19 @@
 #define locVariable3 *m_pRefLocVars[index3]
 #define locVariable4 *m_pRefLocVars[index4]
 
-#define variable(x) (array##x<=0?*pRefLocVars[index##x]:(array##x==DEF_VAR_CONST?m_pByteCode->m_listConst[index##x]:*m_pppArrayList[array##x+(bDelta?1:0)][index##x]))
+#define variable(x)  ResolveWrite(array##x, index##x, pRefLocVars, m_pppArrayList, bDelta)
 
 #define variable1 variable(1)
 #define variable2 variable(2)
 #define variable3 variable(3)
 #define variable4 variable(4)
+
+#define cvariable(x) ResolveRead (array##x, index##x, pRefLocVars, m_pppArrayList, m_pByteCode, bDelta)
+
+#define cvariable1 cvariable(1)
+#define cvariable2 cvariable(2)
+#define cvariable3 cvariable(3)
+#define cvariable4 cvariable(4)
 
 //**************************************************************************************************************
 //*                                              support error place                                           *
@@ -46,7 +94,7 @@
 // need the full ibRunContext / ibByteCode types (procUnitState.h only
 // forward-declares them).
 
-ibByteCode* ibProcUnitState::GetCurrentByteCode() const
+const ibByteCode* ibProcUnitState::GetCurrentByteCode() const
 {
 	const ibRunContext* rc = GetCurrentRunContext();
 	return rc != nullptr ? rc->GetByteCode() : nullptr;
@@ -351,11 +399,52 @@ inline void CopyValue(ibValue& cValue1, ibValue& cValue2)
 	}
 }
 
+// CopyValue from rvalue — store into a local lvalue first, delegate
+// to the mutable overload (so TYPE_OLE/ENUM/VALUE aliasing path can
+// take &cValue2 of a stable address).
 inline void CopyValue(ibValue& cValue1, ibValue&& cValue2)
 {
-	// For temporaries: store into local lvalue, then delegate to lvalue version
 	ibValue tmp = std::move(cValue2);
 	CopyValue(cValue1, tmp);
+}
+
+// CopyValue from const source — direct field-copy without going
+// through Clone(). Same semantics as the mutable overload: simple
+// types are value-copied, TYPE_REFFER shares the m_pRef pointer,
+// TYPE_OLE/ENUM/VALUE alias cValue2 via GetRef() (the aliasing IS
+// the shared-state mechanism for these types). GetRef() is a const
+// method on ibValue and encapsulates the necessary cast — caller
+// stays cast-free.
+inline void CopyValue(ibValue& cValue1, const ibValue& cValue2)
+{
+	cValue1.m_typeClass = cValue2.m_typeClass;
+	switch (cValue2.m_typeClass)
+	{
+	case ibValueTypes::TYPE_NULL:
+		break;
+	case ibValueTypes::TYPE_BOOLEAN:
+		cValue1.m_bData = cValue2.m_bData;
+		break;
+	case ibValueTypes::TYPE_NUMBER:
+		cValue1.m_fData = cValue2.m_fData;
+		break;
+	case ibValueTypes::TYPE_STRING:
+		cValue1.m_sData = cValue2.m_sData;
+		break;
+	case ibValueTypes::TYPE_DATE:
+		cValue1.m_dData = cValue2.m_dData;
+		break;
+	case ibValueTypes::TYPE_REFFER:
+		cValue1.m_pRef = cValue2.m_pRef; cValue1.m_pRef->IncrRef();
+		break;
+	case ibValueTypes::TYPE_OLE:
+	case ibValueTypes::TYPE_ENUM:
+	case ibValueTypes::TYPE_VALUE:
+		cValue1.m_typeClass = ibValueTypes::TYPE_REFFER;
+		cValue1.m_pRef = cValue2.GetRef(); cValue1.m_pRef->IncrRef();
+		break;
+	default: cValue1.m_typeClass = ibValueTypes::TYPE_EMPTY;
+	}
 }
 
 inline void MoveValue(ibValue&& cValue1, ibValue&& cValue2)
@@ -459,7 +548,7 @@ inline bool GetArrayValue(ibValue& cValue1, ibValue& cValue2, const ibValue& cVa
 	return false;
 }
 
-inline ibValue GetValue(ibValue& cValue1)
+inline ibValue GetValue(const ibValue& cValue1)
 {
 	if (cValue1.m_bReadOnly
 		&& cValue1.m_typeClass != ibValueTypes::TYPE_REFFER) {
@@ -539,7 +628,7 @@ void ibProcUnit::Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDe
 	ibValue* pLocVars = pContext->m_pLocVars;
 	ibValue** pRefLocVars = pContext->m_pRefLocVars;
 
-	ibByteUnit* pCodeList = m_pByteCode->m_listCode.data();
+	const ibByteUnit* pCodeList = m_pByteCode->m_listCode.data();
 
 	long lCodeLine = pContext->m_lStart;
 	long lFinish = m_pByteCode->m_listCode.size();
@@ -591,35 +680,35 @@ start_label:
 			{
 			case OPER_CONST: CopyValue(variable1, m_pByteCode->m_listConst[index2]); break;
 			case OPER_CONSTN: SetTypeNumber(variable1, index2); break;
-			case OPER_ADD: AddValue(variable1, variable2, variable3); break;
-			case OPER_SUB: SubValue(variable1, variable2, variable3); break;
-			case OPER_DIV: DivValue(variable1, variable2, variable3); break;
-			case OPER_MOD: ModValue(variable1, variable2, variable3); break;
-			case OPER_MULT: MultValue(variable1, variable2, variable3); break;
-			case OPER_LET: CopyValue(variable1, variable2); break;
-			case OPER_INVERT: SetTypeNumber(variable1, -variable2.GetNumber()); break;
-			case OPER_NOT: SetTypeBoolean(variable1, IsEmptyValue(variable2)); break;
-			case OPER_AND: if (IsHasValue(variable2) && IsHasValue(variable3))
+			case OPER_ADD: AddValue(variable1, cvariable2, cvariable3); break;
+			case OPER_SUB: SubValue(variable1, cvariable2, cvariable3); break;
+			case OPER_DIV: DivValue(variable1, cvariable2, cvariable3); break;
+			case OPER_MOD: ModValue(variable1, cvariable2, cvariable3); break;
+			case OPER_MULT: MultValue(variable1, cvariable2, cvariable3); break;
+			case OPER_LET: CopyValue(variable1, cvariable2); break;
+			case OPER_INVERT: SetTypeNumber(variable1, -cvariable2.GetNumber()); break;
+			case OPER_NOT: SetTypeBoolean(variable1, IsEmptyValue(cvariable2)); break;
+			case OPER_AND: if (IsHasValue(cvariable2) && IsHasValue(cvariable3))
 				SetTypeBoolean(variable1, true); else SetTypeBoolean(variable1, false);
 				break;
 			case OPER_OR:
-				if (IsHasValue(variable2) || IsHasValue(variable3))
+				if (IsHasValue(cvariable2) || IsHasValue(cvariable3))
 					SetTypeBoolean(variable1, true);
 				else SetTypeBoolean(variable1, false); break;
-			case OPER_EQ: CompareValueEQ(variable1, variable2, variable3); break;
-			case OPER_NE: CompareValueNE(variable1, variable2, variable3); break;
-			case OPER_GT: CompareValueGT(variable1, variable2, variable3); break;
-			case OPER_LS: CompareValueLS(variable1, variable2, variable3); break;
-			case OPER_GE: CompareValueGE(variable1, variable2, variable3); break;
-			case OPER_LE: CompareValueLE(variable1, variable2, variable3); break;
+			case OPER_EQ: CompareValueEQ(variable1, cvariable2, cvariable3); break;
+			case OPER_NE: CompareValueNE(variable1, cvariable2, cvariable3); break;
+			case OPER_GT: CompareValueGT(variable1, cvariable2, cvariable3); break;
+			case OPER_LS: CompareValueLS(variable1, cvariable2, cvariable3); break;
+			case OPER_GE: CompareValueGE(variable1, cvariable2, cvariable3); break;
+			case OPER_LE: CompareValueLE(variable1, cvariable2, cvariable3); break;
 			case OPER_IF:
-				if (IsEmptyValue(variable1))
+				if (IsEmptyValue(cvariable1))
 					lCodeLine = index2 - 1;
 				break;
 			case OPER_FOR:
-				if (variable1.m_typeClass != ibValueTypes::TYPE_NUMBER)
+				if (cvariable1.m_typeClass != ibValueTypes::TYPE_NUMBER)
 					ibBackendCoreException::Error(_("Only variables with type can be used to organize the loop \"number\""));
-				if (variable1.m_fData == variable2.m_fData)
+				if (cvariable1.m_fData == cvariable2.m_fData)
 					lCodeLine = index3 - 1;
 				break;
 			case OPER_FOREACH:
@@ -648,10 +737,10 @@ start_label:
 			} break;
 			case OPER_ITER:
 			{
-				if (IsHasValue(variable2))
-					CopyValue(variable1, variable3);
+				if (IsHasValue(cvariable2))
+					CopyValue(variable1, cvariable3);
 				else
-					CopyValue(variable1, variable4);
+					CopyValue(variable1, cvariable4);
 			}  break;
 			case OPER_NEW:
 			{
@@ -679,7 +768,7 @@ start_label:
 				const long lPropNum = variable1.FindProp(strPropName);
 				if (lPropNum < 0) CheckAndError(variable1, strPropName);
 				if (!variable1.IsPropWritable(lPropNum)) ibBackendCoreException::Error(_("Object field not writable (%s)"), strPropName);
-				variable1.SetPropVal(lPropNum, GetValue(variable3));
+				variable1.SetPropVal(lPropNum, GetValue(cvariable3));
 			} break;
 			case OPER_GET_A://get attribute
 			{
@@ -689,6 +778,15 @@ start_label:
 				const long lPropNum = variable2.FindProp(strPropName);
 				if (lPropNum < 0) CheckAndError(variable2, strPropName);
 				if (!variable2.IsPropReadable(lPropNum)) ibBackendCoreException::Error(_("Object field not readable (%s)"), strPropName);
+				// Scope-local props (ThisObject / ThisForm / RegisterRecords)
+				// are bc-internal: host's own code reaches them through
+				// its own m_listVar (compile-time), not through chain
+				// access. In eval mode (`m_bExpressionOnly`) any chain
+				// hop landing on such a prop must be denied — debugger
+				// watch should not be able to walk into a foreign
+				// object's "self" handle.
+				if (m_pByteCode->m_bExpressionOnly && variable2.IsPropScoped(lPropNum))
+					ibBackendCoreException::Error(_("Object field is scope-local (%s)"), strPropName);
 				ibValue vRet; bool result = variable2.GetPropVal(lPropNum, vRet);
 				if (result && vRet.m_typeClass == ibValueTypes::TYPE_REFFER)
 					*pRetValue = vRet;
@@ -702,21 +800,12 @@ start_label:
 				ibValue* pVariable2 = &variable2;
 
 				const wxString& funcName = m_pByteCode->m_listConst[index3].m_sData;
-				long lMethodNum = wxNOT_FOUND;
-				//call optimization
-				ibValue* storageValue = reinterpret_cast<ibValue*>(array4);
-				if (storageValue && storageValue == pVariable2->GetRef()) { //previously there were calls
-					lMethodNum = index4;
-#ifdef DEBUG
-					lMethodNum = pVariable2->FindMethod(funcName);
-					if (lMethodNum != index4) ibBackendCoreException::Error(_("Error value %d must %d (It is recommended to turn off method optimization)"), index4, lMethodNum);
-#endif
-				}
-				else {//there were no calls
-					lMethodNum = pVariable2->FindMethod(funcName);
-					index4 = lMethodNum;
-					array4 = reinterpret_cast<wxLongLong_t>(pVariable2->GetRef());
-				}
+				// Resolve method number on every call. Bytecode is a const
+				// template at runtime — no opcode-level cache patching.
+				// (The previous "cache" path stored resolved method # /
+				// object ref into m_param4 on first call; never actually
+				// improved warm-path performance and complicated AOT.)
+				const long lMethodNum = pVariable2->FindMethod(funcName);
 
 				if (lMethodNum < 0)
 					CheckAndError(variable2, funcName);
@@ -736,8 +825,8 @@ start_label:
 				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
 					lCodeLine++;
 					if (index1 >= 0 && !pVariable2->GetParamDefValue(lMethodNum, i, *cRunContext.m_pRefLocVars[i])) {
-						if (variable1.m_bReadOnly && variable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
-							CopyValue(cRunContext.m_pLocVars[i], variable1);
+						if (cvariable1.m_bReadOnly && cvariable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
+							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
 						}
 						else {
 							cRunContext.m_pRefLocVars[i] = &variable1;
@@ -773,8 +862,10 @@ start_label:
 				ibRunContext cRunContext(index3);
 				cRunContext.m_lStart = index2;
 				cRunContext.m_lParamCount = array3;
-				ibByteCode* pLocalByteCode = m_ppArrayCode[lModuleNumber]->m_pByteCode;
-				cRunContext.m_compileContext = reinterpret_cast<ibCompileContext*>(pLocalByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
+				const ibByteCode* pLocalByteCode = m_ppArrayCode[lModuleNumber]->m_pByteCode;
+				// m_currentFunction is no longer set here — the OPER_FUNC
+				// opcode at function entry sets it as part of tape
+				// execution flow (opcode-driven runtime state).
 				ibValue* pRetValue = &variable1;
 				//load parameters
 				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
@@ -795,12 +886,12 @@ start_label:
 				break;
 			}
 			case OPER_SET_ARRAY:
-				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					ibBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+				if (!SetArrayValue(variable1, cvariable2, GetValue(cvariable3)))
+					ibBackendCoreException::Error(_("Cannot set array value '%s'"), cvariable3.GetString());
 				break; //setting the array value
 			case OPER_GET_ARRAY:
-				if (!GetArrayValue(variable1, variable2, variable3))
-					ibBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+				if (!GetArrayValue(variable1, variable2, cvariable3))
+					ibBackendCoreException::Error(_("Cannot get array value '%s'"), cvariable3.GetString());
 				break; //getting the array value
 			case OPER_GOTO: case OPER_ENDTRY:
 			{
@@ -823,7 +914,7 @@ start_label:
 				if (index1 != DEF_VAR_NORET) {
 					if (pvarRetValue == nullptr)
 						ibBackendCoreException::Error(_("Cannot set return value in procedure!"));
-					CopyValue(*pvarRetValue, variable1);
+					CopyValue(*pvarRetValue, cvariable1);
 				}
 			case OPER_ENDFUNC:
 			case OPER_END:
@@ -836,83 +927,105 @@ start_label:
 					}
 					else break;
 				}
-			} break; //this is the initial run - skip the bodies of procedures and functions
+			}
+			else {
+				// Function entry — opcode-driven runtime state update.
+				// Replaces the legacy FindFunctionByEntry call sites at
+				// OPER_CALL / CallAsProc / CallAsFunc — m_currentFunction
+				// is now established as the tape itself executes, which
+				// is the natural "ibRunContext updated as commands run"
+				// model that the AOT-friendly self-describing tape design
+				// requires (see project_bytecode_tape_design memory).
+				pContext->m_currentFunction = m_pByteCode->FindFunctionByEntry(lCodeLine);
+			}
+			break;
+			// Tape declarators (self-describing bytecode, AOT-ready).
+			// NOP at runtime — they exist to let an AOT loader / debugger
+			// reconstruct ibByteFunction's m_listParam / m_listLocals and
+			// block scopes by walking the tape, without parallel maps.
+			// Compile-time still populates the parallel maps for the live
+			// path; AOT phase makes them derived from these declarators.
+			case OPER_FUNC_PARAM:
+			case OPER_FUNC_LOCAL:
+			case OPER_CTX_BEGIN:
+			case OPER_CTX_END:
+				break;
 			case OPER_SET_TYPE:
 				variable1.SetType(ibValue::GetVTByID(array2));
 				break;
 				//Operators for working with typed data
 				//NUMBER
-			case OPER_ADD + TYPE_DELTA1: variable1.m_fData = variable2.m_fData + variable3.m_fData; break;
-			case OPER_SUB + TYPE_DELTA1: variable1.m_fData = variable2.m_fData - variable3.m_fData; break;
-			case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
-			case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
-			case OPER_MULT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData * variable3.m_fData; break;
-			case OPER_LET + TYPE_DELTA1: variable1.m_fData = variable2.m_fData; break;
-			case OPER_NOT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData.IsZero(); break;
-			case OPER_INVERT + TYPE_DELTA1: variable1.m_fData = -variable2.m_fData; break;
-			case OPER_EQ + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData == variable3.m_fData); break;
-			case OPER_NE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData != variable3.m_fData); break;
-			case OPER_GT + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData > variable3.m_fData); break;
-			case OPER_LS + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData < variable3.m_fData); break;
-			case OPER_GE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData >= variable3.m_fData); break;
-			case OPER_LE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData <= variable3.m_fData); break;
+			case OPER_ADD + TYPE_DELTA1: variable1.m_fData = cvariable2.m_fData + cvariable3.m_fData; break;
+			case OPER_SUB + TYPE_DELTA1: variable1.m_fData = cvariable2.m_fData - cvariable3.m_fData; break;
+			case OPER_DIV + TYPE_DELTA1: if (cvariable3.m_fData.IsZero()) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = cvariable2.m_fData / cvariable3.m_fData; break;
+			case OPER_MOD + TYPE_DELTA1: if (cvariable3.m_fData.IsZero()) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = cvariable2.m_fData.Round() % cvariable3.m_fData.Round(); break;
+			case OPER_MULT + TYPE_DELTA1: variable1.m_fData = cvariable2.m_fData * cvariable3.m_fData; break;
+			case OPER_LET + TYPE_DELTA1: variable1.m_fData = cvariable2.m_fData; break;
+			case OPER_NOT + TYPE_DELTA1: variable1.m_fData = cvariable2.m_fData.IsZero(); break;
+			case OPER_INVERT + TYPE_DELTA1: variable1.m_fData = -cvariable2.m_fData; break;
+			case OPER_EQ + TYPE_DELTA1: variable1.m_fData = (cvariable2.m_fData == cvariable3.m_fData); break;
+			case OPER_NE + TYPE_DELTA1: variable1.m_fData = (cvariable2.m_fData != cvariable3.m_fData); break;
+			case OPER_GT + TYPE_DELTA1: variable1.m_fData = (cvariable2.m_fData > cvariable3.m_fData); break;
+			case OPER_LS + TYPE_DELTA1: variable1.m_fData = (cvariable2.m_fData < cvariable3.m_fData); break;
+			case OPER_GE + TYPE_DELTA1: variable1.m_fData = (cvariable2.m_fData >= cvariable3.m_fData); break;
+			case OPER_LE + TYPE_DELTA1: variable1.m_fData = (cvariable2.m_fData <= cvariable3.m_fData); break;
 			case OPER_SET_ARRAY + TYPE_DELTA1:
-				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					ibBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+				if (!SetArrayValue(variable1, cvariable2, GetValue(cvariable3)))
+					ibBackendCoreException::Error(_("Cannot set array value '%s'"), cvariable3.GetString());
 				break;//set array value
 			case OPER_GET_ARRAY + TYPE_DELTA1:
-				if (!GetArrayValue(variable1, variable2, variable3))
-					ibBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+				if (!GetArrayValue(variable1, variable2, cvariable3))
+					ibBackendCoreException::Error(_("Cannot get array value '%s'"), cvariable3.GetString());
 				break; //getting the array value
-			case OPER_IF + TYPE_DELTA1: if (variable1.m_fData.IsZero()) lCodeLine = index2 - 1; break;
+			case OPER_IF + TYPE_DELTA1: if (cvariable1.m_fData.IsZero()) lCodeLine = index2 - 1; break;
 				//STRING
-			case OPER_ADD + TYPE_DELTA2: variable1.m_sData = variable2.m_sData + variable3.m_sData; break;
-			case OPER_LET + TYPE_DELTA2: variable1.m_sData = variable2.m_sData; break;
+			case OPER_ADD + TYPE_DELTA2: variable1.m_sData = cvariable2.m_sData + cvariable3.m_sData; break;
+			case OPER_LET + TYPE_DELTA2: variable1.m_sData = cvariable2.m_sData; break;
 			case OPER_SET_ARRAY + TYPE_DELTA2:
-				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					ibBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+				if (!SetArrayValue(variable1, cvariable2, GetValue(cvariable3)))
+					ibBackendCoreException::Error(_("Cannot set array value '%s'"), cvariable3.GetString());
 				break; //set array value
 			case OPER_GET_ARRAY + TYPE_DELTA2:
-				if (!GetArrayValue(variable1, variable2, variable3))
-					ibBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+				if (!GetArrayValue(variable1, variable2, cvariable3))
+					ibBackendCoreException::Error(_("Cannot get array value '%s'"), cvariable3.GetString());
 				break; //getting the array value
-			case OPER_IF + TYPE_DELTA2: if (variable1.m_sData.IsEmpty()) lCodeLine = index2 - 1; break;
+			case OPER_IF + TYPE_DELTA2: if (cvariable1.m_sData.IsEmpty()) lCodeLine = index2 - 1; break;
 				//DATE
-			case OPER_ADD + TYPE_DELTA3: variable1.m_dData = variable2.m_dData + variable3.m_dData; break;
-			case OPER_SUB + TYPE_DELTA3: variable1.m_dData = variable2.m_dData - variable3.m_dData; break;
-			case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
-			case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
-			case OPER_MULT + TYPE_DELTA3: variable1.m_dData = variable2.m_dData * variable3.m_dData; break;
-			case OPER_LET + TYPE_DELTA3: variable1.m_dData = variable2.m_dData; break;
-			case OPER_NOT + TYPE_DELTA3: variable1.m_dData = ~variable2.m_dData; break;
-			case OPER_INVERT + TYPE_DELTA3: variable1.m_dData = -variable2.m_dData; break;
-			case OPER_EQ + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData == variable3.m_dData); break;
-			case OPER_NE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData != variable3.m_dData); break;
-			case OPER_GT + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData > variable3.m_dData); break;
-			case OPER_LS + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData < variable3.m_dData); break;
-			case OPER_GE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData >= variable3.m_dData); break;
-			case OPER_LE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData <= variable3.m_dData); break;
+			case OPER_ADD + TYPE_DELTA3: variable1.m_dData = cvariable2.m_dData + cvariable3.m_dData; break;
+			case OPER_SUB + TYPE_DELTA3: variable1.m_dData = cvariable2.m_dData - cvariable3.m_dData; break;
+			case OPER_DIV + TYPE_DELTA3: if (cvariable3.m_dData == 0) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = cvariable2.m_dData / cvariable3.GetInteger(); break;
+			case OPER_MOD + TYPE_DELTA3: if (cvariable3.m_dData == 0) { ibBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = (int)cvariable2.m_dData % cvariable3.GetInteger(); break;
+			case OPER_MULT + TYPE_DELTA3: variable1.m_dData = cvariable2.m_dData * cvariable3.m_dData; break;
+			case OPER_LET + TYPE_DELTA3: variable1.m_dData = cvariable2.m_dData; break;
+			case OPER_NOT + TYPE_DELTA3: variable1.m_dData = ~cvariable2.m_dData; break;
+			case OPER_INVERT + TYPE_DELTA3: variable1.m_dData = -cvariable2.m_dData; break;
+			case OPER_EQ + TYPE_DELTA3: variable1.m_dData = (cvariable2.m_dData == cvariable3.m_dData); break;
+			case OPER_NE + TYPE_DELTA3: variable1.m_dData = (cvariable2.m_dData != cvariable3.m_dData); break;
+			case OPER_GT + TYPE_DELTA3: variable1.m_dData = (cvariable2.m_dData > cvariable3.m_dData); break;
+			case OPER_LS + TYPE_DELTA3: variable1.m_dData = (cvariable2.m_dData < cvariable3.m_dData); break;
+			case OPER_GE + TYPE_DELTA3: variable1.m_dData = (cvariable2.m_dData >= cvariable3.m_dData); break;
+			case OPER_LE + TYPE_DELTA3: variable1.m_dData = (cvariable2.m_dData <= cvariable3.m_dData); break;
 			case OPER_SET_ARRAY + TYPE_DELTA3:
-				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					ibBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+				if (!SetArrayValue(variable1, cvariable2, GetValue(cvariable3)))
+					ibBackendCoreException::Error(_("Cannot set array value '%s'"), cvariable3.GetString());
 				break; //setting the array value
 			case OPER_GET_ARRAY + TYPE_DELTA3:
-				if (!GetArrayValue(variable1, variable2, variable3))
-					ibBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+				if (!GetArrayValue(variable1, variable2, cvariable3))
+					ibBackendCoreException::Error(_("Cannot get array value '%s'"), cvariable3.GetString());
 				break; //getting the array value
-			case OPER_IF + TYPE_DELTA3: if (!variable1.m_dData) lCodeLine = index2 - 1; break;
+			case OPER_IF + TYPE_DELTA3: if (!cvariable1.m_dData) lCodeLine = index2 - 1; break;
 				//BOOLEAN
-			case OPER_ADD + TYPE_DELTA4: variable1.m_bData = variable2.m_bData + variable3.m_bData; break;
-			case OPER_LET + TYPE_DELTA4: variable1.m_bData = variable2.m_bData; break;
-			case OPER_NOT + TYPE_DELTA4: variable1.m_bData = !variable2.m_bData; break;
-			case OPER_INVERT + TYPE_DELTA4: variable1.m_bData = !variable2.m_bData; break;
-			case OPER_EQ + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData == variable3.m_bData); break;
-			case OPER_NE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData != variable3.m_bData); break;
-			case OPER_GT + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData > variable3.m_bData); break;
-			case OPER_LS + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData < variable3.m_bData); break;
-			case OPER_GE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData >= variable3.m_bData); break;
-			case OPER_LE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData <= variable3.m_bData); break;
-			case OPER_IF + TYPE_DELTA4: if (!variable1.m_bData) lCodeLine = index2 - 1; break;
+			case OPER_ADD + TYPE_DELTA4: variable1.m_bData = cvariable2.m_bData + cvariable3.m_bData; break;
+			case OPER_LET + TYPE_DELTA4: variable1.m_bData = cvariable2.m_bData; break;
+			case OPER_NOT + TYPE_DELTA4: variable1.m_bData = !cvariable2.m_bData; break;
+			case OPER_INVERT + TYPE_DELTA4: variable1.m_bData = !cvariable2.m_bData; break;
+			case OPER_EQ + TYPE_DELTA4: variable1.m_bData = (cvariable2.m_bData == cvariable3.m_bData); break;
+			case OPER_NE + TYPE_DELTA4: variable1.m_bData = (cvariable2.m_bData != cvariable3.m_bData); break;
+			case OPER_GT + TYPE_DELTA4: variable1.m_bData = (cvariable2.m_bData > cvariable3.m_bData); break;
+			case OPER_LS + TYPE_DELTA4: variable1.m_bData = (cvariable2.m_bData < cvariable3.m_bData); break;
+			case OPER_GE + TYPE_DELTA4: variable1.m_bData = (cvariable2.m_bData >= cvariable3.m_bData); break;
+			case OPER_LE + TYPE_DELTA4: variable1.m_bData = (cvariable2.m_bData <= cvariable3.m_bData); break;
+			case OPER_IF + TYPE_DELTA4: if (!cvariable1.m_bData) lCodeLine = index2 - 1; break;
 			}
 			lCodeLine++;
 		}
@@ -972,8 +1085,14 @@ start_label:
 //nRunModule parameters:
 //false-do not run
 //true-run
-void ibProcUnit::Execute(ibByteCode& cByteCode, ibValue* pvarRetValue, bool bRunModule)
+void ibProcUnit::Execute(const ibByteCode& cByteCode, ibByteBinder& br, ibValue* pvarRetValue)
 {
+	const std::vector<ibValue*>& bindings = br.GetSlots();
+	// `bDelta` here is the unified flag — historically the API split
+	// it into bRunModule (run-or-skip) + bDelta (skip-function-bodies-
+	// during-initial-pass), but the two always moved together. The
+	// variable() macro expands to use bDelta directly, so keep the name.
+	const bool bDelta = br.IsDelta();
 	Reset();
 
 	if (!cByteCode.m_bCompile)
@@ -1027,33 +1146,52 @@ void ibProcUnit::Execute(ibByteCode& cByteCode, ibValue* pvarRetValue, bool bRun
 		m_pppArrayList[i + 2] = pCurUnit->m_cCurContext.m_pRefLocVars;
 	}
 
-	//support for external variables
-	for (unsigned int i = 0; i < cByteCode.m_listExternValue.size(); i++) {
-		if (cByteCode.m_listExternValue[i]) {
-			m_cCurContext.m_pRefLocVars[i] = cByteCode.m_listExternValue[i];
+	// Pre-flight: every required binding (m_listVar entry with
+	// kind ∈ {External, Context}) must be wired and its class type
+	// must match. Catches missed SetVar() calls (slot still null) and
+	// type mismatches early — before the dispatch loop hits an
+	// OPER_GET / OPER_GET_A on a stale slot. Bytecode is a const
+	// template; only the binder supplies live values. Slot index in
+	// the binder's m_slots vector matches the entry's m_slotIndex
+	// (= runtime frame slot), so we copy 1:1 into m_pRefLocVars.
+	for (const auto& v : cByteCode.m_listVar) {
+		if (!v.IsBindRequired()) continue;
+		const size_t slot = static_cast<size_t>(v.m_slotIndex);
+		ibValue* val = (slot < bindings.size()) ? bindings[slot] : nullptr;
+		if (val == nullptr) {
+			ibBackendCoreException::Error(
+				_("Required binding not provided: '%s' (slot %zu)"),
+				v.m_strRealName, slot);
 		}
+		if (v.m_clsid != 0 && val->GetClassType() != v.m_clsid) {
+			ibBackendCoreException::Error(
+				_("Binding type mismatch for '%s': expected clsid %u, got %u"),
+				v.m_strRealName,
+				(unsigned)v.m_clsid,
+				(unsigned)val->GetClassType());
+		}
+		m_cCurContext.m_pRefLocVars[slot] = val;
 	}
-
-	bool bDelta = true;
 
 	//Initial initialization of module variables
 	unsigned int lFinish = m_pByteCode->m_listCode.size();
 	ibValue** pRefLocVars = m_cCurContext.m_pRefLocVars;
 
 	for (unsigned int lCodeLine = 0; lCodeLine < lFinish; lCodeLine++) {
-		ibByteUnit& byte = m_pByteCode->m_listCode[lCodeLine];
+		const ibByteUnit& byte = m_pByteCode->m_listCode[lCodeLine];
 		if (byte.m_numOper == OPER_SET_TYPE) {
 			variable1.SetType(ibValue::GetVTByID(array2));
 		}
 	}
 
-	//Disable writing constants
-	for (unsigned int i = 0; i < m_pByteCode->m_listConst.size(); i++) {
-		m_pByteCode->m_listConst[i].m_bReadOnly = true;
-	}
+	// Constants are marked read-only at compile finalize — bc is a
+	// const template at runtime, no per-Execute mutation here.
 
-	if (bRunModule) {
-		m_cCurContext.m_compileContext = cByteCode.m_compileModule->m_rootContext;
+	if (bDelta) {
+		// Module-body entry — m_currentFunction stays null (frame is
+		// not inside a function). Runtime carries no compile-context
+		// at all — eval / debugger pull all metadata from bytecode.
+		m_cCurContext.m_currentFunction = nullptr;
 		Execute(&m_cCurContext, pvarRetValue, bDelta);
 	}
 }
@@ -1196,7 +1334,7 @@ void ibProcUnit::CallAsProc(const long lCodeLine, ibValue** ppParams, const long
 
 	cRunContext.m_lParamCount = array3;//number of formal parameters
 	cRunContext.m_lStart = lCodeLine;
-	cRunContext.m_compileContext = reinterpret_cast<ibCompileContext*>(m_pByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
+	// m_currentFunction set by OPER_FUNC handler in Execute (tape-driven).
 
 	//load parameters
 	memcpy(&cRunContext.m_pRefLocVars[0], &ppParams[0], std::min(lSizeArray, cRunContext.m_lParamCount) * sizeof(ibValue*));
@@ -1227,7 +1365,7 @@ void ibProcUnit::CallAsFunc(const long lCodeLine, ibValue& pvarRetValue, ibValue
 
 	cRunContext.m_lParamCount = array3;//number of formal parameters
 	cRunContext.m_lStart = lCodeLine;
-	cRunContext.m_compileContext = reinterpret_cast<ibCompileContext*>(m_pByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
+	// m_currentFunction set by OPER_FUNC handler in Execute (tape-driven).
 
 	//load parameters
 	memcpy(&cRunContext.m_pRefLocVars[0], &ppParams[0], std::min(lSizeArray, cRunContext.m_lParamCount) * sizeof(ibValue*));
@@ -1238,10 +1376,17 @@ void ibProcUnit::CallAsFunc(const long lCodeLine, ibValue& pvarRetValue, ibValue
 
 long ibProcUnit::FindProp(const wxString& strPropName) const
 {
-	auto iterator = std::find_if(m_pByteCode->m_listExportVar.begin(), m_pByteCode->m_listExportVar.end(),
-		[strPropName](const auto pair) {return stringUtils::CompareString(strPropName, pair.first); });
-	if (iterator != m_pByteCode->m_listExportVar.end())
-		return (long)iterator->second;
+	// Module-level exports are user-declared frame vars with kind=Export.
+	// Skip Local (private), External / Context (ambient bindings — not
+	// props of the owning module's value) and ContextProp (their
+	// m_slotIndex is a prop-idx, not a frame slot).
+	auto iterator = std::find_if(m_pByteCode->m_listVar.begin(), m_pByteCode->m_listVar.end(),
+		[&strPropName](const auto& v) {
+			if (!v.IsExport()) return false;
+			return stringUtils::CompareString(strPropName, v.m_strRealName);
+		});
+	if (iterator != m_pByteCode->m_listVar.end())
+		return (long)*iterator;
 	return wxNOT_FOUND;
 }
 
@@ -1282,6 +1427,52 @@ bool ibProcUnit::GetPropVal(const wxString& strPropName, ibValue& pvarPropVal) /
 	return false;
 }
 
+// Specialized compile module for eval / watch expressions. Captures
+// the host bc + the host function frame at construction so resolve-
+// side code (compileContext.cpp's bc walk) can expose host's locals
+// to the expression. Mirrors expression-only mode onto bc-side
+// (m_cByteCode.m_bExpressionOnly) so runtime's OPER_GET_A scoped-prop
+// check fires for chain access through eval
+// (`Catalogs.X.CreateElement().ThisObject`).
+//
+// Lives in procUnit.cpp (the runtime module) because it's the only
+// place that constructs eval modules. Base ibCompileCode exposes
+// virtuals (GetEvalHostFunction / IsExpressionOnly) that return
+// false-by-default; only ibCompileEval overrides — keeps the header
+// clean.
+class ibCompileEval : public ibCompileCode {
+public:
+	// Construct from a runtime context — pulls host bc + host fn out
+	// of pRunContext. Used by Evaluate / CompileExpression.
+	explicit ibCompileEval(ibRunContext* pRunContext)
+		: ibCompileCode(),
+		  m_evalHostFunction(pRunContext ? pRunContext->m_currentFunction : nullptr)
+	{
+		m_cByteCode.m_bExpressionOnly = true;
+		m_cByteCode.m_parent = pRunContext ? pRunContext->GetByteCode() : nullptr;
+		m_rootContext->m_numFindLocalInParent = 2;
+	}
+
+	// Construct from a (host bc, host fn) pair — for paths where
+	// ibRunContext isn't directly available (AOT / standalone eval).
+	ibCompileEval(const ibByteCode* hostBc, const ibByteCode::ibByteFunction* hostFn)
+		: ibCompileCode(),
+		  m_evalHostFunction(hostFn)
+	{
+		m_cByteCode.m_bExpressionOnly = true;
+		m_cByteCode.m_parent = hostBc;
+		m_rootContext->m_numFindLocalInParent = 2;
+	}
+
+	bool IsExpressionOnly() const override { return true; }
+	const ibByteCode::ibByteFunction* GetEvalHostFunction() const override {
+		return m_evalHostFunction;
+	}
+
+private:
+	const ibByteCode::ibByteFunction* m_evalHostFunction;
+};
+
 bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunContext, ibValue& pvarRetValue, bool compileBlock)
 {
 	if (pRunContext == nullptr) {
@@ -1301,24 +1492,21 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 	std::shared_ptr<ibProcUnitEvaluate> runEvaluate = nullptr;
 	if (iterator == pRunContext->m_listEval.end()) { //this text has not yet been compiled
 
-		ibCompileCode* compileExpression = new ibCompileCode;
+		auto compileExpression = std::make_unique<ibCompileEval>(pRunContext);
 		compileExpression->Load(strExpression);
 
-		ibProcUnitEvaluate* evalUnit = new ibProcUnitEvaluate;
-		if (!evalUnit->CompileExpression(pRunContext, pvarRetValue, *compileExpression, compileBlock)) {
-			// If Execute inside CompileExpression got far enough to set m_pByteCode
-			// before throwing, ~ibProcUnitEvaluate would delete compileExpression
-			// through m_pByteCode->m_compileModule — and the explicit delete below
-			// would then double-free. Reset() nulls m_pByteCode (and releases any
-			// partial array allocations from Execute) so the destructor is a no-op.
-			evalUnit->Reset();
-			wxDELETE(evalUnit);
-			wxDELETE(compileExpression);
+		auto evalUnit = std::make_shared<ibProcUnitEvaluate>();
+		// Transfer ownership BEFORE CompileExpression so the unique_ptr
+		// cleans up on any throw / failure path. No back-pointer wiring
+		// on bytecode side; eval finds its compileCode via GetCompileCode().
+		ibCompileCode& cModuleRef = *compileExpression;
+		evalUnit->TakeCompileCode(std::move(compileExpression));
+		if (!evalUnit->CompileExpression(pRunContext, pvarRetValue, cModuleRef, compileBlock)) {
 			if (!isEvalMode) ibBackendException::SetEvalMode(false);
 			return false;
 		}
 
-		runEvaluate = std::shared_ptr<ibProcUnitEvaluate>(evalUnit);
+		runEvaluate = evalUnit;
 
 		//everything is OK
 		pRunContext->m_listEval.insert_or_assign(stringUtils::MakeUpper(strExpression), runEvaluate);
@@ -1327,32 +1515,16 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 		runEvaluate = iterator->second;
 	}
 
-	//Launch
-	bool bDelta = false;
-
-	ibCompileContext* compileContext = pRunContext->m_compileContext;
-	wxASSERT(compileContext);
-	ibCompileCode* compileCode = compileContext->m_compileModule;
-	wxASSERT(compileCode);
-	if (compileCode->m_bExpressionOnly) {
-		ibCompileContext* curContext = compileContext;
-		ibCompileCode* curModule = compileCode;
-		while (curContext != nullptr) {
-			if (!curModule->m_bExpressionOnly)
-				break;
-			curContext = curContext->m_parentContext;
-			curModule = compileCode->GetParent();
-		}
-		if (curContext && curContext->m_numReturn == RETURN_NONE) {
-			bDelta = true;
-		}
-	}
-	else if (compileContext->m_numReturn == RETURN_NONE) {
-		bDelta = true;
-	}
-
+	// Eval bytecode is a single expression — never has OPER_FUNC, so the
+	// "skip module body" semantics of bDelta don't apply. Frame offset
+	// is fixed by layout: own = pppArrayList[0]; host = pppArrayList[1]
+	// (set by CompileExpression override to pRunContext->m_pRefLocVars);
+	// host's parent module = pppArrayList[2] (set by outer Execute via
+	// SetParent → GetParent loop). bDelta=false aligns the emitted
+	// depth chain (own=0, parent=1, parent²=2, …) with this layout
+	// directly — no +1 shift in pppArrayList[depth + (bDelta?1:0)].
 	try {
-		runEvaluate->Execute(&runEvaluate->m_cCurContext, &pvarRetValue, bDelta);
+		runEvaluate->Execute(&runEvaluate->m_cCurContext, &pvarRetValue, /*bDelta=*/false);
 	}
 	catch (const ibBackendException&) {
 		if (!isEvalMode) ibBackendException::SetEvalMode(false);
@@ -1365,17 +1537,11 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 
 bool ibProcUnit::CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetValue, ibCompileCode& cModule, bool bCompileBlock)
 {
-	ibByteCode* const byteCode = pRunContext->GetByteCode();
+	const ibByteCode* const byteCode = pRunContext->GetByteCode();
 
-	//set the expression calling context as parents
-	if (byteCode != nullptr) {
-		cModule.m_cByteCode.m_parent = byteCode;
-		cModule.m_parent = byteCode->m_compileModule;
-		cModule.m_rootContext->m_parentContext = pRunContext->m_compileContext;
-	}
-
-	cModule.m_bExpressionOnly = true;
-	cModule.m_rootContext->m_numFindLocalInParent = 2;
+	// Eval state (m_bExpressionOnly, m_cByteCode.m_parent, host fn,
+	// m_numFindLocalInParent) is pre-set by ibCompileEval's ctor —
+	// CompileExpression's caller passes a fully-prepared eval module.
 	cModule.m_numCurrentCompile = wxNOT_FOUND;
 
 	try {
@@ -1386,8 +1552,6 @@ bool ibProcUnit::CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetVa
 	catch (...) {
 		return false;
 	}
-
-	cModule.m_cByteCode.m_compileModule = &cModule;
 
 	//process the bytecode array to return the expression result
 	ibByteUnit code;
@@ -1421,26 +1585,32 @@ bool ibProcUnit::CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetVa
 	SetParent(pRunContext->m_procUnit);
 
 	try {
-		ibCompileContext* compileContext = pRunContext->m_compileContext;
-		wxASSERT(compileContext);
-		ibCompileCode* compleModule = compileContext->m_compileModule;
-		wxASSERT(compleModule);
 		Execute(cModule.m_cByteCode, pvarRetValue, false);
-		if (compleModule->m_bExpressionOnly) {
+		// Frame-array setup — bytecode-driven walk. If host frame is
+		// already expression-only (eval-inside-eval), count nested
+		// expression-only ancestors; pick m_pppArrayList from N levels
+		// up the host's array. Else fall back to host's local frame.
+		if (pRunContext->IsExpressionOnly()) {
 			int nParentNumber = 1;
-			ibCompileContext* curContext = compileContext;
-			ibCompileCode* curModule = compleModule;
-			while (curContext != nullptr) {
-				if (curModule->m_bExpressionOnly)
-					nParentNumber++;
-				curContext = curContext->m_parentContext; curModule = compleModule->GetParent();
+			for (const ibByteCode* bc = pRunContext->GetByteCode();
+				 bc != nullptr && bc->m_bExpressionOnly;
+				 bc = bc->m_parent) {
+				nParentNumber++;
 			}
 			m_pppArrayList[nParentNumber] = pRunContext->m_procUnit->m_pppArrayList[nParentNumber - 1];
 		}
 		else {
+			// Layout (eval bDelta=false):
+			//   [0] = eval own
+			//   [1] = host's current frame (function-frame if inside
+			//         a function — pRunContext->m_pRefLocVars; module-
+			//         body frame if not; same memory either way)
+			//   [2] = host's module-body frame (GetParent(0); == [1]
+			//         iff host is not inside a function — that's a
+			//         semantic coincidence, not a duplicate slot)
+			//   [3+] = host's parent modules (GetParent(1+))
 			m_pppArrayList[1] = pRunContext->m_pRefLocVars;
 		}
-		m_cCurContext.m_compileContext = cModule.m_rootContext;
 	}
 	catch (...) {
 		return false;
@@ -1453,12 +1623,10 @@ bool ibProcUnit::CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetVa
 //						Construction/Destruction                    //
 //////////////////////////////////////////////////////////////////////
 
-ibProcUnitEvaluate::~ibProcUnitEvaluate()
-{
-	if (m_pByteCode != nullptr) {
-		delete m_pByteCode->m_compileModule;
-	}
-}
+// ~ibProcUnitEvaluate is now `= default` in the header — m_compileCode
+// (unique_ptr) handles cleanup automatically. The old manual delete
+// through m_pByteCode->m_compileModule back-pointer is gone, and so is
+// the back-pointer field on ibByteCode itself.
 
 //**********************************************************************
 //*                       Runtime register                             *

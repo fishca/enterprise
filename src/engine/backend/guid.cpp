@@ -77,30 +77,30 @@ bool ibGuid::isValid() const
 }
 
 template <typename I>
-inline void hex_to_string(std::string& out, I& w, size_t hex_len = sizeof(I) << 1) {
+inline void hex_to_string(wxString& out, I& w, size_t hex_len = sizeof(I) << 1) {
 	static const char* digits = "0123456789abcdef";
 	for (size_t i = 0, j = (hex_len - 1) * 4; i < hex_len; ++i, j -= 4)
-		out.push_back(digits[(w >> j) & 0x0f]);
+		out.append(digits[(w >> j) & 0x0f]);
 }
 
 // convert to string using std::snprintf() and std::string
-std::string ibGuid::str() const
+wxString ibGuid::str() const
 {
-	std::string out; out.reserve(36);
+	wxString out; out.reserve(36);
 	hex_to_string(out, _bytes[0]);
 	hex_to_string(out, _bytes[1]);
 	hex_to_string(out, _bytes[2]);
 	hex_to_string(out, _bytes[3]);
-	out.push_back('-');
+	out.append('-');
 	hex_to_string(out, _bytes[4]);
 	hex_to_string(out, _bytes[5]);
-	out.push_back('-');
+	out.append('-');
 	hex_to_string(out, _bytes[6]);
 	hex_to_string(out, _bytes[7]);
-	out.push_back('-');
+	out.append('-');
 	hex_to_string(out, _bytes[8]);
 	hex_to_string(out, _bytes[9]);
-	out.push_back('-');
+	out.append('-');
 	hex_to_string(out, _bytes[10]);
 	hex_to_string(out, _bytes[11]);
 	hex_to_string(out, _bytes[12]);

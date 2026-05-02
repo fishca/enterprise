@@ -156,7 +156,7 @@ public:
 	// kind = what this session does in the running process. The process-
 	// level run mode (how the exe was launched) lives on appData and is
 	// the same for every session inside a process — not duplicated here.
-	ibSession(std::string id, ibSessionKind kind);
+	ibSession(wxString id, ibSessionKind kind);
 
 	// Virtual — derived ibGUISession (frontend.dll) and per-exe concrete
 	// sessions (ibEnterpriseSession, ibDesignerSession) hang off this.
@@ -215,7 +215,7 @@ public:
 
 	// Legacy id (string representation of m_guid or external cookie).
 	// New code should prefer m_identity.m_guid directly.
-	const std::string& GetId()   const { return m_id; }
+	const wxString&    GetId()   const { return m_id; }
 	ibSessionKind      GetKind() const { return m_kind; }
 
 	// Root runtime of this session. Populated by CreateRoot() driven from
@@ -572,7 +572,7 @@ private:
 	friend class ibSessionScope;
 	friend class ibSessionRegistry;
 
-	std::string    m_id;
+	wxString       m_id;
 	ibSessionKind  m_kind;
 
 	// Registry-only API. Takes m_mtx, mutates the state machine, and

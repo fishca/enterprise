@@ -62,7 +62,7 @@ public:
 		m_listSession.emplace_back(runMode, kind, startedTime, strUserName, strComputerName, strSession);
 	}
 
-	wxString GetSessionArrayHash() const { return wxString(m_sessionArrayHash.str()); }
+	const ibGuid& GetSessionArrayHash() const { return m_sessionArrayHash; }
 
 	wxString GetUserName    (unsigned int idx) const;
 	wxString GetComputerName(unsigned int idx) const;
@@ -88,11 +88,11 @@ public:
 	// Back-fill kinds after rows were appended — used by the registry
 	// snapshot builder to tolerate legacy schemas where the `kind`
 	// column lives in a second optional SELECT.
-	void SetKindsFromMap    (const std::unordered_map<std::string, int>&  kindBySession);
+	void SetKindsFromMap    (const std::unordered_map<wxString, int>&  kindBySession);
 	// Back-fill exclusive flags from a second optional SELECT — same
 	// pattern as kinds, tolerant of pre-migration schemas where the
 	// column doesn't exist yet.
-	void SetExclusiveFromMap(const std::unordered_map<std::string, bool>& exclusiveBySession);
+	void SetExclusiveFromMap(const std::unordered_map<wxString, bool>& exclusiveBySession);
 
 	// Per-row exclusive flag accessor — returns the holder session (the
 	// only one with m_exclusive==true), if any. Used by ProcessAdd's

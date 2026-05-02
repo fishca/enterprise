@@ -149,8 +149,7 @@ void ibDebuggerServer::WakeDebugSession(const wxString& sessionGuid)
 	// stay parked at their own breakpoints.
 	if (sessionGuid.IsEmpty()) { WakeAllDebugSessions(); return; }
 
-	ibSession* sess = ibSessionRegistry::Instance().Find(
-		std::string(sessionGuid.mb_str(wxConvUTF8)));
+	ibSession* sess = ibSessionRegistry::Instance().Find(sessionGuid);
 	if (sess == nullptr) return;
 	auto* d = sess->Debug();
 	if (d == nullptr) return;
@@ -212,7 +211,7 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 		// Session guid travels with every loop-entry packet so the
 		// designer side can route Continue/Step/Eval back to the right
 		// session in a multi-tab wes process.
-		commandChannelEnterLoop.w_stringZ(wxString::FromUTF8(sess->GetId().c_str()));
+		commandChannelEnterLoop.w_stringZ(sess->GetId());
 		commandChannelEnterLoop.w_stringZ(strDocPath);
 		commandChannelEnterLoop.w_stringZ(strModuleName);
 		commandChannelEnterLoop.w_s32(numLine);
@@ -277,7 +276,7 @@ void ibDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& s
 		ibWriterMemory commandChannelLeaveLoop;
 
 		commandChannelLeaveLoop.w_u16(CommandId_LeaveLoop);
-		commandChannelLeaveLoop.w_stringZ(wxString::FromUTF8(sess->GetId().c_str()));
+		commandChannelLeaveLoop.w_stringZ(sess->GetId());
 		commandChannelLeaveLoop.w_stringZ(strDocPath);
 		commandChannelLeaveLoop.w_stringZ(strModuleName);
 		commandChannelLeaveLoop.w_s32(numLine);

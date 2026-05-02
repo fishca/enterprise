@@ -77,20 +77,20 @@ wxString ibSessionSnapshot::GetSessionKindDescr(unsigned int idx) const
 }
 
 void ibSessionSnapshot::SetKindsFromMap(
-	const std::unordered_map<std::string, int>& kindBySession)
+	const std::unordered_map<wxString, int>& kindBySession)
 {
 	for (auto& u : m_listSession) {
-		auto it = kindBySession.find(std::string(u.m_strSession.ToUTF8().data()));
+		auto it = kindBySession.find(u.m_strSession);
 		if (it != kindBySession.end())
 			u.m_kind = it->second;
 	}
 }
 
 void ibSessionSnapshot::SetExclusiveFromMap(
-	const std::unordered_map<std::string, bool>& exclusiveBySession)
+	const std::unordered_map<wxString, bool>& exclusiveBySession)
 {
 	for (auto& u : m_listSession) {
-		auto it = exclusiveBySession.find(std::string(u.m_strSession.ToUTF8().data()));
+		auto it = exclusiveBySession.find(u.m_strSession);
 		if (it != exclusiveBySession.end())
 			u.m_exclusive = it->second;
 	}

@@ -18,7 +18,7 @@
 #include <wx/colour.h>   // wxColour
 #include <wx/font.h>     // wxFont
 
-#include "../../../3rdparty/nlohmann/json.hpp"
+#include "jsonAdapter.h"
 
 class ibWebWindow;
 
@@ -164,18 +164,18 @@ public:
 	virtual nlohmann::json ToJSON() const override {
 		auto n = ibWebSizer::ToJSON();
 		n["orient"]  = m_orient;
-		n["title"]   = std::string(m_title.mb_str(wxConvUTF8));
+		n["title"]   = m_title;
 		n["enabled"] = m_enabled;
 		n["shown"]   = m_shown;
 		if (!m_tooltip.IsEmpty())
-			n["tooltip"] = std::string(m_tooltip.mb_str(wxConvUTF8));
+			n["tooltip"] = m_tooltip;
 		if (m_fg.IsOk())
-			n["fg"] = std::string(m_fg.GetAsString(wxC2S_HTML_SYNTAX).mb_str());
+			n["fg"] = m_fg.GetAsString(wxC2S_HTML_SYNTAX);
 		if (m_bg.IsOk())
-			n["bg"] = std::string(m_bg.GetAsString(wxC2S_HTML_SYNTAX).mb_str());
+			n["bg"] = m_bg.GetAsString(wxC2S_HTML_SYNTAX);
 		if (m_font.IsOk()) {
 			nlohmann::json fj;
-			fj["family"] = std::string(m_font.GetFaceName().mb_str(wxConvUTF8));
+			fj["family"] = m_font.GetFaceName();
 			fj["size"]   = m_font.GetPointSize();
 			fj["bold"]   = m_font.GetWeight() == wxFONTWEIGHT_BOLD;
 			fj["italic"] = m_font.GetStyle()  == wxFONTSTYLE_ITALIC;

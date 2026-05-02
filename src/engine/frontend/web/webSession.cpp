@@ -46,7 +46,7 @@ std::int64_t NowMs()
 
 } // namespace
 
-ibWebSession::ibWebSession(std::string id, std::string user)
+ibWebSession::ibWebSession(wxString id, wxString user)
 	: m_id(std::move(id))
 	, m_user(std::move(user))
 	, m_lastActiveMs(NowMs())
@@ -66,16 +66,14 @@ ibSession* ibWebSession::Session() const
 
 bool ibWebSession::OnInit()
 {
-	if (activeMetaData != nullptr) {
-		const wxString& name = activeMetaData->GetConfigName();
-		m_configName = std::string(name.mb_str(wxConvUTF8));
-	}
+	if (activeMetaData != nullptr)
+		m_configName = activeMetaData->GetConfigName();
 
 	m_initialized = true;
 	return true;
 }
 
-bool ibWebSession::Login(const std::string& user, const std::string& password)
+bool ibWebSession::Login(const wxString& user, const wxString& password)
 {
 	// Serialize against a concurrent OnExit on this same instance.
 	// SessionManager::Login holds a shared_ptr keeper while we run; if
@@ -100,8 +98,8 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	// happens separately via session->Open below so a wrong password
 	// just rejects the Attach; the anonymous row can be retried with new
 	// creds without re-creating the ticket.
-	const wxString presetGuid = wxString::FromUTF8(m_id.c_str());
-	const wxString address    = wxString::FromUTF8(wfrontendServerAddress().c_str());
+	const wxString& presetGuid = m_id;
+	const wxString  address    = wxString::FromUTF8(wfrontendServerAddress().c_str());
 	// CreateSession throws via ibBackendCoreException::Error on registry
 	// Connect / OnCreateSession failure; web HTTP handlers expect bool
 	// false instead of an exception escaping into httplib's loop.
@@ -131,9 +129,7 @@ bool ibWebSession::Login(const std::string& user, const std::string& password)
 	// OnShowAuthenticate. Base ibSession returns false there — web's
 	// HTTP login form is the user-visible prompt, driven from the
 	// client-side, not from a modal.
-	const wxString wxUser = wxString::FromUTF8(user.c_str());
-	const wxString wxPass = wxString::FromUTF8(password.c_str());
-	if (!m_session->Open(wxUser, wxPass)) {
+	if (!m_session->Open(user, password)) {
 		m_session->Close();   // submit Remove → sys_session row DELETEd
 		m_session.reset();
 		return false;

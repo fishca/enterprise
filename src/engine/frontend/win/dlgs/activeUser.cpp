@@ -146,7 +146,7 @@ void ibDialogActiveUser::OnKickSelected(wxCommandEvent&)
 	// current process, refuse — kicking yourself only triggers a forced
 	// close on the kicker's own UI, not on a peer.
 	if (auto* self = ibSession::Current()) {
-		if (guid == wxString::FromUTF8(self->GetId().c_str())) {
+		if (guid == self->GetId()) {
 			wxMessageBox(_("Cannot kick the current session. Close the application instead."),
 				wxTheApp->GetAppDisplayName(), wxOK | wxICON_INFORMATION, this);
 			return;
@@ -179,7 +179,7 @@ void ibDialogActiveUser::OnReloadSelected(wxCommandEvent&)
 	// session via the signal path would just close the designer that
 	// invoked it.
 	if (auto* self = ibSession::Current()) {
-		if (guid == wxString::FromUTF8(self->GetId().c_str())) {
+		if (guid == self->GetId()) {
 			wxMessageBox(_("Cannot reload the current session."),
 				wxTheApp->GetAppDisplayName(), wxOK | wxICON_INFORMATION, this);
 			return;

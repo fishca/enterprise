@@ -34,7 +34,7 @@
 
 #include <iostream>
 
-#include "../../3rdparty/nlohmann/json.hpp"
+#include "web/jsonAdapter.h"
 
 #include "web/webSession.h"
 #include "web/webApplication.h"
@@ -119,7 +119,7 @@ public:
 			if (m_sessions.find(id) != m_sessions.end())
 				return id;
 		}
-		auto session = std::make_shared<ibWebSession>(id, std::string());
+		auto session = std::make_shared<ibWebSession>(wxString::FromUTF8(id.c_str()), wxString());
 		if (!session->OnInit())
 			return std::string();
 
@@ -141,7 +141,8 @@ public:
 			if (it == m_sessions.end()) return false;
 			s = it->second;
 		}
-		return s->Login(user, password);
+		return s->Login(wxString::FromUTF8(user.c_str()),
+		                wxString::FromUTF8(password.c_str()));
 	}
 
 	bool Exists(const std::string& id) const
@@ -761,7 +762,7 @@ WFRONTEND_API bool wfrontendSessionPaused(const std::string& sessionId)
 {
 	if (!g_initialized.load() || appData == nullptr)
 		return false;
-	auto* sess = ibSessionRegistry::Instance().Find(sessionId);
+	auto* sess = ibSessionRegistry::Instance().Find(wxString::FromUTF8(sessionId.c_str()));
 	if (sess == nullptr) return false;
 	auto* d = sess->Debug();
 	if (d == nullptr) return false;
@@ -791,8 +792,8 @@ nlohmann::json CollectSection(const ibValueMetaObject* common, const ibClassID& 
 			continue;
 		items.push_back({
 			{ "id",      child->GetMetaID() },
-			{ "name",    std::string(child->GetName().mb_str(wxConvUTF8)) },
-			{ "synonym", std::string(child->GetSynonym().mb_str(wxConvUTF8)) },
+			{ "name",    child->GetName() },
+			{ "synonym", child->GetSynonym() },
 		});
 	}
 	return items;
@@ -812,7 +813,7 @@ WFRONTEND_API std::string wfrontendMenuJSON()
 	// Same set of "main business object" kinds the desktop shows in
 	// the object tree — catalogs, documents, reports and so on.
 	nlohmann::json root = {
-		{ "configuration", std::string(activeMetaData->GetConfigName().mb_str(wxConvUTF8)) },
+		{ "configuration", activeMetaData->GetConfigName() },
 		{ "sections", {
 			{ { "type", "catalogs"  }, { "caption", "Catalogs"  }, { "items", CollectSection(common, g_metaCatalogCLSID)              } },
 			{ { "type", "documents" }, { "caption", "Documents" }, { "items", CollectSection(common, g_metaDocumentCLSID)             } },
@@ -991,10 +992,10 @@ void CollectForms(const ibValueMetaObject* node, nlohmann::json& out)
 			const ibValueMetaObject* owner = dynamic_cast<const ibValueMetaObject*>(form->GetParent());
 			out.push_back({
 				{ "id",         form->GetMetaID() },
-				{ "name",       std::string(form->GetName().mb_str(wxConvUTF8)) },
-				{ "synonym",    std::string(form->GetSynonym().mb_str(wxConvUTF8)) },
+				{ "name",       form->GetName() },
+				{ "synonym",    form->GetSynonym() },
 				{ "owner_id",   owner ? (int)owner->GetMetaID() : 0 },
-				{ "owner_name", owner ? std::string(owner->GetName().mb_str(wxConvUTF8)) : std::string() },
+				{ "owner_name", owner ? owner->GetName() : wxString() },
 			});
 		}
 		CollectForms(child, out);
@@ -1294,7 +1295,7 @@ std::string SessionInfoFromSession(ibWebSession* s)
 		t["modified"] = false;
 		t["hasIcon"]  = false;
 		if (tab != nullptr) {
-			t["title"] = std::string(tab->GetTitle().mb_str(wxConvUTF8));
+			t["title"] = tab->GetTitle();
 			t["hasIcon"] = tab->GetIcon().IsOk();
 			if (auto* host = tab->GetHost()) {
 				if (auto* form = host->GetValueForm()) {
@@ -1308,7 +1309,7 @@ std::string SessionInfoFromSession(ibWebSession* s)
 						if (const auto* metaForm = form->GetFormMetaObject())
 							name = metaForm->GetName();
 					}
-					t["formName"] = std::string(name.mb_str(wxConvUTF8));
+					t["formName"] = name;
 					// Modified state: desktop renders a '*' prefix in the
 					// tab label when wxDocument::IsModified() is true; the
 					// form's m_formModified mirrors that.
@@ -1500,7 +1501,7 @@ WFRONTEND_API std::string wfrontendCtorsJSON()
 		for (auto* ctor : list) {
 			if (ctor == nullptr) continue;
 			arr.push_back({
-				{ "className", std::string(ctor->GetClassName().mb_str(wxConvUTF8)) },
+				{ "className", ctor->GetClassName() },
 				{ "objectType", t },
 			});
 		}

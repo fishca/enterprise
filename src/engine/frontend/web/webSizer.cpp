@@ -85,7 +85,7 @@ bool ibWebSizer::UpdateItemParams(wxObject* child, const AddParams& params)
 nlohmann::json ibWebSizer::ToJSON() const
 {
 	nlohmann::json node = {
-		{ "type", std::string(GetSizerType().mb_str(wxConvUTF8)) },
+		{ "type", GetSizerType() },
 	};
 	if (!m_items.empty()) {
 		nlohmann::json arr = nlohmann::json::array();

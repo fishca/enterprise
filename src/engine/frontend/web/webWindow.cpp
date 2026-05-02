@@ -107,8 +107,8 @@ void ibWebWindow::RemoveChild(ibWebWindow* child)
 nlohmann::json ibWebWindow::ToJSON() const
 {
 	nlohmann::json node = {
-		{ "type",    std::string(GetControlType().mb_str(wxConvUTF8)) },
-		{ "label",   std::string(m_label.mb_str(wxConvUTF8)) },
+		{ "type",    GetControlType() },
+		{ "label",   m_label },
 		{ "enabled", m_enabled },
 		{ "shown",   m_shown },
 	};
@@ -121,15 +121,15 @@ nlohmann::json ibWebWindow::ToJSON() const
 	// style. Tooltip is just the plain string, surfaces as the
 	// element's `title` attribute client-side.
 	if (m_fg.IsOk()) {
-		node["fg"] = std::string(m_fg.GetAsString(wxC2S_HTML_SYNTAX).mb_str(wxConvUTF8));
+		node["fg"] = m_fg.GetAsString(wxC2S_HTML_SYNTAX);
 	}
 	if (m_bg.IsOk()) {
-		node["bg"] = std::string(m_bg.GetAsString(wxC2S_HTML_SYNTAX).mb_str(wxConvUTF8));
+		node["bg"] = m_bg.GetAsString(wxC2S_HTML_SYNTAX);
 	}
 	if (m_font.IsOk()) {
 		nlohmann::json f = {
 			{ "size",   m_font.GetPointSize() },
-			{ "family", std::string(m_font.GetFaceName().mb_str(wxConvUTF8)) },
+			{ "family", m_font.GetFaceName() },
 			{ "bold",   m_font.GetWeight() >= wxFONTWEIGHT_BOLD },
 			{ "italic", m_font.GetStyle() == wxFONTSTYLE_ITALIC },
 			{ "underline", m_font.GetUnderlined() },
@@ -137,7 +137,7 @@ nlohmann::json ibWebWindow::ToJSON() const
 		node["font"] = std::move(f);
 	}
 	if (!m_tooltip.IsEmpty()) {
-		node["tooltip"] = std::string(m_tooltip.mb_str(wxConvUTF8));
+		node["tooltip"] = m_tooltip;
 	}
 	// Size hints — emit only the axes that are constrained. wxDefaultSize
 	// uses -1 for both, so a -1 stays out of the JSON and the browser

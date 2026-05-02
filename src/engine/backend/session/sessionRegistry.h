@@ -128,7 +128,7 @@ struct BACKEND_API ibConnectRequest {
 	// pipeline keeps working through the base ibSession interface.
 	// Default-constructed (empty std::function) → default behaviour.
 	using SessionFactory =
-		std::function<std::shared_ptr<ibSession>(std::string id, ibSessionKind kind)>;
+		std::function<std::shared_ptr<ibSession>(wxString id, ibSessionKind kind)>;
 	SessionFactory m_sessionFactory;
 };
 
@@ -156,9 +156,9 @@ public:
 	// that don't go through the Submit-based Connect(req) flow (test
 	// harnesses, low-level wiring). New code should use Connect(req) +
 	// ibSessionTicket so registry policies and the auth state machine fire.
-	ibSession* Create(const std::string& id, ibRunMode runMode);
-	void       Destroy(const std::string& id);
-	ibSession* Find(const std::string& id);
+	ibSession* Create(const wxString& id, ibRunMode runMode);
+	void       Destroy(const wxString& id);
+	ibSession* Find(const wxString& id);
 
 	// Reverse lookup — find the session in m_own whose root module-manager
 	// equals `mm`. Used by mm::CreateMainModule to recover its owning
@@ -174,7 +174,7 @@ public:
 	// Iterates m_own comparing s->GetFrame() == frame.
 	ibSession* FindSessionByFrame(class ibBackendDocFrame* frame) const;
 
-	std::vector<std::string> List() const;
+	std::vector<wxString> List() const;
 	std::size_t              Count() const;
 
 	// Does the registered server session (m_currentServer) currently have
@@ -546,7 +546,7 @@ private:
 	// Until queue-based Add lands, m_sessions is written by Create/Destroy
 	// under m_mutex — classic Phase 2 layout.
 	mutable std::mutex                                           m_mutex;
-	std::unordered_map<std::string, std::unique_ptr<ibSession>>  m_sessions;
+	std::unordered_map<wxString, std::unique_ptr<ibSession>>     m_sessions;
 
 	// --- queue-based ownership (populated by ProcessAdd) ---
 	// shared_ptr — ticket co-owns. When ProcessRemove erases the map
@@ -558,7 +558,7 @@ private:
 	// from compile threads). Writers — ProcessAdd / ProcessRemove on the
 	// registry thread — take a unique lock; readers take a shared lock.
 	mutable std::shared_mutex                                    m_ownMutex;
-	std::unordered_map<std::string, std::shared_ptr<ibSession>>  m_own;
+	std::unordered_map<wxString, std::shared_ptr<ibSession>>     m_own;
 
 	// Worker pool. Allocated by appData ctor for headless modes via
 	// SetWorkerPool; nullptr otherwise. Stop'd before m_own teardown
@@ -723,7 +723,7 @@ inline SessionT* FinishCreateSession(ibSession* base)
 }
 
 template<class SessionT>
-inline std::shared_ptr<ibSession> MakeSessionFactory(std::string id, ibSessionKind kind)
+inline std::shared_ptr<ibSession> MakeSessionFactory(wxString id, ibSessionKind kind)
 {
 	return std::make_shared<SessionT>(std::move(id), kind);
 }

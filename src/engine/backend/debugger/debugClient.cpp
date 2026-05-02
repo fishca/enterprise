@@ -728,7 +728,7 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 		commandReader.r_stringZ(m_userName);
 		commandReader.r_stringZ(m_compName);
 
-		m_verifiedConnection = activeMetaData->GetConfigGuid() == m_confGuid;
+		m_verifiedConnection = activeMetaData->GetConfigGuid() == ibGuid(m_confGuid);
 
 		if (m_verifiedConnection && m_connectionType == ConnectionType::ConnectionType_Waiter)
 			m_connectionType = ConnectionType::ConnectionType_Debugger;

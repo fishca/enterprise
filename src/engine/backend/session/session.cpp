@@ -29,7 +29,7 @@ std::shared_mutex s_currentMutex;
 std::unordered_map<std::thread::id, std::weak_ptr<ibSession>> s_currentByThread;
 } // namespace
 
-ibSession::ibSession(std::string id, ibSessionKind kind)
+ibSession::ibSession(wxString id, ibSessionKind kind)
 	: m_id(std::move(id))
 	, m_kind(kind)
 	, m_workDate(wxDateTime::Now())

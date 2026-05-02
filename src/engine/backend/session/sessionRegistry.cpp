@@ -125,7 +125,7 @@ ibSessionRegistry::~ibSessionRegistry()
 
 // --- Legacy Phase-2 API ---------------------------------------------------
 
-ibSession* ibSessionRegistry::Create(const std::string& id, ibRunMode runMode)
+ibSession* ibSessionRegistry::Create(const wxString& id, ibRunMode runMode)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	auto s = std::make_unique<ibSession>(id, SessionKindFromRunMode(runMode));
@@ -134,13 +134,13 @@ ibSession* ibSessionRegistry::Create(const std::string& id, ibRunMode runMode)
 	return raw;
 }
 
-void ibSessionRegistry::Destroy(const std::string& id)
+void ibSessionRegistry::Destroy(const wxString& id)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	m_sessions.erase(id);
 }
 
-ibSession* ibSessionRegistry::Find(const std::string& id)
+ibSession* ibSessionRegistry::Find(const wxString& id)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	auto it = m_sessions.find(id);
@@ -171,10 +171,10 @@ ibSession* ibSessionRegistry::FindSessionByFrame(ibBackendDocFrame* frame) const
 	return nullptr;
 }
 
-std::vector<std::string> ibSessionRegistry::List() const
+std::vector<wxString> ibSessionRegistry::List() const
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	std::vector<std::string> ids;
+	std::vector<wxString> ids;
 	ids.reserve(m_sessions.size());
 	for (const auto& kv : m_sessions)
 		ids.push_back(kv.first);
@@ -453,7 +453,7 @@ ibConnectResult ibSessionRegistry::Connect(const ibConnectRequest& req,
 	identity.m_pid               = CurrentPid();
 	identity.m_expectsAnonPhase  = req.m_userName.IsEmpty();
 
-	const std::string idStr = identity.m_guid.str();
+	const wxString idStr = identity.m_guid;
 
 	// Factory path — typed CreateSession<T> on appData hands us a
 	// callback that builds a derived session (ibGUISession / ibEnterpriseSession /
@@ -850,7 +850,7 @@ static bool InsertSessionRow(ibDatabaseLayer* db, const ibSession& s, const wxSt
 		SESSION_LOG("[session INSERT] PrepareStatement returned null");
 		return false;
 	}
-	stmt->SetParamString(1, wxString::FromUTF8(s.GetId().c_str()));
+	stmt->SetParamString(1, s.GetId());
 	stmt->SetParamString(2, userName);
 	stmt->SetParamInt   (3, int(id.m_appMode));
 	stmt->SetParamDate  (4, id.m_started);
@@ -883,7 +883,7 @@ static bool InsertSessionRow(ibDatabaseLayer* db, const ibSession& s, const wxSt
 		stmtExt->SetParamInt   (1, id.m_pid);
 		stmtExt->SetParamString(2, id.m_address);
 		stmtExt->SetParamInt   (3, int(s.GetKind()));
-		stmtExt->SetParamString(4, wxString::FromUTF8(s.GetId().c_str()));
+		stmtExt->SetParamString(4, s.GetId());
 		try { stmtExt->RunQuery(); } catch (...) { /* legacy schema — fine */ }
 	}
 
@@ -964,7 +964,7 @@ void ibSessionRegistry::ProcessAdd(ibRegistryRequest& req)
 	{
 		std::shared_lock<std::shared_mutex> lk(m_snapshotMtx);
 		if (m_snapshot) {
-			const wxString ownId = wxString::FromUTF8(s.GetId().c_str());
+			const wxString ownId = s.GetId();
 			const unsigned int n = m_snapshot->GetSessionCount();
 			for (unsigned int i = 0; i < n; ++i) {
 				if (m_snapshot->GetSession(i) == ownId) continue;
@@ -1074,7 +1074,7 @@ void ibSessionRegistry::ProcessAttach(ibRegistryRequest& req)
 	// DB wiring — two paths depending on whether the anonymous row
 	// was already inserted by ProcessAdd.
 	if (m_ownsSysSession && m_writeConn) {
-		const wxString guidStr = wxString::FromUTF8(s.GetId().c_str());
+		const wxString guidStr = s.GetId();
 		if (s.Inserted()) {
 			// Was anonymous, now authenticated — update userName only.
 			UpdateSessionUser(m_writeConn.get(), guidStr, info.m_strUserName, info.m_strUserGuid);
@@ -1096,7 +1096,7 @@ void ibSessionRegistry::ProcessDetach(ibRegistryRequest& req)
 	s.SetUserInfo({});
 
 	if (m_ownsSysSession && m_writeConn && s.Inserted()) {
-		const wxString guidStr = wxString::FromUTF8(s.GetId().c_str());
+		const wxString guidStr = s.GetId();
 		UpdateSessionUser(m_writeConn.get(), guidStr, wxEmptyString, wxEmptyString);
 	}
 
@@ -1159,7 +1159,7 @@ void ibSessionRegistry::ProcessRemove(ibRegistryRequest& req)
 	(void)wasAuthenticated;
 
 	if (m_ownsSysSession && m_writeConn && s.Inserted()) {
-		const wxString guidStr = wxString::FromUTF8(s.GetId().c_str());
+		const wxString guidStr = s.GetId();
 		DeleteSessionRow(m_writeConn.get(), guidStr);
 		s.SetInserted(false);
 	}
@@ -1228,7 +1228,7 @@ void ibSessionRegistry::ProcessSetExclusive(ibRegistryRequest& req)
 				session_table));
 		if (!stmt) return;
 		stmt->SetParamInt   (1, value);
-		stmt->SetParamString(2, wxString::FromUTF8(s.GetId().c_str()));
+		stmt->SetParamString(2, s.GetId());
 		try { stmt->RunQuery(); } catch (...) { /* legacy schema — silent */ }
 	};
 
@@ -1277,7 +1277,7 @@ void ibSessionRegistry::ProcessSetExclusive(ibRegistryRequest& req)
 		{
 			std::shared_lock<std::shared_mutex> lk(m_snapshotMtx);
 			if (m_snapshot) {
-				const wxString ownId = wxString::FromUTF8(s.GetId().c_str());
+				const wxString ownId = s.GetId();
 				const unsigned int n = m_snapshot->GetSessionCount();
 				bool clusterSole = true;
 				bool peerExclusive = false;
@@ -1346,7 +1346,7 @@ void ibSessionRegistry::ProcessSetActivity(ibRegistryRequest& req)
 	if (!m_ownsSysSession || !m_writeConn) return;
 	if (!req.session->Inserted()) return;   // nothing to update yet
 
-	const wxString guidStr = wxString::FromUTF8(req.session->GetId().c_str());
+	const wxString guidStr = req.session->GetId();
 	ibStatementGuard stmt(m_writeConn.get(),
 		m_writeConn->PrepareStatement(
 			wxT("UPDATE %s SET currentActivity = ? WHERE session = ?;"),
@@ -1396,8 +1396,7 @@ void ibSessionRegistry::JobSweepStale()
 
 		while (rs->Next()) {
 			const wxString guid = rs->GetResultString(wxT("session"));
-			const std::string idStr = std::string(guid.ToUTF8().data());
-			if (m_own.find(idStr) != m_own.end())
+			if (m_own.find(guid) != m_own.end())
 				continue;  // our own — heartbeat keeps lastActive fresh
 
 			const wxDateTime lastActive = rs->GetResultDate(wxT("lastActive"));
@@ -1523,8 +1522,7 @@ void ibSessionRegistry::JobCheckSignal()
 			// Find the own session and submit Remove@Urgent. Ticket dtor
 			// elsewhere would do this on lifecycle end; here the admin
 			// request replaces that signal path.
-			const std::string idStr = std::string(p.guid.ToUTF8().data());
-			auto it = m_own.find(idStr);
+			auto it = m_own.find(p.guid);
 			if (it != m_own.end() && it->second) {
 				ibRegistryRequest rm;
 				rm.kind    = ibRegistryRequestKind::Remove;
@@ -1538,8 +1536,7 @@ void ibSessionRegistry::JobCheckSignal()
 			// (frontend GUI registers one in ibGUISession::AttachFrame)
 			// react with their own teardown — backend stays GUI-free.
 			m_reloadRequested.store(true, std::memory_order_release);
-			const std::string idStr(p.guid.ToUTF8().data());
-			auto it = m_own.find(idStr);
+			auto it = m_own.find(p.guid);
 			if (it != m_own.end() && it->second)
 				NotifyReload(it->second.get());
 		}
@@ -1604,9 +1601,9 @@ void ibSessionRegistry::JobRefreshSnapshot()
 					wxT("SELECT session, kind FROM %s;"),
 					session_table));
 			if (rsk) {
-				std::unordered_map<std::string, int> kindBySession;
+				std::unordered_map<wxString, int> kindBySession;
 				while (rsk->Next()) {
-					kindBySession[std::string(rsk->GetResultString("session").ToUTF8().data())]
+					kindBySession[rsk->GetResultString("session")]
 						= rsk->GetResultInt("kind");
 				}
 				fresh->SetKindsFromMap(kindBySession);
@@ -1623,9 +1620,9 @@ void ibSessionRegistry::JobRefreshSnapshot()
 					wxT("SELECT session, exclusive FROM %s;"),
 					session_table));
 			if (rsx) {
-				std::unordered_map<std::string, bool> exclusiveBySession;
+				std::unordered_map<wxString, bool> exclusiveBySession;
 				while (rsx->Next()) {
-					exclusiveBySession[std::string(rsx->GetResultString("session").ToUTF8().data())]
+					exclusiveBySession[rsx->GetResultString("session")]
 						= rsx->GetResultInt("exclusive") != 0;
 				}
 				fresh->SetExclusiveFromMap(exclusiveBySession);

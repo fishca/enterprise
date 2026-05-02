@@ -23,14 +23,15 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <string>
+
+#include <wx/string.h>
 
 class ibWebApplication;
 class ibSession;
 
 class ibWebSession {
 public:
-	ibWebSession(std::string id, std::string user);
+	ibWebSession(wxString id, wxString user);
 	~ibWebSession();
 
 	// Lifecycle:
@@ -43,14 +44,14 @@ public:
 	//               builds the MDI frame and calls CreateMainModule.
 	//   OnExit()  — tears the runtime down.
 	bool OnInit();
-	bool Login(const std::string& user, const std::string& password);
+	bool Login(const wxString& user, const wxString& password);
 	void OnExit();
 
 	bool IsAuthenticated() const { return m_app != nullptr; }
 
-	const std::string& Id()         const { return m_id; }
-	const std::string& User()       const { return m_user; }
-	const std::string& ConfigName() const { return m_configName; }
+	const wxString& Id()         const { return m_id; }
+	const wxString& User()       const { return m_user; }
+	const wxString& ConfigName() const { return m_configName; }
 	ibWebApplication*  App()        const { return m_app.get(); }
 	// Raw ibSession pointer from the ticket — for HTTP handlers that need
 	// to pin ibSessionScope on their worker thread so ibSession::Current()
@@ -63,9 +64,9 @@ public:
 	void         Touch();
 
 private:
-	std::string m_id;
-	std::string m_user;
-	std::string m_configName;
+	wxString m_id;
+	wxString m_user;
+	wxString m_configName;
 
 	mutable std::mutex m_mutex;
 	std::int64_t       m_lastActiveMs;

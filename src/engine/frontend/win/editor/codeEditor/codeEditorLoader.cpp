@@ -237,41 +237,42 @@ namespace {
 
 // Strip EOL markers in-place per the editor's current EOL mode so the
 // leading-whitespace scan that follows doesn't trip over `\r`/`\n`.
-void StripEOL(std::string& s, int eolMode)
+void StripEOL(wxString& s, int eolMode)
 {
 	switch (eolMode) {
 	case wxSTC_EOL_CRLF:
-		s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
-		s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
+		s.Replace(wxT("\r"), wxEmptyString);
+		s.Replace(wxT("\n"), wxEmptyString);
 		break;
 	case wxSTC_EOL_CR:
-		s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
+		s.Replace(wxT("\r"), wxEmptyString);
 		break;
 	default:
-		s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
+		s.Replace(wxT("\n"), wxEmptyString);
 		break;
 	}
 }
 
 // Append the editor's EOL marker(s).
-void AppendEOL(std::string& s, int eolMode)
+void AppendEOL(wxString& s, int eolMode)
 {
 	switch (eolMode) {
-	case wxSTC_EOL_CRLF: s.push_back('\r'); s.push_back('\n'); break;
-	case wxSTC_EOL_CR:   s.push_back('\r'); break;
-	default:             s.push_back('\n'); break;
+	case wxSTC_EOL_CRLF: s += wxT("\r\n"); break;
+	case wxSTC_EOL_CR:   s += wxT("\r");   break;
+	default:             s += wxT("\n");   break;
 	}
 }
 
 // Count leading '\t'/' ' chars; outReplacePos receives one past the last
 // whitespace character (the splice end for indent rewrite below).
-int CountLeadingIndent(const std::string& s, int& outReplacePos)
+int CountLeadingIndent(const wxString& s, int& outReplacePos)
 {
 	int count = 0;
 	outReplacePos = 0;
 	const int len = (int)s.length();
 	for (int i = 0; i < len; ++i) {
-		if (s[i] == '\t' || s[i] == ' ') {
+		const wxUniChar c = s[i];
+		if (c == wxT('\t') || c == wxT(' ')) {
 			count++;
 			outReplacePos = i + 1;
 		}
@@ -301,9 +302,11 @@ void ibCodeEditor::PrepareTABs()
 	const int level        = m_fp.GetFoldMask(currLine);
 	const int eolMode      = GetEOLMode();
 
-	std::string rawBufferLine;
-	if (startLinePos != currPosition)
-		rawBufferLine = GetTextRangeRaw(startLinePos, currPosition);
+	wxString rawBufferLine;
+	if (startLinePos != currPosition) {
+		const auto buf = GetTextRangeRaw(startLinePos, currPosition);
+		rawBufferLine = wxString::FromUTF8(buf.data(), buf.length());
+	}
 
 	// Strip any EOL chars upfront so the indent rewrite operates on a
 	// pure (whitespace-prefix + text) buffer. Typically the line slice
@@ -318,7 +321,7 @@ void ibCodeEditor::PrepareTABs()
 		int replacePos = 0;
 		const int currentIndent = CountLeadingIndent(rawBufferLine, replacePos);
 		if (currentIndent != targetTabs)
-			rawBufferLine.replace(0, replacePos, targetTabs, '\t');
+			rawBufferLine.replace(0, replacePos, wxString(wxT('\t'), targetTabs));
 	};
 
 	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
@@ -350,13 +353,16 @@ void ibCodeEditor::PrepareTABs()
 	}
 
 	AppendEOL(rawBufferLine, eolMode);
-	rawBufferLine.append(foldLevel, '\t');
+	rawBufferLine.append(foldLevel, wxT('\t'));
 
+	// wxSTC byte-positions: convert to UTF-8 once for both ReplaceTargetRaw
+	// and the post-replace caret math.
+	const auto utf8 = rawBufferLine.utf8_str();
 	SetTargetStart((int)startLinePos);
 	SetTargetEnd((int)currPosition);
-	ReplaceTargetRaw(rawBufferLine.c_str(), rawBufferLine.length());
+	ReplaceTargetRaw(utf8.data(), utf8.length());
 
-	const size_t length = rawBufferLine.length();
+	const size_t length = utf8.length();
 	GotoLine(LineFromPosition(startLinePos + length));
 	SetEmptySelection(startLinePos + length);
 }

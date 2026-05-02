@@ -31,14 +31,13 @@ bool ibDesignerExclusivePolicy::CanAdd(const ibSession& session, wxString& reaso
 	// the new designer. If the owner is dead, sweep DELETEs its stale
 	// row within ~kStaleCutoffSec (≈30s); user can retry after that.
 	const auto snap       = m_registry->GetClusterSnapshot();
-	const std::string ownId = session.GetId();
+	const wxString& ownId = session.GetId();
 	for (unsigned int i = 0; i < snap.GetSessionCount(); ++i) {
 		if (snap.GetSessionApplication(i) != eDESIGNER_MODE)
 			continue;
 
 		const wxString otherGuid = snap.GetSession(i);
-		const std::string otherId = std::string(otherGuid.ToUTF8().data());
-		if (otherId == ownId)
+		if (otherGuid == ownId)
 			continue;
 
 		// Another designer row visible — veto.

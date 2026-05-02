@@ -32,7 +32,7 @@
 #include <wx/gdicmn.h>
 #include <wx/string.h>
 
-#include "../../../3rdparty/nlohmann/json.hpp"
+#include "jsonAdapter.h"
 
 #ifdef OES_USE_WEB
 // Textctrl side-button events — mirror the three custom wx events
@@ -277,7 +277,7 @@ public:
 		node["representation"] = m_representation;
 		node["hasPicture"]     = m_hasPicture;
 		if (!m_pictureDataUri.IsEmpty())
-			node["picture"] = std::string(m_pictureDataUri.mb_str(wxConvUTF8));
+			node["picture"] = m_pictureDataUri;
 		return node;
 	}
 
@@ -387,7 +387,7 @@ public:
 		node["representation"] = m_representation;
 		node["hasPicture"]     = m_hasPicture;
 		if (!m_pictureDataUri.IsEmpty())
-			node["picture"] = std::string(m_pictureDataUri.mb_str(wxConvUTF8));
+			node["picture"] = m_pictureDataUri;
 		return node;
 	}
 
@@ -465,7 +465,7 @@ public:
 
 	virtual nlohmann::json ToJSON() const override {
 		auto node = ibWebWindow::ToJSON();
-		node["value"]            = std::string(m_value.mb_str(wxConvUTF8));
+		node["value"]            = m_value;
 		node["passwordMode"]     = m_passwordMode;
 		node["multilineMode"]    = m_multilineMode;
 		node["showSelectButton"] = m_showSelectButton;

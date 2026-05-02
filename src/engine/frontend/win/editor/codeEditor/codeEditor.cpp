@@ -781,13 +781,8 @@ void ibCodeEditor::OnKeyDown(wxKeyEvent& event)
 			int startNewPos = PositionFromLine(line - 1);
 			int endNewPos = GetLineEndPosition(line - 1);
 
-			if (endNewPos - startNewPos < length) {
-				std::string m_stringBuffer;
-				for (int c = 0; c < (length - (endNewPos - startNewPos)); c++) {
-					m_stringBuffer.push_back(' ');
-				}
-				InsertText(endNewPos, m_stringBuffer);
-			}
+			if (endNewPos - startNewPos < length)
+				InsertText(endNewPos, wxString(wxT(' '), length - (endNewPos - startNewPos)));
 			SetEmptySelection(startNewPos + length);
 		}
 		else {
@@ -809,14 +804,8 @@ void ibCodeEditor::OnKeyDown(wxKeyEvent& event)
 			int startNewPos = PositionFromLine(line + 1);
 			int endNewPos = GetLineEndPosition(line + 1);
 
-			if (endNewPos - startNewPos < length) {
-				std::string m_stringBuffer;
-				for (int c = 0; c < (length - (endNewPos - startNewPos)); c++) {
-					m_stringBuffer.push_back(' ');
-				}
-
-				InsertText(endNewPos, m_stringBuffer);
-			}
+			if (endNewPos - startNewPos < length)
+				InsertText(endNewPos, wxString(wxT(' '), length - (endNewPos - startNewPos)));
 			SetEmptySelection(startNewPos + length);
 		}
 		else {

@@ -1469,6 +1469,9 @@
     <ClCompile Include="compiler\valueSerialization.cpp">
       <Filter>compiler</Filter>
     </ClCompile>
+    <ClCompile Include="compiler\byteCodeAOT.cpp">
+      <Filter>compiler</Filter>
+    </ClCompile>
     <ClCompile Include="metadataSerialization.cpp" />
     <ClCompile Include="system\value\valueDatabaseLayer.cpp">
       <Filter>system\value</Filter>

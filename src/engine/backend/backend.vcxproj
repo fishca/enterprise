@@ -282,6 +282,7 @@
     <ClCompile Include="backend_picture.cpp" />
     <ClCompile Include="backend_localization.cpp" />
     <ClCompile Include="characteristicCtor.cpp" />
+    <ClCompile Include="compiler\byteCodeAOT.cpp" />
     <ClCompile Include="compiler\valueSerialization.cpp" />
     <ClCompile Include="constantCtor.cpp" />
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataQuery.cpp" />

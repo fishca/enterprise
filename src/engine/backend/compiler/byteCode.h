@@ -61,6 +61,14 @@ enum class ibFnKind : uint8_t {
 // required-bindings table.
 class BACKEND_API ibByteBinder;
 
+// Forward decls for the AOT (Ahead-Of-Time) bytecode persistence
+// layer. SerializeAOT writes a compiled ibByteCode to a memory
+// stream (intended for sys_bytecode_cache.blob); DeserializeAOT
+// reads it back. Keeping these out-of-line in byteCodeAOT.cpp so
+// byteCode.h stays free of fileSystem/fs.h.
+class ibWriterMemory; // backend/fileSystem/fs.h
+class ibReaderMemory; // backend/fileSystem/fs.h
+
 struct ibParamRunUnit {
 	wxLongLong_t m_numArray = 0;
 	wxLongLong_t m_numIndex = 0;
@@ -437,6 +445,27 @@ public:
 			[lCodeLine](const auto& fn) { return lCodeLine == (long)fn; });
 		return iterator != m_listFunc.end() ? &(*iterator) : nullptr;
 	}
+
+	// AOT persistence — see byteCodeAOT.cpp. Writes / reads the
+	// fields needed to reconstruct a compiled bytecode in a fresh
+	// session: identity (m_id, m_version, m_descriptorClsid),
+	// header (m_strModuleName, m_lStartModule, m_lVarCount,
+	// m_bExpressionOnly), bytecode body (m_listCode), const pool
+	// (m_listConst — primitives only), symbol tables (m_listVar,
+	// m_listFunc with embedded m_listLocals), and dependency
+	// id/version pairs. Live pointers (m_parent, m_dependencies,
+	// m_compileModule) are NOT persisted; the cache loader
+	// resolves them via a session-level registry.
+	//
+	// Returns false on I/O error or on format mismatch (magic /
+	// format-version). Caller treats false as cache miss and
+	// recompiles from source.
+	//
+	// Format constants live in byteCodeAOT.cpp; bump
+	// kAOTFormatVersion when the layout changes — readers reject
+	// older blobs and fall back to recompile.
+	bool SerializeAOT(ibWriterMemory& writer) const;
+	bool DeserializeAOT(const ibReaderMemory& reader);
 
 	void Reset() {
 		m_id = ibGuid();

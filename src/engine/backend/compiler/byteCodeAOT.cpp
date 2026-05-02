@@ -1,0 +1,401 @@
+// Ahead-Of-Time (AOT) bytecode persistence — Step 1 of the AOT cache
+// (docs/next-session-aot.md). Writes a compiled ibByteCode into a flat
+// memory blob (later persisted as sys_bytecode_cache.blob) and reads
+// it back. Cold sessions then skip recompilation by Deserialize-ing
+// the blob whose source-hash + metadata-version + compiler-version
+// still match.
+//
+// Format (host-endian; portable LE encoding is a follow-up — see the
+// kAOTFlagPortable bit reserved in the header). Layout is linear, no
+// fs.h chunk wrappers — every collection is `u32 count` + `count`
+// entries laid out back-to-back. Strings are zero-terminated UTF-8
+// via ibWriter::w_stringZ / ibReader::r_stringZ.
+//
+// Header (all little-endian on x86/x64):
+//   u32  magic            = kAOTMagic ('OBC1')
+//   u16  format_version   = kAOTFormatVersion
+//   u16  flags            = 0  (bit 0 reserved for kAOTFlagPortable)
+//   u8[16] m_id           — descriptor identity
+//   u8[16] m_version      — per-compile fingerprint
+//   u64  m_descriptorClsid
+//   s32  m_lStartModule
+//   s32  m_lVarCount
+//   u8   m_bExpressionOnly
+//   zstr m_strModuleName
+//   <m_listCode>
+//   <m_listConst>
+//   <m_listVar>
+//   <m_listFunc>
+//   <m_dependencyIds>
+//   <m_dependencyVersions>
+//
+// Skipped (live pointers — re-resolved on load): m_parent,
+// m_dependencies, m_compileModule, m_bCompile (always set true on
+// successful Deserialize).
+
+#include "backend/compiler/byteCode.h"
+#include "backend/fileSystem/fs.h"
+
+namespace {
+
+constexpr uint32_t kAOTMagic         = 0x31434250u; // 'PBC1' little-endian
+constexpr uint16_t kAOTFormatVersion = 1;
+constexpr uint16_t kAOTFlagPortable  = 0x0001;       // unused — host-endian today
+
+// Sentinel for an over-large collection — guards Deserialize against
+// reading garbage that pre-allocates GB. Bytecodes have hundreds of
+// entries in the worst case, not millions; a hard cap at 16M is well
+// past anything realistic.
+constexpr uint32_t kAOTSanityMax = 16u * 1024u * 1024u;
+
+bool WriteGuid(ibWriterMemory& w, const ibGuid& g) {
+	const auto& b = g.bytes();
+	w.w(b.data(), 16);
+	return true;
+}
+
+bool ReadGuid(const ibReaderMemory& r, ibGuid& out) {
+	std::array<unsigned char, 16> bytes{};
+	r.r(bytes.data(), 16);
+	out = ibGuid(bytes);
+	return true;
+}
+
+bool WriteParamRun(ibWriterMemory& w, const ibParamRunUnit& p) {
+	w.w_s64(p.m_numArray);
+	w.w_s64(p.m_numIndex);
+	return true;
+}
+
+void ReadParamRun(const ibReaderMemory& r, ibParamRunUnit& p) {
+	p.m_numArray = r.r_s64();
+	p.m_numIndex = r.r_s64();
+}
+
+bool WriteByteUnit(ibWriterMemory& w, const ibByteUnit& u) {
+	w.w_s16(u.m_numOper);
+	w.w_u32(u.m_numString);
+	w.w_u32(u.m_numLine);
+	WriteParamRun(w, u.m_param1);
+	WriteParamRun(w, u.m_param2);
+	WriteParamRun(w, u.m_param3);
+	WriteParamRun(w, u.m_param4);
+	w.w_stringZ(u.m_strModuleName);
+	w.w_stringZ(u.m_strDocPath);
+	w.w_stringZ(u.m_strFileName);
+	return true;
+}
+
+void ReadByteUnit(const ibReaderMemory& r, ibByteUnit& u) {
+	u.m_numOper   = r.r_s16();
+	u.m_numString = r.r_u32();
+	u.m_numLine   = r.r_u32();
+	ReadParamRun(r, u.m_param1);
+	ReadParamRun(r, u.m_param2);
+	ReadParamRun(r, u.m_param3);
+	ReadParamRun(r, u.m_param4);
+	r.r_stringZ(u.m_strModuleName);
+	r.r_stringZ(u.m_strDocPath);
+	r.r_stringZ(u.m_strFileName);
+}
+
+// ibValue payload — only primitives appear in m_listConst at compile
+// time (TYPE_REFFER / TYPE_VALUE / TYPE_ENUM never reach the const
+// pool — they live as runtime references, not bytecode literals).
+// Any unexpected type triggers a serialise failure → caller treats
+// as cache miss.
+bool WriteConstValue(ibWriterMemory& w, const ibValue& v) {
+	const uint8_t tc = (uint8_t)v.m_typeClass;
+	w.w_u8(tc);
+	switch (v.m_typeClass) {
+	case ibValueTypes::TYPE_EMPTY:
+	case ibValueTypes::TYPE_NULL:
+		return true;
+	case ibValueTypes::TYPE_BOOLEAN:
+		w.w_u8(v.m_bData ? 1 : 0);
+		return true;
+	case ibValueTypes::TYPE_NUMBER: {
+		// Exact-decimal binary form via ibNumber's own buffer
+		// (same bytes that go into Firebird SQL_INT128 columns).
+		// Length-prefixed so the reader doesn't need a chunk
+		// wrapper around it.
+		wxMemoryBuffer buf = v.m_fData.GetBuffer();
+		const uint32_t len = (uint32_t)buf.GetDataLen();
+		w.w_u32(len);
+		if (len > 0) w.w(buf.GetData(), len);
+		return true;
+	}
+	case ibValueTypes::TYPE_DATE:
+		w.w_s64((int64_t)v.m_dData);
+		return true;
+	case ibValueTypes::TYPE_STRING:
+		w.w_stringZ(v.m_sData);
+		return true;
+	default:
+		return false; // TYPE_REFFER / TYPE_VALUE / TYPE_ENUM / TYPE_OLE
+	}
+}
+
+bool ReadConstValue(const ibReaderMemory& r, ibValue& v) {
+	const uint8_t tc = r.r_u8();
+	v.SetType((ibValueTypes)tc);
+	switch ((ibValueTypes)tc) {
+	case ibValueTypes::TYPE_EMPTY:
+	case ibValueTypes::TYPE_NULL:
+		return true;
+	case ibValueTypes::TYPE_BOOLEAN:
+		v.m_bData = (r.r_u8() != 0);
+		return true;
+	case ibValueTypes::TYPE_NUMBER: {
+		const uint32_t len = r.r_u32();
+		if (len > kAOTSanityMax) return false;
+		wxMemoryBuffer buf;
+		if (len > 0) {
+			r.r(buf.GetAppendBuf(len), (int)len);
+			buf.UngetAppendBuf(len);
+		}
+		return v.m_fData.SetBuffer(buf);
+	}
+	case ibValueTypes::TYPE_DATE:
+		v.m_dData = (wxLongLong_t)r.r_s64();
+		return true;
+	case ibValueTypes::TYPE_STRING:
+		r.r_stringZ(v.m_sData);
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool WriteVarInfo(ibWriterMemory& w, const ibByteCode::ibByteCodeVarInfo& v) {
+	w.w_s32((int32_t)v.m_slotIndex);
+	w.w_u64((uint64_t)v.m_clsid);
+	w.w_u8(v.m_bScoped ? 1 : 0);
+	w.w_u8((uint8_t)v.m_kind);
+	w.w_s32((int32_t)v.m_parentRef);
+	w.w_stringZ(v.m_strRealName);
+	w.w_stringZ(v.m_strContext);
+	return true;
+}
+
+void ReadVarInfo(const ibReaderMemory& r, ibByteCode::ibByteCodeVarInfo& v) {
+	v.m_slotIndex = (long)r.r_s32();
+	v.m_clsid     = (ibClassID)r.r_u64();
+	v.m_bScoped   = (r.r_u8() != 0);
+	v.m_kind      = (ibVarKind)r.r_u8();
+	v.m_parentRef = (long)r.r_s32();
+	r.r_stringZ(v.m_strRealName);
+	r.r_stringZ(v.m_strContext);
+}
+
+bool WriteParam(ibWriterMemory& w, const ibByteCode::ibByteParam& p) {
+	w.w_u8(p.m_bByRef ? 1 : 0);
+	w.w_u64((uint64_t)p.m_clsid);
+	WriteParamRun(w, p.m_defaultValue);
+	w.w_stringZ(p.m_defaultValue.m_strType);
+	return true;
+}
+
+void ReadParam(const ibReaderMemory& r, ibByteCode::ibByteParam& p) {
+	p.m_bByRef = (r.r_u8() != 0);
+	p.m_clsid  = (ibClassID)r.r_u64();
+	ReadParamRun(r, p.m_defaultValue);
+	r.r_stringZ(p.m_defaultValue.m_strType);
+}
+
+bool WriteFunction(ibWriterMemory& w, const ibByteCode::ibByteFunction& f) {
+	w.w_s32((int32_t)f.m_lCodeParamCount);
+	w.w_s32((int32_t)f.m_lCodeLine);
+	w.w_u8(f.m_bCodeRet ? 1 : 0);
+	w.w_s32((int32_t)f.m_lVarCount);
+	w.w_u64((uint64_t)f.m_returnClsid);
+	w.w_u8((uint8_t)f.m_kind);
+	w.w_s32((int32_t)f.m_parentRef);
+	w.w_stringZ(f.m_strRealName);
+	w.w_stringZ(f.m_strContext);
+
+	// m_listParam — count must equal m_lCodeParamCount, but writer
+	// doesn't enforce: reader rebuilds from the count it sees.
+	w.w_u32((uint32_t)f.m_listParam.size());
+	for (const auto& p : f.m_listParam)
+		WriteParam(w, p);
+
+	// m_listParamRealName — parallel to m_listParam.
+	w.w_u32((uint32_t)f.m_listParamRealName.size());
+	for (const auto& s : f.m_listParamRealName)
+		w.w_stringZ(s);
+
+	// m_listLocals — function-frame symbol table.
+	w.w_u32((uint32_t)f.m_listLocals.size());
+	for (const auto& v : f.m_listLocals)
+		WriteVarInfo(w, v);
+
+	return true;
+}
+
+bool ReadFunction(const ibReaderMemory& r, ibByteCode::ibByteFunction& f) {
+	f.m_lCodeParamCount = (long)r.r_s32();
+	f.m_lCodeLine       = (long)r.r_s32();
+	f.m_bCodeRet        = (r.r_u8() != 0);
+	f.m_lVarCount       = (long)r.r_s32();
+	f.m_returnClsid     = (ibClassID)r.r_u64();
+	f.m_kind            = (ibFnKind)r.r_u8();
+	f.m_parentRef       = (long)r.r_s32();
+	r.r_stringZ(f.m_strRealName);
+	r.r_stringZ(f.m_strContext);
+
+	uint32_t paramCount = r.r_u32();
+	if (paramCount > kAOTSanityMax) return false;
+	f.m_listParam.resize(paramCount);
+	for (uint32_t i = 0; i < paramCount; ++i)
+		ReadParam(r, f.m_listParam[i]);
+
+	uint32_t paramNameCount = r.r_u32();
+	if (paramNameCount > kAOTSanityMax) return false;
+	f.m_listParamRealName.resize(paramNameCount);
+	for (uint32_t i = 0; i < paramNameCount; ++i)
+		r.r_stringZ(f.m_listParamRealName[i]);
+
+	uint32_t localsCount = r.r_u32();
+	if (localsCount > kAOTSanityMax) return false;
+	f.m_listLocals.resize(localsCount);
+	for (uint32_t i = 0; i < localsCount; ++i)
+		ReadVarInfo(r, f.m_listLocals[i]);
+
+	return true;
+}
+
+} // anonymous
+
+bool ibByteCode::SerializeAOT(ibWriterMemory& w) const
+{
+	// Header.
+	w.w_u32(kAOTMagic);
+	w.w_u16(kAOTFormatVersion);
+	w.w_u16(0); // flags
+
+	WriteGuid(w, m_id);
+	WriteGuid(w, m_version);
+	w.w_u64((uint64_t)m_descriptorClsid);
+
+	w.w_s32((int32_t)m_lStartModule);
+	w.w_s32((int32_t)m_lVarCount);
+	w.w_u8(m_bExpressionOnly ? 1 : 0);
+	w.w_stringZ(m_strModuleName);
+
+	// m_listCode.
+	w.w_u32((uint32_t)m_listCode.size());
+	for (const auto& u : m_listCode) {
+		if (!WriteByteUnit(w, u)) return false;
+	}
+
+	// m_listConst.
+	w.w_u32((uint32_t)m_listConst.size());
+	for (const auto& v : m_listConst) {
+		if (!WriteConstValue(w, v)) return false;
+	}
+
+	// m_listVar.
+	w.w_u32((uint32_t)m_listVar.size());
+	for (const auto& v : m_listVar) {
+		if (!WriteVarInfo(w, v)) return false;
+	}
+
+	// m_listFunc.
+	w.w_u32((uint32_t)m_listFunc.size());
+	for (const auto& f : m_listFunc) {
+		if (!WriteFunction(w, f)) return false;
+	}
+
+	// Dependencies — id + version vectors. Live pointers are not
+	// persisted; the loader populates m_dependencies by looking each
+	// id up in a session-level registry.
+	w.w_u32((uint32_t)m_dependencyIds.size());
+	for (const auto& g : m_dependencyIds)
+		WriteGuid(w, g);
+
+	w.w_u32((uint32_t)m_dependencyVersions.size());
+	for (const auto& g : m_dependencyVersions)
+		WriteGuid(w, g);
+
+	return true;
+}
+
+bool ibByteCode::DeserializeAOT(const ibReaderMemory& r)
+{
+	// Empty out anything that was already in *this — safer than
+	// asserting on a clean target. AOT load is a fresh-construct
+	// path in the cache code, but defensive Reset() means callers
+	// can also use this on an existing bc to refresh-from-cache.
+	Reset();
+
+	// Header.
+	if (r.elapsed() < (int)(sizeof(uint32_t) + sizeof(uint16_t) * 2))
+		return false;
+
+	const uint32_t magic = r.r_u32();
+	if (magic != kAOTMagic) return false;
+
+	const uint16_t formatVersion = r.r_u16();
+	if (formatVersion != kAOTFormatVersion) return false;
+
+	const uint16_t flags = r.r_u16();
+	(void)flags; // kAOTFlagPortable not yet honoured
+
+	if (!ReadGuid(r, m_id))      return false;
+	if (!ReadGuid(r, m_version)) return false;
+	m_descriptorClsid = (ibClassID)r.r_u64();
+
+	m_lStartModule    = (long)r.r_s32();
+	m_lVarCount       = (long)r.r_s32();
+	m_bExpressionOnly = (r.r_u8() != 0);
+	r.r_stringZ(m_strModuleName);
+
+	// m_listCode.
+	uint32_t codeCount = r.r_u32();
+	if (codeCount > kAOTSanityMax) return false;
+	m_listCode.resize(codeCount);
+	for (uint32_t i = 0; i < codeCount; ++i)
+		ReadByteUnit(r, m_listCode[i]);
+
+	// m_listConst.
+	uint32_t constCount = r.r_u32();
+	if (constCount > kAOTSanityMax) return false;
+	m_listConst.resize(constCount);
+	for (uint32_t i = 0; i < constCount; ++i) {
+		if (!ReadConstValue(r, m_listConst[i])) return false;
+	}
+
+	// m_listVar.
+	uint32_t varCount = r.r_u32();
+	if (varCount > kAOTSanityMax) return false;
+	m_listVar.resize(varCount);
+	for (uint32_t i = 0; i < varCount; ++i)
+		ReadVarInfo(r, m_listVar[i]);
+
+	// m_listFunc.
+	uint32_t funcCount = r.r_u32();
+	if (funcCount > kAOTSanityMax) return false;
+	m_listFunc.resize(funcCount);
+	for (uint32_t i = 0; i < funcCount; ++i) {
+		if (!ReadFunction(r, m_listFunc[i])) return false;
+	}
+
+	// Dependency id / version vectors. m_dependencies (live
+	// pointers) stays empty — caller resolves via session
+	// registry once all bytecodes are loaded.
+	uint32_t depIdCount = r.r_u32();
+	if (depIdCount > kAOTSanityMax) return false;
+	m_dependencyIds.resize(depIdCount);
+	for (uint32_t i = 0; i < depIdCount; ++i)
+		ReadGuid(r, m_dependencyIds[i]);
+
+	uint32_t depVerCount = r.r_u32();
+	if (depVerCount > kAOTSanityMax) return false;
+	m_dependencyVersions.resize(depVerCount);
+	for (uint32_t i = 0; i < depVerCount; ++i)
+		ReadGuid(r, m_dependencyVersions[i]);
+
+	m_bCompile = true;
+	return true;
+}

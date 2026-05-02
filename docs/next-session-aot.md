@@ -1,4 +1,4 @@
-# Next session — AOT bytecode cache
+# AOT bytecode cache
 
 **Goal:** persist compiled `ibByteCode` to disk so cold sessions skip
 re-compilation. Halves cold-start latency at scale; the resolver work
@@ -11,38 +11,68 @@ dependency at runtime), unlocking this step.
 |------------------------|--------|-----------------------------------------------|
 | bc self-sufficient     | ✅ 95% | m_listVar/m_listFunc + binder + resolve all bc-only |
 | Identity / versioning  | 🟡 50% | m_id stamped; m_version is random GUID per compile |
-| Persistence layer      | ❌ 0%  | no writer / reader at all                     |
+| Persistence layer      | ✅ 100% | `SerializeAOT` / `DeserializeAOT` landed 2026-05-02 |
 | Cache lifecycle hooks  | ❌ 0%  | no DB schema, no read-before-compile hook     |
 | Invalidation           | 🟡 10% | dependency-version drift detection sketched   |
 
-Net: ~50% ready. Architecture done, mechanics missing.
+Net: ~70% ready after Step 1. DB schema and compile-time integration
+remain.
 
 ## Plan
 
-### 1. Persistence layer (1-2 days)
+### 1. Persistence layer ✅ landed 2026-05-02
 
-**Writer:** `ibByteCode::Serialize(ibWriterMemory&)`. Walk every
-field:
+**Method names**: `ibByteCode::SerializeAOT(ibWriterMemory&) const` /
+`DeserializeAOT(const ibReaderMemory&)`. Renamed from `Serialize` to
+keep it distinct from `ibValue::Serialize` (string form, client-server
+data exchange) — different layer, different audience.
 
-* `m_id`, `m_version`, `m_descriptorClsid` — `ibGuid::GetBuffer` exists.
-* `m_listCode` — POD `ibByteUnit` per element.
-* `m_listConst` — vector of `ibValue`. Use the existing
-  `ibValue::DoSerialize` (in `valueSerialization.cpp`); tagged-type
-  primitives (Boolean / Number / Date / String) serialize cleanly.
-  TYPE_REFFER constants don't appear in compiled bytecode.
-* `m_listVar`, `m_listFunc`, `m_listLocals` — POD-ish + wxString
-  (UTF-8 encode helper).
-* `m_dependencyIds`, `m_dependencyVersions` — `vector<ibGuid>`.
-* `m_strModuleName` — wxString.
+**File**: `src/engine/backend/compiler/byteCodeAOT.cpp` (sibling of
+`valueSerialization.cpp`). Declarations live in `byteCode.h`.
 
-Skip: `m_parent`, `m_dependencies` (live pointers — resolved at load),
-`m_compileModule` (back-pointer to source — gone in AOT mode).
+**Format**: linear binary, host-endian, magic `'PBC1'` + format
+version `1`. No `fs.h` chunk wrappers around the top-level layout —
+each collection is `u32 count` + `count` entries laid out back-to-back.
+Strings use `w_stringZ` / `r_stringZ` (UTF-8 zero-terminated).
+`ibNumber` constants use the binary `ibNumber::GetBuffer` /
+`SetBuffer` form (length-prefixed, exact-decimal — not lossy double).
 
-**Reader:** symmetric. After load, `m_parent` and `m_dependencies`
-stay null until resolution step (3).
+**Persisted fields**:
 
-**File**: new `byteCodeSerialization.cpp` next to the value
-serialization file. Methods on bytecode struct.
+* `m_id`, `m_version` — raw 16-byte GUID write/read.
+* `m_descriptorClsid` (`u64`).
+* Header: `m_strModuleName` (zstr), `m_lStartModule` (`s32`),
+  `m_lVarCount` (`s32`), `m_bExpressionOnly` (`u8`).
+* `m_listCode` — `u32 count` + per-entry `ibByteUnit` (oper, string,
+  line, 4 param-units, 3 source-attribution strings).
+* `m_listConst` — `u8 typeClass` discriminator + payload. Supports
+  `TYPE_EMPTY`, `TYPE_NULL`, `TYPE_BOOLEAN`, `TYPE_NUMBER`,
+  `TYPE_DATE`, `TYPE_STRING`. Any other type (TYPE_REFFER /
+  TYPE_VALUE / TYPE_ENUM / TYPE_OLE) returns false → cache miss.
+* `m_listVar` — kind, slot, clsid, scoped, parentRef, real-name,
+  context-name.
+* `m_listFunc` — entry IP, paramCount, retFlag, varCount, return-clsid,
+  kind, parentRef, real-name, context-name; embedded `m_listParam`
+  (with default-values + clsid), `m_listParamRealName`, and
+  `m_listLocals`.
+* `m_dependencyIds`, `m_dependencyVersions` — vectors of `ibGuid`.
+
+**Skipped (live pointers — re-resolved on load)**: `m_parent`,
+`m_dependencies`. Reader stamps `m_bCompile = true` on success.
+
+**Sanity cap**: every collection-count is rejected if > 16M — guards
+the reader against pre-allocating GB on garbage input.
+
+**Tests**: `tests/test_byteCodeAOT.cpp` (11 round-trip cases),
+`tests/test_compiler.cpp::CompilerAOT::RealCompileOutputRoundTrips`
+(end-to-end: real compile → serialize → deserialize → field shape
+preserved).
+
+**Out of scope (deferred)**: portable LE encoding (kAOTFlagPortable
+bit reserved, not yet used — current format is host-endian);
+forward-compatibility of older format-version blobs (current reader
+hard-rejects mismatch → cache miss → recompile, which is the safe
+default but loses any pre-bump cached work).
 
 ### 2. DB schema (½ day)
 
@@ -151,9 +181,10 @@ Compiler version bump (binary upgrade) → all rows invalidated.
 * `enterprise/CLAUDE.md` — update "Known Issues" / add AOT cache
   section.
 
-## Estimate
+## Estimate (remaining after Step 1)
 
-* Mechanical work (writer + reader + DB schema + hooks): **3 days**.
+* DB schema + DAO: **½ day**.
+* Compile-time hook + dependency registry: **1½ days**.
 * Invalidation logic + cross-driver SQL: **1-2 days**.
 * Tests (cold/warm/edit/bump scenarios): **1 day**.
 

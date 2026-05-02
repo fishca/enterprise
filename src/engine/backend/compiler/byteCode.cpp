@@ -1,5 +1,73 @@
 #include "byteCode.h"
 
+#include <shared_mutex>
+#include <unordered_map>
+
+////////////////////////////////////////////////////////////////////////
+// ibByteCode registry — process-wide map of descriptor GUID → ibByteCode*.
+//
+// Sole consumer is dependency resolution: a freshly-loaded bytecode
+// walks its m_dependencyIds, looks each up via Find, and points
+// m_dependencies at the live targets. Until this resolution runs,
+// dependent lookups can only see m_parent (which is wired separately
+// by the descriptor's SetParent cascade).
+//
+// Lookup is read-mostly — every Compile call hits Find at least once
+// per dep — so a shared_mutex pays for itself. Mutation only happens
+// on Compile success / descriptor teardown.
+////////////////////////////////////////////////////////////////////////
+
+namespace {
+	std::shared_mutex                          g_byteCodeRegistryMutex;
+	std::unordered_map<wxString, ibByteCode*>  g_byteCodeRegistry;
+}
+
+void ibByteCode::Register(ibByteCode* bc)
+{
+	if (bc == nullptr) return;
+	if (!bc->m_id.isValid()) return;
+	std::unique_lock<std::shared_mutex> lk(g_byteCodeRegistryMutex);
+	g_byteCodeRegistry[wxString(bc->m_id)] = bc;
+}
+
+void ibByteCode::Unregister(const ibGuid& descId)
+{
+	if (!descId.isValid()) return;
+	std::unique_lock<std::shared_mutex> lk(g_byteCodeRegistryMutex);
+	g_byteCodeRegistry.erase(wxString(descId));
+}
+
+ibByteCode* ibByteCode::Find(const ibGuid& descId)
+{
+	if (!descId.isValid()) return nullptr;
+	std::shared_lock<std::shared_mutex> lk(g_byteCodeRegistryMutex);
+	auto it = g_byteCodeRegistry.find(wxString(descId));
+	return it != g_byteCodeRegistry.end() ? it->second : nullptr;
+}
+
+bool ibByteCode::ResolveAndVerifyDependencies()
+{
+	// Parallel-vector invariant — Save/Load preserve it; defensive in
+	// case a deserialised blob is malformed.
+	if (m_dependencyIds.size() != m_dependencyVersions.size())
+		return false;
+
+	// Build resolved list in a temp first so a partial walk doesn't
+	// leave m_dependencies half-populated when we bail.
+	std::vector<ibByteCode*> resolved;
+	resolved.reserve(m_dependencyIds.size());
+	for (size_t i = 0; i < m_dependencyIds.size(); ++i) {
+		ibByteCode* dep = Find(m_dependencyIds[i]);
+		if (dep == nullptr) return false;
+		// m_version is an ibGuid — operator== exists; relying on it
+		// here keeps the comparison opaque to the storage choice.
+		if (!(dep->m_version == m_dependencyVersions[i])) return false;
+		resolved.push_back(dep);
+	}
+	m_dependencies = std::move(resolved);
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // ibByteBinder — per-execution binding session                       //
 ////////////////////////////////////////////////////////////////////////

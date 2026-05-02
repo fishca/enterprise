@@ -467,6 +467,29 @@ public:
 	bool SerializeAOT(ibWriterMemory& writer) const;
 	bool DeserializeAOT(const ibReaderMemory& reader);
 
+	// ----------------------------------------------------------------
+	// Process-wide bytecode registry — keyed by descriptor GUID
+	// (m_id). Populated by ibRuntimeModuleDataObject::Compile after
+	// every successful compile or cache load; cleared by descriptor
+	// teardown. Lookup is shared-locked, mutation is unique-locked.
+	//
+	// Used by ResolveAndVerifyDependencies (below) to walk
+	// m_dependencyIds and reach the live target ibByteCode for each
+	// dep, then verify the snapshotted m_dependencyVersions still
+	// matches the dep's current m_version.
+	// ----------------------------------------------------------------
+	static void Register(ibByteCode* bc);
+	static void Unregister(const ibGuid& descId);
+	static ibByteCode* Find(const ibGuid& descId);
+
+	// Walk m_dependencyIds, look each up via Find, populate
+	// m_dependencies with live pointers, and verify
+	// m_dependencyVersions[i] == dep->m_version. Returns false on
+	// any missing dep or version drift — caller treats this as a
+	// stale bytecode (case (c) — cache hit but transitive bytecode
+	// graph moved underneath) and recompiles from source.
+	bool ResolveAndVerifyDependencies();
+
 	void Reset() {
 		m_id = ibGuid();
 		m_descriptorClsid = 0;

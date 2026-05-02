@@ -135,6 +135,30 @@ public:
 	static void SetEvalMode(bool mode = true);
 	static bool IsEvalMode();
 
+	// Saves the current eval-mode flag in ctor, restores it in dtor.
+	// Use to wrap ibProcUnit::Evaluate so an inner throw doesn't leak
+	// the flag onto the session.
+	class ibEvalModeScope {
+	public:
+		explicit ibEvalModeScope(bool newMode = true)
+			: m_previous(ibBackendException::IsEvalMode())
+		{
+			if (m_previous != newMode)
+				ibBackendException::SetEvalMode(newMode);
+		}
+
+		~ibEvalModeScope() {
+			if (ibBackendException::IsEvalMode() != m_previous)
+				ibBackendException::SetEvalMode(m_previous);
+		}
+
+		ibEvalModeScope(const ibEvalModeScope&) = delete;
+		ibEvalModeScope& operator=(const ibEvalModeScope&) = delete;
+
+	private:
+		const bool m_previous;
+	};
+
 protected:
 
 	static wxString FormatV(const wxString& fmt, va_list& list);

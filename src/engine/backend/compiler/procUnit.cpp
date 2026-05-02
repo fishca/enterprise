@@ -1483,8 +1483,7 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 	if (strExpression.IsEmpty() || pRunContext == nullptr)
 		return false;
 
-	bool isEvalMode = ibBackendException::IsEvalMode();
-	if (!isEvalMode) ibBackendException::SetEvalMode(true);
+	ibBackendException::ibEvalModeScope evalScope;
 
 	auto iterator = std::find_if(pRunContext->m_listEval.begin(), pRunContext->m_listEval.end(),
 		[strExpression](const auto pair) {return stringUtils::CompareString(strExpression, pair.first); });
@@ -1501,10 +1500,8 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 		// on bytecode side; eval finds its compileCode via GetCompileCode().
 		ibCompileCode& cModuleRef = *compileExpression;
 		evalUnit->TakeCompileCode(std::move(compileExpression));
-		if (!evalUnit->CompileExpression(pRunContext, pvarRetValue, cModuleRef, compileBlock)) {
-			if (!isEvalMode) ibBackendException::SetEvalMode(false);
+		if (!evalUnit->CompileExpression(pRunContext, pvarRetValue, cModuleRef, compileBlock))
 			return false;
-		}
 
 		runEvaluate = evalUnit;
 
@@ -1527,11 +1524,9 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 		runEvaluate->Execute(&runEvaluate->m_cCurContext, &pvarRetValue, /*bDelta=*/false);
 	}
 	catch (const ibBackendException&) {
-		if (!isEvalMode) ibBackendException::SetEvalMode(false);
 		return false;
 	}
 
-	if (!isEvalMode) ibBackendException::SetEvalMode(false);
 	return true;
 }
 

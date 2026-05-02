@@ -1,19 +1,134 @@
 #include "codeRunner.h"
 #include "backend/compiler/compileCode.h"
 #include "backend/compiler/procUnit.h"
+#include "frontend/artProvider/artProvider.h"
+#include "frontend/mainFrame/settings/editorsettings.h"
+#include "frontend/mainFrame/settings/fontcolorsettings.h"
 
-///////////////////////////////////////////////////////////////////////////
+#include <wx/filedlg.h>
+#include <wx/aboutdlg.h>
+#include <wx/wfstream.h>
+#include <wx/textfile.h>
+#include <wx/msgdlg.h>
 
-#define DEF_LINENUMBER_ID 0
-#define DEF_BREAKPOINT_ID 1
-#define DEF_FOLDING_ID 2
+enum {
+	wxID_CR_ADD_COMMENTS = wxID_HIGHEST + 11000,
+	wxID_CR_REMOVE_COMMENTS,
+	wxID_CR_FORMAT_CODE,
+	wxID_CR_INCREASE_INDENT,
+	wxID_CR_DECREASE_INDENT,
+	wxID_CR_GOTO_LINE,
+	wxID_CR_PROC_AND_FUNC
+};
+
+void ibFrameCodeRunner::OnToolbarCommand(wxCommandEvent& event)
+{
+	switch (event.GetId()) {
+		case wxID_CR_ADD_COMMENTS:    m_codeEditor->AddCommentsToSelection();      break;
+		case wxID_CR_REMOVE_COMMENTS: m_codeEditor->RemoveCommentsFromSelection(); break;
+		case wxID_CR_FORMAT_CODE:     m_codeEditor->FormatSelection();             break;
+		case wxID_CR_INCREASE_INDENT: m_codeEditor->IncreaseIndent();              break;
+		case wxID_CR_DECREASE_INDENT: m_codeEditor->DecreaseIndent();              break;
+		case wxID_CR_GOTO_LINE:       m_codeEditor->ShowGotoLine();                break;
+		case wxID_CR_PROC_AND_FUNC:   m_codeEditor->ShowMethods();                 break;
+	}
+}
+
+void ibFrameCodeRunner::OnMenuOpen(wxCommandEvent&)
+{
+	wxFileDialog dlg(this, _("Open script"), wxEmptyString, wxEmptyString,
+		_("Text files (*.txt)|*.txt|All files (*.*)|*.*"),
+		wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+	if (dlg.ShowModal() != wxID_OK) return;
+
+	wxTextFile file(dlg.GetPath());
+	if (!file.Open()) {
+		wxMessageBox(_("Cannot open file"), _("Code runner"), wxOK | wxICON_ERROR, this);
+		return;
+	}
+	wxString text;
+	for (size_t i = 0; i < file.GetLineCount(); i++) {
+		if (i > 0) text += wxT("\n");
+		text += file.GetLine(i);
+	}
+	file.Close();
+
+	m_codeEditor->ClearAll();
+	m_codeEditor->SetText(text);
+	m_currentFile = dlg.GetPath();
+	SetTitle(_("Code runner") + wxT(" - ") + m_currentFile);
+}
+
+void ibFrameCodeRunner::OnMenuSave(wxCommandEvent& event)
+{
+	if (m_currentFile.IsEmpty()) {
+		OnMenuSaveAs(event);
+		return;
+	}
+	wxFile file(m_currentFile, wxFile::write);
+	if (!file.IsOpened()) {
+		wxMessageBox(_("Cannot save file"), _("Code runner"), wxOK | wxICON_ERROR, this);
+		return;
+	}
+	const wxString text = m_codeEditor->GetText();
+	file.Write(text);
+}
+
+void ibFrameCodeRunner::OnMenuSaveAs(wxCommandEvent&)
+{
+	wxFileDialog dlg(this, _("Save script as"), wxEmptyString, m_currentFile,
+		_("Text files (*.txt)|*.txt|All files (*.*)|*.*"),
+		wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+	if (dlg.ShowModal() != wxID_OK) return;
+
+	wxFile file(dlg.GetPath(), wxFile::write);
+	if (!file.IsOpened()) {
+		wxMessageBox(_("Cannot save file"), _("Code runner"), wxOK | wxICON_ERROR, this);
+		return;
+	}
+	file.Write(m_codeEditor->GetText());
+	m_currentFile = dlg.GetPath();
+	SetTitle(_("Code runner") + wxT(" - ") + m_currentFile);
+}
+
+void ibFrameCodeRunner::OnMenuExit(wxCommandEvent&)
+{
+	Close(true);
+}
+
+void ibFrameCodeRunner::OnMenuAbout(wxCommandEvent&)
+{
+	wxAboutDialogInfo info;
+	info.SetName(_("OES Code Runner"));
+	info.SetVersion(wxT("1.0"));
+	info.SetDescription(_("Standalone OES script runner — write and execute scripts without metadata."));
+	info.SetCopyright(wxT("(C) Open Enterprise Solutions"));
+	wxAboutBox(info, this);
+}
+
+void ibFrameCodeRunner::OnMenuEdit(wxCommandEvent& event)
+{
+	// Forward standard wxID_UNDO / wxID_REDO / wxID_CUT / wxID_COPY /
+	// wxID_PASTE / wxID_SELECTALL to the wxStyledTextCtrl base — it
+	// implements all of them. Frame's own menu shortcuts dispatch
+	// here when focus isn't already inside the editor (which would
+	// route them directly).
+	switch (event.GetId()) {
+		case wxID_UNDO:      m_codeEditor->Undo();        break;
+		case wxID_REDO:      m_codeEditor->Redo();        break;
+		case wxID_CUT:       m_codeEditor->Cut();         break;
+		case wxID_COPY:      m_codeEditor->Copy();        break;
+		case wxID_PASTE:     m_codeEditor->Paste();       break;
+		case wxID_SELECTALL: m_codeEditor->SelectAll();   break;
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
 void ibFrameCodeRunner::SyntaxCheckOnButtonClick(wxCommandEvent& event)
 {
 	try {
-		m_compileCode->Compile(m_codeEditor->GetText());;
+		m_compileCode->Compile(m_codeEditor->GetText());
 		ibFrameCodeRunner::AppendOutput(_("No syntax errors detected!"));
 	}
 	catch (const ibBackendException& err) {
@@ -27,12 +142,17 @@ void ibFrameCodeRunner::RunCodeOnButtonClick(wxCommandEvent& event)
 {
 	try {
 		m_compileCode->Compile(m_codeEditor->GetText());
-		m_procUnit->Execute(m_compileCode->m_cByteCode);
+		// Build binder from compile-side staging so EnumManager / Catalogs /
+		// other context bindings registered through AddContextVariable
+		// reach the runtime — Execute(bc) alone constructs an EMPTY
+		// binder and the pre-flight gate refuses any required slot.
+		ibByteBinder binder = m_compileCode->CreateBinder();
+		m_procUnit->Execute(m_compileCode->m_cByteCode, binder);
 	}
 	catch (const ibBackendException& err) {
 		ibFrameCodeRunner::AppendOutput(err.GetErrorDescription());
 	}
-	
+
 	event.Skip();
 }
 
@@ -44,524 +164,6 @@ void ibFrameCodeRunner::ClearOutputOnButtonClick(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ibFrameCodeRunner::OnKeyDown(wxKeyEvent& event)
-{
-	if (!m_codeEditor->IsEditable()) {
-		event.Skip(); return;
-	}
-
-	switch (event.GetKeyCode())
-	{
-	case WXK_RETURN:
-		PrepareTABs();
-		break;
-	default:event.Skip();
-	};
-}
-
-void ibFrameCodeRunner::OnStyleNeeded(wxStyledTextEvent& event)
-{
-	/*this is called every time the styler detects a line that needs style, so we style that range.
-	This will save a lot of performance since we only style text when needed instead of parsing the whole file every time.*/
-	int line_start = m_codeEditor->LineFromPosition(m_codeEditor->GetEndStyled());
-	int line_end = m_codeEditor->GetFirstVisibleLine() + m_codeEditor->LinesOnScreen();
-
-	if (line_end > m_codeEditor->GetLineCount()) {
-		line_end = m_codeEditor->GetLineCount() - 1;
-	}
-
-	/*fold level: May need to include the two lines in front because of the fold level these lines have- the line above
-	may be affected*/
-	if (line_start > 1) {
-		line_start -= 2;
-	}
-	else {
-		line_start = 0;
-	}
-
-	//if it is so small that all lines are visible, style the whole document
-	if (m_codeEditor->GetLineCount() == m_codeEditor->LinesOnScreen()) {
-		line_start = 0;
-		line_end = m_codeEditor->GetLineCount() - 1;
-	}
-
-	if (line_end < line_start) {
-		//that happens when you select parts that are in front of the styled area
-		size_t temp = line_end;
-		line_end = line_start;
-		line_start = temp;
-	}
-
-	//style the line following the style area too (if present) in case fold level decreases in that one
-	if (line_end < m_codeEditor->GetLineCount() - 1) {
-		line_end++;
-	}
-
-	//get exact start positions
-	size_t pos_start = m_codeEditor->PositionFromLine(line_start);
-	size_t pos_end = (m_codeEditor->GetLineEndPosition(line_end));
-
-	wxString strCode; int space_char = 0;
-	strCode.reserve(pos_end - pos_start);
-
-	// get str code 
-	const std::string strBuffer(m_codeEditor->GetTextRangeRaw(pos_start, pos_end));
-	for (unsigned int i = 0; i < strBuffer.size(); i++) {
-		const unsigned char& c = strBuffer[i];
-		if (c == ' ' || stringUtils::IsSymbol(c) || !stringUtils::IsWord(c)) {
-			(void)strCode.append(space_char, '_'); space_char = 0;
-		}
-		if ((c & 0x80) == 0) {
-			wchar_t wc = c;
-			(void)strCode.append(wc);
-		}
-		else if ((c & 0xE0) == 0xC0) {
-			space_char += 1;
-			wchar_t wc = (c & 0x1F) << 6;
-			wc |= (strBuffer[i + 1] & 0x3F);
-			(void)strCode.append(wc);
-			i += 1;
-		}
-		else if ((c & 0xF0) == 0xE0) {
-			space_char += 2;
-			wchar_t wc = (c & 0xF) << 12;
-			wc |= (strBuffer[i + 1] & 0x3F) << 6;
-			wc |= (strBuffer[i + 2] & 0x3F);
-			(void)strCode.append(wc);
-			i += 2;
-		}
-		else if ((c & 0xF8) == 0xF0) {
-			space_char += 3;
-			wchar_t wc = (c & 0x7) << 18;
-			wc |= (strBuffer[i + 1] & 0x3F) << 12;
-			wc |= (strBuffer[i + 2] & 0x3F) << 6;
-			wc |= (strBuffer[i + 3] & 0x3F);
-			(void)strCode.append(wc);
-			i += 3;
-		}
-		else if ((c & 0xFC) == 0xF8) {
-			space_char += 4;
-			wchar_t wc = (c & 0x3) << 24;
-			wc |= (strBuffer[i + 1] & 0x3F) << 18;
-			wc |= (strBuffer[i + 2] & 0x3F) << 12;
-			wc |= (strBuffer[i + 3] & 0x3F) << 6;
-			wc |= (strBuffer[i + 4] & 0x3F);
-			(void)strCode.append(wc);
-			i += 4;
-		}
-		else if ((c & 0xFE) == 0xFC) {
-			space_char += 5;
-			wchar_t wc = (c & 0x1) << 30;
-			wc |= (strBuffer[i + 1] & 0x3F) << 24;
-			wc |= (strBuffer[i + 2] & 0x3F) << 18;
-			wc |= (strBuffer[i + 3] & 0x3F) << 12;
-			wc |= (strBuffer[i + 4] & 0x3F) << 6;
-			wc |= (strBuffer[i + 5] & 0x3F);
-			(void)strCode.append(wc);
-			i += 5;
-		}
-	}
-
-	(void)strCode.append(space_char, '_'); space_char = 0;
-
-	HighlightSyntaxAndCalculateFoldLevel(
-		line_start, line_end,
-		pos_start, pos_end, strCode
-	);
-
-	event.Skip();
-}
-
-void ibFrameCodeRunner::OnChagedText(wxStyledTextEvent& event)
-{
-	int modFlags = event.GetModificationType();
-	if ((modFlags & (wxSTC_MOD_BEFOREINSERT)) == 0 &&
-		(modFlags & (wxSTC_MOD_BEFOREDELETE)) == 0) {
-		event.Skip();
-		return;
-	}
-
-	event.Skip();
-}
-
-void ibFrameCodeRunner::OnNeedShow(wxStyledTextEvent& event)
-{
-	event.Skip();
-}
-
-void ibFrameCodeRunner::OnMarginClick(wxStyledTextEvent& event)
-{
-	const int currentLine =
-		m_codeEditor->LineFromPosition(event.GetPosition());
-	switch (event.GetMargin())
-	{
-	case DEF_FOLDING_ID:
-		m_codeEditor->ToggleFold(currentLine);
-		break;
-	}
-	event.Skip();
-}
-
-///////////////////////////////////////////////////////////////////////////
-#define appendStyle(style) \
-m_codeEditor->StartStyling(currPos); \
-m_codeEditor->SetStyling(fromPos + translate.GetCurrentPos() - currPos, style);
-///////////////////////////////////////////////////////////////////////////
-
-#define wxSTC_FOLDLEVELBASE_FLAG 0x400
-
-#define wxSTC_FOLDLEVELWHITE_FLAG 0x1000
-#define wxSTC_FOLDLEVELHEADER_FLAG 0x2000
-
-#define wxSTC_FOLDLEVELELSE_FLAG 0x4000
-
-///////////////////////////////////////////////////////////////////////////
-
-void ibFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
-	const int fromLine, const int toLine,
-	const int fromPos, const int toPos,
-	const wxString& strCode
-)
-{
-	class ibFoldParser {
-		wxStyledTextCtrl* m_stc;
-	public:
-		ibFoldParser(wxStyledTextCtrl* stc, const int fromLine, const int toLine) :
-			m_stc(stc), m_fromLine(fromLine), m_toLine(toLine), m_foldLevel(0) {
-			m_foldLevel = m_stc->GetFoldLevel(fromLine);
-		}
-
-		void OpenFold(const int currentLine) {
-			m_folding_vector.emplace_back(m_fromLine + currentLine, +1);
-		}
-
-		void MarkFold(const int currentLine, const int mask = wxSTC_FOLDLEVELELSE_FLAG) {
-			m_mask_folding_vector.emplace_back(m_fromLine + currentLine, mask);
-		}
-
-		void CloseFold(const int currentLine) {
-			m_folding_vector.emplace_back(m_fromLine + currentLine, -1);
-		}
-
-		void PatchFold() {
-			int level = m_foldLevel ^ wxSTC_FOLDLEVELBASE_FLAG;
-			if ((m_foldLevel & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
-				level = level ^ wxSTC_FOLDLEVELHEADER_FLAG;
-			}
-			else if ((m_foldLevel & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
-				level = level ^ wxSTC_FOLDLEVELELSE_FLAG;
-			}
-			else if ((m_foldLevel & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
-				level = level ^ wxSTC_FOLDLEVELWHITE_FLAG;
-			}
-			for (int l = m_fromLine; l <= m_toLine; l++) {
-				const short curr_level = GetFoldLevel(l);
-				const int curr_mask = wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0);
-				if (curr_level > 0)
-					m_stc->SetFoldLevel(l, curr_mask | wxSTC_FOLDLEVELHEADER_FLAG);
-				else if (curr_level < 0)
-					m_stc->SetFoldLevel(l, curr_mask | wxSTC_FOLDLEVELWHITE_FLAG);
-				else
-					m_stc->SetFoldLevel(l, curr_mask | GetFoldMask(l));
-				level += curr_level;
-			}
-		}
-
-	private:
-		short GetFoldLevel(const int l) {
-			short foldLevel = 0;
-			for (auto& v : m_folding_vector) {
-				if (v.first == l) {
-					foldLevel += v.second;
-				}
-			}
-			return foldLevel;
-		}
-
-		short GetFoldMask(const int l) {
-			short foldMask = 0;
-			for (auto& v : m_mask_folding_vector) {
-				if (v.first == l) {
-					foldMask |= v.second;
-				}
-			}
-			return foldMask;
-		}
-	private:
-		//build a vector to include line and folding level
-		std::vector<std::pair<size_t, int>> m_folding_vector;
-		std::vector<std::pair<size_t, int>> m_mask_folding_vector;
-
-		int m_fromLine, m_toLine;
-		int m_foldLevel;
-	};
-
-	ibFoldParser foldParser(m_codeEditor, fromLine, toLine);
-
-	ibTranslateCode translate;
-	translate.Load(strCode);
-
-	//вдруг строка начинается с комментария:
-	int wasLeftPoint = wxNOT_FOUND;
-
-	//remove old styling
-	m_codeEditor->StartStyling(fromPos); //from here
-	m_codeEditor->SetStyling(toPos - fromPos, wxSTC_C_COMMENT); //with that length and style -> cleared
-
-	wxString strWord;
-	unsigned int currPos = fromPos;
-	while (!translate.IsEnd()) {
-		currPos = fromPos + translate.GetCurrentPos();
-		if (translate.IsWord()) {
-			(void)translate.GetWord(strWord);
-			const short keyWord = ibTranslateCode::IsKeyWord(strWord);
-			if (keyWord != wxNOT_FOUND && wasLeftPoint != translate.GetCurrentLine()) {
-
-				if (keyWord == KEY_PROCEDURE
-					|| keyWord == KEY_FUNCTION
-					|| keyWord == KEY_IF
-					|| keyWord == KEY_FOR
-					|| keyWord == KEY_FOREACH
-					|| keyWord == KEY_WHILE
-					|| keyWord == KEY_TRY
-					) {
-					foldParser.OpenFold(translate.GetCurrentLine());
-				}
-				else if (
-					keyWord == KEY_ELSE
-					|| keyWord == KEY_ELSEIF
-					|| keyWord == KEY_EXCEPT
-					)
-				{
-					foldParser.MarkFold(translate.GetCurrentLine());
-				}
-				else if (
-					keyWord == KEY_ENDPROCEDURE
-					|| keyWord == KEY_ENDFUNCTION
-					|| keyWord == KEY_ENDIF
-					|| keyWord == KEY_ENDDO
-					|| keyWord == KEY_ENDTRY
-					) {
-					foldParser.CloseFold(translate.GetCurrentLine());
-				}
-
-				if (strWord.Left(1) == '#') {
-					appendStyle(wxSTC_C_PREPROCESSOR);
-				}
-				else {
-					appendStyle(wxSTC_C_STRING);
-				}
-			}
-			else {
-				appendStyle(wxSTC_C_WORD);
-			}
-			wasLeftPoint = wxNOT_FOUND;
-		}
-		else if (translate.IsNumber() || translate.IsString() || translate.IsDate()) {
-			if (translate.IsNumber()) {
-				(void)translate.GetNumber();
-				appendStyle(wxSTC_C_NUMBER);
-			}
-			else if (translate.IsString()) {
-				(void)translate.GetString();
-				appendStyle(wxSTC_C_OPERATOR);
-			}
-			else if (translate.IsDate()) {
-				(void)translate.GetDate();
-				appendStyle(wxSTC_C_OPERATOR);
-			}
-			wasLeftPoint = wxNOT_FOUND;
-		}
-		else {
-			translate.GetByte();
-			appendStyle(wxSTC_C_IDENTIFIER);
-		}
-	}
-	foldParser.PatchFold();
-}
-
-void ibFrameCodeRunner::PrepareTABs()
-{
-	const int curr_position = m_codeEditor->GetCurrentPos();
-	const int curr_line =
-		m_codeEditor->LineFromPosition(curr_position);
-
-	const int level = m_codeEditor->GetFoldLevel(curr_line);
-	int fold_level = level ^ wxSTC_FOLDLEVELBASE_FLAG;
-
-	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
-		fold_level = (fold_level ^ wxSTC_FOLDLEVELHEADER_FLAG);
-		const int start_line_pos = m_codeEditor->PositionFromLine(curr_line);
-		if (start_line_pos + fold_level != curr_position) {
-			fold_level = fold_level + 1;
-		}
-	}
-	else if ((level & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
-		fold_level = (fold_level ^ wxSTC_FOLDLEVELELSE_FLAG);
-		if (fold_level >= 0) {
-			const int start_line_pos = m_codeEditor->PositionFromLine(curr_line);
-			int currFold = 0; int toPos = 0;
-			std::string strBuffer(m_codeEditor->GetLineRaw(curr_line));
-			const int length = curr_position - start_line_pos;
-			for (int i = 0; i < length; i++) {
-				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-					currFold++; toPos = i + 1;
-				}
-				else break;
-			};
-			if (currFold != (fold_level - 1)) {
-				(void)strBuffer.replace(0, toPos, fold_level - 1, '\t');
-				(void)strBuffer.append(toPos > (fold_level - 1) ? toPos - (fold_level - 1) : 0, ' ');
-				m_codeEditor->Replace(
-					start_line_pos,
-					start_line_pos + strBuffer.length(),
-					strBuffer
-				);
-			}
-
-			if (start_line_pos + fold_level - 1 == curr_position) {
-				fold_level = fold_level - 1;
-			}
-		}
-	}
-	else if ((level & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
-		fold_level = (fold_level ^ wxSTC_FOLDLEVELWHITE_FLAG) - 1;
-		if (fold_level >= 0) {
-			const int start_line_pos = m_codeEditor->PositionFromLine(curr_line);
-			int currFold = 0; int toPos = 0;
-			std::string strBuffer(m_codeEditor->GetLineRaw(curr_line));
-			const int length = curr_position - start_line_pos;
-			for (int i = 0; i < length; i++) {
-				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-					currFold++; toPos = i + 1;
-				}
-				else break;
-			};
-			if (currFold != fold_level) {
-				(void)strBuffer.replace(0, toPos, fold_level, '\t');
-				(void)strBuffer.append(toPos > fold_level ? toPos - fold_level : 0, ' ');
-				m_codeEditor->Replace(
-					start_line_pos,
-					start_line_pos + strBuffer.length(),
-					strBuffer
-				);
-			}
-		}
-	}
-
-	std::string strTabs;
-	strTabs.append("\r\n");
-
-	if ((curr_line + 1) < m_codeEditor->GetLineCount()) {
-		int currFold = 0; int toPos = 0;
-		const int length = m_codeEditor->GetLineLength(curr_line + 1);
-		if (length > 0) {
-			std::string strBuffer(m_codeEditor->GetLineRaw(curr_line + 1));
-			for (int i = 0; i < length; i++) {
-				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-					currFold++; toPos = i + 1;
-				}
-				else break;
-			};
-		}
-	}
-
-	for (int i = 0; i < fold_level; i++) strTabs.push_back('\t');
-	m_codeEditor->InsertText(curr_position, strTabs);
-
-	m_codeEditor->GotoLine(m_codeEditor->LineFromPosition(curr_position + strTabs.length()));
-	m_codeEditor->SetEmptySelection(curr_position + strTabs.length());
-}
-
-void ibFrameCodeRunner::SetFontColorSettings()
-{
-	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
-	// a copy before passing it in.
-	wxFont font = wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
-
-	m_codeEditor->StyleClearAll();
-	m_codeEditor->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
-
-	m_codeEditor->SetSelForeground(true, wxColor(0xFF, 0xFF, 0xFF));
-	m_codeEditor->SetSelBackground(true, wxColor(0x0A, 0x24, 0x6A));
-
-	m_codeEditor->StyleSetFont(wxSTC_C_DEFAULT, font);
-	m_codeEditor->StyleSetFont(wxSTC_C_IDENTIFIER, font);
-
-	m_codeEditor->StyleSetForeground(wxSTC_C_DEFAULT, wxColor(0x00, 0x00, 0x00));
-	m_codeEditor->StyleSetBackground(wxSTC_C_DEFAULT, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetForeground(wxSTC_STYLE_DEFAULT, wxColor(0x00, 0x00, 0x00));
-	m_codeEditor->StyleSetBackground(wxSTC_STYLE_DEFAULT, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetForeground(wxSTC_C_IDENTIFIER, wxColor(0x00, 0x00, 0x00));
-	m_codeEditor->StyleSetBackground(wxSTC_C_IDENTIFIER, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetFont(wxSTC_C_COMMENT, font);
-	m_codeEditor->StyleSetFont(wxSTC_C_COMMENTLINE, font);
-	m_codeEditor->StyleSetFont(wxSTC_C_COMMENTDOC, font);
-
-	m_codeEditor->StyleSetForeground(wxSTC_C_COMMENT, wxColor(0x00, 0x80, 0x00));
-	m_codeEditor->StyleSetBackground(wxSTC_C_COMMENT, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetForeground(wxSTC_C_COMMENTLINE, wxColor(0x00, 0x80, 0x00));
-	m_codeEditor->StyleSetBackground(wxSTC_C_COMMENTLINE, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetForeground(wxSTC_C_COMMENTDOC, wxColor(0x00, 0x80, 0x00));
-	m_codeEditor->StyleSetBackground(wxSTC_C_COMMENTDOC, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetFont(wxSTC_C_WORD, font);
-	m_codeEditor->StyleSetForeground(wxSTC_C_WORD, wxColor(0x00, 0x00, 0xFF));
-	m_codeEditor->StyleSetBackground(wxSTC_C_WORD, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetFont(wxSTC_C_OPERATOR, font);
-	m_codeEditor->StyleSetForeground(wxSTC_C_OPERATOR, wxColor(0x80, 0x80, 0x80));
-	m_codeEditor->StyleSetBackground(wxSTC_C_OPERATOR, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetFont(wxSTC_C_STRING, font);
-	m_codeEditor->StyleSetForeground(wxSTC_C_STRING, wxColor(0xFF, 0x80, 0x80));
-	m_codeEditor->StyleSetBackground(wxSTC_C_STRING, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetFont(wxSTC_C_STRINGEOL, font);
-	m_codeEditor->StyleSetForeground(wxSTC_C_STRINGEOL, wxColor(0xFF, 0x80, 0x80));
-	m_codeEditor->StyleSetBackground(wxSTC_C_STRINGEOL, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetFont(wxSTC_C_PREPROCESSOR, font);
-	m_codeEditor->StyleSetForeground(wxSTC_C_PREPROCESSOR, wxColor(0x00, 0x00, 0x00));
-	m_codeEditor->StyleSetBackground(wxSTC_C_PREPROCESSOR, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetFont(wxSTC_C_NUMBER, font);
-	m_codeEditor->StyleSetForeground(wxSTC_C_NUMBER, wxColor(0xFF, 0x00, 0x00));
-	m_codeEditor->StyleSetBackground(wxSTC_C_NUMBER, wxColor(0xFF, 0xFF, 0xFF));
-
-	m_codeEditor->StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
-
-	m_codeEditor->SetIndent(4);
-	m_codeEditor->SetTabWidth(4);
-
-	m_codeEditor->SetUseTabs(true);
-	m_codeEditor->SetTabIndents(true);
-	m_codeEditor->SetBackSpaceUnIndents(true);
-	m_codeEditor->SetViewWhiteSpace(false);
-
-	m_codeEditor->SetDoubleBuffered(true);
-
-	// Use the newer D2D drawing.
-	//m_codeEditor->SetTechnology(wxSTC_TECHNOLOGY_DIRECTWRITE);
-
-	// Figure out how wide the margin needs to be do display
-	// the most number of linqes we'd reasonbly have.
-	int marginSize = m_codeEditor->TextWidth(wxSTC_STYLE_LINENUMBER, "_999999");
-	m_codeEditor->SetMarginWidth(DEF_LINENUMBER_ID, marginSize);
-
-	// folding
-	m_codeEditor->SetMarginType(DEF_FOLDING_ID, wxSTC_MARGIN_SYMBOL);
-	m_codeEditor->SetMarginMask(DEF_FOLDING_ID, wxSTC_MASK_FOLDERS);
-
-	m_codeEditor->SetMarginWidth(DEF_FOLDING_ID, FromDIP(16));
-	m_codeEditor->SetMarginSensitive(DEF_FOLDING_ID, true);
-}
-
 ///////////////////////////////////////////////////////////////////////////
 
 ibFrameCodeRunner::ibFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
@@ -569,82 +171,106 @@ ibFrameCodeRunner::ibFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxSt
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
-	wxBoxSizer* bSizerMain;
-	bSizerMain = new wxBoxSizer(wxVERTICAL);
+	// Menu bar — File / Edit / Help. Standard wxID_* IDs let wxSTC
+	// pick up Edit shortcuts directly when the editor has focus.
+	wxMenuBar* menuBar = new wxMenuBar();
 
-	m_codeEditor = new wxStyledTextCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, wxEmptyString);
+	wxMenu* menuFile = new wxMenu();
+	menuFile->Append(wxID_OPEN,    _("&Open...\tCtrl+O"));
+	menuFile->Append(wxID_SAVE,    _("&Save\tCtrl+S"));
+	menuFile->Append(wxID_SAVEAS,  _("Save &as..."));
+	menuFile->AppendSeparator();
+	menuFile->Append(wxID_EXIT,    _("E&xit\tAlt+F4"));
+	menuBar->Append(menuFile, _("&File"));
 
-	// initialize styles
-	m_codeEditor->StyleClearAll();
+	wxMenu* menuEdit = new wxMenu();
+	menuEdit->Append(wxID_UNDO,      _("&Undo\tCtrl+Z"));
+	menuEdit->Append(wxID_REDO,      _("&Redo\tCtrl+Y"));
+	menuEdit->AppendSeparator();
+	menuEdit->Append(wxID_CUT,       _("Cu&t\tCtrl+X"));
+	menuEdit->Append(wxID_COPY,      _("&Copy\tCtrl+C"));
+	menuEdit->Append(wxID_PASTE,     _("&Paste\tCtrl+V"));
+	menuEdit->AppendSeparator();
+	menuEdit->Append(wxID_SELECTALL, _("Select &all\tCtrl+A"));
+	menuBar->Append(menuEdit, _("&Edit"));
 
-	//Set margin cursor
-	for (int margin = 0; margin < m_codeEditor->GetMarginCount(); margin++) {
-		m_codeEditor->SetMarginCursor(margin, wxSTC_CURSORARROW);
-	}
+	wxMenu* menuHelp = new wxMenu();
+	menuHelp->Append(wxID_ABOUT, _("&About"));
+	menuBar->Append(menuHelp, _("&Help"));
 
-	m_codeEditor->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CHANGE);
+	SetMenuBar(menuBar);
 
-	//set Lexer to LEX_CONTAINER: This will trigger the styleneeded event so you can do your own highlighting
-	m_codeEditor->SetLexer(wxSTC_LEX_CONTAINER);
+	Connect(wxID_OPEN,      wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuOpen));
+	Connect(wxID_SAVE,      wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuSave));
+	Connect(wxID_SAVEAS,    wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuSaveAs));
+	Connect(wxID_EXIT,      wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuExit));
+	Connect(wxID_ABOUT,     wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuAbout));
+	Connect(wxID_UNDO,      wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuEdit));
+	Connect(wxID_REDO,      wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuEdit));
+	Connect(wxID_CUT,       wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuEdit));
+	Connect(wxID_COPY,      wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuEdit));
+	Connect(wxID_PASTE,     wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuEdit));
+	Connect(wxID_SELECTALL, wxEVT_MENU, wxCommandEventHandler(ibFrameCodeRunner::OnMenuEdit));
 
-	//set edge mode
-	m_codeEditor->SetEdgeMode(wxSTC_EDGE_MULTILINE);
+	// Top toolbar — same command set as designer's module-editor
+	// docview minus document-only items (Goto line / Procedures &
+	// functions don't apply without a backing module).
+	wxToolBar* toolbar = CreateToolBar(wxTB_FLAT | wxTB_HORIZONTAL);
+	toolbar->AddTool(wxID_CR_ADD_COMMENTS,    _("Add comments"),    wxArtProvider::GetBitmapBundle(wxART_ADD_COMMENT,   wxART_DOC_MODULE), _("Add"));
+	toolbar->AddTool(wxID_CR_REMOVE_COMMENTS, _("Remove comments"), wxArtProvider::GetBitmapBundle(wxART_REMOVE_COMMENT, wxART_DOC_MODULE), _("Remove"));
+	toolbar->AddSeparator();
+	toolbar->AddTool(wxID_CR_FORMAT_CODE,     _("Format selection"), wxArtProvider::GetBitmapBundle(wxART_FORMAT_CODE,   wxART_DOC_MODULE), _("Format"));
+	toolbar->AddTool(wxID_CR_INCREASE_INDENT, _("Increase indent"),  wxArtProvider::GetBitmapBundle(wxART_GO_FORWARD,    wxART_TOOLBAR),    _("Indent"));
+	toolbar->AddTool(wxID_CR_DECREASE_INDENT, _("Decrease indent"),  wxArtProvider::GetBitmapBundle(wxART_GO_BACK,       wxART_TOOLBAR),    _("Unindent"));
+	toolbar->AddSeparator();
+	toolbar->AddTool(wxID_CR_GOTO_LINE,       _("Goto line"),                wxArtProvider::GetBitmapBundle(wxART_GOTO_LINE,    wxART_DOC_MODULE), _("Goto"));
+	toolbar->AddTool(wxID_CR_PROC_AND_FUNC,   _("Procedures and functions"), wxArtProvider::GetBitmapBundle(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"));
+	toolbar->Realize();
 
-	// set visibility
-	m_codeEditor->SetVisiblePolicy(wxSTC_VISIBLE_STRICT | wxSTC_VISIBLE_SLOP, 1);
-	m_codeEditor->SetXCaretPolicy(wxSTC_CARET_EVEN | wxSTC_VISIBLE_STRICT | wxSTC_CARET_SLOP, 1);
-	m_codeEditor->SetYCaretPolicy(wxSTC_CARET_EVEN | wxSTC_VISIBLE_STRICT | wxSTC_CARET_SLOP, 1);
+	Connect(wxID_CR_ADD_COMMENTS,    wxEVT_TOOL, wxCommandEventHandler(ibFrameCodeRunner::OnToolbarCommand));
+	Connect(wxID_CR_REMOVE_COMMENTS, wxEVT_TOOL, wxCommandEventHandler(ibFrameCodeRunner::OnToolbarCommand));
+	Connect(wxID_CR_FORMAT_CODE,     wxEVT_TOOL, wxCommandEventHandler(ibFrameCodeRunner::OnToolbarCommand));
+	Connect(wxID_CR_INCREASE_INDENT, wxEVT_TOOL, wxCommandEventHandler(ibFrameCodeRunner::OnToolbarCommand));
+	Connect(wxID_CR_DECREASE_INDENT, wxEVT_TOOL, wxCommandEventHandler(ibFrameCodeRunner::OnToolbarCommand));
+	Connect(wxID_CR_GOTO_LINE,       wxEVT_TOOL, wxCommandEventHandler(ibFrameCodeRunner::OnToolbarCommand));
+	Connect(wxID_CR_PROC_AND_FUNC,   wxEVT_TOOL, wxCommandEventHandler(ibFrameCodeRunner::OnToolbarCommand));
 
-	//markers
-	m_codeEditor->MarkerDefine(wxSTC_MARKNUM_FOLDER, wxSTC_MARK_BOXPLUS, *wxWHITE, *wxBLACK);
-	m_codeEditor->MarkerDefine(wxSTC_MARKNUM_FOLDEROPEN, wxSTC_MARK_BOXMINUS, *wxWHITE, *wxBLACK);
-	m_codeEditor->MarkerDefine(wxSTC_MARKNUM_FOLDERSUB, wxSTC_MARK_VLINE, *wxWHITE, *wxBLACK);
-	m_codeEditor->MarkerDefine(wxSTC_MARKNUM_FOLDEREND, wxSTC_MARK_BOXPLUSCONNECTED, *wxWHITE, *wxBLACK);
-	m_codeEditor->MarkerDefine(wxSTC_MARKNUM_FOLDEROPENMID, wxSTC_MARK_BOXMINUSCONNECTED, *wxWHITE, *wxBLACK);
-	m_codeEditor->MarkerDefine(wxSTC_MARKNUM_FOLDERMIDTAIL, wxSTC_MARK_TCORNER, *wxWHITE, *wxBLACK);
-	m_codeEditor->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL, wxSTC_MARK_LCORNER, *wxWHITE, *wxBLACK);
+	wxBoxSizer* bSizerMain = new wxBoxSizer(wxVERTICAL);
 
-	// annotations
-	m_codeEditor->AnnotationSetVisible(wxSTC_ANNOTATION_BOXED);
+	// Frontend's full code editor — sessionless / document-less for the
+	// codeRunner host. Highlighter / fold / auto-indent / format & indent
+	// commands all live in ibCodeEditor; only debugger integration is
+	// gated off (designer's ibCodeEditorDesigner subclass wires that).
+	m_codeEditor = new ibCodeEditor(/*document=*/nullptr, this, wxID_ANY,
+		wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 
-	// Set fold flags
-	m_codeEditor->SetFoldFlags(wxSTC_FOLDFLAG_LINEBEFORE_CONTRACTED | wxSTC_FOLDFLAG_LINEAFTER_CONTRACTED);
-
-	// Setup the dwell time before a tooltip is displayed.
-	m_codeEditor->SetMouseDwellTime(200);
-
-	// Setup caret line
-	//m_codeEditor->SetCaretLineVisible(true);
-
-	// miscellaneous
-	m_codeEditor->SetLayoutCache(wxSTC_CACHE_PAGE);
-
-	//Turn the fold markers red when the caret is a line in the group (optional)
-	m_codeEditor->MarkerEnableHighlight(true);
+	// Apply default editor + font/color settings — codeRunner has no
+	// mainFrame singleton to pull them from, so go through the public
+	// setters with a default-constructed pair.
+	m_codeEditor->SetEditorSettings(ibEditorSettings{});
+	m_codeEditor->SetFontColorSettings(ibFontColorSettings{});
 
 	bSizerMain->Add(m_codeEditor, 3, wxEXPAND | wxALL, 5);
 
-	wxBoxSizer* bSizerButton;
-	bSizerButton = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* bSizerButton = new wxBoxSizer(wxHORIZONTAL);
 
-	m_buttonSyntaxCheck = new wxButton(this, wxID_ANY, _("Syntax control"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonSyntaxCheck = new wxButton(this, wxID_ANY, _("Syntax control"));
 	m_buttonSyntaxCheck->SetForegroundColour(wxColour(255, 0, 0));
-
 	bSizerButton->Add(m_buttonSyntaxCheck, 0, wxALL, 5);
 
-	m_buttonRunCode = new wxButton(this, wxID_ANY, _("Run code"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonRunCode = new wxButton(this, wxID_ANY, _("Run code"));
 	m_buttonRunCode->SetBackgroundColour(wxColour(128, 255, 128));
-
 	bSizerButton->Add(m_buttonRunCode, 1, wxALL, 5);
 
-	m_buttonClearOutput = new wxButton(this, wxID_ANY, _("Clear output"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonClearOutput = new wxButton(this, wxID_ANY, _("Clear output"));
 	m_buttonClearOutput->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
 	m_buttonClearOutput->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
-
 	bSizerButton->Add(m_buttonClearOutput, 0, wxALL, 5);
+
 	bSizerMain->Add(bSizerButton, 0, wxEXPAND, 5);
 
-	m_output = new wxStyledTextCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, wxEmptyString);
+	// Output panel — read-only STC for script Message() output.
+	m_output = new wxStyledTextCtrl(this, wxID_ANY);
 	m_output->SetUseTabs(true);
 	m_output->SetTabWidth(4);
 	m_output->SetIndent(4);
@@ -655,63 +281,33 @@ ibFrameCodeRunner::ibFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxSt
 	m_output->SetMarginWidth(2, 0);
 	m_output->SetIndentationGuides(true);
 	m_output->SetReadOnly(true);
-	m_output->SetMarginType(1, wxSTC_MARGIN_SYMBOL);
-	m_output->SetMarginMask(1, wxSTC_MASK_FOLDERS);
-	m_output->SetMarginWidth(1, 16);
-	m_output->SetMarginSensitive(1, true);
-	m_output->SetProperty(wxT("fold"), wxT("1"));
-	m_output->SetFoldFlags(wxSTC_FOLDFLAG_LINEBEFORE_CONTRACTED | wxSTC_FOLDFLAG_LINEAFTER_CONTRACTED);
 	m_output->SetMarginType(0, wxSTC_MARGIN_NUMBER);
 	m_output->SetMarginWidth(0, m_output->TextWidth(wxSTC_STYLE_LINENUMBER, wxT("_99999")));
-	m_output->MarkerDefine(wxSTC_MARKNUM_FOLDER, wxSTC_MARK_BOXPLUS);
-	m_output->MarkerSetBackground(wxSTC_MARKNUM_FOLDER, wxColour(wxT("BLACK")));
-	m_output->MarkerSetForeground(wxSTC_MARKNUM_FOLDER, wxColour(wxT("WHITE")));
-	m_output->MarkerDefine(wxSTC_MARKNUM_FOLDEROPEN, wxSTC_MARK_BOXMINUS);
-	m_output->MarkerSetBackground(wxSTC_MARKNUM_FOLDEROPEN, wxColour(wxT("BLACK")));
-	m_output->MarkerSetForeground(wxSTC_MARKNUM_FOLDEROPEN, wxColour(wxT("WHITE")));
-	m_output->MarkerDefine(wxSTC_MARKNUM_FOLDERSUB, wxSTC_MARK_EMPTY);
-	m_output->MarkerDefine(wxSTC_MARKNUM_FOLDEREND, wxSTC_MARK_BOXPLUS);
-	m_output->MarkerSetBackground(wxSTC_MARKNUM_FOLDEREND, wxColour(wxT("BLACK")));
-	m_output->MarkerSetForeground(wxSTC_MARKNUM_FOLDEREND, wxColour(wxT("WHITE")));
-	m_output->MarkerDefine(wxSTC_MARKNUM_FOLDEROPENMID, wxSTC_MARK_BOXMINUS);
-	m_output->MarkerSetBackground(wxSTC_MARKNUM_FOLDEROPENMID, wxColour(wxT("BLACK")));
-	m_output->MarkerSetForeground(wxSTC_MARKNUM_FOLDEROPENMID, wxColour(wxT("WHITE")));
-	m_output->MarkerDefine(wxSTC_MARKNUM_FOLDERMIDTAIL, wxSTC_MARK_EMPTY);
-	m_output->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL, wxSTC_MARK_EMPTY);
 	m_output->SetSelBackground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
 	m_output->SetSelForeground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+	m_output->SetCodePage(wxSTC_CP_UTF8);
 
-	//Set margin cursor
-	for (int margin = 0; margin < m_output->GetMarginCount(); margin++) {
+	for (int margin = 0; margin < m_output->GetMarginCount(); margin++)
 		m_output->SetMarginCursor(margin, wxSTC_CURSORARROW);
-	}
 
 	bSizerMain->Add(m_output, 1, wxEXPAND | wxALL, 5);
-
-	m_output->SetCodePage(wxSTC_CP_UTF8); //Устанавливаем кодировку Юникод (UTF-8)
-
-	SetFontColorSettings();
 
 	this->SetSizer(bSizerMain);
 	this->Layout();
 	m_statusBar = this->CreateStatusBar(1, wxSTB_SIZEGRIP, wxID_ANY);
-
 	this->Centre(wxBOTH);
 
+	// Register every globally-registered context object (Catalogs,
+	// Documents, EnumManager, …) so script can reference them. They
+	// flow through CreateBinder into the runtime binder at Execute time.
 	for (auto ctor : ibValue::GetListCtorsByType(ibCtorObjectType_object_context)) {
 		m_compileCode->AddContextVariable(ctor->GetClassName(), ctor->CreateObject());
 	}
 
-	// Connect Events
+	// Connect button events.
 	m_buttonSyntaxCheck->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::SyntaxCheckOnButtonClick), nullptr, this);
 	m_buttonRunCode->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::RunCodeOnButtonClick), nullptr, this);
 	m_buttonClearOutput->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::ClearOutputOnButtonClick), nullptr, this);
-
-	m_codeEditor->Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(ibFrameCodeRunner::OnKeyDown), nullptr, this);
-	m_codeEditor->Connect(wxEVT_STC_STYLENEEDED, wxStyledTextEventHandler(ibFrameCodeRunner::OnStyleNeeded), nullptr, this);
-	m_codeEditor->Connect(wxEVT_STC_MARGINCLICK, wxStyledTextEventHandler(ibFrameCodeRunner::OnMarginClick), nullptr, this);
-	m_codeEditor->Connect(wxEVT_STC_MODIFIED, wxStyledTextEventHandler(ibFrameCodeRunner::OnChagedText), nullptr, this);
-	m_codeEditor->Connect(wxEVT_STC_NEEDSHOWN, wxStyledTextEventHandler(ibFrameCodeRunner::OnNeedShow), nullptr, this);
 
 	m_codeEditor->SetText("Message(\"Hello world!\");");
 }

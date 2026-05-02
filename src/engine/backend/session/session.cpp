@@ -346,7 +346,15 @@ ibProcUnitState* ibSession::GetPUState()
 {
 	if (ibSession* s = Current())
 		return &s->m_procUnitState;
-	return nullptr;
+
+	// Sessionless fallback — codeRunner.exe (and any other host that
+	// runs ad-hoc scripts without a session, e.g. command-line script
+	// runners) needs a real ibProcUnitState to back m_currentRunModule
+	// / m_runContext stack / error_place during Compile + Execute.
+	// thread_local so concurrent sessionless callers each get their
+	// own state — no shared mutation, no race.
+	static thread_local ibProcUnitState ts_fallbackPUState;
+	return &ts_fallbackPUState;
 }
 
 void ibSession::WakeDebugLoop()

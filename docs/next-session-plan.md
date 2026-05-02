@@ -625,28 +625,28 @@ Files touched: `session.{h,cpp}`, `sessionRegistry.{h,cpp}`,
   - `debugQueue` length + front session id
 - Same data exposed in designer's Active Users dialog as extra columns.
 
-### Cancellation use cases
-- Wire `ibWorkerPool::CancelSession` to the **debug Pause** command.
-  Currently `Pause` only sets `m_bDebugStopLine`; with `CancelSession`
-  a long-running script outside a breakpoint can be interrupted.
-- Wire to **admin Kick** (currently kicks via Remove submission).
-  CancelSession before Kick gives the script a chance to wind down.
+### Cancellation use cases — landed 2026-05-02
+- ✅ `ibWorkerPool::CancelSession` wired to the debugger Pause command
+  (`debugServer.cpp::RecvCommand` / `CommandId_Pause`). Soft path
+  (`m_bDebugStopLine`) still fires for scripts reaching line markers;
+  hard path covers tight loops / native blocking calls.
+- ✅ Wired to admin Kick (`sessionRegistry.cpp::JobCheckSignal` /
+  `ibSessionSignal::Kick`). CancelSession runs before submitting
+  Remove so OnExit / pool drain races against an idle worker.
 
-### RAII guard for `SetEvalMode`
-- `ibValueSystemFunction::Evaluate` does manual set/reset around
-  `ibProcUnit::Evaluate`. If the inner Evaluate throws, the flag
-  leaks. Per-session storage limits the blast radius but the flag
-  still bleeds across calls on the same session. Add a small
-  `ibEvalModeScope` RAII guard.
+### RAII guard for `SetEvalMode` — landed 2026-05-02
+- ✅ `ibBackendException::ibEvalModeScope` (in `backend_exception.h`)
+  is the new RAII guard. `ibProcUnit::Evaluate` drops three manual
+  set/reset pairs.
 
 ### Pool / dispatch refinements
 - `ibWorkerPoolGUI` is scaffold-only — no consumers. Either wire it
   (background-pool for heavy ops on desktop GUI to keep the wx event
   loop responsive) or delete as dead code.
-- `PostWork` (fire-and-forget) silently drops exceptions from the
-  task. At least log via `wxLogWarning` inside the worker before
-  `set_exception` — current behaviour can mask timer-driven script
-  bugs.
+- ✅ `PostWork` exception logging — landed 2026-05-02. New
+  `LogWorkerException` helper in `workerPoolHeadless.cpp` emits
+  `wxLogWarning` for both reentrant-inline and worker-thread-loop
+  catches. RunOnWorker double-logs; acceptable cost.
 - Web per-tab session lifecycle: confirm DropSession from
   ProcessRemove is hit on every teardown path (force-kill,
   idle-timeout, manual logout). Add an assert / counter.

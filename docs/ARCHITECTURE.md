@@ -84,6 +84,7 @@ Shared frontend objects:
 - **`ibValueForm`** — the runtime representation of an open form; holds the control tree and responds to user events. Same class on both builds.
 - **`ibVisualHost` / `ibVisualHostClient`** — render and input routing surface. Desktop = wxWindow; web = `ibWebWindow` tree serialised to JSON.
 - **Doc-view frames** — backend-facing interface `ibBackendDocFrame` (renamed from the historical `ibBackendDocMDIFrame`); concrete implementations are `ibFrontendDocMDIFrame` (desktop, wraps `wxAuiMDIParentFrame` + `wxDocParentFrameAnyBase`) and `ibWebFrame` (web). Children are `CAuiDocChildFrame` / `ibDialogDocChildFrame` on desktop and `ibWebDocChildFrame` on web. The frame is owned by the `ibSession` that created it (no process-level singleton on the backend side); legacy `mainFrame` macro still exists in `frontend/mainFrame/mainFrame.h` as a frontend-local accessor for the GUI singleton, but new backend code reaches the frame through `ibSession::Current()->GetFrame()` or `ibSession::CurrentFrame()`. Template-mixin rewrite to follow `wxDocParentFrameAny` is partial — `ibFrontendDocMDIFrame` keeps the "MDI" suffix until the frontend-side rename lands.
+- **`ibCodeEditor`** (`frontend/win/editor/codeEditor/`) — the Scintilla-based script editor. Lives in `frontend.dll` so any GUI host can use it: `designer.exe` (its module/form editors), `codeRunner.exe` (sessionless scratch runner). Highlighter, fold parser, auto-indent on Enter, format / increase / decrease indent, comment add/remove, Ctrl-Space autocomplete, GotoLine + ProceduresAndFunctions dialogs all live here. Debugger integration is a designer-only concern, kept out of the base via six virtual hooks (`IsDebuggerEnterLoop`, `OnEditDebugPoint`, `OnPatchModule`, `OnEvaluateAutocomplete`, `OnEvaluateToolTip`, `RefreshBreakpointMarkers`); designer's `ibCodeEditorDesigner` (`designer/win/editor/codeEditor/codeEditorDesigner.{h,cpp}`) overrides them with `debugClient->…` calls. Document-less / sessionless mode: passing `nullptr` for the `ibMetaDocument*` skips metadata-driven autocomplete and breakpoint markers but keeps everything else functional — codeRunner uses this to embed the same editor without any DB / metadata / debug infrastructure.
 
 ---
 
@@ -596,3 +597,33 @@ HTTP: POST /w/<dbalias>/logout?sid=<tabSid>  (sendBeacon from browser pagehide)
                                           └─ ticket.reset → Submit(Remove, Urgent)
                                                └─ registry DELETE sys_session row, release row-lock
 ```
+
+---
+
+## Localization (UI gettext)
+
+Two parallel translation surfaces exist; do not confuse them:
+
+- **Configuration language** — per-session `ibSession::m_resolvedLanguageCode`, selects metadata synonyms / form-label translations stored *inside* the configuration. See `ibBackendLocalization::GetActiveLanguage` / `SetActiveLanguage`.
+- **Process UI language** — gettext catalogs under `locale/` (`ru.po` / `uk.po` + compiled `*.mo`). Strings wrapped in `_("...")` macros across `src/engine/**` end up in the `.mo` and are looked up by wxLocale at runtime.
+
+**Workflow** (when adding new `_()` strings):
+
+```
+# Regenerate the template from current sources (uses Poedit's gettext tools).
+xgettext --from-code=UTF-8 --keyword=_ --keyword=wxTRANSLATE \
+         --keyword=wxPLURAL:1,2 --language=C++ --no-wrap \
+         --output=locale/open_es.pot --files-from=<list-of-cpp-files>
+
+# Merge new entries into each language file (preserves existing translations).
+msgmerge --no-wrap --update --backup=none locale/ru.po locale/open_es.pot
+msgmerge --no-wrap --update --backup=none locale/uk.po locale/open_es.pot
+
+# Translate empty msgstr entries (manually or in Poedit).
+
+# Compile to .mo for the runtime.
+msgfmt --check-format --output-file=locale/ru.mo locale/ru.po
+msgfmt --check-format --output-file=locale/uk.mo locale/uk.po
+```
+
+The Poedit GUI (`File → Open` on the .po) does Step 1 + the editing UI in one shot. CLI route is faster for batch updates from CI.

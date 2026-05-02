@@ -5,6 +5,7 @@
 
 #include "metaModuleObject.h"
 #include "backend/appData.h"
+#include "backend/cache/byteCodeCache.h"
 
 //***********************************************************************
 //*                           ModuleObject                              *
@@ -39,6 +40,13 @@ bool ibValueMetaObjectModuleBase::OnSaveMetaObject(int flags)
 		const wxString& strBuffer = GetModuleText();
 		debugClient->SaveModule(GetDocPath(),
 			1 + std::count(strBuffer.begin(), strBuffer.end(), wxT('\n')));
+		// AOT cache row for this descriptor is now stale — Designer
+		// just persisted new source text. Drop the row so the next
+		// runtime session that compiles this module refreshes the
+		// blob via the cache-miss path in
+		// ibRuntimeModuleDataObject::Compile. Best-effort; if the
+		// table doesn't exist yet the call is a no-op.
+		ibByteCodeCache::Invalidate(GetGuid());
 	}
 
 	return ibValueMetaObject::OnSaveMetaObject(flags);
@@ -46,6 +54,12 @@ bool ibValueMetaObjectModuleBase::OnSaveMetaObject(int flags)
 
 bool ibValueMetaObjectModuleBase::OnDeleteMetaObject()
 {
+	if (appData->DesignerMode()) {
+		// Hygiene — orphan rows survive harmlessly (no descriptor
+		// queries them again) but bloating sys_bytecode_cache serves
+		// no purpose.
+		ibByteCodeCache::Invalidate(GetGuid());
+	}
 	return ibValueMetaObject::OnDeleteMetaObject();
 }
 

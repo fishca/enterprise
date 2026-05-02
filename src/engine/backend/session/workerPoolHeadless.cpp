@@ -1,6 +1,9 @@
 #include "workerPoolHeadless.h"
 
 #include "backend/session/session.h"   // ibSessionScope
+#include "backend/backend_exception.h" // ibBackendException
+
+#include <wx/log.h>
 
 #include <chrono>
 #include <stdexcept>
@@ -17,6 +20,25 @@ thread_local ibSession* tl_currentLease = nullptr;
 // on the next Submit.
 constexpr auto       kIdleTimeout = std::chrono::seconds(30);
 constexpr std::size_t kMinIdle    = 1;
+
+void LogWorkerException(const wxString& location)
+{
+	// Reraise to identify the type without losing the original exception_ptr —
+	// outer catch(...) keeps current_exception() valid across this nested
+	// rethrow, so set_exception below still gets the same one.
+	try { throw; }
+	catch (const ibBackendException& e) {
+		wxLogWarning(wxT("%s: ibBackendException: %s"),
+		             location, e.GetErrorDescription());
+	}
+	catch (const std::exception& e) {
+		wxLogWarning(wxT("%s: std::exception: %s"),
+		             location, wxString::FromUTF8(e.what()));
+	}
+	catch (...) {
+		wxLogWarning(wxT("%s: unknown exception"), location);
+	}
+}
 
 } // namespace
 
@@ -71,6 +93,7 @@ std::future<void> ibWorkerPoolHeadless::Submit(ibSession* session, Task task)
 			promise->set_value();
 		}
 		catch (...) {
+			LogWorkerException(wxT("worker pool reentrant task"));
 			promise->set_exception(std::current_exception());
 		}
 		return future;
@@ -178,6 +201,12 @@ void ibWorkerPoolHeadless::WorkerLoop()
 				item.promise->set_value();
 			}
 			catch (...) {
+				// Always log — PostWork drops the future, so without this
+				// log the exception is silently swallowed (timer-driven
+				// script bugs would mask). RunOnWorker callers will see
+				// double-logging when they handle the rethrown exception
+				// themselves; that's an acceptable cost for the safety win.
+				LogWorkerException(wxT("worker pool task"));
 				item.promise->set_exception(std::current_exception());
 			}
 		}

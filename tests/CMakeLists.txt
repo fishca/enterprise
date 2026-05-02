@@ -30,6 +30,9 @@ add_executable(oes_tests
     test_clsid.cpp
     test_value.cpp
     test_number.cpp
+    test_byteCodeAOT.cpp
+    test_compiler.cpp
+    test_runtime.cpp
 )
 
 target_link_libraries(oes_tests

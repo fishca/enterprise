@@ -5,6 +5,8 @@
 
 #include "dataReport.h"
 #include "backend/metaData.h"
+#include "backend/metadataReport.h"
+#include "backend/moduleManager/moduleManagerExt.h"
 #include "backend/session/session.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectReport, ibValueMetaObjectRecordDataExt)
@@ -42,38 +44,25 @@ ibValueManagerDataObject* ibValueMetaObjectReport::CreateManagerDataObjectValue(
 
 ibValueRecordDataObjectExt* ibValueMetaObjectReport::CreateObjectExtValue()
 {
-	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
-	wxASSERT(moduleManager);
-	ibValueRecordDataObjectReport* pDataRef = nullptr;
-	if (auto* cc = m_metaData->GetCompileCache()) {
-		if (!IsExternalCreate()) {
-			if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
-				ibValueRecordDataObjectReport* createdObj = ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectReport>(this);
-				if (!createdObj->InitializeObject()) {
-					wxDELETE(createdObj);
-					return nullptr;
-				}
-				return createdObj;
-			}
-		}
-		else {
-			return dynamic_cast<ibValueRecordDataObjectExt*>(moduleManager->GetObjectValue());
-		}
-	}
-	else {
-		if (!IsExternalCreate()) {
-			pDataRef = ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectReport>(this);
-			if (!pDataRef->InitializeObject()) {
-				wxDELETE(pDataRef);
-				return nullptr;
-			}
-		}
-		else {
-			return dynamic_cast<ibValueRecordDataObjectExt*>(moduleManager->GetObjectValue());
-		}
+	if (IsExternalCreate()) {
+		// External report — m_objectValue lives on the report's own
+		// moduleManager, not on session's main-config mm. Pull it from
+		// m_metaData (= ibMetaDataReport for external reports).
+		auto* extMeta = dynamic_cast<ibMetaDataReport*>(m_metaData);
+		ibValueModuleManager* mm = extMeta ? extMeta->GetModuleManager() : nullptr;
+		return mm ? dynamic_cast<ibValueRecordDataObjectExt*>(mm->GetObjectValue()) : nullptr;
 	}
 
+	ibValueRecordDataObjectReport* pDataRef = nullptr;
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
+			return pDataRef;
+	}
+	pDataRef = ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectReport>(this);
+	if (!pDataRef->InitializeObject()) {
+		wxDELETE(pDataRef);
+		return nullptr;
+	}
 	return pDataRef;
 }
 

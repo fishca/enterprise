@@ -13,6 +13,10 @@ m_ownerMeta(nullptr),
 m_configOpened(false),
 m_version(version_oes_last)
 {
+	// Designer-only — see ibMetaDataDataProcessor ctor for rationale.
+	if (appData->DesignerMode())
+		m_compileCache = std::make_unique<ibCompileValueCache>();
+
 	//create main metaObject
 	m_commonObject = new ibValueMetaObjectExternalReport();
 	m_commonObject->SetName(

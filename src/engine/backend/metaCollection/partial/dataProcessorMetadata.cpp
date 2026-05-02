@@ -5,6 +5,8 @@
 
 #include "dataProcessor.h"
 #include "backend/metaData.h"
+#include "backend/metadataDataProcessor.h"
+#include "backend/moduleManager/moduleManagerExt.h"
 #include "backend/session/session.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectDataProcessor, ibValueMetaObjectRecordDataExt)
@@ -42,29 +44,21 @@ ibValueManagerDataObject* ibValueMetaObjectDataProcessor::CreateManagerDataObjec
 
 ibValueRecordDataObjectExt* ibValueMetaObjectDataProcessor::CreateObjectExtValue()
 {
-	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
-	wxASSERT(moduleManager);
-	ibValueRecordDataObjectDataProcessor* pDataRef = nullptr;
-	if (auto* cc = m_metaData->GetCompileCache()) {
-		if (!IsExternalCreate()) {
-			if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
-				return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectDataProcessor>(this);
-		}
-		else {
-			return dynamic_cast<ibValueRecordDataObjectExt*>(moduleManager->GetObjectValue());
-		}
-	}
-	else {
-		if (!IsExternalCreate()) {
-			pDataRef = ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectDataProcessor>(this);
-		}
-		else {
-			return dynamic_cast<ibValueRecordDataObjectExt*>(moduleManager->GetObjectValue());
-		}
+	if (IsExternalCreate()) {
+		// External DP — m_objectValue lives on the DP's own moduleManager,
+		// not on session's main-config mm. Pull it from m_metaData
+		// (= ibMetaDataDataProcessor for external DPs).
+		auto* extMeta = dynamic_cast<ibMetaDataDataProcessor*>(m_metaData);
+		ibValueModuleManager* mm = extMeta ? extMeta->GetModuleManager() : nullptr;
+		return mm ? dynamic_cast<ibValueRecordDataObjectExt*>(mm->GetObjectValue()) : nullptr;
 	}
 
-	return pDataRef;
+	ibValueRecordDataObjectDataProcessor* pDataRef = nullptr;
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
+			return pDataRef;
+	}
+	return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectDataProcessor>(this);
 }
 
 ibSourceDataObject* ibValueMetaObjectDataProcessor::CreateSourceObject(ibValueMetaObjectFormBase* metaObject)

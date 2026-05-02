@@ -154,26 +154,12 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 	if (defFormObject != nullptr) {
 
 		ibBackendValueForm* result = nullptr;
-		ibCompileValueCache* cc = m_metaManager->GetMetaData()->GetCompileCache();
+		// Cache lives on the form's own metadata (external DP for .epf, main config
+		// for embedded DP) — m_metaManager->GetMetaData() is the configuration
+		// passed to base ctor and would miss for external DPs.
+		ibCompileValueCache* cc = defFormObject->GetMetaData()->GetCompileCache();
 
 		if (!cc || !cc->FindCompileModule(defFormObject, result)) {
-
-			//valueForm = defFormObject->CreateForm(
-			//	nullptr, m_objectValue
-			//);
-			//try {
-			//	if (valueForm->InitializeFormModule()) {
-			//		valueForm->ShowForm();
-			//	}
-			//}
-			//catch (...) {
-			//	wxDELETE(valueForm);
-			//	if (!appData->DesignerMode()) {
-			//		//decrRef - for control delete
-			//		m_objectValue->DecrRef();
-			//		return false;
-			//	}
-			//}
 
 			result = ibValueMetaObjectFormBase::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
 
@@ -363,25 +349,10 @@ bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 
 	if (defFormObject != nullptr) {
 		ibBackendValueForm* result = nullptr;
-		ibCompileValueCache* cc = m_metaManager->GetMetaData()->GetCompileCache();
+		// Cache lives on the form's own metadata — see the symmetric DataProcessor
+		// path above for rationale.
+		ibCompileValueCache* cc = defFormObject->GetMetaData()->GetCompileCache();
 		if (!cc || !cc->FindCompileModule(defFormObject, result)) {
-
-			//valueForm = defFormObject->CreateForm(
-			//	nullptr, m_objectValue
-			//);
-			//try {
-			//	if (valueForm->InitializeFormModule()) {
-			//		valueForm->ShowForm();
-			//	}
-			//}
-			//catch (...) {
-			//	wxDELETE(valueForm);
-			//	if (!appData->DesignerMode()) {
-			//		//decrRef - for control delete 
-			//		m_objectValue->DecrRef();
-			//		return false;
-			//	}
-			//}
 
 			result = ibValueMetaObjectFormBase::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
 
@@ -389,7 +360,7 @@ bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 				result->ShowForm();
 			}
 			else if (!appData->DesignerMode()) {
-				//decrRef - for control delete 
+				//decrRef - for control delete
 				m_objectValue->DecrRef();
 				return false;
 			}

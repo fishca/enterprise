@@ -715,11 +715,23 @@ int ibDatabaseLayerFirebird::DoRunQuery(const wxString& strQuery, bool bParseQue
 				if (nReturn != 0)
 				{
 					InterpretErrorCodes();
-					// Manually rollback so any error messages from the
-					// rollback don't clobber the original failure.
-					isc_tr_handle pTr = m_pTransaction;
-					m_pInterface->GetIscRollbackTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTr);
-					m_pTransaction = 0;
+					// Roll back the in-progress TX. When we own it
+					// (bQuickieTransaction), go through the public
+					// RollBack so the base class's m_txDepth counter
+					// drops to 0 and the pool's TX-pin clears — without
+					// this, a failed DDL leaves IsActiveTransaction()
+					// true forever and trips checks like
+					// OnBeforeSaveDatabase. When the caller owns the
+					// TX (bQuickieTransaction == false), driver-level
+					// rollback only — caller's own depth is theirs to
+					// resolve.
+					if (bQuickieTransaction) {
+						RollBack();
+					} else {
+						isc_tr_handle pTr = m_pTransaction;
+						m_pInterface->GetIscRollbackTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTr);
+						m_pTransaction = 0;
+					}
 
 					ThrowDatabaseException();
 					return DATABASE_LAYER_QUERY_RESULT_ERROR;
@@ -787,6 +799,13 @@ ibDatabaseResultSet* ibDatabaseLayerFirebird::DoRunQueryWithResults(const wxStri
 					DoRunQuery(QueryArray[i], false);
 					if (GetErrorCode() != DATABASE_LAYER_OK)
 					{
+						// Inner DoRunQuery failure — when we own the
+						// outer TX (bQuickieTransaction), drop the
+						// depth counter via public RollBack so a
+						// subsequent caller doesn't see a phantom
+						// active transaction. Symmetric to the fix in
+						// DoRunQuery's per-statement error path.
+						if (bQuickieTransaction) RollBack();
 						ThrowDatabaseException();
 						return NULL;
 					}

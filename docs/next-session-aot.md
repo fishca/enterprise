@@ -74,67 +74,123 @@ forward-compatibility of older format-version blobs (current reader
 hard-rejects mismatch → cache miss → recompile, which is the safe
 default but loses any pre-bump cached work).
 
-### 2. DB schema (½ day)
+### 2. DB schema ✅ landed 2026-05-02
 
-`sys_bytecode_cache` table:
+`sys_bytecode_cache` final layout (simpler than originally drafted —
+metadata_version / source_hash / compiler_version dropped per the
+"track only `ibValueMetaObjectModuleBase` add/remove/text-change"
+discussion; descriptor identity + bytecode version cover write-side
+freshness, AOT magic + dep version walk cover read-side validity):
 
 ```sql
 CREATE TABLE sys_bytecode_cache (
-    descriptor_id     CHAR(36)    NOT NULL,   -- ibGuid str (key)
-    bytecode_version  CHAR(36)    NOT NULL,   -- m_version
-    source_hash       CHAR(64),               -- SHA-256 of source text
-    metadata_version  BIGINT,                 -- ibMetaData generation
-    compiler_version  INTEGER,                -- g_compilerVersion constant
-    blob              BLOB,                   -- serialized bc
-    PRIMARY KEY (descriptor_id)
+    descriptor_id     VARCHAR(36) NOT NULL PRIMARY KEY,
+    bytecode_version  VARCHAR(36) NOT NULL,
+    bc_blob           BLOB        NOT NULL    -- BYTEA on PostgreSQL
 );
 ```
 
-DAO: `ibByteCodeCache::Load(descriptorId, [out] blob, [out] versions)`,
-`Save(descriptorId, blob, versions)`, `Invalidate(descriptorId)`.
+`bc_blob` not `blob` — Firebird parses the column-name `blob` against
+the `BLOB` type keyword and silently mis-creates the table.
 
-Cross-driver: Firebird / PostgreSQL / SQLite / MySQL / ODBC — use
-`ibPreparedStatement` (project rule).
+DAO at `backend/cache/byteCodeCache.{h,cpp}`:
+`Save(bc) / Load(outBc, descId) / Invalidate(descId) / InvalidateAll()`.
+`Save` extracts identity from `bc.m_id` / `bc.m_version`, runs
+`SerializeAOT` into the blob; `Load` runs `DeserializeAOT` from the
+blob and returns false on any failure (magic / format-version / row
+missing) so the caller falls through to recompile. Cross-driver via
+`ibPreparedStatement::SetParamBlob(int, const void*, long)` — the
+`(int, const wxMemoryBuffer&)` overload is a no-op default in the
+base class, never call it.
 
-### 3. Compile-time integration (1 day)
+`MigrateTableBytecodeCache` runs unconditionally in `CreateAppDataEnv`
+/ `CreateServerAppDataEnv` next to `MigrateTableSession`. PG uses
+`BYTEA`, every other driver gets `BLOB`.
 
-In `ibRuntimeModuleDataObject::Compile` (or `ibCompileCode::Compile`):
+### 3. Compile-time integration ✅ landed 2026-05-02
 
-```cpp
-const ibGuid descId = GetMetaForCompile()->GetGuid();
-const auto sourceHash = SHA256(GetSourceText());
-const auto metaVer  = activeMetaData->GetGeneration();
-const auto compVer  = g_compilerVersion;
+`ibRuntimeModuleDataObject::Compile` runs three phases:
 
-if (auto blob = ibByteCodeCache::Load(descId, sourceHash, metaVer, compVer)) {
-    bc.Deserialize(*blob);
-    // Resolve m_dependencyIds → ibByteCode* via session-level registry.
-    return true;   // cache hit
-}
-
-if (CompileFromSource()) {
-    auto blob = bc.Serialize();
-    ibByteCodeCache::Save(descId, blob, sourceHash, metaVer, compVer);
-    return true;
-}
-return false;
+```
+A1: ibByteCodeCache::Load(bc, descId)
+    hit  → ResolveAndVerifyDependencies → ready (skip A2)
+    miss → A2
+    drift→ Invalidate, bc.Reset(), A2
+A2: m_compileModule->Compile() + stamp identity + Save(bc)
+B : binder over bc.m_listVar + PrepareNames on every bound value +
+    Register(bc) in process-wide registry
 ```
 
-### 4. Dependency resolution registry (½ day)
+Live pointers AOT skipped on serialize are restored in B:
+- `bc.m_parent ← parent compile module's m_cByteCode` (mirrors the
+  setup at `compileModule.cpp:79`).
+- `m_listConst[i].m_bReadOnly = true` stamped inside `DeserializeAOT`
+  (const-pool entries are literals by definition).
+- `PrepareNames()` called on every `m_listExternValue` /
+  `m_listContextValue` before binder seed — fresh-compile path runs
+  this inside `PrepareModuleData`; cache-hit path bypasses it.
 
-Session-level: `unordered_map<ibGuid, ibByteCode*>` populated as bcs
-are compiled or loaded. At load, walk `m_dependencyIds`, look each up
-in registry, write to parallel `m_dependencies`. Missing → defer
-(probably triggers re-compile of dependency).
+### 4. Dependency resolution registry ✅ landed 2026-05-02
 
-### 5. Invalidation tests (1 day)
+`ibByteCode::Register / Unregister / Find` — process-wide
+`unordered_map<wxString, ibByteCode*>` keyed by descriptor GUID,
+guarded by `std::shared_mutex` (read-mostly). `Register` runs at
+the end of every successful `Compile` (both fresh and cache-hit
+arms); `Unregister` runs from `ibRuntimeModuleDataObject` dtor.
 
-Cold-start (empty cache) → all bcs compile + persist.
-Warm-start (full cache) → all bcs load from cache.
-Source edit → invalidates own row, parents stay (their
-`m_dependencyVersions[i]` stops matching → cascade).
-Metadata bump (e.g. user adds a Catalog) → all rows invalidated.
-Compiler version bump (binary upgrade) → all rows invalidated.
+`bc.ResolveAndVerifyDependencies()` walks `m_dependencyIds`, looks
+each up via `Find`, populates `m_dependencies`, and verifies
+`m_dependencyVersions[i] == dep->m_version`. Returns false on any
+missing dep or version drift — caller treats as cache-miss case (c)
+and recompiles from source.
+
+### 5. Invalidation tests — pending
+
+Cold-start (empty cache) → all bcs compile + persist. Verified
+manually.  
+Warm-start (full cache) → all bcs load from cache. Verified manually
+(see telemetry below).  
+Source edit → Designer's `OnSaveMetaObject(saveConfigFlag)`
+invalidates the changed module's row; its dependents' rows stay
+valid until next compile, when their `m_dependencyVersions[i]` stops
+matching after the dep recompiles → cascade. Verified manually.  
+Module deletion → `OnDeleteMetaObject` invalidates its own row
+(hygiene; orphan rows are harmless).  
+Format-version bump → readers reject; everything recompiles.  
+
+Automated gtests not yet written; use `oes_tests` once
+`enterprise/tests/test_byteCodeAOT.cpp` framework is wired against
+a live appData (currently exercises serialize/deserialize without DB).
+
+## Telemetry from initial smoke test
+
+Hot-path on cache-hit (FB embedded, ~20 modules from a small fb_test
+configuration):
+
+| descriptor             | blob   | load     |
+|------------------------|--------|----------|
+| ManagerModule (×12)    | 832 B  | 3-4 ms   |
+| CommonModule1          | 824 B  | 4 ms     |
+| CommonForm1            | 1469 B | 4 ms     |
+| CommonForm2            | 2247 B | 6 ms     |
+| CommonForm3            | 1805 B | 7 ms     |
+| ObjectModule           | 1209 B | 4 ms     |
+
+Latency = single SELECT round-trip + `DeserializeAOT`. Compile path
+is 0 µs / 0 µs (compiler not invoked). Cache-miss "first run" cost
+matches today's startup.
+
+## Firebird driver fix landed alongside
+
+`firebirdDatabaseLayer::DoRunQuery` and `DoRunQueryWithResults` —
+on a per-statement error inside a quickie-TX path (DDL fails because
+table exists, etc.), the old code did manual driver-side
+`isc_rollback_transaction` but bypassed the public `RollBack()` →
+`m_txDepth` stayed at 1 forever → next `OnBeforeSaveDatabase`
+tripped its `IsActiveTransaction()` guard and refused to save. Fixed
+by routing the rollback through public `RollBack()` so the depth
+counter and pool TX-pin clear correctly. Other drivers (PG / SQLite
+/ MySQL / ODBC) don't use the quickie pattern — not affected.
 
 ## Pre-work that's nice but not blocking
 
@@ -181,14 +237,13 @@ Compiler version bump (binary upgrade) → all rows invalidated.
 * `enterprise/CLAUDE.md` — update "Known Issues" / add AOT cache
   section.
 
-## Estimate (remaining after Step 1)
+## Estimate (status)
 
-* DB schema + DAO: **½ day**.
-* Compile-time hook + dependency registry: **1½ days**.
-* Invalidation logic + cross-driver SQL: **1-2 days**.
-* Tests (cold/warm/edit/bump scenarios): **1 day**.
-
-Total: **~1 working week**, no architectural risk.
+* Step 1 — persistence layer: ✅ landed 2026-05-02.
+* Step 2 — DB schema + DAO: ✅ landed 2026-05-02.
+* Step 3 — compile-time hook: ✅ landed 2026-05-02.
+* Step 4 — dependency registry + verify: ✅ landed 2026-05-02.
+* Step 5 — automated invalidation tests: pending; manual smoke OK.
 
 ## Out of scope for this session
 

@@ -10,6 +10,7 @@
 #include "backend/metadataConfiguration.h"
 #include "backend/session/session.h"
 #include "backend/session/sessionRegistry.h"
+#include "backend/session/workerPool.h"
 
 #include "backend/fileSystem/fs.h"
 #if _USE_NET_COMPRESSOR == 1
@@ -1157,8 +1158,22 @@ void ibDebuggerServer::ibDebuggerServerConnection::RecvCommand(void* pointer, un
 	}
 	else if (commandFromClient == CommandId_Pause) {
 		wxString sid; commandReader.r_stringZ(sid);
-		(void)sid;  // Pause sets a flag the script thread checks at next op
+		// Soft pause: m_bDebugStopLine fires DoDebugLoop at the next
+		// opcode-with-line, letting the user inspect.
 		ms_debugServer->m_bDebugStopLine = true;
+		// Hard escape hatch: if the script is in a tight loop without
+		// line markers or in a native blocking call, the soft path
+		// never fires. CancelSession flips the per-session cancel flag
+		// so the interpreter throws ibBackendInterruptException at the
+		// next opcode (any kind) and the script unwinds. Trade-off: on
+		// a normally-running script Cancel fires before EnterDebugger,
+		// so this turns Pause into abort rather than pause-and-inspect.
+		// Acceptable for now — users should set breakpoints for
+		// inspection; Pause is the "I gave up, stop it" button.
+		if (auto* pool = ibSessionRegistry::Instance().GetWorkerPool()) {
+			if (auto* sess = ibSessionRegistry::Instance().Find(sid))
+				pool->CancelSession(sess);
+		}
 	}
 	else if (commandFromClient == CommandId_Detach) {
 

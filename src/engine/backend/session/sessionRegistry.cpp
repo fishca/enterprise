@@ -1524,6 +1524,13 @@ void ibSessionRegistry::JobCheckSignal()
 			// request replaces that signal path.
 			auto it = m_own.find(p.guid);
 			if (it != m_own.end() && it->second) {
+				// Cooperative cancel before Remove — gives the running
+				// script a chance to unwind via ibBackendInterruptException
+				// at the next opcode, so OnExit / pool drain runs against
+				// an idle worker rather than racing a still-executing task.
+				if (m_workerPool)
+					m_workerPool->CancelSession(it->second.get());
+
 				ibRegistryRequest rm;
 				rm.kind    = ibRegistryRequestKind::Remove;
 				rm.session = it->second;

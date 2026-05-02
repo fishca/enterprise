@@ -371,6 +371,11 @@ private:
 	static void CreateTableSession();
 	static void CreateTableEvent();
 	static void MigrateTableSession();
+	// Additive — creates sys_bytecode_cache if missing. Runs in any
+	// runMode after the existing-tables gate, so DBs initialised before
+	// AOT cache landed pick the table up on next open. Independent
+	// table; not part of TableAlreadyCreated()'s init-contract.
+	static void MigrateTableBytecodeCache();
 
 	static bool ClearTableUser();
 
@@ -436,10 +441,11 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-#define user_table		wxT("sys_user")
-#define session_table	wxT("sys_session")
-#define sequence_table	wxT("sys_sequence")
-#define event_table		wxT("sys_event")
+#define user_table				wxT("sys_user")
+#define session_table			wxT("sys_session")
+#define sequence_table			wxT("sys_sequence")
+#define event_table				wxT("sys_event")
+#define bytecode_cache_table	wxT("sys_bytecode_cache")
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif

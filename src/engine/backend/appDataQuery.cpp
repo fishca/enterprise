@@ -167,6 +167,39 @@ void ibApplicationData::MigrateTableSession()
 	}
 }
 
+// Bring up sys_bytecode_cache. Independent of the user/session/event
+// triple — runs in any runMode after the existing-tables gate, so DBs
+// initialised before AOT cache landed pick the table up on the next
+// open of any process. Idempotent; second call is a no-op once the
+// table exists.
+//
+// Per-driver column types: PostgreSQL uses BYTEA for the binary blob,
+// every other driver (Firebird embedded, SQLite, MySQL, ODBC) takes
+// plain BLOB. Firebird's BLOB SUB_TYPE 0 is implicit when no sub-type
+// is named.
+void ibApplicationData::MigrateTableBytecodeCache()
+{
+	if (db_query->TableExists(bytecode_cache_table))
+		return;
+
+	const bool isPG =
+		db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL;
+	const wxString blobType = isPG ? wxT("BYTEA") : wxT("BLOB");
+
+	try {
+		db_query->RunQuery(
+			wxT("CREATE TABLE %s ("
+			    "descriptor_id     VARCHAR(36) NOT NULL PRIMARY KEY,"
+			    "bytecode_version  VARCHAR(36) NOT NULL,"
+			    "blob              ") + blobType + wxT(" NOT NULL);"),
+			bytecode_cache_table);
+	}
+	catch (...) {
+		// Best-effort — DDL failure leaves Save / Load in their
+		// "no table" no-op branch; runtime falls back to compile path.
+	}
+}
+
 bool ibApplicationData::ClearTableUser()
 {
 	if (!db_query->TableExists(user_table))

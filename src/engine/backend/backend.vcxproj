@@ -41,6 +41,7 @@
     <ClInclude Include="restructureInfo.h" />
     <ClInclude Include="spreadsheetDescription.h" />
     <ClInclude Include="clsid.h" />
+    <ClInclude Include="cache\byteCodeCache.h" />
     <ClInclude Include="compiler\byteCode.h" />
     <ClInclude Include="compiler\codeDef.h" />
     <ClInclude Include="compiler\compileCode.h" />
@@ -282,6 +283,7 @@
     <ClCompile Include="backend_picture.cpp" />
     <ClCompile Include="backend_localization.cpp" />
     <ClCompile Include="characteristicCtor.cpp" />
+    <ClCompile Include="cache\byteCodeCache.cpp" />
     <ClCompile Include="compiler\byteCodeAOT.cpp" />
     <ClCompile Include="compiler\valueSerialization.cpp" />
     <ClCompile Include="constantCtor.cpp" />

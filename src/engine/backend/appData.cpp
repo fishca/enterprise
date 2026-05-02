@@ -364,6 +364,7 @@ bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& 
 			// Additive migration for pre-2026-04-20 schemas — registry's
 			// INSERT / snapshot SELECT assume pid / address / currentActivity.
 			ibApplicationData::MigrateTableSession();
+			ibApplicationData::MigrateTableBytecodeCache();
 
 			if (!SetLocaleAppDataEnv(strLocale))
 				return false;
@@ -423,6 +424,7 @@ bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString
 			}
 
 			ibApplicationData::MigrateTableSession();
+			ibApplicationData::MigrateTableBytecodeCache();
 
 			return true;
 		}

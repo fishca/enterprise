@@ -98,20 +98,40 @@ bool ibGUISession::OnDestroySession(bool force)
 	// stays Added and the frame keeps running. force=true skips this
 	// path entirely; used by debug Destroy, admin Kick, and shutdown
 	// flows where the close cannot be cancelled.
-	if (!force && !m_frame->AllowClose())
-		return false;
+	//
+	// AllowClose touches GUI state (script run via ProcUnit, dialogs);
+	// only safe on main thread. When force=true, callers (debug kill,
+	// admin kick) hit this from worker threads — skip the soft path,
+	// the destroy itself is marshalled below.
+	if (!force) {
+		if (!wxIsMainThread())
+			return false;
+		if (!m_frame->AllowClose())
+			return false;
+	}
 
-	// Clear back-link first so any wx event that fires during Destroy()
-	// (pane teardown, child-frame close cascade) sees a detached session
-	// rather than a half-torn-down one.
-	m_frame->SetGUISession(nullptr);
-
-	// wx-idiomatic shutdown — Destroy() schedules deletion through the
-	// event loop. wxFrame::Destroy does NOT fire EVT_CLOSE_WINDOW, so
-	// AllowClose won't double-fire from this path. The frame dtor runs
-	// on the main thread; s_instance is null-cleared by ~ibFrontendDocMDIFrame.
-	m_frame->Destroy();
+	// Marshal teardown to the main wx thread. Debug-listener kill and
+	// admin-kick reach Close(true) on background threads; touching
+	// wxFrame::Destroy / Freeze / docManager from anywhere but main
+	// crashes wx (its window/list state isn't synchronised across
+	// threads). shared_from_this keeps the session alive until the
+	// lambda fires — Close() returns true to caller and ProcessRemove
+	// may run concurrently, but the frame teardown is sequenced on
+	// the main loop.
+	auto* frame = m_frame;
 	m_frame = nullptr;
+	frame->SetGUISession(nullptr);
+
+	auto runDestroy = [frame]() {
+		frame->Destroy();
+	};
+
+	if (wxIsMainThread() || wxTheApp == nullptr) {
+		runDestroy();
+	}
+	else {
+		wxTheApp->CallAfter(runDestroy);
+	}
 	return true;
 }
 

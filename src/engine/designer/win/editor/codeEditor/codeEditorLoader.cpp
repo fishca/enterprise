@@ -362,6 +362,78 @@ void ibCodeEditor::PrepareTABs()
 	SetEmptySelection(startLinePos + length);
 }
 
+// Compute the fold-based target indent (in tab units) for a single
+// line — same decision tree as PrepareTABs, but operates on already-
+// committed lines rather than the buffer-being-edited.
+namespace {
+int ComputeTargetIndent(int level)
+{
+	int foldLevel = level ^ wxSTC_FOLDLEVELBASE_FLAG;
+
+	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
+		return std::max(0, foldLevel ^ wxSTC_FOLDLEVELHEADER_FLAG);
+	}
+	if ((level & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
+		const int parent = (foldLevel ^ wxSTC_FOLDLEVELELSE_FLAG) - 1;
+		return std::max(0, parent);
+	}
+	if ((level & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
+		return std::max(0, (foldLevel ^ wxSTC_FOLDLEVELWHITE_FLAG) - 1);
+	}
+	return std::max(0, foldLevel);
+}
+} // namespace
+
+void ibCodeEditor::FormatSelection()
+{
+	if (!IsEditable())
+		return;
+
+	int selStart = 0, selEnd = 0;
+	GetSelection(&selStart, &selEnd);
+
+	int firstLine = LineFromPosition(selStart);
+	int lastLine  = LineFromPosition(selEnd);
+
+	// Collapsed selection past the line start sticks to the previous
+	// line — typical for caret at column 0; without this the user's
+	// "format current line" selects the wrong line.
+	if (firstLine == lastLine && selStart == selEnd) {
+		// no-op selection — format just the caret line
+	}
+	else if (selEnd > selStart && PositionFromLine(lastLine) == selEnd && lastLine > firstLine) {
+		// Selection ends exactly at the start of lastLine — exclude that
+		// trailing line so a triple-click style line-select doesn't
+		// reformat one extra line below.
+		lastLine--;
+	}
+
+	BeginUndoAction();
+	for (int line = firstLine; line <= lastLine; line++) {
+		const int target = ComputeTargetIndent(m_fp.GetFoldMask(line));
+		// SetLineIndentation honours UseTabs / IndentSize so the
+		// rewrite respects the editor's per-doc tab/space preference.
+		SetLineIndentation(line, target * GetIndent());
+	}
+	EndUndoAction();
+}
+
+void ibCodeEditor::IncreaseIndent()
+{
+	if (!IsEditable())
+		return;
+	// wxSTC's Tab() command — with selection, indents every covered
+	// line by IndentSize; without selection, inserts a tab at caret.
+	Tab();
+}
+
+void ibCodeEditor::DecreaseIndent()
+{
+	if (!IsEditable())
+		return;
+	BackTab();
+}
+
 void ibCodeEditor::LoadAutoComplete()
 {
 	int realPos = GetRealPosition();

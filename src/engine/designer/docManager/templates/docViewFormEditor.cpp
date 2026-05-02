@@ -9,6 +9,9 @@ enum {
 	wxID_SYNTAX_CONTROL,
 	wxID_GOTOLINE,
 	wxID_PROCEDURES_FUNCTIONS,
+	wxID_FORMAT_CODE,
+	wxID_INCREASE_INDENT,
+	wxID_DECREASE_INDENT,
 
 	wxID_TEST_FORM = 15001
 };
@@ -30,6 +33,9 @@ EVT_MENU(wxID_REMOVE_COMMENTS, ibFormEditView::OnMenuEvent)
 EVT_MENU(wxID_SYNTAX_CONTROL, ibFormEditView::OnMenuEvent)
 EVT_MENU(wxID_GOTOLINE, ibFormEditView::OnMenuEvent)
 EVT_MENU(wxID_PROCEDURES_FUNCTIONS, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_FORMAT_CODE, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_INCREASE_INDENT, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_DECREASE_INDENT, ibFormEditView::OnMenuEvent)
 EVT_MENU(wxID_TEST_FORM, ibFormEditView::OnMenuEvent)
 
 wxEND_EVENT_TABLE()
@@ -157,6 +163,13 @@ void ibFormEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 			toolbar->AddSeparator();
 			toolbar->AddTool(wxID_GOTOLINE, _("Goto line"), wxArtProvider::GetBitmapBundle(wxART_GOTO_LINE, wxART_DOC_MODULE), _("Goto"), wxItemKind::wxITEM_NORMAL);
 			toolbar->AddTool(wxID_PROCEDURES_FUNCTIONS, _("Procedures and functions"), wxArtProvider::GetBitmapBundle(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"), wxItemKind::wxITEM_NORMAL);
+			toolbar->AddSeparator();
+			toolbar->AddTool(wxID_FORMAT_CODE, _("Format selection"), wxArtProvider::GetBitmapBundle(wxART_FORMAT_CODE, wxART_DOC_MODULE), _("Format"), wxItemKind::wxITEM_NORMAL);
+			toolbar->EnableTool(wxID_FORMAT_CODE, m_visualNotebook->IsEditable());
+			toolbar->AddTool(wxID_INCREASE_INDENT, _("Increase indent"), wxArtProvider::GetBitmapBundle(wxART_GO_FORWARD, wxART_TOOLBAR), _("Indent"), wxItemKind::wxITEM_NORMAL);
+			toolbar->EnableTool(wxID_INCREASE_INDENT, m_visualNotebook->IsEditable());
+			toolbar->AddTool(wxID_DECREASE_INDENT, _("Decrease indent"), wxArtProvider::GetBitmapBundle(wxART_GO_BACK, wxART_TOOLBAR), _("Unindent"), wxItemKind::wxITEM_NORMAL);
+			toolbar->EnableTool(wxID_DECREASE_INDENT, m_visualNotebook->IsEditable());
 		}
 	}
 	else if (m_visualNotebook != nullptr) {
@@ -202,6 +215,15 @@ void ibFormEditView::OnMenuEvent(wxCommandEvent& event)
 		}
 		else if (id == wxID_PROCEDURES_FUNCTIONS) {
 			m_visualNotebook->ShowMethods();
+		}
+		else if (id == wxID_FORMAT_CODE) {
+			codeEditor->FormatSelection();
+		}
+		else if (id == wxID_INCREASE_INDENT) {
+			codeEditor->IncreaseIndent();
+		}
+		else if (id == wxID_DECREASE_INDENT) {
+			codeEditor->DecreaseIndent();
 		}
 	}
 	else if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {

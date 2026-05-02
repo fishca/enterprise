@@ -6,7 +6,10 @@ enum {
 	wxID_REMOVE_COMMENTS,
 	wxID_SYNTAX_CONTROL,
 	wxID_GOTOLINE,
-	wxID_PROCEDURES_FUNCTIONS
+	wxID_PROCEDURES_FUNCTIONS,
+	wxID_FORMAT_CODE,
+	wxID_INCREASE_INDENT,
+	wxID_DECREASE_INDENT
 };
 
 // ----------------------------------------------------------------------------
@@ -27,6 +30,9 @@ EVT_MENU(wxID_REMOVE_COMMENTS, ibModuleEditView::OnMenuEvent)
 EVT_MENU(wxID_SYNTAX_CONTROL, ibModuleEditView::OnMenuEvent)
 EVT_MENU(wxID_GOTOLINE, ibModuleEditView::OnMenuEvent)
 EVT_MENU(wxID_PROCEDURES_FUNCTIONS, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_FORMAT_CODE, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_INCREASE_INDENT, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_DECREASE_INDENT, ibModuleEditView::OnMenuEvent)
 
 wxEND_EVENT_TABLE()
 
@@ -105,6 +111,13 @@ void ibModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 		toolbar->AddSeparator();
 		toolbar->AddTool(wxID_GOTOLINE, _("Goto line"), wxArtProvider::GetBitmapBundle(wxART_GOTO_LINE, wxART_DOC_MODULE), _("Goto"), wxItemKind::wxITEM_NORMAL);
 		toolbar->AddTool(wxID_PROCEDURES_FUNCTIONS, _("Procedures and functions"), wxArtProvider::GetBitmapBundle(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"), wxItemKind::wxITEM_NORMAL);
+		toolbar->AddSeparator();
+		toolbar->AddTool(wxID_FORMAT_CODE, _("Format selection"), wxArtProvider::GetBitmapBundle(wxART_FORMAT_CODE, wxART_DOC_MODULE), _("Format"), wxItemKind::wxITEM_NORMAL);
+		toolbar->EnableTool(wxID_FORMAT_CODE, m_codeEditor->IsEditable());
+		toolbar->AddTool(wxID_INCREASE_INDENT, _("Increase indent"), wxArtProvider::GetBitmapBundle(wxART_GO_FORWARD, wxART_TOOLBAR), _("Indent"), wxItemKind::wxITEM_NORMAL);
+		toolbar->EnableTool(wxID_INCREASE_INDENT, m_codeEditor->IsEditable());
+		toolbar->AddTool(wxID_DECREASE_INDENT, _("Decrease indent"), wxArtProvider::GetBitmapBundle(wxART_GO_BACK, wxART_TOOLBAR), _("Unindent"), wxItemKind::wxITEM_NORMAL);
+		toolbar->EnableTool(wxID_DECREASE_INDENT, m_codeEditor->IsEditable());
 	}
 }
 
@@ -142,6 +155,15 @@ void ibModuleEditView::OnMenuEvent(wxCommandEvent& event)
 	}
 	else if (event.GetId() == wxID_PROCEDURES_FUNCTIONS) {
 		m_codeEditor->ShowMethods();
+	}
+	else if (event.GetId() == wxID_FORMAT_CODE) {
+		m_codeEditor->FormatSelection();
+	}
+	else if (event.GetId() == wxID_INCREASE_INDENT) {
+		m_codeEditor->IncreaseIndent();
+	}
+	else if (event.GetId() == wxID_DECREASE_INDENT) {
+		m_codeEditor->DecreaseIndent();
 	}
 }
 

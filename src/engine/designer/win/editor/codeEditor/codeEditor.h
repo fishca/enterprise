@@ -278,6 +278,18 @@ public:
 	void ShowGotoLine();
 	void ShowMethods();
 
+	// Re-indent the lines covered by the current selection (or the
+	// caret line if nothing selected) using the same fold-mask logic
+	// as PrepareTABs. Wrapped in BeginUndoAction / EndUndoAction so
+	// the user can undo the whole reformat with one Ctrl+Z.
+	void FormatSelection();
+
+	// Selection-aware indent / unindent — mirror of Tab / Shift+Tab
+	// keystroke behaviour, exposed as a menu / toolbar command for
+	// users who don't recall the shortcut.
+	void IncreaseIndent();
+	void DecreaseIndent();
+
 	void SetCurrentLine(int line, bool setLine = true);
 	bool SyntaxControl(bool throwMessage = true) const;
 

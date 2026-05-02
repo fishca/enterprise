@@ -121,8 +121,8 @@ void ibModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 	}
 }
 
-#include "frontend/win/dlg/lineInput/lineInput.h"
-#include "frontend/win/dlg/functionSearcher/functionSearcher.h"
+#include "frontend/win/dlgs/lineInput/lineInput.h"
+#include "frontend/win/dlgs/functionSearcher/functionSearcher.h"
 
 void ibModuleEditView::OnMenuEvent(wxCommandEvent& event)
 {

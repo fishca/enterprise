@@ -401,8 +401,8 @@ int ibCodeEditor::GetRealPositionFromPoint(const wxPoint& pt)
 	return codeText.Length();
 }
 
-#include "frontend/win/dlg/lineInput/lineInput.h"
-#include "frontend/win/dlg/functionSearcher/functionSearcher.h"
+#include "frontend/win/dlgs/lineInput/lineInput.h"
+#include "frontend/win/dlgs/functionSearcher/functionSearcher.h"
 
 void ibCodeEditor::RefreshEditor()
 {

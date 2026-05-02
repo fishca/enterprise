@@ -330,8 +330,8 @@
     <ClCompile Include="win\editor\codeEditor\components\helpers\listBoxVisualData.cpp" />
     <ClCompile Include="win\editor\codeEditor\components\helpers\listBoxWnd.cpp" />
     <ClCompile Include="win\editor\codeEditor\components\helpers\popupWnd.cpp" />
-    <ClCompile Include="win\dlg\functionSearcher\functionSearcher.cpp" />
-    <ClCompile Include="win\dlg\lineInput\lineInput.cpp" />
+    <ClCompile Include="win\dlgs\functionSearcher\functionSearcher.cpp" />
+    <ClCompile Include="win\dlgs\lineInput\lineInput.cpp" />
     <ClCompile Include="win\theme\luna_dockart.cpp" />
     <ClCompile Include="win\theme\luna_tabart.cpp" />
     <ClCompile Include="win\theme\luna_toolbarart.cpp" />
@@ -585,8 +585,8 @@
     <ClInclude Include="win\editor\codeEditor\components\helpers\listBoxWnd.h" />
     <ClInclude Include="win\editor\codeEditor\components\helpers\popupWnd.h" />
     <ClInclude Include="win\editor\codeEditor\res\bitmaps_res.h" />
-    <ClInclude Include="win\dlg\functionSearcher\functionSearcher.h" />
-    <ClInclude Include="win\dlg\lineInput\lineInput.h" />
+    <ClInclude Include="win\dlgs\functionSearcher\functionSearcher.h" />
+    <ClInclude Include="win\dlgs\lineInput\lineInput.h" />
     <ClInclude Include="win\theme\luna_dockart.h" />
     <ClInclude Include="win\theme\luna_tabart.h" />
     <ClInclude Include="win\theme\luna_toolbarart.h" />

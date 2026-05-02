@@ -160,10 +160,25 @@ void ibTranslateCode::ibDefineCollection::SetDefine(const wxString& strName, con
 }
 
 //////////////////////////////////////////////////////////////////////
+// ibLexem — out-of-line accessors (need ibTranslateCode definition)
+//////////////////////////////////////////////////////////////////////
+
+const wxString& ibLexem::GetModuleName() const {
+	return m_translateCode ? m_translateCode->m_strModuleName : wxEmptyString;
+}
+const wxString& ibLexem::GetDocPath() const {
+	return m_translateCode ? m_translateCode->m_strDocPath : wxEmptyString;
+}
+const wxString& ibLexem::GetFileName() const {
+	return m_translateCode ? m_translateCode->m_strFileName : wxEmptyString;
+}
+
+//////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
 ibTranslateCode::ibTranslateCode() : m_defineList(nullptr),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
@@ -173,20 +188,20 @@ m_nModePreparing(LEXEM_ADD)
 
 ibTranslateCode::ibTranslateCode(const wxString& strModuleName, const wxString& strDocPath) : m_defineList(nullptr),
 m_strModuleName(strModuleName), m_strDocPath(strDocPath),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
-	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords();
 }
 
 ibTranslateCode::ibTranslateCode(const wxString& strFileName) : m_defineList(nullptr),
 m_strFileName(strFileName),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
-	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords();
 }
 
 ibTranslateCode::~ibTranslateCode()
@@ -270,6 +285,13 @@ void ibTranslateCode::Load(const wxString& strCode)
 			[](const auto& c) { return ::toupper(c); }
 #endif // wxUSE_UNICODE
 		);
+
+		// Drop stale lexems from the previous parse before reserving so
+		// _Reallocate doesn't pointlessly move them into the new buffer
+		// just for PrepareLexem to clear() them out 1ms later. clear()
+		// keeps capacity, so the reserve below grows from an empty vector
+		// — no per-element move work, just one allocation.
+		m_listLexem.clear();
 
 		const size_t alloc_size = CalcAllocSize();
 		if (alloc_size > m_listLexem.capacity())
@@ -991,9 +1013,8 @@ bool ibTranslateCode::PrepareLexem()
 
 	while (!IsEnd()) {
 
-		m_current_lex.m_strModuleName = m_strModuleName;
-		m_current_lex.m_strDocPath = m_strDocPath;
-		m_current_lex.m_strFileName = m_strFileName;
+		// m_current_lex.m_translateCode is bound once in the ctor and
+		// preserved across emplace_back moves — no per-iteration write here.
 
 		m_current_lex.m_numLine = m_currentLine;
 		m_current_lex.m_numString = m_currentPos;//if an error occurs later, this is the string that should be returned to the user
@@ -1016,9 +1037,10 @@ bool ibTranslateCode::PrepareLexem()
 #ifdef UTF8_LEXEM_TRANSLATE
 						m_current_lex->m_numUtf8String = m_currentUtf8Pos;
 #endif
-						m_current_lex->m_strModuleName = m_strModuleName;
-						m_current_lex->m_strDocPath = m_strDocPath;
-						m_current_lex->m_strFileName = m_strFileName;
+						// Rebind to consumer's translate so source attribution
+						// follows the expansion site (consumer's module name /
+						// doc path), not the original definition's.
+						m_current_lex->m_translateCode = this;
 						m_listLexem.push_back(*m_current_lex);
 					}
 					continue;
@@ -1242,9 +1264,7 @@ bool ibTranslateCode::PrepareLexem()
 	m_current_lex.m_lexType = ENDPROGRAM;
 	m_current_lex.m_numData = 0;
 
-	m_current_lex.m_strModuleName = m_strModuleName;
-	m_current_lex.m_strDocPath = m_strDocPath;
-	m_current_lex.m_strFileName = m_strFileName;
+	// m_translateCode bound at ctor time, kept through moves.
 
 	m_current_lex.m_numLine = total_line + m_currentLine;
 	m_current_lex.m_numString = total_pos + m_currentPos;
@@ -1292,6 +1312,11 @@ void ibTranslateCode::PrepareFromCurrent(int nMode, const wxString& strName)
 	else if (nMode == LEXEM_ADD) {
 		for (unsigned int i = 0; i < translate.m_listLexem.size() - 1; i++) {//excluding ENDPROGRAM
 			m_listLexem.push_back(translate.m_listLexem[i]);
+			// Re-anchor to caller's translate — the local `translate`
+			// object dies when this function returns; lexems' back-pointer
+			// would otherwise dangle. translate.m_strModuleName was set
+			// to ours above so the strings are identical.
+			m_listLexem.back().m_translateCode = this;
 		}
 
 		m_currentLine = translate.m_currentLine;

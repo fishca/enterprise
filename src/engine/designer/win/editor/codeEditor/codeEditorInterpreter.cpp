@@ -354,7 +354,7 @@ bool ibPrecompileCode::PrepareLexem()
 
 	while (!IsEnd()) {
 
-		m_current_lex.m_strModuleName = m_strModuleName;
+		// m_translateCode bound at ctor time, kept through moves.
 
 		m_current_lex.m_numLine = m_currentLine;
 		m_current_lex.m_numString = m_currentPos;
@@ -547,7 +547,7 @@ void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const in
 		if (insert_text && m_currentLine > (line + line_offset)) break;
 		else if (delete_text && (m_currentLine > line)) break;
 
-		m_current_lex.m_strModuleName = m_strModuleName;
+		// m_translateCode bound at ctor time, kept through moves.
 
 		m_current_lex.m_numLine = m_currentLine;
 		m_current_lex.m_numString = m_currentPos;

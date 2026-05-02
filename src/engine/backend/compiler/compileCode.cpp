@@ -215,9 +215,9 @@ void ibCompileCode::SetError(int codeError, const wxString& errorDesc)
 
 	if (m_numCurrentCompile >= 0 && m_numCurrentCompile < m_listLexem.size()) {
 
-		strFileName = m_listLexem[m_numCurrentCompile].m_strFileName;
-		strModuleName = m_listLexem[m_numCurrentCompile].m_strModuleName;
-		strDocPath = m_listLexem[m_numCurrentCompile].m_strDocPath;
+		strFileName = m_listLexem[m_numCurrentCompile].GetFileName();
+		strModuleName = m_listLexem[m_numCurrentCompile].GetModuleName();
+		strDocPath = m_listLexem[m_numCurrentCompile].GetDocPath();
 
 		if (m_listLexem[m_numCurrentCompile].m_lexType != ENDPROGRAM) {
 			currLine = m_listLexem[m_numCurrentCompile].GetLine();
@@ -284,9 +284,9 @@ void ibCompileCode::AddLineInfo(ibByteUnit& code)
 
 	if (m_numCurrentCompile >= 0 && m_numCurrentCompile < m_listLexem.size()) {
 		if (m_listLexem[m_numCurrentCompile].m_lexType != ENDPROGRAM) {
-			code.m_strModuleName = m_listLexem[m_numCurrentCompile].m_strModuleName;
-			code.m_strDocPath = m_listLexem[m_numCurrentCompile].m_strDocPath;
-			code.m_strFileName = m_listLexem[m_numCurrentCompile].m_strFileName;
+			code.m_strModuleName = m_listLexem[m_numCurrentCompile].GetModuleName();
+			code.m_strDocPath = m_listLexem[m_numCurrentCompile].GetDocPath();
+			code.m_strFileName = m_listLexem[m_numCurrentCompile].GetFileName();
 		}
 		code.m_numString = m_listLexem[m_numCurrentCompile].m_numString;
 		code.m_numLine = m_listLexem[m_numCurrentCompile].m_numLine;

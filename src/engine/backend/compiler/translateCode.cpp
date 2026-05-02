@@ -286,16 +286,12 @@ void ibTranslateCode::Load(const wxString& strCode)
 #endif // wxUSE_UNICODE
 		);
 
-		// Drop stale lexems from the previous parse before reserving so
-		// _Reallocate doesn't pointlessly move them into the new buffer
-		// just for PrepareLexem to clear() them out 1ms later. clear()
-		// keeps capacity, so the reserve below grows from an empty vector
-		// — no per-element move work, just one allocation.
-		m_listLexem.clear();
-
-		const size_t alloc_size = CalcAllocSize();
-		if (alloc_size > m_listLexem.capacity())
-			m_listLexem.reserve(alloc_size + 1000);
+		// Capacity is reserved by the full-PrepareLexem path (after its
+		// clear()) so we don't move stale lexems into a new buffer just
+		// to drop them. Incremental PrepareLexem(line, ...) reuses the
+		// existing capacity; it depends on the previous parse's lexems
+		// being intact for its rewind/patch logic, so Load must not
+		// touch m_listLexem.
 	}
 }
 
@@ -979,6 +975,14 @@ bool ibTranslateCode::PrepareLexem()
 {
 	m_listLexem.clear();
 
+	// Reserve capacity here (after clear) instead of in Load — that way
+	// the reserve grows from an empty vector with no per-element move
+	// work, and incremental PrepareLexem(line, ...) (which depends on
+	// previous-parse lexems being intact) is unaffected.
+	const size_t alloc_size = CalcAllocSize();
+	if (alloc_size > m_listLexem.capacity())
+		m_listLexem.reserve(alloc_size + 1000);
+
 	if (m_defineList == nullptr) {
 		m_defineList = new ibDefineCollection();
 		m_defineList->SetParent(&ms_listDefine);
@@ -1370,68 +1374,15 @@ void ibTranslateCode::OnSetParent(ibTranslateCode* setParent)
 
 size_t ibTranslateCode::CalcAllocSize() const {
 
-	ibTranslateCode translate;
-
-	translate.Clear();
-
-	translate.m_strBuffer.assign(m_strBuffer);
-	translate.m_strBUFFER.assign(m_strBUFFER);
-
-	translate.m_bufferSize = m_bufferSize;
-
-	size_t alloc_size = 1;
-
-	while (!translate.IsEnd()) {
-		if (translate.IsWord()) {
-			try {
-				(void)translate.GetWord();
-				alloc_size++;
-			}
-			catch (...)
-			{
-			}
-		}
-		else if (translate.IsNumber() || translate.IsString() || translate.IsDate()) {
-			if (translate.IsNumber()) {
-				try {
-					(void)translate.GetNumber();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-			else if (translate.IsString()) {
-				try {
-					(void)translate.GetString();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-			else if (translate.IsDate()) {
-				try {
-					(void)translate.GetDate();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-		}
-		else {
-			try {
-				(void)translate.GetByte();
-				alloc_size++;
-			}
-			catch (...)
-			{
-			}
-		}
-	}
-
-	return alloc_size;
+	// Heuristic — average token is ~4 source chars (identifiers, numbers,
+	// short keywords, single-char delimiters; whitespace and comments
+	// don't produce lexems). +16 for tiny inputs. The previous version
+	// ran a full tokenizer pass over a copy of both buffers just to
+	// count and ate ~46% of the Enter-keypress OnTextChange handler.
+	// Slight over-estimate is intentional — vector::reserve takes the
+	// extra capacity without complaint, and one cheap arithmetic op
+	// beats a second tokenization round.
+	return m_bufferSize > 0 ? (m_bufferSize / 4) + 16 : 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

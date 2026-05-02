@@ -182,9 +182,12 @@ void ibValueForm::PrepareNames() const
 	//default element
 	m_methodHelper->ClearHelper();
 
+	// ThisForm is a bc-internal self-prop (ThisForm of binding "ThisForm") —
+	// keep scoped so IntelliSense / debug-watch / eval don't surface it.
+	// Controls / DataSource are real form properties — must stay visible.
 	m_methodHelper->AppendProp(thisForm, true, false, true, eThisForm, eSystem);
-	m_methodHelper->AppendProp(wxT("Controls"), true, false, true, eControls, eSystem);
-	m_methodHelper->AppendProp(wxT("DataSource"), true, false, true, eDataSource, eSystem);
+	m_methodHelper->AppendProp(wxT("Controls"), true, false, false, eControls, eSystem);
+	m_methodHelper->AppendProp(wxT("DataSource"), true, false, false, eDataSource, eSystem);
 	m_methodHelper->AppendProp(wxT("Modified"), eModified, eSystem);
 	m_methodHelper->AppendProp(wxT("FormOwner"), eFormOwner, eSystem);
 	m_methodHelper->AppendProp(wxT("UniqueKey"), eUniqueKey, eSystem);

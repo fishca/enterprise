@@ -108,7 +108,14 @@ public:
 	{
 	}
 
-	ibLexem(ibLexem&& src) :
+	// noexcept move so vector<ibLexem>::reserve / emplace_back use moves
+	// (pointer-swap of wxString internals, ibValue tagged-union move) on
+	// realloc instead of falling back to copy for strong-exception
+	// guarantee. Profile (paste-into-code-editor) showed _Reallocate's
+	// _Uninitialized_copy + _Destroy_range eating ~45% of the modify-
+	// event handler — that path was copy-falling because of the missing
+	// noexcept marker.
+	ibLexem(ibLexem&& src) noexcept :
 		m_lexType(src.m_lexType),
 		m_numData(src.m_numData),
 		m_strData(std::move(src.m_strData)),
@@ -153,7 +160,7 @@ public:
 		return *this;
 	}
 
-	ibLexem& operator =(ibLexem&& src)
+	ibLexem& operator =(ibLexem&& src) noexcept
 	{
 		m_lexType = src.m_lexType;
 		m_numData = src.m_numData;

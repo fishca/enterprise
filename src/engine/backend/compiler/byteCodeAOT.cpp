@@ -139,6 +139,14 @@ bool WriteConstValue(ibWriterMemory& w, const ibValue& v) {
 bool ReadConstValue(const ibReaderMemory& r, ibValue& v) {
 	const uint8_t tc = r.r_u8();
 	v.SetType((ibValueTypes)tc);
+	// Const-pool entries are compile-time literals — readonly by
+	// definition. Without this flag, runtime arg-binding on a literal
+	// arg falls through to the ref-binding branch (procUnit.cpp:828)
+	// and triggers "Attempt to write to a constant value" when the
+	// callee writes through the slot. Fresh-compile path sets this on
+	// every const it pushes; AOT format doesn't carry the bit (it's
+	// implicit for the whole list).
+	v.m_bReadOnly = true;
 	switch ((ibValueTypes)tc) {
 	case ibValueTypes::TYPE_EMPTY:
 	case ibValueTypes::TYPE_NULL:

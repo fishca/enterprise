@@ -191,7 +191,7 @@ void ibApplicationData::MigrateTableBytecodeCache()
 			wxT("CREATE TABLE %s ("
 			    "descriptor_id     VARCHAR(36) NOT NULL PRIMARY KEY,"
 			    "bytecode_version  VARCHAR(36) NOT NULL,"
-			    "blob              ") + blobType + wxT(" NOT NULL);"),
+			    "bc_blob           ") + blobType + wxT(" NOT NULL);"),
 			bytecode_cache_table);
 	}
 	catch (...) {

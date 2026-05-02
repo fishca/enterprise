@@ -22,7 +22,7 @@
 
 #include "backend/backend.h"
 
-class ibByteCode;
+struct ibByteCode;   // defined as struct in compiler/byteCode.h
 class ibGuid;
 
 class BACKEND_API ibByteCodeCache {

@@ -46,13 +46,17 @@ bool ibByteCodeCache::Save(const ibByteCode& bc)
 	{
 		ibStatementGuard ins(db_query,
 			db_query->PrepareStatement(
-				wxT("INSERT INTO %s (descriptor_id, bytecode_version, blob) ")
+				wxT("INSERT INTO %s (descriptor_id, bytecode_version, bc_blob) ")
 				wxT("VALUES (?, ?, ?);"),
 				bytecode_cache_table));
 		if (!ins) return false;
 		ins->SetParamString(1, descIdStr);
 		ins->SetParamString(2, bcVerStr);
-		ins->SetParamBlob  (3, blob);
+		// SetParamBlob(int, const wxMemoryBuffer&) is a no-op default
+		// in ibPreparedStatement; the (void*, long) overload is the
+		// one drivers actually implement.
+		ins->SetParamBlob  (3, blob.GetData(),
+		                    static_cast<long>(blob.GetDataLen()));
 		try { ins->RunQuery(); }
 		catch (...) { return false; }
 	}
@@ -66,7 +70,7 @@ bool ibByteCodeCache::Load(ibByteCode& outBc, const ibGuid& descId)
 
 	ibStatementGuard sel(db_query,
 		db_query->PrepareStatement(
-			wxT("SELECT blob FROM %s WHERE descriptor_id = ?;"),
+			wxT("SELECT bc_blob FROM %s WHERE descriptor_id = ?;"),
 			bytecode_cache_table));
 	if (!sel) return false;
 	sel->SetParamString(1, wxString(descId));

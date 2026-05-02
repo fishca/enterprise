@@ -74,7 +74,7 @@ All database access goes through the abstract `ibDatabaseLayer` interface (`src/
 - Self-contained: no ttmath dependency. Schoolbook Add/Sub/Mul + base-2 long-division Div live in `number.cpp`. MSVC x86/x64 use `_addcarry_u32`/`_subborrow_u32` intrinsics; portable fallback elsewhere.
 - Buffer / wire: `wxMemoryBuffer GetBuffer()` plus `bool GetBuffer(ibWriterMemory&)` / `bool SetBuffer(const ibReaderMemory&)` — chunk-encapsulated I/O with internal `kIbNumberChunk` ID. Compact-zero encoding: zero produces 0-byte buffer, no allocation.
 - 128-bit raw: `To128Bytes(uint8_t[16])` / `From128Bytes` for Firebird SQL_INT128 columns.
-- Tests: `enterprise/tests/test_number.cpp` (gtest) + `enterprise/src/engine/test/numberTest/` (MSBuild stop-gap exe). 111/111 pass at landing.
+- Tests: `enterprise/tests/test_number.cpp` (gtest). 111/111 pass at landing.
 - See `docs/next-session-plan.md` for the landing summary and known-risks list.
 
 ### 3. ibProcUnit Bytecode Interpreter

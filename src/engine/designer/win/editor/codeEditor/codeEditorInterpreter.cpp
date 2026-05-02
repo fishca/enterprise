@@ -197,6 +197,25 @@ void ibPrecompileCode::PrepareModuleData()
 		ibValue* pRefData = nullptr;
 		ibCompileModule* compileModule = contextVariable->GetCompileModule();
 		while (compileModule != nullptr) {
+
+			// Surface compile-side context bindings (ThisForm, ThisObject, …)
+			// — bound via BindContextVariable into the compile module's
+			// m_listContextValue. They aren't enumerated as props of any
+			// cached value (the self-named props are IsPropScoped-skipped),
+			// so without this loop the runtime compiler resolves them but
+			// IntelliSense doesn't see them.
+			for (auto& kv : compileModule->m_listContextValue) {
+				if (m_rootContext.FindVariable(kv.first))
+					continue;
+				ibPrecompileVariable variable;
+				variable.m_name = kv.first;
+				variable.m_realName = kv.first;
+				variable.m_isContext = true;
+				variable.m_isExport = true;
+				variable.m_valContext = kv.second;
+				GetContext()->m_variables[stringUtils::MakeUpper(kv.first)] = variable;
+			}
+
 			const ibValueMetaObjectModuleBase* moduleObject = compileModule->GetModuleObject();
 			if (moduleObject != nullptr) {
 				ibMetaData* metaData = moduleObject->GetMetaData();

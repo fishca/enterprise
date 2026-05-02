@@ -28,7 +28,7 @@ struct ibModuleElement
 	ibContentType m_eType      = eEmpty;
 };
 
-class ibParserModule : public ibTranslateCode
+class FRONTEND_API ibParserModule : public ibTranslateCode
 {
 	int                          m_cursor = wxNOT_FOUND;  // current position in the lexem array
 	std::vector<ibModuleElement> m_content;

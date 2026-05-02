@@ -15,7 +15,8 @@
 static std::array<int, 256> gs_operPriority = { 0 };
 
 ibPrecompileCode::ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject)
-	: ibTranslateCode(moduleObject->GetFullName(), moduleObject->GetDocPath()),
+	: ibTranslateCode(moduleObject ? moduleObject->GetFullName() : wxString(),
+	                  moduleObject ? moduleObject->GetDocPath()  : wxString()),
 	  m_moduleObject(moduleObject)
 {
 	// Wire the root context's back-pointer to this module once at
@@ -43,11 +44,15 @@ ibPrecompileCode::ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject)
 		gs_operPriority[gs_operPriority.size() - 1] = true;
 	}
 
-	m_strModuleName = m_moduleObject->GetFullName();
-	m_strDocPath = m_moduleObject->GetDocPath();
-	m_strFileName = m_moduleObject->GetFileName();
-
-	Load(m_moduleObject->GetModuleText());
+	// Sessionless / no-document hosts (codeRunner) construct the
+	// precompiler without a backing module — names + initial Load
+	// stay empty; OnTextChange will Load() the live editor text.
+	if (m_moduleObject != nullptr) {
+		m_strModuleName = m_moduleObject->GetFullName();
+		m_strDocPath = m_moduleObject->GetDocPath();
+		m_strFileName = m_moduleObject->GetFileName();
+		Load(m_moduleObject->GetModuleText());
+	}
 }
 
 ibPrecompileCode::~ibPrecompileCode() {}
@@ -76,15 +81,18 @@ void ibPrecompileCode::PrepareModuleData()
 {
 	ibRuntimeModuleDataObject* contextVariable = nullptr;
 
+	// Sessionless / no-metadata hosts (codeRunner) skip the cache
+	// lookup entirely — autocomplete just falls back to local
+	// declarations parsed out of the live editor text.
 	if (m_moduleObject) {
 		ibMetaData* metaData = m_moduleObject->GetMetaData();
 		wxASSERT(metaData);
 		ibSession* session = ibSession::Current();
 		ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
-		wxASSERT(moduleManager);
-		auto* cc = metaData->GetCompileCache();
-		if (!cc || !cc->FindCompileModule(m_moduleObject, contextVariable)) {
-			wxASSERT_MSG(false, "ibPrecompileCode::PrepareModuleData");
+		auto* cc = metaData ? metaData->GetCompileCache() : nullptr;
+		if (cc == nullptr || moduleManager == nullptr ||
+			!cc->FindCompileModule(m_moduleObject, contextVariable)) {
+			return;
 		}
 		for (auto pair : moduleManager->GetContextVariables()) {
 
@@ -699,15 +707,21 @@ bool ibPrecompileCode::Compile()
 {
 	Clear();
 
-
-	ibMetaData* metaData = m_moduleObject->GetMetaData();
-	wxASSERT(metaData);
-	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
-	wxASSERT(moduleManager);
-
-	for (auto variable : moduleManager->GetGlobalVariables()) {
-		AddVariable(variable.first, variable.second);
+	// Sessionless / no-module hosts (codeRunner) skip the moduleManager
+	// global-var seeding — there's no metadata configuration to pull
+	// Catalogs / Documents / EnumManager from. Local declarations parsed
+	// from the live editor text still feed autocomplete via the lexem
+	// pass below.
+	if (m_moduleObject != nullptr) {
+		ibMetaData* metaData = m_moduleObject->GetMetaData();
+		wxASSERT(metaData);
+		ibSession* session = ibSession::Current();
+		ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+		if (moduleManager != nullptr) {
+			for (auto variable : moduleManager->GetGlobalVariables()) {
+				AddVariable(variable.first, variable.second);
+			}
+		}
 	}
 
 	PrepareModuleData();

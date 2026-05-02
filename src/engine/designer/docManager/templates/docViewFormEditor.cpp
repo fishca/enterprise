@@ -139,7 +139,7 @@ bool ibFormEditView::OnClose(bool deleteWindow)
 
 #include "frontend/artProvider/artProvider.h"
 
-#include "win/editor/codeEditor/codeEditorPrintOut.h"
+#include "frontend/win/editor/codeEditor/codeEditorPrintOut.h"
 #include "win/editor/visualEditor/printout/formPrintOut.h"
 
 wxPrintout* ibFormEditView::OnCreatePrintout()

@@ -2,7 +2,7 @@
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-#include "win/editor/codeEditor/codeEditorParser.h"
+#include "frontend/win/editor/codeEditor/codeEditorParser.h"
 
 void ibVisualEditorNotebook::CreateVisualEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, long flags)
 {

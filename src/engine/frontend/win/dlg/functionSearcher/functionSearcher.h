@@ -12,7 +12,7 @@ class ibCodeEditor;
 
 #include <map>
 
-struct CFunctionList : public wxDialog
+struct ibFunctionList : public wxDialog
 {
 	wxArrayString aListName;
 	wxArrayInt aListImage;
@@ -35,7 +35,7 @@ struct CFunctionList : public wxDialog
 
 public:
 
-	CFunctionList(ibMetaDocument *moduleDoc, ibCodeEditor* parent);   // standard constructor
+	ibFunctionList(ibMetaDocument *moduleDoc, ibCodeEditor* parent);   // standard constructor
 
 	void OnButtonOk(wxCommandEvent &event);
 	void OnButtonCancel(wxCommandEvent &event);

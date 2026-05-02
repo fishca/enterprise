@@ -1,6 +1,8 @@
 #ifndef __IB_CODE_EDITOR_H__
 #define __IB_CODE_EDITOR_H__
 
+#include "frontend/frontend.h"
+
 #include <wx/docview.h>
 #include <wx/cmdproc.h>
 #include <wx/listctrl.h>
@@ -17,8 +19,8 @@
 
 #include "backend/debugger/debugDefs.h"
 
-#include "win/editor/codeEditor/components/autoComplete.h"
-#include "win/editor/codeEditor/components/callTip.h"
+#include "frontend/win/editor/codeEditor/components/autoComplete.h"
+#include "frontend/win/editor/codeEditor/components/callTip.h"
 
 class ibMetaDocument;
 class ibReaderMemory;
@@ -48,13 +50,18 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////
 
-class ibCodeEditor : public wxStyledTextCtrl {
+class FRONTEND_API ibCodeEditor : public wxStyledTextCtrl {
 
+protected:
+	// Marker IDs — protected so designer's ibCodeEditorDesigner subclass
+	// (which manages breakpoint markers via debugClient) can reach them.
 	enum {
 		Breakpoint = 1,
 		CurrentLine,
 		BreakLine,
 	};
+
+private:
 
 	class ibFoldLevelParser {
 
@@ -290,6 +297,15 @@ public:
 	void IncreaseIndent();
 	void DecreaseIndent();
 
+	// Prepend "//" to every line in the current selection (or the
+	// caret line if nothing is selected). Wrapped in BeginUndoAction.
+	void AddCommentsToSelection();
+
+	// Strip the leading "//" comment prefix from every line in the
+	// current selection (or the caret line). Lines without a comment
+	// prefix are left alone.
+	void RemoveCommentsFromSelection();
+
 	void SetCurrentLine(int line, bool setLine = true);
 	bool SyntaxControl(bool throwMessage = true) const;
 
@@ -341,6 +357,41 @@ protected:
 		event.Skip();
 	}
 
+	// ---- Debugger integration hooks ----
+	// Frontend's ibCodeEditor doesn't know about backend's debugClient;
+	// designer's ibCodeDesigner subclass overrides these to forward to
+	// debugClient. codeRunner / other sessionless hosts get the default
+	// no-op behaviour so the editor still works without any debug
+	// infrastructure attached.
+
+	// True if the debugger is parked at a breakpoint right now.
+	// Autocomplete / tooltip switch to live-eval against the running
+	// script when this returns true.
+	virtual bool IsDebuggerEnterLoop() const { return false; }
+
+	// Toggle (or remove) the breakpoint marker at `line`. Override
+	// performs the marker update + debugClient round-trip.
+	virtual void OnEditDebugPoint(int line) {}
+
+	// Multi-line edit (paste / cut) just shifted code by linesAdded
+	// at `line`. Override forwards the shift to debugClient->PatchModule.
+	virtual void OnPatchModule(int line, int linesAdded) {}
+
+	// Autocomplete / tooltip handlers want the debugger to evaluate
+	// an expression against the running session.
+	virtual void OnEvaluateAutocomplete(const wxString& fileName,
+	                                     const wxString& docPath,
+	                                     const wxString& expression,
+	                                     const wxString& keyword,
+	                                     int pos) {}
+	virtual void OnEvaluateToolTip(const wxString& fileName,
+	                                const wxString& docPath,
+	                                const wxString& expression) {}
+
+	// Repopulate breakpoint markers from the debugger's persistent
+	// store. Called from RefreshBreakpoint after MarkerDeleteAll.
+	virtual void RefreshBreakpointMarkers() {}
+
 private:
 
 	// Private func
@@ -359,13 +410,18 @@ private:
 	void LoadToolTip(const wxPoint& pos);
 	void LoadCallTip();
 
-	//Support styling 
+	//Support styling
 	void HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const int toPos);
 
-	//Support debugger 
+	//Support debugger
 	void EditDebugPoint(int line);
 
+protected:
+	// Subclasses (designer's ibCodeEditorDesigner) reach the document
+	// + breakpoint marker enum to wire debug-client interactions.
 	ibMetaDocument*   m_document         = nullptr;
+
+private:
 	ibPrecompileCode* m_precompileModule = nullptr;
 
 	ibAutoComplete    m_ac;

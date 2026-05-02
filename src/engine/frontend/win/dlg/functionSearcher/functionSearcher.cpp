@@ -10,39 +10,47 @@
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/docView/docView.h"
 
-#include "win/editor/codeEditor/codeEditorParser.h"
+#include "frontend/win/editor/codeEditor/codeEditorParser.h"
 
 #define ICON_SIZE 16
 
-CFunctionList::CFunctionList(ibMetaDocument* moduleDoc, ibCodeEditor* parent)
+ibFunctionList::ibFunctionList(ibMetaDocument* moduleDoc, ibCodeEditor* parent)
 	: wxDialog(parent, wxID_ANY, _("Procedures and functions")), m_docModule(moduleDoc), m_codeEditor(parent)
 {
 	m_OK = new wxButton(this, wxID_ANY, _("OK"));
-	m_OK->Connect(wxEVT_BUTTON, wxCommandEventHandler(CFunctionList::OnButtonOk), nullptr, this);
+	m_OK->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibFunctionList::OnButtonOk), nullptr, this);
 	m_Cancel = new wxButton(this, wxID_ANY, _("Cancel"));
-	m_Cancel->Connect(wxEVT_BUTTON, wxCommandEventHandler(CFunctionList::OnButtonCancel), nullptr, this);
+	m_Cancel->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibFunctionList::OnButtonCancel), nullptr, this);
 
 	m_Sort = new wxCheckBox(this, wxID_ANY, _("Sort"));
-	m_Sort->Connect(wxEVT_CHECKBOX, wxCommandEventHandler(CFunctionList::OnCheckBoxSort), nullptr, this);
+	m_Sort->Connect(wxEVT_CHECKBOX, wxCommandEventHandler(ibFunctionList::OnCheckBoxSort), nullptr, this);
 
 	wxBoxSizer* boxsizerList = new wxBoxSizer(wxHORIZONTAL);
 
 	m_listProcedures = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER);
 	m_listProcedures->AppendColumn(_("Procedures and functions"), wxLIST_FORMAT_LEFT, GetSize().x - 10);
 
-	m_listProcedures->Connect(wxEVT_LIST_ITEM_SELECTED, wxListEventHandler(CFunctionList::OnItemSelected), nullptr, this);
+	m_listProcedures->Connect(wxEVT_LIST_ITEM_SELECTED, wxListEventHandler(ibFunctionList::OnItemSelected), nullptr, this);
 
 	wxImageList* imageList = new wxImageList(ICON_SIZE, ICON_SIZE);
 	int procRed = imageList->Add(wxArtProvider::GetIcon(wxART_PROCEDURE_RED, wxART_AUTOCOMPLETE));
 	int funcRed = imageList->Add(wxArtProvider::GetIcon(wxART_FUNCTION_RED, wxART_AUTOCOMPLETE));
 	m_listProcedures->AssignImageList(imageList, wxIMAGE_LIST_SMALL);
 
-	const ibValueMetaObjectModuleBase* metaModule = dynamic_cast<const ibValueMetaObjectModuleBase*>(moduleDoc->GetMetaObject());
-	wxASSERT(metaModule);
+	// Source text + default-proc list — designer / live-module hosts
+	// pull from the document's metaObject; document-less hosts
+	// (codeRunner) fall back to the editor's current text and skip the
+	// "default procedures" suggestion list (no metadata to source it).
+	const ibValueMetaObjectModuleBase* metaModule = moduleDoc != nullptr
+		? dynamic_cast<const ibValueMetaObjectModuleBase*>(moduleDoc->GetMetaObject())
+		: nullptr;
+	wxString moduleText = metaModule != nullptr
+		? metaModule->GetModuleText()
+		: (m_codeEditor != nullptr ? m_codeEditor->GetText() : wxString());
 
 	ibParserModule moduleParser; std::vector<wxString> arrayProcedures; int maxLine = 0;
 
-	if (moduleParser.ParseModule(metaModule->GetModuleText())) {
+	if (moduleParser.ParseModule(moduleText)) {
 		for (auto content : moduleParser.GetAllContent()) {
 
 			if (content.m_eType == ibContentType::eExportFunction ||
@@ -77,8 +85,8 @@ CFunctionList::CFunctionList(ibMetaDocument* moduleDoc, ibCodeEditor* parent)
 		}
 	}
 
-	//Get default proc 
-	for (unsigned int idx = 0; idx < metaModule->GetDefaultProcedureCount(); idx++) {
+	//Get default proc — only available when a metaObject backs the editor.
+	for (unsigned int idx = 0; metaModule != nullptr && idx < metaModule->GetDefaultProcedureCount(); idx++) {
 		wxString procedureName = metaModule->GetDefaultProcedureName(idx);
 		auto it = std::find_if(arrayProcedures.begin(), arrayProcedures.end(),
 			[&procedureName](const wxString& proc) { return proc.CompareTo(procedureName, wxString::caseCompare::ignoreCase) == 0; });
@@ -115,7 +123,7 @@ CFunctionList::CFunctionList(ibMetaDocument* moduleDoc, ibCodeEditor* parent)
 
 #include "backend/metaData.h"
 
-void CFunctionList::OnButtonOk(wxCommandEvent& event)
+void ibFunctionList::OnButtonOk(wxCommandEvent& event)
 {
 	long lSelectedItem = m_listProcedures->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
 
@@ -175,7 +183,7 @@ void CFunctionList::OnButtonOk(wxCommandEvent& event)
 	EndModal(0); event.Skip();
 }
 
-void CFunctionList::OnButtonCancel(wxCommandEvent& event)
+void ibFunctionList::OnButtonCancel(wxCommandEvent& event)
 {
 	m_codeEditor->Raise();
 	m_codeEditor->SetFocus();
@@ -228,7 +236,7 @@ int wxCALLBACK CompareFunction(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortData
 
 static sortInfo_t m_sortInfo;
 
-void CFunctionList::OnCheckBoxSort(wxCommandEvent& event)
+void ibFunctionList::OnCheckBoxSort(wxCommandEvent& event)
 {
 	m_sortInfo.m_listCtrl = m_listProcedures;
 	m_sortInfo.m_sortOrder = m_Sort->GetValue();
@@ -237,7 +245,7 @@ void CFunctionList::OnCheckBoxSort(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CFunctionList::OnItemSelected(wxListEvent& event)
+void ibFunctionList::OnItemSelected(wxListEvent& event)
 {
 	/*long lSelectedItem = m_listProcedures->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
 

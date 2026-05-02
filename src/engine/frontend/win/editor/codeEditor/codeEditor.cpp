@@ -5,10 +5,9 @@
 
 #include "codeEditor.h"
 #include "frontend/mainFrame/mainFrame.h"
-#include "backend/debugger/debugClient.h"
 #include "backend/moduleManager/moduleManager.h"
 #include "backend/metaData.h"
-#include "frontend/docView/docView.h" 
+#include "frontend/docView/docView.h"
 #include "res/bitmaps_res.h"
 
 #define DEF_LINENUMBER_ID 0
@@ -104,19 +103,37 @@ ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowI
 
 	//Turn the fold markers red when the caret is a line in the group (optional)
 	MarkerEnableHighlight(true);
+
+	// Construct the precompiler upfront — sessionless hosts (codeRunner)
+	// pass nullptr for the document, so the precompiler initialises with
+	// an empty module name and no metadata. Local variable / function
+	// names parsed from the live editor text still feed autocomplete;
+	// metadata-driven props are simply absent.
+	ibValueMetaObjectModuleBase* moduleObject = m_document != nullptr
+		? m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>()
+		: nullptr;
+	m_precompileModule = new ibPrecompileCode(moduleObject);
+
+	// For document-less hosts there is no LoadModule() to flip the
+	// "initial text loaded" gate — start initialised so OnTextChange
+	// runs the precompile pass right away.
+	if (m_document == nullptr)
+		m_initialized = true;
 }
 
 ibCodeEditor::~ibCodeEditor()
 {
-	const ibValueMetaObject* metaObject = m_document->GetMetaObject();
-	wxASSERT(metaObject);
-	const ibMetaData* metaData = metaObject->GetMetaData();
-	wxASSERT(metaData);
-	ibRuntimeModuleDataObject* dataRef = nullptr;
-	auto* cc = metaData->GetCompileCache();
-	if (cc && cc->FindCompileModule(metaObject, dataRef)) {
-		ibCompileModule* compileModule = dataRef->GetCompileModule();
-		if (compileModule != nullptr) compileModule->ClearLexem();
+	if (m_document != nullptr) {
+		const ibValueMetaObject* metaObject = m_document->GetMetaObject();
+		wxASSERT(metaObject);
+		const ibMetaData* metaData = metaObject->GetMetaData();
+		wxASSERT(metaData);
+		ibRuntimeModuleDataObject* dataRef = nullptr;
+		auto* cc = metaData->GetCompileCache();
+		if (cc && cc->FindCompileModule(metaObject, dataRef)) {
+			ibCompileModule* compileModule = dataRef->GetCompileModule();
+			if (compileModule != nullptr) compileModule->ClearLexem();
+		}
 	}
 
 	wxDELETE(m_precompileModule);
@@ -126,27 +143,15 @@ ibCodeEditor::~ibCodeEditor()
 
 void ibCodeEditor::EditDebugPoint(int line_to_edit)
 {
-	//Update the list of breakpoints
-	const int dwFlags = MarkerGet(line_to_edit);
-	if ((dwFlags & (1 << ibCodeEditor::Breakpoint))) {
-		debugClient->RemoveBreakpoint(m_document->GetFilename(), line_to_edit);
-	}
-	else {
-		debugClient->ToggleBreakpoint(m_document->GetFilename(), line_to_edit);
-	}
+	// Forward to the (designer-side) debugger override; sessionless
+	// hosts (codeRunner) get the default no-op.
+	OnEditDebugPoint(line_to_edit);
 }
 
 void ibCodeEditor::RefreshBreakpoint(bool deleteCurrentBreakline)
 {
 	MarkerDeleteAll(ibCodeEditor::Breakpoint);
-
-	//Update the list of breakpoints
-	for (auto& line_to_edit : debugClient->GetDebugList(m_document->GetFilename())) {
-		const int dwFlags = MarkerGet(line_to_edit);
-		if (!(dwFlags & (1 << ibCodeEditor::Breakpoint))) {
-			MarkerAdd(line_to_edit, ibCodeEditor::Breakpoint);
-		}
-	}
+	RefreshBreakpointMarkers();
 }
 
 void ibCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
@@ -396,8 +401,8 @@ int ibCodeEditor::GetRealPositionFromPoint(const wxPoint& pt)
 	return codeText.Length();
 }
 
-#include "win/dlg/lineInput/lineInput.h"
-#include "win/dlg/functionSearcher/functionSearcher.h"
+#include "frontend/win/dlg/lineInput/lineInput.h"
+#include "frontend/win/dlg/functionSearcher/functionSearcher.h"
 
 void ibCodeEditor::RefreshEditor()
 {
@@ -469,7 +474,7 @@ void ibCodeEditor::ShowGotoLine()
 
 void ibCodeEditor::ShowMethods()
 {
-	CFunctionList dlg(m_document, this);
+	ibFunctionList dlg(m_document, this);
 	dlg.ShowModal();
 }
 
@@ -637,22 +642,10 @@ void ibCodeEditor::OnMarginClick(wxStyledTextEvent& event)
 
 	switch (event.GetMargin())
 	{
-	case DEF_BREAKPOINT_ID: {
-		const int dwFlags = ibCodeEditor::MarkerGet(line_from_pos);
-		if (IsEditable()) {
-			//Update the list of breakpoints
-			const wxString& strModuleName = m_document->GetFilename();
-			if ((dwFlags & (1 << ibCodeEditor::Breakpoint))) {
-				if (debugClient->RemoveBreakpoint(strModuleName, line_from_pos)) {
-					MarkerDelete(line_from_pos, ibCodeEditor::Breakpoint);
-				}
-			}
-			else if (debugClient->ToggleBreakpoint(strModuleName, line_from_pos)) {
-				MarkerAdd(line_from_pos, ibCodeEditor::Breakpoint);
-			}
-		}
+	case DEF_BREAKPOINT_ID:
+		if (IsEditable())
+			OnEditDebugPoint(line_from_pos);
 		break;
-	}
 	case DEF_FOLDING_ID:
 		ToggleFold(line_from_pos);
 		break;
@@ -669,80 +662,96 @@ void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 		(modFlags & (wxSTC_MOD_DELETETEXT)) == 0)
 		return;
 
-	if (m_initialized) {
+	if (!m_initialized || m_precompileModule == nullptr)
+		return;
 
-		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
+	const wxString& codeText = GetText();
+	const int line = LineFromPosition(event.GetPosition());
 
-		if (moduleObject != nullptr) {
+	// Precompile pass — fires for every host (codeRunner included).
+	// Tracks local declarations + functions parsed out of the live
+	// editor text; metadata-driven props come in only when a backing
+	// document exists (PrepareModuleData early-returns otherwise).
+	m_precompileModule->Load(codeText);
 
-			const wxString& codeText = GetText();
-			const int line = LineFromPosition(event.GetPosition());
+	if (event.m_linesAdded != 0) {
 
-			{
-				m_precompileModule->Load(codeText);
+		OnPatchModule(line, event.m_linesAdded);
 
-				if (event.m_linesAdded != 0) {
-
-					debugClient->PatchModule(
-						moduleObject->GetDocPath(), line, event.m_linesAdded);
-
-					if (m_lineBreakpoint != wxNOT_FOUND) {
-						MarkerDeleteAll(ibCodeEditor::BreakLine);
-						if (line < m_lineBreakpoint)
-							m_lineBreakpoint += event.m_linesAdded;
-						MarkerAdd(m_lineBreakpoint, ibCodeEditor::BreakLine);
-					}
-
-					RefreshBreakpoint();
-				}
-
-				try {
-#if _USE_OLD_TEXT_PARSER_IN_CODE_EDITOR == 0
-					const wxString& patchText = event.GetString();
-					const int str_length = patchText.Length();
-					const int str_utf8_length = event.GetLength();
-					if ((modFlags & (wxSTC_MOD_INSERTTEXT)) != 0) {
-						m_precompileModule->PrepareLexem(line,
-#ifdef UTF8_LEXEM_TRANSLATE
-							event.m_linesAdded, str_length, str_utf8_length);
-#else
-							event.m_linesAdded, str_length);
-#endif
-					}
-					else if ((modFlags & (wxSTC_MOD_DELETETEXT)) != 0) {
-						m_precompileModule->PrepareLexem(line,
-#ifdef UTF8_LEXEM_TRANSLATE
-							event.m_linesAdded, -str_length, str_utf8_length);
-#else
-							event.m_linesAdded, -str_length);
-#endif
-					}
-#else
-					m_precompileModule->PrepareLexem();
-#endif
-				}
-				catch (...)
-				{
-				}
-
-				ibMetaData* metaData = moduleObject->GetMetaData();
-				wxASSERT(metaData);
-
-				ibRuntimeModuleDataObject* pRefData = nullptr;
-				auto* cc = metaData->GetCompileCache();
-				if (cc && cc->FindCompileModule(m_document->GetMetaObject(), pRefData)) {
-					ibCompileCode* compileModule = pRefData->GetCompileModule();
-					wxASSERT(compileModule);
-					if (!compileModule->m_changedCode) compileModule->m_changedCode = true;
-				}
-
-				m_document->Modify(true);
-				moduleObject->SetModuleText(codeText);
-			}
+		if (m_lineBreakpoint != wxNOT_FOUND) {
+			MarkerDeleteAll(ibCodeEditor::BreakLine);
+			if (line < m_lineBreakpoint)
+				m_lineBreakpoint += event.m_linesAdded;
+			MarkerAdd(m_lineBreakpoint, ibCodeEditor::BreakLine);
 		}
 
-		m_fp.RecalcFoldLevel();
+		RefreshBreakpoint();
 	}
+
+	try {
+#if _USE_OLD_TEXT_PARSER_IN_CODE_EDITOR == 0
+		// First-time-empty buffer (codeRunner initial SetText, or any
+		// host that hasn't called LoadModule) — incremental PrepareLexem
+		// early-returns when m_listLexem is empty, so the fold parser
+		// gets no KEYWORD lexems and folding doesn't kick in. Bootstrap
+		// with a full pass so subsequent edits have a baseline to patch.
+		if (m_precompileModule->GetLexems().empty()) {
+			m_precompileModule->PrepareLexem();
+		}
+		else {
+			const wxString& patchText = event.GetString();
+			const int str_length = patchText.Length();
+			const int str_utf8_length = event.GetLength();
+			if ((modFlags & (wxSTC_MOD_INSERTTEXT)) != 0) {
+				m_precompileModule->PrepareLexem(line,
+#ifdef UTF8_LEXEM_TRANSLATE
+					event.m_linesAdded, str_length, str_utf8_length);
+#else
+					event.m_linesAdded, str_length);
+#endif
+			}
+			else if ((modFlags & (wxSTC_MOD_DELETETEXT)) != 0) {
+				m_precompileModule->PrepareLexem(line,
+#ifdef UTF8_LEXEM_TRANSLATE
+					event.m_linesAdded, -str_length, str_utf8_length);
+#else
+					event.m_linesAdded, -str_length);
+#endif
+			}
+		}
+#else
+		m_precompileModule->PrepareLexem();
+#endif
+	}
+	catch (...)
+	{
+	}
+
+	// Document / metadata-side update — only when a backing document
+	// is present. CodeRunner edits live editor text in memory only;
+	// nothing to push back to a moduleObject / mark dirty / invalidate
+	// in the compile cache.
+	if (m_document != nullptr) {
+		ibValueMetaObjectModuleBase* moduleObject =
+			m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
+		if (moduleObject != nullptr) {
+			ibMetaData* metaData = moduleObject->GetMetaData();
+			wxASSERT(metaData);
+
+			ibRuntimeModuleDataObject* pRefData = nullptr;
+			auto* cc = metaData->GetCompileCache();
+			if (cc && cc->FindCompileModule(m_document->GetMetaObject(), pRefData)) {
+				ibCompileCode* compileModule = pRefData->GetCompileModule();
+				wxASSERT(compileModule);
+				if (!compileModule->m_changedCode) compileModule->m_changedCode = true;
+			}
+
+			m_document->Modify(true);
+			moduleObject->SetModuleText(codeText);
+		}
+	}
+
+	m_fp.RecalcFoldLevel();
 }
 
 void ibCodeEditor::OnKeyDown(wxKeyEvent& event)
@@ -822,22 +831,9 @@ void ibCodeEditor::OnKeyDown(wxKeyEvent& event)
 	case '0': if (m_enableAutoComplete && event.ShiftDown()) m_ct.Cancel(); event.Skip(); break;
 
 	case WXK_F8:
-	{
-		const int line_from_pos = LineFromPosition(GetCurrentPos());
-		if (IsEditable()) {
-			//Update the list of breakpoints
-			const wxString& strModuleName = m_document->GetFilename();
-			if ((ibCodeEditor::MarkerGet(line_from_pos) & (1 << ibCodeEditor::Breakpoint))) {
-				if (debugClient->RemoveBreakpoint(strModuleName, line_from_pos)) {
-					MarkerDelete(line_from_pos, ibCodeEditor::Breakpoint);
-				}
-			}
-			else if (debugClient->ToggleBreakpoint(strModuleName, line_from_pos)) {
-				MarkerAdd(line_from_pos, ibCodeEditor::Breakpoint);
-			}
-		}
-	}
-	break;
+		if (IsEditable())
+			OnEditDebugPoint(LineFromPosition(GetCurrentPos()));
+		break;
 	default: event.Skip(); break;
 	}
 }

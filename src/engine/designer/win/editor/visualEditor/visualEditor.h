@@ -2,7 +2,7 @@
 #define __VISUAL_EDITOR_H__
 
 #include "innerFrame.h"
-#include "win/editor/codeEditor/codeEditor.h"
+#include "win/editor/codeEditor/codeEditorDesigner.h"
 
 #include "frontend/visualView/ctrl/form.h"
 #include "frontend/visualView/ctrl/sizer.h"
@@ -620,7 +620,7 @@ public:
 
 	ibVisualEditorNotebook(ibMetaDocument* document, wxWindow* parent, wxWindowID id, long flags) :
 		wxAuiNotebook(parent, id, wxDefaultPosition, wxDefaultSize, wxAUI_NB_BOTTOM | wxAUI_NB_TAB_FIXED_WIDTH),
-		m_visualEditor(new ibVisualEditor(document, this)), m_codeEditor(new ibCodeEditor(document, this)) {
+		m_visualEditor(new ibVisualEditor(document, this)), m_codeEditor(new ibCodeEditorDesigner(document, this)) {
 		CreateVisualEditor(document, parent, id, flags);
 	}
 
@@ -797,7 +797,7 @@ protected:
 	void OnPageChanged(wxAuiNotebookEvent& event);
 private:
 	ibVisualEditor* m_visualEditor;
-	ibCodeEditor* m_codeEditor;
+	ibCodeEditorDesigner* m_codeEditor;
 
 };
 

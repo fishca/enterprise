@@ -6,7 +6,6 @@
 #include "codeEditor.h"
 #include "codeEditorParser.h"
 
-#include "backend/debugger/debugClient.h"
 #include "backend/metaCollection/partial/commonObject.h"
 
 #include "frontend/docView/docView.h"
@@ -95,13 +94,13 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 			}
 		}
 	}
-	else if (debugClient->IsEnterLoop()) {
+	else if (IsDebuggerEnterLoop() && m_document != nullptr) {
 		ibPrecompileContext* currContext = m_precompileModule->GetCurrentContext();
 		if (currContext && currContext->FindVariable(m_precompileModule->GetLastParentKeyword())) {
 			m_ac.Cancel();
 			const ibValueMetaObject* metaObject = m_document->GetMetaObject();
 			wxASSERT(metaObject);
-			debugClient->EvaluateAutocomplete(
+			OnEvaluateAutocomplete(
 				metaObject->GetFileName(),
 				metaObject->GetDocPath(),
 				m_precompileModule->GetLastExpression(),
@@ -434,6 +433,60 @@ void ibCodeEditor::DecreaseIndent()
 	BackTab();
 }
 
+namespace {
+// Compute first / last line covered by the current selection. If nothing
+// is selected, both equal the caret line. Triple-click style line-select
+// (ends at column 0 of the next line) drops the trailing line so the
+// command doesn't grab one extra line below the visible selection.
+void SelectedLineRange(ibCodeEditor* ed, int& firstLine, int& lastLine)
+{
+	int selStart = 0, selEnd = 0;
+	ed->GetSelection(&selStart, &selEnd);
+	firstLine = ed->LineFromPosition(selStart);
+	lastLine  = ed->LineFromPosition(selEnd);
+	if (selEnd > selStart && ed->PositionFromLine(lastLine) == selEnd && lastLine > firstLine)
+		lastLine--;
+}
+} // namespace
+
+void ibCodeEditor::AddCommentsToSelection()
+{
+	if (!IsEditable())
+		return;
+
+	int firstLine = 0, lastLine = 0;
+	SelectedLineRange(this, firstLine, lastLine);
+
+	BeginUndoAction();
+	for (int line = firstLine; line <= lastLine; line++) {
+		const int pos = PositionFromLine(line);
+		Replace(pos, pos, "//");
+	}
+	EndUndoAction();
+}
+
+void ibCodeEditor::RemoveCommentsFromSelection()
+{
+	if (!IsEditable())
+		return;
+
+	int firstLine = 0, lastLine = 0;
+	SelectedLineRange(this, firstLine, lastLine);
+
+	BeginUndoAction();
+	for (int line = firstLine; line <= lastLine; line++) {
+		const int startPos = PositionFromLine(line);
+		const wxString sLine = GetLineRaw(line);
+		for (unsigned int i = 0; i + 1 < sLine.length(); i++) {
+			if (sLine[i] == '/' && sLine[i + 1] == '/') {
+				Replace(startPos + i, startPos + i + 2, wxEmptyString);
+				break;
+			}
+		}
+	}
+	EndUndoAction();
+}
+
 void ibCodeEditor::LoadAutoComplete()
 {
 	int realPos = GetRealPosition();
@@ -473,26 +526,26 @@ void ibCodeEditor::LoadAutoComplete()
 
 void ibCodeEditor::LoadToolTip(const wxPoint& pos)
 {
-	if (debugClient->IsEnterLoop()) {
+	if (!IsDebuggerEnterLoop() || m_document == nullptr)
+		return;
 
-		int currentPos = GetRealPositionFromPoint(pos);
-		wxString expression, currentWord; bool hasPoint = false;
-		PrepareTooTipExpression(currentPos, expression, currentWord, hasPoint);
+	int currentPos = GetRealPositionFromPoint(pos);
+	wxString expression, currentWord; bool hasPoint = false;
+	PrepareTooTipExpression(currentPos, expression, currentWord, hasPoint);
 
-		expression.Trim(true).Trim(false);
+	expression.Trim(true).Trim(false);
 
-		if (expression.IsEmpty()) {
-			SetToolTip(nullptr); return;
-		}
-
-		const ibValueMetaObject* metaObject = m_document->GetMetaObject();
-		wxASSERT(metaObject);
-		debugClient->EvaluateToolTip(
-			metaObject->GetFileName(),
-			metaObject->GetDocPath(),
-			expression
-		);
+	if (expression.IsEmpty()) {
+		SetToolTip(nullptr); return;
 	}
+
+	const ibValueMetaObject* metaObject = m_document->GetMetaObject();
+	wxASSERT(metaObject);
+	OnEvaluateToolTip(
+		metaObject->GetFileName(),
+		metaObject->GetDocPath(),
+		expression
+	);
 }
 
 void ibCodeEditor::LoadCallTip()

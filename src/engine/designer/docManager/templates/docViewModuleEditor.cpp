@@ -38,7 +38,7 @@ wxEND_EVENT_TABLE()
 
 bool ibModuleEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	m_codeEditor = new ibCodeEditor(doc, m_viewFrame, wxID_ANY,
+	m_codeEditor = new ibCodeEditorDesigner(doc, m_viewFrame, wxID_ANY,
 		wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 
 	m_codeEditor->SetReadOnly(flags == wxDOC_READONLY);
@@ -86,7 +86,7 @@ bool ibModuleEditView::OnClose(bool deleteWindow)
 	return false;
 }
 
-#include "win/editor/codeEditor/codeEditorPrintOut.h"
+#include "frontend/win/editor/codeEditor/codeEditorPrintOut.h"
 
 wxPrintout* ibModuleEditView::OnCreatePrintout()
 {
@@ -121,8 +121,8 @@ void ibModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 	}
 }
 
-#include "win/dlg/lineInput/lineInput.h"
-#include "win/dlg/functionSearcher/functionSearcher.h"
+#include "frontend/win/dlg/lineInput/lineInput.h"
+#include "frontend/win/dlg/functionSearcher/functionSearcher.h"
 
 void ibModuleEditView::OnMenuEvent(wxCommandEvent& event)
 {

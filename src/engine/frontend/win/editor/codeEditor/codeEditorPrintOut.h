@@ -7,7 +7,7 @@
 
 //----------------------------------------------------------------------------
 //! EditPrint
-class ibCodeEditorPrintout : public wxPrintout {
+class FRONTEND_API ibCodeEditorPrintout : public wxPrintout {
 
 public:
 

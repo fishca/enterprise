@@ -57,10 +57,9 @@ the wire protocol, and the read loop:
    benefit: step commands feel snappier (one less polling cycle
    per message).
 
-Status: working tree, uncommitted (will be split into a `firebird:`
-group + `metadata: atomic seed` group + `debug: stable wire under
-multi-tab` group + docs, then pushed to `oes/develop` and
-`origin/develop`).
+Status: landed 2026-04-30, pushed to `oes/develop` + `origin/develop`.
+Split into `424b8d25 debug: stable wire under multi-tab F5 / step
+workloads` (the five-change pile above) + `9b734795 docs: ...`.
 
 ## Firebird driver hardening — landed in working tree 2026-04-30
 
@@ -101,10 +100,11 @@ Highlights:
 - `Open()` is now safe to re-call (detaches old handle first);
   recursive `Mkdir(..., wxPATH_MKDIR_FULL)`.
 
-State: working tree, uncommitted. Next session: review diff,
-commit by topic group (driver fixes / DPB-TPB tuning / metaConfig
-atomic seed / fb_tr_list collapse), build + smoke-test on
-designer.exe + enterprise.exe.
+State: landed 2026-04-30, pushed to `oes/develop` + `origin/develop`.
+Split into `7494bae5 firebird: driver hardening for FB 5.0 embedded`
+(driver UB / DPB / TPB / fb_tr_list collapse / Open re-call) +
+`6a0de70c metadata save: atomic seed phase + idempotent
+predefined-record probe` + `9b734795 docs: ...`.
 
 ## Register totals — trigger-maintained strategy proposal
 

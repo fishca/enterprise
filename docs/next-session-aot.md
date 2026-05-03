@@ -222,20 +222,30 @@ counter and pool TX-pin clear correctly. Other drivers (PG / SQLite
    Source-hash check would need to skip when source missing. For
    first iteration: cache is dev-time optimization, source stays.
 
-## File touch list
+## Files touched (actual landed locations)
 
-* `src/engine/backend/compiler/byteCode.h` — add Serialize/Deserialize
-  declarations.
-* `src/engine/backend/compiler/byteCodeSerialization.cpp` — new file,
-  writer/reader bodies.
-* `src/engine/backend/cache/byteCodeCache.h/.cpp` — new, DAO.
-* `src/engine/backend/moduleInfo.cpp::Compile` — cache hook.
-* `src/engine/backend/metadataReader.cpp` (or wherever metadata
-  generation lives) — bump generation on save.
-* SQL: `firebird/init.sql`, `postgres/init.sql`, `sqlite/init.sql`,
-  `mysql/init.sql` — add `sys_bytecode_cache` DDL.
-* `enterprise/CLAUDE.md` — update "Known Issues" / add AOT cache
-  section.
+* `src/engine/backend/compiler/byteCode.h` — `SerializeAOT` /
+  `DeserializeAOT` declarations + process-wide `Register / Unregister
+  / Find` registry + `ResolveAndVerifyDependencies`.
+* `src/engine/backend/compiler/byteCodeAOT.cpp` (not
+  `byteCodeSerialization.cpp` — the AOT name keeps it distinct from
+  `valueSerialization.cpp` which serves a different layer).
+* `src/engine/backend/cache/byteCodeCache.{h,cpp}` — DAO.
+* `src/engine/backend/moduleInfo.cpp` — three-arm Compile cache hook
+  in `ibRuntimeModuleDataObject::Compile`.
+* `src/engine/backend/metaCollection/metaModuleObject.cpp` —
+  `OnSaveMetaObject` / `OnDeleteMetaObject` invalidate the cache row
+  for the changed / removed module (not `metadataReader.cpp` — that
+  file doesn't exist; module-edit detection lives on the metaobject
+  itself).
+* `src/engine/backend/appDataQuery.cpp` — `MigrateTableBytecodeCache`
+  runs additively in `CreateAppDataEnv` / `CreateServerAppDataEnv`
+  next to `MigrateTableSession`. PG → BYTEA, others → BLOB. Not
+  driver-side `init.sql` files (none exist as a migration vehicle
+  in this tree).
+* `enterprise/CLAUDE.md` — bytecode resolver section already
+  describes the kind-driven layout that unlocks AOT; a dedicated
+  AOT-cache subsection is still pending.
 
 ## Estimate (status)
 

@@ -6,18 +6,50 @@ descriptor-owned map, bytecode decoupling + AOT persistent cache as
 follow-up. This document records the architectural decisions of the
 2026-04-22 session and the implementation phase plan.
 
-> **Status:** design — partial groundwork landed. Step 1 of the
-> 17-step plan (descriptor `m_runtimes` map + Attach/Detach API) is
-> not in code yet. Adjacent precursors that did land 2026-04-26:
-> `ibCompileValueCache` extracted from designer's GUI tree onto
-> `ibMetaData` (template for the runtime-tree split), and
-> `ibSession::EnsureRoot()` + the 3-phase `NotifyAuthenticated`
-> contract — root mm ownership moved into the session, `appData`'s
-> `OnAuthenticated` listener no longer drives `CreateRoot`. The
-> existing implementation still keeps each descriptor's runtime as
-> a single `m_procUnit` (rebuilt per-session by
-> `InitRuntimeForSession` / `ExitRuntimeForSession` under
-> `m_runtimeMutex`); per-descriptor per-session map is the target.
+> **Status (2026-05-03):** ~12 of 17 steps landed.
+>
+> Done:
+> - **1-2** — descriptors compose `ibRuntimeModuleDataObject`
+>   (`backend/moduleInfo.h:17`) with `m_compileModule`, `m_procUnit`
+>   (shared_ptr — pins against fast-F5 UAF), `m_binder`, `m_parent`.
+>   `GetProcUnit()` is session-aware (looks in session's ProcUnit map
+>   under `ibSessionScope`, falls back to descriptor-owned slot).
+>   `appData/webSession` Connect/Disconnect call `InitRuntimeForSession`
+>   / `ExitRuntimeForSession` on the per-session root.
+> - **4** — Start/Stop pair lives on `ibValueModuleManager`; descriptor
+>   subclasses inherit through `ibRuntimeModuleDataObject`.
+> - **6-7** — `m_parent` on the runtime base (raw ptr; invariant
+>   "parent outlives child" enforced by owning containers — equivalent
+>   to weak_ptr without cycle risk). `m_compileModule` + `m_byteCode`
+>   live on the descriptor's runtime mixin, not on a singleton mm.
+> - **8** — bytecode self-contained: zero accesses to
+>   `byteCode->m_compileModule` / `bc->m_compileModule` left in code
+>   (AOT serialize/deserialize works because bc carries everything it
+>   needs). `m_dependencyIds` / `m_dependencyVersions`,
+>   `bc.CreateBinder()` factory, process-wide registry — all on bc.
+> - **9** — object-value composed via descriptor's runtime mixin; no
+>   shared mm field.
+> - **10** — Designer = compile + intellisense only.
+>   `InitializeRuntime` / `Compile` / `Run` are no-ops in Designer mode
+>   (gated at `moduleInfo.h:46-51`).
+> - **11** — extern binder factory (`bc.CreateBinder()`) on bytecode;
+>   per-descriptor `m_binder` with `SetVar` for per-execute binding.
+> - **13-17** — AOT cache pipeline (Steps 1-4 of `next-session-aot.md`,
+>   landed 2026-05-02): `SerializeAOT`/`DeserializeAOT`,
+>   `sys_bytecode_cache` table, three-arm Compile hook (cache-hit /
+>   miss / drift), dependency registry + `ResolveAndVerifyDependencies`,
+>   Designer `OnSaveMetaObject`/`OnDeleteMetaObject` invalidation.
+>   Step 5 (automated invalidation gtests) pending.
+>
+> Remaining:
+> - **3** — rename `Init/ExitRuntimeForSession` → `Attach/Detach` and
+>   privatise behind the descriptor.
+> - **5** — migrate 38 object call-sites from `m_procUnit->CallAsProc`
+>   to a `mm->CallAsProc(obj, method, ...)` facade. Grep confirms
+>   exactly 38 occurrences in 9 object files
+>   (catalog/document/charts/registers/common/constant).
+> - **12** — `ibMetadataRef{guid}` encoding for cross-bc metadata refs
+>   (`Catalogs.Товары` etc) so AOT blobs survive descriptor renames.
 
 ---
 
@@ -472,10 +504,29 @@ Brief summary:
 
 17 steps, incremental. Risk estimates — medium-high after step 5.
 
-> **Progress as of 2026-04-26.** Not directly from this 17-step plan, but adjacent:
-> - `ibCompileValueCache` extracted from designer's GUI tree onto `ibMetaData` (precursor for step 10 — designer without runtimes).
-> - `ibSession::EnsureRoot()` + `NotifyAuthenticated` 3-phase contract — root mm ownership moved into the session, `appData` listener no longer does `CreateRoot` (see `session-registry.md`, `metadata-mm-decoupling.md`).
-> These changes are preparatory; step 1 (descriptor `m_runtimes` map + Attach/Detach API) is not landed yet — root mm is still stored as `ibValuePtr` directly on `ibSession::m_root`, not through a per-descriptor map.
+> **Progress as of 2026-05-03.**
+> - **Step 1 — landed (different shape).** Descriptors compose
+>   `ibRuntimeModuleDataObject` (`backend/moduleInfo.h:17`) — owns
+>   `m_compileModule`, `m_procUnit` (shared, pins against UAF),
+>   `m_binder`, `m_parent`. `GetProcUnit()` is session-aware: looks
+>   in the session's ProcUnit map first (via `ibSessionScope`), falls
+>   back to descriptor-owned slot. No literal `m_runtimes` map needed
+>   — the lookup chain provides per-session resolution on top of the
+>   descriptor-owned slot.
+> - **Step 2 — partially landed.** `appData.cpp Connect` →
+>   `s->GetModuleManager()->InitRuntimeForSession(s)`; `Disconnect`
+>   symmetric. `webSession.cpp Login/Destroy` follows the same
+>   pattern. The interface is still named `InitRuntimeForSession` /
+>   `ExitRuntimeForSession` rather than `Attach` / `Detach` — step 3
+>   (rename + privatise) is the remaining cleanup.
+> - **Adjacent precursors (2026-04-26):** `ibCompileValueCache`
+>   extracted from designer's GUI tree onto `ibMetaData` (precursor
+>   for step 10 — designer without runtimes); `ibSession::EnsureRoot()`
+>   + 3-phase `NotifyAuthenticated` — root-mm ownership on session.
+> - **Step 8 building blocks landed via AOT cache (2026-05-02):**
+>   bytecode carries its own `m_dependencyIds` / `m_dependencyVersions`,
+>   `bc.CreateBinder()` factory, process-wide registry + `Find`. Full
+>   "byteCode->m_compileModule back-pointer removed" not yet done.
 
 
 | Step | What | Risk |

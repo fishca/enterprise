@@ -7,6 +7,7 @@
 #include "backend/metaData.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "reference/reference.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
@@ -132,7 +133,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 {
 	if (!appData->DesignerMode())
 	{
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
@@ -209,7 +210,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::DeleteObject()
 {
 	if (!appData->DesignerMode())
 	{
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));

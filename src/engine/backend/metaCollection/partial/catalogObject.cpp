@@ -7,6 +7,7 @@
 #include "backend/metaData.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "reference/reference.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
@@ -141,7 +142,7 @@ bool ibValueRecordDataObjectCatalog::WriteObject()
 		// script hooks that start their own transactions) inherit
 		// this connection via TL; the base-class counter collapses
 		// their BeginTransaction / Commit onto this outer TX.
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
@@ -221,7 +222,7 @@ bool ibValueRecordDataObjectCatalog::DeleteObject()
 		// Acquire a pool connection for this method's DB work; nested
 		// calls (BeforeDelete / OnDelete script hooks) inherit it via
 		// the thread-local slot. See WriteObject for the full pattern.
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));

@@ -6,6 +6,7 @@
 #include "chartOfAccounts.h"
 #include "backend/metaData.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "reference/reference.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
@@ -80,7 +81,7 @@ ibBackendValueForm* ibValueRecordDataObjectChartOfAccounts::GetFormValue(const w
 bool ibValueRecordDataObjectChartOfAccounts::WriteObject()
 {
 	if (!appData->DesignerMode()) {
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 		if (!scope || !scope->IsOpen()) ibBackendCoreException::Error(_("Database is not open!"));
 		if (!ibBackendException::IsEvalMode()) {
 			if (!m_metaObject->AccessRight_Write()) { ibBackendAccessException::Error(); return false; }
@@ -118,7 +119,7 @@ bool ibValueRecordDataObjectChartOfAccounts::WriteObject()
 bool ibValueRecordDataObjectChartOfAccounts::DeleteObject()
 {
 	if (!appData->DesignerMode()) {
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 		if (!scope || !scope->IsOpen()) ibBackendCoreException::Error(_("Database is not open!"));
 		if (!ibBackendException::IsEvalMode()) {
 			if (!m_metaObject->AccessRight_Delete()) { ibBackendAccessException::Error(); return false; }

@@ -308,120 +308,97 @@ ibValue ibValueRecordDataObjectConstant::GetConstValue() const
 
 bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 {
-	if (!appData->DesignerMode()) {
+	if (appData->DesignerMode())
+		return true;
 
-		const ibValue& constValue = m_constValue;
+	if (!m_metaObject->AccessRight_Write()) {
+		ibBackendAccessException::Error();
+		return false;
+	}
 
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+	const ibValue& constValue = m_constValue;
 
-		if (!scope || !scope->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
+	// Session-bound RAII scope — Acquires the session's conn, scope dtor
+	// rolls back any uncommitted TX on early return / exception.
+	ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+	if (!scope || !scope->IsOpen())
+		ibBackendCoreException::Error(_("Database is not open!"));
 
-		if (!m_metaObject->AccessRight_Write()) {
-			ibBackendAccessException::Error();
+	const wxString& tableName = m_metaObject->GetTableNameDB();
+	ibBackendValueForm* const valueForm = GetForm();
+
+	scope.SafeBeginTransaction();
+
+	auto rollback = [&]() {
+		m_constValue = constValue;
+		scope.SafeRollBackTransaction();
+	};
+
+	{
+		ibValue cancel = false;
+		ExecAsProc(wxT("BeforeWrite"), cancel);
+		if (cancel.GetBoolean()) {
+			rollback();
+			ibBackendCoreException::Error(_("failed to write object in db!"));
 			return false;
 		}
+	}
 
-		const wxString& tableName = m_metaObject->GetTableNameDB();
-		const wxString& fieldName = m_metaObject->GetFieldNameDB();
+	m_constValue = m_metaObject->AdjustValue(cValue);
 
-		if (scope->TableExists(tableName)) {
+	if (m_metaObject->FillCheck() && m_constValue.IsEmpty()) {
+		const wxString fillError =
+			wxString::Format(_("""%s"" is a required field"), m_metaObject->GetSynonym());
+		ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
+		rollback();
+		return false;
+	}
 
-			{
-				ibBackendValueForm* const valueForm = GetForm();
+	wxString sqlText;
+	const bool isFB = (scope->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD);
+	if (isFB) {
+		sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_metaObject); ++i)
+			sqlText += "?,";
+		sqlText += "'6') MATCHING(RECORD_KEY);";
+	} else {
+		sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_metaObject); ++i)
+			sqlText += "?,";
+		sqlText += "'6') ON CONFLICT (RECORD_KEY) DO UPDATE SET "
+		         + ibValueMetaObjectAttributeBase::GetExcludeSQLFieldName(m_metaObject) + ";";
+	}
 
-				scope.SafeBeginTransaction();
-				{
-					ibValue cancel = false;
+	ibStatementGuard statement(scope.get(), scope->PrepareStatement(
+		sqlText, tableName, ibValueMetaObjectAttributeBase::GetSQLFieldName(m_metaObject)));
+	if (!statement) {
+		rollback();
+		return false;
+	}
 
-					ExecAsProc(wxT("BeforeWrite"), cancel);
+	int position = 1;
+	ibValueMetaObjectAttributeBase::SetValueAttribute(
+		m_metaObject, m_constValue, statement.get(), position);
 
-					if (cancel.GetBoolean()) {
-						scope.SafeRollBackTransaction();
-						ibBackendCoreException::Error(_("failed to write object in db!"));
-						return false;
-					}
-				}
+	if (statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR) {
+		rollback();
+		ibBackendCoreException::Error(_("Failed to write object in db!"));
+		return false;
+	}
 
-				m_constValue = m_metaObject->AdjustValue(cValue);
-
-				//check fill attributes 
-				bool fillCheck = true;
-
-				if (m_metaObject->FillCheck()) {
-					if (m_constValue.IsEmpty()) {
-						wxString fillError =
-							wxString::Format(_("""%s"" is a required field"), m_metaObject->GetSynonym());
-						ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
-						fillCheck = false;
-					}
-				}
-
-				if (!fillCheck) {
-					m_constValue = constValue;
-					return false;
-				}
-
-				wxString sqlText = "";
-
-				if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
-					sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-					for (unsigned int idx = 0; idx < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_metaObject); idx++) {
-						sqlText += "?,";
-					}
-					sqlText += "'6')";
-					sqlText += " ON CONFLICT (RECORD_KEY) ";
-					sqlText += " DO UPDATE SET " + ibValueMetaObjectAttributeBase::GetExcludeSQLFieldName(m_metaObject) + ";";
-				}
-				else {
-					sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-					for (unsigned int idx = 0; idx < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_metaObject); idx++) {
-						sqlText += "?,";
-					}
-					sqlText += "'6') MATCHING(RECORD_KEY);";
-				}
-
-				ibPreparedStatement* statement =
-					db_query->PrepareStatement(sqlText, tableName, ibValueMetaObjectAttributeBase::GetSQLFieldName(m_metaObject));
-
-				if (statement == nullptr) {
-					m_constValue = constValue;
-					return false;
-				}
-
-				int position = 1;
-
-				ibValueMetaObjectAttributeBase::SetValueAttribute(
-					m_metaObject,
-					m_constValue,
-					statement,
-					position
-				);
-
-				bool hasError = statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR;
-				db_query->CloseStatement(statement);
-
-				if (hasError) {
-					m_constValue = constValue;
-					scope.SafeRollBackTransaction();
-					ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
-				}
-
-				{
-					ibValue cancel = false;
-					ExecAsProc(wxT("OnWrite"), cancel);
-					if (cancel.GetBoolean()) {
-						scope.SafeRollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
-					}
-				}
-
-				scope.SafeCommitTransaction();
-
-				if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
-			}
+	{
+		ibValue cancel = false;
+		ExecAsProc(wxT("OnWrite"), cancel);
+		if (cancel.GetBoolean()) {
+			rollback();
+			ibBackendCoreException::Error(_("Failed to write object in db!"));
+			return false;
 		}
 	}
+
+	scope.SafeCommitTransaction();
+
+	if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
 
 	return true;
 }

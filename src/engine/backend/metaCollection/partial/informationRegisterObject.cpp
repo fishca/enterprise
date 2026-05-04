@@ -1,6 +1,7 @@
 #include "informationRegister.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
 
@@ -10,7 +11,7 @@ bool ibValueRecordSetObjectInformationRegister::WriteRecordSet(bool replace, boo
 {
 	if (!appData->DesignerMode())
 	{
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
@@ -66,7 +67,7 @@ bool ibValueRecordSetObjectInformationRegister::DeleteRecordSet()
 {
 	if (!appData->DesignerMode())
 	{
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
@@ -198,7 +199,7 @@ bool ibValueRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 {
 	if (!appData->DesignerMode())
 	{
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
@@ -237,7 +238,7 @@ bool ibValueRecordManagerObjectInformationRegister::DeleteRegister()
 {
 	if (!appData->DesignerMode())
 	{
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));

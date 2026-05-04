@@ -114,9 +114,6 @@ public:
 	*/
 	virtual bool CanDeleteControl() const { return true; }
 
-	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const;
-
 	/**
 	* Get type form
 	*/

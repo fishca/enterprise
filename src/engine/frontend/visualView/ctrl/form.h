@@ -144,8 +144,6 @@ public:
 	//get metaData
 	virtual ibMetaData* GetMetaData() const;
 
-	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const { return m_procUnit.get(); }
 	virtual ibValueForm* GetImplValueRef() const override {
 		return const_cast<ibValueForm*>(this);
 	}

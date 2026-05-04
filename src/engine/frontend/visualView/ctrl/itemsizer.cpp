@@ -165,18 +165,6 @@ ibFormID ibValueSizerItem::GetTypeForm() const
 	return metaFormObj->GetTypeForm();
 }
 
-ibProcUnit* ibValueSizerItem::GetFormProcUnit() const
-{
-	if (!m_formOwner) {
-		wxASSERT(m_formOwner);
-		return nullptr;
-	}
-
-	// .get() on shared_ptr — same reasoning as ibValueControl::GetFormProcUnit
-	// (form events on session's worker, no teardown race in scope).
-	return m_formOwner->GetProcUnit().get();
-}
-
 //**********************************************************************************
 //*                                    Data										   *
 //**********************************************************************************

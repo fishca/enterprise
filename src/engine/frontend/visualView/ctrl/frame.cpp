@@ -243,6 +243,17 @@ bool ibValueFrame::PasteObject(ibReaderMemory& reader)
 	return true;
 }
 
+std::shared_ptr<ibProcUnit> ibValueFrame::GetFormProcUnit() const
+{
+	const ibValueForm* valueForm =
+		GetOwnerForm();
+
+	if (valueForm == nullptr) 
+		return nullptr;
+
+	return valueForm->GetProcUnit();
+}
+
 //*******************************************************************
 
 #include "backend/metaData.h"

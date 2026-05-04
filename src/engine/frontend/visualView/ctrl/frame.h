@@ -260,11 +260,11 @@ public:
 
 	// call current event
 	template <typename ...Types>
-	bool CallAsEvent(const ibEvent* event, Types&&... args) {
+	bool CallAsEvent(const ibEvent* event, Types&&... args) const {
 		if (event == nullptr)
 			return false;
 		const wxString& eventValue = event->GetValue();
-		ibProcUnit* formProcUnit = GetFormProcUnit();
+		std::shared_ptr<ibProcUnit> formProcUnit = GetFormProcUnit();
 		if (formProcUnit != nullptr && !eventValue.IsEmpty()) {
 			ibValue eventCancel = false;
 			try {
@@ -285,8 +285,8 @@ public:
 
 	//call current form
 	template <typename ...Types>
-	bool CallAsEvent(const wxString& functionName, Types&&... args) {
-		ibProcUnit* formProcUnit = GetFormProcUnit();
+	bool CallAsEvent(const wxString& functionName, Types&&... args) const {
+		std::shared_ptr<ibProcUnit> formProcUnit = GetFormProcUnit();
 		if (formProcUnit != nullptr && !functionName.IsEmpty()) {
 			try {
 				formProcUnit->CallAsProc(
@@ -397,9 +397,6 @@ public:
 	*/
 	virtual ibFormID GetTypeForm() const = 0;
 
-	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const = 0;
-
 	//counter
 	virtual void ControlIncrRef() { ibValue::IncrRef(); }
 	virtual void ControlDecrRef() { ibValue::DecrRef(); }
@@ -428,6 +425,9 @@ public:
 	}
 
 	virtual bool IsEditable() const;
+
+	//runtime 
+	std::shared_ptr<ibProcUnit> GetFormProcUnit() const;
 
 public:
 

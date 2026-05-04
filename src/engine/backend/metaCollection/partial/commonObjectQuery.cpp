@@ -5,9 +5,6 @@
 
 #include "commonObject.h"
 
-#include <iomanip>
-#include <sstream>
-
 #include "backend/appData.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
@@ -2064,51 +2061,37 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 	// vs document) is a future feature.
 	const int interval = 20000101;
 
-	ibNumber resultCode = 1;
 	const ibTypeDescription& typeDesc = attribute->GetTypeDesc();
-	const bool isFB = db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD;
+	const int driver = db_query->GetDatabaseLayerType();
+	if (driver != DATABASELAYER_FIREBIRD && driver != DATABASELAYER_POSTGRESQL)
+		ibBackendCoreException::Error(_("GenerateNextIdentifier requires Firebird or PostgreSQL"
+			" — atomic UPDATE...RETURNING is not portable to other backends."));
 
-	// 1) Probe sys_sequence for the running counter. Cursor closed
-	//    BEFORE the UPSERT — holding a SELECT cursor open across a write
-	//    on the same connection serialises through the driver's quickie-TX
-	//    and produces 30s lock_timeout waits on FB.
-	bool seqRowExists = false;
-	{
-		const wxString sel = isFB
-			? wxT("SELECT number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;")
-			: wxT("SELECT number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s';");
-		ibDatabaseResultSet* rs = db_query->RunQueryWithResults(
-			sel, sequence_table, stringUtils::IntToStr(interval),
-			m_metaObject->GetDocPath(), strPrefix);
-		if (rs == nullptr)
-			return attribute->CreateValue();
-		if (rs->Next()) {
-			resultCode = rs->GetResultNumber(wxT("number")) + 1;
-			seqRowExists = true;
-		}
-		db_query->CloseResultSet(rs);
-	}
-
-	// 2) sys_sequence empty for this (interval, meta_guid, prefix)?
-	//    Bootstrap from the actual data table — first call after an
-	//    import / migration must not collide with already-stored codes.
-	if (!seqRowExists) {
+	// Bootstrap helper: when sys_sequence has no row yet for this key,
+	// scan the actual data table for the highest existing counter value
+	// matching strPrefix so the first-ever sequence INSERT doesn't
+	// collide with imported / migrated records. Returns 0 on empty.
+	// GetSQLFieldName() returns the composite "<fld>_TYPE,<fld>_<X>"
+	// shape used by SaveData; we want the raw per-type sub-column.
+	auto scanDataMax = [&]() -> ibNumber {
 		const wxString tableName = m_metaObject->GetTableNameDB();
-		const wxString fieldName = ibValueMetaObjectAttributeBase::GetSQLFieldName(attribute);
-
+		const wxString fieldBase = attribute->GetFieldNameDB();
+		ibNumber maxFound = 0;
 		if (attribute->ContainType(ibValueTypes::TYPE_NUMBER)) {
+			const wxString numField = fieldBase + wxT("_N");
 			ibDatabaseResultSet* rs = db_query->RunQueryWithResults(
-				wxT("SELECT MAX(%s) FROM %s;"), fieldName, tableName);
+				wxT("SELECT MAX(%s) FROM %s;"), numField, tableName);
 			if (rs != nullptr) {
 				if (rs->Next() && !rs->IsFieldNull(1))
-					resultCode = rs->GetResultNumber(1) + 1;
+					maxFound = rs->GetResultNumber(1);
 				db_query->CloseResultSet(rs);
 			}
-		} else {  // STRING — formatted "<prefix><digits>"
-			ibPreparedStatement* st = db_query->PrepareStatement(
+		} else if (attribute->ContainType(ibValueTypes::TYPE_STRING)) {
+			const wxString strField = fieldBase + wxT("_S");
+			ibStatementGuard st(db_query, db_query->PrepareStatement(
 				wxT("SELECT MAX(%s) FROM %s WHERE %s LIKE ?;"),
-				fieldName, tableName, fieldName);
-			if (st != nullptr) {
+				strField, tableName, strField));
+			if (st) {
 				st->SetParamString(1, strPrefix + wxT("%"));
 				ibDatabaseResultSet* rs = st->RunQueryWithResults();
 				if (rs != nullptr) {
@@ -2117,43 +2100,80 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 						if (maxCode.length() > strPrefix.length()) {
 							long parsed = 0;
 							maxCode.Mid(strPrefix.length()).ToLong(&parsed);
-							if (parsed > 0) resultCode = parsed + 1;
+							if (parsed > 0) maxFound = parsed;
 						}
 					}
 					db_query->CloseResultSet(rs);
 				}
-				db_query->CloseStatement(st);
 			}
 		}
+		return maxFound;
+	};
+
+	// FB / PG: single-statement UPDATE...RETURNING is atomic. The row
+	// is locked, incremented and returned in one shot — concurrent
+	// sessions (incl. cross-machine) sequentialise through the DB row
+	// lock with no race window between SELECT and UPSERT. Two attempts:
+	//   1) UPDATE...RETURNING — row exists → done.
+	//   2) Bootstrap-scan + INSERT. INSERT may PK-conflict if another
+	//      session inserted first; the next loop iteration's UPDATE arm
+	//      then succeeds with the racing session's value + 1.
+	ibNumber resultCode = 1;
+	bool gotCode = false;
+	for (int attempt = 0; attempt < 2 && !gotCode; ++attempt) {
+		ibStatementGuard upd(db_query, db_query->PrepareStatement(
+			wxT("UPDATE %s SET number = number + 1 WHERE interval = ? AND meta_guid = ? AND prefix = ? RETURNING number;"),
+			sequence_table));
+		if (upd) {
+			upd->SetParamInt(1, interval);
+			upd->SetParamString(2, m_metaObject->GetDocPath());
+			upd->SetParamString(3, strPrefix);
+			ibDatabaseResultSet* rs = upd->RunQueryWithResults();
+			if (rs != nullptr) {
+				if (rs->Next() && !rs->IsFieldNull(1)) {
+					resultCode = rs->GetResultNumber(1);
+					gotCode = true;
+				}
+				db_query->CloseResultSet(rs);
+			}
+		}
+		if (gotCode) break;
+
+		// Row missing — bootstrap from data table and INSERT.
+		const ibNumber candidate = scanDataMax() + 1;
+		ibStatementGuard ins(db_query, db_query->PrepareStatement(
+			wxT("INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (?, ?, ?, ?);"),
+			sequence_table));
+		if (ins) {
+			ins->SetParamInt(1, interval);
+			ins->SetParamString(2, m_metaObject->GetDocPath());
+			ins->SetParamString(3, strPrefix);
+			ins->SetParamNumber(4, candidate);
+			if (ins->RunQuery() != DATABASE_LAYER_QUERY_RESULT_ERROR) {
+				resultCode = candidate;
+				gotCode = true;
+			}
+			// else: PK conflict from a racing session's bootstrap
+			// → loop, UPDATE arm now succeeds.
+		}
 	}
 
-	// 3) UPSERT next value into sys_sequence.
-	const wxString upsert = isFB
-		? wxT("UPDATE OR INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) MATCHING (interval, meta_guid, prefix);")
-		: wxT("INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) ON CONFLICT(interval, meta_guid, prefix) DO UPDATE SET number = excluded.number;");
-	db_query->RunQuery(
-		upsert, sequence_table, stringUtils::IntToStr(interval),
-		m_metaObject->GetDocPath(), strPrefix, resultCode.ToString());
+	if (!gotCode) return attribute->CreateValue();
 
-	if (attribute->ContainType(ibValueTypes::TYPE_NUMBER)) {
+	if (attribute->ContainType(ibValueTypes::TYPE_NUMBER))
 		return resultCode;
-	}
-	else if (attribute->ContainType(ibValueTypes::TYPE_STRING)) {
 
-		wxString strNumber;
-
-		std::stringstream strStreamNumber;
-		if (strPrefix.Length() < typeDesc.GetLength()) {
-			strStreamNumber << strPrefix <<
-				std::setw(typeDesc.GetLength() - strPrefix.Length()) << std::setfill('0') << resultCode;
-		}
-		else {
-			strStreamNumber <<
-				std::setw(strPrefix.Length()) << std::setfill('0') << resultCode;
-		}
-
-		strNumber = strStreamNumber.str();
-		return strNumber;
+	if (attribute->ContainType(ibValueTypes::TYPE_STRING)) {
+		// "<prefix><zero-padded number>" — width derived from typeDesc.
+		// Defensive else: if length was shrunk in the designer below
+		// what the prefix already takes, drop the prefix and pad the
+		// number to prefix-width so the output keeps a stable size.
+		// Uses ibNumber::Format directly — no int64 cap, big counters OK.
+		const size_t prefLen = strPrefix.length();
+		const size_t totLen  = (size_t)typeDesc.GetLength();
+		ibNumber::Format fmt;
+		fmt.minIntDigits = (int)((prefLen < totLen) ? totLen - prefLen : prefLen);
+		return (prefLen < totLen ? strPrefix : wxString()) + resultCode.ToString(fmt);
 	}
 
 	wxASSERT_MSG(false, "m_metaAttribute->GetClsidList() != ibValueTypes::TYPE_NUMBER"

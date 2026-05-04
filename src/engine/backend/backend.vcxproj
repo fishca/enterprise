@@ -492,7 +492,10 @@
     <ClCompile Include="metaCollection\partial\commonObject.cpp" />
     <ClCompile Include="metaCollection\partial\commonObjectModel.cpp" />
     <ClCompile Include="metaCollection\partial\commonObjectProperty.cpp" />
-    <ClCompile Include="metaCollection\partial\commonObjectQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\commonObjectMetaQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\commonObjectRefQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\commonObjectManagerQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\commonObjectRecordSetQuery.cpp" />
     <ClCompile Include="metaCollection\partial\reference\reference.cpp" />
     <ClCompile Include="metaCollection\partial\reference\referenceQuery.cpp" />
     <ClCompile Include="metaCollection\partial\selector\objectSelector.cpp" />

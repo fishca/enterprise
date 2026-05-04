@@ -933,7 +933,16 @@
     <ClCompile Include="metaCollection\partial\commonObjectProperty.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
-    <ClCompile Include="metaCollection\partial\commonObjectQuery.cpp">
+    <ClCompile Include="metaCollection\partial\commonObjectMetaQuery.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\commonObjectRefQuery.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\commonObjectManagerQuery.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\commonObjectRecordSetQuery.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\accumulationRegisterEnum.cpp">

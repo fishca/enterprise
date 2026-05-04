@@ -617,6 +617,24 @@ Files touched: `session.{h,cpp}`, `sessionRegistry.{h,cpp}`,
   - Multi-tab debug still keeps per-session isolation (eval-mode,
     cancel, force-exit) under churn.
 
+### commonObjectQuery split — landed 2026-05-04
+- ✅ Original 2166-line `commonObjectQuery.cpp` split into 4 files
+  by responsibility:
+  - `commonObjectMetaQuery.cpp` (~1260 lines) — metadata-side DDL:
+    Process*, CreateAndUpdateTableDB, Load/SaveTableData on Mutable /
+    Enum / Hierarchy / Register meta classes. db_query channel (DDL).
+  - `commonObjectRefQuery.cpp` (~420 lines) — `ibValueRecordDataObjectRef`
+    instance Read / Save / Delete + `GenerateNextIdentifier` static.
+    ses_query channel.
+  - `commonObjectManagerQuery.cpp` (~125 lines) —
+    `ibValueRecordManagerObject` Exist / Read / Save / Delete.
+    ses_query channel.
+  - `commonObjectRecordSetQuery.cpp` (~410 lines) —
+    `ibValueRecordSetObject` register ops with replace flag.
+    ses_query channel.
+- vcxproj + filters updated. Build clean, runtime smoke-tested via
+  catalog / document save.
+
 ### Observability — landed 2026-05-04
 - ✅ `GET /admin/diag` HTTP endpoint on wes returning JSON:
   - `workerPool` { alive, idle, max }

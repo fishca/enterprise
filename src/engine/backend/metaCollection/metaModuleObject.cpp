@@ -5,7 +5,7 @@
 
 #include "metaModuleObject.h"
 #include "backend/appData.h"
-#include "backend/cache/byteCodeCache.h"
+#include "backend/compiler/cache/byteCodeCache.h"
 
 //***********************************************************************
 //*                           ModuleObject                              *

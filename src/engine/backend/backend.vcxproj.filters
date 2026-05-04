@@ -22,8 +22,8 @@
     <ClInclude Include="moduleManager\moduleManager.h">
       <Filter>moduleManager</Filter>
     </ClInclude>
-    <ClInclude Include="cache\byteCodeCache.h">
-      <Filter>cache</Filter>
+    <ClInclude Include="compiler\cache\byteCodeCache.h">
+      <Filter>compiler\cache</Filter>
     </ClInclude>
     <ClInclude Include="compiler\compileModule.h">
       <Filter>compiler</Filter>
@@ -1475,8 +1475,8 @@
     <ClCompile Include="compiler\byteCodeAOT.cpp">
       <Filter>compiler</Filter>
     </ClCompile>
-    <ClCompile Include="cache\byteCodeCache.cpp">
-      <Filter>cache</Filter>
+    <ClCompile Include="compiler\cache\byteCodeCache.cpp">
+      <Filter>compiler\cache</Filter>
     </ClCompile>
     <ClCompile Include="metadataSerialization.cpp" />
     <ClCompile Include="system\value\valueDatabaseLayer.cpp">
@@ -1519,7 +1519,7 @@
     <Filter Include="compiler">
       <UniqueIdentifier>{154d9ec9-4ee0-4bf9-9618-e99db35efcbb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="cache">
+    <Filter Include="compiler\cache">
       <UniqueIdentifier>{4b2d1a0e-4f82-4f33-8e7e-1e9a2c5f4a01}</UniqueIdentifier>
     </Filter>
     <Filter Include="databaseLayer">

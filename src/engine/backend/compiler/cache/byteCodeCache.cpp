@@ -68,6 +68,8 @@ bool ibByteCodeCache::Load(ibByteCode& outBc, const ibGuid& descId)
 	if (db_query == nullptr) return false;
 	if (!db_query->TableExists(bytecode_cache_table)) return false;
 
+	wxASSERT(descId.isValid());
+
 	ibStatementGuard sel(db_query,
 		db_query->PrepareStatement(
 			wxT("SELECT bc_blob FROM %s WHERE descriptor_id = ?;"),
@@ -98,6 +100,8 @@ void ibByteCodeCache::Invalidate(const ibGuid& descId)
 {
 	if (db_query == nullptr) return;
 	if (!db_query->TableExists(bytecode_cache_table)) return;
+
+	wxASSERT(descId.isValid());
 
 	ibStatementGuard del(db_query,
 		db_query->PrepareStatement(

@@ -6,7 +6,7 @@
 #include "moduleInfo.h"
 
 #include "appData.h"                 // DesignerMode() guard in Compile()
-#include "backend/cache/byteCodeCache.h"              // AOT cache Load / Save
+#include "backend/compiler/cache/byteCodeCache.h"              // AOT cache Load / Save
 #include "backend/metaCollection/metaModuleObject.h"  // ibValueMetaObjectModuleBase full type for GetGuid/GetClassType
 
 ibRuntimeModuleDataObject::ibRuntimeModuleDataObject() :

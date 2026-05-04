@@ -516,7 +516,7 @@ public:
 	//descriptions...
 	virtual wxString GetDataPresentation(const ibValueDataObject* objValue) const = 0;
 
-	//special functions for DB 
+	//special functions for DB
 	virtual wxString GetTableNameDB() const;
 
 protected:
@@ -1476,11 +1476,17 @@ class BACKEND_API ibValueRecordDataObjectRef : public ibValueRecordDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordDataObjectRef);
 protected:
 
-	// code generator
+	// Code generator. Allocates the next per-(meta_guid, prefix) sequence
+	// number from sys_sequence and formats it per the attribute's type.
+	// Instance method (not static) so the call site is guaranteed to run
+	// inside an active session — sequence allocation routes through the
+	// session's connection (ibSession::Current()->EnsureConnection()), so the
+	// increment and the outer document save share one TX. Cross-machine
+	// atomic via UPDATE...RETURNING; FB+PG only.
+	// See memory/reference_generate_next_identifier.
 	ibValue GenerateNextIdentifier(
 		ibValueMetaObjectAttributeBase* attribute, const wxString& strPrefix);
 
-protected:
 	ibValueRecordDataObjectRef(ibValueMetaObjectRecordDataMutableRef* metaObject, const ibGuid& objGuid);
 	ibValueRecordDataObjectRef(const ibValueRecordDataObjectRef& src);
 public:

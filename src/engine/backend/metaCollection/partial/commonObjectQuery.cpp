@@ -6,6 +6,7 @@
 #include "commonObject.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
@@ -1272,93 +1273,109 @@ bool ibValueRecordDataObjectRef::ReadData()
 
 bool ibValueRecordDataObjectRef::ReadData(const ibGuid& srcGuid)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;   // session-bound conn; throws if no active session
 
 	if (m_newObject && !srcGuid.isValid())
 		return false;
 	wxASSERT(m_metaObject);
-	wxString tableName = m_metaObject->GetTableNameDB();
-	if (db_query->TableExists(tableName)) {
+	const wxString tableName = m_metaObject->GetTableNameDB();
 
-		ibDatabaseResultSet* resultSet = nullptr;
-		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
-			resultSet = db_query->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "' LIMIT 1;");
-		else
-			resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "';");
-
-		if (resultSet == nullptr) return false;
-		bool succes = false;
-		if (resultSet->Next()) {
-			succes = true;
-			//load other attributes 
-			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
-					ibValueMetaObjectAttributeBase::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
-				}
-			}
-			for (const auto object : m_metaObject->GetGenericTableArrayObject()) {
-				ibValueTabularSectionDataObjectRef* tabularSection = new ibValueTabularSectionDataObjectRef(this, object);
-				if (!tabularSection->LoadData(srcGuid)) succes = false;
-				m_listObjectValue.insert_or_assign(object->GetMetaID(), tabularSection);
+	// No TableExists probe — table is created at metadata-apply time and
+	// is a hard precondition for any descriptor data op. PrepareStatement
+	// returns null on missing-table; we treat that as no data.
+	const wxString sql = (db->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD)
+		? wxString("SELECT FIRST 1 * FROM " + tableName + " WHERE uuid = ?;")
+		: wxString("SELECT * FROM " + tableName + " WHERE uuid = ? LIMIT 1;");
+	ibStatementGuard st(db, db->PrepareStatement(sql));
+	if (!st) return false;
+	st->SetParamString(1, srcGuid.str());
+	ibDatabaseResultSet* resultSet = st->RunQueryWithResults();
+	if (resultSet == nullptr) return false;
+	bool succes = false;
+	if (resultSet->Next()) {
+		succes = true;
+		//load other attributes
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+			if (!m_metaObject->IsDataReference(object->GetMetaID())) {
+				ibValueMetaObjectAttributeBase::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 			}
 		}
-		db_query->CloseResultSet(resultSet);
-		return succes;
+		for (const auto object : m_metaObject->GetGenericTableArrayObject()) {
+			ibValueTabularSectionDataObjectRef* tabularSection = new ibValueTabularSectionDataObjectRef(this, object);
+			if (!tabularSection->LoadData(srcGuid)) succes = false;
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), tabularSection);
+		}
 	}
-	return false;
+	db->CloseResultSet(resultSet);
+	return succes;
 }
 
 bool ibValueRecordDataObjectRef::SaveData()
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
-	//check fill attributes 
+	//check fill attributes — find() so the probe doesn't auto-insert
+	//an empty value into m_listObjectValue.
 	bool fillCheck = true;
 	wxASSERT(m_metaObject);
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		if (object->FillCheck()) {
-			if (m_listObjectValue[object->GetMetaID()].IsEmpty()) {
-				wxString fillError =
-					wxString::Format(_("""%s"" is a required field"), object->GetSynonym());
-				ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
-				fillCheck = false;
-			}
+		if (!object->FillCheck()) continue;
+		const auto it = m_listObjectValue.find(object->GetMetaID());
+		if (it == m_listObjectValue.end() || it->second.IsEmpty()) {
+			wxString fillError =
+				wxString::Format(_("""%s"" is a required field"), object->GetSynonym());
+			ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
+			fillCheck = false;
 		}
 	}
 
 	if (!fillCheck)
 		return false;
 
-	if (!ibValueRecordDataObjectRef::DeleteData())
-		return false;
-
+	// UPSERT main row in one statement — replaces the previous DELETE +
+	// INSERT pair (the outer DeleteData also cascade-DELETEd tabular
+	// sections, but tabularSection->SaveData below already does its own
+	// DELETE+INSERT, so the cascade was redundant work). Saves 1 main-row
+	// RT plus N redundant tabular-DELETE RTs per save.
+	const bool isFB = (db->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD);
 	const wxString& tableName = m_metaObject->GetTableNameDB();
-	wxString queryText = "INSERT INTO " + tableName + " (";
-	queryText += "uuid";
-	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		if (m_metaObject->IsDataReference(object->GetMetaID()))
-			continue;
-		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
-	}
-	queryText += ") VALUES (?";
-	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		if (m_metaObject->IsDataReference(object->GetMetaID()))
-			continue;
-		unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
-		for (unsigned int i = 0; i < fieldCount; i++) {
-			queryText += ", ?";
-		}
-	}
-	queryText += ");";
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
-	if (statement == nullptr)
+	// Collect column names once — reused by UPSERT clauses below.
+	wxString cols = "uuid";
+	wxString placeholders = "?";
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (m_metaObject->IsDataReference(object->GetMetaID()))
+			continue;
+		cols += ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
+		const unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
+		for (unsigned int i = 0; i < fieldCount; i++)
+			placeholders += ", ?";
+	}
+
+	wxString queryText;
+	if (isFB) {
+		// UPDATE OR INSERT — FB rewrites the row in place if PK matches.
+		queryText = "UPDATE OR INSERT INTO " + tableName + " (" + cols
+		          + ") VALUES (" + placeholders + ") MATCHING (uuid);";
+	} else {
+		// PG ON CONFLICT — assign every non-uuid column from EXCLUDED.
+		// GetExcludeSQLFieldName(attr) emits "<col>=excluded.<col>" for
+		// every sub-column of the attribute; reuse the same helper used
+		// by SetConstValue.
+		wxString assignments;
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+			if (m_metaObject->IsDataReference(object->GetMetaID()))
+				continue;
+			if (!assignments.empty()) assignments += ", ";
+			assignments += ibValueMetaObjectAttributeBase::GetExcludeSQLFieldName(object);
+		}
+		queryText = "INSERT INTO " + tableName + " (" + cols
+		          + ") VALUES (" + placeholders
+		          + ") ON CONFLICT (uuid) DO UPDATE SET " + assignments + ";";
+	}
+
+	ibStatementGuard statement(db, db->PrepareStatement(queryText));
+	if (!statement)
 		return false;
 
 	m_objGuid = m_reference_impl->m_guid;
@@ -1372,15 +1389,13 @@ bool ibValueRecordDataObjectRef::SaveData()
 		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_listObjectValue.at(object->GetMetaID()),
-			statement,
+			statement.get(),
 			position
 		);
 	}
 
 	bool hasError =
 		statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR;
-
-	db_query->CloseStatement(statement);
 
 	//table parts
 	if (!hasError) {
@@ -1408,10 +1423,7 @@ bool ibValueRecordDataObjectRef::SaveData()
 
 bool ibValueRecordDataObjectRef::DeleteData()
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
 	if (m_newObject)
 		return true;
@@ -1427,7 +1439,11 @@ bool ibValueRecordDataObjectRef::DeleteData()
 			return false;
 
 	}
-	db_query->RunQuery("DELETE FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "';");
+	ibStatementGuard del(db, db->PrepareStatement("DELETE FROM " + tableName + " WHERE uuid = ?;"));
+	if (del) {
+		del->SetParamString(1, m_objGuid.str());
+		del->RunQuery();
+	}
 	return true;
 }
 
@@ -1514,7 +1530,7 @@ void ibValueRecordDataObjectRef::SetDeletionMark(bool deletionMark)
 
 bool ibValueRecordManagerObject::ExistData()
 {
-	ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+	ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 	if (!scope || !scope->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
@@ -1569,10 +1585,7 @@ bool ibValueRecordManagerObject::ExistData()
 
 bool ibValueRecordManagerObject::ReadData(const ibUniqueKeyPair& key)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
 	if (m_recordSet->ReadData(key)) {
 		if (m_recordLine == nullptr) {
@@ -1588,10 +1601,7 @@ bool ibValueRecordManagerObject::ReadData(const ibUniqueKeyPair& key)
 
 bool ibValueRecordManagerObject::SaveData(bool replace)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
 	if (m_recordSet->Selected()
 		&& !DeleteData())
@@ -1621,10 +1631,7 @@ bool ibValueRecordManagerObject::SaveData(bool replace)
 
 bool ibValueRecordManagerObject::DeleteData()
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 	return m_recordSet->DeleteRecordSet();
 }
 
@@ -1632,29 +1639,27 @@ bool ibValueRecordManagerObject::DeleteData()
 
 bool ibValueRecordSetObject::ExistData()
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
+	const bool isFB = (db->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD);
 
-	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
-	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
+	const wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
+	wxString queryText = isFB ? "SELECT FIRST 1 1 FROM " + tableName
+	                          : "SELECT 1 FROM " + tableName;
+	bool firstWhere = true;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		if (firstWhere) {
-			queryText = queryText + " WHERE ";
-		}
-		queryText = queryText +
-			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
-		if (firstWhere) {
-			firstWhere = false;
-		}
+		queryText += (firstWhere ? " WHERE " : " AND ")
+		           + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
+		firstWhere = false;
 	}
+	if (!isFB)
+		queryText += " LIMIT 1";
+	queryText += ";";
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
-	if (statement == nullptr)
+	ibStatementGuard statement(db, db->PrepareStatement(queryText));
+	if (!statement)
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
@@ -1663,7 +1668,7 @@ bool ibValueRecordSetObject::ExistData()
 		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
-			statement,
+			statement.get(),
 			position
 		);
 	}
@@ -1671,39 +1676,33 @@ bool ibValueRecordSetObject::ExistData()
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	if (resultSet == nullptr)
 		return false;
-	bool founded = false;
-	if (resultSet->Next())
-		founded = true;
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	bool founded = resultSet->Next();
+	db->CloseResultSet(resultSet);
 	return founded;
 }
 
 bool ibValueRecordSetObject::ExistData(ibNumber& lastNum)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
-	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
-	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
+	const wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
+	// MAX aggregation in SQL — DB uses any index on (recorder, line_number)
+	// instead of streaming the whole rowset client-side.
+	const wxString lineNumField = m_metaObject->GetRegisterLineNumber()->GetFieldNameDB() + wxT("_N");
+	wxString queryText = "SELECT MAX(" + lineNumField + ") FROM " + tableName;
+	bool firstWhere = true;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		if (firstWhere) {
-			queryText = queryText + " WHERE ";
-		}
-		queryText = queryText +
-			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
-		if (firstWhere) {
-			firstWhere = false;
-		}
+		queryText += (firstWhere ? " WHERE " : " AND ")
+		           + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
+		firstWhere = false;
 	}
+	queryText += ";";
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
-	if (statement == nullptr)
+	ibStatementGuard statement(db, db->PrepareStatement(queryText));
+	if (!statement)
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
@@ -1712,7 +1711,7 @@ bool ibValueRecordSetObject::ExistData(ibNumber& lastNum)
 		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
-			statement,
+			statement.get(),
 			position
 		);
 	}
@@ -1721,24 +1720,17 @@ bool ibValueRecordSetObject::ExistData(ibNumber& lastNum)
 	if (resultSet == nullptr)
 		return false;
 	bool founded = false; lastNum = 1;
-	while (resultSet->Next()) {
-		ibValue numLine; ibValueMetaObjectAttributeBase::GetValueAttribute(m_metaObject->GetRegisterLineNumber(), numLine, resultSet);
-		if (numLine > lastNum) {
-			lastNum = numLine.GetNumber();
-		}
+	if (resultSet->Next() && !resultSet->IsFieldNull(1)) {
+		lastNum = resultSet->GetResultNumber(1);
 		founded = true;
 	}
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	db->CloseResultSet(resultSet);
 	return founded;
 }
 
 bool ibValueRecordSetObject::ReadData(const ibUniqueKeyPair& key)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
 	ibValueModelTableBase::Clear(); int position = 1;
 
@@ -1757,8 +1749,8 @@ bool ibValueRecordSetObject::ReadData(const ibUniqueKeyPair& key)
 			firstWhere = false;
 		}
 	}
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
-	if (statement == nullptr)
+	ibStatementGuard statement(db, db->PrepareStatement(queryText));
+	if (!statement)
 		return false;
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		if (!key.FindKey(object->GetMetaID()))
@@ -1766,7 +1758,7 @@ bool ibValueRecordSetObject::ReadData(const ibUniqueKeyPair& key)
 		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			key.GetKey(object->GetMetaID()),
-			statement,
+			statement.get(),
 			position
 		);
 	}
@@ -1785,18 +1777,14 @@ bool ibValueRecordSetObject::ReadData(const ibUniqueKeyPair& key)
 		m_selected = true;
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	db->CloseResultSet(resultSet);
 
 	return GetRowCount() > 0;
 }
 
 bool ibValueRecordSetObject::ReadData()
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
 	ibValueModelTableBase::Clear(); int position = 1;
 
@@ -1815,8 +1803,8 @@ bool ibValueRecordSetObject::ReadData()
 			firstWhere = false;
 		}
 	}
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
-	if (statement == nullptr)
+	ibStatementGuard statement(db, db->PrepareStatement(queryText));
+	if (!statement)
 		return false;
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
@@ -1824,7 +1812,7 @@ bool ibValueRecordSetObject::ReadData()
 		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
-			statement,
+			statement.get(),
 			position
 		);
 	}
@@ -1843,18 +1831,14 @@ bool ibValueRecordSetObject::ReadData()
 		m_selected = true;
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	db->CloseResultSet(resultSet);
 
 	return GetRowCount() > 0;
 }
 
 bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
 	//check fill attributes 
 	bool fillCheck = true; long currLine = 1;
@@ -1896,7 +1880,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 	}
 
 	wxString tableName = m_metaObject->GetTableNameDB(); wxString queryText; bool firstUpdate = true;
-	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
+	if (db->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
 		queryText = "INSERT INTO " + tableName + " (";
 	}
 	else {
@@ -1919,7 +1903,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		}
 	}
 
-	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
+	if (db->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
 		queryText += ")";
 	}
 	else {
@@ -1945,7 +1929,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		queryText += ");";
 	}
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	ibPreparedStatement* statement = db->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
 
@@ -1988,7 +1972,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		hasError = statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR;
 	}
 
-	db_query->CloseStatement(statement);
+	db->CloseStatement(statement);
 
 	if (!hasError && !SaveVirtualTable())
 		return false;
@@ -2003,10 +1987,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 
 bool ibValueRecordSetObject::DeleteData()
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
+	const auto db = ses_query;
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "DELETE FROM " + tableName; bool firstWhere = true;
@@ -2023,7 +2004,7 @@ bool ibValueRecordSetObject::DeleteData()
 		}
 	}
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
+	ibPreparedStatement* statement = db->PrepareStatement(queryText); int position = 1;
 
 	if (statement == nullptr)
 		return false;
@@ -2040,7 +2021,7 @@ bool ibValueRecordSetObject::DeleteData()
 	}
 
 	statement->RunQuery();
-	db_query->CloseStatement(statement);
+	db->CloseStatement(statement);
 	return DeleteVirtualTable();
 }
 
@@ -2050,22 +2031,25 @@ bool ibValueRecordSetObject::DeleteData()
 
 ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttributeBase* attribute, const wxString& strPrefix)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
-		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
-		ibBackendCoreException::Error(_("Database is not open!"));
-
 	wxASSERT(attribute);
+
+	// Connection comes from the active session (instance method = guaranteed
+	// session context); the increment shares its TX with the outer document
+	// save so rollback rolls back both — no orphan sequence values on
+	// failure. ses_query throws if there's no current session or its
+	// connection is closed.
+	const auto db = ses_query;   // shared_ptr<ibDatabaseLayer>
+
+	const int driver = db->GetDatabaseLayerType();
+	if (driver != DATABASELAYER_FIREBIRD && driver != DATABASELAYER_POSTGRESQL)
+		ibBackendCoreException::Error(_("GenerateNextIdentifier requires Firebird or PostgreSQL"
+			" — atomic UPDATE...RETURNING is not portable to other backends."));
 
 	// Period bucket — parking value for now; per-type periodicity (catalog
 	// vs document) is a future feature.
 	const int interval = 20000101;
 
 	const ibTypeDescription& typeDesc = attribute->GetTypeDesc();
-	const int driver = db_query->GetDatabaseLayerType();
-	if (driver != DATABASELAYER_FIREBIRD && driver != DATABASELAYER_POSTGRESQL)
-		ibBackendCoreException::Error(_("GenerateNextIdentifier requires Firebird or PostgreSQL"
-			" — atomic UPDATE...RETURNING is not portable to other backends."));
 
 	// Bootstrap helper: when sys_sequence has no row yet for this key,
 	// scan the actual data table for the highest existing counter value
@@ -2079,16 +2063,16 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 		ibNumber maxFound = 0;
 		if (attribute->ContainType(ibValueTypes::TYPE_NUMBER)) {
 			const wxString numField = fieldBase + wxT("_N");
-			ibDatabaseResultSet* rs = db_query->RunQueryWithResults(
+			ibDatabaseResultSet* rs = db->RunQueryWithResults(
 				wxT("SELECT MAX(%s) FROM %s;"), numField, tableName);
 			if (rs != nullptr) {
 				if (rs->Next() && !rs->IsFieldNull(1))
 					maxFound = rs->GetResultNumber(1);
-				db_query->CloseResultSet(rs);
+				db->CloseResultSet(rs);
 			}
 		} else if (attribute->ContainType(ibValueTypes::TYPE_STRING)) {
 			const wxString strField = fieldBase + wxT("_S");
-			ibStatementGuard st(db_query, db_query->PrepareStatement(
+			ibStatementGuard st(db, db->PrepareStatement(
 				wxT("SELECT MAX(%s) FROM %s WHERE %s LIKE ?;"),
 				strField, tableName, strField));
 			if (st) {
@@ -2103,7 +2087,7 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 							if (parsed > 0) maxFound = parsed;
 						}
 					}
-					db_query->CloseResultSet(rs);
+					db->CloseResultSet(rs);
 				}
 			}
 		}
@@ -2121,7 +2105,7 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 	ibNumber resultCode = 1;
 	bool gotCode = false;
 	for (int attempt = 0; attempt < 2 && !gotCode; ++attempt) {
-		ibStatementGuard upd(db_query, db_query->PrepareStatement(
+		ibStatementGuard upd(db, db->PrepareStatement(
 			wxT("UPDATE %s SET number = number + 1 WHERE interval = ? AND meta_guid = ? AND prefix = ? RETURNING number;"),
 			sequence_table));
 		if (upd) {
@@ -2134,14 +2118,14 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 					resultCode = rs->GetResultNumber(1);
 					gotCode = true;
 				}
-				db_query->CloseResultSet(rs);
+				db->CloseResultSet(rs);
 			}
 		}
 		if (gotCode) break;
 
 		// Row missing — bootstrap from data table and INSERT.
 		const ibNumber candidate = scanDataMax() + 1;
-		ibStatementGuard ins(db_query, db_query->PrepareStatement(
+		ibStatementGuard ins(db, db->PrepareStatement(
 			wxT("INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (?, ?, ?, ?);"),
 			sequence_table));
 		if (ins) {

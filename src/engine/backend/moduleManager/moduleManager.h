@@ -37,7 +37,7 @@ public:
 		bool DestroyCommonModule();
 
 		//get common module 
-		ibValueMetaObjectModuleBase* GetModuleObject() const {
+		ibValueMetaObjectModuleBase* GetObjectModule() const {
 			return m_moduleObject;
 		}
 
@@ -91,7 +91,7 @@ public:
 		{
 			ibValueModuleUnit* compareModule = dynamic_cast<ibValueModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
-				return m_moduleObject == compareModule->GetModuleObject();
+				return m_moduleObject == compareModule->GetObjectModule();
 			}
 
 			return false;
@@ -102,7 +102,7 @@ public:
 		{
 			ibValueModuleUnit* compareModule = dynamic_cast<ibValueModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
-				return m_moduleObject != compareModule->GetModuleObject();
+				return m_moduleObject != compareModule->GetObjectModule();
 			}
 
 			return false;
@@ -178,7 +178,7 @@ private:
 protected:
 
 	//metaData and external variant
-	ibValueModuleManager(ibMetaData* metaData, ibValueMetaObjectModule* metaObject);
+	ibValueModuleManager(ibMetaData* metaData, const ibValueMetaObjectModule* metaObject);
 
 public:
 
@@ -226,7 +226,7 @@ public:
 	bool RuntimeRenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName);
 	bool RuntimeUnregisterCommonModule(ibValueMetaObjectCommonModule* commonModule);
 
-	ibValueModuleUnit* FindCommonModule(ibValueMetaObjectCommonModule* commonModule) const;
+	ibValueModuleUnit* FindCommonModule(const ibValueMetaObjectCommonModule* commonModule) const;
 
 	//system object:
 	ibValue* GetObjectManager() const { return m_objectManager; }
@@ -298,8 +298,8 @@ public:
 
 	// GetRoot override — we are the root, return ourselves as the
 	// ibRuntimeRoot interface pointer.
-	ibRuntimeRoot* GetRoot() const override {
-		return const_cast<ibValueModuleManagerConfiguration*>(this);
+	const ibRuntimeRoot* GetRoot() const override {
+		return this;
 	}
 
 	//Create common module

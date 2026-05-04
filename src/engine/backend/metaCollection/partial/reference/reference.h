@@ -27,7 +27,7 @@ private:
 	};
 private:
 	ibValueReferenceDataObject() : ibValue(ibValueTypes::TYPE_VALUE, true), m_initializedRef(false) {}
-	ibValueReferenceDataObject(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid = wxNullGuid);
+	ibValueReferenceDataObject(const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid = wxNullGuid);
 public:
 
 	ibReference* GetReferenceData() const {
@@ -39,11 +39,11 @@ public:
 	virtual ~ibValueReferenceDataObject();
 
 	static ibValueReferenceDataObject* Create(ibMetaData* metaData, const ibMetaID& id, const ibGuid& objGuid = wxNullGuid);
-	static ibValueReferenceDataObject* Create(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid = wxNullGuid);
+	static ibValueReferenceDataObject* Create(const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid = wxNullGuid);
 
 	static ibValueReferenceDataObject* Create(ibMetaData* metaData, void* ptr);
 	static ibValueReferenceDataObject* CreateFromPtr(ibMetaData* metaData, void* ptr);
-	static ibValueReferenceDataObject* CreateFromResultSet(class ibDatabaseResultSet *rs, ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& refGuid);
+	static ibValueReferenceDataObject* CreateFromResultSet(class ibDatabaseResultSet *rs, const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& refGuid);
 
 	//operator '>'
 	virtual bool CompareValueGT(const ibValue& cParam) const {
@@ -99,9 +99,9 @@ public:
 	virtual bool SetValueByMetaID(const ibMetaID& id, const ibValue& varMetaVal);
 	virtual bool GetValueByMetaID(const ibMetaID& id, ibValue& pvarMetaVal) const;
 
-	//get metaData from object 
-	virtual ibValueMetaObjectRecordData* GetMetaObject() const {
-		return (ibValueMetaObjectRecordData *)m_metaObject;
+	//get metaData from object
+	virtual const ibValueMetaObjectRecordData* GetMetaObject() const {
+		return (const ibValueMetaObjectRecordData *)m_metaObject;
 	}
 
 	//support show 
@@ -120,7 +120,7 @@ public:
 		return IsEmpty();
 	}
 
-	ibValueMetaObjectRecordDataRef* GetMetaObjectRef() const {
+	const ibValueMetaObjectRecordDataRef* GetMetaObjectRef() const {
 		return m_metaObject;
 	}
 
@@ -165,7 +165,7 @@ protected:
 	bool m_initializedRef;
 
 	ibValueMethodHelper* m_methodHelper;
-	ibValueMetaObjectRecordDataRef* m_metaObject;
+	const ibValueMetaObjectRecordDataRef* m_metaObject;
 	ibReference* m_reference_impl;
 
 	bool m_foundedRef;

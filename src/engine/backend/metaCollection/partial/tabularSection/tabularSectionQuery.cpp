@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : tabular sections
 ////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool cr
 
 	const auto db = ses_query;
 	ibValueModelTableBase::Clear();
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	const ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	ibStatementGuard sel(db, db->PrepareStatement("SELECT * FROM " + tableName + " WHERE uuid = ?;"));
@@ -85,7 +85,7 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	const auto db = ses_query;
 	ibValueMetaObjectAttributePredefined* numLine = m_metaTable->GetNumberLine();
 	wxASSERT(numLine);
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	const ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	ibReference* reference_impl = new ibReference(metaObject->GetMetaID(), m_objectValue->GetGuid());
 
@@ -150,7 +150,7 @@ bool ibValueTabularSectionDataObjectRef::DeleteData()
 		return true;
 
 	const auto db = ses_query;
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	const ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	ibStatementGuard del(db, db->PrepareStatement("DELETE FROM " + tableName + " WHERE uuid = ?;"));

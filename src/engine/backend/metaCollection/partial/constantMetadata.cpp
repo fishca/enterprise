@@ -149,7 +149,7 @@ bool ibValueMetaObjectConstant::OnAfterCloseMetaObject()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ibBackendValueForm* ibValueMetaObjectConstant::GetObjectForm()
+ibBackendValueForm* ibValueMetaObjectConstant::GetObjectForm() const
 {
 	ibBackendValueForm* const foundedForm = ibBackendValueForm::FindFormByUniqueKey(nullptr, nullptr, m_metaGuid);
 	if (foundedForm == nullptr)

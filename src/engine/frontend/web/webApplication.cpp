@@ -163,13 +163,13 @@ ibWebApplication::~ibWebApplication()
 		OnExit();
 }
 
-ibValueModuleManagerConfiguration* ibWebApplication::GetModuleManager() const
+ibValueModuleManagerConfiguration* ibWebApplication::GetManagerModule() const
 {
 	// Per-session — runtime mm now lives on ibSession (formerly on
 	// metadata; that virtual is gone). Pull the current session's mm,
 	// which is already typed as ibValueModuleManagerConfiguration*.
 	ibSession* session = ibSession::Current();
-	return session ? session->GetModuleManager() : nullptr;
+	return session ? session->GetManagerModule() : nullptr;
 }
 
 ibWebApplication* currentWebApp()
@@ -210,7 +210,7 @@ bool ibWebApplication::OnInit()
 	// lives in metadata (compiled once at wfrontendInit). AttachRuntime
 	// ran in ibWebSession::Login right before OnInit, so session's
 	// m_procUnitMap is already populated.
-	ibValueModuleManagerConfiguration* sharedMgr = GetModuleManager();
+	ibValueModuleManagerConfiguration* sharedMgr = GetManagerModule();
 	if (sharedMgr == nullptr) {
 		wxLogWarning(wxT("ibWebApplication::OnInit: no shared moduleManager"));
 		delete m_frame;
@@ -380,7 +380,7 @@ void ibWebApplication::OnExit()
 	// fire per-session Exit events. GetProcUnit() in the event handlers
 	// delegates through ibSession::Current(), which the worker
 	// thread's ibSessionScope has set up.
-	if (auto* sharedMgr = GetModuleManager()) {
+	if (auto* sharedMgr = GetManagerModule()) {
 		std::cerr << "[app] ExitMainModule: begin" << std::endl;
 		ExitMainModuleSafe(sharedMgr);
 		std::cerr << "[app] ExitMainModule: done" << std::endl;

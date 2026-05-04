@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : document object
 ////////////////////////////////////////////////////////////////////////////
@@ -22,9 +22,9 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordDataObjectDocument::ibRecorderRegisterDoc
 
 void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::CreateRecordSet()
 {
-	ibValueMetaObjectDocument* metaDocument = dynamic_cast<ibValueMetaObjectDocument*>(m_document->GetMetaObject());
+	const ibValueMetaObjectDocument* metaDocument = dynamic_cast<const ibValueMetaObjectDocument*>(m_document->GetMetaObject());
 	wxASSERT(metaDocument);
-	ibMetaData* metaData = metaDocument->GetMetaData();
+	const ibMetaData* metaData = metaDocument->GetMetaData();
 	wxASSERT(metaData);
 
 	ibRecorderRegisterDocument::ClearRecordSet();
@@ -91,7 +91,7 @@ void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::RefreshRecordS
 		ibValueRecordSetObject* record = pair.second;
 		wxASSERT(record);
 
-		ibValueMetaObjectRegisterData* object = record->GetMetaObject();
+		const ibValueMetaObjectRegisterData* object = record->GetMetaObject();
 		wxASSERT(object);
 		ibBackendValueForm* backendFrame = ibBackendValueForm::FindFormBySourceUniqueKey(object->GetGuid());
 		if (backendFrame != nullptr) backendFrame->UpdateForm();
@@ -114,7 +114,7 @@ ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::~ibRecorderRegister
 //*                                  ibValueRecordDataObjectDocument	                                      *
 //*********************************************************************************************
 
-ibValueRecordDataObjectDocument::ibValueRecordDataObjectDocument(ibValueMetaObjectDocument* metaObject, const ibGuid& objGuid) :
+ibValueRecordDataObjectDocument::ibValueRecordDataObjectDocument(const ibValueMetaObjectDocument* metaObject, const ibGuid& objGuid) :
 	ibValueRecordDataObjectRef(metaObject, objGuid),
 	m_registerRecords(new ibRecorderRegisterDocument(this))
 {
@@ -638,8 +638,7 @@ void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::PrepareNames()
 	for (auto& pair : m_records) {
 		ibValueRecordSetObject* record = pair.second;
 		wxASSERT(record);
-		ibValueMetaObjectRegisterData* metaObject =
-			record->GetMetaObject();
+		const ibValueMetaObjectRegisterData* metaObject = record->GetMetaObject();
 		wxASSERT(metaObject);
 		m_methodHelper->AppendProp(
 			metaObject->GetName(), true, false, pair.first

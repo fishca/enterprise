@@ -1,4 +1,4 @@
-#ifndef _OBJECT_LIST_H__
+﻿#ifndef _OBJECT_LIST_H__
 #define _OBJECT_LIST_H__
 
 #include "backend/metaCollection/partial/commonObject.h"
@@ -59,7 +59,7 @@ public:
 	public:
 
 		ibValueDataObjectListColumnCollection();
-		ibValueDataObjectListColumnCollection(ibValueListDataObject* ownerTable, ibValueMetaObjectGenericData* metaObject);
+		ibValueDataObjectListColumnCollection(ibValueListDataObject* ownerTable, const ibValueMetaObjectGenericData* metaObject);
 		virtual ~ibValueDataObjectListColumnCollection();
 
 		virtual const ibTypeDescription GetColumnType(unsigned int col) const {
@@ -77,7 +77,7 @@ public:
 		}
 
 		virtual unsigned int GetColumnCount() const {
-			ibValueMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
+			const ibValueMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
 			wxASSERT(metaTable);
 			const auto& obj = metaTable->GetGenericAttributeArrayObject();
 			return obj.size();
@@ -150,7 +150,7 @@ public:
 	}
 
 	//ctor
-	ibValueListDataObject(ibValueMetaObjectGenericData* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false);
+	ibValueListDataObject(const ibValueMetaObjectGenericData* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false);
 	virtual ~ibValueListDataObject();
 
 	//****************************************************************************
@@ -158,7 +158,7 @@ public:
 	//****************************************************************************
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual const ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const final { return GetClassType(); }
@@ -176,7 +176,7 @@ public:
 	virtual ibUniqueKey GetGuid() const { return m_objGuid; };
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetMetaObject() const = 0;
+	virtual const ibValueMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//counter
 	virtual void SourceIncrRef() { ibValue::IncrRef(); }
@@ -220,7 +220,7 @@ public:
 	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const;
 
 	//Constructor
-	ibValueListDataObjectEnumRef(ibValueMetaObjectRecordDataEnumRef* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false);
+	ibValueListDataObjectEnumRef(const ibValueMetaObjectRecordDataEnumRef* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
 		const ibDataViewItem& row, unsigned int col) const;
@@ -257,7 +257,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRecordDataEnumRef* GetMetaObject() const {
+	virtual const ibValueMetaObjectRecordDataEnumRef* GetMetaObject() const {
 		return m_metaObject;
 	};
 
@@ -291,7 +291,7 @@ private:
 private:
 
 	bool m_choiceMode;
-	ibValueMetaObjectRecordDataEnumRef* m_metaObject;
+	const ibValueMetaObjectRecordDataEnumRef* m_metaObject;
 };
 
 // list without parent  
@@ -314,7 +314,7 @@ public:
 	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const;
 
 	//Constructor
-	ibValueListDataObjectRef(ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false);
+	ibValueListDataObjectRef(const ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
 		const ibDataViewItem& row, unsigned int col) const;
@@ -355,7 +355,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRecordDataRef* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectRecordDataRef* GetMetaObject() const { return m_metaObject; }
 
 	//Get ref class 
 	virtual ibClassID GetClassType() const;
@@ -394,7 +394,7 @@ private:
 
 	bool m_choiceMode;
 
-	ibValueMetaObjectRecordDataMutableRef* m_metaObject;
+	const ibValueMetaObjectRecordDataMutableRef* m_metaObject;
 };
 
 // list register
@@ -407,7 +407,7 @@ public:
 		}
 		void AppendNodeValue(const ibMetaID& id, const ibValue& variant) { m_nodeKeys.insert_or_assign(id, variant); }
 		ibValue& AppendNodeValue(const ibMetaID& id) { return m_nodeKeys[id]; }
-		ibUniqueKeyPair GetUniquePairKey(ibValueMetaObjectRegisterData* metaObject) const { return ibUniqueKeyPair(metaObject, m_nodeValues); }
+		ibUniqueKeyPair GetUniquePairKey(const ibValueMetaObjectRegisterData* metaObject) const { return ibUniqueKeyPair(metaObject, m_nodeValues); }
 
 	private:
 		ibMetaValueArray m_nodeKeys;
@@ -420,7 +420,7 @@ public:
 	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const;
 
 	//Constructor
-	ibValueListRegisterObject(ibValueMetaObjectRegisterData* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND);
+	ibValueListRegisterObject(const ibValueMetaObjectRegisterData* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND);
 
 	virtual void GetValueByRow(wxVariant& variant,
 		const ibDataViewItem& row, unsigned int col) const;
@@ -455,7 +455,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRegisterData* GetMetaObject() const {
+	virtual const ibValueMetaObjectRegisterData* GetMetaObject() const {
 		return m_metaObject;
 	};
 
@@ -490,7 +490,7 @@ private:
 	);
 
 private:
-	ibValueMetaObjectRegisterData* m_metaObject;
+	const ibValueMetaObjectRegisterData* m_metaObject;
 };
 
 //base tree class 
@@ -536,7 +536,7 @@ public:
 	public:
 
 		ibValueDataObjectTreeColumnCollection();
-		ibValueDataObjectTreeColumnCollection(ibValueModelTreeDataObject* ownerTable, ibValueMetaObjectGenericData* metaObject);
+		ibValueDataObjectTreeColumnCollection(ibValueModelTreeDataObject* ownerTable, const ibValueMetaObjectGenericData* metaObject);
 		virtual ~ibValueDataObjectTreeColumnCollection();
 
 		virtual const ibTypeDescription GetColumnType(unsigned int col) const {
@@ -554,7 +554,7 @@ public:
 		}
 
 		virtual unsigned int GetColumnCount() const {
-			ibValueMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
+			const ibValueMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
 			wxASSERT(metaTable);
 			const auto& obj = metaTable->GetGenericAttributeArrayObject();
 			return obj.size();
@@ -623,7 +623,7 @@ public:
 	}
 
 	//ctor
-	ibValueModelTreeDataObject(ibValueMetaObjectGenericData* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false);
+	ibValueModelTreeDataObject(const ibValueMetaObjectGenericData* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false);
 	virtual ~ibValueModelTreeDataObject();
 
 	//****************************************************************************
@@ -631,7 +631,7 @@ public:
 	//****************************************************************************
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual const ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const final { return GetClassType(); }
@@ -649,7 +649,7 @@ public:
 	virtual ibUniqueKey GetGuid() const { return m_objGuid; }
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetMetaObject() const = 0;
+	virtual const ibValueMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//counter
 	virtual void SourceIncrRef() { ibValue::IncrRef(); }
@@ -699,7 +699,7 @@ public:
 	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const;
 
 	//Constructor
-	ibValueModelTreeDataObjectFolderRef(ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr,
+	ibValueModelTreeDataObjectFolderRef(const ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr,
 		const ibFormID& formType = wxNOT_FOUND, int listMode = LIST_ITEM, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
@@ -747,7 +747,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const { return m_metaObject; }
 
 	//Get ref class 
 	virtual ibClassID GetClassType() const;
@@ -780,7 +780,7 @@ private:
 private:
 
 	bool m_choiceMode; int m_listMode;
-	ibValueMetaObjectRecordDataHierarchyMutableRef* m_metaObject;
+	const ibValueMetaObjectRecordDataHierarchyMutableRef* m_metaObject;
 
 	ibGuid m_topParentGuid; 
 };

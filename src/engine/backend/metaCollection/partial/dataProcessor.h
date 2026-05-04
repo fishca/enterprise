@@ -1,19 +1,17 @@
-#ifndef __DATA_PROCESSOR_H__
+﻿#ifndef __DATA_PROCESSOR_H__
 #define __DATA_PROCESSOR_H__
 
 #include "commonObject.h"
 
 class ibValueMetaObjectDataProcessor : public ibValueMetaObjectRecordDataExt {
 	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectDataProcessor);
-protected:
+public:
 
 	enum
 	{
 		ID_METATREE_OPEN_MODULE = 19000,
 		ID_METATREE_OPEN_MANAGER = 19001,
 	};
-
-public:
 
 	enum
 	{
@@ -68,12 +66,12 @@ public:
 
 #pragma region _form_builder_h_
 	//suppot form
-	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
+	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
 #pragma endregion
 
-	//get module object in compose object 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	//get module object in compose object
+	virtual const ibValueMetaObjectModule* GetObjectModule() const { return m_propertyObjectModule->GetMetaObject(); }
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const { return m_propertyManagerModule->GetMetaObject(); }
 
 	//prepare menu for item
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
@@ -82,13 +80,13 @@ public:
 protected:
 
 	//create manager
-	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
+	virtual ibValueManagerDataObject* CreateManagerDataObjectValue() const;
 
 	//create empty object
-	virtual ibValueRecordDataObjectExt* CreateObjectExtValue();  //create object 
+	virtual ibValueRecordDataObjectExt* CreateObjectExtValue() const;  //create object
 
 	//create object data with meta form
-	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
+	virtual ibSourceDataObject* CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const;
 
 	//load & save metaData from DB 
 	virtual bool LoadData(ibReaderMemory& reader);
@@ -110,8 +108,8 @@ private:
 		return true;
 	}
 
-	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModuleObject = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
-	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyModuleManager = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
+	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyObjectModule = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
+	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyManagerModule = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
 
 	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
 	ibPropertyList* m_propertyDefFormObject = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormObject"), _("Default Object Form"), &ibValueMetaObjectDataProcessor::FillFormObject);
@@ -129,7 +127,7 @@ public:
 		m_metaId = default_meta_id;
 	}
 
-	//сreate from file?
+	//СЃreate from file?
 	virtual bool IsExternalCreate() const { return true; }
 };
 
@@ -138,7 +136,7 @@ public:
 //********************************************************************************************
 
 class ibValueRecordDataObjectDataProcessor : public ibValueRecordDataObjectExt {
-	ibValueRecordDataObjectDataProcessor(ibValueMetaObjectDataProcessor* metaObject);
+	ibValueRecordDataObjectDataProcessor(const ibValueMetaObjectDataProcessor* metaObject);
 	ibValueRecordDataObjectDataProcessor(const ibValueRecordDataObjectDataProcessor& source);
 public:
 

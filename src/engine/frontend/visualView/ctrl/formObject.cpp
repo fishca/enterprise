@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : frame object
 ////////////////////////////////////////////////////////////////////////////
@@ -275,7 +275,7 @@ void ibValueForm::InitializeForm(const ibValueMetaObjectFormBase* creator,
 	if (descParent == nullptr && creator != nullptr) {
 		ibSession* session = ibSession::Current();
 		if (session != nullptr) {
-			if (ibValueModuleManager* mm = session->GetModuleManager())
+			if (ibValueModuleManager* mm = session->GetManagerModule())
 				descParent = mm;
 		}
 	}
@@ -307,7 +307,7 @@ bool ibValueForm::InitializeFormModule()
 		// InitializeRuntime lazily create compile module / ProcUnit
 		// and pick up the parent's scope chain on creation. Run is
 		// Designer-guarded; Compile internally too. Session linkage
-		// flows through the parent chain (descriptor → root → session).
+		// flows through the parent chain (descriptor в†’ root в†’ session).
 		BindContextVariable(thisForm, this);
 		InitializeRuntime();
 
@@ -533,7 +533,7 @@ bool ibValueForm::CloseForm(bool force)
 		// the view (a wxEvtHandler) plus every control synchronously.
 		// If CloseForm was invoked from within the toolbar's tool
 		// event (Save-and-close command), control returns to
-		// wxAuiToolBar::OnLeftUp on freed memory → UAF in
+		// wxAuiToolBar::OnLeftUp on freed memory в†’ UAF in
 		// wxEvtHandler::TryHereOnly. Defer the deletion through
 		// CallAfter so the click event fully unwinds first.
 		ownerDocForm->CallAfter([doc = ownerDocForm]{ doc->DeleteAllViews(); });
@@ -579,7 +579,7 @@ bool ibValueForm::GenerateForm(ibValueRecordDataObjectRef* obj) const
 	(void)obj;
 	return false;
 #else
-	ibValueMetaObjectRecordDataMutableRef* metaObject = obj->GetMetaObject();
+	const ibValueMetaObjectRecordDataMutableRef* metaObject = obj->GetMetaObject();
 	wxASSERT(metaObject);
 	ibMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);

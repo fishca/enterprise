@@ -1,4 +1,4 @@
-#include "advpropType.h"
+﻿#include "advpropType.h"
 
 #include "backend/propertyManager/property/propertyType.h"
 #include "backend/propertyManager/property/variant/variantType.h"
@@ -400,7 +400,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 						groupIcon, groupIcon);
 
 					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
-						ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+						const ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<const ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
 							ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
@@ -427,7 +427,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							groupIcon, groupIcon);
 
 						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Characteristic)) {
-							ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+							const ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<const ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
@@ -455,7 +455,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 						groupIcon, groupIcon);
 
 					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_List)) {
-						ibValueMetaObjectGenericData* registerData = dynamic_cast<ibValueMetaObjectGenericData*>(so->GetMetaObject());
+						const ibValueMetaObjectGenericData* registerData = dynamic_cast<const ibValueMetaObjectGenericData*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
 							ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
@@ -484,7 +484,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							groupIcon, groupIcon);
 
 						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Object)) {
-							ibValueMetaObjectRecordData* registerData = dynamic_cast<ibValueMetaObjectRecordData*>(so->GetMetaObject());
+							const ibValueMetaObjectRecordData* registerData = dynamic_cast<const ibValueMetaObjectRecordData*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
@@ -512,7 +512,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							groupIcon, groupIcon);
 
 						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
-							ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+							const ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<const ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);

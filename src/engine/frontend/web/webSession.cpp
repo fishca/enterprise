@@ -211,7 +211,7 @@ void ibWebSession::OnExit()
 	if (m_session) {
 		ibSessionScope scope(m_session.get());
 		if (activeMetaData != nullptr) {
-			if (auto* mm = m_session->GetModuleManager())
+			if (auto* mm = m_session->GetManagerModule())
 				mm->DetachRuntime(m_session.get());
 		}
 

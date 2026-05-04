@@ -27,7 +27,7 @@ ibFormVisualDocument* ibValueForm::GetVisualDocument() const
 	return ibFormVisualDocument::FindDocByUniqueKey(m_formKey);
 }
 
-ibValueMetaObjectGenericData* ibValueForm::GetMetaObject() const
+const ibValueMetaObjectGenericData* ibValueForm::GetMetaObject() const
 {
 	return m_sourceObject != nullptr ?
 		m_sourceObject->GetSourceMetaObject() : nullptr;

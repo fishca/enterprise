@@ -9,7 +9,7 @@
 bool ibValueMetaObjectEnumeration::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = defaultMenu->Append(ID_METATREE_OPEN_MANAGER, _("Open manager module"));
-	menuItem->SetBitmap((*m_propertyModuleManager)->GetIcon());
+	menuItem->SetBitmap((*m_propertyManagerModule)->GetIcon());
 	defaultMenu->AppendSeparator();
 	return false;
 }
@@ -20,5 +20,5 @@ void ibValueMetaObjectEnumeration::ProcessCommand(unsigned int id)
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_MANAGER)
-		metaTree->OpenFormMDI(m_propertyModuleManager->GetMetaObject());
+		metaTree->OpenFormMDI(m_propertyManagerModule->GetMetaObject());
 }

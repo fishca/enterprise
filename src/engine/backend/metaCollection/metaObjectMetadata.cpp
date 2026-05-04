@@ -124,7 +124,7 @@ bool ibValueMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
 		return false;
 
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 
 	// Designer's compile-cache only exists on the edit configuration

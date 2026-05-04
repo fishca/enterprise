@@ -106,7 +106,7 @@ bool ibFrontendDocMDIFrameEnterprise::AllowRun() const
 	// StartMainModule fires BeforeStart / OnStart on the session's
 	// root. BeforeStart veto returns false → frame show blocked.
 	if (ibSession* s = GetSession()) {
-		if (auto* root = s->GetModuleManager())
+		if (auto* root = s->GetManagerModule())
 			return root->StartMainModule();
 	}
 	return false;
@@ -117,7 +117,7 @@ bool ibFrontendDocMDIFrameEnterprise::AllowClose() const
 	// ExitMainModule fires BeforeExit / OnExit. BeforeExit veto blocks
 	// close (user sees "cancelled by script" banner / modal).
 	if (ibSession* s = GetSession()) {
-		if (auto* root = s->GetModuleManager())
+		if (auto* root = s->GetManagerModule())
 			return root->ExitMainModule();
 	}
 	return false;

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : chart of characteristic types object
 ////////////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@
 //*                          ObjectChartOfCharacteristicTypesValue                             *
 //*********************************************************************************************
 
-ibValueRecordDataObjectChartOfCharacteristicTypes::ibValueRecordDataObjectChartOfCharacteristicTypes(ibValueMetaObjectChartOfCharacteristicTypes* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
+ibValueRecordDataObjectChartOfCharacteristicTypes::ibValueRecordDataObjectChartOfCharacteristicTypes(const ibValueMetaObjectChartOfCharacteristicTypes* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
 	ibValueRecordDataObjectHierarchyRef(metaObject, objGuid, objMode)
 {
 }

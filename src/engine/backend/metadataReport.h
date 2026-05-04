@@ -13,7 +13,7 @@ public:
 	virtual ~ibMetaDataReport();
 
 	virtual ibValueMetaObjectReport* GetReport() const { return m_commonObject; }
-	virtual ibValueModuleManagerExternalReport* GetModuleManager() const { return m_moduleManager; }
+	virtual ibValueModuleManagerExternalReport* GetManagerModule() const { return m_moduleManager; }
 
 	virtual void SetVersion(const ibVersionID& version) { m_version = version; }
 	virtual ibVersionID GetVersion() const { return m_version; }

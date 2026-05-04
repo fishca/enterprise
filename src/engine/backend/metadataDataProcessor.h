@@ -13,7 +13,7 @@ public:
 	virtual ~ibMetaDataDataProcessor();
 
 	virtual ibValueMetaObjectDataProcessor* GetDataProcessor() const { return m_commonObject; }
-	virtual ibValueModuleManagerExternalDataProcessor* GetModuleManager() const { return m_moduleManager; }
+	virtual ibValueModuleManagerExternalDataProcessor* GetManagerModule() const { return m_moduleManager; }
 
 	virtual void SetVersion(const ibVersionID& version) { m_version = version; }
 	virtual ibVersionID GetVersion() const { return m_version; }

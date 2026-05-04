@@ -1,4 +1,4 @@
-#ifndef __COMMON_OBJECT_H__
+﻿#ifndef __COMMON_OBJECT_H__
 #define __COMMON_OBJECT_H__
 
 #include "reference/reference.h"
@@ -236,7 +236,7 @@ public:
 #pragma region _form_builder_h_
 	//support form 
 	ibBackendValueForm* GetGenericForm(const wxString& strFormName = wxEmptyString,
-		ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
+		ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
 #pragma endregion
 
 #pragma region _form_creator_h_
@@ -244,21 +244,21 @@ public:
 		ibBackendControlFrame* ownerControl = nullptr,
 		ibSourceDataObject* srcObject = nullptr,
 		const ibUniqueKey& formGuid = wxNullGuid
-	);
+	) const;
 #pragma endregion
 
 #pragma region _template_builder_h_
 
-	class ibValueSpreadsheetDocument* GetTemplate(const wxString& strFormName);
+	class ibValueSpreadsheetDocument* GetTemplate(const wxString& strFormName) const;
 
 #pragma endregion
 
-	virtual ibValueManagerDataObject* CreateManagerDataObjectValue() = 0;
+	virtual ibValueManagerDataObject* CreateManagerDataObjectValue() const = 0;
 
 protected:
 
 	//create object data with meta form
-	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject) { return nullptr; }
+	virtual ibSourceDataObject* CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const { return nullptr; }
 };
 
 class BACKEND_API ibValueMetaObjectRecordData
@@ -283,8 +283,8 @@ public:
 	}
 
 	//get module object in compose object 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return nullptr; }
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
+	virtual const ibValueMetaObjectModule* GetObjectModule() const { return nullptr; }
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const { return nullptr; }
 
 	//meta events
 	virtual bool OnLoadMetaObject(ibMetaData* metaData);
@@ -373,11 +373,11 @@ public:
 #pragma endregion 
 
 	//create single object
-	virtual ibValueRecordDataObject* CreateRecordDataObjectValue() = 0;
+	virtual ibValueRecordDataObject* CreateRecordDataObjectValue() const = 0;
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) = 0;
+	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const = 0;
 #pragma endregion 
 
 protected:
@@ -418,19 +418,19 @@ public:
 	//ctor
 	ibValueMetaObjectRecordDataExt();
 
-	//�reate from file?
+	//пїЅreate from file?
 	virtual bool IsExternalCreate() const { return false; }
 
 	//module manager is started or exit 
 	virtual bool OnBeforeRunMetaObject(int flags);
 	virtual bool OnAfterCloseMetaObject();
 
-	//create associate value 
-	ibValueRecordDataObjectExt* CreateObjectValue(); //create object
-	ibValueRecordDataObjectExt* CreateObjectValue(ibValueRecordDataObjectExt* objSrc);
+	//create associate value
+	ibValueRecordDataObjectExt* CreateObjectValue() const;
+	ibValueRecordDataObjectExt* CreateObjectValue(ibValueRecordDataObjectExt* objSrc) const;
 
 	//create single object
-	virtual ibValueRecordDataObject* CreateRecordDataObjectValue();
+	virtual ibValueRecordDataObject* CreateRecordDataObjectValue() const;
 
 	//get command section 
 	virtual ibInterfaceCommandSection GetCommandSection() const { return ibInterfaceCommandSection::ibInterfaceCommandSection_Service; }
@@ -438,7 +438,7 @@ public:
 protected:
 
 	//create empty object
-	virtual ibValueRecordDataObjectExt* CreateObjectExtValue() = 0;  //create object 
+	virtual ibValueRecordDataObjectExt* CreateObjectExtValue() const = 0;  //create object
 
 private:
 #pragma region role
@@ -481,14 +481,14 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//create single object
-	virtual ibValueRecordDataObject* CreateRecordDataObjectValue() {
+	virtual ibValueRecordDataObject* CreateRecordDataObjectValue() const {
 		wxASSERT_MSG(false, "ibValueMetaObjectRecordDataRef::CreateRecordDataObjectValue");
 		return nullptr;
 	}
 
-	//process choice 
+	//process choice
 	virtual bool ProcessChoice(ibBackendControlFrame* ownerValue,
-		const wxString& strFormName = wxEmptyString, ibSelectMode selMode = ibSelectMode::ibSelectMode_Items);
+		const wxString& strFormName = wxEmptyString, ibSelectMode selMode = ibSelectMode::ibSelectMode_Items) const;
 
 #pragma region __generic_h__
 
@@ -505,12 +505,12 @@ public:
 	virtual ibValueMetaObjectAttributeBase* GetAttributeForCode() const { return nullptr; }
 
 	//find object value
-	virtual class ibValueReferenceDataObject* FindObjectValue(const ibGuid& guid); //find by guid and ret reference 
+	virtual class ibValueReferenceDataObject* FindObjectValue(const ibGuid& guid) const; //find by guid and ret reference
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) = 0;
-	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) = 0;
+	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const = 0;
+	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const = 0;
 #pragma endregion 
 
 	//descriptions...
@@ -666,18 +666,18 @@ public:
 	virtual bool OnBeforeCloseMetaObject();
 	virtual bool OnAfterCloseMetaObject();
 
-	//create associate value 
-	ibValueRecordDataObjectRef* CreateObjectValue();
-	ibValueRecordDataObjectRef* CreateObjectValue(const ibGuid& guid);
-	ibValueRecordDataObjectRef* CreateObjectValue(ibValueRecordDataObjectRef* objSrc, bool generate = false);
+	//create associate value
+	ibValueRecordDataObjectRef* CreateObjectValue() const;
+	ibValueRecordDataObjectRef* CreateObjectValue(const ibGuid& guid) const;
+	ibValueRecordDataObjectRef* CreateObjectValue(ibValueRecordDataObjectRef* objSrc, bool generate = false) const;
 
-	//copy associate value 	
-	ibValueRecordDataObjectRef* CopyObjectValue(const ibGuid& guid);
+	//copy associate value
+	ibValueRecordDataObjectRef* CopyObjectValue(const ibGuid& guid) const;
 
 	//create single object
-	virtual ibValueRecordDataObject* CreateRecordDataObjectValue();
+	virtual ibValueRecordDataObject* CreateRecordDataObjectValue() const;
 
-	//get command section 
+	//get command section
 	virtual ibInterfaceCommandSection GetCommandSection() const { return ibInterfaceCommandSection::ibInterfaceCommandSection_Combined; }
 
 	// load & save config data 
@@ -720,7 +720,7 @@ protected:
 	int ProcessTable(const wxString& tabularName, const ibValueMetaObjectTableData* srcTable, const ibValueMetaObjectTableData* dstTable);
 
 	//create empty object
-	virtual ibValueRecordDataObjectRef* CreateObjectRefValue(const ibGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
+	virtual ibValueRecordDataObjectRef* CreateObjectRefValue(const ibGuid& objGuid = wxNullGuid) const = 0; //create object and read by guid
 
 protected:
 
@@ -820,9 +820,9 @@ public:
 	ibValueMetaObjectRecordDataHierarchyMutableRef();
 	virtual ~ibValueMetaObjectRecordDataHierarchyMutableRef();
 
-	//process choice 
+	//process choice
 	virtual bool ProcessChoice(ibBackendControlFrame* ownerValue,
-		const wxString& strFormName = wxEmptyString, ibSelectMode selMode = ibSelectMode::ibSelectMode_Items);
+		const wxString& strFormName = wxEmptyString, ibSelectMode selMode = ibSelectMode::ibSelectMode_Items) const;
 
 	virtual bool FilterChild(const ibClassID& clsid) const {
 		if (clsid == g_metaAttributeCLSID ||
@@ -848,18 +848,18 @@ public:
 	bool HasPredefinedValue(const ibGuid& valueGuid) const { return FindPredefinedValue(valueGuid) != nullptr; }
 	bool HasPredefinedValue(const wxString& strPredefinedName) const { return FindPredefinedValue(strPredefinedName) != nullptr; }
 
-	//create associate value 	
-	ibValueRecordDataObjectHierarchyRef* CreateObjectValue(ibObjectMode mode);
-	ibValueRecordDataObjectHierarchyRef* CreateObjectValue(ibObjectMode mode, const ibGuid& guid);
-	ibValueRecordDataObjectHierarchyRef* CreateObjectValue(ibObjectMode mode, ibValueRecordDataObjectRef* objSrc, bool generate = false);
+	//create associate value
+	ibValueRecordDataObjectHierarchyRef* CreateObjectValue(ibObjectMode mode) const;
+	ibValueRecordDataObjectHierarchyRef* CreateObjectValue(ibObjectMode mode, const ibGuid& guid) const;
+	ibValueRecordDataObjectHierarchyRef* CreateObjectValue(ibObjectMode mode, ibValueRecordDataObjectRef* objSrc, bool generate = false) const;
 
-	//copy associate value 	
-	ibValueRecordDataObjectHierarchyRef* CopyObjectValue(ibObjectMode mode, const ibGuid& guid);
+	//copy associate value
+	ibValueRecordDataObjectHierarchyRef* CopyObjectValue(ibObjectMode mode, const ibGuid& guid) const;
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual ibBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) = 0;
-	virtual ibBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) = 0;
+	virtual ibBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const = 0;
+	virtual ibBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const = 0;
 #pragma endregion 
 
 	//append predefined value
@@ -915,8 +915,8 @@ protected:
 	virtual bool SaveData(ibWriterMemory& writer);
 
 	//create empty object
-	virtual ibValueRecordDataObjectHierarchyRef* CreateObjectRefValue(ibObjectMode mode, const ibGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
-	virtual ibValueRecordDataObjectRef* CreateObjectRefValue(const ibGuid& objGuid = wxNullGuid) final;
+	virtual ibValueRecordDataObjectHierarchyRef* CreateObjectRefValue(ibObjectMode mode, const ibGuid& objGuid = wxNullGuid) const = 0; //create object and read by guid
+	virtual ibValueRecordDataObjectRef* CreateObjectRefValue(const ibGuid& objGuid = wxNullGuid) const final;
 
 protected:
 
@@ -1077,23 +1077,23 @@ public:
 	virtual bool HasPeriod() const { return false; }
 	virtual bool HasRecorder() const { return true; }
 
-	ibValueRecordKeyObject* CreateRecordKeyObjectValue();
+	ibValueRecordKeyObject* CreateRecordKeyObjectValue() const;
 
-	ibValueRecordSetObject* CreateRecordSetObjectValue(bool needInitialize = true);
-	ibValueRecordSetObject* CreateRecordSetObjectValue(const ibUniqueKeyPair& uniqueKey, bool needInitialize = true);
-	ibValueRecordSetObject* CreateRecordSetObjectValue(ibValueRecordSetObject* source, bool needInitialize = true);
+	ibValueRecordSetObject* CreateRecordSetObjectValue(bool needInitialize = true) const;
+	ibValueRecordSetObject* CreateRecordSetObjectValue(const ibUniqueKeyPair& uniqueKey, bool needInitialize = true) const;
+	ibValueRecordSetObject* CreateRecordSetObjectValue(ibValueRecordSetObject* source, bool needInitialize = true) const;
 
 	ibValueRecordSetObject* CopyRecordSetObjectValue(const ibUniqueKeyPair& uniqueKey);
 
-	ibValueRecordManagerObject* CreateRecordManagerObjectValue();
-	ibValueRecordManagerObject* CreateRecordManagerObjectValue(const ibUniqueKeyPair& uniqueKey);
-	ibValueRecordManagerObject* CreateRecordManagerObjectValue(ibValueRecordManagerObject* source);
+	ibValueRecordManagerObject* CreateRecordManagerObjectValue() const;
+	ibValueRecordManagerObject* CreateRecordManagerObjectValue(const ibUniqueKeyPair& uniqueKey) const;
+	ibValueRecordManagerObject* CreateRecordManagerObjectValue(ibValueRecordManagerObject* source) const;
 
-	ibValueRecordManagerObject* CopyRecordManagerObjectValue(const ibUniqueKeyPair& uniqueKey);
+	ibValueRecordManagerObject* CopyRecordManagerObjectValue(const ibUniqueKeyPair& uniqueKey) const;
 
 	//get module object in compose object 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return nullptr; }
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
+	virtual const ibValueMetaObjectModule* GetObjectModule() const { return nullptr; }
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const { return nullptr; }
 
 	virtual bool FilterChild(const ibClassID& clsid) const {
 		if (
@@ -1117,7 +1117,7 @@ public:
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) = 0;
+	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const = 0;
 #pragma endregion 
 
 	//special functions for DB 
@@ -1159,8 +1159,8 @@ protected:
 
 	///////////////////////////////////////////////////////////////////
 
-	virtual ibValueRecordSetObject* CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) = 0;
-	virtual ibValueRecordManagerObject* CreateRecordManagerObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) { return nullptr; }
+	virtual ibValueRecordSetObject* CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) const = 0;
+	virtual ibValueRecordManagerObject* CreateRecordManagerObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) const { return nullptr; }
 
 	//create and update table 
 	virtual bool CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
@@ -1223,7 +1223,7 @@ public:
 	virtual ibUniqueKey GetGuid() const = 0;
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetSourceMetaObject() const = 0;
+	virtual const ibValueMetaObjectGenericData* GetSourceMetaObject() const = 0;
 
 	//support source data 
 	virtual ibSourceExplorer GetSourceExplorer() const = 0;
@@ -1259,7 +1259,7 @@ public:
 	ibValueManagerObject() : ibValue(ibValueTypes::TYPE_VALUE, true) {}
 	virtual ~ibValueManagerObject() {}
 
-	virtual ibValueMetaObject* GetMetaObject() const = 0;
+	virtual const ibValueMetaObject* GetMetaObject() const = 0;
 };
 
 class BACKEND_API ibValueManagerDataObject : public ibValueManagerObject {
@@ -1268,8 +1268,8 @@ public:
 	ibValueManagerDataObject() : ibValueManagerObject(), m_methodHelper(new ibValueMethodHelper) {}
 	virtual ~ibValueManagerDataObject() { wxDELETE(m_methodHelper); }
 
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const = 0;
-	virtual ibValueMetaObjectGenericData* GetMetaObject() const = 0;
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const = 0;
+	virtual const ibValueMetaObjectGenericData*  GetMetaObject()    const = 0;
 
 	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
@@ -1296,7 +1296,7 @@ class BACKEND_API ibValueManagerDataObjectPredefined : public ibValueManagerData
 
 public:
 
-	virtual ibValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const = 0;
+	virtual const ibValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const = 0;
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
@@ -1346,11 +1346,11 @@ public:
 	// Feed the record's data-object module into ibRuntimeModuleDataObject's
 	// lazy compile-module creation. Every record-data subclass has
 	// its own GetMetaObject() (virtual in a parallel ibValueDataObject
-	// hierarchy) returning concrete metadata; GetModuleObject() then
+	// hierarchy) returning concrete metadata; GetObjectModule() then
 	// extracts the compile-target.
 	virtual const class ibValueMetaObjectModuleBase* GetMetaForCompile() const override {
 		if (auto* m = GetMetaObject())
-			return m->GetModuleObject();
+			return m->GetObjectModule();
 		return nullptr;
 	}
 
@@ -1369,7 +1369,7 @@ public:
 	virtual bool IsEmpty() const override { return ibValue::IsEmpty(); }
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual const ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const final { return GetClassType(); }
@@ -1402,7 +1402,7 @@ public:
 	virtual void SourceDecrRef() override { ibValue::DecrRef(); }
 
 	//get metaData from object
-	virtual ibValueMetaObjectRecordData* GetMetaObject() const override = 0;
+	virtual const ibValueMetaObjectRecordData* GetMetaObject() const override = 0;
 
 	//get unique identifier
 	virtual ibUniqueKey GetGuid() const override = 0;
@@ -1447,7 +1447,7 @@ class BACKEND_API ibValueRecordDataObjectExt : public ibValueRecordDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordDataObjectExt);
 protected:
 	//override copy constructor
-	ibValueRecordDataObjectExt(ibValueMetaObjectRecordDataExt* metaObject);
+	ibValueRecordDataObjectExt(const ibValueMetaObjectRecordDataExt* metaObject);
 	ibValueRecordDataObjectExt(const ibValueRecordDataObjectExt& source);
 public:
 	virtual ~ibValueRecordDataObjectExt();
@@ -1465,10 +1465,10 @@ public:
 	virtual ibValueRecordDataObjectExt* CopyObjectValue();
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRecordDataExt* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectRecordDataExt* GetMetaObject() const { return m_metaObject; }
 
 protected:
-	ibValueMetaObjectRecordDataExt* m_metaObject;
+	const ibValueMetaObjectRecordDataExt* m_metaObject;
 };
 
 //Object with reference type 
@@ -1487,7 +1487,7 @@ protected:
 	ibValue GenerateNextIdentifier(
 		ibValueMetaObjectAttributeBase* attribute, const wxString& strPrefix);
 
-	ibValueRecordDataObjectRef(ibValueMetaObjectRecordDataMutableRef* metaObject, const ibGuid& objGuid);
+	ibValueRecordDataObjectRef(const ibValueMetaObjectRecordDataMutableRef* metaObject, const ibGuid& objGuid);
 	ibValueRecordDataObjectRef(const ibValueRecordDataObjectRef& src);
 public:
 
@@ -1530,7 +1530,7 @@ public:
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRecordDataMutableRef* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectRecordDataMutableRef* GetMetaObject() const { return m_metaObject; }
 
 	//check is changes data in db
 	virtual bool ModifiesData() { return true; }
@@ -1584,7 +1584,7 @@ protected:
 	friend class ibValueTabularSectionDataObjectRef;
 
 	bool m_objModified;
-	ibValueMetaObjectRecordDataMutableRef* m_metaObject;
+	const ibValueMetaObjectRecordDataMutableRef* m_metaObject;
 	ibReference* m_reference_impl;
 };
 
@@ -1592,7 +1592,7 @@ protected:
 class BACKEND_API ibValueRecordDataObjectHierarchyRef : public ibValueRecordDataObjectRef {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordDataObjectHierarchyRef);
 protected:
-	ibValueRecordDataObjectHierarchyRef(ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const ibGuid& objGuid, ibObjectMode objMode = ibObjectMode::OBJECT_ITEM);
+	ibValueRecordDataObjectHierarchyRef(const ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const ibGuid& objGuid, ibObjectMode objMode = ibObjectMode::OBJECT_ITEM);
 	ibValueRecordDataObjectHierarchyRef(const ibValueRecordDataObjectHierarchyRef& src);
 public:
 	virtual ~ibValueRecordDataObjectHierarchyRef();
@@ -1607,8 +1607,8 @@ public:
 	}
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const {
-		return static_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(m_metaObject);
+	virtual const ibValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const {
+		return static_cast<const ibValueMetaObjectRecordDataHierarchyMutableRef*>(m_metaObject);
 	}
 
 	//copy new object
@@ -1642,7 +1642,7 @@ protected:
 class BACKEND_API ibValueRecordKeyObject : public ibValue {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordKeyObject);
 public:
-	ibValueRecordKeyObject(ibValueMetaObjectRegisterData* metaObject);
+	ibValueRecordKeyObject(const ibValueMetaObjectRegisterData* metaObject);
 	virtual ~ibValueRecordKeyObject();
 
 	//standart override
@@ -1664,7 +1664,7 @@ public:
 	ibUniqueKeyPair GetUniqueKey() { return ibUniqueKeyPair(m_metaObject, m_keyValues); }
 
 	//get metaData from object
-	virtual ibValueMetaObjectRegisterData* GetMetaObject() const { return m_metaObject; };
+	virtual const ibValueMetaObjectRegisterData* GetMetaObject() const { return m_metaObject; };
 
 	//Get ref class
 	virtual ibClassID GetClassType() const override;
@@ -1678,7 +1678,7 @@ public:
 	virtual unsigned int GetIteratorCount() const override { return m_methodHelper != nullptr ? m_methodHelper->GetNProps() : 0; }
 
 protected:
-	ibValueMetaObjectRegisterData* m_metaObject;
+	const ibValueMetaObjectRegisterData* m_metaObject;
 	ibMetaValueArray m_keyValues;
 	ibValueMethodHelper* m_methodHelper;
 };
@@ -1738,7 +1738,7 @@ public:
 		}
 
 		virtual unsigned int GetColumnCount() const override {
-			ibValueMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
+			const ibValueMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
 			wxASSERT(metaTable);
 			std::vector<ibValueMetaObjectAttributeBase*> genArr;
 			const auto obj = metaTable->GetGenericAttributeArrayObject(genArr);
@@ -1849,7 +1849,7 @@ public:
 	};
 
 protected:
-	ibValueRecordSetObject(ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey);
+	ibValueRecordSetObject(const ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey);
 	ibValueRecordSetObject(const ibValueRecordSetObject& source);
 public:
 	virtual ~ibValueRecordSetObject();
@@ -1899,11 +1899,11 @@ public:
 	virtual bool ModifiesData() { return true; }
 
 	//get metaData from object
-	virtual ibValueMetaObjectRegisterData* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectRegisterData* GetMetaObject() const { return m_metaObject; }
 
 #pragma region _tabular_data_
 	//get metaData from object
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return GetMetaObject(); }
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return GetMetaObject(); }
 
 	//Get ref class
 	virtual ibClassID GetSourceClassType() const { return GetClassType(); }
@@ -1993,7 +1993,7 @@ protected:
 
 	ibMetaValueArray m_keyValues;
 
-	ibValueMetaObjectRegisterData* m_metaObject;
+	const ibValueMetaObjectRegisterData* m_metaObject;
 
 	ibValuePtr<ibValueRecordSetObjectRegisterColumnCollection> m_recordColumnCollection;
 	ibValuePtr<ibValueRecordSetObjectRegisterKeyValue> m_recordSetKeyValue;
@@ -2005,7 +2005,7 @@ class BACKEND_API ibValueRecordManagerObject : public ibValue,
 	public ibSourceDataObject, public ibActionDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordManagerObject);
 protected:
-	ibValueRecordManagerObject(ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey);
+	ibValueRecordManagerObject(const ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey);
 	ibValueRecordManagerObject(const ibValueRecordManagerObject& source);
 public:
 
@@ -2021,7 +2021,7 @@ public:
 	virtual bool IsNewObject() const override { return !m_recordSet->m_selected; }
 
 	//get metaData from object
-	virtual ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual const ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class
 	virtual ibClassID GetSourceClassType() const final { return GetClassType(); }
@@ -2082,7 +2082,7 @@ public:
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id) override;
 
 	//get metaData from object
-	virtual ibValueMetaObjectRegisterData* GetMetaObject() const {
+	virtual const ibValueMetaObjectRegisterData* GetMetaObject() const {
 		return m_metaObject;
 	};
 
@@ -2124,7 +2124,7 @@ protected:
 
 	ibUniqueKeyPair m_objGuid;
 
-	ibValueMetaObjectRegisterData* m_metaObject;
+	const ibValueMetaObjectRegisterData* m_metaObject;
 
 	ibValuePtr<ibValueRecordSetObject> m_recordSet;
 	ibValuePtr<ibValueModelTableBase::ibValueModelReturnLine> m_recordLine;

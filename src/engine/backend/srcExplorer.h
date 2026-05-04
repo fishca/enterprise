@@ -88,23 +88,23 @@ public:
 	bool ContainType(const ibValueTypes& valType) const { return m_sourceInfo.m_typeDesc.ContainType(valType); }
 	bool ContainType(const ibClassID& cid) const { return m_sourceInfo.m_typeDesc.ContainType(cid); }
 
-	void AppendSource(ibValueMetaObjectGenericData* refData, const ibClassID& cid) {
+	void AppendSource(const ibValueMetaObjectGenericData* refData, const ibClassID& cid) {
 		if (refData->IsDeleted())
 			return;
 		m_arraySource.emplace_back(ibSourceExplorer{ refData, cid });
 	}
 
-	void AppendSource(ibValueMetaObjectAttributeBase* attribute, bool enabled = true, bool visible = true) {
+	void AppendSource(const ibValueMetaObjectAttributeBase* attribute, bool enabled = true, bool visible = true) {
 		if (attribute->IsDeleted())
 			return;
 		m_arraySource.emplace_back(ibSourceExplorer{ attribute, enabled , visible });
 	}
 
-	void AppendSource(ibValueMetaObjectTableData* tableSection) {
-		
+	void AppendSource(const ibValueMetaObjectTableData* tableSection) {
+
 		if (tableSection->IsDeleted())
 			return;
-		
+
 		m_arraySource.emplace_back(ibSourceExplorer{ tableSection });
 	}
 

@@ -1,4 +1,4 @@
-#ifndef __CONSTANTS_H__
+﻿#ifndef __CONSTANTS_H__
 #define __CONSTANTS_H__
 
 #include "backend/metaCollection/partial/commonObject.h"
@@ -45,13 +45,13 @@ public:
 	static wxString GetTableNameDB() { return wxT("sys_const"); }
 
 	//get module object in compose object 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModule->GetMetaObject(); }
+	virtual const ibValueMetaObjectModule* GetObjectModule() const { return m_propertyModule->GetMetaObject(); }
 
 	//create empty object
-	virtual ibValueRecordDataObjectConstant* CreateRecordDataObjectValue();
+	virtual ibValueRecordDataObjectConstant* CreateRecordDataObjectValue() const;
 
 	//support form 
-	virtual ibBackendValueForm* GetObjectForm();
+	virtual ibBackendValueForm* GetObjectForm() const;
 
 	//create constant table  
 	static bool CreateConstantSQLTable();
@@ -120,7 +120,7 @@ protected:
 protected:
 
 	//override copy constructor
-	ibValueRecordDataObjectConstant(ibValueMetaObjectConstant* metaObject);
+	ibValueRecordDataObjectConstant(const ibValueMetaObjectConstant* metaObject);
 	ibValueRecordDataObjectConstant(const ibValueRecordDataObjectConstant& source);
 
 	//standart override 
@@ -136,7 +136,7 @@ public:
 	// Constant's module object drives lazy compile creation via
 	// BindContextVariable.
 	virtual const class ibValueMetaObjectModuleBase* GetMetaForCompile() const override {
-		return m_metaObject ? m_metaObject->GetModuleObject() : nullptr;
+		return m_metaObject ? m_metaObject->GetObjectModule() : nullptr;
 	}
 
 	ibValue GetConstValue() const;
@@ -164,7 +164,7 @@ public:
 	virtual bool ModifiesData() { return true; }
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual const ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const final { return GetClassType(); };
@@ -187,8 +187,8 @@ public:
 	virtual void SourceDecrRef() { ibValue::DecrRef(); }
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetMetaObject() const {
-		return (ibValueMetaObjectGenericData*)m_metaObject;
+	virtual const ibValueMetaObjectGenericData* GetMetaObject() const {
+		return (const ibValueMetaObjectGenericData*)m_metaObject;
 	};
 
 	//get unique identifier 
@@ -221,7 +221,7 @@ protected:
 	bool m_objModified;
 
 	ibValueMethodHelper* m_methodHelper;
-	ibValueMetaObjectConstant* m_metaObject;
+	const ibValueMetaObjectConstant* m_metaObject;
 	ibValue m_constValue;
 
 	friend class ibValue;

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : list data 
 ////////////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueListRegisterObject, ibValueListDataObject);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTreeDataObject, ibValueModelTreeBase);
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObjectFolderRef, ibValueModelTreeDataObject);
 
-ibValueListDataObject::ibValueListDataObject(ibValueMetaObjectGenericData* metaObject, const ibFormID& formType, bool choiceMode) :
+ibValueListDataObject::ibValueListDataObject(const ibValueMetaObjectGenericData* metaObject, const ibFormID& formType, bool choiceMode) :
 	ibSourceDataObject(),
 	m_recordColumnCollection(new ibValueDataObjectListColumnCollection(this, metaObject)),
 	m_objGuid(choiceMode ? ibGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new ibValueMethodHelper())
@@ -43,7 +43,7 @@ ibValueListDataObject::~ibValueListDataObject()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ibValueModelTreeDataObject::ibValueModelTreeDataObject(ibValueMetaObjectGenericData* metaObject, const ibFormID& formType, bool choiceMode) :
+ibValueModelTreeDataObject::ibValueModelTreeDataObject(const ibValueMetaObjectGenericData* metaObject, const ibFormID& formType, bool choiceMode) :
 	ibSourceDataObject(),
 	m_recordColumnCollection(new ibValueDataObjectTreeColumnCollection(this, metaObject)),
 	m_objGuid(choiceMode ? ibGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new ibValueMethodHelper())
@@ -75,7 +75,7 @@ ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectL
 {
 }
 
-ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnCollection(ibValueListDataObject* ownerTable, ibValueMetaObjectGenericData* metaObject) :
+ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnCollection(ibValueListDataObject* ownerTable, const ibValueMetaObjectGenericData* metaObject) :
 	ibValueModelColumnCollection(), m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable)
 {
 	wxASSERT(metaObject);
@@ -90,12 +90,12 @@ ibValueListDataObject::ibValueDataObjectListColumnCollection::~ibValueDataObject
 	wxDELETE(m_methodHelper);
 }
 
-bool ibValueListDataObject::ibValueDataObjectListColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//������ ������� ������ ���������� � 0
+bool ibValueListDataObject::ibValueDataObjectListColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ 0
 {
 	return false;
 }
 
-bool ibValueListDataObject::ibValueDataObjectListColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //������ ������� ������ ���������� � 0
+bool ibValueListDataObject::ibValueDataObjectListColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 
@@ -118,7 +118,7 @@ ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataOb
 {
 }
 
-ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnCollection(ibValueModelTreeDataObject* ownerTable, ibValueMetaObjectGenericData* metaObject) :
+ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnCollection(ibValueModelTreeDataObject* ownerTable, const ibValueMetaObjectGenericData* metaObject) :
 	ibValueModelColumnCollection(), m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable)
 {
 	wxASSERT(metaObject);
@@ -134,12 +134,12 @@ ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::~ibValueDataO
 	wxDELETE(m_methodHelper);
 }
 
-bool ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//������ ������� ������ ���������� � 0
+bool ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ 0
 {
 	return false;
 }
 
-bool ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //������ ������� ������ ���������� � 0
+bool ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
@@ -209,7 +209,7 @@ void ibValueListDataObject::ibValueDataObjectListReturnLine::PrepareNames() cons
 {
 	m_methodHelper->ClearHelper();
 
-	ibValueMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
+	const ibValueMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_methodHelper->AppendProp(
 			object->GetName(),
@@ -251,7 +251,7 @@ void ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::PrepareNames()
 {
 	m_methodHelper->ClearHelper();
 
-	ibValueMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
+	const ibValueMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_methodHelper->AppendProp(
 			object->GetName(),
@@ -307,7 +307,7 @@ ibDataViewItem ibValueListDataObjectEnumRef::FindRowValue(ibValueModelReturnLine
 	return ibDataViewItem(nullptr);
 }
 
-ibValueListDataObjectEnumRef::ibValueListDataObjectEnumRef(ibValueMetaObjectRecordDataEnumRef* metaObject, const ibFormID& formType, bool choiceMode) :
+ibValueListDataObjectEnumRef::ibValueListDataObjectEnumRef(const ibValueMetaObjectRecordDataEnumRef* metaObject, const ibFormID& formType, bool choiceMode) :
 	ibValueListDataObject(metaObject, formType, choiceMode), m_metaObject(metaObject), m_choiceMode(choiceMode)
 {
 	ibValueListDataObject::AppendSort(m_metaObject->GetDataOrder(), true, true, true);
@@ -403,7 +403,7 @@ ibDataViewItem ibValueListDataObjectRef::FindRowValue(ibValueModelReturnLine* re
 	return ibDataViewItem(nullptr);
 }
 
-ibValueListDataObjectRef::ibValueListDataObjectRef(ibValueMetaObjectRecordDataMutableRef* metaObject, const ibFormID& formType, bool choiceMode) :
+ibValueListDataObjectRef::ibValueListDataObjectRef(const ibValueMetaObjectRecordDataMutableRef* metaObject, const ibFormID& formType, bool choiceMode) :
 	ibValueListDataObject(metaObject, formType, choiceMode), m_metaObject(metaObject), m_choiceMode(choiceMode)
 {
 }
@@ -655,7 +655,7 @@ ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(ibValueModelRet
 	return ibDataViewItem(nullptr);
 }
 
-ibValueModelTreeDataObjectFolderRef::ibValueModelTreeDataObjectFolderRef(ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const ibFormID& formType,
+ibValueModelTreeDataObjectFolderRef::ibValueModelTreeDataObjectFolderRef(const ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const ibFormID& formType,
 	int listMode, bool choiceMode) : ibValueModelTreeDataObject(metaObject, formType, choiceMode),
 	m_metaObject(metaObject), m_listMode(listMode), m_choiceMode(choiceMode)
 {
@@ -909,7 +909,7 @@ ibDataViewItem ibValueListRegisterObject::FindRowValue(const ibValue& varValue, 
 {
 	ibValueRecordManagerObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
-		ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
+		const ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
 		wxASSERT(metaObject);
 		for (long row = 0; row < GetRowCount(); row++) {
 			ibDataViewItem item = GetItem(row);
@@ -926,7 +926,7 @@ ibDataViewItem ibValueListRegisterObject::FindRowValue(const ibValue& varValue, 
 
 ibDataViewItem ibValueListRegisterObject::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
+	const ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
 	ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(retLine->GetLineItem());
 	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node, metaObject](ibValueTableRow* row)
@@ -938,7 +938,7 @@ ibDataViewItem ibValueListRegisterObject::FindRowValue(ibValueModelReturnLine* r
 	return ibDataViewItem(nullptr);
 }
 
-ibValueListRegisterObject::ibValueListRegisterObject(ibValueMetaObjectRegisterData* metaObject, const ibFormID& formType) :
+ibValueListRegisterObject::ibValueListRegisterObject(const ibValueMetaObjectRegisterData* metaObject, const ibFormID& formType) :
 	ibValueListDataObject(metaObject, formType), m_metaObject(metaObject)
 {
 	if (m_metaObject->HasRecorder()) {

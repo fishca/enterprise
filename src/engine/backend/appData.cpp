@@ -176,7 +176,7 @@ void ibApplicationData::WireSessionEvents()
 				(m_runMode == eSERVICE_MODE) ||
 				(m_runMode == eWEB_ENTERPRISE_MODE);
 			if (wantsRuntime) {
-				if (auto* mm = s->GetModuleManager())
+				if (auto* mm = s->GetManagerModule())
 					mm->AttachRuntime(s);
 			}
 		}
@@ -188,7 +188,7 @@ void ibApplicationData::WireSessionEvents()
 	// thread originally pinned them.
 	registry->OnDisconnect([this](ibSession* s) {
 		if (s == nullptr) return;
-		if (auto* mm = s->GetModuleManager())
+		if (auto* mm = s->GetManagerModule())
 			mm->DetachRuntime(s);
 		s->DestroyRoot();
 		ibSession::UnbindSession(s);

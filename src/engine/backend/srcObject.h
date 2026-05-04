@@ -17,7 +17,7 @@ public:
 	virtual ~ibSourceObject() {}
 	
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
 	
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const = 0;
@@ -36,7 +36,7 @@ public:
 	virtual ~ibTabularObject() {}
 
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const = 0;

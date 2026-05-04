@@ -75,12 +75,12 @@ bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector
 			}
 			return false;
 		}
-		ibValueMetaObjectRecordDataRef* m_metaObject;
+		const ibValueMetaObjectRecordDataRef* m_metaObject;
 	private:
-		ibValueDataObjectComparator(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) : ibValueDataObject(guid, false), m_metaObject(metaObject) {}
+		ibValueDataObjectComparator(const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) : ibValueDataObject(guid, false), m_metaObject(metaObject) {}
 	public:
 
-		static bool CompareValue(const wxString& findData, ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) {
+		static bool CompareValue(const wxString& findData, const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) {
 			bool allow = false;
 			ibValueDataObjectComparator* comparator = new ibValueDataObjectComparator(metaObject, guid);
 			if (comparator->ReadValues()) {
@@ -101,8 +101,8 @@ bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector
 			return allow;
 		}
 
-		//get metaData from object 
-		virtual ibValueMetaObjectRecordData* GetMetaObject() const {
+		//get metaData from object
+		virtual const ibValueMetaObjectRecordData* GetMetaObject() const {
 			return m_metaObject;
 		}
 	};

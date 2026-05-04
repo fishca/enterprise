@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : report - object
 ////////////////////////////////////////////////////////////////////////////
@@ -9,7 +9,7 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-ibValueRecordDataObjectReport::ibValueRecordDataObjectReport(ibValueMetaObjectReport* metaObject) : ibValueRecordDataObjectExt(metaObject)
+ibValueRecordDataObjectReport::ibValueRecordDataObjectReport(const ibValueMetaObjectReport* metaObject) : ibValueRecordDataObjectExt(metaObject)
 {
 }
 

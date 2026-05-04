@@ -223,7 +223,7 @@ public:
 	// the registry's NotifyAuthenticated phase right after Open() succeeds;
 	// stays nullptr for sessions that never run scripts (Designer,
 	// WebServer technical session, Launcher).
-	ibValueModuleManagerConfiguration* GetModuleManager() const;
+	ibValueModuleManagerConfiguration* GetManagerModule() const;
 
 	// Create the session's root module manager. The configuration's
 	// commonMetaObject is taken directly from metaData (typed accessor —

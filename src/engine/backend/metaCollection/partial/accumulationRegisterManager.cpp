@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : acc register manager
 ////////////////////////////////////////////////////////////////////////////
@@ -10,9 +10,9 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectAccumulationRegister, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectAccumulationRegister::GetModuleManager() const
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectAccumulationRegister::GetManagerModule() const
 {
-	return m_metaObject->GetModuleManager();
+	return m_metaObject->GetManagerModule();
 }
 
 enum Func {

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : chart of characteristic types metaData
 ////////////////////////////////////////////////////////////////////////////
@@ -21,15 +21,15 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectChartOfCharacteristicTypes, ibValueMe
 ibValueMetaObjectChartOfCharacteristicTypes::ibValueMetaObjectChartOfCharacteristicTypes() : ibValueMetaObjectRecordDataHierarchyMutableRef()
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeDelete"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnDelete"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("BeforeDelete"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("OnDelete"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
 
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("Filling"), ibContentHelper::eProcedureHelper, { wxT("Source"), wxT("StandartProcessing") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnCopy"), ibContentHelper::eProcedureHelper, { wxT("Source") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("Filling"), ibContentHelper::eProcedureHelper, { wxT("Source"), wxT("StandartProcessing") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("OnCopy"), ibContentHelper::eProcedureHelper, { wxT("Source") });
 
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("SetNewCode"), ibContentHelper::eProcedureHelper, { wxT("Prefix"), wxT("StandartProcessing") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("SetNewCode"), ibContentHelper::eProcedureHelper, { wxT("Prefix"), wxT("StandartProcessing") });
 }
 
 ibValueMetaObjectChartOfCharacteristicTypes::~ibValueMetaObjectChartOfCharacteristicTypes()
@@ -59,18 +59,18 @@ ibValueMetaObjectFormBase* ibValueMetaObjectChartOfCharacteristicTypes::GetDefau
 
 #include "chartOfCharacteristicTypesManager.h"
 
-ibValueManagerDataObject* ibValueMetaObjectChartOfCharacteristicTypes::CreateManagerDataObjectValue()
+ibValueManagerDataObject* ibValueMetaObjectChartOfCharacteristicTypes::CreateManagerDataObjectValue() const
 {
 	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectChartOfCharacteristicTypes>(this);
 }
 
 #include "backend/appData.h"
 
-ibValueRecordDataObjectHierarchyRef* ibValueMetaObjectChartOfCharacteristicTypes::CreateObjectRefValue(ibObjectMode mode, const ibGuid& guid)
+ibValueRecordDataObjectHierarchyRef* ibValueMetaObjectChartOfCharacteristicTypes::CreateObjectRefValue(ibObjectMode mode, const ibGuid& guid) const
 {
 	ibValueRecordDataObjectChartOfCharacteristicTypes* pDataRef = nullptr;
 	if (auto* cc = m_metaData->GetCompileCache()) {
-		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
+		if (!cc->FindCompileModule(m_propertyObjectModule->GetMetaObject(), pDataRef)) {
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectChartOfCharacteristicTypes>(this, guid, mode);
 		}
 	}
@@ -81,7 +81,7 @@ ibValueRecordDataObjectHierarchyRef* ibValueMetaObjectChartOfCharacteristicTypes
 	return pDataRef;
 }
 
-ibSourceDataObject* ibValueMetaObjectChartOfCharacteristicTypes::CreateSourceObject(ibValueMetaObjectFormBase* metaObject)
+ibSourceDataObject* ibValueMetaObjectChartOfCharacteristicTypes::CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const
 {
 	switch (metaObject->GetTypeForm())
 	{
@@ -101,7 +101,7 @@ ibSourceDataObject* ibValueMetaObjectChartOfCharacteristicTypes::CreateSourceObj
 }
 
 #pragma region _form_builder_h_
-ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetObjectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetObjectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -111,7 +111,7 @@ ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetObjectForm(c
 	);
 }
 
-ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetFolderForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetFolderForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -121,7 +121,7 @@ ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetFolderForm(c
 	);
 }
 
-ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -131,7 +131,7 @@ ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetListForm(con
 	);
 }
 
-ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -141,7 +141,7 @@ ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetSelectForm(c
 	);
 }
 
-ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetFolderSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetFolderSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -170,8 +170,8 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::LoadData(ibReaderMemory& dataR
 	(*m_propertyAttributeType)->LoadMeta(dataReader);
 
 	//Load object module
-	(*m_propertyModuleObject)->LoadMeta(dataReader);
-	(*m_propertyModuleManager)->LoadMeta(dataReader);
+	(*m_propertyObjectModule)->LoadMeta(dataReader);
+	(*m_propertyManagerModule)->LoadMeta(dataReader);
 
 	m_propertyTypesOfCharacteristics->LoadData(dataReader);
 
@@ -191,8 +191,8 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::SaveData(ibWriterMemory& dataW
 	(*m_propertyAttributeType)->SaveMeta(dataWritter);
 
 	//Save object module
-	(*m_propertyModuleObject)->SaveMeta(dataWritter);
-	(*m_propertyModuleManager)->SaveMeta(dataWritter);
+	(*m_propertyObjectModule)->SaveMeta(dataWritter);
+	(*m_propertyManagerModule)->SaveMeta(dataWritter);
 
 	m_propertyTypesOfCharacteristics->SaveData(dataWritter);
 
@@ -217,8 +217,8 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnCreateMetaObject(ibMetaData*
 		return false;
 
 	return (*m_propertyAttributeType)->OnCreateMetaObject(metaData, flags) && 
-		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags) &&
-		(*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
+		(*m_propertyObjectModule)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyManagerModule)->OnCreateMetaObject(metaData, flags);
 }
 
 bool ibValueMetaObjectChartOfCharacteristicTypes::OnLoadMetaObject(ibMetaData* metaData)
@@ -226,10 +226,10 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnLoadMetaObject(ibMetaData* m
 	if (!(*m_propertyAttributeType)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData))
+	if (!(*m_propertyObjectModule)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
+	if (!(*m_propertyManagerModule)->OnLoadMetaObject(metaData))
 		return false;
 
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(metaData);
@@ -240,10 +240,10 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnSaveMetaObject(int flags)
 	if (!(*m_propertyAttributeType)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
+	if (!(*m_propertyObjectModule)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnSaveMetaObject(flags))
 		return false;
 
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(flags);
@@ -254,10 +254,10 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnDeleteMetaObject()
 	if (!(*m_propertyAttributeType)->OnDeleteMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnDeleteMetaObject())
+	if (!(*m_propertyObjectModule)->OnDeleteMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
+	if (!(*m_propertyManagerModule)->OnDeleteMetaObject())
 		return false;
 
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject();
@@ -268,7 +268,7 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnReloadMetaObject()
 
 	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordDataObjectChartOfCharacteristicTypes* pDataRef = nullptr;
-		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
+		if (!cc->FindCompileModule(m_propertyObjectModule->GetMetaObject(), pDataRef)) {
 			return true;
 		}
 		return pDataRef->InitializeObject();
@@ -284,10 +284,10 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnBeforeRunMetaObject(int flag
 	if (!(*m_propertyAttributeType)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyObjectModule)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	registerSelection();
@@ -311,17 +311,17 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnAfterRunMetaObject(int flags
 	if (!(*m_propertyAttributeType)->OnAfterRunMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyObjectModule)->OnAfterRunMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnAfterRunMetaObject(flags))
 		return false;
 
 
 	if (auto* cc = m_metaData->GetCompileCache()) {
 
 		if (ibValueMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags))
-			return cc->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue(ibObjectMode::OBJECT_ITEM));
+			return cc->AddCompileModule(m_propertyObjectModule->GetMetaObject(), CreateObjectValue(ibObjectMode::OBJECT_ITEM));
 
 		return false;
 	}
@@ -334,17 +334,17 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnBeforeCloseMetaObject()
 	if (!(*m_propertyAttributeType)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject())
+	if (!(*m_propertyObjectModule)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
+	if (!(*m_propertyManagerModule)->OnBeforeCloseMetaObject())
 		return false;
 
 
 	if (auto* cc = m_metaData->GetCompileCache()) {
 
 		if (ibValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject())
-			return cc->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
+			return cc->RemoveCompileModule(m_propertyObjectModule->GetMetaObject());
 
 		return false;
 	}
@@ -357,10 +357,10 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::OnAfterCloseMetaObject()
 	if (!(*m_propertyAttributeType)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject())
+	if (!(*m_propertyObjectModule)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
+	if (!(*m_propertyManagerModule)->OnAfterCloseMetaObject())
 		return false;
 
 	unregisterSelection();

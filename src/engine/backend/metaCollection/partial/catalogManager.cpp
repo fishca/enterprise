@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : catalog manager
 ////////////////////////////////////////////////////////////////////////////
@@ -10,7 +10,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectCatalog, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectCatalog::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectCatalog::GetManagerModule() const { return m_metaObject->GetManagerModule(); }
 
 #include "reference/reference.h"
 

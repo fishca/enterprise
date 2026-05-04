@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : enumeration metaData
 ////////////////////////////////////////////////////////////////////////////
@@ -41,18 +41,18 @@ ibValueMetaObjectFormBase* ibValueMetaObjectEnumeration::GetDefaultFormByID(cons
 
 #include "enumerationManager.h"
 
-ibValueManagerDataObject* ibValueMetaObjectEnumeration::CreateManagerDataObjectValue()
+ibValueManagerDataObject* ibValueMetaObjectEnumeration::CreateManagerDataObjectValue() const
 {
 	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectEnumeration>(this);
 }
 
-ibSourceDataObject* ibValueMetaObjectEnumeration::CreateSourceObject(ibValueMetaObjectFormBase* metaObject)
+ibSourceDataObject* ibValueMetaObjectEnumeration::CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const
 {
 	switch (metaObject->GetTypeForm())
 	{
-	case eFormList: 
+	case eFormList:
 		return ibValue::CreateAndPrepareValueRef<ibValueListDataObjectEnumRef>(this, metaObject->GetTypeForm());
-	case eFormSelect: 
+	case eFormSelect:
 		return ibValue::CreateAndPrepareValueRef<ibValueListDataObjectEnumRef>(this, metaObject->GetTypeForm(), true);
 	}
 
@@ -60,7 +60,7 @@ ibSourceDataObject* ibValueMetaObjectEnumeration::CreateSourceObject(ibValueMeta
 }
 
 #pragma region _form_builder_h_
-ibBackendValueForm* ibValueMetaObjectEnumeration::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectEnumeration::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -70,7 +70,7 @@ ibBackendValueForm* ibValueMetaObjectEnumeration::GetListForm(const wxString& st
 	);
 }
 
-ibBackendValueForm* ibValueMetaObjectEnumeration::GetSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectEnumeration::GetSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -98,7 +98,7 @@ wxString ibValueMetaObjectEnumeration::GetDataPresentation(const ibValueDataObje
 bool ibValueMetaObjectEnumeration::LoadData(ibReaderMemory& dataReader)
 {
 	//Load object module
-	(*m_propertyModuleManager)->LoadMeta(dataReader);
+	(*m_propertyManagerModule)->LoadMeta(dataReader);
 
 	//save default form 
 	m_propertyDefFormList->SetValue(GetIdByGuid(dataReader.r_stringZ()));
@@ -110,7 +110,7 @@ bool ibValueMetaObjectEnumeration::LoadData(ibReaderMemory& dataReader)
 bool ibValueMetaObjectEnumeration::SaveData(ibWriterMemory& dataWritter)
 {
 	//Save object module
-	(*m_propertyModuleManager)->SaveMeta(dataWritter);
+	(*m_propertyManagerModule)->SaveMeta(dataWritter);
 
 	//save default form 
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormList->GetValueAsInteger()));
@@ -129,12 +129,12 @@ bool ibValueMetaObjectEnumeration::OnCreateMetaObject(ibMetaData* metaData, int 
 	if (!ibValueMetaObjectRecordDataEnumRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyManagerModule)->OnCreateMetaObject(metaData, flags);
 }
 
 bool ibValueMetaObjectEnumeration::OnLoadMetaObject(ibMetaData* metaData)
 {
-	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
+	if (!(*m_propertyManagerModule)->OnLoadMetaObject(metaData))
 		return false;
 
 	return ibValueMetaObjectRecordDataEnumRef::OnLoadMetaObject(metaData);
@@ -142,7 +142,7 @@ bool ibValueMetaObjectEnumeration::OnLoadMetaObject(ibMetaData* metaData)
 
 bool ibValueMetaObjectEnumeration::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnSaveMetaObject(flags))
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
@@ -157,7 +157,7 @@ bool ibValueMetaObjectEnumeration::OnSaveMetaObject(int flags)
 
 bool ibValueMetaObjectEnumeration::OnDeleteMetaObject()
 {
-	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
+	if (!(*m_propertyManagerModule)->OnDeleteMetaObject())
 		return false;
 
 	return ibValueMetaObjectRecordDataEnumRef::OnDeleteMetaObject();
@@ -170,7 +170,7 @@ bool ibValueMetaObjectEnumeration::OnReloadMetaObject()
 
 bool ibValueMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
 {
-	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	return ibValueMetaObjectRecordDataEnumRef::OnBeforeRunMetaObject(flags);
@@ -178,7 +178,7 @@ bool ibValueMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
 
 bool ibValueMetaObjectEnumeration::OnAfterRunMetaObject(int flags)
 {
-	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnAfterRunMetaObject(flags))
 		return false;
 
 	return ibValueMetaObjectRecordDataEnumRef::OnAfterRunMetaObject(flags);
@@ -186,7 +186,7 @@ bool ibValueMetaObjectEnumeration::OnAfterRunMetaObject(int flags)
 
 bool ibValueMetaObjectEnumeration::OnBeforeCloseMetaObject()
 {
-	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
+	if (!(*m_propertyManagerModule)->OnBeforeCloseMetaObject())
 		return false;
 
 	return ibValueMetaObjectRecordDataEnumRef::OnBeforeCloseMetaObject();
@@ -194,7 +194,7 @@ bool ibValueMetaObjectEnumeration::OnBeforeCloseMetaObject()
 
 bool ibValueMetaObjectEnumeration::OnAfterCloseMetaObject()
 {
-	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
+	if (!(*m_propertyManagerModule)->OnAfterCloseMetaObject())
 		return false;
 
 	return ibValueMetaObjectRecordDataEnumRef::OnAfterCloseMetaObject();

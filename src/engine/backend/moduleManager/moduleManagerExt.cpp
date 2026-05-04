@@ -14,7 +14,7 @@
 ibCompileModule* ibValueModuleManagerExternalDataProcessor::GetCompileModule() const
 {
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
@@ -22,7 +22,7 @@ ibCompileModule* ibValueModuleManagerExternalDataProcessor::GetCompileModule() c
 std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalDataProcessor::GetProcUnit() const
 {
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
@@ -30,13 +30,13 @@ std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalDataProcessor::GetProcUn
 std::map<wxString, ibValue*>& ibValueModuleManagerExternalDataProcessor::GetContextVariables()
 {
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
 
 ibValueModuleManagerExternalDataProcessor::ibValueModuleManagerExternalDataProcessor(ibMetaData* metadata, ibValueMetaObjectDataProcessor* metaObject)
-	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetModuleObject() : nullptr)
+	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetObjectModule() : nullptr)
 {
 	m_objectValue = new ibValueRecordDataObjectDataProcessor(metaObject);
 	//set complile module 
@@ -64,7 +64,7 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 		return true;
 
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 
 	// Imperative pipeline — SetParent cascades compile+procUnit parents
@@ -144,7 +144,7 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 	//incrRef - for control delete
 	m_objectValue->IncrRef();
 
-	ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
+	const ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
 	wxASSERT(commonObject);
 	ibValueMetaObjectFormBase* defFormObject = commonObject->GetDefaultFormByID
 	(
@@ -216,7 +216,7 @@ bool ibValueModuleManagerExternalDataProcessor::ExitMainModule(bool force)
 ibCompileModule* ibValueModuleManagerExternalReport::GetCompileModule() const
 {
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
@@ -224,7 +224,7 @@ ibCompileModule* ibValueModuleManagerExternalReport::GetCompileModule() const
 std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalReport::GetProcUnit() const
 {
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
@@ -232,13 +232,13 @@ std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalReport::GetProcUnit() co
 std::map<wxString, ibValue*>& ibValueModuleManagerExternalReport::GetContextVariables()
 {
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
 
 ibValueModuleManagerExternalReport::ibValueModuleManagerExternalReport(ibMetaData* metadata, ibValueMetaObjectReport* metaObject)
-	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetModuleObject() : nullptr)
+	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetObjectModule() : nullptr)
 {
 	m_objectValue = new ibValueRecordDataObjectReport(metaObject);
 	//set complile module 
@@ -266,7 +266,7 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 		return true;
 
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 
 	// Imperative pipeline — see ExternalDataProcessor::CreateMainModule
@@ -340,7 +340,7 @@ bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 	//incrRef - for control delete
 	m_objectValue->IncrRef();
 
-	ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
+	const ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
 	wxASSERT(commonObject);
 	ibValueMetaObjectFormBase* defFormObject = commonObject->GetDefaultFormByID
 	(

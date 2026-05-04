@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : constants - db
 ////////////////////////////////////////////////////////////////////////////
@@ -15,10 +15,9 @@
 //*                           constant value                            *
 //***********************************************************************
 
-ibValueRecordDataObjectConstant* ibValueMetaObjectConstant::CreateRecordDataObjectValue()
+ibValueRecordDataObjectConstant* ibValueMetaObjectConstant::CreateRecordDataObjectValue() const
 {
 	ibValueRecordDataObjectConstant* pDataRef = nullptr;
-
 	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (!cc->FindCompileModule(m_propertyModule->GetMetaObject(), pDataRef))
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectConstant>(this);
@@ -37,7 +36,7 @@ ibValueRecordDataObjectConstant* ibValueMetaObjectConstant::CreateRecordDataObje
 bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataObjectConstant* source)
 {
 	ibSession* session = ibSession::Current();
-	ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 
 	// Descriptor parent first — subsequent BindVariable /
@@ -71,7 +70,7 @@ bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataOb
 	return true;
 }
 
-ibValueRecordDataObjectConstant::ibValueRecordDataObjectConstant(ibValueMetaObjectConstant* metaObject)
+ibValueRecordDataObjectConstant::ibValueRecordDataObjectConstant(const ibValueMetaObjectConstant* metaObject)
 	: m_metaObject(metaObject), m_objModified(false), m_methodHelper(new ibValueMethodHelper())
 {
 	InitializeObject();

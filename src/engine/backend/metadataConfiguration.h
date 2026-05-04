@@ -56,14 +56,6 @@ public:
 	virtual bool LoadDataFromBuffer(const wxMemoryBuffer& buffer) { return true; }
 	virtual bool SaveDataToBuffer(wxMemoryBuffer& buffer) { return true; }
 
-	//load/save config to XML text format
-	virtual bool SaveConfigToXML(const wxString& strFileName);
-	virtual bool LoadConfigFromXML(const wxString& strFileName);
-
-	//load/save config to JSON text format
-	virtual bool SaveConfigToJSON(const wxString& strFileName);
-	virtual bool LoadConfigFromJSON(const wxString& strFileName);
-
 	//get common metadata
 	virtual ibValueMetaObjectConfiguration* GetCommonMetaObject() const = 0;
 

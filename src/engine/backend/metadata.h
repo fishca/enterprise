@@ -264,7 +264,7 @@ public:
 
 #pragma region __array_h__
 
-	//any  
+	//any
 	template <typename _T1 = ibValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
@@ -272,7 +272,7 @@ public:
 		return array;
 	}
 
-	//any 
+	//any
 	template <typename _T1 = ibValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const ibClassID& clsid, const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
@@ -280,7 +280,7 @@ public:
 		return array;
 	}
 
-	//any  
+	//any
 	template <typename _T1 = ibValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const std::initializer_list<ibClassID> filter, const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
@@ -291,19 +291,19 @@ public:
 #pragma endregion
 #pragma region __filter_h__
 
-	//any 
+	//any
 	template <typename _T1 = ibValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id, const bool use_child_filter = false) const {
 		return FindObjectByFilter<_T2, ibValueMetaObject, _T1>(id, {}, use_child_filter);
 	}
 
-	//any 
+	//any
 	template <typename _T1 = ibValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id, const ibClassID& clsid, const bool use_child_filter = false) const {
 		return FindObjectByFilter<_T2, ibValueMetaObject, _T1>(id, { clsid }, use_child_filter);
 	}
 
-	//any 
+	//any
 	template <typename _T1 = ibValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id,
 		const std::initializer_list<ibClassID> filter, const bool use_child_filter = false) const {
@@ -353,7 +353,7 @@ protected:
 		return false;
 	}
 
-#pragma endregion 
+#pragma endregion
 #pragma region __filter_h__
 
 	template<typename _T1, typename _T2 = ibValueMetaObject, typename _T3 = ibValueMetaObject>

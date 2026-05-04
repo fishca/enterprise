@@ -21,7 +21,7 @@ public:
 	virtual ibClassID GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
-	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Object; }
 
 protected:
@@ -51,7 +51,7 @@ public:
 	virtual ibClassID GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
-	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Manager; }
 
 protected:

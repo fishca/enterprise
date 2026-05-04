@@ -256,9 +256,9 @@ public:
 	//filter children element
 	virtual bool FilterChild(const ibClassID& clsid) const { return false; }
 
-	//process choice 
+	//process choice
 	virtual bool ProcessChoice(ibBackendControlFrame* ownerValue,
-		const wxString& strFormName, enum ibSelectMode selMode) {
+		const wxString& strFormName, enum ibSelectMode selMode) const {
 		return true;
 	}
 
@@ -357,10 +357,10 @@ public:
 		return array;
 	}
 
-#pragma endregion 
+#pragma endregion
 #pragma region __filter_h__
 
-	//any 
+	//any
 	template <typename _T1 = ibValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id) const {
 		return FindObjectByFilter<_T1>(id, {});
@@ -485,7 +485,7 @@ protected:
 			}
 		}
 
-		//self 
+		//self
 		if (stringUtils::CompareString(name, GetName()))
 			return dynamic_cast<_T1*>(const_cast<ibValueMetaObject*>(this));
 
@@ -532,7 +532,7 @@ protected:
 			}
 		}
 
-		//self 
+		//self
 		if (CompareId(id))
 			return dynamic_cast<_T1*>(const_cast<ibValueMetaObject*>(this));
 
@@ -579,7 +579,7 @@ protected:
 			}
 		}
 
-		//self 
+		//self
 		if (CompareGuid(id))
 			return dynamic_cast<_T1*>(const_cast<ibValueMetaObject*>(this));
 

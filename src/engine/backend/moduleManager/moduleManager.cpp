@@ -18,7 +18,7 @@
 //*                                   Singleton class "moduleManager"                                     *
 //*********************************************************************************************************
 
-ibValueModuleManager::ibValueModuleManager(ibMetaData* metadata, ibValueMetaObjectModule* obj) :
+ibValueModuleManager::ibValueModuleManager(ibMetaData* metadata, const ibValueMetaObjectModule* obj) :
 	ibValue(ibValueTypes::TYPE_VALUE), ibRuntimeModuleDataObject(new ibCompileModule(obj)),
 	m_objectManager(new ibValueGlobalContextManager(metadata)),
 	m_metaManager(new ibValueMetadataUnit(metadata)),
@@ -83,11 +83,11 @@ bool ibValueModuleManager::RuntimeRegisterCommonModule(ibValueMetaObjectCommonMo
 	return true;
 }
 
-ibValueModuleManager::ibValueModuleUnit* ibValueModuleManager::FindCommonModule(ibValueMetaObjectCommonModule* commonModule) const
+ibValueModuleManager::ibValueModuleUnit* ibValueModuleManager::FindCommonModule(const ibValueMetaObjectCommonModule* commonModule) const
 {
 	auto moduleObjectIt = std::find_if(m_listCommonModuleManager.begin(), m_listCommonModuleManager.end(),
 		[commonModule](ibValueModuleUnit* valueModule) {
-			return commonModule == valueModule->GetModuleObject();
+			return commonModule == valueModule->GetObjectModule();
 		}
 	);
 
@@ -205,7 +205,7 @@ long ibValueModuleManager::FindProp(const wxString& strName) const
 ibValueModuleManagerConfiguration::ibValueModuleManagerConfiguration(
 	ibMetaData* metadata,
 	ibValueMetaObjectConfiguration* metaObject)
-	: ibValueModuleManager(metadata, metaObject ? metaObject->GetModuleObject() : nullptr)
+	: ibValueModuleManager(metadata, metaObject ? metaObject->GetObjectModule() : nullptr)
 {
 }
 

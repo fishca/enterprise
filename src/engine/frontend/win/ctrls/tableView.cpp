@@ -1,4 +1,4 @@
-#include "tableView.h"
+﻿#include "tableView.h"
 #include "backend/tableInfo.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibTableViewCtrl, ibDataViewCtrl);
@@ -287,7 +287,7 @@ bool ibTableViewCtrl::ShowFilter(struct ibFilterRow& filter)
 				else if (so != nullptr && so->GetObjectTypeCtor() == ibCtorObjectType_object_meta_value) {
 					const ibCtorMetaValueType* meta_so = dynamic_cast<const ibCtorMetaValueType*>(so);
 					if (meta_so != nullptr) {
-						ibValueMetaObjectRecordDataRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
+						const ibValueMetaObjectRecordDataRef* metaObject = dynamic_cast<const ibValueMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
 						if (metaObject != nullptr)
 							return metaObject->HasQuickChoice();
 					}
@@ -319,7 +319,7 @@ bool ibTableViewCtrl::ShowFilter(struct ibFilterRow& filter)
 				if (!ibTypeControlFactory::QuickChoice(this, clsid, GetEditorCtrl())) {
 					const ibCtorMetaValueType* singleValue = activeMetaData->GetTypeCtor(clsid);
 					if (singleValue != nullptr) {
-						ibValueMetaObject* metaObject = singleValue->GetMetaObject();
+						const ibValueMetaObject* metaObject = singleValue->GetMetaObject();
 						wxASSERT(metaObject);
 						const ibValueMetaObjectAttributeBase* attribute = activeMetaData->FindAnyObjectByFilter<ibValueMetaObjectAttributeBase>(filterData.m_filterModel, true);
 

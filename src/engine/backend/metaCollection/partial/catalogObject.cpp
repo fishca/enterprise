@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : catalog object
 ////////////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-ibValueRecordDataObjectCatalog::ibValueRecordDataObjectCatalog(ibValueMetaObjectCatalog* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
+ibValueRecordDataObjectCatalog::ibValueRecordDataObjectCatalog(const ibValueMetaObjectCatalog* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
 	ibValueRecordDataObjectHierarchyRef(metaObject, objGuid, objMode)
 {
 }

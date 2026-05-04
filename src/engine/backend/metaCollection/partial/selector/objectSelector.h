@@ -1,4 +1,4 @@
-#ifndef _SELECTOR_H__
+﻿#ifndef _SELECTOR_H__
 #define _SELECTOR_H__
 
 #include "backend/metaCollection/partial/commonObject.h"
@@ -17,7 +17,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual ibValueMetaObjectGenericData* GetMetaObject() const = 0;
+	virtual const ibValueMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//Get ref class 
 	virtual ibClassID GetClassType() const;
@@ -39,13 +39,13 @@ class BACKEND_API ibValueSelectorRecordDataObject : public ibValueSelectorDataOb
 	public ibValueDataObject {
 public:
 
-	ibValueSelectorRecordDataObject(ibValueMetaObjectRecordDataMutableRef* metaObject);
+	ibValueSelectorRecordDataObject(const ibValueMetaObjectRecordDataMutableRef* metaObject);
 
 	virtual bool Next();
 	virtual ibValueRecordDataObjectRef* GetObject(const ibGuid& guid) const;
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRecordData* GetMetaObject() const {
+	virtual const ibValueMetaObjectRecordData* GetMetaObject() const {
 		return m_metaObject;
 	}
 
@@ -67,7 +67,7 @@ protected:
 
 protected:
 
-	ibValueMetaObjectRecordDataMutableRef* m_metaObject;
+	const ibValueMetaObjectRecordDataMutableRef* m_metaObject;
 	std::vector<ibGuid> m_currentValues;
 };
 
@@ -76,13 +76,13 @@ protected:
 class BACKEND_API ibValueSelectorRegisterDataObject :
 	public ibValueSelectorDataObject {
 public:
-	ibValueSelectorRegisterDataObject(ibValueMetaObjectRegisterData* metaObject);
+	ibValueSelectorRegisterDataObject(const ibValueMetaObjectRegisterData* metaObject);
 
 	virtual bool Next();
 	virtual ibValueRecordManagerObject* GetRecordManager(const ibMetaValueArray& keyValues) const;
 
 	//get metaData from object 
-	virtual ibValueMetaObjectRegisterData* GetMetaObject() const {
+	virtual const ibValueMetaObjectRegisterData* GetMetaObject() const {
 		return m_metaObject;
 	}
 
@@ -104,7 +104,7 @@ protected:
 
 protected:
 
-	ibValueMetaObjectRegisterData* m_metaObject;
+	const ibValueMetaObjectRegisterData* m_metaObject;
 
 	ibMetaValueArray m_keyValues;
 

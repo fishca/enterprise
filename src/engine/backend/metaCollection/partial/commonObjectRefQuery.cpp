@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : ibValueRecordDataObjectRef — instance Read / Save /
 //	              Delete on the runtime-data side. Routes through
@@ -237,7 +237,7 @@ bool ibValueRecordDataObjectRef::ResetUniqueIdentifier()
 bool ibValueRecordDataObjectHierarchyRef::ReadData()
 {
 	if (ibValueRecordDataObjectRef::ReadData()) {
-		ibValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
+		const ibValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
 		ibValue isFolder; ibValueRecordDataObjectHierarchyRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
@@ -252,7 +252,7 @@ bool ibValueRecordDataObjectHierarchyRef::ReadData()
 bool ibValueRecordDataObjectHierarchyRef::ReadData(const ibGuid& srcGuid)
 {
 	if (ibValueRecordDataObjectRef::ReadData(srcGuid)) {
-		ibValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
+		const ibValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
 		ibValue isFolder; ibValueRecordDataObjectHierarchyRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
@@ -354,7 +354,7 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 	// is locked, incremented and returned in one shot — concurrent
 	// sessions (incl. cross-machine) sequentialise through the DB row
 	// lock with no race window between SELECT and UPSERT. Two attempts:
-	//   1) UPDATE...RETURNING — row exists → done.
+	//   1) UPDATE...RETURNING — row exists в†’ done.
 	//   2) Bootstrap-scan + INSERT. INSERT may PK-conflict if another
 	//      session inserted first; the next loop iteration's UPDATE arm
 	//      then succeeds with the racing session's value + 1.
@@ -394,7 +394,7 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 				gotCode = true;
 			}
 			// else: PK conflict from a racing session's bootstrap
-			// → loop, UPDATE arm now succeeds.
+			// в†’ loop, UPDATE arm now succeeds.
 		}
 	}
 

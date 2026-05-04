@@ -1,4 +1,4 @@
-#include "tableBox.h"
+﻿#include "tableBox.h"
 #include "frontend/visualView/ctrl/form.h"
 #include "frontend/visualView/visualHost.h"
 
@@ -40,8 +40,7 @@ void ibValueModelTableBox::OnPropertyChanged(ibProperty* property, const wxVaria
 			const ibCtorMetaValueType* typeCtor =
 				metaData->GetTypeCtor(clsid);
 			if (typeCtor != nullptr) {
-				ibValueMetaObjectCompositeData* metaObject =
-					dynamic_cast<ibValueMetaObjectCompositeData*>(typeCtor->GetMetaObject());
+				const ibValueMetaObjectCompositeData* metaObject = dynamic_cast<const ibValueMetaObjectCompositeData*>(typeCtor->GetMetaObject());
 				if (metaObject != nullptr) {
 					for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 						ibValueModelTableBoxColumn* tableBoxColumn =

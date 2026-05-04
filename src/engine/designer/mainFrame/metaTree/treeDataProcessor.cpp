@@ -108,7 +108,7 @@ ibDataProcessorTree::ibDataProcessorTree(ibMetaDocument* docParent, wxWindow* pa
 
 	ibMetaDataDataProcessor* metaData = ((ibDataProcessorFilibDocument*)docParent)->GetMetaData();
 	ibValueMetaObjectDataProcessor* commonMeta = metaData->GetDataProcessor();
-	ibValueMetaObjectModule *moduleMeta = commonMeta->GetModuleObject();
+	const ibValueMetaObjectModule *moduleMeta = commonMeta->GetObjectModule();
 
 	m_buttonModule = new wxButton(this, wxID_ANY, _("Open module"));
 	m_buttonModule->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibDataProcessorTree::OnButtonModuleClicked), nullptr, this);
@@ -216,7 +216,7 @@ void ibDataProcessorTree::OnButtonModuleClicked(wxCommandEvent& event)
 {
 	ibValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
-	OpenFormMDI(dataProcessor->GetModuleObject());
+	dataProcessor->ProcessCommand(ibValueMetaObjectDataProcessor::ID_METATREE_OPEN_MODULE);
 }
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibDataProcessorTree::ibDataProcessorTreeCtrl, wxTreeCtrl);

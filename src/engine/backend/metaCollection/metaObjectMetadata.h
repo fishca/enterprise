@@ -1,4 +1,4 @@
-#ifndef __METAOBJECT_METADATA_H__
+﻿#ifndef __METAOBJECT_METADATA_H__
 #define __METAOBJECT_METADATA_H__
 
 #include "metaObject.h"
@@ -108,7 +108,7 @@ public:
 
 public:
 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleConfiguration->GetMetaObject(); }
+	virtual const ibValueMetaObjectModule* GetObjectModule() const { return m_propertyModuleConfiguration->GetMetaObject(); }
 
 protected:
 

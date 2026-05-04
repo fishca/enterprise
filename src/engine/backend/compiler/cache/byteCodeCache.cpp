@@ -87,8 +87,7 @@ bool ibByteCodeCache::Load(ibByteCode& outBc, const ibGuid& descId)
 		wxMemoryBuffer blob;
 		rs->GetResultBlob(1, blob);
 		if (blob.GetDataLen() > 0) {
-			ibReaderMemory reader(const_cast<void*>(blob.GetData()),
-			                      static_cast<int>(blob.GetDataLen()));
+			ibReaderMemory reader(blob);
 			ok = outBc.DeserializeAOT(reader);
 		}
 	}

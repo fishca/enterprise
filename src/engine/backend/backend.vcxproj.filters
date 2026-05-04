@@ -1505,8 +1505,6 @@
       <Filter>system\value</Filter>
     </ClCompile>
     <ClCompile Include="tableView.cpp" />
-    <ClCompile Include="metadataConfigurationXML.cpp" />
-    <ClCompile Include="metadataConfigurationJSON.cpp" />
     <ClCompile Include="propertyManager\property\propertyChartOfAccounts.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>

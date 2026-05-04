@@ -39,7 +39,7 @@ std::shared_ptr<ibProcUnit> ibRuntimeModuleDataObject::GetProcUnit() const
 	return m_procUnit;
 }
 
-ibRuntimeRoot* ibRuntimeModuleDataObject::GetRoot() const
+const ibRuntimeRoot* ibRuntimeModuleDataObject::GetRoot() const
 {
 	// Default: walk up. Root descriptor overrides and returns `this`
 	// cast to the interface.
@@ -67,12 +67,9 @@ void ibRuntimeModuleDataObject::BindContextVariable(const wxString& name, ibValu
 {
 	// Lazy-create m_compileModule on first BindContextVariable —
 	// subclass provides its meta-object via GetMetaObject() override.
-	// ibCompileModule ctor takes non-const meta; const_cast is safe —
-	// compile only reads the meta tree, never mutates it.
 	if (m_compileModule == nullptr) {
 		if (const ibValueMetaObjectModuleBase* meta = GetMetaForCompile()) {
-			m_compileModule = new ibCompileModule(
-				const_cast<ibValueMetaObjectModuleBase*>(meta));
+			m_compileModule = new ibCompileModule(meta);
 			// Propagate parent's compile scope chain — SetParent can
 			// be called before BindContextVariable; we pick up the
 			// parent compile on creation.
@@ -230,7 +227,7 @@ void ibRuntimeModuleDataObject::Execute(bool delta)
 	}
 }
 
-void ibRuntimeModuleDataObject::SetParent(ibRuntimeModuleDataObject* parent)
+void ibRuntimeModuleDataObject::SetParent(const ibRuntimeModuleDataObject* parent)
 {
 	m_parent = parent;
 

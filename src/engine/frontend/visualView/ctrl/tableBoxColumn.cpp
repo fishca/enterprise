@@ -18,7 +18,7 @@ bool ibValueModelTableBoxColumn::GetChoiceForm(ibPropertyList* property)
 		ibValueMetaObjectRecordDataRef* metaObjectRefValue = nullptr;
 		if (!m_propertySource->IsEmptyProperty()) {
 
-			ibValueMetaObjectGenericData* metaObjectValue =
+			const ibValueMetaObjectGenericData* metaObjectValue =
 				m_formOwner->GetMetaObject();
 
 			if (metaObjectValue != nullptr) {

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : document manager
 ////////////////////////////////////////////////////////////////////////////
@@ -10,9 +10,9 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectDocument, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectDocument::GetModuleManager() const
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectDocument::GetManagerModule() const
 {
-	return m_metaObject->GetModuleManager();
+	return m_metaObject->GetManagerModule();
 }
 
 #include "reference/reference.h"

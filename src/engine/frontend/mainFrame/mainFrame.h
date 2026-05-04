@@ -167,7 +167,7 @@ protected:
 	// Lazy runtime start — first Show() after LoadMetadata creates the
 	// root module manager and wires per-session ProcUnits onto the
 	// metadata descriptors. No-op on later shows (re-enter guarded by
-	// session->GetModuleManager()) and on kinds that don't run scripts
+	// session->GetManagerModule()) and on kinds that don't run scripts
 	// (Designer / Launcher / WebServer). Called from Show().
 	bool EnsureRuntime();
 

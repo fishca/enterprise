@@ -151,7 +151,7 @@ public:
 	virtual ibSourceDataObject* GetSourceObject() const { return m_sourceObject; }
 	virtual const ibValueMetaObjectFormBase* GetFormMetaObject() const { return m_metaFormObject; }
 
-	ibValueMetaObjectGenericData* GetMetaObject() const;
+	const ibValueMetaObjectGenericData* GetMetaObject() const;
 
 	// get control caption
 	virtual wxString GetControlTitle() const;

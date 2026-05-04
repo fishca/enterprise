@@ -27,7 +27,7 @@ public:
 		m_parentModule = dynamic_cast<ibCompileModule*>(parent);
 	}
 
-	virtual const ibValueMetaObjectModuleBase* GetModuleObject() const { return m_moduleObject; }
+	virtual const ibValueMetaObjectModuleBase* GetObjectModule() const { return m_moduleObject; }
 
 protected:
 	const ibValueMetaObjectModuleBase* m_moduleObject;

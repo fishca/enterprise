@@ -148,7 +148,7 @@ public:
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const { return GetClassType(); }

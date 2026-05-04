@@ -1,4 +1,4 @@
-#ifndef _CONSTANTS_MANAGER_H__
+﻿#ifndef _CONSTANTS_MANAGER_H__
 #define _CONSTANTS_MANAGER_H__
 
 #include "constant.h"
@@ -10,7 +10,7 @@ public:
 	ibValueManagerDataObjectConstant(ibValueMetaObjectConstant* metaConst = nullptr) : m_metaObject(metaConst) {}
 	virtual ~ibValueManagerDataObjectConstant() {}
 
-	virtual ibValueMetaObjectConstant* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectConstant* GetMetaObject() const { return m_metaObject; }
 
 	virtual ibValueMethodHelper* GetPMethods() const {
 		//PrepareNames();  
@@ -28,7 +28,7 @@ public:
 	virtual wxString GetString() const;
 
 protected:
-	ibValueMetaObjectConstant* m_metaObject;
+	const ibValueMetaObjectConstant* m_metaObject;
 	static ibValueMethodHelper m_methodHelper;
 private:
 	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectConstant);

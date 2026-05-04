@@ -264,7 +264,7 @@ public:
 
 #pragma region _tabular_data_
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return nullptr; }
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return nullptr; }
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const { return g_valueTableCLSID; }

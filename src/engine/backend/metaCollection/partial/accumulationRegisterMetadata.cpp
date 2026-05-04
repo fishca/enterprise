@@ -1,4 +1,4 @@
-#include "accumulationRegister.h"
+﻿#include "accumulationRegister.h"
 #include "list/objectList.h"
 #include "backend/metadataConfiguration.h"
 #include "backend/moduleManager/moduleManager.h"
@@ -14,8 +14,8 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectAccumulationRegister, ibValueMetaObje
 ibValueMetaObjectAccumulationRegister::ibValueMetaObjectAccumulationRegister() : ibValueMetaObjectRegisterData()
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
 }
 
 ibValueMetaObjectAccumulationRegister::~ibValueMetaObjectAccumulationRegister()
@@ -33,7 +33,7 @@ ibValueMetaObjectFormBase* ibValueMetaObjectAccumulationRegister::GetDefaultForm
 }
 
 #pragma region _form_builder_h_
-ibBackendValueForm* ibValueMetaObjectAccumulationRegister::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectAccumulationRegister::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -60,8 +60,8 @@ bool ibValueMetaObjectAccumulationRegister::LoadData(ibReaderMemory& dataReader)
 	m_propertyRegisterType->SetValue(dataReader.r_u16());
 
 	//load object module
-	(*m_propertyModuleObject)->LoadMeta(dataReader);
-	(*m_propertyModuleManager)->LoadMeta(dataReader);
+	(*m_propertyObjectModule)->LoadMeta(dataReader);
+	(*m_propertyManagerModule)->LoadMeta(dataReader);
 
 	return ibValueMetaObjectRegisterData::LoadData(dataReader);
 }
@@ -78,8 +78,8 @@ bool ibValueMetaObjectAccumulationRegister::SaveData(ibWriterMemory& dataWritter
 	dataWritter.w_u16(m_propertyRegisterType->GetValueAsInteger());
 
 	//Save object module
-	(*m_propertyModuleObject)->SaveMeta(dataWritter);
-	(*m_propertyModuleManager)->SaveMeta(dataWritter);
+	(*m_propertyObjectModule)->SaveMeta(dataWritter);
+	(*m_propertyManagerModule)->SaveMeta(dataWritter);
 
 	//create or update table:
 	return ibValueMetaObjectRegisterData::SaveData(dataWritter);
@@ -97,8 +97,8 @@ bool ibValueMetaObjectAccumulationRegister::OnCreateMetaObject(ibMetaData* metaD
 		return false;
 
 	return (*m_propertyAttributibRecordType)->OnCreateMetaObject(metaData, flags) &&
-		(*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags) &&
-		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags);
+		(*m_propertyManagerModule)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyObjectModule)->OnCreateMetaObject(metaData, flags);
 }
 
 bool ibValueMetaObjectAccumulationRegister::OnLoadMetaObject(ibMetaData* metaData)
@@ -106,10 +106,10 @@ bool ibValueMetaObjectAccumulationRegister::OnLoadMetaObject(ibMetaData* metaDat
 	if (!(*m_propertyAttributibRecordType)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
+	if (!(*m_propertyManagerModule)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData))
+	if (!(*m_propertyObjectModule)->OnLoadMetaObject(metaData))
 		return false;
 
 	return ibValueMetaObjectRegisterData::OnLoadMetaObject(metaData);
@@ -120,10 +120,10 @@ bool ibValueMetaObjectAccumulationRegister::OnSaveMetaObject(int flags)
 	if (!(*m_propertyAttributibRecordType)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
+	if (!(*m_propertyObjectModule)->OnSaveMetaObject(flags))
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
@@ -141,10 +141,10 @@ bool ibValueMetaObjectAccumulationRegister::OnDeleteMetaObject()
 	if (!(*m_propertyAttributibRecordType)->OnDeleteMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
+	if (!(*m_propertyManagerModule)->OnDeleteMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnDeleteMetaObject())
+	if (!(*m_propertyObjectModule)->OnDeleteMetaObject())
 		return false;
 
 	return ibValueMetaObjectRegisterData::OnDeleteMetaObject();
@@ -155,7 +155,7 @@ bool ibValueMetaObjectAccumulationRegister::OnReloadMetaObject()
 
 	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordSetObjectAccumulationRegister* recordSet = nullptr;
-		if (cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), recordSet)) {
+		if (cc->FindCompileModule(m_propertyObjectModule->GetMetaObject(), recordSet)) {
 			if (!recordSet->InitializeObject())
 				return false;
 		}
@@ -171,10 +171,10 @@ bool ibValueMetaObjectAccumulationRegister::OnBeforeRunMetaObject(int flags)
 	if (!(*m_propertyAttributibRecordType)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyObjectModule)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	registerSelection();
@@ -187,10 +187,10 @@ bool ibValueMetaObjectAccumulationRegister::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyAttributibRecordType)->OnAfterRunMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyManagerModule)->OnAfterRunMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyObjectModule)->OnAfterRunMetaObject(flags))
 		return false;
 
 
@@ -198,7 +198,7 @@ bool ibValueMetaObjectAccumulationRegister::OnAfterRunMetaObject(int flags)
 
 		if (ibValueMetaObjectRegisterData::OnAfterRunMetaObject(flags)) {
 
-			if (!cc->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateRecordSetObjectValue()))
+			if (!cc->AddCompileModule(m_propertyObjectModule->GetMetaObject(), CreateRecordSetObjectValue()))
 				return false;
 
 			return true;
@@ -213,10 +213,10 @@ bool ibValueMetaObjectAccumulationRegister::OnBeforeCloseMetaObject()
 	if (!(*m_propertyAttributibRecordType)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
+	if (!(*m_propertyManagerModule)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject())
+	if (!(*m_propertyObjectModule)->OnBeforeCloseMetaObject())
 		return false;
 
 
@@ -224,7 +224,7 @@ bool ibValueMetaObjectAccumulationRegister::OnBeforeCloseMetaObject()
 
 		if (ibValueMetaObjectRegisterData::OnBeforeCloseMetaObject()) {
 
-			if (!cc->RemoveCompileModule(m_propertyModuleObject->GetMetaObject()))
+			if (!cc->RemoveCompileModule(m_propertyObjectModule->GetMetaObject()))
 				return false;
 
 			return true;
@@ -239,10 +239,10 @@ bool ibValueMetaObjectAccumulationRegister::OnAfterCloseMetaObject()
 	if (!(*m_propertyAttributibRecordType)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
+	if (!(*m_propertyManagerModule)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject())
+	if (!(*m_propertyObjectModule)->OnAfterCloseMetaObject())
 		return false;
 
 	unregisterSelection();
@@ -273,16 +273,16 @@ void ibValueMetaObjectAccumulationRegister::OnRemoveMetaForm(ibValueMetaObjectFo
 }
 #include "accumulationRegisterManager.h"
 
-ibValueManagerDataObject* ibValueMetaObjectAccumulationRegister::CreateManagerDataObjectValue()
+ibValueManagerDataObject* ibValueMetaObjectAccumulationRegister::CreateManagerDataObjectValue() const
 {
 	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectAccumulationRegister>(this);
 }
 
-ibValueRecordSetObject* ibValueMetaObjectAccumulationRegister::CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey)
+ibValueRecordSetObject* ibValueMetaObjectAccumulationRegister::CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey) const
 {
 	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordSetObject* pDataRef = nullptr;
-		if (!cc->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
+		if (!cc->FindCompileModule(m_propertyObjectModule->GetMetaObject(), pDataRef)) {
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectAccumulationRegister>(this, uniqueKey);
 		}
 		return pDataRef;
@@ -290,7 +290,7 @@ ibValueRecordSetObject* ibValueMetaObjectAccumulationRegister::CreateRecordSetOb
 	return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectAccumulationRegister>(this, uniqueKey);
 }
 
-ibSourceDataObject* ibValueMetaObjectAccumulationRegister::CreateSourceObject(ibValueMetaObjectFormBase* metaObject)
+ibSourceDataObject* ibValueMetaObjectAccumulationRegister::CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const
 {
 	switch (metaObject->GetTypeForm())
 	{

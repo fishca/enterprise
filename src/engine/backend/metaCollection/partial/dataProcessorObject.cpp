@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : dataProcessor - object
 ////////////////////////////////////////////////////////////////////////////
@@ -9,7 +9,7 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-ibValueRecordDataObjectDataProcessor::ibValueRecordDataObjectDataProcessor(ibValueMetaObjectDataProcessor* metaObject) :
+ibValueRecordDataObjectDataProcessor::ibValueRecordDataObjectDataProcessor(const ibValueMetaObjectDataProcessor* metaObject) :
 	ibValueRecordDataObjectExt(metaObject)
 {
 }

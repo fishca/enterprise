@@ -140,7 +140,7 @@ bool ibFrontendDocMDIFrame::EnsureRuntime()
 
 	// Re-entry guard — root module manager lives on the session; if it's
 	// already installed the runtime was started on a previous Show().
-	if (m_session->GetModuleManager() != nullptr)
+	if (m_session->GetManagerModule() != nullptr)
 		return true;
 
 	const ibSessionKind kind = m_session->GetKind();
@@ -153,7 +153,7 @@ bool ibFrontendDocMDIFrame::EnsureRuntime()
 
 	// CreateRoot + CompileRoot already happened in OnRun after LoadMetadata
 	// — frame->Initialize is the runtime-start phase, only InitRuntime here.
-	if (auto* mm = m_session->GetModuleManager())
+	if (auto* mm = m_session->GetManagerModule())
 		mm->AttachRuntime(m_session);
 	return true;
 }
@@ -193,7 +193,7 @@ ibBackendValueForm* ibFrontendDocMDIFrame::CreateNewForm(const ibValueMetaObject
 	wxASSERT(!(backendControl == nullptr && ownerControl != nullptr));
 	// Parent descriptor wiring happens inside ibValueForm's ctor — it
 	// already receives ownerControl; for the UI path (null owner) it
-	// falls back to backend_mainFrame->GetSession()->GetModuleManager().
+	// falls back to backend_mainFrame->GetSession()->GetManagerModule().
 	return ibValue::CreateAndPrepareValueRef<ibValueForm>(creator, ownerControl, srcObject, formGuid);
 }
 

@@ -56,7 +56,7 @@ public:
 	// webApplication.cpp (with moduleManager.h already included there)
 	// lets TUs that only need the class identity (formObject.cpp,
 	// webTimer.cpp) stop at a forward decl.
-	ibValueModuleManagerConfiguration* GetModuleManager() const;
+	ibValueModuleManagerConfiguration* GetManagerModule() const;
 	ibWebFrame*                        GetFrame()         const { return m_frame; }
 
 	// Session context for this application. Set by the owning
@@ -142,7 +142,7 @@ private:
 	// leak-free without a matching IncrRef/DecrRef pair to track.
 	ibWebFrame*                                   m_frame         = nullptr;
 	// m_moduleManager field removed — moduleManager is shared process-
-	// wide and lives on metadata; GetModuleManager() pulls from there.
+	// wide and lives on metadata; GetManagerModule() pulls from there.
 	bool                                          m_initialized   = false;
 	// Borrowed — owned by ibSessionRegistry keyed by cookie. Survives this
 	// app because Destroy is driven by the session teardown that runs

@@ -99,7 +99,7 @@ public:
 	// Module-object currently wired in m_compileModule. Thin post-
 	// compile accessor — only meaningful AFTER compile is created.
 	const ibValueMetaObjectModuleBase* GetMetaObject() const {
-		return GetCompileModule() ? GetCompileModule()->GetModuleObject() : nullptr;
+		return GetCompileModule() ? GetCompileModule()->GetObjectModule() : nullptr;
 	}
 
 	// Compile-target — the single module this descriptor compiles
@@ -113,14 +113,14 @@ public:
 	//   - GetMetaObject() on record-data    → the container.
 	//   - GetMetaForCompile()               → the single module inside
 	//     the container that drives THIS descriptor's bytecode
-	//     (usually container->GetModuleObject() for catalog/document
+	//     (usually container->GetObjectModule() for catalog/document
 	//     objects; form / common module are modules themselves and
 	//     return the metadata directly).
 	// Default reads through m_compileModule — works for eager-compile
 	// subclasses (Unit, Configuration, External DP) whose compile is
 	// wired in their ctor; lazy-compile subclasses override.
 	virtual const ibValueMetaObjectModuleBase* GetMetaForCompile() const {
-		return m_compileModule ? m_compileModule->GetModuleObject() : nullptr;
+		return m_compileModule ? m_compileModule->GetObjectModule() : nullptr;
 	}
 
 	virtual ibCompileModule* GetCompileModule() const { return m_compileModule; }
@@ -148,14 +148,14 @@ public:
 	// resolution). Same for m_procUnit (call stack frame chain). This
 	// lets call sites set parent once at the descriptor level instead
 	// of separately wiring both compile and runtime parents.
-	void SetParent(ibRuntimeModuleDataObject* parent);
-	ibRuntimeModuleDataObject* GetParent() const { return m_parent; }
+	void SetParent(const ibRuntimeModuleDataObject* parent);
+	const ibRuntimeModuleDataObject* GetParent() const { return m_parent; }
 
 	// Walk the parent chain until we hit a node that acts as runtime
 	// root (implements ibRuntimeRoot). Configuration is today's sole
 	// root; external DPs / reports parent into it. Returns nullptr
 	// for orphan descriptors — no root reachable upward.
-	virtual ibRuntimeRoot* GetRoot() const;
+	virtual const ibRuntimeRoot* GetRoot() const;
 
 protected:
 	// Method call (array form). Resolves the runtime through
@@ -232,7 +232,7 @@ protected:
 	// CreateNewForm, AddObject) so scope chain walks up correctly.
 	// Raw ptr; safe as long as parent outlives child (enforced by
 	// owning containers).
-	ibRuntimeModuleDataObject* m_parent = nullptr;
+	const ibRuntimeModuleDataObject* m_parent = nullptr;
 };
 
 #endif

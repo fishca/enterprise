@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : autoComplete loader  
 ////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 		for (long i = 0; i < vObject.GetNProps(); i++) {
 			// Scope-local props (ThisObject / ThisForm) must not
 			// surface in autocomplete after a chain walk reaches a
-			// foreign object (`Catalogs.Catalog1.CreateElement().` …).
+			// foreign object (`Catalogs.Catalog1.CreateElement().` вЂ¦).
 			if (vObject.IsPropScoped(i)) continue;
 			m_ac.Append(
 				ibContentType::eVariable,
@@ -43,7 +43,7 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 		}
 		ibRuntimeModuleDataObject* moduleDataObject = dynamic_cast<ibRuntimeModuleDataObject*>(vObject.GetRef());
 		if (moduleDataObject != nullptr) {
-			const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
+			const const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
 			if (computeModuleObject != nullptr) {
 				ibParserModule cParser;
 				if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
@@ -75,7 +75,7 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 		}
 		ibValueManagerDataObject* managerDataObject = dynamic_cast<ibValueManagerDataObject*>(vObject.GetRef());
 		if (managerDataObject != nullptr) {
-			ibValueMetaObjectCommonModule* computeManagerModule = managerDataObject->GetModuleManager();
+			const ibValueMetaObjectCommonModule* computeManagerModule = managerDataObject->GetManagerModule();
 			if (computeManagerModule != nullptr) {
 				ibParserModule cParser;
 				if (cParser.ParseModule(computeManagerModule->GetModuleText())) {
@@ -577,7 +577,7 @@ void ibCodeEditor::LoadCallTip()
 
 				ibRuntimeModuleDataObject* moduleDataObject = dynamic_cast<ibRuntimeModuleDataObject*>(vObject.GetRef());
 				if (moduleDataObject) {
-					const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
+					const const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
 					if (computeModuleObject) {
 						ibParserModule cParser;
 						if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
@@ -595,7 +595,7 @@ void ibCodeEditor::LoadCallTip()
 
 				ibValueManagerDataObject* managerDataObject = dynamic_cast<ibValueManagerDataObject*>(vObject.GetRef());
 				if (managerDataObject) {
-					ibValueMetaObjectCommonModule* computeManagerModule = managerDataObject->GetModuleManager();
+					const ibValueMetaObjectCommonModule* computeManagerModule = managerDataObject->GetManagerModule();
 					if (computeManagerModule) {
 						ibParserModule cParser;
 						if (cParser.ParseModule(computeManagerModule->GetModuleText())) {

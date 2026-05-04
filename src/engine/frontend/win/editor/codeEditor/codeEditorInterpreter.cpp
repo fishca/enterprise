@@ -88,7 +88,7 @@ void ibPrecompileCode::PrepareModuleData()
 		ibMetaData* metaData = m_moduleObject->GetMetaData();
 		wxASSERT(metaData);
 		ibSession* session = ibSession::Current();
-		ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+		ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 		auto* cc = metaData ? metaData->GetCompileCache() : nullptr;
 		if (cc == nullptr || moduleManager == nullptr ||
 			!cc->FindCompileModule(m_moduleObject, contextVariable)) {
@@ -224,7 +224,7 @@ void ibPrecompileCode::PrepareModuleData()
 				GetContext()->m_variables[stringUtils::MakeUpper(kv.first)] = variable;
 			}
 
-			const ibValueMetaObjectModuleBase* moduleObject = compileModule->GetModuleObject();
+			const ibValueMetaObjectModuleBase* moduleObject = compileModule->GetObjectModule();
 			if (moduleObject != nullptr) {
 				ibMetaData* metaData = moduleObject->GetMetaData();
 				wxASSERT(metaData);
@@ -716,7 +716,7 @@ bool ibPrecompileCode::Compile()
 		ibMetaData* metaData = m_moduleObject->GetMetaData();
 		wxASSERT(metaData);
 		ibSession* session = ibSession::Current();
-		ibValueModuleManager* moduleManager = session ? session->GetModuleManager() : nullptr;
+		ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 		if (moduleManager != nullptr) {
 			for (auto variable : moduleManager->GetGlobalVariables()) {
 				AddVariable(variable.first, variable.second);

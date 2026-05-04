@@ -153,7 +153,7 @@ ibSession* ibSessionRegistry::FindSessionByRoot(ibValueModuleManagerConfiguratio
 	std::shared_lock<std::shared_mutex> lock(m_ownMutex);
 	for (const auto& kv : m_own) {
 		ibSession* s = kv.second.get();
-		if (s != nullptr && s->GetModuleManager() == mm)
+		if (s != nullptr && s->GetManagerModule() == mm)
 			return s;
 	}
 	return nullptr;

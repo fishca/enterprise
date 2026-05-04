@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : dataProcessor - manager
 ////////////////////////////////////////////////////////////////////////////
@@ -9,7 +9,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectDataProcessor, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectDataProcessor::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectDataProcessor::GetManagerModule() const { return m_metaObject->GetManagerModule(); }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +74,7 @@ bool ibValueManagerDataObjectExternalDataProcessor::CallAsFunc(const long lMetho
 	{
 		ibMetaDataDataProcessor* metaDataProcessor = new ibMetaDataDataProcessor();
 		if (metaDataProcessor->LoadFromFile(paParams[0]->GetString())) {
-			ibValueModuleManagerExternalDataProcessor* moduleManager = metaDataProcessor->GetModuleManager();
+			ibValueModuleManagerExternalDataProcessor* moduleManager = metaDataProcessor->GetManagerModule();
 			pvarRetValue = moduleManager->GetObjectValue();
 			return true;
 		}

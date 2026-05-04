@@ -79,7 +79,7 @@ public:
 	virtual ibValue AdjustValue() const;
 	virtual ibValue AdjustValue(const ibValue& varValue) const;
 
-	//get metadata 
+	//get metadata
 	virtual class ibMetaData* GetMetaData() const = 0;
 };
 

@@ -69,7 +69,7 @@ public:
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const;
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const;
 	//get ref class 
 	virtual ibClassID GetSourceClassType() const;
 	//Get presentation 

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : enumeration manager
 ////////////////////////////////////////////////////////////////////////////
@@ -11,7 +11,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectEnumeration, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectEnumeration::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectEnumeration::GetManagerModule() const { return m_metaObject->GetManagerModule(); }
 
 enum Func {
 	eGetForm,

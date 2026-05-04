@@ -57,7 +57,7 @@ ibSession::~ibSession()
 	ClearRoot();
 }
 
-ibValueModuleManagerConfiguration* ibSession::GetModuleManager() const
+ibValueModuleManagerConfiguration* ibSession::GetManagerModule() const
 {
 	return m_root;   // ibValuePtr's implicit operator T*()
 }
@@ -497,7 +497,7 @@ bool ibSession::Open(const wxString& user, const wxString& password)
 		//   1. OnFirstConnect listeners — process-level metadata bootstrap
 		//      (metadataCreate, populates activeMetaData) on the first auth.
 		//   2. session->EnsureRoot — per-session root mm allocated NOW so
-		//      step 3's listeners can rely on GetModuleManager() != null.
+		//      step 3's listeners can rely on GetManagerModule() != null.
 		//   3. OnAuthenticated listeners — per-session bring-up
 		//      (RunDatabase fires OnBefore/AfterRunMetaObject which read
 		//      session->mm; CompileRoot; AttachRuntime).

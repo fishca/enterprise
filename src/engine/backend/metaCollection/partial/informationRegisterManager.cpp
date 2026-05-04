@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : information register manager
 ////////////////////////////////////////////////////////////////////////////
@@ -10,8 +10,8 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectInformationRegister, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectInformationRegister::GetModuleManager() const {
-	return m_metaObject->GetModuleManager();
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectInformationRegister::GetManagerModule() const {
+	return m_metaObject->GetManagerModule();
 }
 
 enum {

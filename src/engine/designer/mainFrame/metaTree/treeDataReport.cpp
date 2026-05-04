@@ -108,7 +108,7 @@ ibDataReportTree::ibDataReportTree(ibMetaDocument* docParent, wxWindow* parent, 
 
 	ibMetaDataReport* metaData = ((ibReportFilibDocument*)docParent)->GetMetaData();
 	ibValueMetaObjectReport* commonMeta = metaData->GetReport();
-	ibValueMetaObjectModule* moduleMeta = commonMeta->GetModuleObject();
+	const ibValueMetaObjectModule* moduleMeta = commonMeta->GetObjectModule();
 
 	m_buttonModule = new wxButton(this, wxID_ANY, _("Open module"));
 	m_buttonModule->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibDataReportTree::OnButtonModuleClicked), nullptr, this);
@@ -216,7 +216,7 @@ void ibDataReportTree::OnButtonModuleClicked(wxCommandEvent& event)
 {
 	ibValueMetaObjectReport* report = m_metaData->GetReport();
 	wxASSERT(report);
-	OpenFormMDI(report->GetModuleObject());
+	report->ProcessCommand(ibValueMetaObjectReport::ID_METATREE_OPEN_MODULE);
 }
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibDataReportTree::ibDataReportTreeCtrl, wxTreeCtrl);

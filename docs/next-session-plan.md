@@ -665,6 +665,49 @@ Files touched: `session.{h,cpp}`, `sessionRegistry.{h,cpp}`,
   survive descriptor renames. See `docs/runtime-facade.md` status
   banner for the up-to-date map.
 
+### Session/holder + ses_query landed 2026-05-04
+- `db_query → Current()` runtime split done as `ses_query` macro
+  (`#define ses_query (ibSession::DatabaseLayer())`) routing through
+  session's holder. `db_query` stays for DDL / metadata-load /
+  service / bootstrap.
+- `ibSession` switched from inheritance (`: public ibDatabaseConnectionHolder`)
+  to **composition** — owns `m_dbHolder` member. Façade: `EnsureConnection`,
+  `OpenConnectionScope`, `Holder()`, static `DatabaseLayer()`. Pool is
+  now holder-agnostic — `CurrentHolder()` returns `ThreadHolder` only,
+  no implicit session routing.
+- Holder's new `EnsureConnection()` chain: TX-pinned > scope-bound >
+  Checkout-and-bind-as-scope. Auto-bind sticks the conn to the holder
+  for the holder's lifetime, so multi-call functions share one conn
+  (no orphan rs leaks). Anti-pattern remaining: `ses_query->X(...)`
+  multiple times in one function → still incurs `Current()` lookup +
+  `EnsureConnection` chain per call. Cheap but cleaner is
+  `auto db = ses_query;` once per function.
+- `ibConnectionScope` no longer routes to session implicitly. Callers
+  that previously did `ibConnectionScope scope = GetFreeConnection();`
+  expecting session binding now use
+  `ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();`
+  explicitly. Updated 8 *Object.cpp callsites + SetConstValue.
+- 17 descriptor / runtime files migrated from `db_query` to `ses_query`
+  (commonObjectQuery, tabularSection, all *Manager_impl, list/selector/
+  reference query files, valueDatabase{Layer,PrepareStatement,ResultSet},
+  systemManagerFunc::BeginTransaction/Commit/RollBack).
+- `commonObjectQuery.cpp` audit: statement-leak fix (RAII via
+  `ibStatementGuard`), `m_listObjectValue.find()` instead of `[]`
+  auto-insert, **DELETE+INSERT → UPSERT main row** (FB
+  `UPDATE OR INSERT`, PG `ON CONFLICT DO UPDATE`), drop `TableExists`
+  probe in ReadData, `?` param binding for GUIDs, `LIMIT 1` /
+  `FIRST 1` in `ExistData`, `SELECT MAX()` aggregation in
+  `ExistData(lastNum)` instead of C++ loop.
+- New tests: `tests/test_connectionPool.cpp` (8 cases — pool
+  lifecycle), `tests/test_session.cpp` (6 cases — composition + façade
+  invariants). Mock layer in `tests/mock_database_layer.h`.
+- See `memory/reference_ses_query.md`,
+  `memory/reference_session_holder_composition.md`.
+- **Open**: integration tests for Checkout-deleter, ReserveTx,
+  BindScopeHolder cycle, EnsureConnection auto-bind sticks across
+  calls, IsBusy semantics — all need full appData wiring + live
+  driver. Currently smoke-tested only via launcher.exe runs.
+
 ### Sequence allocator — atomic landed 2026-05-04
 - `GenerateNextIdentifier` uses `UPDATE ... RETURNING` for atomic
   increment + bootstrap-INSERT for first-ever call (FB / PG).

@@ -10,12 +10,13 @@
 #include "backend/system/value/valueTable.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -51,7 +52,7 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cFilter)
 		}
 	}
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText, m_metaObject->GetTableNameDB());
+	ibPreparedStatement* statement = ses_query->PrepareStatement(queryText, m_metaObject->GetTableNameDB());
 
 	if (statement == nullptr)
 		return retTable;
@@ -85,9 +86,9 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cFilter)
 
 ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cPeriod, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -124,7 +125,7 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cPeriod,
 				" AND " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(filter.first);
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(queryText, m_metaObject->GetTableNameDB());
+		ibPreparedStatement* statement = ses_query->PrepareStatement(queryText, m_metaObject->GetTableNameDB());
 
 		if (statement == nullptr)
 			return retTable;
@@ -153,8 +154,8 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cPeriod,
 			wxDELETE(retLine);
 		}
 
-		db_query->CloseResultSet(resultSet);
-		db_query->CloseStatement(statement);
+		ses_query->CloseResultSet(resultSet);
+		ses_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -162,9 +163,9 @@ ibValue ibValueManagerDataObjectInformationRegister::Get(const ibValue& cPeriod,
 
 ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPeriod, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueStructure* retTable = ibValue::CreateAndPrepareValueRef<ibValueStructure>();
@@ -305,7 +306,7 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
@@ -332,8 +333,8 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 			}
 		}
 
-		db_query->CloseResultSet(resultSet);
-		db_query->CloseStatement(statement);
+		ses_query->CloseResultSet(resultSet);
+		ses_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -341,9 +342,9 @@ ibValue ibValueManagerDataObjectInformationRegister::GetFirst(const ibValue& cPe
 
 ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPeriod, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueStructure* retTable = ibValue::CreateAndPrepareValueRef<ibValueStructure>();
@@ -484,7 +485,7 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
@@ -511,8 +512,8 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 			}
 		}
 
-		db_query->CloseResultSet(resultSet);
-		db_query->CloseStatement(statement);
+		ses_query->CloseResultSet(resultSet);
+		ses_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -520,9 +521,9 @@ ibValue ibValueManagerDataObjectInformationRegister::GetLast(const ibValue& cPer
 
 ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& cPeriod, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -671,7 +672,7 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
@@ -701,8 +702,8 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 			wxDELETE(retLine);
 		}
 
-		db_query->CloseResultSet(resultSet);
-		db_query->CloseStatement(statement);
+		ses_query->CloseResultSet(resultSet);
+		ses_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -710,9 +711,9 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceFirst(const ibValue& c
 
 ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cPeriod, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -861,7 +862,7 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 			}
 		}
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
@@ -891,8 +892,8 @@ ibValue ibValueManagerDataObjectInformationRegister::SliceLast(const ibValue& cP
 			wxDELETE(retLine);
 		}
 
-		db_query->CloseResultSet(resultSet);
-		db_query->CloseStatement(statement);
+		ses_query->CloseResultSet(resultSet);
+		ses_query->CloseStatement(statement);
 	}
 
 	return retTable;

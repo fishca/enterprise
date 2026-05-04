@@ -975,7 +975,7 @@ void ibValueSystemFunction::BeginTransaction()
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	db_query->BeginTransaction();
+	ses_query->BeginTransaction();
 }
 
 void ibValueSystemFunction::CommitTransaction()
@@ -983,7 +983,7 @@ void ibValueSystemFunction::CommitTransaction()
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	db_query->Commit();
+	ses_query->Commit();
 }
 
 void ibValueSystemFunction::RollBackTransaction()
@@ -991,5 +991,5 @@ void ibValueSystemFunction::RollBackTransaction()
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	db_query->RollBack();
+	ses_query->RollBack();
 }

@@ -7,6 +7,7 @@
 #include "backend/metaData.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "reference/reference.h"
 #include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
@@ -230,8 +231,8 @@ bool ibValueRecordDataObjectDocument::WriteObject(ibDocumentWriteMode writeMode,
 		// one conn so the outer TX encompasses every register's work
 		// atomically (inner rollback poisons outer commit via the
 		// counter layer). The scope installs a TL slot for the
-		// thread; inner `db_query` and `ibConnectionScope` inherit it.
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		// thread; inner `ses_query` and `ibConnectionScope` inherit it.
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
@@ -395,7 +396,7 @@ bool ibValueRecordDataObjectDocument::DeleteObject()
 		// cleanup (DeleteRecordSet on each linked register) runs
 		// inside this scope — shared conn means the outer TX can
 		// atomically undo all register rows if anything aborts.
-		ibConnectionScope scope = ibConnectionPool::GetFreeConnection();
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
 
 		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));

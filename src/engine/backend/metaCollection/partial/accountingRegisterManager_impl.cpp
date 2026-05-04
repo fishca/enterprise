@@ -10,12 +10,13 @@
 #include "backend/system/value/valueTable.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 ibValue ibValueManagerDataObjectAccountingRegister::Balance(const ibValue& cPeriod, const ibValue& cAccount, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -247,7 +248,7 @@ ibValue ibValueManagerDataObjectAccountingRegister::Balance(const ibValue& cPeri
 	sqlQuery += ") AS T1";
 
 	// Prepare and bind parameters
-	ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 	if (statement == nullptr)
 		return retTable;
@@ -314,17 +315,17 @@ ibValue ibValueManagerDataObjectAccountingRegister::Balance(const ibValue& cPeri
 		wxDELETE(retLine);
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 
 	return retTable;
 }
 
 ibValue ibValueManagerDataObjectAccountingRegister::Turnovers(const ibValue& cBeginOfPeriod, const ibValue& cEndOfPeriod, const ibValue& cAccount, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -572,7 +573,7 @@ ibValue ibValueManagerDataObjectAccountingRegister::Turnovers(const ibValue& cBe
 	sqlQuery += ") AS T1";
 
 	// Prepare and bind parameters
-	ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 	if (statement == nullptr)
 		return retTable;
@@ -644,17 +645,17 @@ ibValue ibValueManagerDataObjectAccountingRegister::Turnovers(const ibValue& cBe
 		wxDELETE(retLine);
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 
 	return retTable;
 }
 
 ibValue ibValueManagerDataObjectAccountingRegister::DrCrTurnovers(const ibValue& cBeginOfPeriod, const ibValue& cEndOfPeriod, const ibValue& cAccount, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -887,7 +888,7 @@ ibValue ibValueManagerDataObjectAccountingRegister::DrCrTurnovers(const ibValue&
 	}
 
 	// Prepare and bind parameters
-	ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 	if (statement == nullptr)
 		return retTable;
@@ -944,17 +945,17 @@ ibValue ibValueManagerDataObjectAccountingRegister::DrCrTurnovers(const ibValue&
 		wxDELETE(retLine);
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 
 	return retTable;
 }
 
 ibValue ibValueManagerDataObjectAccountingRegister::BalanceAndTurnovers(const ibValue& cBeginOfPeriod, const ibValue& cEndOfPeriod, const ibValue& cAccount, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -1377,7 +1378,7 @@ ibValue ibValueManagerDataObjectAccountingRegister::BalanceAndTurnovers(const ib
 	}
 
 	// Prepare and bind parameters
-	ibPreparedStatement* statement = db_query->PrepareStatement(outerQuery);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(outerQuery);
 
 	if (statement == nullptr)
 		return retTable;
@@ -1470,8 +1471,8 @@ ibValue ibValueManagerDataObjectAccountingRegister::BalanceAndTurnovers(const ib
 		wxDELETE(retLine);
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 
 	return retTable;
 }

@@ -1,6 +1,7 @@
 #include "valueDatabase.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueResultSet, ibValue);
 
@@ -17,7 +18,7 @@ ibValueResultSet::ibValueResultSet(ibDatabaseResultSet* resultSet)
 ibValueResultSet::~ibValueResultSet()
 {
 	if (m_resultSet != nullptr)
-		db_query->CloseResultSet(m_resultSet);
+		ses_query->CloseResultSet(m_resultSet);
 
 	wxDELETE(m_methodHelper);
 }

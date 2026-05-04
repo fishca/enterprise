@@ -10,12 +10,13 @@
 #include "backend/system/value/valueTable.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 ibValue ibValueManagerDataObjectAccumulationRegister::Balance(const ibValue& cPeriod, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -140,7 +141,7 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Balance(const ibValue& cPe
 
 		sqlQuery += ") AS T1";
 
-		ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+		ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 		if (statement == nullptr)
 			return retTable;
@@ -175,8 +176,8 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Balance(const ibValue& cPe
 			wxDELETE(retLine);
 		}
 
-		db_query->CloseResultSet(resultSet);
-		db_query->CloseStatement(statement);
+		ses_query->CloseResultSet(resultSet);
+		ses_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -184,9 +185,9 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Balance(const ibValue& cPe
 
 ibValue ibValueManagerDataObjectAccumulationRegister::Turnovers(const ibValue& cBeginOfPeriod, const ibValue& cEndOfPeriod, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -355,7 +356,7 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Turnovers(const ibValue& c
 
 	sqlQuery += ") AS T1";
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 	if (statement == nullptr)
 		return retTable;
@@ -401,8 +402,8 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Turnovers(const ibValue& c
 		wxDELETE(retLine);
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 
 	return retTable;
 }

@@ -5,6 +5,7 @@
 
 #include "reference.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/metaCollection/partial/tabularSection/tabularSection.h"
 #include "backend/databaseLayer/databaseLayer.h"
@@ -15,19 +16,21 @@ bool ibValueReferenceDataObject::ReadData(bool createData)
 	if (m_metaObject == nullptr || !m_objGuid.isValid())
 		return false;
 
+	// Cache the conn locally — every ses_query call Acquires a fresh
+	// shared_ptr; multiple ses_query->X(...) in one function would each
+	// route through Checkout and pin a different pool entry, leaving rs
+	// orphaned on a conn that the next Close runs on the wrong handle.
+	const auto db = ses_query;
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 
-	if (db_query->TableExists(tableName)) {
-		ibDatabaseResultSet* resultSet = nullptr;	
-		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
-			resultSet = db_query->RunQueryWithResults("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1;", tableName, m_objGuid.str());
-		else
-			resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM %s WHERE uuid = '%s';", tableName, m_objGuid.str());
+	if (db->TableExists(tableName)) {
+		ibDatabaseResultSet* resultSet = (db->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD)
+			? db->RunQueryWithResults("SELECT FIRST 1 * FROM %s WHERE uuid = '%s';", tableName, m_objGuid.str())
+			: db->RunQueryWithResults("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1;", tableName, m_objGuid.str());
 		if (resultSet == nullptr)
 			return false;
 		bool readRef = false;
-		if (resultSet->Next()) {			
-			//load attributes 
+		if (resultSet->Next()) {
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
 					ibValueMetaObjectAttributeBase::GetValueAttribute(
@@ -38,15 +41,9 @@ bool ibValueReferenceDataObject::ReadData(bool createData)
 					);
 				}
 			}
-			// table is collection values 
-			//for (const auto object : m_metaObject->GetTableArrayObject()) {
-			//	m_listObjectValue.insert_or_assign(object->GetMetaID(), 
-			//		ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectRef>(this, object, true));
-			//}
-
 			readRef = true;
-		}	
-		db_query->CloseResultSet(resultSet);
+		}
+		db->CloseResultSet(resultSet);
 		return readRef;
 	}
 	return false;
@@ -58,26 +55,22 @@ bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector
 		bool ReadValues() {
 			if (m_metaObject == nullptr || m_newObject)
 				return false;
+			const auto db = ses_query;
 			const wxString& tableName = m_metaObject->GetTableNameDB();
-			if (db_query->TableExists(tableName)) {
-
-				ibDatabaseResultSet* resultSet = nullptr;
-				if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
-					resultSet = db_query->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "' LIMIT 1;");
-				else
-					resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "';");
-
+			if (db->TableExists(tableName)) {
+				ibDatabaseResultSet* resultSet = (db->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD)
+					? db->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "';")
+					: db->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "' LIMIT 1;");
 				if (!resultSet)
 					return false;
 				if (resultSet->Next()) {
-					//load other attributes 
 					for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 						if (m_metaObject->IsDataReference(object->GetMetaID()))
 							continue;
 						ibValueMetaObjectAttributeBase::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 					}
 				}
-				db_query->CloseResultSet(resultSet);
+				db->CloseResultSet(resultSet);
 				return true;
 			}
 			return false;
@@ -113,9 +106,10 @@ bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector
 			return m_metaObject;
 		}
 	};
+	const auto db = ses_query;
 	const wxString& tableName = m_metaObject->GetTableNameDB();
-	if (db_query->TableExists(tableName)) {
-		ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT * FROM %s ORDER BY uuid; ", tableName);
+	if (db->TableExists(tableName)) {
+		ibDatabaseResultSet* resultSet = db->RunQueryWithResults("SELECT * FROM %s ORDER BY uuid; ", tableName);
 		if (resultSet == nullptr)
 			return false;
 		while (resultSet->Next()) {
@@ -127,7 +121,7 @@ bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector
 			}
 		}
 		std::sort(listValue.begin(), listValue.end(), [](const ibValue& a, const ibValue& b) { return a.GetString() < b.GetString(); });
-		db_query->CloseResultSet(resultSet);
+		db->CloseResultSet(resultSet);
 		return listValue.size() > 0;
 	}
 

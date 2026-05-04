@@ -5,6 +5,7 @@
 
 #include "chartOfCharacteristicTypesManager.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/metaCollection/attribute/metaAttributeObject.h"
 
@@ -12,22 +13,22 @@ ibValueReferenceDataObject* ibValueManagerDataObjectChartOfCharacteristicTypes::
 {
 	if (!appData->DesignerMode()) {
 
-		if (db_query != nullptr && !db_query->IsOpen())
+		if (ses_query != nullptr && !ses_query->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		else if (ses_query == nullptr)
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!cParam.IsEmpty()) {
 			const wxString& tableName = m_metaObject->GetTableNameDB();
-			if (db_query->TableExists(tableName)) {
+			if (ses_query->TableExists(tableName)) {
 				ibValueMetaObjectAttributePredefined* attributeCode = m_metaObject->GetDataCode();
 				wxASSERT(attributeCode);
 				wxString sqlQuery = "";
-				if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
+				if (ses_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 					sqlQuery = "SELECT uuid FROM %s WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attributeCode, "LIKE") + " LIMIT 1";
 				else
 					sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attributeCode, "LIKE");
-				ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery, tableName);
+				ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery, tableName);
 				if (statement == nullptr)
 					return ibValueReferenceDataObject::Create(m_metaObject);
 				int position = 1;
@@ -39,8 +40,8 @@ ibValueReferenceDataObject* ibValueManagerDataObjectChartOfCharacteristicTypes::
 					const ibGuid& foundedGuid = databaseResultSet->GetResultString(guidName);
 					if (foundedGuid.isValid()) foundedReference = ibValueReferenceDataObject::Create(m_metaObject, foundedGuid);
 				}
-				db_query->CloseResultSet(databaseResultSet);
-				db_query->CloseStatement(statement);
+				ses_query->CloseResultSet(databaseResultSet);
+				ses_query->CloseStatement(statement);
 				if (foundedReference != nullptr) return foundedReference;
 			}
 		}
@@ -52,22 +53,22 @@ ibValueReferenceDataObject* ibValueManagerDataObjectChartOfCharacteristicTypes::
 {
 	if (!appData->DesignerMode()) {
 
-		if (db_query != nullptr && !db_query->IsOpen())
+		if (ses_query != nullptr && !ses_query->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		else if (ses_query == nullptr)
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!cParam.IsEmpty()) {
 			const wxString tableName = m_metaObject->GetTableNameDB();
-			if (db_query->TableExists(tableName)) {
+			if (ses_query->TableExists(tableName)) {
 				ibValueMetaObjectAttributePredefined* attributeDescription = m_metaObject->GetDataDescription();
 				wxASSERT(attributeDescription);
 				wxString sqlQuery = "";
-				if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
+				if (ses_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 					sqlQuery = "SELECT uuid FROM %s WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attributeDescription, "LIKE") + " LIMIT 1";
 				else
 					sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(attributeDescription, "LIKE");
-				ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery, tableName);
+				ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery, tableName);
 				if (statement == nullptr) return ibValueReferenceDataObject::Create(m_metaObject);
 				int position = 1;
 				ibValueMetaObjectAttributeBase::SetValueAttribute(attributeDescription, attributeDescription->AdjustValue(cParam), statement, position);
@@ -78,8 +79,8 @@ ibValueReferenceDataObject* ibValueManagerDataObjectChartOfCharacteristicTypes::
 					const ibGuid& foundedGuid = databaseResultSet->GetResultString(guidName);
 					if (foundedGuid.isValid()) foundedReference = ibValueReferenceDataObject::Create(m_metaObject, foundedGuid);
 				}
-				db_query->CloseResultSet(databaseResultSet);
-				db_query->CloseStatement(statement);
+				ses_query->CloseResultSet(databaseResultSet);
+				ses_query->CloseStatement(statement);
 				if (foundedReference != nullptr) return foundedReference;
 			}
 		}

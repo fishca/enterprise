@@ -4,6 +4,7 @@
 
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -12,15 +13,15 @@ void ibValueSelectorRecordDataObject::Reset()
 	m_objGuid.reset(); m_newObject = false;
 	if (!appData->DesignerMode()) {
 		m_currentValues.clear();
-		ibPreparedStatement* statement = db_query->PrepareStatement("SELECT uuid FROM %s ORDER BY CAST(uuid AS VARCHAR(36)); ", m_metaObject->GetTableNameDB());
+		ibPreparedStatement* statement = ses_query->PrepareStatement("SELECT uuid FROM %s ORDER BY CAST(uuid AS VARCHAR(36)); ", m_metaObject->GetTableNameDB());
 		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 		while (resultSet->Next()) {
 			m_currentValues.push_back(
 				resultSet->GetResultString(guidName)
 			);
 		};
-		db_query->CloseResultSet(resultSet);
-		db_query->CloseStatement(statement);
+		ses_query->CloseResultSet(resultSet);
+		ses_query->CloseStatement(statement);
 	}
 	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
 		if (!appData->DesignerMode()) {
@@ -48,10 +49,10 @@ bool ibValueSelectorRecordDataObject::Read()
 	m_listObjectValue.clear();
 
 	ibPreparedStatement* statement = nullptr;
-	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
-		statement = db_query->PrepareStatement("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
+	if (ses_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
+		statement = ses_query->PrepareStatement("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
 	else
-		statement = db_query->PrepareStatement("SELECT FIRST 1 * FROM %s WHERE uuid = '%s'; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
+		statement = ses_query->PrepareStatement("SELECT FIRST 1 * FROM %s WHERE uuid = '%s'; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
 
 	if (statement == nullptr)
 		return false;
@@ -77,8 +78,8 @@ bool ibValueSelectorRecordDataObject::Read()
 
 		isLoaded = true;
 	}
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 	return isLoaded;
 }
 
@@ -89,7 +90,7 @@ void ibValueSelectorRegisterDataObject::Reset()
 	m_keyValues.clear();
 	if (!appData->DesignerMode()) {
 		m_currentValues.clear();
-		ibPreparedStatement* statement = db_query->PrepareStatement("SELECT * FROM %s; ", m_metaObject->GetTableNameDB());
+		ibPreparedStatement* statement = ses_query->PrepareStatement("SELECT * FROM %s; ", m_metaObject->GetTableNameDB());
 		ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 		while (resultSet->Next()) {
 			ibMetaValueArray keyRow;
@@ -108,8 +109,8 @@ void ibValueSelectorRegisterDataObject::Reset()
 			}
 			m_currentValues.push_back(keyRow);
 		};
-		db_query->CloseResultSet(resultSet);
-		db_query->CloseStatement(statement);
+		ses_query->CloseResultSet(resultSet);
+		ses_query->CloseStatement(statement);
 	}
 }
 
@@ -124,7 +125,7 @@ bool ibValueSelectorRegisterDataObject::Read()
 	
 	wxString queryText = ""; bool isLoaded = false;
 
-	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
+	if (ses_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
 		queryText = "SELECT * FROM " + m_metaObject->GetTableNameDB() + " LIMIT 1"; bool firstWhere = true;
 		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 			if (firstWhere) {
@@ -152,7 +153,7 @@ bool ibValueSelectorRegisterDataObject::Read()
 		queryText += " LIMIT 1 ";
 	}
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(queryText);
 
 	if (statement == nullptr)
 		return false;
@@ -178,7 +179,7 @@ bool ibValueSelectorRegisterDataObject::Read()
 			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowTable[object->GetMetaID()], resultSet);
 		m_listObjectValue.insert_or_assign(keyTable, rowTable);
 	}
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 	return isLoaded;
 }

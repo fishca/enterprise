@@ -6,6 +6,7 @@
 #include "valueDatabase.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 //////////////////////////////////////////////////////////////////////
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueDatabaseLayer, ibValue);
@@ -45,7 +46,7 @@ bool ibValueDatabaseLayer::CallAsFunc(const long lMethodNum, ibValue& pvarRetVal
 	{
 		if (!appData->DesignerMode())
 		{
-			ibPreparedStatement* preparedStatement = db_query->PrepareStatement(paParams[0]->GetString());
+			ibPreparedStatement* preparedStatement = ses_query->PrepareStatement(paParams[0]->GetString());
 			if (preparedStatement == nullptr) {
 				ibBackendCoreException::Error(ibBackendCoreException::GetLastError());
 				return false;
@@ -60,16 +61,16 @@ bool ibValueDatabaseLayer::CallAsFunc(const long lMethodNum, ibValue& pvarRetVal
 	else if (lMethodNum == eRunQuery)
 	{
 		if (!appData->DesignerMode())
-			pvarRetValue = db_query->RunQuery(paParams[0]->GetString());
+			pvarRetValue = ses_query->RunQuery(paParams[0]->GetString());
 		return true;
 	}
 	else if (lMethodNum == eRunQueryWithResults)
 	{
 		if (!appData->DesignerMode())
 		{
-			ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults(paParams[0]->GetString());
+			ibDatabaseResultSet* resultSet = ses_query->RunQueryWithResults(paParams[0]->GetString());
 			if (resultSet == nullptr) {
-				ibBackendCoreException::Error(db_query->GetErrorMessage());
+				ibBackendCoreException::Error(ses_query->GetErrorMessage());
 				return false;
 			}
 			pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueResultSet>(resultSet);

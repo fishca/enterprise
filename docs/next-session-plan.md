@@ -651,11 +651,29 @@ Files touched: `session.{h,cpp}`, `sessionRegistry.{h,cpp}`,
   ProcessRemove is hit on every teardown path (force-kill,
   idle-timeout, manual logout). Add an assert / counter.
 
-### Runtime facade plan
-- Steps 1-2 of `docs/runtime-facade.md` (descriptor `m_runtimes` map +
-  `ibSession::Submit` / `mm->Start/Stop()` integration) — preconditions
-  shifted today. Re-read the plan, see what's already implicit and
-  what still needs landing.
+### Runtime facade plan — Steps 1-11 + 13-17 landed 2026-05-04
+- Steps 1-2 (descriptor-side runtime composition + Connect/Disconnect
+  wiring), Step 3 (`Init/ExitRuntimeForSession` → `AttachRuntime/
+  DetachRuntime` rename), Step 4 (Start/Stop on mm), Step 5
+  (`ExecAsProc/Func` facade on `ibRuntimeModuleDataObject` + 38 object
+  call-sites migrated), Steps 6-10 (parent chain, compile cache on
+  descriptor, bytecode self-containment, designer-without-runtime),
+  Step 11 (`bc.CreateBinder()` extern binder), Steps 13-17 (AOT cache
+  pipeline) — all landed.
+- **Step 12 remaining** — `ibMetadataRef{guid}` encoding for
+  cross-bc metadata refs (`Catalogs.Товары` etc.) so AOT blobs
+  survive descriptor renames. See `docs/runtime-facade.md` status
+  banner for the up-to-date map.
+
+### Sequence allocator — atomic landed 2026-05-04
+- `GenerateNextIdentifier` uses `UPDATE ... RETURNING` for atomic
+  increment + bootstrap-INSERT for first-ever call (FB / PG).
+  Cross-machine safe via DB row lock; MySQL / ODBC throw with a
+  clear message (not used in production OES). See
+  `memory/reference_generate_next_identifier.md`.
+- `ibNumber::Format::minIntDigits` added for leading-zero pad of
+  the integer part (no int64 cap, big counters work). See
+  `memory/reference_number_format_padding.md`.
 
 ### Compute-server tiering — Phase 3 onwards
 - Phase 2 (in-process shared dispatcher) is largely landed; verify

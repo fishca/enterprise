@@ -303,7 +303,7 @@ Closely related — moves toward Step 1-2 of `runtime-facade.md`:
 
 - `ibSession::EnsureRoot()` added — idempotent `CreateRoot(activeMetaData)` wrapper.
 - `ibSessionRegistry::NotifyAuthenticated` now calls `s->EnsureRoot()` between the `OnFirstConnect` and `OnAuthenticated` listener phases. See `session-registry.md` for the full three-phase contract.
-- `appData`'s `OnAuthenticated` listener no longer creates the root — it only drives `RunDatabase` (one-shot) + `CompileRoot` + `InitRuntimeForSession`.
+- `appData`'s `OnAuthenticated` listener no longer creates the root — it only drives `RunDatabase` (one-shot) + `CompileRoot` + `AttachRuntime`.
 
 This makes the session the explicit owner of its root mm and removes the ordering hazard that `OnBeforeRunMetaObject` would fire against null `session->GetModuleManager()` during the very first auth.
 

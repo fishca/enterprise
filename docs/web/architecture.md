@@ -8,14 +8,14 @@ The module manager is **per-session**. Each session owns its own
 is per-descriptor (`ibModuleDataObject`), shared across sessions
 because compile is metadata-driven and immutable; the runtime
 ProcUnit is rebuilt on each descriptor for the active session by
-`ibValueModuleManager::InitRuntimeForSession(s)` and torn down by
-`ExitRuntimeForSession(s)` — both serialised by `m_runtimeMutex`.
+`ibValueModuleManager::AttachRuntime(s)` and torn down by
+`DetachRuntime(s)` — both serialised by `m_runtimeMutex`.
 
 Bring-up sequence (web): `ibWebSession::Login` → `registry.Connect`
 → `ticket.Attach` → `ibSessionRegistry::NotifyAuthenticated` runs
 the 3 phases (OnFirstConnect → `EnsureRoot` → OnAuthenticated). The
 OnAuthenticated listener drives `RunDatabase` (one-shot per process),
-`session->CompileRoot()`, then `mm->InitRuntimeForSession(session)`.
+`session->CompileRoot()`, then `mm->AttachRuntime(session)`.
 `app->OnInit()` runs after that under an `ibSessionScope` bound on
 the HTTP handler thread.
 

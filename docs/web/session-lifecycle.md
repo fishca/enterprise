@@ -16,7 +16,7 @@ Two-stage model since the compile/runtime split (2026-04-19):
    `ibProcUnit` is created at this stage.
 2. **Per-session runtime** (`ibWebSession::Login` →
    `registry.Connect` → `ticket.Attach` → `NotifyAuthenticated` →
-   `mm->InitRuntimeForSession(s)` → `ibWebApplication::OnInit`)
+   `mm->AttachRuntime(s)` → `ibWebApplication::OnInit`)
    allocates the session's `ibProcUnit` instances against the shared
    bytecode and fires the `OnStart` script on them.
 
@@ -37,7 +37,7 @@ splits into two distinct session kinds inside one wes process:
 `eWEB_ENTERPRISE_MODE` (the common per-tab case); the wes process's
 own `WebServer` row is created with the kind passed explicitly.
 
-`InitRuntimeForSession` filters by kind:
+`AttachRuntime` filters by kind:
 
 ```cpp
 const ibSessionKind kind = session->GetKind();
@@ -80,7 +80,7 @@ POST /w/<prefix>/login
         │         1. OnFirstConnect (one-shot per process)
         │         2. session->EnsureRoot() — CreateRoot(activeMetaData)
         │         3. OnAuthenticated → RunDatabase + session->CompileRoot()
-        │                            + mm->InitRuntimeForSession(s)
+        │                            + mm->AttachRuntime(s)
         │       (creates shared_ptr<ibProcUnit> for main + each non-global
         │        common module on the descriptors, executes bytecode top-
         │        level to populate globals)
@@ -107,24 +107,24 @@ POST /w/<prefix>/login
 
 Script dispatch through `ibModuleDataObject::GetProcUnit()` returns
 the descriptor's `m_procUnit` slot. The slot is rebuilt for the
-active session by `InitRuntimeForSession` and serialised by
+active session by `AttachRuntime` and serialised by
 `m_runtimeMutex` — so concurrent web sessions calling into the same
 descriptor coordinate through the runtime mutex (current scaling
 ceiling; per-descriptor per-session map is the target — see
 [`../runtime-facade.md`](../runtime-facade.md), step 1).
 
-### InitRuntimeForSession must run before OnInit
+### AttachRuntime must run before OnInit
 
 `app->OnInit()` calls `StartMainModule` which fires `BeforeStart` /
 `OnStart`. Those resolve the runtime via `GetProcUnit()`; the
 descriptor must have its session-bound `m_procUnit` set by the time
-`OnStart` runs. If `InitRuntimeForSession` runs **after** OnInit, the
+`OnStart` runs. If `AttachRuntime` runs **after** OnInit, the
 slot is empty at OnStart time, dispatch returns nullptr, and the
 script (including every `OpenForm` it makes) is silently skipped —
 symptom: `tabCount=0` after a successful login.
 
 Order is enforced by the registry — `NotifyAuthenticated` runs
-`InitRuntimeForSession` in its OnAuthenticated phase, before
+`AttachRuntime` in its OnAuthenticated phase, before
 `Login()` returns and before `app->OnInit()` is called.
 
 ## Teardown flow
@@ -147,7 +147,7 @@ ibWebSession::OnExit
     │     │     BeforeExit() → CallAsProc("beforeExit", bCancel)
     │     │     OnExit()     → CallAsProc("onExit")
     │     ├── { ibSessionScope exitScope(session);
-    │     │     └── mm->ExitRuntimeForSession(session)
+    │     │     └── mm->DetachRuntime(session)
     │     │           Releases this session's ProcUnit on every touched
     │     │           descriptor (under m_runtimeMutex). Bytecode stays
     │     │           on the descriptor for the next session.

@@ -25,10 +25,10 @@ the wire protocol, and the read loop:
    wes process when started with `--debug`. Cancels only THIS
    session's interpreter.
 2. **`ibWebSession::OnExit`** (webSession.cpp) — calls
-   `WakeDebugLoop` *before* `ExitRuntimeForSession`, then drains
+   `WakeDebugLoop` *before* `DetachRuntime`, then drains
    the worker via `Submit([]{}).get()`. The FIFO queue guarantees
    that when the no-op runs, the parked-then-cancelled task has
-   unwound and the worker is idle, so `ExitRuntimeForSession` no
+   unwound and the worker is idle, so `DetachRuntime` no
    longer races the unwinding script over `ProcUnit` destruction.
 3. **`ibDebuggerServerConnection::SendCommand` mutex** (debugServer.h /
    .cpp) — `std::mutex m_sendMutex` serialises the two-step

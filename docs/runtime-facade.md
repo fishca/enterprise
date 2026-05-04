@@ -14,8 +14,8 @@ follow-up. This document records the architectural decisions of the
 >   (shared_ptr — pins against fast-F5 UAF), `m_binder`, `m_parent`.
 >   `GetProcUnit()` is session-aware (looks in session's ProcUnit map
 >   under `ibSessionScope`, falls back to descriptor-owned slot).
->   `appData/webSession` Connect/Disconnect call `InitRuntimeForSession`
->   / `ExitRuntimeForSession` on the per-session root.
+>   `appData/webSession` Connect/Disconnect call `AttachRuntime`
+>   / `DetachRuntime` on the per-session root.
 > - **4** — Start/Stop pair lives on `ibValueModuleManager`; descriptor
 >   subclasses inherit through `ibRuntimeModuleDataObject`.
 > - **6-7** — `m_parent` on the runtime base (raw ptr; invariant
@@ -41,15 +41,33 @@ follow-up. This document records the architectural decisions of the
 >   Designer `OnSaveMetaObject`/`OnDeleteMetaObject` invalidation.
 >   Step 5 (automated invalidation gtests) pending.
 >
+> - **3** — `InitRuntimeForSession` / `ExitRuntimeForSession` renamed
+>   to `AttachRuntime(session)` / `DetachRuntime(session)` on
+>   `ibValueModuleManager`. 14 files touched (declaration, definition,
+>   8 callsites, 5 comment refs). Privatisation behind the descriptor
+>   stays open — methods remain public on mm because external callers
+>   (`appData::Connect` / `webSession::Login` / `mainFrameParts`) still
+>   drive them directly; a future Attach/Detach private form would
+>   require a façade on `ibSession::Start/Stop` first.
+> - **5** — landed. Facade is `ExecAsProc` / `ExecAsFunc` on
+>   `ibRuntimeModuleDataObject` itself (`moduleInfo.h:18-38` public
+>   variadic sugar; `:160-184` protected array form). Mirrors
+>   `ibProcUnit::CallAsProc/Func` shape — variadic packs into
+>   `ibValue*[]` and forwards. Session-aware `GetProcUnit()` resolve,
+>   shared_ptr pin against fast-F5 UAF, null-safety. Better placement
+>   than the original `mm->CallAsProc(obj, method, ...)` sketch — each
+>   descriptor pins its own ProcUnit, no mm hop. 38 object call-sites
+>   in 9 files (catalog/document/charts/registers/common/constant)
+>   migrated from raw `m_procUnit->CallAsProc` to variadic
+>   `ExecAsProc`; 8 dispatch callers (3 mm + 4 record-data + frontend's
+>   `form.cpp`) qualified-call the protected array form via
+>   `ibRuntimeModuleDataObject::ExecAsProc`.
+>
 > Remaining:
-> - **3** — rename `Init/ExitRuntimeForSession` → `Attach/Detach` and
->   privatise behind the descriptor.
-> - **5** — migrate 38 object call-sites from `m_procUnit->CallAsProc`
->   to a `mm->CallAsProc(obj, method, ...)` facade. Grep confirms
->   exactly 38 occurrences in 9 object files
->   (catalog/document/charts/registers/common/constant).
 > - **12** — `ibMetadataRef{guid}` encoding for cross-bc metadata refs
 >   (`Catalogs.Товары` etc) so AOT blobs survive descriptor renames.
+> - locale `.po` / `.pot` cleanup for `_("AttachRuntime main: %s")` —
+>   regenerate via xgettext + msgmerge in a follow-up.
 
 ---
 
@@ -76,7 +94,7 @@ Today the runtime layer is spread across several singleton paths:
   first-entry on web (bug: multi-tab last-login-wins).
 - `ibModuleDataObject::m_procUnit` — descriptor-level field, shared between
   sessions, resolved through a thread_local session fallback.
-- `ibValueModuleManager::InitRuntimeForSession / ExitRuntimeForSession` —
+- `ibValueModuleManager::AttachRuntime / DetachRuntime` —
   called from appData.cpp + webSession.cpp; the session layer knows about
   the module manager and reaches inside it.
 - Form/eval/external-DP — each compiles its own compileModule ad-hoc with
@@ -86,7 +104,7 @@ Goal of the refactor:
 
 1. **Session layer does not know about runtime** — `session.Start()` /
    `session.Stop()` + `activeMetaData->GetModuleManager(session)` are
-   the only interaction points. No `InitRuntimeForSession`.
+   the only interaction points. No `AttachRuntime`.
 2. **Per-tab isolation on web** — every WebClient session has its own
    root mm + a fully independent runtime tree. Multi-tab
    last-login-wins is closed architecturally.
@@ -254,7 +272,7 @@ if (!objectRt) {
 }
 
 // dispatch — objectRt uses parent (root) through chain for scope resolution
-objectRt->ExecuteProc(wxT("OnWrite"), args, nArgs);
+objectRt->ExecAsProc(wxT("OnWrite"), args, nArgs);
 ```
 
 ### Teardown flow
@@ -317,7 +335,7 @@ ibApplicationData::Connect(user, pwd):
      ▼
 wx main loop — user-interaction
   Open form → formDesc->AttachRuntime(session, parent=object or root)
-  Execute OnWrite → objectRt->ExecuteProc
+  Execute OnWrite → objectRt->ExecAsProc
   Eval("...") → ibProcUnitEvaluate created in place, parent = Current()
 
      │
@@ -514,10 +532,10 @@ Brief summary:
 >   — the lookup chain provides per-session resolution on top of the
 >   descriptor-owned slot.
 > - **Step 2 — partially landed.** `appData.cpp Connect` →
->   `s->GetModuleManager()->InitRuntimeForSession(s)`; `Disconnect`
+>   `s->GetModuleManager()->AttachRuntime(s)`; `Disconnect`
 >   symmetric. `webSession.cpp Login/Destroy` follows the same
->   pattern. The interface is still named `InitRuntimeForSession` /
->   `ExitRuntimeForSession` rather than `Attach` / `Detach` — step 3
+>   pattern. The interface is still named `AttachRuntime` /
+>   `DetachRuntime` rather than `Attach` / `Detach` — step 3
 >   (rename + privatise) is the remaining cleanup.
 > - **Adjacent precursors (2026-04-26):** `ibCompileValueCache`
 >   extracted from designer's GUI tree onto `ibMetaData` (precursor
@@ -534,7 +552,7 @@ Brief summary:
 | 0 | Template-dedup `ibValueModuleManagerExternalDataProcessor/Report` over `<TMeta,TDataObject>` | low |
 | 1 | Descriptor `m_runtimes` map + `GetRuntime(session)/AttachRuntime/_DropRuntime`. `ibMetaDataConfiguration.GetModuleManager(session=nullptr) / Attach / Detach` as sugar over the root module descriptor. | low |
 | 2 | `appData.cpp Connect/Disconnect` + `webSession.cpp Login/Destroy` → `Attach/Detach` + `mm->Start/Stop()` | low |
-| 3 | `InitRuntimeForSession/ExitRuntimeForSession` → private detail inside Attach/Detach | low |
+| 3 | `AttachRuntime/DetachRuntime` → private detail inside Attach/Detach | low |
 | 4 | Merge `CreateMainModule+StartMainModule → Start()`, `ExitMainModule+DestroyMainModule → Stop()`. Subclasses merge bodies, remove duplication | medium |
 | 5 | `CallAsProc/Func` facade on mm (4 overloads). Migrate 38 object call-sites from `m_procUnit->CallAsProc` to `mm->CallAsProc(obj, method, ...)` | medium |
 | 6 | Add to `ibModuleDataObject`: `m_parent: weak_ptr`, virtual `GetSession()/GetContext()`. `ibValueModuleManager` overrides — returns its own fields. `ibValueModuleManager::Current()` + thread_local stack. No new subclasses | low-medium |

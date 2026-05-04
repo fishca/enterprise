@@ -334,8 +334,8 @@ The registry supports multiple concurrent sessions (N on web, 1 on desktop) thro
 
 **Current:**
 - Compile state (`ibCompileCode` with immutable `ibByteCode`) lives on the descriptor (`ibModuleDataObject`) and is shared across sessions.
-- ProcUnits are kept on the descriptor itself (`ibModuleDataObject::m_procUnit`). The descriptor's runtime is rebuilt for each session by `ibValueModuleManager::InitRuntimeForSession(session)` and torn down by `ExitRuntimeForSession(session)` — both serialised by `m_runtimeMutex`. There is no per-session ProcUnit map yet; the descriptor's ProcUnit is single-occupancy at any given moment, so concurrent web sessions on the same descriptor must coordinate through the runtime mutex (current scaling ceiling).
-- The session's root `ibValueModuleManagerConfiguration` is owned by `ibSession::m_root` (intrusive-refcounted via `ibValuePtr`). `ibSession::CreateRoot(metaData)` allocates it; `ibSession::CompileRoot()` runs `CreateMainModule`; `appData`'s `OnAuthenticated` listener then drives `RunDatabase` (one-shot per process) + `CompileRoot` + `mm->InitRuntimeForSession(session)`.
+- ProcUnits are kept on the descriptor itself (`ibModuleDataObject::m_procUnit`). The descriptor's runtime is rebuilt for each session by `ibValueModuleManager::AttachRuntime(session)` and torn down by `DetachRuntime(session)` — both serialised by `m_runtimeMutex`. There is no per-session ProcUnit map yet; the descriptor's ProcUnit is single-occupancy at any given moment, so concurrent web sessions on the same descriptor must coordinate through the runtime mutex (current scaling ceiling).
+- The session's root `ibValueModuleManagerConfiguration` is owned by `ibSession::m_root` (intrusive-refcounted via `ibValuePtr`). `ibSession::CreateRoot(metaData)` allocates it; `ibSession::CompileRoot()` runs `CreateMainModule`; `appData`'s `OnAuthenticated` listener then drives `RunDatabase` (one-shot per process) + `CompileRoot` + `mm->AttachRuntime(session)`.
 - `BeforeStart / OnStart / BeforeExit / OnExit` events dispatch through the session's root module manager.
 
 **Direction (in progress, see [`runtime-facade.md`](runtime-facade.md)):**
@@ -364,7 +364,7 @@ ibValueModuleManager : ibModuleDataObject (root only — per-session singleton)
 
 ### Designer — compile only
 
-Designer (`eDESIGNER_MODE`) creates sessions without runtime — `InitRuntimeForSession` returns early for Designer role. Designer reads `ibCompileCode` for autocomplete, function search, jump-to-definition, and cascading recompile. Scripts are not executed. Debug sessions attach to a separate runtime process (enterprise.exe / wenterprise-server.exe) via the TCP debug protocol.
+Designer (`eDESIGNER_MODE`) creates sessions without runtime — `AttachRuntime` returns early for Designer role. Designer reads `ibCompileCode` for autocomplete, function search, jump-to-definition, and cascading recompile. Scripts are not executed. Debug sessions attach to a separate runtime process (enterprise.exe / wenterprise-server.exe) via the TCP debug protocol.
 
 ---
 
@@ -530,7 +530,7 @@ launcher.exe (or direct enterprise.exe with CLI creds)
                                           2. session->EnsureRoot() — CreateRoot(activeMetaData)
                                           3. OnAuthenticated — RunDatabase (one-shot)
                                                              + session->CompileRoot()
-                                                             + mm->InitRuntimeForSession(s)
+                                                             + mm->AttachRuntime(s)
                                                                 — main ProcUnit + Execute top-level
                                                                 — StartMainModule: BeforeStart / OnStart
                                                                 — wx main loop handles UI
@@ -545,7 +545,7 @@ HTTP: POST /w/<dbalias>/login  (body: user+pwd, cookie: tabSid UUID)
             └─ registry.Connect(req)           # same path as desktop
                  └─ ticket.Attach(user, pwd)   # AuthenticateUser on worker-side
                       └─ NotifyAuthenticated phases (OnFirstConnect / EnsureRoot / OnAuthenticated)
-                           └─ session->EnsureRoot + CompileRoot + mm->InitRuntimeForSession(s)
+                           └─ session->EnsureRoot + CompileRoot + mm->AttachRuntime(s)
                                 └─ ibSessionScope(session) on HTTP handler thread
                                      └─ ibWebApplication::OnInit
                                           └─ StartMainModule (BeforeStart / OnStart, under m_runtimeMutex)
@@ -592,7 +592,7 @@ HTTP: POST /w/<dbalias>/logout?sid=<tabSid>  (sendBeacon from browser pagehide)
                  └─ RunOnWorker DeleteAllViews of open tabs (form dtors)
                       └─ StopWorker (joins per-session worker thread)
                            └─ ExitMainModule (BeforeExit / OnExit events, under m_runtimeMutex)
-                                └─ mm->ExitRuntimeForSession(s) — release descriptor ProcUnits
+                                └─ mm->DetachRuntime(s) — release descriptor ProcUnits
                                                                   bound to this session
                                      └─ delete frame
                                           └─ ticket.reset → Submit(Remove, Urgent)

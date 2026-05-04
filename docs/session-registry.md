@@ -81,12 +81,12 @@ NotifyAuthenticated(s):
          │     # session->GetModuleManager() and the metadata-side
          │     # ibCompileValueCache — both required to be live by now
          ├── s->CompileRoot()
-         └── (runtime modes) mm->InitRuntimeForSession(s)
+         └── (runtime modes) mm->AttachRuntime(s)
 ```
 
 **Why three phases, not two.** The pre-2026-04-26 layout fired `OnFirstConnect` then `OnAuthenticated` directly. `CreateRoot` lived in `appData`'s `OnAuthenticated` listener, and `RunDatabase` was nominally below it but ordering was easy to flip. The crash that drove this refactor was `OnBeforeRunMetaObject` reading `ibSession::Current()->GetModuleManager()` while `RunDatabase` was iterating — mm null because `CreateRoot` hadn't run yet on the very first session. Putting `EnsureRoot` between phases makes the contract explicit: every `OnAuthenticated` listener can rely on `s->GetModuleManager()` being non-null when `activeMetaData` is set.
 
-**Where `CreateRoot` lives.** In `ibSession`. The session is the owner of its root mm; the registry just calls the hook at the right moment. `appData`'s `OnAuthenticated` no longer touches `CreateRoot` — only `RunDatabase`/`CompileRoot`/`InitRuntimeForSession`.
+**Where `CreateRoot` lives.** In `ibSession`. The session is the owner of its root mm; the registry just calls the hook at the right moment. `appData`'s `OnAuthenticated` no longer touches `CreateRoot` — only `RunDatabase`/`CompileRoot`/`AttachRuntime`.
 
 ## Lifecycle (web per-cookie)
 
@@ -103,7 +103,7 @@ POST /login { user, password }
     ├── m_ticket = move(result.ticket)
     ├── ticket.Attach(user, pwd)                 # UPDATE userName
     ├── SessionScope(ticket->Session()) on HTTP thread
-    ├── InitRuntimeForSession(ticket->Session()) # ProcUnits for this cookie
+    ├── AttachRuntime(ticket->Session()) # ProcUnits for this cookie
     └── app->OnInit() → StartMainModule → OnStart script fires
 ```
 
@@ -268,7 +268,7 @@ enum class ibSessionKind : int {
 - Desktop `appData->CreateSession()` → `SessionKindFromRunMode(m_runMode)` (wes process passes `WebServer` explicitly via the typed factory).
 - `ibWebSession::Login` → `ibSessionKind::WebClient` + `m_appMode = eWEB_ENTERPRISE_MODE`.
 - `sys_session.kind` is added via `MigrateTableSession` (best-effort ALTER TABLE); legacy schemas without it still work (kinds read as 0).
-- `moduleManager::InitRuntimeForSession` filters by kind: runtime runs for `Enterprise / WebClient / Service`, skipped for the rest.
+- `moduleManager::AttachRuntime` filters by kind: runtime runs for `Enterprise / WebClient / Service`, skipped for the rest.
 
 ## wes console-close cleanup
 

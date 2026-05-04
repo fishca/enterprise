@@ -513,7 +513,7 @@ void ibDebuggerServer::SendStack()
 	for (unsigned int i = frameCount; i > 0; i--) { // walk call stack top-down
 
 		ibRunContext* runContext = puState->GetRunContext(i - 1);
-		const const ibByteCode* byteCode = runContext ? runContext->GetByteCode() : nullptr;
+		const ibByteCode* byteCode = runContext ? runContext->GetByteCode() : nullptr;
 		if (runContext == nullptr || byteCode == nullptr)
 			continue;
 

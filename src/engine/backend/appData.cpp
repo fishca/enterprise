@@ -177,7 +177,7 @@ void ibApplicationData::WireSessionEvents()
 				(m_runMode == eWEB_ENTERPRISE_MODE);
 			if (wantsRuntime) {
 				if (auto* mm = s->GetModuleManager())
-					mm->InitRuntimeForSession(s);
+					mm->AttachRuntime(s);
 			}
 		}
 	});
@@ -189,7 +189,7 @@ void ibApplicationData::WireSessionEvents()
 	registry->OnDisconnect([this](ibSession* s) {
 		if (s == nullptr) return;
 		if (auto* mm = s->GetModuleManager())
-			mm->ExitRuntimeForSession(s);
+			mm->DetachRuntime(s);
 		s->DestroyRoot();
 		ibSession::UnbindSession(s);
 		auto* registry = m_sessionRegistry.get();

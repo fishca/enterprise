@@ -246,16 +246,16 @@ public:
 	// on `this`. Overridden by subclasses with additional modules
 	// (external data processor, report). Default impl handles the
 	// common-case main module + m_listCommonModuleManager fanout.
-	virtual bool InitRuntimeForSession(class ibSession* session);
+	virtual bool AttachRuntime(class ibSession* session);
 
 	// Symmetric teardown — drop this session's ProcUnit entries.
-	virtual void ExitRuntimeForSession(class ibSession* session);
+	virtual void DetachRuntime(class ibSession* session);
 
 protected:
 
 	bool m_initialized;
 
-	// Serializes Init/ExitRuntimeForSession across sessions — the
+	// Serializes Init/DetachRuntime across sessions — the
 	// compile/common-module state is process-shared so two concurrent
 	// Init (rapid F5) or Init-racing-Exit (pagehide beacon for old
 	// session while new one logs in) would corrupt m_listCommonModule*

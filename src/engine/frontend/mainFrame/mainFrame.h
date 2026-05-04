@@ -63,7 +63,7 @@ public:
 	// Bind session to this frame. Called once right after session->Open
 	// succeeds, BEFORE LoadMetadata — so AllowRun/AllowClose and any
 	// session-aware UI already see the session even while metadata is
-	// being compiled. Runtime start (CreateRoot + InitRuntimeForSession)
+	// being compiled. Runtime start (CreateRoot + AttachRuntime)
 	// is deferred to Show() so activeMetaData is guaranteed populated.
 	virtual bool Initialize(ibSession* session);
 

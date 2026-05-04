@@ -144,10 +144,10 @@ bool ibWebSession::Login(const wxString& user, const wxString& password)
 	// same type so SetFrame later doesn't need a cast.
 	app->SetSessionContext(sessionRaw);
 
-	// CreateRoot / CompileRoot / InitRuntimeForSession are driven by
+	// CreateRoot / CompileRoot / AttachRuntime are driven by
 	// ibSessionRegistry::NotifyAuthenticated → appData::WireSessionEvents
 	// (OnFirstConnect → metadataCreate; EnsureRoot; OnAuthenticated →
-	// RunDatabase + CompileRoot + InitRuntimeForSession for runtime modes).
+	// RunDatabase + CompileRoot + AttachRuntime for runtime modes).
 	// Both fired inside the m_session->Open(...) call above. Calling them
 	// again here would re-execute the main module's top-level script.
 	bool initOk = false;
@@ -178,7 +178,7 @@ void ibWebSession::OnExit()
 		return;
 
 	// If the script worker is parked at a breakpoint, unpark it before
-	// touching the runtime — ExitRuntimeForSession below resets the
+	// touching the runtime — DetachRuntime below resets the
 	// per-session ProcUnit, and m_app->OnExit's RunOnWorker(...) must
 	// dispatch onto an idle worker. A worker stuck inside DoDebugLoop's
 	// CV wait would block both. WakeDebugLoop sets m_forceExit on the
@@ -195,7 +195,7 @@ void ibWebSession::OnExit()
 	// Drain the worker before tearing down the runtime. Submit a no-op
 	// and wait — the per-session worker queue is FIFO, so by the time
 	// our no-op runs, the cancelled breakpoint task has unwound and
-	// every prior task has drained. Without this, ExitRuntimeForSession
+	// every prior task has drained. Without this, DetachRuntime
 	// would race the unwinding script over ProcUnit destruction.
 	// Swallow any exception (failed task, race with Close) so OnExit
 	// keeps making progress; the rest of teardown is idempotent.
@@ -206,13 +206,13 @@ void ibWebSession::OnExit()
 
 	// Symmetric teardown — drop this session's ProcUnit entries from the
 	// shared moduleManager before destroying the app + closing the session.
-	// ibSessionScope pinned so ExitRuntimeForSession's bookkeeping is
+	// ibSessionScope pinned so DetachRuntime's bookkeeping is
 	// consistent with the rest of the web runtime's expectations.
 	if (m_session) {
 		ibSessionScope scope(m_session.get());
 		if (activeMetaData != nullptr) {
 			if (auto* mm = m_session->GetModuleManager())
-				mm->ExitRuntimeForSession(m_session.get());
+				mm->DetachRuntime(m_session.get());
 		}
 
 		// Drop session's own root so its refs to metadata descriptors

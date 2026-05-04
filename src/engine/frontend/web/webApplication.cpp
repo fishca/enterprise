@@ -207,7 +207,7 @@ bool ibWebApplication::OnInit()
 		m_sessionContext->SetFrame(m_frame);
 
 	// No per-session moduleManager any more — the shared Configuration
-	// lives in metadata (compiled once at wfrontendInit). InitRuntimeForSession
+	// lives in metadata (compiled once at wfrontendInit). AttachRuntime
 	// ran in ibWebSession::Login right before OnInit, so session's
 	// m_procUnitMap is already populated.
 	ibValueModuleManagerConfiguration* sharedMgr = GetModuleManager();

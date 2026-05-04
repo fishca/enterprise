@@ -448,7 +448,7 @@ private:
 		//                                   compile. StartMainModule
 		//                                   (the old tail of RunDatabase)
 		//                                   moved to per-session
-		//                                   InitRuntimeForSession, so
+		//                                   AttachRuntime, so
 		//                                   this finishes with a fresh
 		//                                   compile and the next login
 		//                                   spins runtime up on it.
@@ -881,7 +881,7 @@ std::string OpenFormInSession(ibWebSession* session, int metaID)
 
 	// Pin the tab's ibSession as Current() on this HTTP worker thread so
 	// moduleManager->GetProcUnit() resolves via session->GetProcUnitFor
-	// (the main / common module ProcUnits InitRuntimeForSession attached
+	// (the main / common module ProcUnits AttachRuntime attached
 	// at Login). Without the scope, Current() is null on worker threads,
 	// the form's parent-ProcUnit comes up nullptr, and Execute throws
 	// "compilation failed (#2)" at form-open.

@@ -154,7 +154,7 @@ bool ibFrontendDocMDIFrame::EnsureRuntime()
 	// CreateRoot + CompileRoot already happened in OnRun after LoadMetadata
 	// — frame->Initialize is the runtime-start phase, only InitRuntime here.
 	if (auto* mm = m_session->GetModuleManager())
-		mm->InitRuntimeForSession(m_session);
+		mm->AttachRuntime(m_session);
 	return true;
 }
 

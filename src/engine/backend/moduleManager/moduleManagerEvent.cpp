@@ -12,13 +12,13 @@
 //*********************************************************************************************************
 
 // Events fire on the root's own ProcUnit (m_procUnit — populated by
-// InitRuntimeForSession). Each handler holds a local shared_ptr for
+// AttachRuntime). Each handler holds a local shared_ptr for
 // the entire CallAsProc — without the hold, a concurrent teardown
 // (Remove@Urgent from fast-F5 /logout) would drop the last ref and
 // leave the pointer dangling mid-Execute. See
 // project_refresh_execute_crash.md.
 //
-// Handlers take m_runtimeMutex — same lock as Init/ExitRuntimeForSession
+// Handlers take m_runtimeMutex — same lock as Init/DetachRuntime
 // — because CallAsProc enters ibProcUnit::Execute which mutates shared
 // compileModule state (procUnit.cpp:1025 writes m_listConst[i].m_bReadOnly;
 // :1029 reads m_compileModule->m_rootContext). Two concurrent logins

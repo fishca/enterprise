@@ -497,7 +497,7 @@ bool ibSession::Open(const wxString& user, const wxString& password)
 		//      step 3's listeners can rely on GetModuleManager() != null.
 		//   3. OnAuthenticated listeners — per-session bring-up
 		//      (RunDatabase fires OnBefore/AfterRunMetaObject which read
-		//      session->mm; CompileRoot; InitRuntimeForSession).
+		//      session->mm; CompileRoot; AttachRuntime).
 		// Note: NotifyAuthenticated already calls BindSessionToThread
 		// before firing listeners, so any breakpoint hit inside them
 		// resolves Current() to THIS session (the registry-fallback

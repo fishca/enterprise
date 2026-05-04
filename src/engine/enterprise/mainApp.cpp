@@ -287,7 +287,7 @@ int ibAppEnterprise::OnRun()
 
 	// AccessMode was set by appData's ctor based on runMode. Registry
 	// listeners (wired in appData ctor) handle BindSessionToThread,
-	// LoadMetadata, CreateRoot + CompileRoot + InitRuntimeForSession
+	// LoadMetadata, CreateRoot + CompileRoot + AttachRuntime
 	// through OnFirstConnect / OnAuthenticated.
 	ibSession* session = nullptr;
 	wxString openError;

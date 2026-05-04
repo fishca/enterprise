@@ -2060,65 +2060,80 @@ ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttr
 
 	wxASSERT(attribute);
 
+	// Period bucket — parking value for now; per-type periodicity (catalog
+	// vs document) is a future feature.
 	const int interval = 20000101;
 
 	ibNumber resultCode = 1;
 	const ibTypeDescription& typeDesc = attribute->GetTypeDesc();
+	const bool isFB = db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD;
 
-	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
-
-		ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
-			wxT("SELECT interval, meta_guid, prefix, number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s';"),
-			sequence_table,
-			stringUtils::IntToStr(interval),
-			m_metaObject->GetDocPath(),
-			strPrefix
-		);
-
-		if (resultSet == nullptr)
+	// 1) Probe sys_sequence for the running counter. Cursor closed
+	//    BEFORE the UPSERT — holding a SELECT cursor open across a write
+	//    on the same connection serialises through the driver's quickie-TX
+	//    and produces 30s lock_timeout waits on FB.
+	bool seqRowExists = false;
+	{
+		const wxString sel = isFB
+			? wxT("SELECT number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;")
+			: wxT("SELECT number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s';");
+		ibDatabaseResultSet* rs = db_query->RunQueryWithResults(
+			sel, sequence_table, stringUtils::IntToStr(interval),
+			m_metaObject->GetDocPath(), strPrefix);
+		if (rs == nullptr)
 			return attribute->CreateValue();
-
-		if (resultSet->Next())
-			resultCode = resultSet->GetResultNumber(wxT("number")) + 1;
-
-		db_query->RunQuery(
-			wxT("INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) ON CONFLICT(interval, meta_guid, prefix) DO UPDATE SET interval = excluded.interval, meta_guid = excluded.meta_guid, prefix = excluded.prefix, number = excluded.number;"),
-			sequence_table,
-			stringUtils::IntToStr(interval),
-			m_metaObject->GetDocPath(),
-			strPrefix, //prefix
-			resultCode.ToString()
-		);
-
-		db_query->CloseResultSet(resultSet);
+		if (rs->Next()) {
+			resultCode = rs->GetResultNumber(wxT("number")) + 1;
+			seqRowExists = true;
+		}
+		db_query->CloseResultSet(rs);
 	}
-	else {
 
-		ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
-			wxT("SELECT interval, meta_guid, prefix, number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;"),
-			sequence_table,
-			stringUtils::IntToStr(interval),
-			m_metaObject->GetDocPath(),
-			strPrefix
-		);
+	// 2) sys_sequence empty for this (interval, meta_guid, prefix)?
+	//    Bootstrap from the actual data table — first call after an
+	//    import / migration must not collide with already-stored codes.
+	if (!seqRowExists) {
+		const wxString tableName = m_metaObject->GetTableNameDB();
+		const wxString fieldName = ibValueMetaObjectAttributeBase::GetSQLFieldName(attribute);
 
-		if (resultSet == nullptr)
-			return attribute->CreateValue();
-
-		if (resultSet->Next())
-			resultCode = resultSet->GetResultNumber(wxT("number")) + 1;
-
-		db_query->RunQuery(
-			wxT("UPDATE OR INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) MATCHING (interval, meta_guid, prefix);"),
-			sequence_table,
-			stringUtils::IntToStr(interval),
-			m_metaObject->GetDocPath(),
-			strPrefix, //prefix
-			resultCode.ToString()
-		);
-
-		db_query->CloseResultSet(resultSet);
+		if (attribute->ContainType(ibValueTypes::TYPE_NUMBER)) {
+			ibDatabaseResultSet* rs = db_query->RunQueryWithResults(
+				wxT("SELECT MAX(%s) FROM %s;"), fieldName, tableName);
+			if (rs != nullptr) {
+				if (rs->Next() && !rs->IsFieldNull(1))
+					resultCode = rs->GetResultNumber(1) + 1;
+				db_query->CloseResultSet(rs);
+			}
+		} else {  // STRING — formatted "<prefix><digits>"
+			ibPreparedStatement* st = db_query->PrepareStatement(
+				wxT("SELECT MAX(%s) FROM %s WHERE %s LIKE ?;"),
+				fieldName, tableName, fieldName);
+			if (st != nullptr) {
+				st->SetParamString(1, strPrefix + wxT("%"));
+				ibDatabaseResultSet* rs = st->RunQueryWithResults();
+				if (rs != nullptr) {
+					if (rs->Next() && !rs->IsFieldNull(1)) {
+						const wxString maxCode = rs->GetResultString(1);
+						if (maxCode.length() > strPrefix.length()) {
+							long parsed = 0;
+							maxCode.Mid(strPrefix.length()).ToLong(&parsed);
+							if (parsed > 0) resultCode = parsed + 1;
+						}
+					}
+					db_query->CloseResultSet(rs);
+				}
+				db_query->CloseStatement(st);
+			}
+		}
 	}
+
+	// 3) UPSERT next value into sys_sequence.
+	const wxString upsert = isFB
+		? wxT("UPDATE OR INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) MATCHING (interval, meta_guid, prefix);")
+		: wxT("INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) ON CONFLICT(interval, meta_guid, prefix) DO UPDATE SET number = excluded.number;");
+	db_query->RunQuery(
+		upsert, sequence_table, stringUtils::IntToStr(interval),
+		m_metaObject->GetDocPath(), strPrefix, resultCode.ToString());
 
 	if (attribute->ContainType(ibValueTypes::TYPE_NUMBER)) {
 		return resultCode;

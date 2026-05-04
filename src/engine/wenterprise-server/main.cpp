@@ -756,6 +756,15 @@ int main(int argc, char** argv)
 		res.set_content("bye\n", "text/plain");
 	});
 
+	// GET /admin/diag — JSON snapshot of pool / worker / session state.
+	// Cheap: reads atomic counters + the registry's last-refreshed
+	// snapshot. Designed for monitoring agents and the Active Users
+	// dialog; callable freely without rate-limiting at typical loads.
+	svr.Get(prefix + "/admin/diag",
+		[](const httplib::Request&, httplib::Response& res) {
+			res.set_content(wfrontendDiagJSON(), "application/json");
+		});
+
 	// POST /admin/sessions/<guid>/kick — write "kick" into
 	// sys_session.signal for the row matching <guid>. The owning
 	// wes process sees it on its next JobCheckSignal tick (~3s) and

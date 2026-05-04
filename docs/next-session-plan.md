@@ -617,13 +617,20 @@ Files touched: `session.{h,cpp}`, `sessionRegistry.{h,cpp}`,
   - Multi-tab debug still keeps per-session isolation (eval-mode,
     cancel, force-exit) under churn.
 
-### Observability
-- `/admin/diag` HTTP endpoint on wes returning JSON:
+### Observability — landed 2026-05-04
+- ✅ `GET /admin/diag` HTTP endpoint on wes returning JSON:
   - `workerPool` { alive, idle, max }
   - `connectionPool` { live, idle, max, minIdle }
-  - `sessions` snapshot (count, kinds, auth states)
-  - `debugQueue` length + front session id
-- Same data exposed in designer's Active Users dialog as extra columns.
+  - `sessions` { count, active, byKind { "<label>": N, ... } }
+- Implementation: `wfrontendDiagJSON()` in `frontend/wfrontend.cpp`
+  reads atomic counters + the registry's last-refreshed snapshot,
+  returns `nlohmann::json::dump()`. Cheap to call — no rate-limiting
+  needed at typical load.
+- Open: same data as extra columns in designer's Active Users
+  dialog (currently dialog reads its own snapshot via the registry,
+  could share the diag aggregator).
+- Open: `debugQueue` length + front session id — needs new
+  registry accessor exposing the per-thread debug queue head.
 
 ### Cancellation use cases — landed 2026-05-02
 - ✅ `ibWorkerPool::CancelSession` wired to the debugger Pause command

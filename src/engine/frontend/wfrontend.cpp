@@ -662,6 +662,62 @@ WFRONTEND_API bool wfrontendReloadSessionByGuid(const std::string& sessionGuid)
 		wxString::FromUTF8(sessionGuid.c_str()));
 }
 
+#include "backend/session/workerPoolHeadless.h"
+#include "backend/session/sessionSnapshot.h"
+
+WFRONTEND_API std::string wfrontendDiagJSON()
+{
+	nlohmann::json root = {
+		{ "workerPool",     nlohmann::json::object() },
+		{ "connectionPool", nlohmann::json::object() },
+		{ "sessions",       nlohmann::json::object() },
+	};
+
+	// --- Worker pool (headless impl carries the size counters) -----
+	if (auto* registry = &ibSessionRegistry::Instance()) {
+		if (auto* base = registry->GetWorkerPool()) {
+			if (auto* hl = dynamic_cast<ibWorkerPoolHeadless*>(base)) {
+				root["workerPool"] = {
+					{ "alive", static_cast<unsigned>(hl->AliveWorkers()) },
+					{ "idle",  static_cast<unsigned>(hl->IdleWorkers())  },
+					{ "max",   static_cast<unsigned>(hl->MaxWorkers())   },
+				};
+			}
+		}
+	}
+
+	// --- Connection pool ------------------------------------------
+	if (auto* pool = ibApplicationData::GetConnectionPool()) {
+		root["connectionPool"] = {
+			{ "live",    static_cast<unsigned>(pool->LiveSize()) },
+			{ "idle",    static_cast<unsigned>(pool->IdleSize()) },
+			{ "max",     static_cast<unsigned>(pool->MaxSize())  },
+			{ "minIdle", static_cast<unsigned>(pool->MinIdle())  },
+		};
+	}
+
+	// --- Sessions snapshot ---------------------------------------
+	const ibSessionSnapshot snap = ibSessionRegistry::Instance().GetClusterSnapshot();
+	const unsigned int total = snap.GetSessionCount();
+	unsigned int active = 0;
+	std::map<std::string, unsigned int> byKind;
+	for (unsigned int i = 0; i < total; ++i) {
+		if (!snap.GetUserName(i).IsEmpty()) ++active;
+		const std::string label = snap.GetSessionKindDescr(i).ToStdString(wxConvUTF8);
+		++byKind[label];
+	}
+	nlohmann::json kinds = nlohmann::json::object();
+	for (const auto& [label, count] : byKind)
+		kinds[label] = count;
+	root["sessions"] = {
+		{ "count",  total },
+		{ "active", active },
+		{ "byKind", kinds },
+	};
+
+	return root.dump();
+}
+
 WFRONTEND_API void wfrontendShutdown()
 {
 	std::lock_guard<std::mutex> lock(g_initMutex);

@@ -162,6 +162,18 @@ WFRONTEND_API bool wfrontendKickSessionByGuid(const std::string& sessionGuid);
 // POST /admin/sessions/<guid>/reload.
 WFRONTEND_API bool wfrontendReloadSessionByGuid(const std::string& sessionGuid);
 
+// Diagnostic snapshot — JSON object exposing pool/worker/session state
+// for /admin/diag and the designer's Active Users dialog. Shape:
+//   {
+//     "workerPool":     { "alive": N, "idle": N, "max": N },
+//     "connectionPool": { "live": N, "idle": N, "max": N, "minIdle": N },
+//     "sessions":       { "count": N, "active": N,
+//                         "byKind": { "<kindLabel>": N, ... } }
+//   }
+// Cheap to call — just reads atomic counters and the registry's
+// last-refreshed snapshot. Returns "{}" on any internal failure.
+WFRONTEND_API std::string wfrontendDiagJSON();
+
 // Current tab count for the session (0 if the session doesn't exist or
 // isn't authenticated yet). Used by GET / to decide whether F5 should
 // swap an empty session for a fresh one (re-running OnStart).

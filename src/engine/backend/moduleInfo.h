@@ -17,25 +17,24 @@ public:
 class BACKEND_API ibRuntimeModuleDataObject {
 public:
 
-	// Method call. Resolves the runtime through GetProcUnit(); local
-	// shared_ptr keeps the ProcUnit alive for the whole call — without
-	// it, a concurrent session teardown would drop the last ref and
-	// leave pu dangling mid-Execute (fast-F5 UAF crash,
-	// project_refresh_execute_crash.md).
-	bool ExecuteProc(const wxString& strMethodName,
-		ibValue** paParams, const long lSizeArray)
-	{
-		if (auto pu = GetProcUnit())
-			return pu->CallAsProc(strMethodName, paParams, lSizeArray);
-		return false;
+	// Variadic method call — packs the trailing ibValue& arguments into
+	// the ibValue*[] array form expected by the underlying ProcUnit.
+	// Public surface for fixed-N event handler invocations:
+	// ExecAsProc(wxT("BeforeWrite"), cancel). Mirrors
+	// ibProcUnit::CallAsProc/Func variadics (void return). Forwards to
+	// the protected array form, which resolves the runtime through
+	// GetProcUnit() and pins the shared_ptr against fast-F5 UAF
+	// (project_refresh_execute_crash.md).
+	template <typename... Types>
+	void ExecAsProc(const wxString& strMethodName, Types&&... args) const {
+		ibValue* paParams[] = { &args..., nullptr };
+		ExecAsProc(strMethodName, paParams, (const long)sizeof...(args));
 	}
 
-	bool ExecuteFunc(const wxString& strMethodName,
-		ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
-	{
-		if (auto pu = GetProcUnit())
-			return pu->CallAsFunc(strMethodName, pvarRetValue, paParams, lSizeArray);
-		return false;
+	template <typename... Types>
+	void ExecAsFunc(const wxString& strMethodName, ibValue& pvarRetValue, Types&&... args) const {
+		ibValue* paParams[] = { &args..., nullptr };
+		ExecAsFunc(strMethodName, pvarRetValue, paParams, (const long)sizeof...(args));
 	}
 
 	// Allocate the runtime slot (ProcUnit) for this descriptor on
@@ -46,7 +45,7 @@ public:
 	void InitializeRuntime();
 
 	// Drop the runtime slot — symmetric teardown for InitializeRuntime.
-	// Used by ExitRuntimeForSession to release this descriptor's
+	// Used by DetachRuntime to release this descriptor's
 	// ProcUnit at session end. No-op if already empty.
 	void ResetRuntime() { m_procUnit.reset(); }
 
@@ -159,6 +158,31 @@ public:
 	virtual ibRuntimeRoot* GetRoot() const;
 
 protected:
+	// Method call (array form). Resolves the runtime through
+	// GetProcUnit(); local shared_ptr keeps the ProcUnit alive for the
+	// whole call — without it, a concurrent session teardown would drop
+	// the last ref and leave pu dangling mid-Execute (fast-F5 UAF
+	// crash, project_refresh_execute_crash.md). Used by derived-class
+	// CallAsProc(lMethodNum, paParams, lSizeArray) dispatch and by the
+	// public variadic forms above. External callers should use the
+	// variadic — this raw form stays protected because the array shape
+	// is a derived-class implementation detail.
+	bool ExecAsProc(const wxString& strMethodName,
+		ibValue** paParams, const long lSizeArray) const
+	{
+		if (auto pu = GetProcUnit())
+			return pu->CallAsProc(strMethodName, paParams, lSizeArray);
+		return false;
+	}
+
+	bool ExecAsFunc(const wxString& strMethodName,
+		ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray) const
+	{
+		if (auto pu = GetProcUnit())
+			return pu->CallAsFunc(strMethodName, pvarRetValue, paParams, lSizeArray);
+		return false;
+	}
+
 	// Populate a value's method-helper from this descriptor's bytecode —
 	// every kind=Export entry in m_listFunc / m_listVar is appended as
 	// a method / prop alias eProcUnit (the canonical alias all
@@ -169,7 +193,7 @@ protected:
 	// No-op when there's no live ProcUnit or no bytecode (Designer mode,
 	// not-yet-compiled descriptor). Helper is read through GetProcUnit()
 	// to pin the shared_ptr alive for the duration — same pattern as
-	// ExecuteProc / ExecuteFunc above.
+	// ExecAsProc / ExecAsFunc above.
 	void ExportNamesToHelper(ibValue::ibValueMethodHelper* helper, long alias) const {
 		if (helper == nullptr) return;
 		const auto pu = GetProcUnit();

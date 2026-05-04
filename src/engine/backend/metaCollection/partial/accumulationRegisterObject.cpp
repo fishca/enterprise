@@ -27,7 +27,7 @@ bool ibValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bo
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					ExecAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
@@ -44,7 +44,7 @@ bool ibValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bo
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					ExecAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
@@ -83,7 +83,7 @@ bool ibValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					ExecAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
@@ -100,7 +100,7 @@ bool ibValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					ExecAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));

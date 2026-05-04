@@ -334,7 +334,7 @@ bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 				{
 					ibValue cancel = false;
 
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					ExecAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
@@ -409,7 +409,7 @@ bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					ExecAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!")); return false;

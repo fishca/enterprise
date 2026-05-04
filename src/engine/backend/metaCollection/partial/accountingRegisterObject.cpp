@@ -32,7 +32,7 @@ bool ibValueRecordSetObjectAccountingRegister::WriteRecordSet(bool replace, bool
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					ExecAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
@@ -49,7 +49,7 @@ bool ibValueRecordSetObjectAccountingRegister::WriteRecordSet(bool replace, bool
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					ExecAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
@@ -88,7 +88,7 @@ bool ibValueRecordSetObjectAccountingRegister::DeleteRecordSet()
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+					ExecAsProc(wxT("BeforeDelete"), cancel);
 
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
@@ -105,7 +105,7 @@ bool ibValueRecordSetObjectAccountingRegister::DeleteRecordSet()
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
+					ExecAsProc(wxT("OnDelete"), cancel);
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to delete object in db!"));

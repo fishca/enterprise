@@ -261,7 +261,7 @@ bool ibValueRecordDataObjectDocument::WriteObject(ibDocumentWriteMode writeMode,
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel,
+						ExecAsProc(wxT("BeforeWrite"), cancel,
 							ibValue::CreateEnumObject<ibValueEnumDocumentWriteMode>(writeMode),
 							ibValue::CreateEnumObject<ibValueEnumDocumentPostingMode>(postingMode)
 						);
@@ -288,7 +288,7 @@ bool ibValueRecordDataObjectDocument::WriteObject(ibDocumentWriteMode writeMode,
 
 					if (!IsSetUniqueIdentifier()) {
 						ibValue prefix = "", standartProcessing = true;
-						m_procUnit->CallAsProc(wxT("SetNewNumber"), prefix, standartProcessing);
+						ExecAsProc(wxT("SetNewNumber"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
 							generateUniqueIdentifier =
 								ibValueRecordDataObjectDocument::GenerateUniqueIdentifier(prefix.GetString());
@@ -319,7 +319,7 @@ bool ibValueRecordDataObjectDocument::WriteObject(ibDocumentWriteMode writeMode,
 					if (writeMode == ibDocumentWriteMode::ibDocumentWriteMode_Posting) {
 
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("Posting"), cancel,
+						ExecAsProc(wxT("Posting"), cancel,
 							ibValue::CreateEnumObject<ibValueEnumDocumentPostingMode>(postingMode)
 						);
 
@@ -342,7 +342,7 @@ bool ibValueRecordDataObjectDocument::WriteObject(ibDocumentWriteMode writeMode,
 					else if (writeMode == ibDocumentWriteMode::ibDocumentWriteMode_UndoPosting) {
 
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("UndoPosting"), cancel);
+						ExecAsProc(wxT("UndoPosting"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
 								ibValueRecordDataObjectDocument::ResetUniqueIdentifier();
@@ -361,7 +361,7 @@ bool ibValueRecordDataObjectDocument::WriteObject(ibDocumentWriteMode writeMode,
 					}
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+						ExecAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
 								ibValueRecordDataObjectDocument::ResetUniqueIdentifier();
@@ -413,7 +413,7 @@ bool ibValueRecordDataObjectDocument::DeleteObject()
 					scope.SafeBeginTransaction();
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+						ExecAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
@@ -429,7 +429,7 @@ bool ibValueRecordDataObjectDocument::DeleteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
+						ExecAsProc(wxT("OnDelete"), cancel);
 
 						if (cancel.GetBoolean()) {
 							scope.SafeRollBackTransaction();
@@ -621,7 +621,7 @@ bool ibValueRecordDataObjectDocument::CallAsFunc(const long lMethodNum, ibValue&
 		return true;
 	}
 
-	return ibRuntimeModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

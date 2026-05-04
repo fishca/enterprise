@@ -88,20 +88,20 @@ bool ibValueRecordDataObjectChartOfAccounts::WriteObject()
 				ibBackendValueForm* const valueForm = GetForm();
 				{
 					scope.SafeBeginTransaction();
-					{ ibValue cancel = false; m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					{ ibValue cancel = false; ExecAsProc(wxT("BeforeWrite"), cancel);
 						if (cancel.GetBoolean()) { scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false; } }
 					bool newObject = IsNewObject();
 					bool generateUniqueIdentifier = false;
 					if (!IsSetUniqueIdentifier()) {
 						ibValue prefix = "", standartProcessing = true;
-						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
+						ExecAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) generateUniqueIdentifier = GenerateUniqueIdentifier(prefix.GetString());
 					}
 					if (!SaveData()) {
 						if (generateUniqueIdentifier) ResetUniqueIdentifier();
 						scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
 					}
-					{ ibValue cancel = false; m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					{ ibValue cancel = false; ExecAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) { if (generateUniqueIdentifier) ResetUniqueIdentifier();
 							scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false; } }
 					scope.SafeCommitTransaction();
@@ -131,10 +131,10 @@ bool ibValueRecordDataObjectChartOfAccounts::DeleteObject()
 				ibBackendValueForm* const valueForm = GetForm();
 				{
 					scope.SafeBeginTransaction();
-					{ ibValue cancel = false; m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+					{ ibValue cancel = false; ExecAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) { scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; } }
 					if (!DeleteData()) { scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; }
-					{ ibValue cancel = false; m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
+					{ ibValue cancel = false; ExecAsProc(wxT("OnDelete"), cancel);
 						if (cancel.GetBoolean()) { scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; } }
 					scope.SafeCommitTransaction();
 					if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
@@ -208,5 +208,5 @@ bool ibValueRecordDataObjectChartOfAccounts::CallAsFunc(const long lMethodNum, i
 	case Func::enGetTemplate: pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString()); return true;
 	case Func::enGetMetadata: pvarRetValue = m_metaObject; return true;
 	}
-	return ibRuntimeModuleDataObject::ExecuteFunc(GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray);
+	return ibRuntimeModuleDataObject::ExecAsFunc(GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray);
 }

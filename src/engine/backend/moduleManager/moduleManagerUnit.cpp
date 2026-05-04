@@ -40,7 +40,7 @@ bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
 	// Manager.<method>() inside common modules.
 	BindContextVariable(objectManager, m_moduleManager->GetObjectManager());
 
-	// Compile only — per-session ProcUnit comes from InitRuntimeForSession.
+	// Compile only — per-session ProcUnit comes from AttachRuntime.
 	try {
 		Compile();
 	}
@@ -73,14 +73,14 @@ void ibValueModuleManager::ibValueModuleUnit::PrepareNames() const
 
 bool ibValueModuleManager::ibValueModuleUnit::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
-	return ibRuntimeModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecAsProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
 bool ibValueModuleManager::ibValueModuleUnit::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	return ibRuntimeModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

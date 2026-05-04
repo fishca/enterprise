@@ -430,7 +430,7 @@ bool ibValueModuleManagerExternalDataProcessor::CallAsFunc(const long lMethodNum
 		return m_objectValue->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	}
 
-	return ibRuntimeModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
@@ -505,7 +505,7 @@ bool ibValueModuleManagerExternalReport::CallAsFunc(const long lMethodNum, ibVal
 		return m_objectValue->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	}
 
-	return ibRuntimeModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

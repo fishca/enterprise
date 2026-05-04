@@ -151,7 +151,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+						ExecAsProc(wxT("BeforeWrite"), cancel);
 
 						if (cancel.GetBoolean()) {
 							scope.SafeRollBackTransaction();
@@ -165,7 +165,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 
 					if (!IsSetUniqueIdentifier()) {
 						ibValue prefix = "", standartProcessing = true;
-						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
+						ExecAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
 							generateUniqueIdentifier =
 								ibValueRecordDataObjectChartOfCharacteristicTypes::GenerateUniqueIdentifier(prefix.GetString());
@@ -182,7 +182,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+						ExecAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
 								ibValueRecordDataObjectChartOfCharacteristicTypes::ResetUniqueIdentifier();
@@ -240,7 +240,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::DeleteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+						ExecAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
@@ -256,7 +256,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::DeleteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
+						ExecAsProc(wxT("OnDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
@@ -424,7 +424,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::CallAsFunc(const long lM
 		return true;
 	}
 
-	return ibRuntimeModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

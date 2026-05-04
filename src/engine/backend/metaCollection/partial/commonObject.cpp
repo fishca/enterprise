@@ -1661,7 +1661,7 @@ bool ibValueRecordDataObject::CallAsProc(const long lMethodNum, ibValue** paPara
 {
 	const long lMethodAlias = m_methodHelper->GetPropAlias(lMethodNum);
 	if (lMethodAlias == eProcUnit) {
-		return ibRuntimeModuleDataObject::ExecuteProc(
+		return ibRuntimeModuleDataObject::ExecAsProc(
 			GetMethodName(lMethodNum), paParams, lSizeArray
 		);
 	}
@@ -1673,7 +1673,7 @@ bool ibValueRecordDataObject::CallAsFunc(const long lMethodNum, ibValue& pvarRet
 {
 	const long lMethodAlias = m_methodHelper->GetPropAlias(lMethodNum);
 	if (lMethodAlias == eProcUnit) {
-		return ibRuntimeModuleDataObject::ExecuteFunc(
+		return ibRuntimeModuleDataObject::ExecAsFunc(
 			GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 		);
 	}
@@ -1934,7 +1934,7 @@ bool ibValueRecordDataObjectRef::InitializeObject(ibValueRecordDataObjectRef* so
 		ibRuntimeModuleDataObject::SetParent(const_cast<ibValueModuleManager*>(moduleManager));
 		Execute();
 		if (m_newObject && source != nullptr && !generate) {
-			m_procUnit->CallAsProc(wxT("OnCopy"), source->GetValue());
+			ExecAsProc(wxT("OnCopy"), source->GetValue());
 		}
 		else if (m_newObject && source == nullptr) {
 			succes = Filling();
@@ -2025,9 +2025,7 @@ bool ibValueRecordDataObjectRef::Generate()
 bool ibValueRecordDataObjectRef::Filling(ibValue cValue) const
 {
 	ibValue standartProcessing = true;
-	if (m_procUnit != nullptr) {
-		m_procUnit->CallAsProc(wxT("Filling"), cValue, standartProcessing);
-	}
+	ExecAsProc(wxT("Filling"), cValue, standartProcessing);
 	return standartProcessing.GetBoolean();
 }
 

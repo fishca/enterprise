@@ -340,7 +340,7 @@ bool ibValueForm::CallAsProc(const long lMethodNum, ibValue** paParams, const lo
 		return true;
 	}
 
-	return ibRuntimeModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecAsProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
@@ -357,7 +357,7 @@ bool ibValueForm::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibVal
 		return true;
 	}
 
-	return ibRuntimeModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

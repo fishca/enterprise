@@ -160,7 +160,7 @@ bool ibValueRecordDataObjectCatalog::WriteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+						ExecAsProc(wxT("BeforeWrite"), cancel);
 
 						if (cancel.GetBoolean()) {
 							scope.SafeRollBackTransaction();
@@ -174,7 +174,7 @@ bool ibValueRecordDataObjectCatalog::WriteObject()
 					
 					if (!IsSetUniqueIdentifier()) {
 						ibValue prefix = "", standartProcessing = true;
-						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
+						ExecAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
 							generateUniqueIdentifier = 
 								ibValueRecordDataObjectCatalog::GenerateUniqueIdentifier(prefix.GetString());
@@ -191,7 +191,7 @@ bool ibValueRecordDataObjectCatalog::WriteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+						ExecAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
 								ibValueRecordDataObjectCatalog::ResetUniqueIdentifier();
@@ -252,7 +252,7 @@ bool ibValueRecordDataObjectCatalog::DeleteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+						ExecAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
@@ -268,7 +268,7 @@ bool ibValueRecordDataObjectCatalog::DeleteObject()
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
+						ExecAsProc(wxT("OnDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!")); 
@@ -439,7 +439,7 @@ bool ibValueRecordDataObjectCatalog::CallAsFunc(const long lMethodNum, ibValue& 
 		return true;
 	}
 
-	return ibRuntimeModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

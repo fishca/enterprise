@@ -163,14 +163,14 @@ void ibValueModuleManager::PrepareNames() const
 
 bool ibValueModuleManager::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
-	return ibRuntimeModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecAsProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
 bool ibValueModuleManager::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	return ibRuntimeModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
@@ -244,7 +244,7 @@ bool ibValueModuleManagerConfiguration::CreateMainModule()
 	}
 
 	// Compile only — runtime (ibProcUnit) is created per session by
-	// InitRuntimeForSession(ctx). The manager itself no longer carries
+	// AttachRuntime(ctx). The manager itself no longer carries
 	// a ProcUnit field.
 	if (!appData->DesignerMode()) {
 		try {
@@ -297,7 +297,7 @@ bool ibValueModuleManagerConfiguration::DestroyMainModule()
 	m_compileModule->Reset();
 	// m_procUnit is no longer populated by CreateMainModule (compile-
 	// only since the runtime split 2026-04-19). Session ProcUnits are
-	// torn down by ExitRuntimeForSession, not here.
+	// torn down by DetachRuntime, not here.
 
 	//Setup common modules
 	for (auto& moduleValue : m_listCommonModuleManager) {
@@ -362,7 +362,7 @@ SYSTEM_TYPE_REGISTER(ibValueModuleManagerConfiguration, "ConfigModuleManager", s
 //*          Per-session runtime (compile / runtime split)             *
 //**********************************************************************
 
-bool ibValueModuleManager::InitRuntimeForSession(ibSession* session)
+bool ibValueModuleManager::AttachRuntime(ibSession* session)
 {
 	if (session == nullptr)
 		return false;
@@ -395,7 +395,7 @@ bool ibValueModuleManager::InitRuntimeForSession(ibSession* session)
 			Run();                    // execute main module top-level
 		}
 		catch (const ibBackendException& err) {
-			wxLogWarning(_("InitRuntimeForSession main: %s"), err.GetErrorDescription());
+			wxLogWarning(_("AttachRuntime main: %s"), err.GetErrorDescription());
 			return false;
 		}
 	}
@@ -421,18 +421,18 @@ bool ibValueModuleManager::InitRuntimeForSession(ibSession* session)
 			moduleValue->Run(false);
 		}
 		catch (const ibBackendException& err) {
-			wxLogWarning(_("InitRuntimeForSession common: %s"), err.GetErrorDescription());
+			wxLogWarning(_("AttachRuntime common: %s"), err.GetErrorDescription());
 			return false;
 		}
 	}
 	return true;
 }
 
-void ibValueModuleManager::ExitRuntimeForSession(ibSession* session)
+void ibValueModuleManager::DetachRuntime(ibSession* session)
 {
 	if (session == nullptr)
 		return;
-	// Pairs with InitRuntimeForSession's lock — concurrent Init + Exit
+	// Pairs with AttachRuntime's lock — concurrent Init + Exit
 	// would race on m_listCommonModuleManager iteration + common-module
 	// ProcUnit drop. Hot code path but brief.
 	std::lock_guard<std::mutex> lock(m_runtimeMutex);

@@ -27,7 +27,7 @@ bool ibValueRecordSetObjectInformationRegister::WriteRecordSet(bool replace, boo
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					ExecAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
@@ -44,7 +44,7 @@ bool ibValueRecordSetObjectInformationRegister::WriteRecordSet(bool replace, boo
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					ExecAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
@@ -83,7 +83,7 @@ bool ibValueRecordSetObjectInformationRegister::DeleteRecordSet()
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					ExecAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
@@ -100,7 +100,7 @@ bool ibValueRecordSetObjectInformationRegister::DeleteRecordSet()
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					ExecAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));

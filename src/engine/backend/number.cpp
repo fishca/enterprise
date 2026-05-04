@@ -1207,13 +1207,21 @@ wxString ibNumber::ToString(const Format& fmt) const
 		if (fracDigitsEmit == 0 && fracLeadingEmit == 0) hasFraction = false;
 	}
 
+	// minIntDigits: pad integer part with leading '0' to this width.
+	// "0" placeholder for an empty int part counts as one digit.
+	const size_t baseIntEmit = (intLen == 0) ? 1u : intLen;
+	const size_t padCount = (fmt.minIntDigits > 0
+	                         && static_cast<size_t>(fmt.minIntDigits) > baseIntEmit)
+	    ? static_cast<size_t>(fmt.minIntDigits) - baseIntEmit
+	    : 0;
+	const size_t emitIntLen = baseIntEmit + padCount;
+
 	// Pre-size output.
 	const bool useGroups = (fmt.groupSize > 0 && fmt.groupSep != 0
-	                        && (intLen == 0 ? 1u : intLen) > static_cast<size_t>(fmt.groupSize));
+	                        && emitIntLen > static_cast<size_t>(fmt.groupSize));
 	const size_t groupSepCount = useGroups
-	    ? ((intLen == 0 ? 1u : intLen) - 1) / static_cast<size_t>(fmt.groupSize)
+	    ? (emitIntLen - 1) / static_cast<size_t>(fmt.groupSize)
 	    : 0;
-	const size_t emitIntLen = (intLen == 0) ? 1u : intLen;
 	const size_t totalSize  = (b.negative && !b.IsZero() ? 1u : 0u)
 	                        + emitIntLen + groupSepCount
 	                        + (hasFraction ? 1u : 0u)
@@ -1224,25 +1232,34 @@ wxString ibNumber::ToString(const Format& fmt) const
 
 	if (b.negative && !b.IsZero()) result += wxT('-');
 
-	// Integer part with optional group separator.
-	if (intLen == 0) {
-		result += wxT('0');
-	} else if (useGroups) {
-		for (size_t i = 0; i < intLen; ++i) {
-			if (i > 0 && (intLen - i) % static_cast<size_t>(fmt.groupSize) == 0)
+	// Integer part — leading-zero pad, then digits, with optional group separator.
+	if (useGroups) {
+		for (size_t i = 0; i < emitIntLen; ++i) {
+			if (i > 0 && (emitIntLen - i) % static_cast<size_t>(fmt.groupSize) == 0)
 				result += fmt.groupSep;
-			result += (i < intDigitsAtP) ? p[i] : wxT('0');
+			if (i < padCount)                       result += wxT('0');
+			else if (intLen == 0)                   result += wxT('0');     // base placeholder
+			else {
+				const size_t j = i - padCount;
+				result += (j < intDigitsAtP) ? p[j] : wxT('0');             // trailing zeros for exp>0
+			}
 		}
 	} else {
-		// Fast path — append slice + trailing zeros without per-char condition.
-		if (intDigitsAtP > 0) result += wxString(p, intDigitsAtP);
-		if (intTrailingZeros > 0) result.append(intTrailingZeros, wxT('0'));
+		// Fast path — append leading pad, slice, trailing zeros without per-char condition.
+		// append(ptr, n) writes straight into reserved storage; wxString(ptr, n)
+		// would allocate a temporary first.
+		if (padCount > 0)         result.append(padCount, wxT('0'));
+		if (intLen == 0)          result += wxT('0');
+		else {
+			if (intDigitsAtP > 0)     result.append(p, intDigitsAtP);
+			if (intTrailingZeros > 0) result.append(intTrailingZeros, wxT('0'));
+		}
 	}
 
 	if (hasFraction) {
 		result += fmt.decimalSep;
 		if (fracLeadingEmit > 0) result.append(fracLeadingEmit, wxT('0'));
-		if (fracDigitsEmit > 0) result += wxString(fracStart, fracDigitsEmit);
+		if (fracDigitsEmit > 0)  result.append(fracStart, fracDigitsEmit);
 	}
 	return result;
 }

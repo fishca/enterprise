@@ -496,3 +496,85 @@ TEST(NumberStream, OstreamNegativeInt) {
     ss << ibNumber(-42);
     EXPECT_EQ(ss.str(), "-42");
 }
+
+// -------------------------------------------------------------------- Format
+
+TEST(NumberFormat, DefaultsMatchBareToString) {
+    ibNumber n(wxString(wxT("12345.678")));
+    ibNumber::Format fmt;
+    EXPECT_EQ(n.ToString(fmt), n.ToString());
+}
+
+TEST(NumberFormat, FracDigitsRounds) {
+    ibNumber n(wxString(wxT("1.23456")));
+    ibNumber::Format fmt; fmt.fracDigits = 2;
+    EXPECT_EQ(n.ToString(fmt), wxT("1.23"));
+}
+
+TEST(NumberFormat, GroupSepThousands) {
+    ibNumber n(1234567);
+    ibNumber::Format fmt; fmt.groupSep = wxT(' '); fmt.groupSize = 3;
+    EXPECT_EQ(n.ToString(fmt), wxT("1 234 567"));
+}
+
+// minIntDigits — leading-zero pad on the integer part.
+
+TEST(NumberFormat, PadSmallNumberToFour) {
+    ibNumber n(7);
+    ibNumber::Format fmt; fmt.minIntDigits = 4;
+    EXPECT_EQ(n.ToString(fmt), wxT("0007"));
+}
+
+TEST(NumberFormat, PadZeroToFour) {
+    ibNumber n;
+    ibNumber::Format fmt; fmt.minIntDigits = 4;
+    EXPECT_EQ(n.ToString(fmt), wxT("0000"));
+}
+
+TEST(NumberFormat, PadEqualToActualNoChange) {
+    ibNumber n(1234);
+    ibNumber::Format fmt; fmt.minIntDigits = 4;
+    EXPECT_EQ(n.ToString(fmt), wxT("1234"));
+}
+
+TEST(NumberFormat, PadShorterThanActualDoesNotTruncate) {
+    ibNumber n(98765);
+    ibNumber::Format fmt; fmt.minIntDigits = 3;
+    EXPECT_EQ(n.ToString(fmt), wxT("98765"));
+}
+
+TEST(NumberFormat, PadOffWhenZero) {
+    ibNumber n(7);
+    ibNumber::Format fmt; fmt.minIntDigits = 0;
+    EXPECT_EQ(n.ToString(fmt), wxT("7"));
+}
+
+TEST(NumberFormat, PadNegativeSignOutside) {
+    // sign sits OUTSIDE the padding (printf "%04d" semantics differ here)
+    ibNumber n(-5);
+    ibNumber::Format fmt; fmt.minIntDigits = 4;
+    EXPECT_EQ(n.ToString(fmt), wxT("-0005"));
+}
+
+TEST(NumberFormat, PadHeapTierBigCounter) {
+    // bigger than int64 — printf-route would have overflowed; ibNumber path
+    // stays exact.
+    ibNumber n(wxString(wxT("99999999999999999999")));   // 20 digits
+    ibNumber::Format fmt; fmt.minIntDigits = 24;
+    EXPECT_EQ(n.ToString(fmt), wxT("000099999999999999999999"));
+}
+
+TEST(NumberFormat, PadCombinedWithFracDigits) {
+    ibNumber n(wxString(wxT("3.14159")));
+    ibNumber::Format fmt; fmt.minIntDigits = 4; fmt.fracDigits = 2;
+    EXPECT_EQ(n.ToString(fmt), wxT("0003.14"));
+}
+
+TEST(NumberFormat, PadCombinedWithGroups) {
+    // padding zeros count as digits for separator placement
+    ibNumber n(7);
+    ibNumber::Format fmt;
+    fmt.minIntDigits = 7;
+    fmt.groupSep = wxT(','); fmt.groupSize = 3;
+    EXPECT_EQ(n.ToString(fmt), wxT("0,000,007"));
+}

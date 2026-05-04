@@ -205,11 +205,14 @@ private:
 
 struct ibNumber::Format
 {
-	int    fracDigits = -1;          // round to N decimal places (-1 = no rounding)
-	int    precision  = -1;          // cap total significant digits, trim trailing zeros (-1 = off)
-	wxChar decimalSep = wxT('.');    // decimal separator
-	wxChar groupSep   = 0;           // thousand-group separator (0 = no grouping)
-	int    groupSize  = 0;           // digits per group (0 = no grouping)
+	int    fracDigits   = -1;        // round to N decimal places (-1 = no rounding)
+	int    precision    = -1;        // cap total significant digits, trim trailing zeros (-1 = off)
+	wxChar decimalSep   = wxT('.');  // decimal separator
+	wxChar groupSep     = 0;         // thousand-group separator (0 = no grouping)
+	int    groupSize    = 0;         // digits per group (0 = no grouping)
+	int    minIntDigits = 0;         // pad integer part with leading '0' to this width (0 = off)
+	                                 //   sign sits OUTSIDE the padding: -5 with width 4 → "-0005",
+	                                 //   not "-005" (printf "%04d" semantics differ here)
 };
 
 static_assert(sizeof(uint64_t) == 8, "ibNumber assumes uint64_t is 8 bytes");

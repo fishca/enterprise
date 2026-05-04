@@ -17,6 +17,8 @@
 #include "backend/compiler/value.h" // ibValue (base for ibValuePtr)
 #include "backend/compiler/procUnitState.h"   // ibProcUnitState — per-session interpreter swap target
 #include "backend/value_ptr.h"    // ibValuePtr for m_root
+#include "backend/databaseLayer/connectionHolder.h"   // ibDatabaseConnectionHolder for m_dbHolder
+#include "backend/databaseLayer/connectionScope.h"    // ibConnectionScope for OpenScope return type
 
 #include <atomic>
 #include <condition_variable>
@@ -150,8 +152,7 @@ struct BACKEND_API ibSessionIdentity {
 // via std::make_shared (registry path) or the typed factory.
 // ------------------------------------------------------------------
 class BACKEND_API ibSession
-	: public std::enable_shared_from_this<ibSession>
-	, public ibDatabaseConnectionHolder {
+	: public std::enable_shared_from_this<ibSession> {
 public:
 	// kind = what this session does in the running process. The process-
 	// level run mode (how the exe was launched) lives on appData and is
@@ -682,7 +683,38 @@ public:
 	// debugged.
 	void WakeDebugLoop();
 
+	// --- Database connection façade ----------------------------------
+	// Composition over inheritance: session OWNS a connection holder
+	// rather than BEING one. Each session has ONE connection; runtime
+	// descriptor work all funnels through EnsureConnection. The raw
+	// holder pointer is exposed for pool's CurrentHolder cast and for
+	// scope-binding from ibConnectionScope.
+	//
+	// AcquireFreeConnection is intentionally NOT mirrored on session —
+	// "session has one conn" invariant. Background subsystems that
+	// genuinely need a side-channel conn (meta-watcher polling,
+	// registry's separate write/probe holders) declare their own
+	// holders and call AcquireFreeConnection on those directly.
+	std::shared_ptr<class ibDatabaseLayer> EnsureConnection() {
+		return m_dbHolder.EnsureConnection();
+	}
+	ibConnectionScope OpenConnectionScope() {
+		return m_dbHolder.OpenConnectionScope();
+	}
+	ibDatabaseConnectionHolder*       Holder()       { return &m_dbHolder; }
+	const ibDatabaseConnectionHolder* Holder() const { return &m_dbHolder; }
+
+	// Static — backs the ses_query macro. Resolves to
+	// Current()->EnsureConnection() with explicit-failure throws if
+	// no session is bound or the conn isn't open.
+	static std::shared_ptr<class ibDatabaseLayer> DatabaseLayer();
+
 private:
+	// Owned holder identity — session uses its own holder for pool
+	// reservations (TX pin / scope binding). Const-mutable not needed:
+	// every method that touches m_dbHolder is non-const.
+	ibDatabaseConnectionHolder m_dbHolder;
+
 	// nullptr unless the session was created with debug attached.
 	std::unique_ptr<ibDebugSession> m_debug;
 
@@ -833,5 +865,17 @@ private:
 // sessionRegistry.h — they delegate through ibSessionRegistry's factory
 // methods, which require the registry's full type at instantiation.
 // Callers that use the typed overload include sessionRegistry.h.
+
+// ses_query — symmetric to db_query but routes through the active
+// session's holder so the work joins the session's TX/scope-bound
+// connection. Throws ibBackendCoreException if no session is
+// current or the session has no bound connection — explicit failure
+// instead of silent fall-through. Use in descriptor / runtime code
+// that must be transactionally cohesive with the outer document
+// save; keep db_query for DDL / service / bootstrap paths.
+//
+// Returns shared_ptr (same as db_query) so callsites can use
+// operator-> directly: ses_query->RunQuery(...).
+#define ses_query (ibSession::DatabaseLayer())
 
 #endif

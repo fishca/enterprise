@@ -24,11 +24,12 @@ void ibConnectionScope::Acquire(ibDatabaseConnectionHolder* customHolder)
 
 	// Resolve the holder for this scope:
 	//   - explicit `customHolder` wins (private-holder pattern, e.g. a
-	//     thread_local singleton owned by the calling subsystem);
-	//   - else fall through to CurrentHolder(): session if bound,
-	//     otherwise the pool's db_query singleton. Keeps `db_query`
-	//     and default `ibConnectionScope()` routing consistent — same
-	//     identity for both.
+	//     thread_local singleton owned by the calling subsystem, or
+	//     ibSession::Current()->Holder() for session-bound work);
+	//   - else fall through to CurrentHolder() = ThreadHolder
+	//     (db_query channel). Sessions are NOT routed implicitly any
+	//     more — session work passes its holder explicitly via
+	//     `ibSession::Current()->OpenConnectionScope()` (see session.h).
 	m_holder = (customHolder != nullptr)
 		? customHolder
 		: ibConnectionPool::CurrentHolder();
@@ -55,8 +56,8 @@ void ibConnectionScope::Acquire(ibDatabaseConnectionHolder* customHolder)
 	}
 
 	// 3. Fresh checkout — pool hands a borrowed entry. Bind it to the
-	//    holder so nested scopes / db_query for the same holder route
-	//    to this conn. No-op when holder == nullptr (non-session
+	//    holder so nested scopes / ses_query for the same holder route
+	//    to this conn. No-op when holder == nullptr (non-holder
 	//    threads using Checkout directly).
 	m_conn = pool->Checkout();
 	if (m_conn) {

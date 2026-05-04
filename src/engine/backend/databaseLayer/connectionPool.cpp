@@ -1,8 +1,8 @@
 #include "connectionPool.h"
 
 #include "backend/appData.h"
-#include "backend/session/session.h"
 #include "connectionHolder.h"
+#include "connectionScope.h"
 #include "databaseLayer.h"
 
 ibDatabaseConnectionHolder* ibConnectionPool::ThreadHolder()
@@ -19,18 +19,12 @@ ibDatabaseConnectionHolder* ibConnectionPool::ThreadHolder()
 
 ibDatabaseConnectionHolder* ibConnectionPool::CurrentHolder()
 {
-	// Two channels:
-	//   - Session: ibSession::Current() when a session is bound to the
-	//     thread (runtime / web / GUI / debug eval all run inside a
-	//     SessionScope). Reservation table lookups return the
-	//     session's pinned/scope-bound conn.
-	//   - db_query: the per-thread holder above. Each calling thread has
-	//     its own reservation key, so concurrent non-session work runs on
-	//     independent pool connections without serialising on one
-	//     singleton. Subsystems that need explicit per-call isolation pass
-	//     their own holder to ibConnectionScope.
-	if (auto* s = ibSession::Current())
-		return static_cast<ibDatabaseConnectionHolder*>(s);
+	// db_query channel only — per-thread holder. Sessions have their
+	// own channel via session->Holder() (called explicitly by ses_query
+	// or by ibConnectionScope(session->Holder())). No implicit session
+	// routing here; mixing the two channels would couple db_query's
+	// ad-hoc per-statement semantics with the session's long-lived
+	// holder.
 	return ThreadHolder();
 }
 
@@ -192,16 +186,9 @@ ibSingleConnectionHolder::~ibSingleConnectionHolder()
 		pool->ReleaseAll(this);
 }
 
-std::shared_ptr<ibDatabaseLayer> ibDatabaseConnectionHolder::GetConnection() const
+ibConnectionScope ibDatabaseConnectionHolder::OpenConnectionScope()
 {
-	auto* pool = ibApplicationData::GetConnectionPool();
-	if (pool == nullptr) return nullptr;
-	// Pool-side lookup: TX pin > scope binding. Const-cast on `this` is
-	// safe — pool keys reservations by address, never mutates the
-	// holder through the pointer.
-	auto* self = const_cast<ibDatabaseConnectionHolder*>(this);
-	if (auto tx = pool->GetReservedTx(self)) return tx;
-	return pool->GetScopeConn(self);
+	return ibConnectionScope(this);
 }
 
 std::shared_ptr<ibDatabaseLayer> ibDatabaseConnectionHolder::AcquireFreeConnection() const
@@ -212,6 +199,23 @@ std::shared_ptr<ibDatabaseLayer> ibDatabaseConnectionHolder::AcquireFreeConnecti
 	// the holder's current TX (parallel side query, async refresh).
 	auto* pool = ibApplicationData::GetConnectionPool();
 	return pool != nullptr ? pool->Checkout() : nullptr;
+}
+
+std::shared_ptr<ibDatabaseLayer> ibDatabaseConnectionHolder::EnsureConnection()
+{
+	auto* pool = ibApplicationData::GetConnectionPool();
+	if (pool == nullptr) return nullptr;
+	// 1. TX-pinned > 2. scope-bound > 3. fresh Checkout + bind as scope.
+	// Single entry point — replaced the old read-only GetConnection.
+	// Auto-bind ensures multi-statement runtime paths share one conn:
+	// without it, every call would Checkout a new conn and live result
+	// sets on a previously-Acquired conn would leak (entry returned to
+	// pool while busy → next Checkout skips → grows pool → deadlocks).
+	if (auto tx = pool->GetReservedTx(this)) return tx;
+	if (auto scope = pool->GetScopeConn(this)) return scope;
+	auto conn = pool->Checkout();
+	if (conn) pool->BindScopeHolder(this, conn);
+	return conn;
 }
 
 void ibConnectionPool::BindScopeHolder(ibDatabaseConnectionHolder* holder,
@@ -270,11 +274,8 @@ std::shared_ptr<ibDatabaseLayer> ibConnectionPool::GetDatabaseLayer()
 	//   1. TX-pinned conn  (ThreadHolder's BeginTransaction)
 	//   2. Scope-bound conn (ThreadHolder's outer ibConnectionScope)
 	//   3. Primary fallback (m_source)
-	// Session-aware paths (ibConnectionScope by default, ibProcUnit script
-	// access) go through CurrentHolder which prefers ibSession::Current()
-	// over ThreadHolder. db_query intentionally bypasses session lookup so
-	// background / utility callers operate on their own thread, not on the
-	// session that happens to be bound at the call site.
+	// Session-aware work uses session->Holder() directly (ses_query) and
+	// never goes through CurrentHolder — pool stays holder-agnostic.
 	auto* pool = ibApplicationData::GetConnectionPool();
 	if (pool == nullptr) return nullptr;
 	auto* holder = ThreadHolder();

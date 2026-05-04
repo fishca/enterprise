@@ -5,6 +5,9 @@
 #include "backend/metadataConfiguration.h"
 #include "backend/compiler/procUnit.h"
 #include "backend/compiler/procUnitState.h"
+#include "backend/databaseLayer/databaseLayer.h"
+#include "backend/databaseLayer/connectionPool.h"
+#include "backend/appData.h"
 #include "workerPool.h"
 
 #include <utility>
@@ -564,4 +567,17 @@ ibSessionScope::~ibSessionScope()
 		s_currentByThread[tid] = m_prev;   // weak_ptr copy of still-live binding
 	else
 		s_currentByThread.erase(tid);
+}
+
+std::shared_ptr<ibDatabaseLayer> ibSession::DatabaseLayer()
+{
+	ibSession* sess = ibSession::Current();
+	if (sess == nullptr)
+		ibBackendCoreException::Error(_("ses_query: no active session"));
+	// Single entry — holder's EnsureConnection resolves TX > scope >
+	// fresh Checkout (auto-bound as scope). See connectionHolder.h.
+	auto conn = sess->EnsureConnection();
+	if (!conn || !conn->IsOpen())
+		ibBackendCoreException::Error(_("ses_query: session failed to acquire a database connection"));
+	return conn;
 }

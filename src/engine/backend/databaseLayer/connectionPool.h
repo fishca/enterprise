@@ -119,10 +119,11 @@ public:
 private:
 	// --- Internal API -------------------------------------------------------
 
-	// Resolve the holder for the calling context — session if bound,
-	// else the db_query singleton. Two channels only; subsystems
-	// needing parallel non-session isolation declare their own static
-	// holder and pass it to `ibConnectionScope(&customHolder)`.
+	// db_query channel only — returns ThreadHolder. Pool stays
+	// holder-agnostic: it doesn't know about ibSession. Session-bound
+	// work passes its own holder explicitly via
+	// `ibConnectionScope(ibSession::Current()->Holder())` (or
+	// `ibSession::Current()->OpenConnectionScope()`).
 	static ibDatabaseConnectionHolder* CurrentHolder();
 
 	// db_query channel — per-thread holder identity. Used internally by

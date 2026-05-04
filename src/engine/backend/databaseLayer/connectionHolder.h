@@ -26,20 +26,23 @@ class BACKEND_API ibDatabaseConnectionHolder {
 public:
 	virtual ~ibDatabaseConnectionHolder() = default;
 
-	// Conn currently reserved or scope-bound to this holder. TX pin
-	// takes priority over scope binding (the active TX must always
-	// route to the same conn). Returns nullptr if the holder has
-	// neither reservation in flight. Resolves via ibConnectionPool
-	// internally so callers don't need pool plumbing at the use
-	// site:
+	// Single entry point: returns a usable conn for this holder.
+	// Resolution chain:
+	//   1. TX-pinned conn (BeginTransaction not yet committed/rollbacked)
+	//   2. Scope-bound conn (live ibConnectionScope on this holder)
+	//   3. Fresh Checkout from pool, bound as scope to this holder so
+	//      subsequent EnsureConnection calls return the same conn while
+	//      the holder is alive. Released when the holder drops via
+	//      ReleaseAll (holder dtor).
 	//
-	//   if (auto conn = ibSession::Current()->GetConnection()) {
+	//   if (auto conn = ibSession::Current()->EnsureConnection()) {
 	//       conn->RunQuery(...);
 	//   }
 	//
 	// Defined out-of-line in connectionPool.cpp where the pool's
-	// header is in scope.
-	std::shared_ptr<ibDatabaseLayer> GetConnection() const;
+	// header is in scope. Returns nullptr only if the pool is not
+	// initialised.
+	std::shared_ptr<ibDatabaseLayer> EnsureConnection();
 
 	// Fresh conn from the pool — wrapped Checkout, NOT bound to this
 	// holder. The returned shared_ptr's deleter releases the entry
@@ -54,6 +57,12 @@ public:
 	//
 	// Returns nullptr if the pool is saturated / not initialised.
 	std::shared_ptr<ibDatabaseLayer> AcquireFreeConnection() const;
+
+	// Convenience: return an ibConnectionScope bound to this holder.
+	// Equivalent to `ibConnectionScope(this)`. Lets call sites stay
+	// short — `auto scope = ibSession::Current()->OpenConnectionScope();`
+	// (via session façade).
+	class ibConnectionScope OpenConnectionScope();
 };
 
 // ibSingleConnectionHolder — generic empty holder. The OES runtime

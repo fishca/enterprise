@@ -33,6 +33,8 @@ add_executable(oes_tests
     test_byteCodeAOT.cpp
     test_compiler.cpp
     test_runtime.cpp
+    test_connectionPool.cpp
+    test_session.cpp
 )
 
 target_link_libraries(oes_tests

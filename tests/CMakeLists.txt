@@ -35,6 +35,7 @@ add_executable(oes_tests
     test_runtime.cpp
     test_connectionPool.cpp
     test_session.cpp
+    test_pagingRamTable.cpp
 )
 
 target_link_libraries(oes_tests

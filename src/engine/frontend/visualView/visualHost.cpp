@@ -4,7 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "visualHost.h"
-
 #ifdef OES_USE_WEB
 
 #include "ctrl/frame.h"
@@ -414,8 +413,9 @@ bool ibVisualHost::UpdateVisualHost()
 {
 	const ibValueForm* valueForm = GetValueForm();
 
+	
 	ScopedFreeze freeze(GetParentBackgroundWindow());
-
+	
 	if (valueForm != nullptr && IsShownHost()) {
 
 		// --- [1] Show form 
@@ -467,7 +467,7 @@ bool ibVisualHost::UpdateVisualHost()
 	GetParentBackgroundWindow()->Update();
 #endif
 
-	return true;
+		return true;
 }
 
 bool ibVisualHost::ClearVisualHost()

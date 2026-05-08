@@ -112,7 +112,7 @@ public:
 		return _("TableBox") + wxT(": ") + _("<empty source>");
 	}
 
-	//control factory 
+	//control factory
 	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
@@ -171,8 +171,26 @@ public:
 	void CreateModel(bool recreateModel = false);
 	void RefreshModel(bool recreateModel = false);
 
-	// get current line if exist 
+	// get current line if exist
 	ibValueModel::ibValueModelReturnLine* GetCurrentLine() const { return m_tableCurrentLine; }
+
+	// Single source of truth for programmatic current-line mutation.
+	// All non-user-click paths (OnIdle restore from createdValue /
+	// ownerControl / changedValue, script-side SetPropVal CurrentRow,
+	// paged-bootstrap focus restore) route through here so
+	// m_tableCurrentLine, ctrl's selection, optionally ctrl's current
+	// row and viewport visibility stay consistent.  Pass nullptr for
+	// `line` to clear.  The script Selection event is fired in both
+	// directions (user click via OnSelectionChanged, programmatic
+	// here) so listeners get a unified signal regardless of source.
+	//
+	// `focus = false` records the current line + drives selection
+	// highlight without grabbing keyboard focus or scrolling the
+	// viewport — for cross-table coordinated updates, batch
+	// programmatic replays, or any "track current line silently"
+	// flow where the user shouldn't see their cursor jump.
+	void ApplyCurrentLine(ibValueModel::ibValueModelReturnLine* line,
+	                      bool focus = true);
 
 	void SetCalculateColumnPos() { m_need_calculate_pos = true; }
 
@@ -199,6 +217,7 @@ protected:
 	void OnItemValueChanged(ibDataViewEvent& event);
 
 	void OnItemStartInserting(ibDataViewEvent& event);
+	void OnItemStartAdding(ibDataViewEvent& event);
 	void OnItemStartDeleting(ibDataViewEvent& event);
 
 	void OnViewSet(ibDataViewEvent& event);
@@ -214,12 +233,6 @@ protected:
 
 	void OnCommandMenu(wxCommandEvent& event);
 	void OnContextMenu(ibDataViewEvent& event);
-
-	void OnSize(wxSizeEvent& event);
-	void OnIdle(wxIdleEvent& event);
-
-	// the methods to be called from the window event handlers
-	void HandleOnScroll(wxScrollWinEvent& event);
 
 private:
 
@@ -241,15 +254,20 @@ private:
 	ibEventControl* m_eventOnActivateRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("OnActivateRow"), _("Activate row"), _("When row is activated"), wxArrayString{ {wxT("Control")} });
 	ibEventControl* m_eventBeforeAddRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("BeforeAddRow"), _("Before add row"), _("When row addition mode is called"), wxArrayString{ wxT("Control"), wxT("Cancel"), wxT("Clone") });
 	ibEventControl* m_eventBeforeDeleteRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("BeforeDeleteRow"), _("Before delete row"), _("When row deletion is called"), wxArrayString{ wxT("Control"), wxT("Cancel") });
+	// After-add / after-delete pair — fires for GUI-driven add / delete
+	// (via wxEVT_DATAVIEW_ITEM_START_ADDING / _START_DELETING handlers)
+	// and for owner-driven createdValue path in OnUpdated that lands a fresh
+	// row through ApplyCurrentLine.  Lets script observe creation regardless
+	// of source.  _START_INSERTING (Insert / Copy at position) does NOT fire
+	// OnAddRow — Copy semantics are distinct from Add.
+	ibEventControl* m_eventOnAddRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("OnAddRow"), _("On add row"), _("When a new row has been inserted"), wxArrayString{ wxT("Control"), wxT("RowAdded") });
+	ibEventControl* m_eventOnDeleteRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("OnDeleteRow"), _("On delete row"), _("When a row has been deleted"), wxArrayString{ wxT("Control"), wxT("RowDeleted") });
 
 #pragma endregion 
 
-	bool m_dataViewCreated, m_dataViewUpdated,
-		m_dataViewSelected, m_dataViewSizeChanged;
+	bool m_dataViewCreated, m_dataViewSelected;
 
 	bool m_need_calculate_pos;
-
-	wxSize m_dataViewSize;
 
 	ibValuePtr<ibValueModel> m_tableModel;
 	ibValuePtr<ibValueModel::ibValueModelReturnLine> m_tableCurrentLine;

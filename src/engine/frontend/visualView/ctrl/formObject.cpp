@@ -481,6 +481,7 @@ void ibValueForm::UpdateForm()
 	if (ibBackendException::IsEvalMode())
 		return;
 
+	
 	ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
@@ -494,14 +495,15 @@ void ibValueForm::UpdateForm()
 			// Web build serialises a fresh JSON tree on every request,
 			// so there's no mid-render flicker to hide — call the host
 			// walker directly.
-			visualView->Freeze();
+						visualView->Freeze();
 #endif
-			visualView->UpdateVisualHost();
-#ifndef OES_USE_WEB
-			visualView->Thaw();
+						visualView->UpdateVisualHost();
+			#ifndef OES_USE_WEB
+						visualView->Thaw();
 #endif
 		}
 	}
+
 }
 
 bool ibValueForm::CloseForm(bool force)

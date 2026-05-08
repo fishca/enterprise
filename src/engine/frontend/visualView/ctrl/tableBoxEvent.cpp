@@ -8,54 +8,19 @@ void ibValueModelTableBox::OnColumnClick(ibDataViewEvent& event)
 	ibDataViewColumnObject* dataViewColumn =
 		dynamic_cast<ibDataViewColumnObject*>(event.GetDataViewColumn());
 	wxASSERT(dataViewColumn);
+
+	// Designer-side: hand keyboard / property-grid focus to the column
+	// control in the visual editor.  Runtime ignores this branch.
 	if (g_visualHostContext != nullptr) {
 		ibValueModelTableBoxColumn* columnControl = dataViewColumn->GetControl();
 		wxASSERT(columnControl);
 		g_visualHostContext->SelectControl(columnControl);
 	}
 
-	if (m_tableModel != nullptr) {
-		ibSortOrder::ibSortData* sort = m_tableModel->GetSortByID(event.GetColumn());
-		if (sort != nullptr && !sort->m_sortSystem) {
-
-			m_tableModel->ResetSort();
-
-			sort->m_sortAscending = !sort->m_sortAscending;
-			sort->m_sortEnable = true;
-
-			if (!appData->DesignerMode()) {
-
-				ibDataViewCtrl* dataViewCtrl = dataViewColumn->GetOwner();
-				wxASSERT(dataViewCtrl);
-
-				try {
-					m_tableModel->CallRefreshModel(dataViewCtrl->GetTopItem(), dataViewCtrl->GetCountPerPage());
-				}
-				catch (const ibBackendException&) {
-					dataViewCtrl->AssociateModel(nullptr);
-					throw;
-				}
-
-				if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-					const ibDataViewItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
-					if (currLine.IsOk())
-						m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-					else m_tableCurrentLine.Reset();
-				}
-
-				if (m_tableCurrentLine != nullptr) {
-					dataViewCtrl->Select(
-						m_tableCurrentLine->GetLineItem()
-					);
-				}
-			}
-		}
-		else {
-			event.Veto();
-			return;
-		}
-	}
-
+	// Sort decision (toggle / refetch / system-sort veto) lives in
+	// the fork's default header handler — datavgen.cpp::OnClick now
+	// consults model->IsSortable(col) which returns false for system
+	// sorts and missing entries.  We just propagate.
 	event.Skip();
 }
 
@@ -178,10 +143,27 @@ void ibValueModelTableBox::OnItemValueChanged(ibDataViewEvent& event)
 
 void ibValueModelTableBox::OnItemStartInserting(ibDataViewEvent& event)
 {
-	if (m_tableModel != nullptr && !m_tableModel->IsCallRefreshModel())
-		m_formOwner->RefreshForm();
-	else if (m_tableModel == nullptr)
-		m_formOwner->RefreshForm();
+	// Insert / Copy semantics — the row is cloned at a position. No
+	// OnAddRow callback for this path; OnAddRow lives on the dedicated
+	// _START_ADDING event below.
+	m_formOwner->RefreshForm();
+	event.Skip();
+}
+
+void ibValueModelTableBox::OnItemStartAdding(ibDataViewEvent& event)
+{
+	m_formOwner->RefreshForm();
+
+	// GUI-driven Add → fire script OnAddRow with the just-appended row.
+	// Programmatic createdValue path (OnIdle) goes through
+	// ibValueModelRamTableBase::Append too, so listeners observe creation
+	// regardless of origin.
+	const ibDataViewItem& item = event.GetItem();
+	if (item.IsOk() && m_eventOnAddRow != nullptr && m_tableModel != nullptr) {
+		CallAsEvent(m_eventOnAddRow,
+			GetValue(),
+			ibValue(m_tableModel->GetRowAt(item)));
+	}
 
 	event.Skip();
 }
@@ -198,13 +180,22 @@ void ibValueModelTableBox::OnItemStartDeleting(ibDataViewEvent& event)
 		cancel //cancel
 	);
 
-	if (m_tableModel != nullptr && !m_tableModel->IsCallRefreshModel()) m_formOwner->RefreshForm();
-	else if (m_tableModel == nullptr) m_formOwner->RefreshForm();
+	m_formOwner->RefreshForm();
 
-	if (cancel.GetBoolean())
+	if (cancel.GetBoolean()) {
 		event.Veto();
-	else
+	}
+	else {
+		// Symmetric to OnAddRow — fire OnDeleteRow with the row that
+		// is about to be removed so script can take action while the
+		// row is still resolvable.
+		if (m_eventOnDeleteRow != nullptr && m_tableModel != nullptr) {
+			CallAsEvent(m_eventOnDeleteRow,
+				GetValue(),
+				ibValue(m_tableModel->GetRowAt(item)));
+		}
 		event.Skip();
+	}
 }
 
 void ibValueModelTableBox::OnViewSet(ibDataViewEvent& event)
@@ -286,123 +277,5 @@ void ibValueModelTableBox::OnContextMenu(ibDataViewEvent& event)
 	);
 	wxASSERT(wnd);
 	wnd->PopupMenu(&menu, event.GetPosition());
-}
-
-void ibValueModelTableBox::OnSize(wxSizeEvent& event)
-{
-	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(event.GetEventObject());
-
-	if (m_dataViewCreated)
-		m_dataViewSizeChanged = m_dataViewUpdated || (m_dataViewSize != dataViewCtrl->GetSize()) && (m_dataViewSize != wxDefaultSize);
-
-	event.Skip();
-}
-
-void ibValueModelTableBox::OnIdle(wxIdleEvent& event)
-{
-	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(event.GetEventObject());
-
-	if (m_dataViewSizeChanged && m_tableModel != nullptr) {
-
-		try {
-			m_tableModel->CallRefreshModel(dataViewCtrl->GetTopItem(), dataViewCtrl->GetCountPerPage());
-		}
-		catch (const ibBackendException&) {
-			dataViewCtrl->AssociateModel(nullptr);
-			throw;
-		}
-
-		const ibValue& createdValue = m_formOwner->GetCreatedValue();
-		if (!createdValue.IsEmpty()) {
-			const ibDataViewItem& currLine = m_tableModel->FindRowValue(createdValue);
-			if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-			else m_tableCurrentLine.Reset();
-		}
-		else if (!m_dataViewSelected) {
-			ibValueFrame* ownerControl = m_formOwner->GetOwnerControl();
-			if (ownerControl != nullptr && m_tableCurrentLine == nullptr) {
-				ibValue retValue; ownerControl->GetControlValue(retValue);
-				const ibDataViewItem& currLine = m_tableModel->FindRowValue(retValue);
-				if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-				else m_tableCurrentLine.Reset();
-			}
-
-			if (m_tableCurrentLine != nullptr) {
-
-				const ibDataViewItem& item =
-					m_tableModel->GetParent(m_tableCurrentLine->GetLineItem());
-
-				dataViewCtrl->SetTopParent(item);
-			}
-
-			m_dataViewSelected = true;
-		}
-
-		if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-
-			const ibDataViewItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
-			if (currLine.IsOk()) {
-				m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-			}
-			else {
-				const ibValue& changedValue = m_formOwner->GetChangedValue();
-				if (!changedValue.IsEmpty()) {
-					const ibDataViewItem& currLine = m_tableModel->FindRowValue(changedValue);
-					if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-					else m_tableCurrentLine.Reset();
-				}
-				else {
-					m_tableCurrentLine.Reset();
-				}
-			}
-		}
-
-		if (m_tableCurrentLine != nullptr)
-			dataViewCtrl->Select(m_tableCurrentLine->GetLineItem());
-	}
-
-	if (m_need_calculate_pos) {
-		CalculateColumnPos();
-		m_need_calculate_pos = false;
-	}
-
-	m_dataViewSize = dataViewCtrl->GetSize();
-	m_dataViewUpdated = m_dataViewSizeChanged = false;
-	event.Skip();
-}
-
-void ibValueModelTableBox::HandleOnScroll(wxScrollWinEvent& event)
-{
-	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(event.GetEventObject());
-
-	const short scroll = (event.GetEventType() == wxEVT_SCROLLWIN_TOP ||
-		event.GetEventType() == wxEVT_SCROLLWIN_LINEUP ||
-		event.GetEventType() == wxEVT_SCROLLWIN_PAGEUP) ? 1 : -1;
-
-	if (dataViewCtrl != nullptr) {
-
-		if (m_tableModel != nullptr) {
-
-			const int countPerPage = dataViewCtrl->GetCountPerPage();
-			const ibDataViewItem& top_item = dataViewCtrl->GetTopItem();
-			const ibDataViewItem& focused_item = m_tableCurrentLine != nullptr ?
-				m_tableCurrentLine->GetLineItem() : ibDataViewItem(nullptr);
-
-			m_tableModel->CallRefreshItemModel(top_item, focused_item, countPerPage, scroll);
-
-			if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-				const ibDataViewItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
-				if (currLine.IsOk()) {
-					m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-					dataViewCtrl->Select(m_tableCurrentLine->GetLineItem());
-				}
-				else {
-					m_tableCurrentLine.Reset();
-				}
-			}
-		}
-	}
-
-	event.Skip();
 }
 

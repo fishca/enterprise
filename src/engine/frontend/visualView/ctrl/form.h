@@ -159,6 +159,22 @@ public:
 	ibValue GetCreatedValue() const { return m_createdValue; }
 	ibValue GetChangedValue() const { return m_changedValue; }
 
+	// One-shot consume — read and reset.  NotifyCreate/NotifyChange set
+	// these to drive position-to-new on the next UpdateForm.  Without
+	// clearing, every subsequent UpdateForm (manual Refresh, sort, idle
+	// reset) sees the same value and re-positions, bouncing the user's
+	// later selection back to the create / change row.
+	ibValue ConsumeCreatedValue() {
+		ibValue v = m_createdValue;
+		m_createdValue = wxEmptyValue;
+		return v;
+	}
+	ibValue ConsumeChangedValue() {
+		ibValue v = m_changedValue;
+		m_changedValue = wxEmptyValue;
+		return v;
+	}
+
 	virtual ibValueForm* GetOwnerForm() const {
 		return const_cast<ibValueForm*>(this);
 	}

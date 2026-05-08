@@ -93,9 +93,27 @@ null pointer when caller bound NULL on a BLOB position.
 
 **`ibDatatabaseParameterFirebird(... wxString)` ctor:** replaced
 `wxStrncpy((wxChar*)sqldata, (wxChar*)valueBuffer, length)` with
-`memcpy(sqldata, valueBuffer, n)` clamped to `pVar->sqllen`. The
-buffer is UTF-8 bytes; treating it as wide chars copied half the
-data and wrote past the allocated buffer on long strings.
+`memcpy(sqldata, valueBuffer, length)` and an explicit
+`pVar->sqllen = (ISC_SHORT)length;` mutation. The buffer is UTF-8
+bytes; treating it as wide chars copied half the data and wrote
+past the allocated buffer on long strings.
+
+**No clamp by `pVar->sqllen` on the memcpy** — it would look like
+defensive programming but is actually a regression. After the first
+bind into a parameter slot, `sqllen` no longer reflects the column's
+max length; it carries the previous bound string's length. A clamp
+`n = min(length, sqllen)` then truncates every rebind by the
+*previous* value — first empty bind into a slot pins `sqllen = 0`
+and every subsequent bind into the same slot writes zero bytes.
+Surfaced 2026-05-08 as a TabularSection-save regression introduced
+by `7494bae5` (5 rows saved with empty `_S` columns, ts-load
+returned loaded=5 + isEmpty=1 for all). The buffer allocated by
+`AllocateParameterSpace` reserves the column's declared maximum
+(`+1` for SQL_TEXT, `+3` for SQL_VARYING) so an unclamped memcpy of
+a string within column limits cannot overflow; FB itself rejects
+oversized binds. See memory note `reference_fb_string_param_clamp`
+for the full incident write-up — clamp must not be reintroduced on
+any future driver refactor.
 
 ### `firebirdInterface.h`
 

@@ -140,11 +140,15 @@ void ibDatatabaseParameterFirebirdCollection::AllocateParameterSpace()
 			pVar->sqldata = nullptr;
 			break;
 		case SQL_TYPE_TIME:
-			pVar->sqldata = (char*)new ISC_TIME;
+			// Uniform array allocation across all paths so FreeParameterSpace
+			// can use a single wxDELETEA without type-mismatch UB (the
+			// previous `(char*)new ISC_TIME` + scalar delete was a typed-vs-
+			// char* delete mismatch).
+			pVar->sqldata = new char[sizeof(ISC_TIME)];
 			memset(pVar->sqldata, 0, sizeof(ISC_TIME));
 			break;
 		case SQL_TYPE_DATE:
-			pVar->sqldata = (char*)new ISC_DATE;
+			pVar->sqldata = new char[sizeof(ISC_DATE)];
 			memset(pVar->sqldata, 0, sizeof(ISC_DATE));
 			break;
 		case SQL_TEXT:
@@ -204,26 +208,24 @@ void ibDatatabaseParameterFirebirdCollection::FreeParameterSpace()
 					//wxDELETE(pVar->sqldata);
 					break;
 				case SQL_TYPE_TIME:
-					wxDELETE(pVar->sqldata);
-					break;
 				case SQL_TYPE_DATE:
-					//wxDELETE(pVar->sqldata);
-					break;
 				case SQL_TEXT:
 				case SQL_VARYING:
+				case SQL_INT64:
+				case SQL_INT128:
+					// All these paths now allocate via new char[size] in
+					// AllocateParameterSpace — array delete required.
+					// Previously TIME used scalar delete on (char*)new ISC_TIME
+					// (type-mismatch UB), DATE was never freed (leak), INT64
+					// and INT128 used scalar delete on `new char[]` (array
+					// delete required).
 					wxDELETEA(pVar->sqldata);
 					break;
 				case SQL_SHORT:
-					//wxDELETE(pVar->sqldata);
-					break;
 				case SQL_LONG:
-					//wxDELETE(pVar->sqldata);
-					break;
-				case SQL_INT64:
-					wxDELETE(pVar->sqldata);
-					break;
-				case SQL_INT128:
-					wxDELETE(pVar->sqldata);
+					// Owned by ibDatatabaseParameterFirebird (sqldata points
+					// at member fields like m_nValue / m_sValue); not freed
+					// here.
 					break;
 				case SQL_FLOAT:
 					//wxDELETE(pVar->sqldata);

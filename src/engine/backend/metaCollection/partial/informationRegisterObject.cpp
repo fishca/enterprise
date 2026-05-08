@@ -404,7 +404,7 @@ bool ibValueRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum
 		pvarRetValue = (unsigned int)GetRowCount();
 		return true;
 	case recordSet::enClear:
-		ibValueModelTableBase::Clear();
+		ibValueModelRamTableBase::Clear();
 		return true;
 	case recordSet::enLoad:
 		LoadDataFromTable(paParams[0]->ConvertToType<ibValueModelTableBase>());

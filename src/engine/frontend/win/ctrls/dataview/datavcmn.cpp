@@ -126,7 +126,7 @@ void ibDataViewIndexListModel::RowPrepended()
 
 	ibDataViewItem item(wxUIntToPtr(id));
 	m_hash.Insert(item, 0);
-	ItemAdded(ibDataViewItem(0), item);
+	ItemInserted(ibDataViewItem(), item);
 
 }
 
@@ -139,7 +139,7 @@ void ibDataViewIndexListModel::RowInserted(unsigned int before)
 
 	ibDataViewItem item(wxUIntToPtr(id));
 	m_hash.Insert(item, before);
-	ItemAdded(ibDataViewItem(0), item);
+	ItemInserted(ibDataViewItem(), item);
 }
 
 void ibDataViewIndexListModel::RowAppended()
@@ -149,7 +149,7 @@ void ibDataViewIndexListModel::RowAppended()
 
 	ibDataViewItem item(wxUIntToPtr(id));
 	m_hash.Add(item);
-	ItemAdded(ibDataViewItem(0), item);
+	ItemInserted(ibDataViewItem(), item);
 }
 
 void ibDataViewIndexListModel::RowDeleted(unsigned int row)
@@ -158,7 +158,7 @@ void ibDataViewIndexListModel::RowDeleted(unsigned int row)
 
 	ibDataViewItem item(m_hash[row]);
 	m_hash.RemoveAt(row);
-	/* ibDataViewModel:: */ ItemDeleted(ibDataViewItem(0), item);
+	/* ibDataViewModel:: */ ItemDeleted(ibDataViewItem(), item);
 }
 
 void ibDataViewIndexListModel::RowsDeleted(const wxArrayInt& rows)
@@ -178,7 +178,7 @@ void ibDataViewIndexListModel::RowsDeleted(const wxArrayInt& rows)
 	for (i = 0; i < sorted.GetCount(); i++)
 		m_hash.RemoveAt(sorted[i]);
 
-	/* ibDataViewModel:: */ ItemsDeleted(ibDataViewItem(0), array);
+	/* ibDataViewModel:: */ ItemsDeleted(ibDataViewItem(), array);
 }
 
 void ibDataViewIndexListModel::RowChanged(unsigned int row)
@@ -240,28 +240,28 @@ void ibDataViewVirtualListModel::RowPrepended()
 {
 	m_size++;
 	ibDataViewItem item(wxUIntToPtr(1));
-	ItemAdded(ibDataViewItem(0), item);
+	ItemInserted(ibDataViewItem(), item);
 }
 
 void ibDataViewVirtualListModel::RowInserted(unsigned int before)
 {
 	m_size++;
 	ibDataViewItem item(wxUIntToPtr(before + 1));
-	ItemAdded(ibDataViewItem(0), item);
+	ItemInserted(ibDataViewItem(), item);
 }
 
 void ibDataViewVirtualListModel::RowAppended()
 {
 	m_size++;
 	ibDataViewItem item(wxUIntToPtr(m_size));
-	ItemAdded(ibDataViewItem(0), item);
+	ItemInserted(ibDataViewItem(), item);
 }
 
 void ibDataViewVirtualListModel::RowDeleted(unsigned int row)
 {
 	m_size--;
 	ibDataViewItem item(wxUIntToPtr(row + 1));
-	/* ibDataViewModel:: */ ItemDeleted(ibDataViewItem(0), item);
+	/* ibDataViewModel:: */ ItemDeleted(ibDataViewItem(), item);
 }
 
 void ibDataViewVirtualListModel::RowsDeleted(const wxArrayInt& rows)
@@ -278,7 +278,7 @@ void ibDataViewVirtualListModel::RowsDeleted(const wxArrayInt& rows)
 		ibDataViewItem item(wxUIntToPtr(sorted[i] + 1));
 		array.Add(item);
 	}
-	/* ibDataViewModel:: */ ItemsDeleted(ibDataViewItem(0), array);
+	/* ibDataViewModel:: */ ItemsDeleted(ibDataViewItem(), array);
 }
 
 void ibDataViewVirtualListModel::RowChanged(unsigned int row)
@@ -379,8 +379,12 @@ bool ibDataViewRendererBase::StartEditing(const ibDataViewItem& item, wxRect lab
 	unsigned int col = GetOwner()->GetModelColumn();
 	const wxVariant& value = CheckedGetValue(dv_ctrl->GetModel(), item, col);
 
-	m_editorCtrl = CreateEditorCtrl(
-		(wxWindow*)dv_ctrl->CellToDataViewWindow(item, column), labelRect, value);
+	wxWindow* parent = (wxWindow*)dv_ctrl->CellToDataViewWindow(item, column);
+	const wxSize parentSize = parent ? parent->GetClientSize() : wxSize(-1, -1);
+	const wxPoint parentScreen = parent ? parent->ClientToScreen(wxPoint(0, 0)) : wxPoint(-1, -1);
+	
+
+	m_editorCtrl = CreateEditorCtrl(parent, labelRect, value);
 
 	// there might be no editor control for the given item
 	if (!m_editorCtrl)
@@ -1413,6 +1417,7 @@ wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_EDITING_DONE, ibDataViewEvent);
 wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_VALUE_CHANGED, ibDataViewEvent);
 
 wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_START_INSERTING, ibDataViewEvent);
+wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_START_ADDING, ibDataViewEvent);
 wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_START_DELETING, ibDataViewEvent);
 
 wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, ibDataViewEvent);
@@ -2292,7 +2297,7 @@ ibDataViewItem ibDataViewTreeStore::AppendItem(const ibDataViewItem& parent,
 	const wxString& text, const wxBitmapBundle& icon, wxClientData* data)
 {
 	ibDataViewTreeStoreContainerNode* parent_node = FindContainerNode(parent);
-	if (!parent_node) return ibDataViewItem(0);
+	if (!parent_node) return ibDataViewItem();
 
 	ibDataViewTreeStoreNode* node =
 		new ibDataViewTreeStoreNode(parent_node, text, icon, data);
@@ -2305,7 +2310,7 @@ ibDataViewItem ibDataViewTreeStore::PrependItem(const ibDataViewItem& parent,
 	const wxString& text, const wxBitmapBundle& icon, wxClientData* data)
 {
 	ibDataViewTreeStoreContainerNode* parent_node = FindContainerNode(parent);
-	if (!parent_node) return ibDataViewItem(0);
+	if (!parent_node) return ibDataViewItem();
 
 	ibDataViewTreeStoreNode* node =
 		new ibDataViewTreeStoreNode(parent_node, text, icon, data);
@@ -2323,12 +2328,12 @@ ibDataViewTreeStore::InsertItem(const ibDataViewItem& parent,
 	wxClientData* data)
 {
 	ibDataViewTreeStoreContainerNode* parent_node = FindContainerNode(parent);
-	if (!parent_node) return ibDataViewItem(0);
+	if (!parent_node) return ibDataViewItem();
 
 	ibDataViewTreeStoreNode* previous_node = FindNode(previous);
 	ibDataViewTreeStoreNodes& children = parent_node->GetChildren();
 	const ibDataViewTreeStoreNodes::iterator iter = parent_node->FindChild(previous_node);
-	if (iter == children.end()) return ibDataViewItem(0);
+	if (iter == children.end()) return ibDataViewItem();
 
 	ibDataViewTreeStoreNode* node =
 		new ibDataViewTreeStoreNode(parent_node, text, icon, data);
@@ -2342,7 +2347,7 @@ ibDataViewItem ibDataViewTreeStore::PrependContainer(const ibDataViewItem& paren
 	wxClientData* data)
 {
 	ibDataViewTreeStoreContainerNode* parent_node = FindContainerNode(parent);
-	if (!parent_node) return ibDataViewItem(0);
+	if (!parent_node) return ibDataViewItem();
 
 	ibDataViewTreeStoreContainerNode* node =
 		new ibDataViewTreeStoreContainerNode(parent_node, text, icon, expanded, data);
@@ -2360,7 +2365,7 @@ ibDataViewTreeStore::AppendContainer(const ibDataViewItem& parent,
 	wxClientData* data)
 {
 	ibDataViewTreeStoreContainerNode* parent_node = FindContainerNode(parent);
-	if (!parent_node) return ibDataViewItem(0);
+	if (!parent_node) return ibDataViewItem();
 
 	ibDataViewTreeStoreContainerNode* node =
 		new ibDataViewTreeStoreContainerNode(parent_node, text, icon, expanded, data);
@@ -2378,12 +2383,12 @@ ibDataViewTreeStore::InsertContainer(const ibDataViewItem& parent,
 	wxClientData* data)
 {
 	ibDataViewTreeStoreContainerNode* parent_node = FindContainerNode(parent);
-	if (!parent_node) return ibDataViewItem(0);
+	if (!parent_node) return ibDataViewItem();
 
 	ibDataViewTreeStoreNode* previous_node = FindNode(previous);
 	ibDataViewTreeStoreNodes& children = parent_node->GetChildren();
 	const ibDataViewTreeStoreNodes::iterator iter = parent_node->FindChild(previous_node);
-	if (iter == children.end()) return ibDataViewItem(0);
+	if (iter == children.end()) return ibDataViewItem();
 
 	ibDataViewTreeStoreContainerNode* node =
 		new ibDataViewTreeStoreContainerNode(parent_node, text, icon, expanded, data);
@@ -2403,13 +2408,13 @@ bool ibDataViewTreeStore::IsContainer(const ibDataViewItem& item) const
 ibDataViewItem ibDataViewTreeStore::GetNthChild(const ibDataViewItem& parent, unsigned int pos) const
 {
 	ibDataViewTreeStoreContainerNode* parent_node = FindContainerNode(parent);
-	if (!parent_node) return ibDataViewItem(0);
+	if (!parent_node) return ibDataViewItem();
 
 	ibDataViewTreeStoreNode* const node = parent_node->GetChildren()[pos];
 	if (node)
 		return node->GetItem();
 
-	return ibDataViewItem(0);
+	return ibDataViewItem();
 }
 
 int ibDataViewTreeStore::GetChildCount(const ibDataViewItem& parent) const
@@ -2568,13 +2573,13 @@ ibDataViewTreeStore::SetValue(const wxVariant& variant,
 ibDataViewItem ibDataViewTreeStore::GetParent(const ibDataViewItem& item) const
 {
 	ibDataViewTreeStoreNode* node = FindNode(item);
-	if (!node) return ibDataViewItem(0);
+	if (!node) return ibDataViewItem();
 
 	ibDataViewTreeStoreNode* parent = node->GetParent();
-	if (!parent) return ibDataViewItem(0);
+	if (!parent) return ibDataViewItem();
 
 	if (parent == m_root)
-		return ibDataViewItem(0);
+		return ibDataViewItem();
 
 	return parent->GetItem();
 }
@@ -2692,7 +2697,7 @@ ibDataViewItem ibDataViewTreeCtrl::AppendItem(const ibDataViewItem& parent,
 	ibDataViewItem res = GetStore()->
 		AppendItem(parent, text, GetBitmapBundle(iconIndex), data);
 
-	GetStore()->ItemAdded(parent, res);
+	GetStore()->ItemInserted(parent, res);
 
 	return res;
 }
@@ -2703,7 +2708,7 @@ ibDataViewItem ibDataViewTreeCtrl::PrependItem(const ibDataViewItem& parent,
 	ibDataViewItem res = GetStore()->
 		PrependItem(parent, text, GetBitmapBundle(iconIndex), data);
 
-	GetStore()->ItemAdded(parent, res);
+	GetStore()->ItemInserted(parent, res);
 
 	return res;
 }
@@ -2714,7 +2719,7 @@ ibDataViewItem ibDataViewTreeCtrl::InsertItem(const ibDataViewItem& parent, cons
 	ibDataViewItem res = GetStore()->
 		InsertItem(parent, previous, text, GetBitmapBundle(iconIndex), data);
 
-	GetStore()->ItemAdded(parent, res);
+	GetStore()->ItemInserted(parent, res);
 
 	return res;
 }
@@ -2726,7 +2731,7 @@ ibDataViewItem ibDataViewTreeCtrl::PrependContainer(const ibDataViewItem& parent
 		PrependContainer(parent, text,
 			GetBitmapBundle(iconIndex), GetBitmapBundle(expandedIndex), data);
 
-	GetStore()->ItemAdded(parent, res);
+	GetStore()->ItemInserted(parent, res);
 
 	return res;
 }
@@ -2738,7 +2743,7 @@ ibDataViewItem ibDataViewTreeCtrl::AppendContainer(const ibDataViewItem& parent,
 		AppendContainer(parent, text,
 			GetBitmapBundle(iconIndex), GetBitmapBundle(expandedIndex), data);
 
-	GetStore()->ItemAdded(parent, res);
+	GetStore()->ItemInserted(parent, res);
 
 	return res;
 }
@@ -2750,7 +2755,7 @@ ibDataViewItem ibDataViewTreeCtrl::InsertContainer(const ibDataViewItem& parent,
 		InsertContainer(parent, previous, text,
 			GetBitmapBundle(iconIndex), GetBitmapBundle(expandedIndex), data);
 
-	GetStore()->ItemAdded(parent, res);
+	GetStore()->ItemInserted(parent, res);
 
 	return res;
 }

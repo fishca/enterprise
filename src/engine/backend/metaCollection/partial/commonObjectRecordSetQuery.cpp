@@ -115,7 +115,7 @@ bool ibValueRecordSetObject::ReadData(const ibUniqueKeyPair& key)
 {
 	const auto db = ses_query;
 
-	ibValueModelTableBase::Clear(); int position = 1;
+	ibValueModelRamTableBase::Clear(); int position = 1;
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
@@ -156,7 +156,7 @@ bool ibValueRecordSetObject::ReadData(const ibUniqueKeyPair& key)
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
-		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelRamTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 		m_selected = true;
 	}
 
@@ -169,7 +169,7 @@ bool ibValueRecordSetObject::ReadData()
 {
 	const auto db = ses_query;
 
-	ibValueModelTableBase::Clear(); int position = 1;
+	ibValueModelRamTableBase::Clear(); int position = 1;
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
@@ -210,7 +210,7 @@ bool ibValueRecordSetObject::ReadData()
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
-		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelRamTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 		m_selected = true;
 	}
 
@@ -361,7 +361,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		return false;
 
 	if (!hasError && clearTable)
-		ibValueModelTableBase::Clear();
+		ibValueModelRamTableBase::Clear();
 	else if (!clearTable)
 		m_selected = true;
 

@@ -743,8 +743,15 @@ class BACKEND_API ibValueMetaObjectRecordDataHierarchyMutableRef :
 	wxDECLARE_ABSTRACT_CLASS(ibValueMetaObjectRecordDataHierarchyMutableRef);
 public:
 
-	class ibPredefinedValueObject : public wxRefCounter {
+	class ibPredefinedValueObject : public ibDataViewObject {
 	public:
+
+		// Folder/leaf flag is stored on the predefined value itself
+		// — the designer's predefined-list dialog renders these as
+		// a tree, so the data-view item asks the row "are you a
+		// container?" directly.  Keeps the dialog free of model-side
+		// IsContainer overrides.
+		virtual bool IsContainer() const override { return m_valueIsFolder; }
 
 		ibPredefinedValueObject(bool valueIsFolder = false,
 			const wxObjectDataPtr<ibPredefinedValueObject>& valueParent = wxObjectDataPtr<ibPredefinedValueObject>())
@@ -1683,7 +1690,7 @@ protected:
 	ibValueMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API ibValueRecordSetObject : public ibValueModelTableBase, public ibRuntimeModuleDataObject {
+class BACKEND_API ibValueRecordSetObject : public ibValueModelRamTableBase, public ibRuntimeModuleDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordSetObject);
 public:
 
@@ -1762,7 +1769,7 @@ public:
 	public:
 
 		ibValueRecordSetObjectRegisterReturnLine(ibValueRecordSetObject* ownerTable = nullptr,
-			const ibDataViewItem& line = ibDataViewItem(nullptr));
+			const ibDataViewItem& line = ibDataViewItem());
 		virtual ~ibValueRecordSetObjectRegisterReturnLine();
 
 		virtual ibValueModelTableBase* GetOwnerModel() const { return m_ownerTable; }
@@ -1953,7 +1960,7 @@ public:
 	virtual bool HasIterator() const override { return true; }
 
 	virtual ibValue GetIteratorEmpty() override {
-		return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterReturnLine>(this, ibDataViewItem(nullptr));
+		return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterReturnLine>(this, ibDataViewItem());
 	}
 
 	virtual ibValue GetIteratorAt(unsigned int idx) override {

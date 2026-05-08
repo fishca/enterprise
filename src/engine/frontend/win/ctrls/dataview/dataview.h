@@ -312,10 +312,10 @@ enum ibDataViewSelectionMode
 	ibDataViewSelectRow = 1,  // allow selecting only entire rows
 };
 
-enum ibDataViewViewMode 
+enum ibDataViewViewMode
 {
-	ibDataViewTree, 
-	ibDataViewHierarchical, 
+	ibDataViewTree,
+	ibDataViewHierarchical,
 	ibDataViewList
 };
 
@@ -497,7 +497,7 @@ public:
 	ibDataViewItem GetCurrentItem() const;
 	void SetCurrentItem(const ibDataViewItem& item);
 
-	virtual ibDataViewItem GetTopItem() const { return ibDataViewItem(NULL); }
+	virtual ibDataViewItem GetTopItem() const { return ibDataViewItem(); }
 	virtual int GetCountPerPage() const { return wxNOT_FOUND; }
 
 	// Currently focused column of the current item or NULL if no column has focus
@@ -817,6 +817,10 @@ wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_EDITING_DONE, ibDataV
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_VALUE_CHANGED, ibDataViewEvent);
 
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_INSERTING, ibDataViewEvent);
+// "Add" pathway (AppendRow) — distinct from _START_INSERTING which fires on
+// Insert / Copy. Lets handlers tell GUI-driven "Add new row" apart from
+// "insert at position / clone existing row".
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_ADDING, ibDataViewEvent);
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_START_DELETING, ibDataViewEvent);
 
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, ibDataViewEvent);

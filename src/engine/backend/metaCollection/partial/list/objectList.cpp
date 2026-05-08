@@ -4,6 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "objectList.h"
+#include "registerSqlBuilder.h"
 #include "backend/srcExplorer.h"
 #include "backend/system/systemManager.h"
 
@@ -281,30 +282,20 @@ bool ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::GetPropVal(con
 
 ibDataViewItem ibValueListDataObjectEnumRef::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
+	// Paged model: rows live in the control's deque, not on the model
+	// (m_nodeValues stays empty).  Build a stub row carrying just
+	// m_objGuid; ibValueTableEnumRow::IsEqualTo lets PagedBootstrap's
+	// freshly-fetched row match it on key, restoring focus without
+	// requiring the rest of the row to be populated here.
 	ibValueReferenceDataObject* pRefData = nullptr;
-	if (varValue.ConvertToValue(pRefData)) {
-		for (long row = 0; row < GetRowCount(); row++) {
-			ibDataViewItem item = GetItem(row);
-			if (item.IsOk()) {
-				ibValueTableEnumRow* node = GetViewData<ibValueTableEnumRow>(item);
-				if (node != nullptr && pRefData->GetGuid() == node->GetGuid())
-					return item;
-			}
-		}
-	}
-	return ibDataViewItem(nullptr);
-}
-
-ibDataViewItem ibValueListDataObjectEnumRef::FindRowValue(ibValueModelReturnLine* retLine) const
-{
-	ibValueTableEnumRow* node = GetViewData<ibValueTableEnumRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](ibValueTableRow* row)
-		{
-			return node->GetGuid() == ((ibValueTableEnumRow*)row)->GetGuid();
-		}
-	);
-	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
-	return ibDataViewItem(nullptr);
+	if (!varValue.ConvertToValue(pRefData) || pRefData == nullptr)
+		return ibDataViewItem();
+	if (!pRefData->GetGuid().isValid())
+		return ibDataViewItem();
+	auto* stub = new ibValueTableEnumRow(pRefData->GetGuid());
+	ibDataViewItem item(stub);
+	stub->DecRef();
+	return item;
 }
 
 ibValueListDataObjectEnumRef::ibValueListDataObjectEnumRef(const ibValueMetaObjectRecordDataEnumRef* metaObject, const ibFormID& formType, bool choiceMode) :
@@ -377,30 +368,38 @@ wxString ibValueListDataObjectEnumRef::GetString() const
 
 ibDataViewItem ibValueListDataObjectRef::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
+	// Paged model: rows live in the control's deque, not on the model.
+	// Build a stub row carrying:
+	//   * m_objGuid               — drives IsEqualTo against a freshly-
+	//                                fetched row, restoring focus after
+	//                                refetch.
+	//   * m_nodeValues sort cols  — drive BuildRefAnchor's cursor
+	//                                predicate.  Empty values would
+	//                                bind as NULL in the SQL composite
+	//                                predicate (`(c1,c2,...) >= (?,?,...)`)
+	//                                and exclude all rows → empty table.
+	//                                Pull real values for each enabled
+	//                                non-reference sort column from the
+	//                                reference (lazy DB load via
+	//                                GetValueByMetaID) so the cursor
+	//                                positions on the new row's sort
+	//                                tuple.
 	ibValueReferenceDataObject* pRefData = nullptr;
-	if (varValue.ConvertToValue(pRefData)) {
-		for (long row = 0; row < GetRowCount(); row++) {
-			ibDataViewItem item = GetItem(row);
-			if (item.IsOk()) {
-				ibValueTableListRow* node = GetViewData<ibValueTableListRow>(item);
-				if (node != nullptr && pRefData->GetGuid() == node->GetGuid())
-					return item;
-			}
-		}
+	if (!varValue.ConvertToValue(pRefData) || pRefData == nullptr)
+		return ibDataViewItem();
+	if (!pRefData->GetGuid().isValid())
+		return ibDataViewItem();
+	auto* stub = new ibValueTableListRow(pRefData->GetGuid());
+	for (const auto& s : m_sortOrder.m_sorts) {
+		if (!s.m_sortEnable) continue;
+		if (m_metaObject->IsDataReference(s.m_sortModel)) continue;
+		ibValue v;
+		if (pRefData->GetValueByMetaID(s.m_sortModel, v))
+			stub->AppendTableValue(s.m_sortModel, v);
 	}
-	return ibDataViewItem(nullptr);
-}
-
-ibDataViewItem ibValueListDataObjectRef::FindRowValue(ibValueModelReturnLine* retLine) const
-{
-	ibValueTableListRow* node = GetViewData<ibValueTableListRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](ibValueTableRow* row)
-		{
-			return node->GetGuid() == ((ibValueTableListRow*)row)->GetGuid();
-		}
-	);
-	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
-	return ibDataViewItem(nullptr);
+	ibDataViewItem item(stub);   // IncRef → 2
+	stub->DecRef();              // refcount=1, owned by item
+	return item;
 }
 
 ibValueListDataObjectRef::ibValueListDataObjectRef(const ibValueMetaObjectRecordDataMutableRef* metaObject, const ibFormID& formType, bool choiceMode) :
@@ -451,6 +450,7 @@ void ibValueListDataObjectRef::AddValue(unsigned int before)
 			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
+			wxLogError(wxT("objectList: unhandled non-ibBackend exception swallowed"));
 		}
 	}
 }
@@ -472,6 +472,7 @@ void ibValueListDataObjectRef::CopyValue()
 			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
+			wxLogError(wxT("objectList: unhandled non-ibBackend exception swallowed"));
 		}
 	}
 }
@@ -493,6 +494,7 @@ void ibValueListDataObjectRef::EditValue()
 			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
+			wxLogError(wxT("objectList: unhandled non-ibBackend exception swallowed"));
 		}
 	}
 }
@@ -518,6 +520,7 @@ void ibValueListDataObjectRef::DeleteValue()
 			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
+			wxLogError(wxT("objectList: unhandled non-ibBackend exception swallowed"));
 		}
 	}
 }
@@ -543,6 +546,7 @@ void ibValueListDataObjectRef::MarkAsDeleteValue()
 			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
+			wxLogError(wxT("objectList: unhandled non-ibBackend exception swallowed"));
 		}
 	}
 }
@@ -595,74 +599,40 @@ wxString ibValueListDataObjectRef::GetString() const
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(const ibValue& varValue, const wxString& colName) const
+ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(const ibValue& varValue, const wxString& /*colName*/) const
 {
-	ibValueReferenceDataObject* pRefData = nullptr;
-	if (varValue.ConvertToValue(pRefData)) {
-		std::function<void(ibValueTreeListNode*, ibValueTreeListNode*&, const ibGuid&)> findGuid = [&findGuid](ibValueTreeListNode* parent, ibValueTreeListNode*& foundedNode, const ibGuid& guid)
-			{
-				if (guid == parent->GetGuid()) {
-					foundedNode = parent; return;
-				}
-				else if (foundedNode != nullptr) {
-					return;
-				}
-				for (unsigned int n = 0; n < parent->GetChildCount(); n++) {
-					ibValueTreeListNode* node = dynamic_cast<ibValueTreeListNode*>(parent->GetChild(n));
-					if (node != nullptr)
-						findGuid(node, foundedNode, guid);
-					if (foundedNode != nullptr)
-						break;
-				}
-			};
-		ibValueTreeListNode* foundedNode = nullptr;
-		for (unsigned int child = 0; child < GetRoot()->GetChildCount(); child++) {
-			ibValueTreeListNode* node = dynamic_cast<ibValueTreeListNode*>(GetRoot()->GetChild(child));
-			if (node != nullptr)
-				findGuid(node, foundedNode, pRefData->GetGuid());
-			if (foundedNode != nullptr)
-				break;
-		}
-		if (foundedNode != nullptr)
-			return ibDataViewItem(foundedNode);
-	}
-	return ibDataViewItem(nullptr);
-}
-
-ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(ibValueModelReturnLine* retLine) const
-{
-	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(retLine->GetLineItem());
-	std::function<void(ibValueTreeListNode*, ibValueTreeListNode*&, const ibGuid&)> findGuid =
-		[&findGuid](ibValueTreeListNode* parent, ibValueTreeListNode*& foundedNode, const ibGuid& guid)
-		{
-			if (guid == parent->GetGuid()) { foundedNode = parent; return; }
-			else if (foundedNode != nullptr) { return; }
-
-			for (unsigned int n = 0; n < parent->GetChildCount(); n++) {
-				ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(parent->GetChild(n));
-				if (child != nullptr)
-					findGuid(child, foundedNode, guid);
-				if (foundedNode != nullptr) break;
-			}
-		};
-	ibValueTreeListNode* foundedNode = nullptr;
-	for (unsigned int c = 0; c < GetRoot()->GetChildCount(); c++) {
-		ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(GetRoot()->GetChild(c));
-		if (child != nullptr) findGuid(child, foundedNode, node->GetGuid());
-		if (foundedNode != nullptr) break;
-	}
-	if (foundedNode != nullptr) return ibDataViewItem(foundedNode);
-	return ibDataViewItem(nullptr);
+	// Paged tree: rows aren't materialized in-memory, but we can
+	// resolve a reference-typed value to its row by GUID via the
+	// same one-SQL `WHERE uuid IN (?)` path used for ancestor
+	// breadcrumb construction.  Used by the post-Save selection-
+	// restore cascade in tableBox::OnIdle.  Non-reference values
+	// (column-value lookup) aren't supported on the paged path.
+	ibValueReferenceDataObject* refData = nullptr;
+	if (!varValue.ConvertToValue(refData) || refData == nullptr)
+		return ibDataViewItem();
+	const ibGuid g = refData->GetGuid();
+	if (!g.isValid()) return ibDataViewItem();
+	auto rows = LoadRowsByGuids({ g });
+	if (rows.empty()) return ibDataViewItem();
+	auto* row = rows[0];
+	ibDataViewItem item(row);   // IncRef → 2
+	row->DecRef();               // refcount=1, owned by item
+	return item;
 }
 
 ibValueModelTreeDataObjectFolderRef::ibValueModelTreeDataObjectFolderRef(const ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const ibFormID& formType,
 	int listMode, bool choiceMode) : ibValueModelTreeDataObject(metaObject, formType, choiceMode),
 	m_metaObject(metaObject), m_listMode(listMode), m_choiceMode(choiceMode)
 {
-	//ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataIsFolder(), false, true, true);
 	ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataCode(), true, false);
 	ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataDescription(), true);
-	ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataReference());
+	// Reference (uuid PK) sort = system: always enabled, OnSortColumnChanged
+	// preserves it as the cursor tiebreaker so the `uuid > ? / uuid < ?`
+	// predicate stays meaningful even when the user picks a different
+	// column-sort.
+	ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataReference(),
+	                                       /*ascending=*/true, /*use=*/true,
+	                                       /*system=*/true);
 }
 
 ibSourceExplorer ibValueModelTreeDataObjectFolderRef::GetSourceExplorer() const
@@ -700,23 +670,34 @@ bool ibValueModelTreeDataObjectFolderRef::GetModel(ibValueModel*& tableValue, co
 }
 
 //events 
+void ibValueModelTreeDataObjectFolderRef::ResolveParentForNew(ibValue& outParent) const
+{
+	// Parent inheritance — three sources, in order:
+	//   1. Current selection (Tree mode + List with row selected): use
+	//      selected folder itself, or selected item's parent.
+	//   2. Drill chain (Hierarchical drill, no selection inside folder):
+	//      the deepest crumb is the folder we're inside — use it as
+	//      parent so a fresh item lands here, not at the root.
+	//   3. Fallback empty: top-level catalog root.
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
+	if (node != nullptr) {
+		ibValue isFolder = true;
+		node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
+		if (!isFolder.GetBoolean())
+			node->GetValue(*m_metaObject->GetDataParent(), outParent);
+		else
+			node->GetValue(*m_metaObject->GetDataReference(), outParent);
+		return;
+	}
+	ibValueTreeListNode* drillNode = GetViewData<ibValueTreeListNode>(GetDrillParent());
+	if (drillNode != nullptr)
+		drillNode->GetValue(*m_metaObject->GetDataReference(), outParent);
+}
+
 void ibValueModelTreeDataObjectFolderRef::AddValue(unsigned int before)
 {
-	ibValue cParent; ibValue isFolder = true;
-
-	if (m_topParentGuid.isValid()) {
-		cParent = ibValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
-	}
-	else {
-		ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
-		if (node != nullptr) {
-			node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
-			if (!isFolder.GetBoolean())
-				node->GetValue(*m_metaObject->GetDataParent(), cParent);
-			else
-				node->GetValue(*m_metaObject->GetDataReference(), cParent);
-		}
-	}
+	ibValue cParent;
+	ResolveParentForNew(cParent);
 
 	ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(ibObjectMode::OBJECT_ITEM));
 
@@ -728,21 +709,8 @@ void ibValueModelTreeDataObjectFolderRef::AddValue(unsigned int before)
 
 void ibValueModelTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 {
-	ibValue cParent; ibValue isFolder = true;
-
-	if (m_topParentGuid.isValid()) {
-		cParent = ibValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
-	}
-	else {
-		ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
-		if (node != nullptr) {
-			node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
-			if (!isFolder.GetBoolean())
-				node->GetValue(*m_metaObject->GetDataParent(), cParent);
-			else
-				node->GetValue(*m_metaObject->GetDataReference(), cParent);
-		}
-	}
+	ibValue cParent;
+	ResolveParentForNew(cParent);
 
 	try {
 		ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(ibObjectMode::OBJECT_FOLDER));
@@ -845,6 +813,7 @@ void ibValueModelTreeDataObjectFolderRef::MarkAsDeleteValue()
 			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
+			wxLogError(wxT("objectList: unhandled non-ibBackend exception swallowed"));
 		}
 	}
 }
@@ -907,35 +876,54 @@ wxString ibValueModelTreeDataObjectFolderRef::GetString() const
 
 ibDataViewItem ibValueListRegisterObject::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
+	// Paged model: rows live in the control's deque, not on the model.
+	// Build a stub key-row carrying:
+	//   * m_nodeKeys                  — identity (recorder + line for
+	//                                    HasRecorder, dimensions
+	//                                    otherwise).  Drives
+	//                                    ibValueTableKeyRow::IsEqualTo
+	//                                    against the freshly-fetched
+	//                                    row, restoring focus.
+	//   * m_nodeValues effective cols — drive BuildRegisterAnchor's
+	//                                    cursor predicate.  Empty
+	//                                    values bind as NULL in the
+	//                                    composite predicate and
+	//                                    exclude all rows → empty
+	//                                    table.  Pull real values for
+	//                                    each effective sort column
+	//                                    (user sort + identity tail)
+	//                                    from the record manager so
+	//                                    the cursor positions on the
+	//                                    new row's tuple.
 	ibValueRecordManagerObject* pRefData = nullptr;
-	if (varValue.ConvertToValue(pRefData)) {
-		const ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
-		wxASSERT(metaObject);
-		for (long row = 0; row < GetRowCount(); row++) {
-			ibDataViewItem item = GetItem(row);
-			if (item.IsOk()) {
-				ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(item);
-				if (node != nullptr && pRefData->GetGuid() == node->GetUniquePairKey(metaObject))
-					return item;
-			}
-		}
+	if (!varValue.ConvertToValue(pRefData) || pRefData == nullptr)
+		return ibDataViewItem();
+
+	auto* stub = new ibValueTableKeyRow;
+	// Identity columns → m_nodeKeys.
+	if (m_metaObject->HasRecorder()) {
+		if (auto* attrRec = m_metaObject->GetRegisterRecorder())
+			stub->AppendNodeValue(attrRec->GetMetaID(),
+				pRefData->GetValueByMetaID(attrRec->GetMetaID()));
+		if (auto* attrLine = m_metaObject->GetRegisterLineNumber())
+			stub->AppendNodeValue(attrLine->GetMetaID(),
+				pRefData->GetValueByMetaID(attrLine->GetMetaID()));
+	}
+	else {
+		for (auto& dim : m_metaObject->GetGenericDimentionArrayObject())
+			stub->AppendNodeValue(dim->GetMetaID(),
+				pRefData->GetValueByMetaID(dim->GetMetaID()));
+	}
+	// Effective sort columns → m_nodeValues (read by BuildRegisterAnchor).
+	for (const auto& c : ibRegisterSqlBuilder::EffectiveOrder(m_metaObject, m_sortOrder)) {
+		ibValue v;
+		if (pRefData->GetValueByMetaID(c.m_attr->GetMetaID(), v))
+			stub->AppendTableValue(c.m_attr->GetMetaID(), v);
 	}
 
-	return ibDataViewItem(nullptr);
-}
-
-ibDataViewItem ibValueListRegisterObject::FindRowValue(ibValueModelReturnLine* retLine) const
-{
-	const ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
-	wxASSERT(metaObject);
-	ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node, metaObject](ibValueTableRow* row)
-		{
-			return node->GetUniquePairKey(metaObject) == ((ibValueTableKeyRow*)row)->GetUniquePairKey(metaObject);
-		}
-	);
-	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
-	return ibDataViewItem(nullptr);
+	ibDataViewItem item(stub);   // IncRef → 2
+	stub->DecRef();              // refcount=1, owned by item
+	return item;
 }
 
 ibValueListRegisterObject::ibValueListRegisterObject(const ibValueMetaObjectRegisterData* metaObject, const ibFormID& formType) :
@@ -991,6 +979,7 @@ void ibValueListRegisterObject::AddValue(unsigned int before)
 			ibValueSystemFunction::Alert(err.GetErrorDescription());
 		}
 		catch (...) {
+			wxLogError(wxT("objectList: unhandled non-ibBackend exception swallowed"));
 		}
 	}
 }
@@ -1111,7 +1100,7 @@ bool ibValueListDataObjectEnumRef::CallAsProc(const long lMethodNum, ibValue** p
 	switch (lMethodNum)
 	{
 	case enRefresh:
-		CallRefreshModel();
+		RefetchAll();
 		return true;
 	}
 	return false;
@@ -1131,7 +1120,7 @@ bool ibValueListDataObjectRef::CallAsProc(const long lMethodNum, ibValue** paPar
 	switch (lMethodNum)
 	{
 	case enRefresh:
-		CallRefreshModel();
+		RefetchAll();
 		return true;
 	}
 	return false;
@@ -1151,7 +1140,7 @@ bool ibValueModelTreeDataObjectFolderRef::CallAsProc(const long lMethodNum, ibVa
 	switch (lMethodNum)
 	{
 	case enRefresh:
-		CallRefreshModel();
+		RefetchAll();
 		return true;
 	}
 	return false;
@@ -1170,7 +1159,7 @@ bool ibValueListRegisterObject::CallAsProc(const long lMethodNum, ibValue** paPa
 	switch (lMethodNum)
 	{
 	case enRefresh:
-		CallRefreshModel();
+		RefetchAll();
 		return true;
 	}
 	return false;

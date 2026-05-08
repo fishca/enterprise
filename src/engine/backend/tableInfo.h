@@ -1,6 +1,10 @@
 #ifndef __TABLE_INFO_H__
 #define __TABLE_INFO_H__
 
+#include <algorithm>
+#include <functional>
+#include <future>
+
 #include "backend/tableView.h"
 
 #include "backend/system/value/valueType.h"
@@ -12,153 +16,54 @@
 #define defaultCountPerPage 100
 ///////////////////////////////////////////////////////////////////////////////////
 
-enum ibComparisonType {
-	ibComparisonType_Equal, // ==
-	ibComparisonType_NotEqual, // !=
+// ibComparisonType / ibFilterRow / ibSortOrder / ibSortData / ibSortModel
+// moved to tableView.h — view-layer types used by both ibDataViewModel
+// virtuals and paged Fetch SQL builders.
+
+// =============================================================================
+// Paged fetch contract — see docs/paging-design.md
+// =============================================================================
+
+enum class ibFetchDirection : int8_t {
+	Reset    = 0,   // discard buffer, fetch initial window at anchor
+	Forward  = 1,   // append after anchor
+	Backward = -1   // prepend before anchor
 };
 
-struct ibFilterRow {
-
-	struct ibFilterData {
-		unsigned int m_filterModel;
-		ibGuid m_filterGuid;
-		wxString m_filterName;
-		wxString m_filterPresentation;
-		ibComparisonType m_filterComparison;
-		ibTypeDescription m_filterTypeDescription;
-		ibValue m_filterValue;
-		bool m_filterUse;
-	public:
-		ibFilterData(unsigned int filterModel, const wxString& filterName, const wxString& filterPresentation,
-			ibComparisonType comparisonType, const ibTypeDescription& filterTypeDescription, const ibValue& filterValue,
-			bool filterUse = false) :
-			m_filterModel(filterModel),
-			m_filterGuid(ibGuid::newGuid()),
-			m_filterName(filterName),
-			m_filterPresentation(filterPresentation),
-			m_filterComparison(comparisonType),
-			m_filterTypeDescription(filterTypeDescription),
-			m_filterValue(filterValue),
-			m_filterUse(filterUse) {
-		}
-	};
-
-	std::vector< ibFilterData> m_filters;
-
-public:
-
-	void AppendFilter(unsigned int filterModel, const wxString& filterName,
-		const ibTypeDescription& filterTypeDescription, const ibValue& filterValue) {
-		m_filters.emplace_back(filterModel, filterName, filterName,
-			ibComparisonType::ibComparisonType_Equal, filterTypeDescription, filterValue, false
-		);
-	}
-
-	void AppendFilter(unsigned int filterModel, const wxString& filterName, const wxString& filterPresentation,
-		const ibTypeDescription& filterTypeDescription, const ibValue& filterValue) {
-		m_filters.emplace_back(filterModel, filterName, filterPresentation,
-			ibComparisonType::ibComparisonType_Equal, filterTypeDescription, filterValue, false
-		);
-	}
-
-	void AppendFilter(unsigned int filterModel, const wxString& filterName, const wxString& filterPresentation,
-		ibComparisonType comparisonType, const ibTypeDescription& filterTypeDescription, const ibValue& filterValue,
-		bool filterUse = false) {
-		m_filters.emplace_back(filterModel, filterName, filterPresentation,
-			comparisonType, filterTypeDescription, filterValue, filterUse
-		);
-	}
-
-	ibFilterData* GetFilterByID(unsigned int filterModel) {
-		auto iterator = std::find_if(m_filters.begin(), m_filters.end(), [filterModel](const ibFilterData& data) {
-			return filterModel == data.m_filterModel; });
-		if (iterator != m_filters.end())
-			return &*iterator;
-		return nullptr;
-	}
-
-	ibFilterData* GetFilterByName(const wxString& filterName) {
-		auto iterator = std::find_if(m_filters.begin(), m_filters.end(), [filterName](const ibFilterData& data) {
-			return filterName == data.m_filterName; });
-		if (iterator != m_filters.end())
-			return &*iterator;
-		return nullptr;
-	}
-
-	void SetFilterByID(unsigned int filterModel, const ibValue& filterValue) {
-		ibFilterData* data = GetFilterByID(filterModel);
-		if (data != nullptr) {
-			data->m_filterValue = filterValue;
-			data->m_filterUse = true;
-		}
-	}
-
-	void SetFilterByName(const wxString& filterName, const ibValue& filterValue) {
-		ibFilterData* data = GetFilterByName(filterName);
-		if (data != nullptr) {
-			data->m_filterValue = filterValue;
-			data->m_filterUse = true;
-		}
-	}
-
-	bool UseFilter() const {
-		return m_filters.size() > 0;
-	}
-
-	void ResetFilter() {
-		for (auto& filter : m_filters) {
-			filter.m_filterUse = false;
-		}
-	}
+// Stable, opaque cursor for pagination. Templated by row-key type:
+//   TKey = ibGuid           — catalogs, enums, folders.
+//   TKey = ibUniqueKeyPair  — registers.
+template <class TKey>
+struct ibFetchAnchor {
+	bool                 m_empty = true;     // true = no anchor, fetch top
+	TKey                 m_key{};            // last row's stable key
+	std::vector<ibValue> m_sortValues;       // values of sort columns at that row
 };
 
-struct ibSortOrder {
-	
-	struct ibSortData {
-		unsigned int m_sortModel;
-		wxString m_sortName;
-		wxString m_sortPresentation;
-		bool m_sortAscending;
-		bool m_sortEnable;
-		bool m_sortSystem;
-	public:
-		ibSortData(unsigned int sortModel, const wxString& sortName, const wxString& sortPresentation = wxEmptyString, bool sortAscending = true, bool sortEnable = true, bool sortSystem = false) :
-			m_sortModel(sortModel),
-			m_sortName(sortName),
-			m_sortPresentation(sortPresentation),
-			m_sortAscending(sortAscending),
-			m_sortEnable(sortEnable),
-			m_sortSystem(sortSystem)
-		{
-		}
-	};
-	std::vector< ibSortData> m_sorts;
-public:
-
-	void AppendSort(unsigned int col_id, const wxString& name, bool ascending = true, bool use = true, bool system = false) {
-		AppendSort(col_id, name, wxEmptyString, ascending, use, system);
-	}
-
-	void AppendSort(unsigned int col_id, const wxString& name, const wxString& presentation, bool ascending = true, bool use = true, bool system = false) {
-		if (GetSortByID(col_id) == nullptr) m_sorts.emplace_back(col_id, name, presentation, ascending, use, system);
-	}
-
-	ibSortData* GetSortByID(unsigned int col_id) const {
-		auto iterator = std::find_if(m_sorts.begin(), m_sorts.end(),
-			[col_id](const ibSortData& data) {return col_id == data.m_sortModel; });
-		if (iterator != m_sorts.end()) return const_cast<ibSortData*>(&*iterator);
-		return nullptr;
-	}
-
-	unsigned int GetSortCount() const {
-		return m_sorts.size();
-	}
+// Pagination request the frontend / buffer hands to the concrete model.
+// Filter / sort snapshots are read directly from the model's own
+// m_filterRow / m_sortOrder members at Fetch time — request carries
+// only anchor + direction + batch.
+template <class TKey>
+struct ibFetchRequest {
+	ibFetchAnchor<TKey>  m_anchor;
+	ibFetchDirection     m_direction = ibFetchDirection::Reset;
+	int                  m_count     = 0;
 };
 
-struct ibSortModel {
-	unsigned int m_sortModel;
-	bool m_sortAscending;
+// Response from the concrete model's typed Fetch.
+template <class TKey, class TRow>
+struct ibFetchResponse {
+	std::vector<TRow*>   m_rows;
+	bool                 m_hasMore = false;
 };
+
+// AnchorOf builds an ibFetchAnchor (key + sort values) from a row.
+// Each paged concrete model exposes one as a public helper so the
+// frontend (control deque) can construct cursor parameters when it
+// dispatches GetNextFetch / GetPrevFetch on its own.
+template <class TKey, class TRow>
+using ibAnchorOfFn = std::function<ibFetchAnchor<TKey>(const TRow*)>;
 
 #pragma region _data_model_h_
 class BACKEND_API ibDataViewModelProvider : public ibDataViewModel {
@@ -302,19 +207,6 @@ protected:
 			return m_ownerModel->IsContainer(item);
 		}
 
-		// define current parent for hierarchical view 
-		virtual bool HasParentTopItem() const {
-			return m_ownerModel->HasParentTopItem();
-		}
-
-		virtual bool SetParentTopItem(const ibDataViewItem& item) {
-			return m_ownerModel->SetParentTopItem(item);
-		}
-
-		virtual ibDataViewItem GetParentTopItem() const {
-			return m_ownerModel->GetParentTopItem();
-		}
-
 		// Is the container just a header or an item with all columns
 		virtual bool HasContainerColumns(const ibDataViewItem& item) const {
 			return m_ownerModel->HasContainerColumns(item);
@@ -331,6 +223,63 @@ protected:
 		}
 
 		virtual bool HasDefaultCompare() const { return false; }
+
+		// Header-click sort change — forward to ibValueModel so paged
+		// concrete models can update m_sortOrder and trigger refresh.
+		virtual void OnSortColumnChanged(unsigned int col, bool ascending) override {
+			m_ownerModel->OnSortColumnChanged(col, ascending);
+		}
+
+		// Universal Get*Fetch — forward to owner so concrete model's
+		// override drives the paged source (DB or RAM).
+		virtual unsigned int GetFirstFetch(const ibDataViewItem& parent,
+			const ibDataViewItem& anchor, int count, ibDataViewItemArray& out) const override {
+			return m_ownerModel->GetFirstFetch(parent, anchor, count, out);
+		}
+		virtual unsigned int GetNextFetch(const ibDataViewItem& parent,
+			const ibDataViewItem& anchor, int count, ibDataViewItemArray& out) const override {
+			return m_ownerModel->GetNextFetch(parent, anchor, count, out);
+		}
+		virtual unsigned int GetPrevFetch(const ibDataViewItem& parent,
+			const ibDataViewItem& anchor, int count, ibDataViewItemArray& out) const override {
+			return m_ownerModel->GetPrevFetch(parent, anchor, count, out);
+		}
+
+		// All ibValueModel-derived models are paged by architecture;
+		// the flag distinguishes them from non-paged wxDVC native
+		// models (lists / tree-stores / predefined editor).
+		virtual bool IsPagedModel() const override            { return true; }
+
+		// Forward to ibValueModel — concrete models filter system
+		// sorts in their override (see ibValueModel::IsSortable).
+		virtual bool IsSortable(unsigned int col) const override {
+			return m_ownerModel->IsSortable(col);
+		}
+
+		// Forward to ibValueModel which delegates to ibSession::Submit
+		// (worker pool).  Future return value is discarded — fetch
+		// completion is communicated via the lambda body itself
+		// (typically via wxWindow::CallAfter back to the UI thread).
+		virtual void SubmitFetchAsync(std::function<void()> work) override {
+			m_ownerModel->SubmitFetchAsync(std::move(work));
+		}
+
+		// Capability + state forwarders — ibDataViewModel virtuals
+		// resolve to the owning ibValueModel's storage.  Lets
+		// datavgen.cpp ask GetModel()->GetFeatures() / GetSortOrder()
+		// directly without cross-casting through this provider.
+		virtual ibDataViewModel::Features GetFeatures() const override {
+			return m_ownerModel->GetFeatures();
+		}
+		virtual ibSortOrder*       GetSortOrder()       override { return &m_ownerModel->GetSortOrder(); }
+		virtual const ibSortOrder* GetSortOrder() const override { return &m_ownerModel->GetSortOrder(); }
+		virtual ibFilterRow*       GetFilterRow()       override { return &m_ownerModel->GetFilterRow(); }
+		virtual const ibFilterRow* GetFilterRow() const override { return &m_ownerModel->GetFilterRow(); }
+
+		virtual void BuildAncestorBreadcrumb(const ibDataViewItem& fromRow,
+		                                     ibDataViewItemArray& out) const override {
+			m_ownerModel->BuildAncestorBreadcrumb(fromRow, out);
+		}
 
 		// internal
 		virtual bool IsListModel() const {
@@ -454,25 +403,25 @@ public:
 				refCounter->DecRef();
 		}
 
-		virtual bool IsPropReadable(const long lPropNum) const override {
-			return GetOwnerModel()->ValidateReturnLine(
-				const_cast<ibValueModelReturnLine*>(this)
-			);
+		// True iff the cached line still refers to a row attached to
+		// its owner model.  ReturnLine may outlive the row's place
+		// in the model (script holds the line, model Clear/Remove
+		// detaches the row) — read/write through a detached line
+		// must fail safely instead of poking at a dead model link.
+		bool IsLineAttached() const {
+			auto* obj = m_lineItem.GetID();
+			return obj != nullptr && obj->IsAttached();
 		}
 
-		virtual bool IsPropWritable(const long lPropNum) const override {
-			return GetOwnerModel()->ValidateReturnLine(
-				const_cast<ibValueModelReturnLine*>(this)
-			);
-		}
+		virtual bool IsPropReadable(const long lPropNum) const override { return IsLineAttached(); }
+		virtual bool IsPropWritable(const long lPropNum) const override { return IsLineAttached(); }
 
 		virtual ibValueModel* GetOwnerModel() const = 0;
 
 		//set meta/get meta
 		virtual bool SetValueByMetaID(const ibMetaID& id, const ibValue& varMetaVal) {
-			if (GetOwnerModel()->ValidateReturnLine(const_cast<ibValueModelReturnLine*>(this)))
-				return GetOwnerModel()->SetValueByMetaID(m_lineItem, id, varMetaVal);
-			return false;
+			if (!IsLineAttached()) return false;
+			return GetOwnerModel()->SetValueByMetaID(m_lineItem, id, varMetaVal);
 		}
 
 		virtual bool GetValueByMetaID(const ibMetaID& id, ibValue& pvarMetaVal) const {
@@ -533,28 +482,92 @@ public:
 		return m_sortOrder.GetSortByID(col);
 	}
 
+	// Re-export the canonical Features type from ibDataViewModel so
+	// concrete ibValueModel-derived classes can keep saying `Features`
+	// in their override declarations (these classes inherit
+	// ibValueModel, not ibDataViewModel — only the provider impl
+	// bridges to the data-view side).
+	using Features = ibDataViewModel::Features;
+
+	// Concrete models advertise their feature set here; the provider
+	// impl forwards to ibDataViewModel::GetFeatures() so the GUI sees
+	// the same value via either path.
+	virtual Features GetFeatures() const { return Features{}; }
+
+	// Mutable sort accessor — the GUI uses this to insert / toggle
+	// system sort entries (e.g. folder-first prefix on Tree /
+	// Hierarchical view modes) without backdooring through protected
+	// state.  Read-only callers go through the const overload.  Both
+	// are also reachable through ibDataViewModel via the provider's
+	// pointer-returning forwarders.
+	ibSortOrder&       GetSortOrder()       { return m_sortOrder; }
+	const ibSortOrder& GetSortOrder() const { return m_sortOrder; }
+	ibFilterRow&       GetFilterRow()       { return m_filterRow; }
+	const ibFilterRow& GetFilterRow() const { return m_filterRow; }
+
 	ibValueModel();
 	virtual ~ibValueModel();
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
-	bool IsCallRefreshModel() const { return m_refreshModel; }
+	// Refetch the entire current scope — wipes the control's loaded
+	// buffer (BeforeReset notifier) and signals it to dispatch a fresh
+	// GetFirstFetch (AfterReset notifier).  The concrete fetch shape
+	// is determined by the control's view-mode + drill state at the
+	// time of the next fetch dispatch (top-level, scoped to a folder,
+	// or s_constIgnoreParent flat scan).  All models drive refresh
+	// through this single path; legacy CallRefreshModel / RefreshModel
+	// are gone.
+	void RefetchAll() {
+		if (m_modelProvider != nullptr) {
+			m_modelProvider->BeforeReset();
+			m_modelProvider->AfterReset();
+		}
+	}
 
-	//Update model 
-	void CallRefreshModel(const ibDataViewItem& topItem = ibDataViewItem(nullptr), const int countPerPage = defaultCountPerPage) {
-		m_refreshModel = true;
-		RefreshModel(topItem, countPerPage);
-		m_refreshModel = false;
-	};
+	// Column header click — rebuild the result set with new ORDER BY.
+	// Updates m_sortOrder (single-column sort, disabling other user
+	// sorts) and signals the control via the notifier so it wipes
+	// its deque and re-dispatches GetFirstFetch.
+	virtual void OnSortColumnChanged(unsigned int col, bool ascending) {
+		for (auto& s : m_sortOrder.m_sorts) {
+			if (!s.m_sortSystem) s.m_sortEnable = false;
+		}
+		if (auto* sd = m_sortOrder.GetSortByID(col)) {
+			sd->m_sortAscending = ascending;
+			sd->m_sortEnable    = true;
+		}
+		if (m_modelProvider != nullptr) {
+			m_modelProvider->BeforeReset();
+			m_modelProvider->AfterReset();
+		}
+	}
 
-	void CallRefreshItemModel(
-		const ibDataViewItem& topItem,
-		const ibDataViewItem& currentItem,
-		const int countPerPage,
-		const short scroll = 0
-	) {
-		RefreshItemModel(topItem, currentItem, countPerPage, scroll);
-	};
+	// Hierarchical-breadcrumb hook (see ibDataViewModel virtual for
+	// semantics).  Mirrored here so concrete ibValueModel-derived
+	// models can override directly without going through the provider.
+	virtual void BuildAncestorBreadcrumb(const ibDataViewItem& fromRow,
+	                                     ibDataViewItemArray& out) const {
+		(void)fromRow; (void)out;
+	}
+
+	// Universal paged-fetch API.  Mirrors the ibDataViewModel virtuals
+	// so concrete models override here directly.
+	virtual unsigned int GetFirstFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count, ibDataViewItemArray& out) const {
+		(void)parent; (void)anchor; (void)count; (void)out;
+		return 0;
+	}
+	virtual unsigned int GetNextFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count, ibDataViewItemArray& out) const {
+		(void)parent; (void)anchor; (void)count; (void)out;
+		return 0;
+	}
+	virtual unsigned int GetPrevFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count, ibDataViewItemArray& out) const {
+		(void)parent; (void)anchor; (void)count; (void)out;
+		return 0;
+	}
 
 #pragma region _data_model_h_
 	ibDataViewModelProviderImpl* GetDataViewModel() const { return m_modelProvider; }
@@ -563,16 +576,49 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
 	virtual ibDataViewItem GetSelection() const;
+	// Hierarchical drill-context — empty when not drilled / non-hierarchical
+	// view; otherwise the deepest crumb (the folder the user is inside).
+	// Used by AddValue paths to inherit parent for new items.
+	virtual ibDataViewItem GetDrillParent() const;
 	virtual void RowValueStartEdit(const ibDataViewItem& item, unsigned int col = 0);
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// Paging hooks — backend is stateless: model exposes Get*Fetch
+	// only.  The GUI keeps its own deque inside ibDataViewCtrl and
+	// dispatches GetNextFetch / GetPrevFetch when scroll approaches
+	// an edge.  Every ibValueModel-derived model is paged by
+	// architecture; the IsPagedModel() flag on the data-view base
+	// only differentiates ibValueModel-derived (paged) from native
+	// non-paged wxDVC models (lists, tree-stores, predefined editor).
 
-	virtual bool ValidateReturnLine(ibValueModelReturnLine* retLine) const { return true; }
+	// Submit a Fetch-style task to the current session's worker pool.
+	// Returns the future the pool gave us; if no session is bound the
+	// task runs inline and the returned future is already ready (matches
+	// ibSession::Submit's no-pool fallback contract). Caller owns the
+	// UI marshaling decision: future.wait() inline, wxTheApp->CallAfter
+	// on completion, or fire-and-forget. Backend itself stays free of
+	// frontend coupling.
+	std::future<void> SubmitFetchAsync(std::function<void()> work);
+
+	// Adopt rows returned by a typed Get*Fetch into ibDataViewItemArray.
+	// Typed Fetch hands out new'd rows with refcount=1; ibDataViewItem's
+	// ctor IncRefs to 2; we DecRef the initial allocation reference so
+	// `out` owns exactly one reference per row. Use this at every
+	// typed → universal Get*Fetch bridge to avoid leaking the initial
+	// reference on long-running paged use.
+	template <class TRow>
+	static void AdoptRowsToItems(std::vector<TRow*>& rows,
+		ibDataViewItemArray& out) {
+		for (auto* r : rows) {
+			out.Add(ibDataViewItem(r));
+			r->DecRef();
+		}
+		rows.clear();
+	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
 	virtual ibDataViewItem FindRowValue(const ibValue& varValue, const wxString& colName = wxEmptyString) const { return ibDataViewItem(nullptr); }
-	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const { return ibDataViewItem(nullptr); }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -589,11 +635,14 @@ public:
 		ibValueModel::RowValueStartEdit(item, col);
 	}
 
+	// User-toggleable iff the model carries a non-system sort entry
+	// for this column.  System sorts (folders-on-top, recorder+line
+	// for registers, …) are model-driven and must not be flipped by
+	// header click.  Mirrored on ibDataViewModel via the provider impl
+	// so the data-view fork can consult it directly (datavgen.cpp).
 	virtual bool IsSortable(unsigned int col) const {
 		ibSortOrder::ibSortData* sortData = m_sortOrder.GetSortByID(col);
-		if (sortData == nullptr)
-			return false;
-		return true;
+		return sortData != nullptr && !sortData->m_sortSystem;
 	}
 
 	virtual void AddValue(unsigned int before = 0) {}
@@ -687,22 +736,8 @@ public:
 
 protected:
 
-	//Update model 
-	virtual void RefreshModel(const ibDataViewItem& topItem = ibDataViewItem(nullptr), const int countPerPage = defaultCountPerPage) {};
-	virtual void RefreshItemModel(
-		const ibDataViewItem& topItem,
-		const ibDataViewItem& currentItem,
-		const int countPerPage,
-		const short scroll = 0
-	) {
-	};
-
-protected:
-
 	ibFilterRow m_filterRow;
 	ibSortOrder m_sortOrder;
-
-	bool m_refreshModel;
 };
 
 //Table support
@@ -710,19 +745,30 @@ class BACKEND_API ibValueModelTableBase : public ibValueModel {
 	wxDECLARE_ABSTRACT_CLASS(ibValueModelTableBase);
 public:
 
-	enum
-	{
-		TABLE_NODE_HIDDEN = 0x0001,
-	};
+	struct ibValueTableRow : public ibDataViewObject {
 
-	struct ibValueTableRow : public wxRefCounter {
+		// Logical equality for paged refetch: rows with matching value
+		// map represent the same business row, even when behind fresh
+		// pointers from a new fetch.
+		virtual bool IsEqualTo(const ibDataViewObject& other) const override {
+			const ibValueTableRow* o = dynamic_cast<const ibValueTableRow*>(&other);
+			if (o == nullptr) return false;
+			return m_nodeValues == o->m_nodeValues;
+		}
+
+		// Detached state — set by base Clear / Remove which null
+		// `m_valueTable` while the row may stay alive through
+		// refcount-pinning by an ibDataViewItem held elsewhere
+		// (selection cache, ReturnLine).  Script reads/writes via
+		// ReturnLine consult this to refuse on dead rows.
+		virtual bool IsAttached() const override { return m_valueTable != nullptr; }
 
 		ibValueTableRow() :
-			m_valueTable(nullptr), m_nodeValues(), m_nodeFlags(0) {
+			m_valueTable(nullptr), m_nodeValues() {
 		}
 
 		ibValueTableRow(const ibValueTableRow& tableRow) :
-			m_valueTable(tableRow.m_valueTable), m_nodeValues(tableRow.m_nodeValues), m_nodeFlags(0) {
+			m_valueTable(tableRow.m_valueTable), m_nodeValues(tableRow.m_nodeValues) {
 		}
 
 		/////////////////////////////////////////////////////////////////////////////
@@ -863,181 +909,39 @@ public:
 			return false;
 		}
 
-		// Returns true if property has given flag set.
-		bool HasFlag(long flag) const
-		{
-			return (m_nodeFlags & flag) != 0;
-		}
-
-		// Returns true if property has all given flags set.
-		bool HasFlagsExact(long flags) const
-		{
-			return (m_nodeFlags & flags) == flags;
-		}
-
-		void SetFlag(long flag) { m_nodeFlags |= flag; }
-		void ClearFlag(long flag) { m_nodeFlags &= ~(flag); }
-
 	private:
 		friend class ibValueModelTableBase;
+		friend class ibValueModelRamTableBase;
 	protected:
 		ibValueModelTableBase* m_valueTable;
 		ibMetaValueArray m_nodeValues;
-		long m_nodeFlags;
 	};
 
 public:
 
 	ibValueModelTableBase() : ibValueModel() {}
-	virtual ~ibValueModelTableBase() { Clear(false); }
+	virtual ~ibValueModelTableBase() = default;
 
 	/////////////////////////////////////////////////////////
 
-	virtual bool IsEmpty() const override { return GetRowCount() == 0; }
+	// Row count / row access — paged DB-backed concrete classes pull
+	// rows on demand and don't keep a full-table count; RAM-backed
+	// (ibValueModelRamTableBase) override.
+	virtual long           GetRowCount() const         { return 0; }
+	virtual long           GetRow(const ibDataViewItem& item) const { (void)item; return wxNOT_FOUND; }
+	virtual ibDataViewItem GetItem(long row) const     { (void)row; return ibDataViewItem(); }
 
 	/////////////////////////////////////////////////////////
 
-	virtual bool ValidateReturnLine(ibValueModelReturnLine* retLine) const override {
-		ibValueTableRow* node = GetViewData<ibValueTableRow>(retLine->GetLineItem());
-		wxASSERT(node);
-		return node ? node->m_valueTable != nullptr : false;
-	}
-
-	/////////////////////////////////////////////////////////
-
-	void Clear(bool notify = true) {
-		if (m_nodeValues.empty()) return;
-		if (notify) /* wxDataViewModel:: */ m_modelProvider->BeforeReset();
-		m_nodeValues.erase(std::remove_if(m_nodeValues.begin(), m_nodeValues.end(), [](const auto& node) { node->m_valueTable = nullptr; node->DecRef(); return true; }), m_nodeValues.end());
-		if (notify) /* wxDataViewModel:: */ m_modelProvider->AfterReset();
-	}
-
-	/////////////////////////////////////////////////////////
-
-	void ClearRange(const unsigned long from, const unsigned long to, bool notify = true) {
-		if (from > m_nodeValues.size() || to > m_nodeValues.size()) return;
-		for (auto iterator = m_nodeValues.begin() + from; iterator != m_nodeValues.begin() + to; iterator++) {
-			/* wxDataViewModel:: */
-			if (notify && !m_modelProvider->ItemDeleted(ibDataViewItem(nullptr), ibDataViewItem(*iterator)))
-				return;
-			(*iterator)->m_valueTable = nullptr;
-			(*iterator)->DecRef();
-		}
-		m_nodeValues.erase(m_nodeValues.begin() + from, m_nodeValues.begin() + to);
-	}
-
-	/////////////////////////////////////////////////////////
-
+	// Notification helpers — drive the ItemChanged / ValueChanged
+	// hook from anywhere a row mutation happens (Set / write-through
+	// from script).  No storage dependency, lives on the base.
 	void RowChanged(ibValueTableRow* item) {
-		/* wxDataViewModel:: */ m_modelProvider->ItemChanged(ibDataViewItem(item));
+		m_modelProvider->ItemChanged(ibDataViewItem(item));
 	}
 
 	void RowValueChanged(ibValueTableRow* item, unsigned int col) {
-		/* wxDataViewModel:: */ m_modelProvider->ValueChanged(ibDataViewItem(item), col);
-	}
-
-	/////////////////////////////////////////////////////////
-	void Reserve(const long rowCount = 1) {
-		m_nodeValues.reserve(m_nodeValues.size() + rowCount);
-	}
-	/////////////////////////////////////////////////////////
-
-	long Append(ibValueTableRow* child, bool notify = true) {
-		wxASSERT(child);
-
-		child->m_valueTable = this;
-		m_nodeValues.emplace_back(child);
-
-		/* wxDataViewModel:: */
-		if (notify && !m_modelProvider->ItemAdded(ibDataViewItem(nullptr), ibDataViewItem(child))) {
-			child->m_valueTable = this;
-			m_nodeValues.pop_back();
-			return false;
-		}
-
-		if (!notify)
-			child->SetFlag(TABLE_NODE_HIDDEN);
-
-		return m_nodeValues.size() - 1;
-	}
-
-	long Insert(ibValueTableRow* child, unsigned int row, bool notify = true) {
-		wxASSERT(child);
-
-		child->m_valueTable = this;
-		auto iterator = m_nodeValues.insert(m_nodeValues.begin() + row, child);
-
-		/* wxDataViewModel:: */
-		if (notify && !m_modelProvider->ItemAdded(ibDataViewItem(nullptr), ibDataViewItem(child))) {
-			child->m_valueTable = this;
-			m_nodeValues.erase(iterator);
-			return false;
-		}
-
-		if (!notify)
-			child->SetFlag(TABLE_NODE_HIDDEN);
-		return row + 1;
-	}
-
-	bool Remove(ibValueTableRow*& child, bool notify = true) {
-		wxASSERT(child);
-
-		auto iterator = std::find(
-			m_nodeValues.begin(),
-			m_nodeValues.end(), child
-		);
-
-		if (notify && !m_modelProvider->ItemDeleted(ibDataViewItem(nullptr), ibDataViewItem(child)))
-			return false;
-
-		if (iterator != m_nodeValues.end()) {
-			m_nodeValues.erase(iterator);
-			child->m_valueTable = nullptr;
-			child->DecRef();
-			return true;
-		}
-		return false;
-	}
-
-	void Sort(unsigned int col, bool ascending = true, bool notify = true) {
-		std::vector<ibSortModel> fixedSort = { { col, ascending } };
-		Sort(fixedSort, notify);
-	}
-
-	void Sort(std::vector<ibSortModel>& paSort, bool notify = true) {
-		if (notify) m_modelProvider->BeforeReset();
-		std::sort(m_nodeValues.begin(), m_nodeValues.end(),
-			[&paSort](const ibValueTableRow* a, const ibValueTableRow* b)
-			{
-				return a->CompareRow(b, paSort);
-			}
-		);
-		if (notify) m_modelProvider->AfterReset();
-	}
-
-	long GetRowCount() const { return m_nodeValues.size(); }
-
-	/////////////////////////////////////////////////////////
-
-	void Show(const ibDataViewItem& item, bool show = true) {
-
-		ibValueTableRow* child = GetViewData<ibValueTableRow>(item);
-		if (child != nullptr && show && child->HasFlag(TABLE_NODE_HIDDEN)) {
-
-			/* wxDataViewModel:: */
-			if (!m_modelProvider->ItemAdded(ibDataViewItem(nullptr), ibDataViewItem(child)))
-				return;
-
-			child->ClearFlag(TABLE_NODE_HIDDEN);
-		}
-		else if (child != nullptr && !show && !child->HasFlag(TABLE_NODE_HIDDEN)) {
-
-			/*wxDataViewModel::*/
-			if (!m_modelProvider->ItemDeleted(ibDataViewItem(nullptr), ibDataViewItem(child)))
-				return;
-
-			child->SetFlag(TABLE_NODE_HIDDEN);
-		}
+		m_modelProvider->ValueChanged(ibDataViewItem(item), col);
 	}
 
 	/////////////////////////////////////////////////////////
@@ -1058,25 +962,6 @@ public:
 	virtual bool IsEnabledByRow(const ibDataViewItem& WXUNUSED(row),
 		unsigned int WXUNUSED(col)) const {
 		return true;
-	}
-
-	// helper methods provided by list models only
-	virtual long GetRow(const ibDataViewItem& item) const {
-		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
-		if (node == nullptr)
-			return wxNOT_FOUND;
-		auto iterator = std::find(m_nodeValues.begin(), m_nodeValues.end(), node);
-		if (iterator != m_nodeValues.end())
-			return std::distance(m_nodeValues.begin(), iterator);
-		return wxNOT_FOUND;
-	}
-
-	virtual ibDataViewItem GetItem(long row) const {
-		wxASSERT(row < (long)m_nodeValues.size());
-		if (row >= 0 && row < (long)m_nodeValues.size()) {
-			return ibDataViewItem(m_nodeValues[row]);
-		}
-		return ibDataViewItem(nullptr);
 	}
 
 #pragma region _data_model_h_
@@ -1101,18 +986,14 @@ public:
 		return IsEnabledByRow(item, col);
 	}
 
-	// implement base methods
-	virtual unsigned int GetChildren(const ibDataViewItem& parent, ibDataViewItemArray& array) const override {
-		if (parent.IsOk())
-			return 0;
-		unsigned int count = m_nodeValues.size();
-		if (count == 0)
-			return 0;
-		array.Alloc(count);
-		for (auto& node : m_nodeValues) {
-			array.Add(ibDataViewItem((void*)node));
-		}
-		return count;
+	// Children query — DB-backed concrete classes pull rows via
+	// Get*Fetch and don't expose a full-table GetChildren walk;
+	// RAM-backed (ibValueModelRamTableBase) overrides to walk
+	// m_nodeValues.  Default returns 0 here so the base remains
+	// instantiable abstract for non-RAM concretes.
+	virtual unsigned int GetChildren(const ibDataViewItem& WXUNUSED(parent),
+		ibDataViewItemArray& WXUNUSED(array)) const override {
+		return 0;
 	}
 
 	// implement some base class pure virtual directly
@@ -1174,24 +1055,341 @@ public:
 		return ascending ? id1 - id2 : id2 - id1;
 	}
 
-	virtual bool HasDefaultCompare() const override { return true; }
+	// Model rebuilds itself on sort change (column header click →
+	// m_sortOrder updated → BeforeReset/AfterReset → fresh fetch
+	// with new ORDER BY). wxDVC's incremental sort tracking would
+	// fight us — return false so it leaves order to us.
+	virtual bool HasDefaultCompare() const override { return false; }
 
 	// internal
 	virtual bool IsListModel() const override { return true; }
 	virtual bool IsVirtualListModel() const override { return false; }
 
 #pragma endregion
+};
+
+// RAM-backed table models — own the row storage and serve Get*Fetch
+// by slicing it.  Concrete RAM-backed classes (TabularSection,
+// ibValueModelTable, RecordSet) inherit from this; DB-backed
+// (Catalog list, Enum, Register) inherit directly from
+// ibValueModelTableBase and don't see the storage at all.
+class BACKEND_API ibValueModelRamTableBase : public ibValueModelTableBase {
+	wxDECLARE_ABSTRACT_CLASS(ibValueModelRamTableBase);
+
+public:
+
+	ibValueModelRamTableBase() = default;
+	virtual ~ibValueModelRamTableBase() { Clear(false); }
+
+	/////////////////////////////////////////////////////////
+
+	virtual bool IsEmpty() const override { return GetRowCount() == 0; }
+
+	// RAM-backed by construction — every concrete subclass slices its
+	// own m_nodeValues vector through the inherited Get*Fetch.
+	// Subclasses that add filter / sort UI must build on top via
+	// `auto f = ibValueModelRamTableBase::GetFeatures(); f.flags |= …;`.
+	virtual Features GetFeatures() const override {
+		Features f;
+		f.flags |= Features::RamFetch;
+		return f;
+	}
+
+	/////////////////////////////////////////////////////////
+
+	void Clear(bool notify = true) {
+		if (m_nodeValues.empty()) return;
+		if (notify) m_modelProvider->BeforeReset();
+		m_nodeValues.erase(std::remove_if(m_nodeValues.begin(), m_nodeValues.end(),
+			[](const auto& node) { node->m_valueTable = nullptr; node->DecRef(); return true; }),
+			m_nodeValues.end());
+		if (notify) m_modelProvider->AfterReset();
+	}
+
+	// Tell control to discard its rendered view and re-fetch everything
+	// from the model. Used after batch mutations that wxDVC's
+	// incremental sort tracking can't follow (paged backward Insert).
+	void NotifyReset() {
+		if (m_modelProvider) {
+			m_modelProvider->BeforeReset();
+			m_modelProvider->AfterReset();
+		}
+	}
+
+	/////////////////////////////////////////////////////////
+
+	void ClearRange(const unsigned long from, const unsigned long to, bool notify = true) {
+		if (from > m_nodeValues.size() || to > m_nodeValues.size()) return;
+		for (auto iterator = m_nodeValues.begin() + from; iterator != m_nodeValues.begin() + to; iterator++) {
+			if (notify && !m_modelProvider->ItemDeleted(ibDataViewItem(nullptr), ibDataViewItem(*iterator)))
+				return;
+			(*iterator)->m_valueTable = nullptr;
+			(*iterator)->DecRef();
+		}
+		m_nodeValues.erase(m_nodeValues.begin() + from, m_nodeValues.begin() + to);
+	}
+
+	/////////////////////////////////////////////////////////
+
+	void Reserve(const long rowCount = 1) {
+		m_nodeValues.reserve(m_nodeValues.size() + rowCount);
+	}
+
+	/////////////////////////////////////////////////////////
+
+	long Append(ibValueTableRow* child, bool notify = true) {
+		wxASSERT(child);
+
+		child->m_valueTable = this;
+		m_nodeValues.emplace_back(child);
+
+		if (notify && !m_modelProvider->ItemAppended(ibDataViewItem(nullptr), ibDataViewItem(child))) {
+			child->m_valueTable = this;
+			m_nodeValues.pop_back();
+			return false;
+		}
+
+		return m_nodeValues.size() - 1;
+	}
+
+	long Insert(ibValueTableRow* child, unsigned int row, bool notify = true) {
+		wxASSERT(child);
+
+		child->m_valueTable = this;
+		auto iterator = m_nodeValues.insert(m_nodeValues.begin() + row, child);
+
+		if (notify && !m_modelProvider->ItemInserted(ibDataViewItem(nullptr), ibDataViewItem(child))) {
+			child->m_valueTable = this;
+			m_nodeValues.erase(iterator);
+			return false;
+		}
+
+		return row + 1;
+	}
+
+	bool Remove(ibValueTableRow*& child, bool notify = true) {
+		wxASSERT(child);
+
+		auto iterator = std::find(
+			m_nodeValues.begin(),
+			m_nodeValues.end(), child
+		);
+
+		if (notify && !m_modelProvider->ItemDeleted(ibDataViewItem(nullptr), ibDataViewItem(child)))
+			return false;
+
+		if (iterator != m_nodeValues.end()) {
+			m_nodeValues.erase(iterator);
+			child->m_valueTable = nullptr;
+			child->DecRef();
+			return true;
+		}
+		return false;
+	}
+
+	void Sort(unsigned int col, bool ascending = true, bool notify = true) {
+		std::vector<ibSortModel> fixedSort = { { col, ascending } };
+		Sort(fixedSort, notify);
+	}
+
+	void Sort(std::vector<ibSortModel>& paSort, bool notify = true) {
+		if (notify) m_modelProvider->BeforeReset();
+		std::sort(m_nodeValues.begin(), m_nodeValues.end(),
+			[&paSort](const ibValueTableRow* a, const ibValueTableRow* b)
+			{
+				return a->CompareRow(b, paSort);
+			}
+		);
+		if (notify) m_modelProvider->AfterReset();
+	}
+
+	long GetRowCount() const { return m_nodeValues.size(); }
+
+	/////////////////////////////////////////////////////////
+
+	// Row index reported here is the RAW m_nodeValues position so
+	// save / iteration code that uses GetRowCount() bound (raw size)
+	// + GetItem(row) traverses every row including filtered-out
+	// ones.  For DISPLAY-position queries (number-line column,
+	// post-filter row index inside the rendered tree), use
+	// BuildVisibleView directly — see TabularSection's GetValueByRow.
+	virtual long GetRow(const ibDataViewItem& item) const override {
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
+		if (node == nullptr)
+			return wxNOT_FOUND;
+		auto iterator = std::find(m_nodeValues.begin(), m_nodeValues.end(), node);
+		if (iterator != m_nodeValues.end())
+			return std::distance(m_nodeValues.begin(), iterator);
+		return wxNOT_FOUND;
+	}
+
+	virtual ibDataViewItem GetItem(long row) const override {
+		if (row >= 0 && row < (long)m_nodeValues.size()) {
+			return ibDataViewItem(m_nodeValues[row]);
+		}
+		return ibDataViewItem(nullptr);
+	}
+
+	virtual unsigned int GetChildren(const ibDataViewItem& parent, ibDataViewItemArray& array) const override {
+		if (parent.IsOk())
+			return 0;
+		// Mirror BuildVisibleView's filter+sort so narrow ItemInserted /
+		// ValueChanged paths in the control (which probe GetChildren
+		// for insertion position) see the same row order Get*Fetch
+		// returns — otherwise the tree node lands at the m_nodeValues
+		// index instead of the view index, which mismatches the
+		// fetched buffer.
+		auto view = BuildVisibleView();
+		unsigned int count = static_cast<unsigned int>(view.size());
+		if (count == 0)
+			return 0;
+		array.Alloc(count);
+		for (auto* node : view) {
+			array.Add(ibDataViewItem(node));
+		}
+		return count;
+	}
+
+	// Legacy unfiltered/unsorted counterpart kept private for the
+	// rare call site that needs the raw vector — currently none
+	// outside this class.
+	unsigned int GetChildrenRaw(const ibDataViewItem& parent, ibDataViewItemArray& array) const {
+		if (parent.IsOk())
+			return 0;
+		unsigned int count = static_cast<unsigned int>(m_nodeValues.size());
+		if (count == 0)
+			return 0;
+		array.Alloc(count);
+		for (auto& node : m_nodeValues) {
+			array.Add(ibDataViewItem(node));
+		}
+		return count;
+	}
+
+	// Build a filtered + sorted view of m_nodeValues.  Filter comes
+	// from m_filterRow (eFilter / eFilterByColumn / eFilterClear UI
+	// path); sort from m_sortOrder (header click).  Caller slices
+	// the returned vector by anchor + count.  RAM tables are small
+	// (typically << 1000 rows) so building the view per-fetch is
+	// cheap; cache + invalidation isn't worth the complexity.
+	std::vector<ibValueTableRow*> BuildVisibleView() const {
+		std::vector<ibValueTableRow*> view;
+		view.reserve(m_nodeValues.size());
+		ibValue scratch;
+		for (auto* row : m_nodeValues) {
+			if (row == nullptr) continue;
+			const ibDataViewItem item(row);
+			bool match = true;
+			for (const auto& f : m_filterRow.m_filters) {
+				if (!f.m_filterUse) continue;
+				if (!GetValueByMetaID(item, f.m_filterModel, scratch)) continue;
+				if (f.m_filterComparison == ibComparisonType_Equal
+				    && f.m_filterValue != scratch) { match = false; break; }
+				if (f.m_filterComparison == ibComparisonType_NotEqual
+				    && f.m_filterValue == scratch) { match = false; break; }
+			}
+			if (match) view.push_back(row);
+		}
+		bool anySort = false;
+		for (const auto& s : m_sortOrder.m_sorts) if (s.m_sortEnable) { anySort = true; break; }
+		if (anySort) {
+			std::stable_sort(view.begin(), view.end(),
+				[this](ibValueTableRow* a, ibValueTableRow* b) {
+					ibValue av, bv;
+					for (const auto& s : m_sortOrder.m_sorts) {
+						if (!s.m_sortEnable) continue;
+						const ibDataViewItem ia(a), ib(b);
+						GetValueByMetaID(ia, s.m_sortModel, av);
+						GetValueByMetaID(ib, s.m_sortModel, bv);
+						if (av < bv) return s.m_sortAscending;
+						if (bv < av) return !s.m_sortAscending;
+					}
+					return false;
+				});
+		}
+		return view;
+	}
+
+	// RAM-backed paged fetch — slice the filtered+sorted view by
+	// anchor + count.  count <= 0 means "no batch limit" → return
+	// everything in scope.
+	virtual unsigned int GetFirstFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count, ibDataViewItemArray& array) const override {
+		if (parent.IsOk()) return 0;
+		auto view = BuildVisibleView();
+		const size_t total = view.size();
+		if (total == 0) return 0;
+		size_t start = 0;
+		if (anchor.IsOk()) {
+			auto* row = static_cast<ibValueTableRow*>(anchor.GetID());
+			auto it = std::find(view.begin(), view.end(), row);
+			if (it != view.end()) start = std::distance(view.begin(), it);
+		}
+		if (start >= total) return 0;
+		const size_t avail = total - start;
+		const size_t take = (count > 0)
+			? std::min<size_t>(static_cast<size_t>(count), avail) : avail;
+		array.Alloc(take);
+		for (size_t i = 0; i < take; ++i)
+			array.Add(ibDataViewItem(view[start + i]));
+		return static_cast<unsigned int>(take);
+	}
+
+	virtual unsigned int GetNextFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count,
+		ibDataViewItemArray& array) const override {
+		if (parent.IsOk() || !anchor.IsOk()) return 0;
+		auto view = BuildVisibleView();
+		const size_t total = view.size();
+		if (total == 0) return 0;
+		auto* anchorRow = static_cast<ibValueTableRow*>(anchor.GetID());
+		auto it = std::find(view.begin(), view.end(), anchorRow);
+		if (it == view.end()) return 0;
+		size_t start = std::distance(view.begin(), it) + 1;
+		if (start >= total) return 0;
+		const size_t avail = total - start;
+		const size_t take = (count > 0)
+			? std::min<size_t>(static_cast<size_t>(count), avail) : avail;
+		array.Alloc(take);
+		for (size_t i = 0; i < take; ++i)
+			array.Add(ibDataViewItem(view[start + i]));
+		return static_cast<unsigned int>(take);
+	}
+
+	virtual unsigned int GetPrevFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count,
+		ibDataViewItemArray& array) const override {
+		if (parent.IsOk() || !anchor.IsOk()) return 0;
+		auto view = BuildVisibleView();
+		if (view.empty()) return 0;
+		auto* anchorRow = static_cast<ibValueTableRow*>(anchor.GetID());
+		auto it = std::find(view.begin(), view.end(), anchorRow);
+		if (it == view.begin() || it == view.end()) return 0;
+		const size_t end = std::distance(view.begin(), it);
+		const size_t take = (count > 0)
+			? std::min<size_t>(static_cast<size_t>(count), end) : end;
+		array.Alloc(take);
+		for (size_t i = 0; i < take; ++i)
+			array.Add(ibDataViewItem(view[end - take + i]));
+		return static_cast<unsigned int>(take);
+	}
 
 protected:
-	std::vector< ibValueTableRow*> m_nodeValues;
+	std::vector<ibValueTableRow*> m_nodeValues;
 };
 
 //Tree support
 class BACKEND_API ibValueModelTreeBase : public ibValueModel {
 	wxDECLARE_ABSTRACT_CLASS(ibValueModelTableBase);
-public:
 
-	struct ibValueTreeNode : public wxRefCounter {
+
+	struct ibValueTreeNode : public ibDataViewObject {
+
+		// Detached state — base tree's Remove / Clear nulls m_valueTree.
+		// Used by script-side ReturnLine to refuse reads/writes on a
+		// row whose model link has been wiped while the node itself is
+		// still pinned by an ibDataViewItem.
+		virtual bool IsAttached() const override { return m_valueTree != nullptr; }
 
 		ibValueTreeNode(ibValueModelTreeBase* valueTree) :
 			m_parent(nullptr), m_valueTree(valueTree) {
@@ -1213,7 +1411,12 @@ public:
 			}
 		}
 
-		virtual bool IsContainer() const { return m_children.size() > 0; }
+		// ibDataViewObject overrides — let ibDataViewItem queries
+		// dispatch directly without going through the model.
+		virtual bool IsContainer() const override { return m_children.size() > 0; }
+		virtual ibDataViewItem GetParentItem() const override {
+			return m_parent ? ibDataViewItem(m_parent) : ibDataViewItem();
+		}
 
 		/////////////////////////////////////////////////////////////////////////////
 
@@ -1242,7 +1445,7 @@ public:
 		bool Append(ibValueTreeNode* child, bool notify = true) {
 			child->m_valueTree = m_valueTree;
 			m_children.emplace_back(child);
-			if (notify && !m_valueTree->m_modelProvider->ItemAdded(ibDataViewItem(this), ibDataViewItem(child))) {
+			if (notify && !m_valueTree->m_modelProvider->ItemAppended(ibDataViewItem(this), ibDataViewItem(child))) {
 				child->m_valueTree = nullptr;
 				m_children.pop_back();
 				return false;
@@ -1253,7 +1456,7 @@ public:
 		bool Insert(ibValueTreeNode* child, unsigned int n, bool notify = true) {
 			child->m_valueTree = m_valueTree;
 			auto iterator = m_children.insert(m_children.begin() + n, child);
-			if (notify && !m_valueTree->m_modelProvider->ItemAdded(ibDataViewItem(this), ibDataViewItem(child))) {
+			if (notify && !m_valueTree->m_modelProvider->ItemInserted(ibDataViewItem(this), ibDataViewItem(child))) {
 				child->m_valueTree = nullptr;
 				m_children.erase(iterator);
 				return false;
@@ -1375,6 +1578,7 @@ public:
 
 	private:
 		friend class ibValueModelTreeBase;
+		friend class ibValueModelRamTreeBase;
 	private:
 		ibValueTreeNode* m_parent;
 		std::vector<ibValueTreeNode*> m_children;
@@ -1385,32 +1589,11 @@ public:
 
 public:
 
-	ibValueModelTreeBase() : ibValueModel() {
-		m_root = new ibValueTreeNode(this);
-	}
+	ibValueModelTreeBase() : ibValueModel() {}
 
-	virtual ~ibValueModelTreeBase() {
-		wxDELETE(m_root);
-	}
+	virtual ~ibValueModelTreeBase() {}
 
 	/////////////////////////////////////////////////////////
-
-	virtual bool IsEmpty() const override {
-		return m_root->GetChildCount() == 0;
-	}
-
-	/////////////////////////////////////////////////////////
-
-	virtual bool ValidateReturnLine(ibValueModelReturnLine* retLine) const override {
-		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(retLine->GetLineItem());
-		wxASSERT(node);
-		return node ? node->m_valueTree != nullptr : false;
-	}
-
-
-	/////////////////////////////////////////////////////////
-
-	ibValueTreeNode* GetRoot() const { return m_root; }
 
 	void RowChanged(ibValueTreeNode* item) {
 		/* wxDataViewModel:: */ m_modelProvider->ItemChanged(ibDataViewItem(item));
@@ -1418,61 +1601,6 @@ public:
 
 	void RowValueChanged(ibValueTreeNode* item, unsigned int col) {
 		/* wxDataViewModel:: */ m_modelProvider->ValueChanged(ibDataViewItem(item), col);
-	}
-
-	// helper methods to change the model
-	bool Delete(const ibDataViewItem& item, bool notify = true) {
-		ibValueTreeNode* node = (ibValueTreeNode*)item.GetID();
-		if (node == nullptr)
-			return false;
-		ibDataViewItem parent(node->GetParent());
-		if (!parent.IsOk()) {
-			wxASSERT(node == m_root);
-			// don't make the control completely empty:
-			wxLogError("Cannot remove the root item!");
-			return false;
-		}
-
-		// first remove the node from the parent's array of children;
-		// NOTE: MyMusicTreeModelNodePtrArray is only an array of _pointers_
-		//       thus removing the node from it doesn't result in freeing it
-		std::vector<ibValueTreeNode*>& children = node->GetParent()->GetChildren();
-		std::vector<ibValueTreeNode*>::iterator children_iterator = std::find(children.begin(), children.end(), node);
-		if (children_iterator != children.end())
-			children.erase(children_iterator);
-
-		// notify control
-		if (notify && !m_modelProvider->ItemDeleted(parent, item))
-			return false;
-
-		// free the node
-		node->m_valueTree = nullptr;
-		node->DecRef();
-		return true;
-	}
-
-	void Clear(bool notify = true) {
-		std::vector<ibValueTreeNode*>& children = m_root->GetChildren();
-		while (!children.empty()) {
-			ibValueTreeNode* node = m_root->GetChild(0);
-			std::vector<ibValueTreeNode*>::iterator children_iterator = std::find(children.begin(), children.end(), node);
-			if (children_iterator != children.end())
-				children.erase(children_iterator);
-			node->m_valueTree = nullptr;
-			node->DecRef();
-		}
-		if (notify) /* wxDataViewModel:: */ m_modelProvider->Cleared();
-	}
-
-	void Sort(unsigned int col, bool ascending = true, bool notify = true) {
-		std::vector<ibSortModel> fixedSort = { { col, ascending } };
-		Sort(fixedSort, notify);
-	}
-
-	void Sort(std::vector<ibSortModel>& paSort, bool notify = true) {
-		if (notify) /* wxDataViewModel:: */ m_modelProvider->BeforeReset();
-		m_root->Sort(paSort);
-		if (notify) /* wxDataViewModel:: */ m_modelProvider->AfterReset();
 	}
 
 	/////////////////////////////////////////////////////////
@@ -1526,21 +1654,20 @@ public:
 		return IsEnabledByRow(item, col);
 	}
 
+	// Paged tree: parent is recovered from the node itself; legacy
+	// invisible-root walk lives on Ram-tree-base which owns m_root.
 	virtual ibDataViewItem GetParent(const ibDataViewItem& item) const override {
-		// the invisible root node has no parent
 		if (!item.IsOk())
-			return ibDataViewItem(nullptr);
+			return ibDataViewItem();
 		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
-		// "root" also has no parent
-		if (m_root == node ||
-			m_root == node->GetParent())
-			return ibDataViewItem(nullptr);
-		return ibDataViewItem((void*)node->GetParent());
+		if (node == nullptr || node->GetParent() == nullptr)
+			return ibDataViewItem();
+		return ibDataViewItem(node->GetParent());
 	}
 
 	virtual bool IsContainer(const ibDataViewItem& item) const override {
-		// the invisible root node can have children
-		// (in our model always "root")
+		// invisible top-level: paged path uses synthetic empty item as
+		// "the whole tree", so report container
 		if (!item.IsOk())
 			return true;
 		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
@@ -1549,24 +1676,29 @@ public:
 		return node->IsContainer();
 	}
 
-	// define current parent for hierarchical view 
+	// Paged path uses Get*Fetch directly; the wx-style GetChildren
+	// walker only feeds the in-memory tree consumer (Ram-tree-base
+	// override).  Default returns the children stored on the node
+	// itself when one is supplied; null parent has no fallback root
+	// here.
 	virtual unsigned int GetChildren(const ibDataViewItem& parent,
 		ibDataViewItemArray& array) const override {
 		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(parent);
 		if (node == nullptr)
-			return GetChildren(ibDataViewItem(m_root), array);
+			return 0;
 		unsigned int count = node->GetChildCount();
 		if (count == 0)
 			return 0;
 		array.Alloc(count);
 		for (unsigned int pos = 0; pos < count; pos++) {
-			array.Add(ibDataViewItem((void*)node->GetChild(pos)));
+			array.Add(ibDataViewItem(node->GetChild(pos)));
 		}
 		return count;
 	}
 
-	// override sorting to always sort branches ascendingly
-	virtual bool HasDefaultCompare() const override { return true; }
+	// Paged tree rebuilds on sort change via BeforeReset/AfterReset —
+	// no incremental wx-managed sort path needed.
+	virtual bool HasDefaultCompare() const override { return false; }
 
 	virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
 		unsigned int col, bool ascending) const override {
@@ -1618,9 +1750,203 @@ public:
 	virtual bool IsVirtualListModel() const override { return false; }
 
 #pragma endregion
+};
+
+// RAM-backed tree — symmetric counterpart to ibValueModelRamTableBase.
+// Owns the in-memory ibValueTreeNode root and the mutation API
+// (Delete / Clear / Sort) that legacy script-side and designer-side
+// consumers rely on.  Tree-base above stays a pure shape contract,
+// so DB-cursor concretes (FolderRef) inherit only the Get*Fetch and
+// notification primitives without paying for the m_root allocation.
+class BACKEND_API ibValueModelRamTreeBase : public ibValueModelTreeBase {
+	wxDECLARE_ABSTRACT_CLASS(ibValueModelRamTreeBase);
+
+public:
+
+	ibValueModelRamTreeBase() : ibValueModelTreeBase() {
+		m_root = new ibValueTreeNode(this);
+	}
+
+	virtual ~ibValueModelRamTreeBase() {
+		wxDELETE(m_root);
+	}
+
+	/////////////////////////////////////////////////////////
+
+	virtual bool IsEmpty() const override {
+		return m_root->GetChildCount() == 0;
+	}
+
+	// RAM-backed tree — Tree shape + RamFetch by default.  Subclasses
+	// extend via `auto f = ibValueModelRamTreeBase::GetFeatures();
+	// f.flags |= Features::Folders | …; f.folderSortID = …; return f;`.
+	virtual Features GetFeatures() const override {
+		Features f;
+		f.flags |= Features::Tree | Features::RamFetch;
+		return f;
+	}
+
+	/////////////////////////////////////////////////////////
+
+	ibValueTreeNode* GetRoot() const { return m_root; }
+
+	// helper methods to change the model
+	bool Delete(const ibDataViewItem& item, bool notify = true) {
+		ibValueTreeNode* node = (ibValueTreeNode*)item.GetID();
+		if (node == nullptr)
+			return false;
+		ibDataViewItem parent(node->GetParent());
+		if (!parent.IsOk()) {
+			wxASSERT(node == m_root);
+			// don't make the control completely empty:
+			wxLogError("Cannot remove the root item!");
+			return false;
+		}
+
+		// first remove the node from the parent's array of children;
+		// removing the node from the vector doesn't free it — the node
+		// is refcounted via ibDataViewItem.
+		std::vector<ibValueTreeNode*>& children = node->GetParent()->GetChildren();
+		std::vector<ibValueTreeNode*>::iterator children_iterator = std::find(children.begin(), children.end(), node);
+		if (children_iterator != children.end())
+			children.erase(children_iterator);
+
+		// notify control
+		if (notify && !m_modelProvider->ItemDeleted(parent, item))
+			return false;
+
+		// detach the node and drop our ref
+		node->m_valueTree = nullptr;
+		node->DecRef();
+		return true;
+	}
+
+	void Clear(bool notify = true) {
+		std::vector<ibValueTreeNode*>& children = m_root->GetChildren();
+		while (!children.empty()) {
+			ibValueTreeNode* node = m_root->GetChild(0);
+			std::vector<ibValueTreeNode*>::iterator children_iterator = std::find(children.begin(), children.end(), node);
+			if (children_iterator != children.end())
+				children.erase(children_iterator);
+			node->m_valueTree = nullptr;
+			node->DecRef();
+		}
+		if (notify) m_modelProvider->Cleared();
+	}
+
+	void Sort(unsigned int col, bool ascending = true, bool notify = true) {
+		std::vector<ibSortModel> fixedSort = { { col, ascending } };
+		Sort(fixedSort, notify);
+	}
+
+	void Sort(std::vector<ibSortModel>& paSort, bool notify = true) {
+		if (notify) m_modelProvider->BeforeReset();
+		m_root->Sort(paSort);
+		if (notify) m_modelProvider->AfterReset();
+	}
+
+	/////////////////////////////////////////////////////////
+
+	// RAM-backed paged fetch — slice the parent's child vector (or
+	// m_root's children when parent is empty / invisible-root).  No
+	// filter / sort UI by default; subclasses that need them override
+	// this in addition to GetFeatures() to set Filters | Sorting.
+	// count <= 0 means "no batch limit" → return everything in scope.
+	virtual unsigned int GetFirstFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count,
+		ibDataViewItemArray& array) const override {
+		ibValueTreeNode* parentNode = GetViewData<ibValueTreeNode>(parent);
+		if (parentNode == nullptr) parentNode = m_root;
+		const auto& children = parentNode->m_children;
+		const size_t total = children.size();
+		if (total == 0) return 0;
+		size_t start = 0;
+		if (anchor.IsOk()) {
+			auto* row = static_cast<ibValueTreeNode*>(anchor.GetID());
+			auto it = std::find(children.begin(), children.end(), row);
+			if (it != children.end()) start = std::distance(children.begin(), it);
+		}
+		if (start >= total) return 0;
+		const size_t avail = total - start;
+		const size_t take = (count > 0)
+			? std::min<size_t>(static_cast<size_t>(count), avail) : avail;
+		array.Alloc(take);
+		for (size_t i = 0; i < take; ++i)
+			array.Add(ibDataViewItem(children[start + i]));
+		return static_cast<unsigned int>(take);
+	}
+
+	virtual unsigned int GetNextFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count,
+		ibDataViewItemArray& array) const override {
+		if (!anchor.IsOk()) return 0;
+		ibValueTreeNode* parentNode = GetViewData<ibValueTreeNode>(parent);
+		if (parentNode == nullptr) parentNode = m_root;
+		const auto& children = parentNode->m_children;
+		const size_t total = children.size();
+		if (total == 0) return 0;
+		auto* anchorRow = static_cast<ibValueTreeNode*>(anchor.GetID());
+		auto it = std::find(children.begin(), children.end(), anchorRow);
+		if (it == children.end()) return 0;
+		size_t start = std::distance(children.begin(), it) + 1;
+		if (start >= total) return 0;
+		const size_t avail = total - start;
+		const size_t take = (count > 0)
+			? std::min<size_t>(static_cast<size_t>(count), avail) : avail;
+		array.Alloc(take);
+		for (size_t i = 0; i < take; ++i)
+			array.Add(ibDataViewItem(children[start + i]));
+		return static_cast<unsigned int>(take);
+	}
+
+	virtual unsigned int GetPrevFetch(const ibDataViewItem& parent,
+		const ibDataViewItem& anchor, int count,
+		ibDataViewItemArray& array) const override {
+		if (!anchor.IsOk()) return 0;
+		ibValueTreeNode* parentNode = GetViewData<ibValueTreeNode>(parent);
+		if (parentNode == nullptr) parentNode = m_root;
+		const auto& children = parentNode->m_children;
+		if (children.empty()) return 0;
+		auto* anchorRow = static_cast<ibValueTreeNode*>(anchor.GetID());
+		auto it = std::find(children.begin(), children.end(), anchorRow);
+		if (it == children.begin() || it == children.end()) return 0;
+		const size_t end = std::distance(children.begin(), it);
+		const size_t take = (count > 0)
+			? std::min<size_t>(static_cast<size_t>(count), end) : end;
+		array.Alloc(take);
+		for (size_t i = 0; i < take; ++i)
+			array.Add(ibDataViewItem(children[end - take + i]));
+		return static_cast<unsigned int>(take);
+	}
+
+	/////////////////////////////////////////////////////////
+
+	// Null-parent fallback to the invisible root — reproduces the
+	// pre-split behaviour for callers that pass an empty item to
+	// mean "top of the tree".
+	virtual unsigned int GetChildren(const ibDataViewItem& parent,
+		ibDataViewItemArray& array) const override {
+		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(parent);
+		if (node == nullptr)
+			return ibValueModelTreeBase::GetChildren(ibDataViewItem(m_root), array);
+		return ibValueModelTreeBase::GetChildren(parent, array);
+	}
+
+	// GetParent stops at the invisible root: a node whose parent is
+	// m_root reports no parent (it sits at the top level).
+	virtual ibDataViewItem GetParent(const ibDataViewItem& item) const override {
+		if (!item.IsOk())
+			return ibDataViewItem();
+		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
+		if (node == nullptr)
+			return ibDataViewItem();
+		if (m_root == node || m_root == node->GetParent())
+			return ibDataViewItem();
+		return ibDataViewItem(node->GetParent());
+	}
 
 protected:
 	ibValueTreeNode* m_root;
 };
 
-#endif 
+#endif

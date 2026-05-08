@@ -2329,7 +2329,7 @@ void ibValueRecordDataObjectHierarchyRef::PrepareEmptyObject(const ibValueRecord
 //*						     metaData									* 
 //***********************************************************************
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueRecordSetObject, ibValueModelTableBase);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueRecordSetObject, ibValueModelRamTableBase);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueRecordManagerObject, ibValue);
 
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueRecordKeyObject, ibValue);
@@ -2620,7 +2620,7 @@ bool ibValueRecordSetObject::InitializeObject(const ibValueRecordSetObject* sour
 		for (long row = 0; row < source->GetRowCount(); row++) {
 			ibValueTableRow* node = source->GetViewData<ibValueTableRow>(source->GetItem(row));
 			wxASSERT(node);
-			ibValueModelTableBase::Append(new ibValueTableRow(*node), false);
+			ibValueModelRamTableBase::Append(new ibValueTableRow(*node), false);
 		}
 	}
 
@@ -2651,14 +2651,14 @@ ibValueRecordSetObject* ibValueRecordSetObject::CopyRegisterValue()
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-ibValueRecordSetObject::ibValueRecordSetObject(const ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey) : ibValueModelTableBase(),
+ibValueRecordSetObject::ibValueRecordSetObject(const ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey) : ibValueModelRamTableBase(),
 m_recordColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterColumnCollection>(this)), m_recordSetKeyValue(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterKeyValue>(this)),
 m_metaObject(metaObject), m_keyValues(uniqueKey.IsOk() ? uniqueKey : metaObject), m_objModified(false), m_selected(false),
 m_methodHelper(new ibValueMethodHelper())
 {
 }
 
-ibValueRecordSetObject::ibValueRecordSetObject(const ibValueRecordSetObject& source) : ibValueModelTableBase(),
+ibValueRecordSetObject::ibValueRecordSetObject(const ibValueRecordSetObject& source) : ibValueModelRamTableBase(),
 m_recordColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterColumnCollection>(this)), m_recordSetKeyValue(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterKeyValue>(this)),
 m_metaObject(source.m_metaObject), m_keyValues(source.m_keyValues), m_objModified(true), m_selected(false),
 m_methodHelper(new ibValueMethodHelper())
@@ -2666,7 +2666,7 @@ m_methodHelper(new ibValueMethodHelper())
 	for (long row = 0; row < source.GetRowCount(); row++) {
 		ibValueTableRow* node = source.GetViewData<ibValueTableRow>(source.GetItem(row));
 		wxASSERT(node);
-		ibValueModelTableBase::Append(new ibValueTableRow(*node), false);
+		ibValueModelRamTableBase::Append(new ibValueTableRow(*node), false);
 	}
 }
 
@@ -2813,7 +2813,7 @@ bool ibValueRecordSetObject::GetValueByMetaID(const ibDataViewItem& item, const 
 
 
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection, ibValueModelTableBase::ibValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection, ibValueModelRamTableBase::ibValueModelColumnCollection);
 
 ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueRecordSetObjectRegisterColumnCollection() :
 	ibValueModelColumnCollection(),
@@ -2864,7 +2864,7 @@ bool ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::Get
 //					ibValueRecordSetRegisterColumnInfo               //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueRecordSetRegisterColumnInfo, ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueRecordSetRegisterColumnInfo, ibValueModelRamTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
 ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueRecordSetRegisterColumnInfo::ibValueRecordSetRegisterColumnInfo() :
 	ibValueModelColumnInfo(), m_metaAttribute(nullptr)
@@ -2884,7 +2884,7 @@ ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueR
 //					 ibValueRecordSetObjectRegisterReturnLine					//
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterReturnLine, ibValueModelTableBase::ibValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterReturnLine, ibValueModelRamTableBase::ibValueModelReturnLine);
 
 ibValueRecordSetObject::ibValueRecordSetObjectRegisterReturnLine::ibValueRecordSetObjectRegisterReturnLine(ibValueRecordSetObject* ownerTable, const ibDataViewItem& line)
 	: ibValueModelReturnLine(line), m_ownerTable(ownerTable), m_methodHelper(new ibValueMethodHelper())
@@ -2958,9 +2958,9 @@ long ibValueRecordSetObject::AppendRow(unsigned int before)
 	}
 
 	if (before > 0)
-		return ibValueModelTableBase::Insert(rowData, before, !ibBackendException::IsEvalMode());
+		return ibValueModelRamTableBase::Insert(rowData, before, !ibBackendException::IsEvalMode());
 
-	return ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+	return ibValueModelRamTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 }
 
 enum Func

@@ -193,7 +193,7 @@ bool ibValueRecordSetObjectAccumulationRegister::CallAsFunc(const long lMethodNu
 		pvarRetValue = (unsigned int)GetRowCount();
 		return true;
 	case func::eClear:
-		ibValueModelTableBase::Clear();
+		ibValueModelRamTableBase::Clear();
 		return true;
 	case func::eLoad:
 		LoadDataFromTable(paParams[0]->ConvertToType<ibValueModelTableBase>());

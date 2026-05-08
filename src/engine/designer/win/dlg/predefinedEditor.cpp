@@ -13,7 +13,7 @@ enum
 void ibDialogPredefinedEditor::ibDataViewPredefinedTreeStore::GetValue(wxVariant& variant,
 	const ibDataViewItem& item, unsigned int col) const
 {
-	if (item.m_pItem == (void*)1)
+	if (item.GetID() == (void*)1)
 	{
 		if (col == model_name)
 			variant = _("Predefined items");
@@ -36,7 +36,7 @@ void ibDialogPredefinedEditor::ibDataViewPredefinedTreeStore::GetValue(wxVariant
 
 bool ibDialogPredefinedEditor::ibDataViewPredefinedTreeStore::IsContainer(const ibDataViewItem& item) const
 {
-	if (item.m_pItem == (void*)1)
+	if (item.GetID() == (void*)1)
 		return true;
 
 	ibPredefinedValueObject* predefined =

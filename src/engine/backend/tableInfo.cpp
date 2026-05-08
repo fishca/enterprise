@@ -5,21 +5,24 @@
 
 #include "tableInfo.h"
 
+#include "backend/session/session.h"
+
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel, ibValue);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelColumnCollection, ibValue);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo, ibValue);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelReturnLine, ibValue);
 
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTableBase, ibValueModel);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelRamTableBase, ibValueModelTableBase);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTreeBase, ibValueModel);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelRamTreeBase, ibValueModelTreeBase);
 
 ibValueModel::ibValueModel()
 	: ibValue(ibValueTypes::TYPE_VALUE),
-	m_modelProvider(nullptr),
-	m_refreshModel(false)
+	m_modelProvider(nullptr)
 {
 	m_modelProvider = new ibDataViewModelProviderImpl(this);
-	//m_modelProvider->IncRef(); // always one 
+	//m_modelProvider->IncRef(); // always one
 }
 
 ibValueModel::~ibValueModel()
@@ -33,6 +36,25 @@ ibDataViewItem ibValueModel::GetSelection() const
 		return ibDataViewItem(nullptr);
 	return m_modelProvider->GetSelection();
 }
+
+ibDataViewItem ibValueModel::GetDrillParent() const
+{
+	if (m_modelProvider == nullptr)
+		return ibDataViewItem();
+	return m_modelProvider->GetDrillParent();
+}
+
+std::future<void> ibValueModel::SubmitFetchAsync(std::function<void()> work)
+{
+	auto* sess = ibSession::Current();
+	if (sess != nullptr)
+		return sess->Submit(std::move(work));
+	if (work) work();
+	std::promise<void> p;
+	p.set_value();
+	return p.get_future();
+}
+
 
 void ibValueModel::RowValueStartEdit(const ibDataViewItem& item, unsigned int col)
 {
@@ -85,7 +107,7 @@ void ibValueModel::ExecuteAction(const ibActionID& lNumAction, ibBackendValueFor
 		break;
 	case eFilter:
 		if (ShowFilter()) {
-			CallRefreshModel(ibDataViewItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
+			RefetchAll();
 		}
 		break;
 	case eFilterByColumn:
@@ -97,12 +119,12 @@ void ibValueModel::ExecuteAction(const ibActionID& lNumAction, ibBackendValueFor
 			ibValue retValue; GetValueByMetaID(item, m_modelProvider->GetCurrentModelColumn(), retValue);
 			m_filterRow.SetFilterByID(m_modelProvider->GetCurrentModelColumn(), retValue);
 		}
-		CallRefreshModel(ibDataViewItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
+		RefetchAll();
 		break;
 	}
 	case eFilterClear:
 		m_filterRow.ResetFilter();
-		CallRefreshModel(ibDataViewItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
+		RefetchAll();
 		break;
 	case eViewMode:
 		ShowViewMode();

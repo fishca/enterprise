@@ -1,6 +1,21 @@
 #include "tableView.h"
 
 // ---------------------------------------------------------
+// s_constIgnoreParent — flat-scan sentinel
+// ---------------------------------------------------------
+//
+// Marker is a wxRefCounter that we never destroy (process-lifetime
+// static).  `s_constIgnoreParent` IncRefs it to 2; copies bump and
+// drop further but the static itself keeps refcount > 0 forever, so
+// no double-free at process exit even when subordinate copies dtor
+// out of order.  Same translation unit guarantees the marker is
+// constructed before the const item that captures its address.
+namespace {
+	ibDataViewObject g_ignoreParentMarker;
+}
+const ibDataViewItem s_constIgnoreParent(&g_ignoreParentMarker);
+
+// ---------------------------------------------------------
 // ibDataViewItemAttr
 // ---------------------------------------------------------
 
@@ -29,7 +44,7 @@ bool ibDataViewModelNotifier::ItemsAdded(const ibDataViewItem& parent, const ibD
 	size_t count = items.GetCount();
 	size_t i;
 	for (i = 0; i < count; i++)
-		if (!ItemAdded(parent, items[i])) return false;
+		if (!ItemInserted(parent, items[i])) return false;
 
 	return true;
 }
@@ -71,7 +86,7 @@ ibDataViewModel::~ibDataViewModel()
 	}
 }
 
-bool ibDataViewModel::ItemAdded(const ibDataViewItem& parent, const ibDataViewItem& item)
+bool ibDataViewModel::ItemInserted(const ibDataViewItem& parent, const ibDataViewItem& item)
 {
 	bool ret = true;
 
@@ -79,7 +94,22 @@ bool ibDataViewModel::ItemAdded(const ibDataViewItem& parent, const ibDataViewIt
 	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
 	{
 		ibDataViewModelNotifier* notifier = *iter;
-		if (!notifier->ItemAdded(parent, item))
+		if (!notifier->ItemInserted(parent, item))
+			ret = false;
+	}
+
+	return ret;
+}
+
+bool ibDataViewModel::ItemAppended(const ibDataViewItem& parent, const ibDataViewItem& item)
+{
+	bool ret = true;
+
+	ibDataViewModelNotifiers::iterator iter;
+	for (iter = m_notifiers.begin(); iter != m_notifiers.end(); ++iter)
+	{
+		ibDataViewModelNotifier* notifier = *iter;
+		if (!notifier->ItemAppended(parent, item))
 			ret = false;
 	}
 
@@ -240,6 +270,13 @@ ibDataViewItem ibDataViewModel::GetSelection(int view_id) const
 	return ibDataViewItem(nullptr);
 }
 
+ibDataViewItem ibDataViewModel::GetDrillParent(int view_id) const
+{
+	if (m_notifiers.size() > 0)
+		return m_notifiers[view_id]->GetDrillParent();
+	return ibDataViewItem();
+}
+
 int ibDataViewModel::GetSelections(ibDataViewItemArray& sel, int view_id) const
 {
 	if (m_notifiers.size() > 0)
@@ -287,6 +324,14 @@ void ibDataViewModel::Resort()
 		ibDataViewModelNotifier* notifier = *iter;
 		notifier->Resort();
 	}
+}
+
+void ibDataViewModel::OnSortColumnChanged(unsigned int /*col*/, bool /*ascending*/)
+{
+	// Default: legacy behaviour — let notifiers re-sort the existing
+	// rendered window. Paged models override this to update their own
+	// sort state and trigger a fresh DB fetch.
+	Resort();
 }
 
 void ibDataViewModel::AddNotifier(ibDataViewModelNotifier* notifier)

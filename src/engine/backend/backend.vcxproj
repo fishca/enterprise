@@ -173,6 +173,8 @@
     <ClInclude Include="metaCollection\partial\informationRegister.h" />
     <ClInclude Include="metaCollection\partial\informationRegisterEnum.h" />
     <ClInclude Include="metaCollection\partial\informationRegisterManager.h" />
+    <ClInclude Include="metaCollection\partial\list\listSqlBuilder.h" />
+    <ClInclude Include="metaCollection\partial\list\registerSqlBuilder.h" />
     <ClInclude Include="metaCollection\partial\list\objectList.h" />
     <ClInclude Include="metaCollection\partial\commonObject.h" />
     <ClInclude Include="metaCollection\partial\reference\reference.h" />
@@ -485,6 +487,8 @@
     <ClCompile Include="metaCollection\partial\informationRegisterMetadata_res.cpp" />
     <ClCompile Include="metaCollection\partial\informationRegisterObject.cpp" />
     <ClCompile Include="metaCollection\partial\informationRegisterQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\list\listSqlBuilder.cpp" />
+    <ClCompile Include="metaCollection\partial\list\registerSqlBuilder.cpp" />
     <ClCompile Include="metaCollection\partial\list\objectList.cpp" />
     <ClCompile Include="metaCollection\partial\list\objectListAction.cpp" />
     <ClCompile Include="metaCollection\partial\list\objectListModel.cpp" />

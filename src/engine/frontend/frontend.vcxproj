@@ -289,6 +289,8 @@
     <ClCompile Include="win\ctrls\tableView.cpp" />
     <ClCompile Include="win\ctrls\dataview\datavcmn.cpp" />
     <ClCompile Include="win\ctrls\dataview\datavgen.cpp" />
+    <ClCompile Include="win\ctrls\dataview\datavgen.paged.cpp" />
+    <ClCompile Include="win\ctrls\dataview\datavgen.scrollbar.cpp" />
     <ClCompile Include="win\ctrls\dynamicBorder.cpp" />
     <ClCompile Include="win\ctrls\grid\gridext.cpp" />
     <ClCompile Include="win\ctrls\grid\gridextctrl.cpp" />

@@ -809,6 +809,12 @@
     <ClCompile Include="win\ctrls\dataview\datavgen.cpp">
       <Filter>win\ctrls\dataview</Filter>
     </ClCompile>
+    <ClCompile Include="win\ctrls\dataview\datavgen.paged.cpp">
+      <Filter>win\ctrls\dataview</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\dataview\datavgen.scrollbar.cpp">
+      <Filter>win\ctrls\dataview</Filter>
+    </ClCompile>
     <ClCompile Include="win\ctrls\dataview\datavcmn.cpp">
       <Filter>win\ctrls\dataview</Filter>
     </ClCompile>

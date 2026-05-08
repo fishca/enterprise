@@ -9,7 +9,7 @@
 const ibClassID g_valueTableCLSID = string_to_clsid("VL_TABL");
 
 //Table support
-class BACKEND_API ibValueModelTable : public ibValueModelTableBase {
+class BACKEND_API ibValueModelTable : public ibValueModelRamTableBase {
 	wxDECLARE_DYNAMIC_CLASS(ibValueModelTable);
 private:
 	// methods:
@@ -182,7 +182,6 @@ public:
 public:
 
 	virtual ibDataViewItem FindRowValue(const ibValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const;
 
 	virtual bool AutoCreateColumn() const { return true; }
 

@@ -5,14 +5,12 @@
 
 #include "tabularSection.h"
 
-#include "backend/appData.h"
 #include "backend/session/session.h"
 
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
 #include "backend/metaCollection/partial/commonObject.h"
-
 bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool createData)
 {
 	if (m_objectValue->IsNewObject() && !srcGuid.isValid()) {
@@ -21,26 +19,34 @@ bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool cr
 	}
 
 	const auto db = ses_query;
-	ibValueModelTableBase::Clear();
+	ibValueModelRamTableBase::Clear();
 	const ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
+	
 	ibStatementGuard sel(db, db->PrepareStatement("SELECT * FROM " + tableName + " WHERE uuid = ?;"));
 	if (!sel) return false;
 	sel->SetParamString(1, srcGuid.str());
 	ibDatabaseResultSet* resultSet = sel->RunQueryWithResults();
 	if (resultSet == nullptr)
 		return false;
+	long loadedRow = 0;
 	while (resultSet->Next()) {
 		ibValueTableRow* rowData = new ibValueTableRow();
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (m_metaTable->IsNumberLine(object->GetMetaID()))
 				continue;
-			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet, createData);
+			ibValue& slot = rowData->AppendTableValue(object->GetMetaID());
+			const wxString fldName = object->GetFieldNameDB();
+			const int dbType = resultSet->GetResultInt(fldName + wxT("_TYPE"));
+			const wxString dbStr = resultSet->GetResultString(fldName + wxT("_S"));
+			ibValueMetaObjectAttributeBase::GetValueAttribute(object, slot, resultSet, createData);
+			
 		}
-		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
-
+		ibValueModelRamTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+		++loadedRow;
 	}
+	
 
 	db->CloseResultSet(resultSet);
 
@@ -56,6 +62,8 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 {
 	if (m_readOnly)
 		return true;
+
+	
 
 	bool hasError = false;
 	//check fill attributes
@@ -104,6 +112,8 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	}
 	queryText += ");";
 
+	
+
 	ibStatementGuard statement(db, db->PrepareStatement(queryText));
 	if (!statement) {
 		delete reference_impl;
@@ -116,18 +126,24 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 			break;
 		int position = 2;
 		statement->SetParamString(1, m_objectValue->GetGuid());
+		ibValueTableRow* rowNode = GetViewData<ibValueTableRow>(GetItem(row));
+		
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+			const int posBefore = position;
 			if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
 				ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(row));
 				wxASSERT(node);
+				const ibValue& v = node->GetTableValue(object->GetMetaID());
+				
 				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
-					node->GetTableValue(object->GetMetaID()),
+					v,
 					statement.get(),
 					position
 				);
 			}
 			else {
+				
 				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
 					numberLine++,
@@ -135,12 +151,40 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 					position
 				);
 			}
+			
 		}
 
 		hasError = statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR;
+		
+	}
+
+	// Post-INSERT verification: read back what FB actually has for this uuid.
+	{
+		ibStatementGuard sel(db, db->PrepareStatement(
+			"SELECT * FROM " + tableName + " WHERE uuid = ?;"));
+		if (sel) {
+			sel->SetParamString(1, m_objectValue->GetGuid());
+			ibDatabaseResultSet* rs = sel->RunQueryWithResults();
+			if (rs != nullptr) {
+				long verifyRow = 0;
+				while (rs->Next()) {
+					for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+						if (m_metaTable->IsNumberLine(object->GetMetaID()))
+							continue;
+						const wxString fldName = object->GetFieldNameDB();
+						const int dbType = rs->GetResultInt(fldName + wxT("_TYPE"));
+						const wxString dbStr = rs->GetResultString(fldName + wxT("_S"));
+						
+					}
+					++verifyRow;
+				}
+				db->CloseResultSet(rs);
+			}
+		}
 	}
 
 	delete reference_impl;
+	
 	return !hasError;
 }
 

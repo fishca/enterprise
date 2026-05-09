@@ -113,7 +113,7 @@ bool ibValueRecordManagerObject::SaveData(bool replace)
 		);
 	}
 	if (m_recordSet->WriteRecordSet(replace, false)) {
-		m_objGuid.SetKeyPair(m_metaObject, m_recordSet->m_keyValues);
+		m_objGuid.SetKeyValues(m_recordSet->m_keyValues);
 		return true;
 	}
 	return false;

@@ -2461,7 +2461,7 @@ m_objGuid(uniqueKey)
 ibValueRecordManagerObject::ibValueRecordManagerObject(const ibValueRecordManagerObject& source) : ibValue(ibValueTypes::TYPE_VALUE),
 m_metaObject(source.m_metaObject), m_methodHelper(new ibValueMethodHelper()),
 m_recordSet(m_metaObject->CreateRecordSetObjectValue(source.m_recordSet, false)), m_recordLine(nullptr),
-m_objGuid(source.m_metaObject)
+m_objGuid(source.m_metaObject->CreateUniqueKeyPair())
 {
 }
 
@@ -2653,7 +2653,7 @@ ibValueRecordSetObject* ibValueRecordSetObject::CopyRegisterValue()
 
 ibValueRecordSetObject::ibValueRecordSetObject(const ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey) : ibValueModelRamTableBase(),
 m_recordColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterColumnCollection>(this)), m_recordSetKeyValue(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterKeyValue>(this)),
-m_metaObject(metaObject), m_keyValues(uniqueKey.IsOk() ? uniqueKey : metaObject), m_objModified(false), m_selected(false),
+m_metaObject(metaObject), m_keyValues(uniqueKey.IsOk() ? uniqueKey : metaObject->CreateUniqueKeyPair()), m_objModified(false), m_selected(false),
 m_methodHelper(new ibValueMethodHelper())
 {
 }

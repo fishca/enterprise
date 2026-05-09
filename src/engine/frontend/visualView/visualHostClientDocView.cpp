@@ -290,6 +290,17 @@ ibFormVisualDocument* ibFormVisualDocument::FindDocByUniqueKey(const ibUniqueKey
 
 bool ibFormVisualDocument::UpdateFormUniqueKey(const ibUniqueKeyPair& formKey)
 {
+	// Lookup by stable instance GUID, NOT by composite key:
+	//  * `m_objGuid` is per-instance (set once by the ctor), shared
+	//    between the manager's m_objGuid and the form's m_formKey
+	//    because they reference the same ibUniqueKeyPair instance.
+	//  * `m_keyValues` changes when the user edits a dimension —
+	//    using operator== (which dispatches to enUniqueKey →
+	//    m_keyValues compare) would miss the form right after save
+	//    because form still holds the OLD keyValues at this point.
+	// The whole purpose of this method is to write the NEW keyValues
+	// onto the form, so we must locate it by the stable identity
+	// (m_objGuid), then replace m_formKey with the fresh pair.
 	std::set<ibFormVisualDocument*>::iterator foundedForm =
 		std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
 			[formKey](const ibFormVisualDocument* visualDoc) {

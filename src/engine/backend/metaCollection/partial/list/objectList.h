@@ -464,7 +464,7 @@ public:
 		const ibMetaValueArray& GetNodeKeys() const { return m_nodeKeys; }
 
 		ibUniqueKeyPair GetUniquePairKey(const ibValueMetaObjectRegisterData* metaObject) const {
-			return ibUniqueKeyPair(metaObject, m_nodeKeys);
+			return metaObject->CreateUniqueKeyPair(m_nodeKeys);
 		}
 
 		// Logical equality by identity keys — mirrors Catalog/Enum's

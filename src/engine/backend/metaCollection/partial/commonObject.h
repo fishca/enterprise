@@ -2,6 +2,7 @@
 #define __COMMON_OBJECT_H__
 
 #include "reference/reference.h"
+#include "backend/uniqueKey.h"
 
 //special object 
 #include "backend/metaCollection/metaModuleObject.h"
@@ -1048,6 +1049,29 @@ public:
 		return array;
 	}
 
+	// Build a composite-key Pair seeded with this register's dimension
+	// list.  ibUniqueKeyPair itself is metadata-agnostic (just carries
+	// the metaID → ibValue map); these helpers are the canonical "make
+	// me a Pair from this register" entry points.
+	ibUniqueKeyPair CreateUniqueKeyPair() const {
+		ibMetaValueArray values;
+		for (const auto* attr : GetGenericDimentionArrayObject())
+			values.insert_or_assign(attr->GetMetaID(), attr->CreateValue());
+		return ibUniqueKeyPair(values);
+	}
+
+	// Same, but the caller already has dimension values to copy in
+	// (filtered to dimensions actually owned by this register).
+	ibUniqueKeyPair CreateUniqueKeyPair(const ibMetaValueArray& keyValues) const {
+		ibMetaValueArray values;
+		for (const auto* attr : GetGenericDimentionArrayObject()) {
+			const auto it = keyValues.find(attr->GetMetaID());
+			if (it != keyValues.end())
+				values.insert_or_assign(attr->GetMetaID(), it->second);
+		}
+		return ibUniqueKeyPair(values);
+	}
+
 #pragma endregion
 #pragma region __filter_h__
 
@@ -1668,7 +1692,7 @@ public:
 	virtual bool IsEmpty() const override;
 
 	//Get unique key
-	ibUniqueKeyPair GetUniqueKey() { return ibUniqueKeyPair(m_metaObject, m_keyValues); }
+	ibUniqueKeyPair GetUniqueKey() { return m_metaObject->CreateUniqueKeyPair(m_keyValues); }
 
 	//get metaData from object
 	virtual const ibValueMetaObjectRegisterData* GetMetaObject() const { return m_metaObject; };

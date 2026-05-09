@@ -548,10 +548,20 @@ void ibValueModelTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibV
 					m_dataViewSelected = true;
 				}
 
-				if (line == nullptr && m_tableCurrentLine == nullptr) {
+				if (line == nullptr) {
+					// Always consume changedValue when no createdValue /
+					// ownerControl line was resolved.  Post-edit save on a
+					// row already selected (m_tableCurrentLine != nullptr)
+					// needs this path: NotifyChange from manager-save
+					// fires `ownerForm->m_changedValue` with the row's
+					// fresh identity, and we replace the stale current
+					// line with a stub matching the new identity.
+					// ConsumeChangedValue clears the field, so the next
+					// OnUpdated cycle won't re-position uninitialized.
 					const ibValue changedValue = m_formOwner->ConsumeChangedValue();
-					if (!changedValue.IsEmpty())
+					if (!changedValue.IsEmpty()) {
 						line = ResolveLineByValue(m_tableModel, changedValue);
+					}
 				}
 
 				if (line != nullptr) {

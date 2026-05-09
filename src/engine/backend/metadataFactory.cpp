@@ -153,7 +153,7 @@ ibMetaID ibMetaData::GetVTByID(const ibClassID& clsid) const
 ibClassID ibMetaData::GetIDByVT(const ibMetaID& valueType, ibCtorObjectMetaType refType) const
 {
 	for (auto& typeCtor : m_factoryCtors) {
-		const const ibValueMetaObject* metaValue = typeCtor->GetMetaObject();
+		const ibValueMetaObject* metaValue = typeCtor->GetMetaObject();
 		wxASSERT(metaValue);
 		if (refType == typeCtor->GetMetaTypeCtor() && valueType == metaValue->GetMetaID())
 			return typeCtor->GetClassType();

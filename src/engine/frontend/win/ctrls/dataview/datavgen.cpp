@@ -4653,7 +4653,7 @@ void ibDataViewCtrl::Refresh(bool eraseb, const wxRect* rect)
 
 bool ibDataViewCtrl::AssociateModel(ibDataViewModel* model)
 {
-	
+
 	if (ibDataViewModel* const oldModel = GetModel())
 	{
 		// Remove the notifier from the model before calling the base class

@@ -334,6 +334,34 @@ void ibDataViewCtrl::PagedBootstrap()
 		? ibDataViewItem()
 		: treeCrumbs[treeCrumbs.GetCount() - 1];
 
+	// Hierarchical-mode auto-drill on selection-restore: target row
+	// (e.g. selector form's pre-set value) sits in a subfolder.  Without
+	// this, top-level fetch returns siblings of root + target's row
+	// is never in the batch → focus-scan misses across all fetched.
+	// Same primitive (BuildAncestorBreadcrumb) as Tree mode above; the
+	// difference is the Hierarchical view consumes the chain via
+	// m_topParentChain (drill state) instead of in-tree expand walker.
+	const bool isHierarchical =
+		(m_viewMode == ibDataViewViewMode::ibDataViewHierarchical);
+	if (isHierarchical && restoreFromSelection
+	    && m_topParentChain.IsEmpty()
+	    && savedFocus.IsOk()) {
+		ibDataViewItemArray hierCrumbs;
+		model->BuildAncestorBreadcrumb(savedFocus, hierCrumbs);
+		for (size_t i = 0; i < hierCrumbs.GetCount(); ++i)
+			m_topParentChain.Add(hierCrumbs[i]);
+		m_countFrozenHierarchicalRows =
+			static_cast<int>(m_topParentChain.GetCount());
+		// Re-init frozen-rows window to match the new chain depth.
+		// SetTopParent / SetViewMode call this after mutating chain;
+		// without it, chain crumbs render in the scrolling-rows area
+		// (visible as extra "empty folder" rows above the data) until
+		// the next manual Refresh re-runs the partition.
+		InitializeFrozenWindows();
+		InvalidateBestSize();
+		CalcWindowSizes();
+	}
+
 	// Cursor selection:
 	//   - Tree mode + restoreFromSelection + chain available →
 	//     cursor=chain[last] (topmost ancestor folder).  Composite

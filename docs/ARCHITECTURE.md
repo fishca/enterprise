@@ -192,6 +192,7 @@ Opcodes are defined as plain integer constants in `src/engine/backend/compiler/c
 | Control flow | `OPER_GOTO`, `OPER_IF`, `OPER_FOR`, `OPER_FOREACH`, `OPER_IN`, `OPER_NEXT`, `OPER_NEXT_ITER` |
 | Variables | `OPER_LET`, `OPER_CONST`, `OPER_CONSTN`, `OPER_SET`, `OPER_SETREF`, `OPER_SETCONST` |
 | Functions | `OPER_FUNC`, `OPER_ENDFUNC`, `OPER_CALL`, `OPER_CALL_M`, `OPER_RET` |
+| Lambdas (Phase A) | `OPER_LFUNC`, `OPER_ENDLFUNC` (anonymous body fences — distinct from `OPER_FUNC`/`OPER_ENDFUNC` so a containing named-function's module-init skip doesn't terminate on a nested lambda's terminator), `OPER_FUNC_PTR` (materialises an `ibValueFunction` wrapper into a slot), `OPER_CALL_VAL` (dynamic call — target read from a slot at runtime, must wrap an `ibValueFunction`). See `docs/lambda-phase-a.md`. |
 | Arrays | `OPER_GET_ARRAY`, `OPER_SET_ARRAY`, `OPER_CHECK_ARRAY`, `OPER_SET_ARRAY_SIZE`, `OPER_ENTER_A`, `OPER_GET_A`, `OPER_SET_A` |
 | Objects | `OPER_NEW`, `OPER_SET_TYPE` |
 | Exceptions | `OPER_TRY`, `OPER_ENDTRY`, `OPER_RAISE`, `OPER_RAISE_T` |

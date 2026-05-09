@@ -289,10 +289,11 @@ All 11 business object types with: attributes (full type qualifiers), tabular se
 
 ## Compiler Quick Reference
 
-- **Opcodes:** 66, defined in `src/engine/backend/compiler/codeDef.h` as `OPER_*` enumerators
+- **Opcodes:** 70, defined in `src/engine/backend/compiler/codeDef.h` as `OPER_*` enumerators (Phase A added `OPER_LFUNC` / `OPER_ENDLFUNC` for lambda body fences and `OPER_FUNC_PTR` / `OPER_CALL_VAL` for function-as-value)
 - **Keywords:** 44, defined as `KEY_*` enumerators in the same file
 - **Built-in functions:** 88, registered in `ibSystemManager` (`src/engine/backend/system/systemManager.cpp`)
-- **Syntax modes:** VBS-style (`If…Then…EndIf`) and CES-style abbreviations; both compile to the same bytecode
+- **Syntax modes:** VBS-style (`If…Then…EndIf`) and CES-style C-flavoured (`if (...) { ... }`); both compile to the same bytecode. Mode is process-global on `ibCompileCode::SetCodeStyle()` / `GetCodeStyle()`.
+- **Anonymous functions (Phase A):** `Function(args) ... EndFunction` and `Procedure(args) ... EndProcedure` work as expressions — assignable to slots, callable through variables. Backed by `ibValueFunction` (inline class in `procUnit.cpp` near `ibValueIterator`, CLSID `VL_FUNC`). Lambda's compile-context kind is `RETURN_LAMBDA` (5th value in the existing `RETURN_NONE/PROCEDURE/FUNCTION/LAMBDA/BLOCK` enum). No closure capture yet — outer-function locals fail with "undefined identifier" at compile. See `docs/lambda-phase-a.md`.
 - **Debugger port:** 1650 (`defaultDebuggerPort` in `src/engine/backend/debugger/debugDefs.h`)
 
 ### Bytecode resolver (kind-driven, AOT-ready)

@@ -113,6 +113,35 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 		// Function / procedure declaration: pull header text + collect params.
 		if (lex.m_lexType == KEYWORD && (lex.m_numData == KEY_FUNCTION || lex.m_numData == KEY_PROCEDURE)) {
 			bool isFunction = lex.m_numData == KEY_FUNCTION;
+
+			// Anonymous lambda detection: keyword followed directly by `(`
+			// (no identifier between them) means this is Function/Procedure
+			// used as expression — typically `var x = Function(args) ...`.
+			// Anonymous bodies aren't navigable by name, so skip the body
+			// without registering a content entry. Depth counter handles
+			// nested anonymous bodies (lambda inside lambda) — every
+			// KEY_FUNCTION / KEY_PROCEDURE bumps depth, every
+			// KEY_ENDFUNCTION / KEY_ENDPROCEDURE drops it.
+			if (IsNextDelimeter('(')) {
+				int depth = 1;
+				while (m_cursor < (m_listLexem.size() - 1)) {
+					const ibLexem& nl = m_listLexem[m_cursor + 1];
+					if (nl.m_lexType == KEYWORD) {
+						if (nl.m_numData == KEY_FUNCTION || nl.m_numData == KEY_PROCEDURE) {
+							depth++;
+						}
+						else if (nl.m_numData == KEY_ENDFUNCTION || nl.m_numData == KEY_ENDPROCEDURE) {
+							if (--depth == 0) {
+								(void)ExpectLexem(); // consume the matching end
+								break;
+							}
+						}
+					}
+					(void)ExpectLexem();
+				}
+				continue;
+			}
+
 			// pull out the text of the function declaration
 			lex = PreviewGetLexem();
 			wxString shortDescription;
@@ -195,15 +224,34 @@ bool ibParserModule::ParseModule(const wxString& sModule)
 				else { data.m_eType = ibContentType::eProcedure; }
 			}
 
+			// Body walk — depth-aware so nested lambdas
+			// (`Function(...) ... EndFunction` as an inline expression
+			// inside this body) don't terminate the outer's end-search
+			// prematurely on their own EndFunction. Pre-Phase A this
+			// could only happen if a programmer wrote `Function` in a
+			// declaration mid-body (which CompileBlock rejected anyway);
+			// with anonymous lambdas as expressions it's now legitimate.
+			int depth = 1;
 			while (m_cursor < (m_listLexem.size() - 1)) {
 
 				if (IsNextKeyWord(KEY_ENDFUNCTION)) {
-					data.m_lineEnd = m_listLexem[m_cursor + 1].m_numLine;
-					ExpectKeyword(KEY_ENDFUNCTION); break;
+					if (--depth == 0) {
+						data.m_lineEnd = m_listLexem[m_cursor + 1].m_numLine;
+						ExpectKeyword(KEY_ENDFUNCTION); break;
+					}
+					ExpectKeyword(KEY_ENDFUNCTION);
+					continue;
 				}
 				else if (IsNextKeyWord(KEY_ENDPROCEDURE)) {
-					data.m_lineEnd = m_listLexem[m_cursor + 1].m_numLine;
-					ExpectKeyword(KEY_ENDPROCEDURE); break;
+					if (--depth == 0) {
+						data.m_lineEnd = m_listLexem[m_cursor + 1].m_numLine;
+						ExpectKeyword(KEY_ENDPROCEDURE); break;
+					}
+					ExpectKeyword(KEY_ENDPROCEDURE);
+					continue;
+				}
+				else if (IsNextKeyWord(KEY_FUNCTION) || IsNextKeyWord(KEY_PROCEDURE)) {
+					depth++;
 				}
 
 				lex = ExpectLexem();

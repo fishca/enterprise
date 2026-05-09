@@ -159,22 +159,81 @@ ibValueModuleManagerConfiguration* ibSession::CreateRoot(ibMetaDataConfiguration
 
 	m_root = ibValuePtr<ibValueModuleManagerConfiguration>(
 		new ibValueModuleManagerConfiguration(metaData, commonMeta));
+
 	return m_root;
 }
 
 bool ibSession::CompileRoot()
 {
-	return m_root && m_root->CreateMainModule();
+	if (!m_root) return false;
+	if (!m_root->CreateMainModule()) return false;
+
+	// Runtime bring-up — formerly an explicit mm->AttachRuntime(s)
+	// call from appData / webSession after CompileRoot. Folded in
+	// here so callers see one entry point: compile + attach is the
+	// session's own responsibility. AttachRuntime self-gates by
+	// session kind (Enterprise / WebClient / Service execute; others
+	// short-circuit), so no external wantsRuntime check is needed.
+	m_root->AttachRuntime(this);
+
+	// Lambda executor — m_root's procUnit is live after AttachRuntime,
+	// so SetParent target is valid. ibValueFunction's Execute resolves
+	// this through ibSession::GetLambdaRuntime().
+	//
+	// Custom frame array layout: regular ProcUnit setup puts own
+	// m_cCurContext at m_pppArrayList[0] AND [1] (duplicate, since
+	// runtime slot indices start at 1 with bDelta=false). The shim
+	// has no own locals — lambda body's frame is per-call cRunContext
+	// — so we substitute root's frame for the [0,1] pair. That way
+	// lambda compile's depth=1 stamping (lambda discipline walks bc
+	// chain to topmost = root, single increment) lands directly on
+	// root mm's bound slots: Catalogs / Documents / Manager / system
+	// functions all resolve at depth=1 without an offset hack.
+	if (m_lambdaRuntime == nullptr) {
+		if (auto rootPu = m_root->GetProcUnit()) {
+			m_lambdaRuntime = std::make_unique<ibProcUnit>();
+			m_lambdaRuntime->SetParent(rootPu.get());
+
+			ibProcUnit* shim = m_lambdaRuntime.get();
+			const unsigned int n = shim->GetParentCount();
+			shim->m_ppArrayCode = new ibProcUnit*[n + 1];
+			shim->m_ppArrayCode[0] = shim;
+			shim->m_pppArrayList = new ibValue**[n + 2];
+			shim->m_pppArrayList[0] = rootPu->m_cCurContext.m_pRefLocVars;
+			shim->m_pppArrayList[1] = rootPu->m_cCurContext.m_pRefLocVars;
+			for (unsigned int i = 0; i < n; i++) {
+				ibProcUnit* p = shim->GetParent(i);
+				shim->m_ppArrayCode[i + 1] = p;
+				shim->m_pppArrayList[i + 2] = p->m_cCurContext.m_pRefLocVars;
+			}
+		}
+	}
+
+	return true;
 }
 
 bool ibSession::DestroyRoot()
 {
-	return m_root && m_root->DestroyMainModule();
+	if (!m_root) return false;
+	// Lambda runtime's parent is m_root's procUnit; drop it first so
+	// the SetParent target stays valid right up to the moment we
+	// release it.
+	m_lambdaRuntime.reset();
+	// Symmetric to CompileRoot: detach runtime before destroying the
+	// main module so common-module ProcUnits drop in order. Formerly
+	// an explicit mm->DetachRuntime(s) call from webSession.
+	m_root->DetachRuntime(this);
+	return m_root->DestroyMainModule();
 }
 
 void ibSession::ClearRoot()
 {
+	// Lambda runtime depends on m_root's procUnit (SetParent target);
+	// drop it before m_root itself goes away.
+	m_lambdaRuntime.reset();
+
 	if (m_root) {
+		m_root->DetachRuntime(this);
 		m_root->DestroyMainModule();
 		m_root = nullptr;
 	}

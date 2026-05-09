@@ -6,8 +6,20 @@
 
 struct ibProcUnitState;   // procUnitState.h — forward decl; full type via ibSession::GetPUState()
 
+// Forward decl — ibValueFunction lives inline in procUnit.cpp; needs
+// access to ibProcUnit::m_pByteCode for the swap-and-restore pattern
+// in its Execute() implementation.
+class ibValueFunction;
+class ibSession;
+
 class BACKEND_API ibProcUnit {
 public:
+
+	friend class ibValueFunction;
+	// ibSession::CompileRoot wires the per-session lambda runtime
+	// shim's frame array directly — needs access to m_pppArrayList /
+	// m_ppArrayCode / m_cCurContext.
+	friend class ibSession;
 
 	//Constructors/destructors
 	ibProcUnit() : m_numAutoDeleteParent(0),

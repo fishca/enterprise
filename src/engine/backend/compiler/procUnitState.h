@@ -11,6 +11,8 @@
 // to provide this struct on ibSession with no behaviour change — the
 // interpreter still reads/writes its TLS, the swap helpers come later.
 
+#include <map>
+#include <utility>
 #include <vector>
 
 #include <wx/defs.h>   // wxNOT_FOUND
@@ -36,6 +38,11 @@ struct ibErrorPlace {
 	}
 };
 
+// Lambda metadata moved into ibByteCode::m_listFunc with kind = Lambda
+// — same path named functions use. ibValueFunction stores
+// (parentBc, funcIndex) and resolves shape/names/defaults via
+// parentBc->m_listFunc[funcIndex]. No separate descriptor struct.
+
 struct ibProcUnitState {
 	// Currently-executing module. Read by every opcode dispatch site
 	// to resolve "which module's bytecode are we in".
@@ -53,17 +60,14 @@ struct ibProcUnitState {
 	// MAX_REC_COUNT in procUnit.cpp.
 	short                       m_recCount = 0;
 
-	// O(1) member-by-member swap. Lighter than std::swap on the whole
-	// struct because vector::swap is a 3-pointer exchange (no allocations,
-	// no element moves) — the worker-pool boundary primitive uses this
-	// to exchange TLS ↔ slot.
-	void Swap(ibProcUnitState& other) noexcept {
-		using std::swap;
-		swap(m_currentRunModule, other.m_currentRunModule);
-		m_runContext.swap(other.m_runContext);
-		swap(m_errorPlace, other.m_errorPlace);
-		swap(m_recCount,   other.m_recCount);
-	}
+	// Resolves the lambda executor for this state. Primary path:
+	// session's m_lambdaRuntime (allocated alongside m_root, parent =
+	// root's procUnit). Fallback (no session): currently-dispatching
+	// ProcUnit — used by codeRunner sandbox runs where ibSession
+	// isn't bound. OPER_CALL_VAL caller swaps m_pByteCode for the
+	// dispatch and restores after; Execute snapshots m_pByteCode at
+	// entry so nested lambda calls don't clobber an outer view.
+	ibProcUnit* GetLambdaRuntime();
 
 	// --- accessor methods (mirror the old static API on ibProcUnit) ---
 	// ibProcUnit's static forwarders (procUnit.cpp) delegate here on the

@@ -54,6 +54,13 @@ enum class ibFnKind : uint8_t {
 	Local,
 	Export,
 	ContextMethod,
+	// Anonymous lambda — pushed to m_listFunc with synthetic name
+	// "<lambda@<lo>>" so debugger / eval / FindFunctionByEntry pick
+	// up the same metadata path as named functions. Filtered out of
+	// name-keyed lookups via IsLambda() — `<` prefix keeps callers
+	// safe even if the filter is missed (no valid identifier starts
+	// with it). Cross-bc invisible by definition (anonymous).
+	Lambda,
 };
 
 // Forward decl — full definition lives after ibByteCode so the
@@ -234,8 +241,9 @@ struct ibByteCode {
 		bool IsLocal()         const { return m_kind == ibFnKind::Local; }
 		bool IsExport()        const { return m_kind == ibFnKind::Export; }
 		bool IsContextMethod() const { return m_kind == ibFnKind::ContextMethod; }
-		// Visible cross-bc — Export and ContextMethod (privates filtered).
-		bool IsCrossBcVisible() const { return m_kind != ibFnKind::Local; }
+		bool IsLambda()        const { return m_kind == ibFnKind::Lambda; }
+		// Visible cross-bc — Export and ContextMethod (privates + lambdas filtered).
+		bool IsCrossBcVisible() const { return m_kind == ibFnKind::Export || m_kind == ibFnKind::ContextMethod; }
 
 		// ContextMethod only: index of the parent Context entry in
 		// ibByteCode::m_listVar (cross-table reference — parent is a

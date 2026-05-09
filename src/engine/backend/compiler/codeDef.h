@@ -66,6 +66,43 @@ enum { //instruction types
 	OPER_ENDTRY,
 	OPER_SET_TYPE,
 	OPER_NEW,
+	// Anonymous functions / function-as-value:
+	//
+	// OPER_LFUNC is the active materialiser for a lambda definition.
+	// Operand layout:
+	//   m_param1                 — dest slot for the resulting ibValueFunction
+	//   m_param2.m_numIndex      — end IP (OPER_ENDLFUNC position; patched
+	//                              at compile time after the body is emitted)
+	//   m_param3.m_numIndex      — lazy cache of derived ibByteCode*
+	//                              (reinterpret-cast through intptr_t).
+	//                              0 = not yet built. AOT skips this on
+	//                              write so loaded blobs rebuild on first use.
+	// On bDelta=false (regular execution): if cache is empty, scan the
+	// range [LFUNC+1 .. ENDLFUNC-1] in the parent bytecode, copy body +
+	// referenced const-pool entries into a fresh self-contained
+	// ibByteCode (m_parent = current bc — bc parent walk reaches root
+	// Context bindings: Catalogs / Documents / CommonModules / system
+	// functions), stash it in m_param3 and in parent's m_lambdaBcs. Then
+	// materialise an ibValueFunction wrapper into the dest slot and jump
+	// IP to m_param2.m_numIndex (past OPER_ENDLFUNC). On bDelta=true
+	// (module-init skip): walk forward to matching OPER_ENDLFUNC.
+	//
+	// OPER_ENDLFUNC marks the end of the lambda body in the parent bc.
+	// Never reached in normal flow — OPER_LFUNC always jumps past it
+	// after materialisation. NOP at runtime; kept as a structural fence
+	// for the compile-time scan and for the AOT-resilient first-fire
+	// extraction.
+	//
+	// OPER_CALL_VAL is the dynamic counterpart of OPER_CALL: the call
+	// target is an ibValue (must wrap an ibValueFunction) read from a
+	// slot in m_param4 instead of a static index in m_param2. Frame push
+	// + param bind + jump-to-entry are the same machinery as OPER_CALL,
+	// but dispatch goes through fn->m_runtime (the root mm captured at
+	// materialise time) on fn->m_byteCode (the derived self-contained
+	// lambda bc).
+	OPER_LFUNC,
+	OPER_ENDLFUNC,
+	OPER_CALL_VAL,
 	OPER_END,
 };
 

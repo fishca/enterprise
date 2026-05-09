@@ -17,6 +17,7 @@
 #include "frontend/mainFrame/settings/editorsettings.h"
 #include "frontend/mainFrame/settings/fontcolorsettings.h"
 
+#include "backend/compiler/compileCode.h"   // CODE_VBS / CODE_CES + GetCodeStyle for fold-mode dispatch
 #include "backend/debugger/debugDefs.h"
 
 #include "frontend/win/editor/codeEditor/components/autoComplete.h"
@@ -71,6 +72,7 @@ private:
 			FoldIf,
 			FoldDo,
 			FoldTry,
+			FoldBrace,         // CES `{ ... }` block — opens at `{`, closes at `}`
 			FoldKindCount
 		};
 
@@ -225,9 +227,33 @@ private:
 
 			ClearFoldLevel();
 
+			// Dispatch depends on script syntax mode. VBS folds at
+			// keyword boundaries (Function/EndFunction, If/EndIf, …).
+			// CES folds at `{ }` brace boundaries — keyword tokens
+			// (Function / If / While / …) precede the block but the
+			// fold itself is on the brace pair, so keyword folds are
+			// suppressed in CES to avoid double-counting. Mode is
+			// read from ibCompileCode (process-global).
+			const bool isCES = (ibCompileCode::GetCodeStyle() == CODE_CES);
+
 			const auto& lexems = m_codeEditor->m_precompileModule->GetLexems();
 			for (const ibLexem& lex : lexems) {
 
+				if (isCES) {
+					// CES — brace-fenced. `{` opens, `}` closes.
+					// Lambda bodies, named function bodies, control-
+					// structure blocks all use the same brace pair,
+					// so a single FoldBrace kind covers everything.
+					if (lex.m_lexType == DELIMITER) {
+						if (lex.m_numData == '{')
+							OpenFold(lex.m_numLine, FoldBrace);
+						else if (lex.m_numData == '}')
+							CloseFold(lex.m_numLine, FoldBrace);
+					}
+					continue;
+				}
+
+				// VBS — keyword-fenced.
 				if (lex.m_lexType != KEYWORD)
 					continue;
 

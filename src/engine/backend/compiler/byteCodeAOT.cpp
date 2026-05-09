@@ -39,7 +39,26 @@
 namespace {
 
 constexpr uint32_t kAOTMagic         = 0x31434250u; // 'PBC1' little-endian
-constexpr uint16_t kAOTFormatVersion = 1;
+// v3 (2026-05-09 evening): lambda body model rewritten — no per-lambda
+// ibByteFunction in m_listFunc, so ibByteFunction::m_lFinish (added in
+// v2) was retired. Reading a v2 blob would mis-align subsequent fields
+// because the m_lFinish s32 is gone; strict version check rejects v2
+// as cache miss → safe recompile + repopulate.
+//
+// v4 (2026-05-10): OPER_CALL_VAL now carries the caller's actual arg
+// count in m_param2.m_numIndex (set by EmitCallVal). v3 cache rows had
+// that field at 0, so dispatch would treat every dynamic call as
+// "0 args supplied" and fall into the missing-required-argument throw
+// even when the source explicitly passed args. Bumping the version
+// forces recompile to re-run the stamping path. Payload layout
+// unchanged — same field, just newly meaningful.
+//
+// v5 (2026-05-10 PM): lambda metadata model unified — anonymous bodies
+// pushed into m_listFunc with kind = Lambda + synthetic name. OPER_LFUNC
+// .m_param3.m_numIndex now stores the funcIndex; m_param3.m_numArray /
+// m_param4.m_numIndex (was paramCount / bCodeRet) are unused. v4 readers
+// would still load but dispatch from stale operands → bump rejects.
+constexpr uint16_t kAOTFormatVersion = 5;
 constexpr uint16_t kAOTFlagPortable  = 0x0001;       // unused — host-endian today
 
 // Sentinel for an over-large collection — guards Deserialize against

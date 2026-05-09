@@ -771,23 +771,35 @@ bool ibPrecompileCode::CompileModule()
 
 bool ibPrecompileCode::CompileFunction()
 {
-	// we are now at the token level, where the FUNCTION or PROCEDURE keyword is specified
+	// we are now at the token level, where the FUNCTION or PROCEDURE keyword is specified.
+	// Track opening keyword + lambda-ness for downstream decisions (synthetic-name
+	// generation, m_returnKind tag, closing-keyword expectation).
 	ibLexem lex;
+	bool isFunctionKeyword = false;
+	bool isLambda = false;
+
 	if (IsNextKeyWord(KEY_FUNCTION))
 	{
 		ExpectKeyword(KEY_FUNCTION);
+		isFunctionKeyword = true;
+		isLambda = IsNextDelimeter('(');
 
 		m_activeContext = new ibPrecompileContext(GetContext());
 		m_activeContext->SetModule(this);
-		m_activeContext->m_returnKind = RETURN_FUNCTION;
+		// Enum value encodes both axes (anonymous-vs-named and
+		// function-vs-procedure) — symmetric with the backend
+		// compiler's ibCompileContext::m_numReturn axis.
+		m_activeContext->m_returnKind = isLambda ? RETURN_LAMBDA_FUNCTION : RETURN_FUNCTION;
 	}
 	else if (IsNextKeyWord(KEY_PROCEDURE))
 	{
 		ExpectKeyword(KEY_PROCEDURE);
+		isFunctionKeyword = false;
+		isLambda = IsNextDelimeter('(');
 
 		m_activeContext = new ibPrecompileContext(GetContext());
 		m_activeContext->SetModule(this);
-		m_activeContext->m_returnKind = RETURN_PROCEDURE;
+		m_activeContext->m_returnKind = isLambda ? RETURN_LAMBDA_PROCEDURE : RETURN_PROCEDURE;
 	}
 	else
 	{
@@ -818,8 +830,17 @@ bool ibPrecompileCode::CompileFunction()
 		}
 	}
 
-	// get the function name
-	wxString csFuncName0 = ExpectIdentifier(true);
+	// get the function name. Anonymous lambda — no identifier follows
+	// the keyword (`(` comes directly), so synthesise a label tied to
+	// the source line. The synthetic name is stable per-line within a
+	// compilation pass and unique enough for the m_functions map key
+	// (anonymous bodies are never looked up by name from script anyway).
+	wxString csFuncName0;
+	if (isLambda) {
+		csFuncName0 = wxString::Format(wxT("<lambda@%d>"), numLine);
+	} else {
+		csFuncName0 = ExpectIdentifier(true);
+	}
 	wxString funcName = stringUtils::MakeUpper(csFuncName0);
 	int nError = m_cursor;
 
@@ -902,7 +923,11 @@ bool ibPrecompileCode::CompileFunction()
 	CompileBlock();
 	GetContext()->m_currentFunctionName = wxEmptyString;
 
-	if (m_activeContext->m_returnKind == RETURN_FUNCTION) ExpectKeyword(KEY_ENDFUNCTION);
+	// Closing keyword matches the OPENING keyword (Function → EndFunction,
+	// Procedure → EndProcedure). isFunctionKeyword captured at
+	// signature-parse drives the decision uniformly for named and
+	// anonymous bodies.
+	if (isFunctionKeyword) ExpectKeyword(KEY_ENDFUNCTION);
 	else ExpectKeyword(KEY_ENDPROCEDURE);
 
 	if (m_caretPos >= nStartContext && m_caretPos <= m_listLexem[m_cursor].m_numString) m_cursorContext = m_activeContext;
@@ -998,7 +1023,7 @@ bool ibPrecompileCode::CompileBlock()
 				if (m_activeContext->m_returnKind == RETURN_NONE)
 					return false;
 
-				if (m_activeContext->m_returnKind == RETURN_FUNCTION)
+				if (IsReturnFunction(m_activeContext->m_returnKind))
 				{
 					if (IsNextDelimeter(';')) return false;
 
@@ -1031,8 +1056,35 @@ bool ibPrecompileCode::CompileBlock()
 
 			case KEY_FUNCTION:
 			case KEY_PROCEDURE:
-				GetLexem();
+			{
+				// Anonymous Function/Procedure expression inside a body
+				// (lambda — `var f = Function(x) ... EndFunction`). For
+				// Phase A IntelliSense we skip the body via depth-tracking
+				// rather than recursively parsing it: anonymous bodies
+				// aren't navigable by name, and walking them with the
+				// existing m_activeContext would clobber the enclosing
+				// scope. A future iteration can invoke CompileFunction
+				// here with proper save/restore around m_activeContext to
+				// expose the lambda's locals for autocomplete.
+				GetLexem();  // consume the opening Function/Procedure keyword
+				int depth = 1;
+				while (m_cursor + 1 < m_listLexem.size()) {
+					const ibLexem& nl = m_listLexem[m_cursor + 1];
+					if (nl.m_lexType == KEYWORD) {
+						if (nl.m_numData == KEY_FUNCTION || nl.m_numData == KEY_PROCEDURE) {
+							depth++;
+						}
+						else if (nl.m_numData == KEY_ENDFUNCTION || nl.m_numData == KEY_ENDPROCEDURE) {
+							if (--depth == 0) {
+								GetLexem();  // consume matching end
+								break;
+							}
+						}
+					}
+					GetLexem();
+				}
 				break;
+			}
 
 			default:
 				// means the operator bracket ending this block has been encountered (for example, ENDIF, ENDDO, ENDFUNCTION, etc.)

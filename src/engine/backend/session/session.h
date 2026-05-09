@@ -219,6 +219,14 @@ public:
 	const wxString&    GetId()   const { return m_id; }
 	ibSessionKind      GetKind() const { return m_kind; }
 
+	// Session-wide lambda executor — pure accessor; the runtime itself
+	// is allocated inside CompileRoot() right after AttachRuntime,
+	// once m_root's procUnit is live. ibValueFunction::Execute swaps
+	// the runtime's m_pByteCode to info->parentBc for the dispatch
+	// and restores after; ibProcUnit::Execute snapshots m_pByteCode
+	// at entry so re-entrant lambdas don't clobber the outer view.
+	ibProcUnit* GetLambdaRuntime() { return m_lambdaRuntime.get(); }
+
 	// Root runtime of this session. Populated by CreateRoot() driven from
 	// the registry's NotifyAuthenticated phase right after Open() succeeds;
 	// stays nullptr for sessions that never run scripts (Designer,
@@ -723,6 +731,11 @@ private:
 	// (common modules, object instances, forms) parent up through
 	// m_parent chain. See project_runtime_facade_plan.md.
 	ibValuePtr<ibValueModuleManagerConfiguration> m_root;
+
+	// Lambda executor — see GetLambdaRuntime() for semantics. Allocated
+	// in CreateRoot; SetParent(m_root's procUnit) is wired lazily on
+	// first GetLambdaRuntime() call once m_root's procUnit exists.
+	std::unique_ptr<ibProcUnit> m_lambdaRuntime;
 
 	// Identity fields — populated progressively as the session moves
 	// through Add → Attach. Registry thread is the sole writer.

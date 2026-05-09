@@ -85,6 +85,7 @@ public:
 
 	static void InitializeCompileModule();
 	static void SetCodeStyle(short codeStyle);
+	static short GetCodeStyle();
 
 	ibCompileContext* GetContext() const { return m_rootContext; }
 
@@ -169,6 +170,50 @@ protected:
 
 	bool CompileModule();
 	bool CompileFunction(ibCompileContext* context);
+
+	// Helpers split out of CompileFunction's body — pure mechanical
+	// extraction for reuse from anonymous-lambda expression compile.
+	// Behaviour preserved exactly: CompileFunction is now a thin
+	// orchestrator that calls these in sequence with the dedup +
+	// m_listFunction registration in between.
+	//
+	// Anonymous form is detected from the token stream itself: keyword
+	// followed by `(` → anonymous (synthetic `__lambda_<guid>` name);
+	// keyword followed by an identifier → named declaration. No
+	// external gate needed — context (next token) is the single
+	// source of truth.
+	bool ParseFunctionSignature(ibCompileContext* context,
+		std::shared_ptr<ibCompileContext::ibFunction>& outFunction,
+		std::unique_ptr<ibCompileContext>& outFunctionContext,
+		int& outErrorPlace);
+	// Discriminator (named vs lambda) is read from
+	// functionContext->m_numReturn — RETURN_LAMBDA_FUNCTION /
+	// RETURN_LAMBDA_PROCEDURE for anonymous bodies, RETURN_FUNCTION /
+	// RETURN_PROCEDURE for named — stamped by ParseFunctionSignature
+	// based on the token stream (anonymous form: keyword followed by
+	// `(`). Picks body fences accordingly: OPER_FUNC/OPER_ENDFUNC for
+	// named, OPER_LFUNC/OPER_ENDLFUNC for lambda. The two pairs are
+	// intentionally distinct opcodes so the module-init skip-through
+	// over a named function body — which matches only OPER_ENDFUNC —
+	// doesn't terminate prematurely on a nested lambda's terminator.
+	// Lambdas additionally skip the m_listFunc push (their identity
+	// lives entirely in OPER_LFUNC's operands).
+	bool EmitFunctionBody(ibCompileContext* context,
+		const std::shared_ptr<ibCompileContext::ibFunction>& createdFunction,
+		ibCompileContext* functionContext);
+
+	// Compiles an anonymous Function/Procedure expression. Parses the
+	// signature into a context whose parent is nullptr (lambda body
+	// sees only own params/locals + root-level Context bindings reached
+	// via bc parent walk; closures rejected).
+	// Emits OPER_LFUNC + body + OPER_ENDLFUNC inline, then back-patches
+	// OPER_LFUNC's operands with the dest slot (allocated in caller's
+	// context) and the OPER_ENDLFUNC IP. Returns the dest slot — runtime
+	// OPER_LFUNC materialises an ibValueFunction into it on first
+	// fire (and then jumps past the body); subsequent re-execution of
+	// the same definition site re-fires the same materialisation.
+	ibParamUnit CompileLambdaExpression(ibCompileContext* context);
+
 	bool CompileDeclaration(ibCompileContext* context);
 	bool CompileBlock(ibCompileContext* context);
 	bool CompileNewObject(ibCompileContext* context);

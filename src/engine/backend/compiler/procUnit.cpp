@@ -9,11 +9,9 @@
 
 #include "debugger/debugServer.h"
 #include "system/systemManager.h"
-#include "session/session.h"   // ibSession::GetPUState()
+#include "session/session.h"   // ibSession::GetPUState() / GetLambdaRuntime()
 
 #include "appData.h"
-
-#include <wx/ffile.h>
 
 // Operand resolution for the bytecode interpreter. Three slot kinds:
 //   slot <= 0           — local frame (mutable).
@@ -93,6 +91,19 @@ inline const ibValue& ResolveRead(int slot, int idx,
 // point is ibSession::GetPUState()->X. Out-of-line here because they
 // need the full ibRunContext / ibByteCode types (procUnitState.h only
 // forward-declares them).
+
+ibProcUnit* ibProcUnitState::GetLambdaRuntime()
+{
+	// Primary path: session's lambda runtime (allocated in CreateRoot,
+	// parent = root mm's procUnit). All lambdas in the session route
+	// through it.
+	if (auto* sess = ibSession::Current())
+		if (ibProcUnit* rt = sess->GetLambdaRuntime())
+			return rt;
+	// Fallback: no session bound (codeRunner sandbox path). Dispatch
+	// on whoever is currently executing.
+	return m_currentRunModule;
+}
 
 const ibByteCode* ibProcUnitState::GetCurrentByteCode() const
 {
@@ -599,6 +610,89 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueIterator, ibValue);
 const ibClassID g_valueIterator = string_to_clsid("SO_ITER");
 #pragma endregion
 
+#pragma region function_value_support
+// First-class callable value. Backs OES anonymous functions (lambdas).
+// Lives heap-allocated; regular ibValue holders carry it via TYPE_REFFER
+// + m_pRef. Mirrors the inline ibValueIterator pattern above —
+// runtime-internal value type, never touched from the compiler side
+// (compile-side only emits OPER_LFUNC / OPER_CALL_VAL).
+//
+// Storage: pointer into parentBc->m_listFunc + the funcIndex at
+// which the lambda's ibByteFunction sits. Single source of truth —
+// frame shape (paramCount / varCount / bCodeRet), m_listParam (with
+// defaults), m_listParamRealName (param names), m_listLocals (locals
+// by name for eval), and the entry IP (m_lCodeLine) all live on
+// ibByteFunction itself, the same path named functions use.
+//
+// Lifetime: parentBc points into the session's bytecode storage; the
+// ibByteFunction inside m_listFunc is owned by parentBc. The value
+// must not outlive the session that produced it.
+class ibValueFunction : public ibValue {
+	wxDECLARE_DYNAMIC_CLASS(ibValueFunction);
+public:
+	ibValueFunction() : ibValue(ibValueTypes::TYPE_VALUE) {}
+
+	ibValueFunction(const ibByteCode* parentBc, long funcIndex)
+		: ibValue(ibValueTypes::TYPE_VALUE),
+		  m_parentBc(parentBc),
+		  m_funcIndex(funcIndex)
+	{}
+
+	const ibByteCode*                  GetParentBc()   const { return m_parentBc; }
+	long                               GetFuncIndex()  const { return m_funcIndex; }
+	const ibByteCode::ibByteFunction*  GetFunction()   const {
+		if (m_parentBc == nullptr) return nullptr;
+		if (m_funcIndex < 0 || m_funcIndex >= (long)m_parentBc->m_listFunc.size())
+			return nullptr;
+		return &m_parentBc->m_listFunc[m_funcIndex];
+	}
+
+	// Dispatch the lambda body. Resolves the session's lambda runtime
+	// (root mm's procUnit when session-bound; current dispatching
+	// ProcUnit on codeRunner sandbox), swaps m_pByteCode = parentBc
+	// for the call duration, runs Execute, restores bc on exit (incl.
+	// exceptions). Re-entrant lambda-in-lambda calls are safe because
+	// ProcUnit::Execute snapshots m_pByteCode at entry.
+	void Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDelta)
+	{
+		if (GetFunction() == nullptr)
+			ibBackendCoreException::Error(_("Cannot call: function value is not initialised"));
+
+		ibProcUnitState* const state = ibSession::GetPUState();
+		if (state == nullptr)
+			ibBackendCoreException::Error(_("Cannot call function value without interpreter state"));
+
+		ibProcUnit* runtime = state->GetLambdaRuntime();
+		if (runtime == nullptr)
+			ibBackendCoreException::Error(_("No runtime available for function-value call"));
+
+		// Swap m_pByteCode to the lambda's parent for the dispatch
+		// duration. Execute snapshots m_pByteCode at entry, so nested
+		// lambda-in-lambda calls don't clobber an outer view. Restore
+		// on both normal return and unwind.
+		const ibByteCode* prevBc = runtime->m_pByteCode;
+		runtime->m_pByteCode = m_parentBc;
+		try {
+			runtime->Execute(pContext, pvarRetValue, bDelta);
+		}
+		catch (...) {
+			runtime->m_pByteCode = prevBc;
+			throw;
+		}
+		runtime->m_pByteCode = prevBc;
+	}
+
+private:
+
+	const ibByteCode* m_parentBc  = nullptr;
+	long              m_funcIndex = -1;
+};
+
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueFunction, ibValue);
+
+const ibClassID g_valueFunction = string_to_clsid("VL_FUNC");
+#pragma endregion
+
 //////////////////////////////////////////////////////////////////////
 //						Construction/Destruction                    //
 //////////////////////////////////////////////////////////////////////
@@ -628,10 +722,21 @@ void ibProcUnit::Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDe
 	ibValue* pLocVars = pContext->m_pLocVars;
 	ibValue** pRefLocVars = pContext->m_pRefLocVars;
 
+	// Snapshot bc at entry. The session's lambda runtime swaps
+	// m_pByteCode per OPER_CALL_VAL dispatch; a nested lambda call
+	// would clobber the outer frame's view if we read this->m_pByteCode
+	// inside the loop. Local snapshot keeps each Execute invocation
+	// pinned to the bc it started with.
+	const ibByteCode* m_pByteCode = this->m_pByteCode;
 	const ibByteUnit* pCodeList = m_pByteCode->m_listCode.data();
 
 	long lCodeLine = pContext->m_lStart;
-	long lFinish = m_pByteCode->m_listCode.size();
+	// Loop walks to the bytecode tail; explicit termination is on
+	// OPER_RET / OPER_ENDFUNC / OPER_ENDLFUNC / OPER_END (all set
+	// lCodeLine = lFinish; break). Lambda invocation lands m_lStart
+	// at info->lo + 1 and runs until OPER_ENDLFUNC — same termination
+	// path as named functions.
+	long lFinish = (long)m_pByteCode->m_listCode.size();
 	long lPrevLine = wxNOT_FOUND;
 
 	std::vector<ibTryLabel> tryList;
@@ -752,8 +857,13 @@ start_label:
 				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
 					lCodeLine++;
 					if (index1 >= 0) {
-						if (variable1.m_bReadOnly && variable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
-							CopyValue(cRunContext.m_pLocVars[i], variable1);
+						// Read-resolve via cvariable1 first — read-only check
+						// safely passes a DEF_VAR_CONST slot. variable1 (write-
+						// resolve) would throw on const slots before reaching
+						// the m_bReadOnly check, breaking const literal args
+						// like `New Foo(3, 5)`. Mirrors OPER_CALL_M's pattern.
+						if (cvariable1.m_bReadOnly && cvariable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
+							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
 						}
 						else {
 							cRunContext.m_pRefLocVars[i] = &variable1;
@@ -862,6 +972,10 @@ start_label:
 				ibRunContext cRunContext(index3);
 				cRunContext.m_lStart = index2;
 				cRunContext.m_lParamCount = array3;
+				// Function bodies exit via OPER_RET / OPER_ENDFUNC /
+				// OPER_ENDLFUNC (all fall through to lCodeLine = lFinish;
+				// break), so callers don't need to range-bound the
+				// invocation — the terminator opcodes handle exit.
 				const ibByteCode* pLocalByteCode = m_ppArrayCode[lModuleNumber]->m_pByteCode;
 				// m_currentFunction is no longer set here — the OPER_FUNC
 				// opcode at function entry sets it as part of tape
@@ -874,8 +988,13 @@ start_label:
 						CopyValue(cRunContext.m_pLocVars[i], pLocalByteCode->m_listConst[index1]);
 					}
 					else {
-						if (variable1.m_bReadOnly || index2 == 1) {//pass parameter by value
-							CopyValue(cRunContext.m_pLocVars[i], variable1);
+						// Read-resolve via cvariable1 — read-only check safely
+						// passes a DEF_VAR_CONST slot. variable1 (write-resolve)
+						// would throw on const slots before reaching the
+						// m_bReadOnly check, breaking const literal args like
+						// `someFunc(3, 5)`. Mirrors OPER_CALL_M and OPER_CALL_VAL.
+						if (cvariable1.m_bReadOnly || index2 == 1) {//pass parameter by value
+							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
 						}
 						else {
 							cRunContext.m_pRefLocVars[i] = &variable1;
@@ -917,10 +1036,17 @@ start_label:
 					CopyValue(*pvarRetValue, cvariable1);
 				}
 			case OPER_ENDFUNC:
+			case OPER_ENDLFUNC:
 			case OPER_END:
 				lCodeLine = lFinish;
 				break; //exit
 			case OPER_FUNC: if (bDelta) {
+				// Module-init walk skips through the named-function body
+				// to its OPER_ENDFUNC. Anonymous lambdas use a distinct
+				// opcode pair (OPER_LFUNC / OPER_ENDLFUNC) so an inline
+				// lambda nested inside a named function body does NOT
+				// terminate this skip prematurely — the matcher here
+				// is opcode-specific.
 				while (lCodeLine < lFinish) {
 					if (curCode.m_numOper != OPER_ENDFUNC) {
 						lCodeLine++;
@@ -939,6 +1065,137 @@ start_label:
 				pContext->m_currentFunction = m_pByteCode->FindFunctionByEntry(lCodeLine);
 			}
 			break;
+			case OPER_LFUNC: {
+				// Operand layout (stamped at compile time):
+				//   m_param1                = dest slot for the resulting
+				//                             ibValueFunction value
+				//   m_param2.m_numIndex     = end IP (matching OPER_ENDLFUNC)
+				//   m_param3.m_numIndex     = varCount   (frame size)
+				//   m_param3.m_numArray     = paramCount
+				//   m_param4.m_numIndex     = bCodeRet (1 = function, 0 = procedure)
+				// Start IP is the current opcode itself (lCodeLine).
+				//
+				// Materialisation runs in BOTH bDelta paths — unlike
+				// OPER_FUNC (named function declaration; module-init
+				// only registers, doesn't execute), OPER_LFUNC is a
+				// value-producing expression. Module-level
+				// `var f = Function() ... EndFunction` runs the LFUNC
+				// at module-init (bDelta=true) so the dest slot
+				// holds a real ibValueFunction by the time the
+				// follow-on OPER_LET copies it into `f`.
+				const long endIp     = (long)index2;
+				const long funcIdx   = (long)index3;
+				// Range sanity — guards against a corrupted OPER_LFUNC
+				// (compile-time bug or AOT cache mismatch).
+				if (m_pByteCode == nullptr ||
+				    lCodeLine < 0 || endIp <= lCodeLine ||
+				    endIp >= (long)m_pByteCode->m_listCode.size() ||
+				    funcIdx < 0 || funcIdx >= (long)m_pByteCode->m_listFunc.size())
+				{
+					ibBackendCoreException::Error(_("Cannot create function value (invalid lambda operands)"));
+				}
+				CopyValue(variable1, ibValue(new ibValueFunction(m_pByteCode, funcIdx)));
+				// Skip past the body — body opcodes are inert at
+				// module-init walk and reached only via OPER_CALL_VAL
+				// during normal execution.
+				lCodeLine = endIp;
+				break;
+			}
+			case OPER_CALL_VAL: {
+				
+				// m_param4 = source ibValue holding the callable (must
+				//            wrap an ibValueFunction via TYPE_REFFER + m_pRef)
+				// m_param1 = return value dest
+				// Frame size + paramCount + body range — on the captured
+				// ibLambdaInfo. Lambda body lives inline in info->parentBc;
+				// dispatch routes through the session's lambda runtime
+				// (root mm's procUnit, parent chain anchors Catalogs /
+				// Documents / Manager / system functions in its frame
+				// array). The runtime's m_pByteCode is swapped to
+				// info->parentBc for the call duration and restored
+				// after — Execute snapshots it at entry, so re-entrant
+				// lambda calls don't clobber an outer view.
+				// Caller-supplied arg count — stamped at compile by EmitCallVal
+				// in m_param2.m_numIndex (= listParam.size() at the call site).
+				// Read before the param-bind loop shifts curCode off CALL_VAL.
+				const long callerArgCount = (long)index2;
+				ibValueFunction* fn = cvariable4.ConvertToType<ibValueFunction>();
+				const ibByteCode::ibByteFunction* bfn = fn ? fn->GetFunction() : nullptr;
+				if (bfn == nullptr) {
+					ibBackendCoreException::Error(_("Cannot call: value is not a callable function"));
+				}
+
+				const ibByteCode* pLocalByteCode = fn->GetParentBc();
+				const long lambdaParamCount = bfn->m_lCodeParamCount;
+				const long lambdaVarCount   = bfn->m_lVarCount;
+				const long lambdaEntryIp    = bfn->m_lCodeLine;
+
+				// Arg-count validation — too many is a hard error;
+				// too few is OK iff missing tail has defaults (checked
+				// in phase 2 below).
+				if (callerArgCount > lambdaParamCount) {
+					ibBackendCoreException::Error(
+						_("Too many arguments to function value: passed %ld, expected at most %ld"),
+						callerArgCount, lambdaParamCount);
+				}
+
+				ibRunContext cRunContext(lambdaVarCount);
+				cRunContext.m_lStart          = lambdaEntryIp + 1;  // first body opcode
+				cRunContext.m_lParamCount     = lambdaParamCount;
+				// Stamp the lambda's ibByteFunction so debugger / call-stack
+				// renders "<lambda@N>" with proper params + locals; eval
+				// host detection uses bfn->m_listLocals to resolve names.
+				cRunContext.m_currentFunction = bfn;
+				ibValue* pRetValue = &variable1;
+
+				// Phase 1 — consume caller-supplied OPER_SET / OPER_SETCONST.
+				// Strict opcode validation: a non-SET opcode here means
+				// the compiler stamped a wrong arg count on CALL_VAL,
+				// or the bytecode tape was corrupted — both are invariant
+				// violations, not user errors.
+				for (long i = 0; i < callerArgCount; i++) {
+					lCodeLine++;
+					if (curCode.m_numOper == OPER_SETCONST) {
+						CopyValue(cRunContext.m_pLocVars[i], pLocalByteCode->m_listConst[index1]);
+					}
+					else if (curCode.m_numOper == OPER_SET) {
+						if (cvariable1.m_bReadOnly || index2 == 1) {
+							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
+						}
+						else {
+							cRunContext.m_pRefLocVars[i] = &variable1;
+						}
+					}
+					else {
+						ibBackendCoreException::Error(
+							_("Lambda call: malformed argument tape (expected OPER_SET/SETCONST at param %ld)"),
+							i);
+					}
+				}
+
+				// Phase 2 — fill missing tail params from compile-time
+				// defaults on the lambda's m_listParam (same structure
+				// named-function calls read from at PushCallFunction).
+				for (long i = callerArgCount; i < lambdaParamCount; i++) {
+					if (i >= (long)bfn->m_listParam.size()) {
+						ibBackendCoreException::Error(
+							_("Lambda call: m_listParam shorter than paramCount at param %ld"), i);
+					}
+					const ibParamUnit& puDef = bfn->m_listParam[i].m_defaultValue;
+					if (puDef.m_numArray == DEF_VAR_SKIP) {
+						const wxString& nm = (i < (long)bfn->m_listParamRealName.size())
+							? bfn->m_listParamRealName[i]
+							: wxString::Format(wxT("p%ld"), i);
+						ibBackendCoreException::Error(
+							_("Missing required argument '%s' to function value"),
+							nm);
+					}
+					CopyValue(cRunContext.m_pLocVars[i], pLocalByteCode->m_listConst[puDef.m_numIndex]);
+				}
+
+				fn->Execute(&cRunContext, pRetValue, false);
+				break;
+			}
 			// Tape declarators (self-describing bytecode, AOT-ready).
 			// NOP at runtime — they exist to let an AOT loader / debugger
 			// reconstruct ibByteFunction's m_listParam / m_listLocals and
@@ -1628,3 +1885,4 @@ bool ibProcUnit::CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetVa
 //**********************************************************************
 
 SYSTEM_TYPE_REGISTER(ibValueIterator, "Iterator", g_valueIterator);
+SYSTEM_TYPE_REGISTER(ibValueFunction, "Function", g_valueFunction);

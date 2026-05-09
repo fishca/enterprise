@@ -170,15 +170,11 @@ void ibApplicationData::WireSessionEvents()
 			if (!m_run_metadata) {
 				m_run_metadata = activeMetaData->RunDatabase();
 			}
+			// CompileRoot folds compile + AttachRuntime + lambda
+			// runtime wire-up. AttachRuntime self-gates by session
+			// kind (Enterprise / WebClient / Service execute; others
+			// no-op), so no explicit runMode check needed here.
 			s->CompileRoot();
-			const bool wantsRuntime =
-				(m_runMode == eENTERPRISE_MODE) ||
-				(m_runMode == eSERVICE_MODE) ||
-				(m_runMode == eWEB_ENTERPRISE_MODE);
-			if (wantsRuntime) {
-				if (auto* mm = s->GetManagerModule())
-					mm->AttachRuntime(s);
-			}
 		}
 	});
 

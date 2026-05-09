@@ -79,32 +79,41 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 	std::shared_ptr <ibVariable> currentVariable = nullptr;
 	if (!FindVariable(strVarName, currentVariable)) {
 
+		int numParent = 0, numContext = 0;
+		if (m_numReturn == RETURN_BLOCK)
+			numContext++;
+
+		// Bail out on pathological depth — same threshold for every
+		// hop (compile-context walk and bc walk).
+		auto guardRecursion = [&]() {
+			if (numParent > 2 * MAX_OBJECTS_LEVEL)
+				ibBackendCoreException::Error(_("Recursive call of modules!"));
+		};
+
+		// Visibility check + emit. Depth is the runtime frame index
+		// (m_pppArrayList layer); blockReturn switches it to
+		// DEF_VAR_TEMP for through-block reach. Returns true (with
+		// `out` filled) only if visibility budget allows.
+		auto tryEmit = [&](const std::shared_ptr<ibVariable>& cur, int depth, bool blockReturn, ibParamUnit& out) {
+			if (!(m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || cur->m_bExport))
+				return false;
+			out.m_numArray = blockReturn ? (long long)DEF_VAR_TEMP : (long long)depth;
+			out.m_numIndex = cur->m_numVariable;
+			out.m_strType = cur->m_strType;
+			return true;
+		};
+
 		//search in parent contexts (modules)
 		if (bFindInParent) {
 
-			int numParent = 0, numContext = 0;
-			if (m_numReturn == RETURN_BLOCK)
-				numContext++;
-
-			// Bail out on pathological depth — same threshold for every
-			// hop (compile-context walk and bc walk).
-			auto guardRecursion = [&]() {
-				if (numParent > 2 * MAX_OBJECTS_LEVEL)
-					ibBackendCoreException::Error(_("Recursive call of modules!"));
-			};
-
-			// Visibility check + emit. Depth is the runtime frame index
-			// (m_pppArrayList layer); blockReturn switches it to
-			// DEF_VAR_TEMP for through-block reach. Returns true (with
-			// `out` filled) only if visibility budget allows.
-			auto tryEmit = [&](const std::shared_ptr<ibVariable>& cur, int depth, bool blockReturn, ibParamUnit& out) {
-				if (!(m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || cur->m_bExport))
-					return false;
-				out.m_numArray = blockReturn ? (long long)DEF_VAR_TEMP : (long long)depth;
-				out.m_numIndex = cur->m_numVariable;
-				out.m_strType = cur->m_strType;
-				return true;
-			};
+			// Lambda boundary detection. `this` is the lambda's own
+			// functionContext for top-level lambda body code (var
+			// references at the top of the body). Block scopes inside
+			// the lambda hit the boundary by walking up to the
+			// containing functionContext (RETURN_LAMBDA_*). Either way
+			// we end up restricted to the top-parent bc when searching
+			// the bc chain below.
+			bool isLambdaFunction = IsReturnLambda(m_numReturn);
 
 			// 1. Compile-context chain (block → function → root of own
 			//    ibCompileCode, then up through parent compile-contexts
@@ -113,7 +122,8 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 				numParent++;
 				if (pCurContext->m_numReturn == RETURN_BLOCK)
 					numContext++;
-				guardRecursion();
+
+					guardRecursion();
 
 				if (pCurContext->FindVariable(strVarName, currentVariable)) {
 					ibParamUnit variable;
@@ -122,6 +132,11 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 						return variable;
 				}
 				numCanUseLocalInParent--;
+
+				if(IsReturnLambda(pCurContext->m_numReturn)){
+					isLambdaFunction = true;
+					break;
+				}
 			}
 
 			// 2. Eval host function frame (only when this compile is an
@@ -154,8 +169,25 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 			//    inherits its host's chain) — foreign bcs never appear,
 			//    so scoped bindings (ThisForm / ThisObject) are
 			//    reachable iff they live on a real ancestor.
-			for (const ibByteCode* pCurByteCode = m_compileModule->m_cByteCode.m_parent;
+			// Walk start: lambda case includes OWN bc (codeRunner-style
+			// flat compile where own bc IS the root with no parent
+			// chain to walk). Non-lambda case starts at m_parent — own
+			// scope was already covered by FindVariable on `this` at
+			// the top of GetVariable.
+			const ibByteCode* startBc = isLambdaFunction
+				? &m_compileModule->m_cByteCode
+				: m_compileModule->m_cByteCode.m_parent;
+			for (const ibByteCode* pCurByteCode = startBc;
 			     pCurByteCode != nullptr; pCurByteCode = pCurByteCode->m_parent) {
+
+				// Lambda discipline: only consult the topmost bc
+				// (m_parent == nullptr — root configuration). Skip
+				// every intermediate ancestor — lambda body sees only
+				// root-level Context bindings, not its definition site's
+				// module-level vars.
+				if (isLambdaFunction && pCurByteCode->m_parent != nullptr)
+					continue;
+
 				numParent++;
 				guardRecursion();
 
@@ -164,7 +196,35 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 					if (tryEmit(currentVariable, numParent - numContext, /*blockReturn=*/false, variable))
 						return variable;
 				}
+
 				numCanUseLocalInParent--;
+			}
+			// Lambda final fallback: m_rootContext for Context bindings
+			// (Catalogs / Documents / Manager / system functions / host-
+			// injected like codeRunner's ValueOutput). They land in
+			// m_rootContext->m_listVariable via AddContextVariable —
+			// CompileContext layer, not bc layer — so the bc walk above
+			// can't see them. Filter to m_bContext == true so user
+			// module-level vars in rootCtx (codeRunner sandbox case
+			// where module-level declarations land directly in root)
+			// stay invisible. Depth 1 matches the runtime shim's
+			// m_pppArrayList[1] — root frame.
+			if (isLambdaFunction && bFindInParent) {
+				ibCompileContext* rootCtx = m_compileModule
+					? m_compileModule->GetContext() : nullptr;
+				if (rootCtx != nullptr && rootCtx != this) {
+					std::shared_ptr<ibVariable> rootVar = nullptr;
+					if (rootCtx->FindVariable(strVarName, rootVar)
+						&& rootVar && rootVar->m_bContext)
+					{
+						ibParamUnit variable;
+						variable.m_numArray = 1;
+						variable.m_numIndex = rootVar->m_numVariable;
+						variable.m_strType  = rootVar->m_strType;
+						currentVariable = rootVar;
+						return variable;
+					}
+				}
 			}
 		}
 

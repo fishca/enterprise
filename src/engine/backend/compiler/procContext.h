@@ -103,6 +103,7 @@ struct ibRunContext {
 	const ibByteCode::ibByteFunction* m_currentFunction = nullptr;
 
 	long m_lStart, m_lCurLine; //current executing bytecode line
+
 	long m_lVarCount, m_lParamCount;
 
 	ibValue m_cLocVars[MAX_STATIC_VAR] = {};

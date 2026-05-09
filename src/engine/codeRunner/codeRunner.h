@@ -3,6 +3,7 @@
 #include <wx/intl.h>
 #include <wx/string.h>
 #include <wx/button.h>
+#include <wx/choice.h>
 #include <wx/sizer.h>
 #include <wx/statusbr.h>
 #include <wx/frame.h>
@@ -31,6 +32,7 @@ protected:
 	class ibProcUnit* m_procUnit;
 
 	ibCodeEditor*     m_codeEditor;
+	wxChoice*         m_syntaxChoice;
 	wxButton*         m_buttonSyntaxCheck;
 	wxButton*         m_buttonRunCode;
 	wxButton*         m_buttonClearOutput;
@@ -40,6 +42,7 @@ protected:
 	void SyntaxCheckOnButtonClick(wxCommandEvent& event);
 	void RunCodeOnButtonClick(wxCommandEvent& event);
 	void ClearOutputOnButtonClick(wxCommandEvent& event);
+	void SyntaxChoiceOnChange(wxCommandEvent& event);
 
 	void OnToolbarCommand(wxCommandEvent& event);
 

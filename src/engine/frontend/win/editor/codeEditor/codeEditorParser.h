@@ -11,6 +11,11 @@ enum ibContentType
 	eExportProcedure,
 	eFunction,
 	eExportFunction,
+	eLambda,           // anonymous Function/Procedure used as expression —
+	                   // no name, navigable by line range. m_name carries
+	                   // a synthetic label like "<lambda @ line 23>" for
+	                   // listing in symbol pickers; declaration kind
+	                   // (function vs procedure) is encoded in m_imageIndex.
 
 	eEmpty
 };

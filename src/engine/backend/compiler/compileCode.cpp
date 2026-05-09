@@ -7,6 +7,7 @@
 #include "codeDef.h"
 
 #include "system/systemManager.h"
+#include "backend/guid.h"  // wxNewUniqueGuid for anonymous-lambda synthetic naming
 
 #pragma warning(push)
 #pragma warning(disable : 4018)
@@ -97,6 +98,11 @@ void ibCompileCode::InitializeCompileModule()
 void ibCompileCode::SetCodeStyle(short codeStyle)
 {
 	gs_codeStyle = codeStyle;
+}
+
+short ibCompileCode::GetCodeStyle()
+{
+	return gs_codeStyle;
 }
 
 void ibCompileCode::Reset()
@@ -1171,30 +1177,92 @@ bool ibCompileCode::PushCallFunction(const std::shared_ptr<ibCallFunction>& call
 
 bool ibCompileCode::CompileFunction(ibCompileContext* context)
 {
-	// functionContext owns the function's compile-time scope (locals,
-	// labels). Lifetime is bounded to this CompileFunction call —
-	// after MakeFunction stamps everything we need into the bytecode,
-	// the compile-context can go away. ibFunction no longer owns it.
+	// Thin orchestrator: parse signature → ancestor-chain dedup →
+	// register in m_listFunction → emit body. Behaviour is the
+	// monolithic pre-split flow exactly. The two helpers
+	// (ParseFunctionSignature + EmitFunctionBody) are reused by
+	// the upcoming anonymous-lambda expression path, which skips
+	// the dedup + m_listFunction registration steps.
+	std::shared_ptr<ibCompileContext::ibFunction> createdFunction;
 	std::unique_ptr<ibCompileContext> functionContextOwner;
-	ibCompileContext* functionContext = nullptr;
+	int errorPlace = 0;
 
-	// we are now at the token level, where the FUNCTION or PROCEDURE keyword is specified
+	if (!ParseFunctionSignature(context, createdFunction, functionContextOwner, errorPlace))
+		return false;
+
+	ibCompileContext* functionContext = functionContextOwner.get();
+	const wxString& strFuncName = createdFunction->m_strName;
+	const wxString& strFuncRealName = createdFunction->m_strRealName;
+
+	// Ancestor-chain dedup: declaration cannot collide with an
+	// exported function visible from any enclosing scope. Walk
+	// up via m_parentContext; on collision rewind to errorPlace
+	// (position right after the function name in the source) so
+	// the error highlight points at the conflicting name.
+	int numParent = 0;
+	ibCompileContext* pCurContext = context;
+	while (pCurContext != nullptr) {
+		numParent++;
+		if (numParent > MAX_OBJECTS_LEVEL) {
+			ibValueSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
+			if (numParent > 2 * MAX_OBJECTS_LEVEL) {
+				ibBackendCoreException::Error(_("Recursive call of modules!"));
+			}
+		}
+
+		std::shared_ptr<ibCompileContext::ibFunction> foundedFunc = nullptr;
+		if (pCurContext->FindFunction(strFuncName, foundedFunc)) { // found
+			if (foundedFunc != createdFunction && foundedFunc->m_bExport) {
+				m_numCurrentCompile = errorPlace;
+				SetError(ERROR_DEF_FUNCTION, strFuncRealName);
+				return false;
+			}
+		}
+
+		pCurContext = pCurContext->m_parentContext;
+	}
+
+	context->m_listFunction[strFuncName] = createdFunction;
+
+	return EmitFunctionBody(context, createdFunction, functionContext);
+}
+
+bool ibCompileCode::ParseFunctionSignature(ibCompileContext* context,
+	std::shared_ptr<ibCompileContext::ibFunction>& outFunction,
+	std::unique_ptr<ibCompileContext>& outFunctionContext,
+	int& outErrorPlace)
+{
+	// functionContext owns the function's compile-time scope (locals,
+	// labels). Lifetime is bounded to the caller's frame — after
+	// EmitFunctionBody stamps everything we need into the bytecode,
+	// the compile-context can go away. ibFunction no longer owns it.
+
+	// We are at the token level where FUNCTION or PROCEDURE keyword
+	// is specified. The enum value chosen here fully encodes both axes
+	// — anonymous-vs-named AND function-vs-procedure — so any later
+	// path that needs either piece can derive it from m_numReturn
+	// alone via IsReturnLambda / IsReturnFunction (no side flag).
+	//
+	// Anonymity is determined by the NEXT TOKEN after the keyword:
+	// `Function (` is anonymous, `Function Name(` is named. No
+	// external gate — context (next token) is enough to tell.
 	if (IsNextKeyWord(KEY_FUNCTION)) {
 		GETKeyWord(KEY_FUNCTION);
-		// create a new context in which we will compile the function body
-		functionContextOwner.reset(context->CreateContext(RETURN_FUNCTION));
-		functionContext = functionContextOwner.get();
+		const bool isAnon = IsNextDelimeter('(');
+		outFunctionContext.reset(context->CreateContext(
+			isAnon ? RETURN_LAMBDA_FUNCTION : RETURN_FUNCTION));
 	}
 	else if (IsNextKeyWord(KEY_PROCEDURE)) {
 		GETKeyWord(KEY_PROCEDURE);
-		// create a new context in which we will compile the body of the procedure
-		functionContextOwner.reset(context->CreateContext(RETURN_PROCEDURE));
-		functionContext = functionContextOwner.get();
+		const bool isAnon = IsNextDelimeter('(');
+		outFunctionContext.reset(context->CreateContext(
+			isAnon ? RETURN_LAMBDA_PROCEDURE : RETURN_PROCEDURE));
 	}
 	else {
 		SetError(ERROR_FUNC_DEFINE);
 		return false;
 	}
+	ibCompileContext* functionContext = outFunctionContext.get();
 
 	// pull out the text of the function declaration
 	const ibLexem& lex = PreviewGetLexem();
@@ -1216,8 +1284,22 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 		}
 	}
 
-	// get the function name
-	const wxString& strFuncRealName = GETIdentifier(true);
+	// get the function name. Anonymous form: next token `(` directly
+	// after the keyword → synthesise a guid-based label. Used purely
+	// for debugger / error-message labelling — the lambda is NOT
+	// registered in any compile-context's m_listFunction map
+	// (CompileFunction's orchestrator path does that for declarations
+	// only; CompileLambdaExpression deliberately skips it). Guid
+	// guarantees zero chance of collision with any user-written
+	// identifier (Variable or Function in any scope), and signals at a
+	// glance "synthetic — never look this up by name".
+	wxString strFuncRealName;
+	if (IsNextDelimeter('(')) {
+		strFuncRealName = wxT("__lambda_") + wxNewUniqueGuid.str();
+	}
+	else {
+		strFuncRealName = GETIdentifier(true);
+	}
 	// Original-cased name through both the ibFunction storage and the
 	// m_listFunction map key — lookups use stringUtils::CompareString
 	// (case-insensitive), so storage no longer needs to upper-normalize.
@@ -1225,13 +1307,17 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 	// directly and now show the user's source casing.
 	const wxString& strFuncName = strFuncRealName;
 
-	const int errorPlace = m_numCurrentCompile;
+	outErrorPlace = m_numCurrentCompile;
 
-	std::shared_ptr<ibCompileContext::ibFunction> createdFunction(new ibCompileContext::ibFunction(strFuncName, functionContext));
-
-	createdFunction->m_strRealName = strFuncRealName;
-	createdFunction->m_strShortDescription = strShortDescription;
-	createdFunction->m_numLine = numLine;
+	outFunction.reset(new ibCompileContext::ibFunction(strFuncName, functionContext));
+	outFunction->m_strRealName = strFuncRealName;
+	outFunction->m_strShortDescription = strShortDescription;
+	outFunction->m_numLine = numLine;
+	// Derived from the context's m_numReturn — RETURN_FUNCTION and
+	// RETURN_LAMBDA_FUNCTION both carry "returns a value", the
+	// procedure variants don't. No keyword bool kept; enum is the
+	// single source of truth.
+	outFunction->m_bCodeRet = IsReturnFunction(functionContext->m_numReturn);
 
 	// compile the list of formal parameters + register them as local
 	GETDelimeter('(');
@@ -1271,7 +1357,7 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 		}
 
 		functionContext->AddVariable(strRealName, typeVar);
-		createdFunction->m_listParam.emplace_back(std::move(cVariable));
+		outFunction->m_listParam.emplace_back(std::move(cVariable));
 
 		if (!IsNextDelimeter(',') || IsNextDelimeter(')'))
 			break;
@@ -1281,41 +1367,30 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 	GETDelimeter(')');
 	if (IsNextKeyWord(KEY_EXPORT)) {
 		GETKeyWord(KEY_EXPORT);
-		createdFunction->m_bExport = true;
+		outFunction->m_bExport = true;
 	}
 
-	int numParent = 0;
-	ibCompileContext* pCurContext = context;
-	while (pCurContext != nullptr) {
-		numParent++;
-		if (numParent > MAX_OBJECTS_LEVEL) {
-			ibValueSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
-			if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-				ibBackendCoreException::Error(_("Recursive call of modules!"));
-			}
-		}
+	return true;
+}
 
-		std::shared_ptr<ibCompileContext::ibFunction> foundedFunc = nullptr;
-		if (pCurContext->FindFunction(strFuncName, foundedFunc)) { // found
-			if (foundedFunc != createdFunction && foundedFunc->m_bExport) {
-				m_numCurrentCompile = errorPlace;
-				SetError(ERROR_DEF_FUNCTION, strFuncRealName);
-				return false;
-			}
-		}
+bool ibCompileCode::EmitFunctionBody(ibCompileContext* /*context*/,
+	const std::shared_ptr<ibCompileContext::ibFunction>& createdFunction,
+	ibCompileContext* functionContext)
+{
+	// Discriminator lives on the context — RETURN_LAMBDA_FUNCTION /
+	// RETURN_LAMBDA_PROCEDURE stamped by ParseFunctionSignature for
+	// anonymous bodies. No separate isLambda arg threaded through.
+	const bool isLambda = IsReturnLambda(functionContext->m_numReturn);
 
-		pCurContext = pCurContext->m_parentContext;
-	}
-
-	context->m_listFunction[strFuncName] = createdFunction;
-
-	// Function entry — OPER_FUNC marks the tape position. Runtime's
-	// Execute switch sets cRunContext->m_currentFunction here via
-	// FindFunctionByEntry(lCodeLine) — opcode-driven state update,
-	// no external lookup at call sites.
+	// Function entry — OPER_FUNC (named) or OPER_LFUNC (lambda) marks
+	// the tape position. Runtime's Execute switch sets
+	// cRunContext->m_currentFunction here via FindFunctionByEntry(
+	// lCodeLine) — opcode-driven state update, no external lookup at
+	// call sites. Both opcodes resolve through the same FindFunctionByEntry
+	// path (lookup is by entry IP, not by opcode kind).
 	ibByteUnit code0;
 	AddLineInfo(code0);
-	code0.m_numOper = OPER_FUNC;
+	code0.m_numOper = isLambda ? OPER_LFUNC : OPER_FUNC;
 	code0.m_param1.m_numArray = 0;
 	m_cByteCode.m_listCode.emplace_back(std::move(code0));
 
@@ -1331,9 +1406,9 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 	//                        m_numArray = DEF_VAR_SKIP / DEF_VAR_CONST /
 	//                        ..., m_numIndex = const-pool index when CONST)
 	// Carries the same info that the legacy OPER_SET/SETCONST at
-	// function entry carries (compileCode.cpp:1213+) — those remain
-	// for now as a NOP-equivalent shadow; once nothing reads them
-	// we can drop them entirely (next iteration).
+	// function entry carries — those remain for now as a NOP-equivalent
+	// shadow; once nothing reads them we can drop them entirely
+	// (next iteration).
 	for (unsigned int i = 0; i < createdFunction->m_listParam.size(); i++) {
 		ibByteUnit declParam;
 		AddLineInfo(declParam);
@@ -1357,17 +1432,27 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 		AddTypeSet(variable);
 	}
 
-	m_strCurFuncName = strFuncName;
+	// Save/restore enclosing-function name — handles nested lambdas
+	// inside named functions (and lambda inside lambda) cleanly. Pre-
+	// Phase A there was no nesting (CompileBlock rejected KEY_FUNCTION
+	// inside a function body) so plain set+clear was safe; with lambdas
+	// as expressions the inner emit can fire while outer is still open.
+	const wxString savedCurFuncName = m_strCurFuncName;
+	m_strCurFuncName                = createdFunction->m_strName;
 
 	CompileBlock(functionContext);
 
 	functionContext->CreateLabels();
 
-	m_strCurFuncName = wxEmptyString;
+	m_strCurFuncName = savedCurFuncName;
 
 	if (gs_codeStyle == CODE_VBS) {
-
-		if (functionContext->m_numReturn == RETURN_FUNCTION) {
+		// Closer keyword matches the OPENING keyword — derived from
+		// m_bCodeRet, which IsReturnFunction(m_numReturn) populated at
+		// signature parse. Both named and anonymous bodies dispatch
+		// the same way; the lambda enum split keeps function vs
+		// procedure visible without a side flag.
+		if (createdFunction->m_bCodeRet) {
 			GETKeyWord(KEY_ENDFUNCTION);
 		}
 		else {
@@ -1377,12 +1462,11 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 
 	ibByteUnit code;
 	AddLineInfo(code);
-	code.m_numOper = OPER_ENDFUNC;
+	code.m_numOper = isLambda ? OPER_ENDLFUNC : OPER_ENDFUNC;
 	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	createdFunction->m_nFinish = m_cByteCode.m_listCode.size() - 1;
 	createdFunction->m_lVarCount = functionContext->m_listVariable.size();
-	createdFunction->m_bCodeRet  = (functionContext->m_numReturn == RETURN_FUNCTION);
 
 	m_cByteCode.m_listCode[lAddress].m_param3.m_numIndex = createdFunction->m_lVarCount;// number of local variables
 	m_cByteCode.m_listCode[lAddress].m_param3.m_numArray = createdFunction->m_listParam.size();//number of formal parameters
@@ -1391,33 +1475,95 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 	// fields are settled (lVarCount + per-param info available only
 	// after body compile). The ibByteFunction(long, const CompileFn&)
 	// ctor copies all fields from the compile-side ibFunction.
+	//
+	// Lambdas land here too with kind = Lambda + synthetic name
+	// "<lambda@<lAddress>>". m_listFunc lookups by name skip them
+	// (`<` prefix isn't a valid identifier; IsCrossBcVisible() returns
+	// false for Lambda kind so cross-bc resolvers ignore them).
+	// FindFunctionByEntry sees them — that's what makes the debugger
+	// stack and eval host detection work for anonymous bodies.
 	ibByteCode::ibByteFunction byteFn(lAddress, *createdFunction);
-	// Function-scope symbol table — stamped here directly from
-	// functionContext->m_listVariable (params + locals + temps).
-	// Lifetime of functionContext stays bounded to this CompileFunction
-	// call (unique_ptr); ibFunction doesn't own a compile-context.
 	for (auto it : functionContext->m_listVariable) {
-		// Skip temps (compiler-introduced intermediates that hold
-		// values between OPER_*'s — debugger has no use for them and
-		// they're already covered by the function's frame size).
 		if (it.second->m_bTempVar) continue;
 		ibByteCode::ibByteCodeVarInfo info(*it.second);
-		// m_strRealName is the canonical name on the vector entry —
-		// fall back to the compile-context map key if the source's
-		// realName was empty (legacy paths).
 		if (info.m_strRealName.IsEmpty())
 			info.m_strRealName = it.first;
 		byteFn.m_listLocals.push_back(std::move(info));
 	}
-	// Single push to unified m_listFunc — kind (Local / Export) is
-	// derived in the templated ctor from createdFunction->m_bExport.
-	// Ensure m_strRealName is populated; CompareString-based lookup
-	// in m_listFunc reads it as the canonical name.
-	if (byteFn.m_strRealName.IsEmpty())
+	if (isLambda) {
+		byteFn.m_kind        = ibFnKind::Lambda;
+		byteFn.m_strRealName = wxString::Format(wxT("<lambda@%ld>"), lAddress);
+	} else if (byteFn.m_strRealName.IsEmpty()) {
 		byteFn.m_strRealName = createdFunction->m_strName;
+	}
 	m_cByteCode.m_listFunc.push_back(std::move(byteFn));
 
 	return true;
+}
+
+ibParamUnit ibCompileCode::CompileLambdaExpression(ibCompileContext* context)
+{
+	// Parse signature into a context that parents into m_rootContext
+	// (NOT the caller's `context`). Lambda scoping discipline: the
+	// body sees ONLY root configuration's bindings (Context bindings
+	// reached via bc parent walk — Catalogs / Documents / CommonModules
+	// / system functions) plus own params / locals. NOT current
+	// module's compile-context, no module-level vars, no outer-
+	// function locals. Closures rejected.
+	std::shared_ptr<ibCompileContext::ibFunction> createdFunction;
+	std::unique_ptr<ibCompileContext> functionContextOwner;
+	int errorPlace = 0;
+
+	if (!ParseFunctionSignature(m_rootContext, createdFunction,
+		functionContextOwner, errorPlace)) {
+		return ibParamUnit();
+	}
+
+	ibCompileContext* functionContext = functionContextOwner.get();
+	functionContext->m_parentContext = nullptr;
+
+	// Emit OPER_LFUNC + params + body + OPER_ENDLFUNC inline.
+	// EmitFunctionBody discriminates lambda vs named via
+	// IsReturnLambda(functionContext->m_numReturn) — RETURN_LAMBDA_*
+	// stamped by ParseFunctionSignature when the signature lookahead
+	// saw `(` directly after Function/Procedure. Stamps:
+	//   - createdFunction->m_nStart  = OPER_LFUNC IP
+	//   - createdFunction->m_nFinish = OPER_ENDLFUNC IP
+	// For lambdas, EmitFunctionBody does NOT push to m_listFunc —
+	// lambda identity stays in the OPER_LFUNC operands themselves;
+	// runtime BuildOrGetLambdaInfo derives the frame shape on first
+	// fire.
+	if (!EmitFunctionBody(context, createdFunction, functionContext)) {
+		return ibParamUnit();
+	}
+
+	const long lfuncIp    = (long)createdFunction->m_nStart;
+	const long endlfuncIp = (long)createdFunction->m_nFinish;
+
+	// Allocate the dest slot in CALLER's context — that's where the
+	// ibValueFunction value lands at runtime. The follow-on consumer
+	// (OPER_LET / OPER_SET / OPER_CALL arg) reads from this slot.
+	ibParamUnit target = context->CreateVariable();
+
+	// Back-patch OPER_LFUNC's operands. Frame shape lives on the
+	// just-pushed ibByteFunction in m_listFunc; we stamp the index here
+	// so runtime can resolve the entry without a name lookup.
+	//
+	// Operand layout (OPER_LFUNC):
+	//   m_param1                — dest slot for the resulting ibValueFunction
+	//   m_param2.m_numIndex     — end IP (OPER_ENDLFUNC's position; used by
+	//                              OPER_LFUNC handler at module-init walk
+	//                              to skip past the body opcodes)
+	//   m_param3.m_numIndex     — funcIndex into parentBc->m_listFunc
+	//                              (frame shape, names, defaults — all
+	//                              live there)
+	const long funcIndex = (long)m_cByteCode.m_listFunc.size() - 1;
+	ibByteUnit& lfuncCode = m_cByteCode.m_listCode[lfuncIp];
+	lfuncCode.m_param1 = target;
+	lfuncCode.m_param2.m_numIndex = endlfuncIp;
+	lfuncCode.m_param3.m_numIndex = funcIndex;
+
+	return target;
 }
 
 /**
@@ -1564,7 +1710,12 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 				AddLineInfo(code);
 				code.m_numOper = OPER_RET;
 
-				if (currContext->m_numReturn == RETURN_FUNCTION) { // some value is returned
+				// Decide if Return must carry an expression. Function
+				// kinds (named or anonymous) require a value; procedure
+				// kinds reject one. m_numReturn fully discriminates
+				// both axes — IsReturnFunction handles RETURN_FUNCTION
+				// + RETURN_LAMBDA_FUNCTION uniformly.
+				if (IsReturnFunction(currContext->m_numReturn)) {
 					if (IsNextDelimeter(';')) {
 						SetError(ERROR_EXPRESSION_REQUIRE);
 						return false;
@@ -1904,7 +2055,69 @@ ibParamUnit ibCompileCode::GetCurrentIdentifier(ibCompileContext* context, int& 
 			}
 		}
 		else {
-			variable = GetCallFunction(context, strRealName, numIsSet);
+			// Try as a Variable holding a callable value (lambda /
+			// function-pointer / any ibValueFunction-wrapping ibValue).
+			// This sits between the context-method check above and the
+			// named-function fallback below: regular Local / Export
+			// vars get OPER_CALL_VAL on their slot; runtime then verifies
+			// at dispatch that the value really wraps an ibValueFunction.
+			// Excludes context-bindings (Manager, ThisForm — m_bContext)
+			// and externals (m_bExternal) — those aren't user-callable
+			// in Phase A. ContextProp (m_strContext non-empty) goes
+			// through OPER_GET_A elsewhere.
+			std::shared_ptr<ibCompileContext::ibVariable> foundedCallableVar = nullptr;
+			const bool isCallableVar = context->FindVariable(strRealName, foundedCallableVar)
+				&& foundedCallableVar
+				&& foundedCallableVar->m_strContext.IsEmpty()
+				&& !foundedCallableVar->m_bContext
+				&& !foundedCallableVar->m_bExternal;
+
+			if (isCallableVar) {
+				std::vector<ibParamUnit> listParam;
+				GETDelimeter('(');
+				while (!IsNextDelimeter(')')) {
+					if (IsNextDelimeter(',')) {
+						ibParamUnit data;
+						data.m_numArray = DEF_VAR_SKIP; // missing parameter
+						data.m_numIndex = DEF_VAR_SKIP;
+						listParam.emplace_back(std::move(data));
+					}
+					else {
+						listParam.emplace_back(GetExpression(context));
+						if (!IsNextDelimeter(',') || IsNextDelimeter(')'))
+							break;
+					}
+					GETDelimeter(',');
+				}
+				GETDelimeter(')');
+
+				ibByteUnit code;
+				AddLineInfo(code);
+				code.m_numOper = OPER_CALL_VAL;
+				variable = context->CreateVariable();
+				code.m_param1 = variable;                                  // return-value dest
+				code.m_param4 = context->GetVariable(strRealName, true, false);  // source callable slot
+				// m_param2.m_numIndex = caller-supplied arg count. Runtime
+				// uses this as the upper bound for inline OPER_SET / SETCONST
+				// consumption. Trailing params (callerArgCount..paramCount)
+				// are filled from the lambda's m_listParam[i].m_defaultValue.
+				code.m_param2.m_numIndex = (long)listParam.size();
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
+
+				// Inline OPER_SET for each parameter — same layout as
+				// OPER_CALL_M / OPER_CALL. Runtime walks these via
+				// lCodeLine++ inside its OPER_CALL_VAL handler.
+				for (unsigned int i = 0; i < listParam.size(); i++) {
+					ibByteUnit code;
+					AddLineInfo(code);
+					code.m_numOper = OPER_SET;
+					code.m_param1 = listParam[i];
+					m_cByteCode.m_listCode.emplace_back(std::move(code));
+				}
+			}
+			else {
+				variable = GetCallFunction(context, strRealName, numIsSet);
+			}
 		}
 		if (IsTypeVar(strRealName)) {
 			variable.m_strType = GetTypeVar(strRealName);	// this is a type cast
@@ -2614,6 +2827,16 @@ ibParamUnit ibCompileCode::GetExpression(ibCompileContext* context, int nPriorit
 			code.m_param1 = listParam[arg];
 			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
+	}
+	else if (lex.m_lexType == KEYWORD &&
+		(lex.m_numData == KEY_FUNCTION || lex.m_numData == KEY_PROCEDURE)) {
+		// Anonymous Function/Procedure as expression — Phase A lambda.
+		// Step back so CompileLambdaExpression's ParseFunctionSignature
+		// can re-consume the keyword via its standard
+		// IsNextKeyWord/GETKeyWord path; mirrors the IDENTIFIER-branch
+		// step-back idiom below.
+		m_numCurrentCompile--;
+		variable = CompileLambdaExpression(context);
 	}
 	else if (lex.m_lexType == DELIMITER && lex.m_numData == '(') {
 		variable = GetExpression(context);

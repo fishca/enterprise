@@ -5,13 +5,36 @@
 
 class BACKEND_API ibCompileCode;
 
-//function properties:
+//function properties — RETURN_* tags the kind of compile-context, used
+//both for `Return` statement validation and for closure-capture /
+//parent-walk discipline (anonymous bodies stop the parent search).
+//Function/Procedure axis is encoded directly in the enum so callers can
+//derive m_bCodeRet from m_numReturn without a side flag — no separate
+//"keyword returns value" local needed at signature parse time.
 enum {
-	RETURN_NONE = 0,//no return (module code)
-	RETURN_PROCEDURE,//return from procedure
-	RETURN_FUNCTION,//return from function
-	RETURN_BLOCK,//return from context
+	RETURN_NONE = 0,           //no return — module-level (NOP for `Return`)
+	RETURN_PROCEDURE,          //named procedure body (returns nothing)
+	RETURN_FUNCTION,           //named function body (returns a value)
+	RETURN_LAMBDA_PROCEDURE,   //anonymous Procedure(...) body
+	RETURN_LAMBDA_FUNCTION,    //anonymous Function(...) body
+	RETURN_BLOCK,              //block-scope (`{ }` in CES, control-structure body)
 };
+
+// True when a context is any lambda boundary — Phase B compile
+// discipline stops parent-context walks here so lambda bodies can't
+// see outer-function locals.
+inline bool IsReturnLambda(short numReturn) {
+	return numReturn == RETURN_LAMBDA_FUNCTION
+	    || numReturn == RETURN_LAMBDA_PROCEDURE;
+}
+
+// True when a context body is expected to produce a return value
+// (Function form, named or anonymous). Used to gate `Return` syntax
+// and to stamp ibFunction::m_bCodeRet at compile finalize.
+inline bool IsReturnFunction(short numReturn) {
+	return numReturn == RETURN_FUNCTION
+	    || numReturn == RETURN_LAMBDA_FUNCTION;
+}
 
 //variable flags (specified with a negative value in the nArray attribute of the bytecode)
 enum {

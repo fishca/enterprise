@@ -164,6 +164,22 @@ void ibFrameCodeRunner::ClearOutputOnButtonClick(wxCommandEvent& event)
 	event.Skip();
 }
 
+void ibFrameCodeRunner::SyntaxChoiceOnChange(wxCommandEvent& event)
+{
+	// Items are aligned with the dropdown population order: 0 = VBS,
+	// 1 = CES. Mode is process-global on ibCompileCode (gs_codeStyle),
+	// so updating it here affects every subsequent Compile call AND
+	// the fold parser's mode-aware dispatch (VBS keyword-folds vs CES
+	// brace-folds — both read GetCodeStyle on next CalcFoldLevel).
+	// Trigger an editor refresh so the visual switch is immediate.
+	const int sel = m_syntaxChoice->GetSelection();
+	ibCompileCode::SetCodeStyle(sel == 1 ? CODE_CES : CODE_VBS);
+	if (m_codeEditor) {
+		m_codeEditor->Colourise(0, -1);
+	}
+	event.Skip();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 
 ibFrameCodeRunner::ibFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
@@ -254,6 +270,18 @@ ibFrameCodeRunner::ibFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxSt
 
 	wxBoxSizer* bSizerButton = new wxBoxSizer(wxHORIZONTAL);
 
+	// Syntax-mode dropdown — VBS (default, 1C-like with EndProcedure /
+	// EndFunction keyword fences) vs CES (C-like, brace-fenced blocks).
+	// Selection writes through to ibCompileCode::SetCodeStyle so the
+	// compiler picks up the mode on the next Compile call.
+	wxArrayString syntaxItems;
+	syntaxItems.Add(wxT("VBS"));
+	syntaxItems.Add(wxT("CES"));
+	m_syntaxChoice = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, syntaxItems);
+	m_syntaxChoice->SetSelection(ibCompileCode::GetCodeStyle() == CODE_CES ? 1 : 0);
+	m_syntaxChoice->SetToolTip(_("Script syntax mode"));
+	bSizerButton->Add(m_syntaxChoice, 0, wxALL, 5);
+
 	m_buttonSyntaxCheck = new wxButton(this, wxID_ANY, _("Syntax control"));
 	m_buttonSyntaxCheck->SetForegroundColour(wxColour(255, 0, 0));
 	bSizerButton->Add(m_buttonSyntaxCheck, 0, wxALL, 5);
@@ -308,6 +336,7 @@ ibFrameCodeRunner::ibFrameCodeRunner(wxWindow* parent, wxWindowID id, const wxSt
 	m_buttonSyntaxCheck->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::SyntaxCheckOnButtonClick), nullptr, this);
 	m_buttonRunCode->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::RunCodeOnButtonClick), nullptr, this);
 	m_buttonClearOutput->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibFrameCodeRunner::ClearOutputOnButtonClick), nullptr, this);
+	m_syntaxChoice->Connect(wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler(ibFrameCodeRunner::SyntaxChoiceOnChange), nullptr, this);
 
 	m_codeEditor->SetText("Message(\"Hello world!\");");
 }

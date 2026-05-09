@@ -204,20 +204,13 @@ void ibWebSession::OnExit()
 		catch (...) { /* drain best-effort */ }
 	}
 
-	// Symmetric teardown — drop this session's ProcUnit entries from the
-	// shared moduleManager before destroying the app + closing the session.
-	// ibSessionScope pinned so DetachRuntime's bookkeeping is
-	// consistent with the rest of the web runtime's expectations.
+	// Symmetric teardown — drop this session's ProcUnit entries from
+	// the shared moduleManager before destroying the app + closing
+	// the session. ClearRoot folds DetachRuntime + DestroyMainModule
+	// + m_root reset; ibSessionScope keeps the session pinned so the
+	// detach bookkeeping runs in the right context.
 	if (m_session) {
 		ibSessionScope scope(m_session.get());
-		if (activeMetaData != nullptr) {
-			if (auto* mm = m_session->GetManagerModule())
-				mm->DetachRuntime(m_session.get());
-		}
-
-		// Drop session's own root so its refs to metadata descriptors
-		// release now, not later when the registry thread eventually
-		// destroys the ibSession.
 		m_session->ClearRoot();
 	}
 

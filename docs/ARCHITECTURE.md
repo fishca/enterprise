@@ -182,7 +182,7 @@ Source text (wxString)
 
 ### Opcode Categories
 
-Opcodes are defined as plain integer constants in `src/engine/backend/compiler/codeDef.h`. The 66 opcodes fall into these groups:
+Opcodes are defined as plain integer constants in `src/engine/backend/compiler/codeDef.h`. The 67 opcodes fall into these groups:
 
 | Category | Opcodes |
 |---|---|
@@ -192,7 +192,7 @@ Opcodes are defined as plain integer constants in `src/engine/backend/compiler/c
 | Control flow | `OPER_GOTO`, `OPER_IF`, `OPER_FOR`, `OPER_FOREACH`, `OPER_IN`, `OPER_NEXT`, `OPER_NEXT_ITER` |
 | Variables | `OPER_LET`, `OPER_CONST`, `OPER_CONSTN`, `OPER_SET`, `OPER_SETREF`, `OPER_SETCONST` |
 | Functions | `OPER_FUNC`, `OPER_ENDFUNC`, `OPER_CALL`, `OPER_CALL_M`, `OPER_RET` |
-| Lambdas (Phase A) | `OPER_LFUNC`, `OPER_ENDLFUNC` (anonymous body fences — distinct from `OPER_FUNC`/`OPER_ENDFUNC` so a containing named-function's module-init skip doesn't terminate on a nested lambda's terminator), `OPER_FUNC_PTR` (materialises an `ibValueFunction` wrapper into a slot), `OPER_CALL_VAL` (dynamic call — target read from a slot at runtime, must wrap an `ibValueFunction`). See `docs/lambda-phase-a.md`. |
+| Lambdas | `OPER_LFUNC`, `OPER_ENDLFUNC` (anonymous body fences — distinct from `OPER_FUNC`/`OPER_ENDFUNC` so a containing named-function's module-init skip doesn't terminate on a nested lambda's terminator), `OPER_FUNC_PTR` (materialises an `ibValueFunction` wrapper into a slot), `OPER_CALL_VAL` (dynamic call — target read from a slot at runtime, must wrap an `ibValueFunction`). See `docs/lambda.md`. |
 | Arrays | `OPER_GET_ARRAY`, `OPER_SET_ARRAY`, `OPER_CHECK_ARRAY`, `OPER_SET_ARRAY_SIZE`, `OPER_ENTER_A`, `OPER_GET_A`, `OPER_SET_A` |
 | Objects | `OPER_NEW`, `OPER_SET_TYPE` |
 | Exceptions | `OPER_TRY`, `OPER_ENDTRY`, `OPER_RAISE`, `OPER_RAISE_T` |
@@ -315,7 +315,7 @@ OES distinguishes between **metadata** (compile-time, process-wide, shared) and 
 - **Single** (desktop, daemon, codeRunner, classChecker) — one session per process for its lifetime. `Current()` returns the lone session regardless of thread.
 - **Shared** (wenterprise-server) — per-thread lookup of bound sessions, with a process-wide fallback for threads that aren't bound (registry consumer, signal handlers).
 
-`ibSessionScope` (legacy) and `ibSessionThreadBinding` (preferred for app entry points) are the RAII helpers that bind a session to the calling thread. The thread_local pin is being replaced incrementally by direct `ibSession*` pointer passing through `ibProcUnit` and friends.
+`ibSessionScope` (legacy) and `ibSessionThreadBinding` (preferred for app entry points) are the RAII helpers that bind a session to the calling thread. The interpreter no longer reads global `thread_local` state directly: `ibProcUnitState` lives under `ibSession` (`session.h`), and the only `thread_local` slot in `session.cpp` is a fallback for sessionless callers (codeRunner sandbox / system bootstrap). The worker pool (`workerPool.h` + `workerPoolHeadless.cpp`) leases a session into a thread via `tl_currentLease` and runs the request on it.
 
 Runtime ProcUnits are not held in a per-session map on `ibSession` itself. Each module descriptor (`ibModuleDataObject`) keeps its own `m_procUnit`. Per-session ProcUnit ownership through a descriptor map is the target end-state of the runtime-facade plan (see [`runtime-facade.md`](runtime-facade.md), step 1) — not yet landed.
 

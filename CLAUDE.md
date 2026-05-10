@@ -19,7 +19,7 @@ The runtime executes compiled bytecode, renders forms through wxWidgets, and sto
 | Language | C++17 |
 | GUI | wxWidgets 3.3.2 (git submodule at `src/3rdparty/wxWidgets`) |
 | Build (Windows) | MSBuild — `enterprise.sln` (Visual Studio 2019/2022) |
-| Build (cross-platform) | CMake — planned, `CMakeLists.txt` does not exist yet |
+| Build (cross-platform) | CMake — `CMakeLists.txt` at repo root; macOS / Linux build supported, Windows uses MSBuild |
 | Primary database | Firebird (embedded) |
 | Optional databases | PostgreSQL, SQLite, MySQL, ODBC |
 | License | LGPL 2.1 |
@@ -174,15 +174,16 @@ Argon2id (OWASP #1, memory-hard) would be the stronger option but requires vendo
 
 ### Empty Catch Blocks
 
-Some catch sites in the backend discard exceptions silently:
+About 24 `catch (...) {}` sites exist in `backend.dll` — they live in
+RAII destructors, Firebird driver rollback paths, and connection-pool
+cleanup. The pattern is intentional: a destructor that throws is
+worse than a swallowed error during cleanup, and a rollback that
+fails on an already-failed transaction is a no-op. They are
+**not** the "swallow real errors in production code paths" pattern.
 
-```cpp
-catch (const ibBackendException*) {
-    // nothing — error swallowed
-}
-```
-
-These are located primarily in the compiler and metadata loading paths. They mask real errors. When adding new code, always at minimum log or rethrow.
+When adding new code, follow the existing rule: `catch (...) {}`
+only inside dtors / cleanup helpers, never in business logic. In
+business code, log or rethrow.
 
 ---
 
@@ -200,12 +201,15 @@ msbuild enterprise.sln /p:Configuration=Debug /p:Platform=x64 /m
 
 Output lands in `bin\Win64\Release\` or `bin\Win64\Debug\`.
 
-### CMake (future — not yet available)
+### CMake (macOS / Linux)
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
+cmake --build build --parallel 3   # cap parallelism on 16 GB RAM
 ```
+
+See `docs/BUILD.md` for per-platform requirements and the
+`OES_USE_FIREBIRD / POSTGRESQL / MYSQL / ODBC / TBB` options.
 
 ---
 
@@ -289,19 +293,19 @@ All 11 business object types with: attributes (full type qualifiers), tabular se
 
 ## Compiler Quick Reference
 
-- **Opcodes:** 70, defined in `src/engine/backend/compiler/codeDef.h` as `OPER_*` enumerators (Phase A added `OPER_LFUNC` / `OPER_ENDLFUNC` for lambda body fences and `OPER_FUNC_PTR` / `OPER_CALL_VAL` for function-as-value)
-- **Keywords:** 44, defined as `KEY_*` enumerators in the same file
-- **Built-in functions:** 88, registered in `ibSystemManager` (`src/engine/backend/system/systemManager.cpp`)
-- **Syntax modes:** VBS-style (`If…Then…EndIf`) and CES-style C-flavoured (`if (...) { ... }`); both compile to the same bytecode. Mode is process-global on `ibCompileCode::SetCodeStyle()` / `GetCodeStyle()`.
-- **Anonymous functions (Phase A):** `Function(args) ... EndFunction` and `Procedure(args) ... EndProcedure` work as expressions — assignable to slots, callable through variables. Backed by `ibValueFunction` (inline class in `procUnit.cpp` near `ibValueIterator`, CLSID `VL_FUNC`). Lambda's compile-context kind is `RETURN_LAMBDA` (5th value in the existing `RETURN_NONE/PROCEDURE/FUNCTION/LAMBDA/BLOCK` enum). No closure capture yet — outer-function locals fail with "undefined identifier" at compile. See `docs/lambda-phase-a.md`.
+- **Opcodes:** 67, defined in `src/engine/backend/compiler/codeDef.h` as `OPER_*` enumerators (lambda landed: `OPER_LFUNC` / `OPER_ENDLFUNC` body fences, `OPER_FUNC_PTR` materialise, `OPER_CALL_VAL` dynamic call)
+- **Keywords:** 43, defined as `KEY_*` enumerators in the same file
+- **Built-in functions:** 91, registered in `ibSystemManager` (`src/engine/backend/system/systemManager.cpp`)
+- **Syntax modes:** VES (`If…Then…EndIf`, Visual-Basic-style with 1С/BSL mix) and CES (`if (…) { … }`, C-flavoured); both compile to the same bytecode. Mode is process-global on `ibCompileCode::SetCodeStyle()` / `GetCodeStyle()`. **CES is the default** for new configurations (2026-05-10); existing serialised configs preserve their stored Syntax. Wire token in metadata enum still reads `vbs` for back-compat — user-visible label is `ves`.
+- **Anonymous functions:** `Function(args) ... EndFunction` and `Procedure(args) ... EndProcedure` (or CES `Function(args) { … }`) work as expressions — assignable to slots, callable through variables. Backed by `ibValueFunction` (inline class in `procUnit.cpp` near `ibValueIterator`, CLSID `VL_FUNC`). Lambda's compile-context kind is `RETURN_LAMBDA`. Eval-in-lambda resolves outer frames via splice in `CompileExpression` (lambda-shim's `m_pppArrayList[1..]` → eval's `[2..]`). No closure capture yet — outer-function locals fail with "undefined identifier" at compile. See `docs/lambda.md`.
 - **Debugger port:** 1650 (`defaultDebuggerPort` in `src/engine/backend/debugger/debugDefs.h`)
 
 ### Bytecode resolver (kind-driven, AOT-ready)
 
 `ibByteCode` carries everything needed for cross-bc resolve, with no runtime dependency on the compile-context.
 
-- `m_listVar`: `std::vector<ibByteCodeVarInfo>` — kinds: `Local / Export / External / Context / ContextProp`.
-- `m_listFunc`: `std::vector<ibByteFunction>` — kinds: `Local / Export / ContextMethod`.
+- `m_listVar`: `std::vector<ibByteCodeVarInfo>` — `ibVarKind` enum: `Local / Export / External / Context / ContextProp`.
+- `m_listFunc`: `std::vector<ibByteFunction>` — `ibFnKind` enum: `Local / Export / ContextMethod / Lambda` (the `Lambda` kind landed with the anonymous-function feature; cross-bc invisible, name-keyed lookups filter via `IsLambda()`).
 - `m_listLocals` (per-function): same vector shape as `m_listVar`.
 - Cross-table refs: `ContextProp / ContextMethod` carry `m_parentRef` indexing back into `m_listVar`.
 - `ibByteBinder` reads `m_listVar` directly and binds slots whose kind ∈ `{External, Context}` (`IsBindRequired()`).
@@ -309,6 +313,12 @@ All 11 business object types with: attributes (full type qualifiers), tabular se
 - Descriptors expose `ExportNamesToHelper(helper, alias)` on `ibRuntimeModuleDataObject` to populate a value's helper from the bc's export entries.
 
 See `docs/eval-scope-refactor.md` for the full architecture and `docs/next-session-aot.md` for the persistence-layer plan that builds on this state.
+
+### Runtime infrastructure (landed)
+
+- **Worker pool** — `ibWorkerPool` (`src/engine/backend/session/workerPool.h`) + headless implementation (`workerPoolHeadless.{h,cpp}`). Per-thread session lease via `tl_currentLease`; sessionless callers get a `thread_local` fallback `ibProcUnitState` in `session.cpp`.
+- **AOT bytecode cache** — `byteCodeAOT.cpp` serialises a compiled `ibByteCode` to a memory stream; deserialisation reverses the compile step without re-running the parser. Intended target: `sys_bytecode_cache.blob` keyed by descriptor + source hash + metadata version.
+- **Per-session module manager** — each `ibSession` owns `m_moduleManager : ibValueModuleManager*` and `m_lambdaRuntime : ibProcUnit*`. The configuration-level `m_moduleManager` singleton is accessed only by Designer / codeRunner sandbox.
 
 ---
 

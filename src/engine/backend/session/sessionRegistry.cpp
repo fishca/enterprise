@@ -361,13 +361,65 @@ void ibSessionRegistry::Stop()
 		m_workerPool.reset();
 	}
 
-	// Submit Remove for every session still in m_own (the wes process's
-	// technical WebServer session, stranded per-tab sessions on a hard
-	// exit, etc.) BEFORE flipping m_stop. The worker's end-of-loop drain
-	// pass picks them up and runs ProcessRemove → DELETE sys_session row
-	// + fire OnDisconnect listeners — without this they'd be orphaned in
-	// the DB until the next sweep eventually cleans them up.
+	// Quiesce the registry thread FIRST without giving it any new work.
+	// Earlier shape ran Remove'ы through Submit + ThreadBody so they
+	// happened on the registry thread; that turned shutdown into a
+	// cross-thread mutex chase between main (in unwind / dtor) and
+	// ThreadBody (in ProcessRemove → session.m_mtx / NotifyDisconnect
+	// listener → wxApp / DeleteSessionRow → fbclient lock), which
+	// deadlocked once a listener or session destructor on main happened
+	// to share a lock with one of those paths. Inline drain after the
+	// join keeps every shutdown side-effect on a single thread, so a
+	// hang here surfaces directly in main's stack instead of as an
+	// invisible deadlock waiting on `m_thread.join()`.
 	{
+		std::lock_guard<std::mutex> lk(m_submitMtx);
+		m_stop.store(true, std::memory_order_release);
+	}
+	m_submitCv.notify_all();
+
+	// Timed join with detach backstop. ThreadBody may be mid-ProcessRemove
+	// when m_stop fires; if its NotifyDisconnect → DetachRuntime path
+	// blocks on a mutex that main holds further up the stack (classic
+	// case: main crashed inside BeforeStart's lock_guard<m_runtimeMutex>,
+	// SEH dispatch unrolled to OnFatalException → ~ibApplicationData →
+	// Stop without releasing C++ frames — the lock is still held), a
+	// blind join() hangs forever. m_threadAlive is set by ThreadBody
+	// at entry and cleared on exit (incl. exception path via the noexcept
+	// guarantee + the explicit clear at function tail / Die()). Poll it
+	// with a deadline; on timeout, detach and let the OS reap the thread
+	// on process exit.
+	using clock = std::chrono::steady_clock;
+	const auto deadline = clock::now() + std::chrono::seconds(2);
+	while (m_threadAlive.load(std::memory_order_acquire)
+		&& clock::now() < deadline)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	}
+	const bool detached = m_threadAlive.load(std::memory_order_acquire);
+	if (detached) {
+		wxLogWarning(wxT("registry: m_thread join timed out — detaching ")
+			wxT("(deadlock against an in-flight ProcessRemove → DetachRuntime / ")
+			wxT("listener callback chain). Process will exit anyway."));
+		m_thread.detach();
+	}
+	else {
+		m_thread.join();
+	}
+
+	// Inline Remove drain — DELETE sys_session row + fire OnDisconnect
+	// listeners for every still-owned session. Per-Remove try/catch keeps
+	// one bad row from poisoning the rest (e.g. fbclient already
+	// disconnected → DeleteSessionRow throws ibBackendException).
+	//
+	// Skipped on the detached path: ProcessRemove → NotifyDisconnect →
+	// DetachRuntime would acquire m_runtimeMutex, the same lock the
+	// in-flight ThreadBody is stuck on (and which main itself may still
+	// hold via BeforeStart's lock_guard if we're unwinding from a crash).
+	// The detached ThreadBody picks up the queued Removes if it ever
+	// resumes; otherwise the rows are reaped on the next process's
+	// startup sweep.
+	if (!detached) {
 		std::vector<std::shared_ptr<ibSession>> owned;
 		{
 			std::shared_lock<std::shared_mutex> lk(m_ownMutex);
@@ -380,16 +432,9 @@ void ibSessionRegistry::Stop()
 			ibRegistryRequest req;
 			req.kind    = ibRegistryRequestKind::Remove;
 			req.session = s;
-			Submit(std::move(req), ibPriority::Urgent);
+			try { ProcessRemove(req); } catch (...) {}
 		}
 	}
-
-	{
-		std::lock_guard<std::mutex> lk(m_submitMtx);
-		m_stop.store(true, std::memory_order_release);
-	}
-	m_submitCv.notify_all();
-	m_thread.join();
 
 	// Drop pool checkouts. shared_ptr custom deleter on pool connections
 	// reparks them on the pool's idle list — no explicit pool-side

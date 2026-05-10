@@ -121,6 +121,21 @@ void ibDebuggerServer::ShutdownServer()
 	const bool isSelf = (wxThread::GetCurrentId() == thread->GetId());
 
 	thread->Delete();          // sets TestDestroy() flag
+
+	// Tear the listening socket down BEFORE Wait(). Without this the
+	// worker thread sleeps inside wxSocketServer::Accept(true) (the
+	// blocking-accept branch when m_waitConnection is true) or waits
+	// out a full waitDebuggerTimeout in WaitForAccept(0, ...) on every
+	// loop tick — neither path polls TestDestroy fast enough to make
+	// shutdown timely. Destroying the server socket aborts the in-
+	// flight accept so the next TestDestroy check immediately exits
+	// the loop. Worker's own OnKill/dtor will null the pointer it
+	// holds; the duplicate Destroy is a no-op.
+	if (auto* srv = thread->m_socketServer) {
+		srv->Destroy();
+		thread->m_socketServer = nullptr;
+	}
+
 	if (!isSelf) {
 		thread->Wait();        // block until worker actually exited
 		delete thread;

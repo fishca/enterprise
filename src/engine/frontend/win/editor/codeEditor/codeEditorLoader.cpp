@@ -10,6 +10,13 @@
 
 #include "frontend/docView/docView.h"
 
+#include <wx/file.h>
+#include <wx/datetime.h>
+#include <wx/stdpaths.h>
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
+
 void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 {
 	if (vObject.GetType() != ibValueTypes::TYPE_EMPTY &&
@@ -43,7 +50,7 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 		}
 		ibRuntimeModuleDataObject* moduleDataObject = dynamic_cast<ibRuntimeModuleDataObject*>(vObject.GetRef());
 		if (moduleDataObject != nullptr) {
-			const const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
+			const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
 			if (computeModuleObject != nullptr) {
 				ibParserModule cParser;
 				if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
@@ -281,6 +288,72 @@ int CountLeadingIndent(const wxString& s, int& outReplacePos)
 	return count;
 }
 
+// True for lines that contain only whitespace (incl. EOL chars). Used
+// to walk back through blank lines while resolving a CES soft-header
+// region — `if (cond)` followed by blanks before the body is still
+// one soft-stmt scope.
+bool IsBlankOrWhitespace(const wxString& line)
+{
+	for (size_t i = 0; i < line.length(); ++i) {
+		const wxUniChar c = line[i];
+		if (c != wxT(' ') && c != wxT('\t') && c != wxT('\r') && c != wxT('\n'))
+			return false;
+	}
+	return true;
+}
+
+// True when the line is whitespace + a single `{` (with optional trailing
+// whitespace / EOL). Marks an Allman-style brace opener that "consumes"
+// any pending soft single-statement body bump from the previous header
+// — the `{` itself sits at the header's indent, not at body indent.
+bool IsLineJustOpenBrace(const wxString& line)
+{
+	size_t i = 0;
+	while (i < line.length() && (line[i] == wxT(' ') || line[i] == wxT('\t')))
+		++i;
+	if (i >= line.length() || line[i] != wxT('{'))
+		return false;
+	for (++i; i < line.length(); ++i) {
+		const wxUniChar c = line[i];
+		if (c != wxT(' ') && c != wxT('\t') && c != wxT('\r') && c != wxT('\n'))
+			return false;
+	}
+	return true;
+}
+
+// CES brace-less single-statement header: `if (cond)`, `while (cond)`,
+// `for (...)`, `for each (...)` — no `{` on the line, condition closes
+// with `)`. Fold parser doesn't open a brace fold here (there's no
+// matching closer), so the line carries no header flag and the next
+// line would otherwise inherit the same indent. The bump applies only
+// to the immediate Enter; the line after the body returns to base.
+bool IsCESSingleStmtHeader(const wxString& line)
+{
+	size_t i = 0;
+	while (i < line.length() && (line[i] == wxT(' ') || line[i] == wxT('\t')))
+		++i;
+	if (i >= line.length()) return false;
+
+	wxString core = line.Mid(i);
+	if (int cmt = core.Find(wxT("//")); cmt != wxNOT_FOUND)
+		core = core.Left(cmt);
+	while (!core.empty() && (core.Last() == wxT(' ') || core.Last() == wxT('\t') ||
+	                         core.Last() == wxT('\r') || core.Last() == wxT('\n')))
+		core.RemoveLast();
+	if (core.empty()) return false;
+
+	if (core.Last() != wxT(')')) return false;
+	if (core.Contains(wxT('{'))) return false;
+
+	auto matchKw = [&](const wxString& kw) {
+		if (core.length() <= kw.length()) return false;
+		if (core.Mid(0, kw.length()).Lower() != kw) return false;
+		const wxChar after = core[kw.length()];
+		return after == wxT(' ') || after == wxT('\t') || after == wxT('(');
+	};
+	return matchKw(wxT("if")) || matchKw(wxT("while")) || matchKw(wxT("for"));
+}
+
 } // namespace
 
 /**
@@ -317,26 +390,65 @@ void ibCodeEditor::PrepareTABs()
 
 	int foldLevel = level ^ wxSTC_FOLDLEVELBASE_FLAG;
 
-	auto rewriteIndent = [&](int targetTabs) {
+	// CES brace-less single-statement form: `if (cond)`, `while (cond)`,
+	// `for (...)`. Fold parser tracks only `{...}` braces, so the body line
+	// has no header flag and the fold-derived foldLevel for body and header
+	// match. softBodyExtra carries +1 for the body line so its indent is
+	// preserved. currIsSoftHeader bumps the next-line indent. Both stack
+	// for nested headers. Walk back through blank lines so `if (cond)\n
+	// <blank>\n  body;` still recognises the soft-body region.
+	const bool isCES = (ibCompileCode::GetCodeStyle() == CODE_CES);
+	bool prevIsSoftHeader = false;
+	if (isCES) {
+		for (int l = currLine - 1; l >= 0; --l) {
+			const wxString prev = GetLine(l);
+			if (IsBlankOrWhitespace(prev)) continue;
+			prevIsSoftHeader = IsCESSingleStmtHeader(prev);
+			break;
+		}
+	}
+	const bool currIsSoftHeader = isCES && IsCESSingleStmtHeader(rawBufferLine);
+	const bool currLineBlank    = IsBlankOrWhitespace(rawBufferLine);
+	// Allman: `{` on its own line absorbs the soft-body bump. The `{` line
+	// itself sits at the soft header's indent; body inside braces at +1.
+	// Without this the `{` would be re-indented to body level by the
+	// HEADER branch's applyIndent call.
+	const bool currLineIsBraceOpener = isCES && IsLineJustOpenBrace(rawBufferLine);
+	const int  softBodyExtra    = (prevIsSoftHeader && !currLineIsBraceOpener) ? 1 : 0;
+
+	// CES indent rewrite is no-shrink: fold parser only tracks `{...}`,
+	// so manual indents inside soft-body regions or hand-aligned closers
+	// would otherwise be stripped. VES keeps strict match — its fold
+	// vector is keyword-fenced and accurate.
+	auto applyIndent = [&](int targetTabs) {
 		int replacePos = 0;
 		const int currentIndent = CountLeadingIndent(rawBufferLine, replacePos);
-		if (currentIndent != targetTabs)
+		if (isCES) {
+			if (currentIndent < targetTabs)
+				rawBufferLine.replace(0, replacePos, wxString(wxT('\t'), targetTabs));
+		}
+		else if (currentIndent != targetTabs) {
 			rawBufferLine.replace(0, replacePos, wxString(wxT('\t'), targetTabs));
+		}
 	};
 
 	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
 		// Procedure/Function/If/While/Try header — line itself sits at
 		// foldLevel; Enter on the header opens its body, +1 indent.
 		foldLevel ^= wxSTC_FOLDLEVELHEADER_FLAG;
-		rewriteIndent(foldLevel);
+		applyIndent(foldLevel + softBodyExtra);
 		if (startLinePos + foldLevel != currPosition) foldLevel++;
+		// Inside-brace body of a soft-scope `{` opener: lines inside the
+		// braces sit at brace-fold + soft carry. Without this carry the
+		// body of `if (x)\n\t{` lands at the brace level only.
+		foldLevel += softBodyExtra;
 	}
 	else if ((level & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
 		// Else/ElseIf/Except — pseudo-header at child indent; visually
 		// aligns to parent indent (foldLevel - 1).
 		foldLevel ^= wxSTC_FOLDLEVELELSE_FLAG;
 		if (foldLevel >= 0 && LineLength(currLine) > 0)
-			rewriteIndent(std::max(0, foldLevel - 1));
+			applyIndent(std::max(0, foldLevel - 1) + softBodyExtra);
 		if (startLinePos + foldLevel - 1 == currPosition) foldLevel--;
 	}
 	else if ((level & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
@@ -344,13 +456,24 @@ void ibCodeEditor::PrepareTABs()
 		// indent; the WHITE flag's level is already child, so subtract 1.
 		foldLevel = (foldLevel ^ wxSTC_FOLDLEVELWHITE_FLAG) - 1;
 		if (foldLevel >= 0 && LineLength(currLine) > 0)
-			rewriteIndent(foldLevel);
+			applyIndent(foldLevel + softBodyExtra);
 	}
 	else if ((level & wxSTC_FOLDLEVELBASE_FLAG) != 0) {
 		// Plain code line inside a block — indent matches foldLevel.
 		if (foldLevel >= 0 && LineLength(currLine) > 0)
-			rewriteIndent(foldLevel);
+			applyIndent(foldLevel + softBodyExtra);
 	}
+
+	// New-line indent: if current is a soft header, body goes one deeper
+	// than the current line's effective indent (foldLevel + softBodyExtra).
+	// If current line is still blank inside a soft-body region, carry the
+	// softBodyExtra forward — the body hasn't been typed yet, the next
+	// Enter stays in the same scope. Otherwise the body terminates after
+	// this statement and the next line returns to header level.
+	if (currIsSoftHeader)
+		foldLevel += 1 + softBodyExtra;
+	else if (currLineBlank && prevIsSoftHeader)
+		foldLevel += softBodyExtra;
 
 	AppendEOL(rawBufferLine, eolMode);
 	rawBufferLine.append(foldLevel, wxT('\t'));
@@ -415,12 +538,183 @@ void ibCodeEditor::FormatSelection()
 
 	BeginUndoAction();
 	for (int line = firstLine; line <= lastLine; line++) {
-		const int target = ComputeTargetIndent(m_fp.GetFoldMask(line));
+		const int mask = m_fp.GetFoldMask(line);
+		const int target = ComputeTargetIndent(mask);
 		// SetLineIndentation honours UseTabs / IndentSize so the
 		// rewrite respects the editor's per-doc tab/space preference.
 		SetLineIndentation(line, target * GetIndent());
 	}
 	EndUndoAction();
+}
+
+// Brace pair highlight on caret movement. wxSTC's BraceHighlight wants
+// matched positions; we resolve them manually because the custom styler
+// doesn't tag braces, and wxSTC's BraceMatch fails without that. Three
+// pairs supported: `{}`, `()`, `[]`.
+namespace {
+
+bool IsOpenBrace(wxChar c)  { return c == wxT('{') || c == wxT('(') || c == wxT('['); }
+bool IsCloseBrace(wxChar c) { return c == wxT('}') || c == wxT(')') || c == wxT(']'); }
+wxChar PairOf(wxChar c)
+{
+	switch ((int)c) {
+		case '{': return wxT('}');
+		case '}': return wxT('{');
+		case '(': return wxT(')');
+		case ')': return wxT('(');
+		case '[': return wxT(']');
+		case ']': return wxT('[');
+	}
+	return wxT('\0');
+}
+
+} // namespace
+
+void ibCodeEditor::OnUpdateUI(wxStyledTextEvent& event)
+{
+	const int caret = GetCurrentPos();
+
+	// Prefer brace just before caret, fall back to brace at caret.
+	int bracePos = -1;
+	wxChar braceCh = 0;
+	if (caret > 0) {
+		const wxChar c = (wxChar)GetCharAt(caret - 1);
+		if (IsOpenBrace(c) || IsCloseBrace(c)) {
+			bracePos = caret - 1;
+			braceCh  = c;
+		}
+	}
+	if (bracePos < 0) {
+		const wxChar c = (wxChar)GetCharAt(caret);
+		if (IsOpenBrace(c) || IsCloseBrace(c)) {
+			bracePos = caret;
+			braceCh  = c;
+		}
+	}
+
+	if (bracePos < 0) {
+		BraceHighlight(wxSTC_INVALID_POSITION, wxSTC_INVALID_POSITION);
+		event.Skip();
+		return;
+	}
+
+	const wxChar wantedPair = PairOf(braceCh);
+	const bool   forward    = IsOpenBrace(braceCh);
+	const int    total      = GetLength();
+	int          matchPos   = -1;
+	int          depth      = 1;
+
+	if (forward) {
+		for (int p = bracePos + 1; p < total; ++p) {
+			const wxChar c = (wxChar)GetCharAt(p);
+			if (c == braceCh)   ++depth;
+			else if (c == wantedPair) { if (--depth == 0) { matchPos = p; break; } }
+		}
+	}
+	else {
+		for (int p = bracePos - 1; p >= 0; --p) {
+			const wxChar c = (wxChar)GetCharAt(p);
+			if (c == braceCh)   ++depth;
+			else if (c == wantedPair) { if (--depth == 0) { matchPos = p; break; } }
+		}
+	}
+
+	if (matchPos < 0)
+		BraceBadLight(bracePos);
+	else
+		BraceHighlight(bracePos, matchPos);
+
+	event.Skip();
+}
+
+// Auto-align a typed brace. Fires from wxEVT_STC_CHARADDED on every
+// character; gates on `{` / `}` and rewrites the leading indent only
+// when the line so far is whitespace-only. Mixed-content typing like
+// `foo();}` is left alone — the user clearly didn't intend a fresh
+// closer there.
+//
+// `}` matching is a manual backward depth walk over raw bytes — wxSTC's
+// `BraceMatch` requires the lexer to style brace characters and our
+// custom styler doesn't, so it returns -1 here.
+//
+// `{` on a blank line right after a CES single-statement header
+// (`if (cond)` / `while (cond)` / `for (...)`) absorbs the pending
+// soft-body bump (Allman style): `{` sits at the header's indent.
+void ibCodeEditor::OnCharAdded(wxStyledTextEvent& event)
+{
+	const int key = event.GetKey();
+	if (key != '}' && key != '{') {
+		event.Skip();
+		return;
+	}
+
+	const int caret      = GetCurrentPos();
+	const int line       = LineFromPosition(caret);
+	const int lineStart  = PositionFromLine(line);
+	const int bracePos   = caret - 1;  // the just-typed brace
+
+	if (bracePos < lineStart) {
+		event.Skip();
+		return;
+	}
+
+	for (int p = lineStart; p < bracePos; ++p) {
+		const wxChar c = (wxChar)GetCharAt(p);
+		if (c != wxT(' ') && c != wxT('\t')) {
+			event.Skip();
+			return;
+		}
+	}
+
+	if (key == '}') {
+		int matchPos = -1;
+		int depth = 1;  // bracePos is a `}`, balance starts at 1
+		for (int p = bracePos - 1; p >= 0; --p) {
+			const wxChar c = (wxChar)GetCharAt(p);
+			if (c == wxT('}'))      ++depth;
+			else if (c == wxT('{')) { if (--depth == 0) { matchPos = p; break; } }
+		}
+
+		if (matchPos < 0) {
+			event.Skip();
+			return;
+		}
+
+		const int matchLine   = LineFromPosition(matchPos);
+		const int matchIndent = GetLineIndentation(matchLine);
+		const int currIndent  = GetLineIndentation(line);
+
+		if (matchIndent != currIndent)
+			SetLineIndentation(line, matchIndent);
+	}
+	else {
+		// `{` — Allman dedent under a CES soft single-statement header.
+		if (ibCompileCode::GetCodeStyle() != CODE_CES) {
+			event.Skip();
+			return;
+		}
+
+		int headerLine = -1;
+		for (int l = line - 1; l >= 0; --l) {
+			const wxString prev = GetLine(l);
+			if (IsBlankOrWhitespace(prev)) continue;
+			if (IsCESSingleStmtHeader(prev)) headerLine = l;
+			break;  // first non-blank line found, done
+		}
+
+		if (headerLine < 0) {
+			event.Skip();
+			return;
+		}
+
+		const int headerIndent = GetLineIndentation(headerLine);
+		const int currIndent   = GetLineIndentation(line);
+
+		if (headerIndent != currIndent)
+			SetLineIndentation(line, headerIndent);
+	}
+
+	event.Skip();
 }
 
 void ibCodeEditor::IncreaseIndent()
@@ -511,14 +805,21 @@ void ibCodeEditor::LoadAutoComplete()
 	if (m_ct.Active())
 		m_ct.Cancel();
 
-	if (!PrepareExpression(realPos, expression, keyword, currentWord, hasPoint)) {
+	const bool hasKeyword = PrepareExpression(realPos, expression, keyword, currentWord, hasPoint);
+
+	// User stands AT a word boundary (Ctrl+Space at the very start of an
+	// identifier, or in trailing whitespace). PrepareExpression greedily
+	// captures the full identifier from the lex stream which then lands as
+	// the Append filter — and `Find("MESSAGE")` rejects every system keyword
+	// like `If`, `Then`, etc. Force-clear currentWord here so the dropdown
+	// shows all candidates; the user filters live by typing forward.
+	if (lenEntered == 0)
+		currentWord = wxEmptyString;
+
+	if (!hasKeyword) {
 		m_ac.Start(currentWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
-		if (hasPoint) {
-			LoadIntelliList();
-		}
-		else {
-			LoadSysKeyword();
-		}
+		if (hasPoint) LoadIntelliList();
+		else          LoadSysKeyword();
 	}
 	else {
 		m_ac.Start(currentWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
@@ -527,6 +828,7 @@ void ibCodeEditor::LoadAutoComplete()
 
 	wxPoint position = PointFromPosition(wordStartPos);
 	position.y += TextHeight(GetCurrentLine());
+
 	m_ac.Show(position);
 }
 
@@ -577,7 +879,7 @@ void ibCodeEditor::LoadCallTip()
 
 				ibRuntimeModuleDataObject* moduleDataObject = dynamic_cast<ibRuntimeModuleDataObject*>(vObject.GetRef());
 				if (moduleDataObject) {
-					const const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
+					const ibValueMetaObjectModuleBase* computeModuleObject = moduleDataObject->GetMetaObject();
 					if (computeModuleObject) {
 						ibParserModule cParser;
 						if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
@@ -665,9 +967,13 @@ void ibCodeEditor::LoadSysKeyword()
 
 	if (m_precompileModule->Compile()) {
 		ibPrecompileContext* rootContext = m_precompileModule->GetContext();
+		const int caretPos = (int)GetRealPosition();
 		for (const auto& variable : rootContext->m_variables) {
 			const ibPrecompileVariable& v = variable.second;
 			if (v.m_isTempVar)
+				continue;
+			// declPos > caret → declared below current line; not yet visible.
+			if (v.m_declPos > caretPos)
 				continue;
 			m_ac.Append(v.m_isExport ?
 				ibContentType::eExportVariable : ibContentType::eVariable, v.m_realName, wxEmptyString
@@ -693,6 +999,12 @@ void ibCodeEditor::LoadSysKeyword()
 					const ibPrecompileVariable& v = variable.second;
 					if (v.m_isTempVar)
 						continue;
+					// Same declared-above-caret gate as for root context. Function
+					// parameters keep declPos=0 so they always show up; only
+					// in-body `var x` / implicit `x = expr` declarations are
+					// position-gated.
+					if (v.m_declPos > caretPos)
+						continue;
 					m_ac.Append(v.m_isExport ?
 						ibContentType::eExportVariable : ibContentType::eVariable, v.m_realName, wxEmptyString
 					);
@@ -709,10 +1021,8 @@ void ibCodeEditor::LoadIntelliList()
 	m_precompileModule->SetCurrentPos(GetRealPosition());
 	m_precompileModule->SetCalcValue(true);
 
-	//Collect text
-	if (m_precompileModule->Compile()) {
+	if (m_precompileModule->Compile())
 		AddKeywordFromObject(m_precompileModule->GetComputeValue());
-	}
 
 	m_precompileModule->SetCalcValue(false);
 	m_precompileModule->Clear();

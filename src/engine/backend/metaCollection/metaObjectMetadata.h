@@ -156,7 +156,11 @@ private:
 
 	ibPropertyCategory* m_compatibilityCategory = ibPropertyObject::CreatePropertyCategory(wxT("Compatibility"), _("Compatibility"));
 	ibPropertyEnum<ibValueEnumVersion>* m_propertyVersion = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumVersion>>(m_compatibilityCategory, wxT("Version"), _("Version"), version_oes_last);
-	ibPropertyEnum<ibValueEnumSyntax>* m_propertySyntax = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSyntax>>(m_compatibilityCategory, wxT("Syntax"), _("Syntax"), syntax_vbs);
+	// CES is the default for new configurations. VES (Visual Basic-style
+	// ES + 1С/BSL mix) is kept available for legacy / 1С-migrated
+	// configurations and acts as a "please migrate" signal in the
+	// metadata UI.
+	ibPropertyEnum<ibValueEnumSyntax>* m_propertySyntax = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSyntax>>(m_compatibilityCategory, wxT("Syntax"), _("Syntax"), syntax_ces);
 
 #pragma region role 
 	ibRole* m_roleAdministration = ibValueMetaObject::CreateRole(wxT("Administration"), _("Administration"));

@@ -2,6 +2,7 @@
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/win/theme/luna_tabart.h"
 
+#include "frontend/win/editor/codeEditor/codeEditor.h"
 #include "frontend/win/editor/codeEditor/codeEditorParser.h"
 
 void ibVisualEditorNotebook::CreateVisualEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, long flags)
@@ -129,11 +130,7 @@ void ibVisualEditorNotebook::ModifyEvent(ibEvent* event, const wxVariant& oldVal
 			wxString offset = endPos > 0 ?
 				wxT("\r\n\r\n") : wxT("");
 			m_codeEditor->Replace(endPos, endPos,
-				offset +
-				wxT("Procedure ") + strEvent + wxT("(") + prcArgs + wxT(")\r\n")
-				"\t\r\n"
-				wxT("EndProcedure")
-			);
+				offset + ibCodeEditor::MakeProcedureTemplate(strEvent, prcArgs));
 			int patchLine = endPos > 0 ?
 				2 : -1;
 			m_lineStart = m_lineEnd + patchLine;

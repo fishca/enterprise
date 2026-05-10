@@ -14,6 +14,15 @@
 //array of mathematical operation priorities
 static std::array<int, 256> gs_operPriority = { 0 };
 
+// IntelliSense mirrors the backend compiler's syntax mode — process-
+// global flag set on ibCompileCode. CES (`if (cond) { … }`) and VES
+// (`If cond Then … EndIf`) compile to identical bytecode at the
+// backend, so the editor walks the lexem stream with the matching
+// closing-token expectations and brace handling.
+static inline bool IsCES() {
+	return ibCompileCode::GetCodeStyle() == CODE_CES;
+}
+
 ibPrecompileCode::ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject)
 	: ibTranslateCode(moduleObject ? moduleObject->GetFullName() : wxString(),
 	                  moduleObject ? moduleObject->GetDocPath()  : wxString()),
@@ -360,6 +369,14 @@ bool ibPrecompileCode::PrepareLexem()
 	wxString s;
 	m_listLexem.clear();
 
+	// Line on which a preprocessor directive (#define / #undef / #ifdef /
+	// #ifndef / #region / etc.) was last seen. Every token tokenised on
+	// the same line is dropped — the directive's parameter (an ident
+	// after #define, the symbol after #ifdef, the region name) would
+	// otherwise leak into the lexem stream and the parser would try to
+	// interpret it as an expression. -1 = no directive in flight.
+	int directiveLine = -1;
+
 	while (!IsEnd()) {
 
 		// m_translateCode bound at ctor time, kept through moves.
@@ -440,6 +457,11 @@ bool ibPrecompileCode::PrepareLexem()
 				}
 			}
 
+			// Directive-line guard — same rationale as the bottom-of-loop
+			// check: a string / number / date literal on a `#define X = 5`
+			// line must not enter the lexem stream as a free token.
+			if (directiveLine >= 0 && (int)m_current_lex.m_numLine == directiveLine)
+				continue;
 			m_listLexem.emplace_back(std::move(m_current_lex));
 			continue;
 		}
@@ -463,14 +485,23 @@ bool ibPrecompileCode::PrepareLexem()
 		m_current_lex.m_strData = s;
 		if (m_current_lex.m_lexType == KEYWORD)
 		{
-			if (m_current_lex.m_numData == KEY_DEFINE)continue;
-			else if (m_current_lex.m_numData == KEY_UNDEF) continue;
-			else if (m_current_lex.m_numData == KEY_IFDEF || m_current_lex.m_numData == KEY_IFNDEF) continue;
-			else if (m_current_lex.m_numData == KEY_ENDIFDEF) continue;
-			else if (m_current_lex.m_numData == KEY_ELSEDEF) continue;
-			else if (m_current_lex.m_numData == KEY_REGION) continue;
-			else if (m_current_lex.m_numData == KEY_ENDREGION) continue;
+			if (m_current_lex.m_numData == KEY_DEFINE
+				|| m_current_lex.m_numData == KEY_UNDEF
+				|| m_current_lex.m_numData == KEY_IFDEF
+				|| m_current_lex.m_numData == KEY_IFNDEF
+				|| m_current_lex.m_numData == KEY_ENDIFDEF
+				|| m_current_lex.m_numData == KEY_ELSEDEF
+				|| m_current_lex.m_numData == KEY_REGION
+				|| m_current_lex.m_numData == KEY_ENDREGION) {
+				directiveLine = m_current_lex.m_numLine;
+				continue;
+			}
 		}
+		// Drop everything on the directive's line — the parameter token
+		// (`#define <NAME>`, `#region <Name>`, …) would otherwise enter
+		// the parser as a stray identifier.
+		if (directiveLine >= 0 && m_current_lex.m_numLine == directiveLine)
+			continue;
 		m_listLexem.emplace_back(std::move(m_current_lex));
 	}
 
@@ -550,6 +581,11 @@ void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const in
 		insert_after = false;
 	}
 
+	// Mirror the directive-line skip from the full PrepareLexem path
+	// so incremental re-tokenisation drops `#define <NAME>` etc. as a
+	// whole-line unit too. -1 = no directive in flight.
+	int directiveLine = -1;
+
 	while (!IsEnd()) {
 
 		if (insert_text && m_currentLine > (line + line_offset)) break;
@@ -627,6 +663,11 @@ void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const in
 				}
 			}
 
+			// Directive-line guard for the incremental tokenizer's
+			// CONSTANT path — see the full PrepareLexem version.
+			if (directiveLine >= 0 && (int)m_current_lex.m_numLine == directiveLine) {
+				continue;
+			}
 			if (insert_after) {
 				hint = m_listLexem.emplace(
 					std::next(hint, 1), std::move(m_current_lex));
@@ -666,9 +707,14 @@ void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const in
 				|| m_current_lex.m_numData == KEY_ENDREGION
 				)
 			{
+				directiveLine = m_current_lex.m_numLine;
 				continue;
 			}
 		}
+		// Drop tokens on the directive's line — see full-PrepareLexem
+		// counterpart for rationale.
+		if (directiveLine >= 0 && (int)m_current_lex.m_numLine == directiveLine)
+			continue;
 
 		if (insert_after) {
 			hint = m_listLexem.emplace(
@@ -744,7 +790,6 @@ bool ibPrecompileCode::CompileModule()
 		else if (KEYWORD == lex.m_lexType && (KEY_PROCEDURE == lex.m_numData || KEY_FUNCTION == lex.m_numData))
 		{
 			CompileFunction();// load function declaration
-			// don't forget to restore the current module context (if necessary)...
 		}
 		else
 		{
@@ -757,14 +802,13 @@ bool ibPrecompileCode::CompileModule()
 	// load the executable body of the module
 	m_activeContext = GetContext();// context of the module itself
 
-	CompileBlock();
+	CompileBlock(/*allowSingleStmt=*/false);
 
-	if (m_cursor + 1 < m_listLexem.size() - 1) return false;
+	if (m_cursor + 1 < m_listLexem.size() - 1)
+		return false;
 
 	if (m_caretPos >= nStartContext && m_caretPos <= m_listLexem[m_cursor].m_numString)
-	{
 		m_cursorContext = m_activeContext;
-	}
 
 	return true;
 }
@@ -920,15 +964,23 @@ bool ibPrecompileCode::CompileFunction()
 	int nStartContext = m_listLexem[m_cursor].m_numString;
 
 	GetContext()->m_currentFunctionName = funcName;
-	CompileBlock();
+	// Function/procedure body is multi-statement (terminator = EndFunction /
+	// EndProcedure in VES, matching `}` in CES). The default
+	// allowSingleStmt=true would make the body exit after the first parsed
+	// statement and leave the terminator unconsumed — cascade-fail when an
+	// inline lambda's `EndFunction` is what appears next.
+	CompileBlock(/*allowSingleStmt=*/false);
 	GetContext()->m_currentFunctionName = wxEmptyString;
 
-	// Closing keyword matches the OPENING keyword (Function → EndFunction,
-	// Procedure → EndProcedure). isFunctionKeyword captured at
-	// signature-parse drives the decision uniformly for named and
-	// anonymous bodies.
-	if (isFunctionKeyword) ExpectKeyword(KEY_ENDFUNCTION);
-	else ExpectKeyword(KEY_ENDPROCEDURE);
+	// VES — closing keyword matches the OPENING keyword (Function →
+	// EndFunction, Procedure → EndProcedure). isFunctionKeyword captured
+	// at signature-parse drives the decision uniformly for named and
+	// anonymous bodies. CES uses brace-fenced bodies; the trailing `}`
+	// is consumed by the body's CompileBlock.
+	if (!IsCES()) {
+		if (isFunctionKeyword) ExpectKeyword(KEY_ENDFUNCTION);
+		else ExpectKeyword(KEY_ENDPROCEDURE);
+	}
 
 	if (m_caretPos >= nStartContext && m_caretPos <= m_listLexem[m_cursor].m_numString) m_cursorContext = m_activeContext;
 	return true;
@@ -966,13 +1018,35 @@ bool ibPrecompileCode::CompileDeclaration()
 			isExport = true;
 		}
 
-		m_activeContext->AddVariable(name, type, isExport);
+		ibParamValue inferred;
+		bool         hasInit = false;
 
 		if (IsNextDelimeter('='))// initial initialization - works only inside the text of modules (but not re-declaring procedures and functions)
 		{
 			if (nArrayCount >= 0) ExpectDelimeter(',');//Error!
 			ExpectDelimeter('=');
+			// Consume the initialiser expression. Without this, CES code
+			// like `var x = Catalogs.Items;` left the chain expression in
+			// the lexem stream, the outer CompileBlock then read it as a
+			// fresh statement and failed at the `.` (no leading identifier
+			// state was preserved). Walking through GetExpression also
+			// captures the inferred type so subsequent `x.` autocomplete
+			// resolves the chain.
+			inferred = GetExpression();
+			hasInit  = true;
 		}
+
+		// Variable registration goes AFTER the initialiser parse so the
+		// inferred type carries through to AddVariable. Original-cased
+		// `name` lands in the context; case-insensitive lookup handles
+		// the rest. declPos is captured at the start of the declaration
+		// so autocomplete only surfaces this var when caret is past it.
+		const wxString effectiveType = type.IsEmpty() && hasInit
+			? inferred.m_paramType : type;
+		const int declPos = (m_cursor >= 0 && m_cursor < (int)m_listLexem.size())
+			? m_listLexem[m_cursor].m_numString : 0;
+		m_activeContext->AddVariable(name, effectiveType, isExport, /*context=*/false,
+			hasInit ? inferred.m_paramObject : ibValue(), declPos);
 
 		if (!IsNextDelimeter(','))
 			break;
@@ -983,12 +1057,41 @@ bool ibPrecompileCode::CompileDeclaration()
 	return true;
 }
 
-bool ibPrecompileCode::CompileBlock()
+bool ibPrecompileCode::CompileBlock(bool allowSingleStmt)
 {
 	ibLexem lex;
 
+	// CES — consume the opener `{` if present. Function bodies and the
+	// per-control-structure call-sites both invoke CompileBlock with `{`
+	// as the next token (mirroring ibCompileCode::CompileBlock's entry
+	// gate). Set bCompileBlock so the matching `}` is consumed at exit.
+	//
+	// CES also supports the brace-less single-statement body
+	// (`if (cond) stmt;` / `while (cond) stmt;`), where the body is
+	// exactly one statement and the surrounding control structure
+	// resumes parsing immediately after. singleStmtMode below mirrors
+	// the backend compiler's `RETURN_BLOCK` exit condition; IntelliSense
+	// lacks that context kind, so we track it locally via parsedOne.
+	// Module-level body callsite passes allowSingleStmt=false — no `{`
+	// is expected there but the body is multi-statement.
+	bool bCompileBlock  = false;
+	bool singleStmtMode = false;
+	bool parsedOne      = false;
+	if (IsCES()) {
+		if (IsNextDelimeter('{')) {
+			ExpectDelimeter('{');
+			bCompileBlock = true;
+		}
+		else if (allowSingleStmt) {
+			singleStmtMode = true;
+		}
+	}
+
 	while ((lex = PreviewGetLexem()).m_lexType != ERRORTYPE)
 	{
+		if (singleStmtMode && parsedOne)
+			goto blockExit;
+
 		if (IDENTIFIER == lex.m_lexType && IsTypeVar(lex.m_strData)) CompileDeclaration();
 
 		if (KEYWORD == lex.m_lexType)
@@ -1045,7 +1148,10 @@ bool ibPrecompileCode::CompileBlock()
 
 				ExpectKeyword(KEY_EXCEPT);
 				CompileBlock();
-				ExpectKeyword(KEY_ENDTRY);
+				// VES terminates with EndTry; CES closes via the body
+				// braces and falls through directly.
+				if (!IsCES())
+					ExpectKeyword(KEY_ENDTRY);
 
 				break;
 			}
@@ -1088,8 +1194,14 @@ bool ibPrecompileCode::CompileBlock()
 
 			default:
 				// means the operator bracket ending this block has been encountered (for example, ENDIF, ENDDO, ENDFUNCTION, etc.)
-				return true;
+				goto blockExit;
 			}
+			// One control-keyword statement consumed (KEY_VAR / KEY_IF /
+			// KEY_WHILE / KEY_FOR{,EACH} / KEY_GOTO / KEY_RETURN /
+			// KEY_TRY / KEY_RAISE / KEY_CONTINUE / KEY_BREAK / lambda
+			// skip). Trips singleStmtMode so a brace-less CES body
+			// `if (cond) stmt;` exits after exactly this statement.
+			parsedOne = true;
 		}
 		else
 		{
@@ -1120,16 +1232,47 @@ bool ibPrecompileCode::CompileBlock()
 						}
 						else
 						{
-							m_activeContext->AddVariable(variable.m_paramName, expression.m_paramType, false, false, expression.m_paramObject);
+							const int implDeclPos = (m_cursor >= 0 && m_cursor < (int)m_listLexem.size())
+								? m_listLexem[m_cursor].m_numString : 0;
+							m_activeContext->AddVariable(variable.m_paramName, expression.m_paramType, false, false, expression.m_paramObject, implDeclPos);
 						}
 					}
 				}
+				parsedOne = true;
 			}
-			else if (DELIMITER == lex.m_lexType && ';' == lex.m_numData) break;
+			else if (DELIMITER == lex.m_lexType && ';' == lex.m_numData) {
+				// VES legacy break-on-`;` was a bug for CES — `;` is just
+				// a statement terminator there; the block continues.
+				// In single-stmt mode the trailing `;` after the body is
+				// the body's own terminator; ate-it-and-exit.
+				if (IsCES()) {
+					if (singleStmtMode && parsedOne)
+						goto blockExit;
+					continue;
+				}
+				break;
+			}
+			else if (IsCES() && DELIMITER == lex.m_lexType && '{' == lex.m_numData) {
+				// Nested `{ … }` block — recurse into CompileBlock; it
+				// will consume the matching `}` itself.
+				m_cursor--;  // step back so CompileBlock sees the `{`
+				CompileBlock();
+				parsedOne = true;
+			}
+			else if (IsCES() && DELIMITER == lex.m_lexType && '}' == lex.m_numData) {
+				// Block close — step back and let the surrounding caller
+				// (or our own bCompileBlock branch below) consume `}`.
+				m_cursor--;
+				break;
+			}
 			else if (ENDPROGRAM == lex.m_lexType) break;
 			else return false;
 		}
 	}//while
+
+blockExit:
+	if (IsCES() && bCompileBlock)
+		ExpectDelimeter('}');
 
 	return true;
 }
@@ -1180,9 +1323,14 @@ bool ibPrecompileCode::CompileIf()
 {
 	ExpectKeyword(KEY_IF);
 
+	if (IsCES())
+		ExpectDelimeter('(');
 	GetExpression();
+	if (IsCES())
+		ExpectDelimeter(')');
+	else
+		ExpectKeyword(KEY_THEN);
 
-	ExpectKeyword(KEY_THEN);
 	CompileBlock();
 
 	while (IsNextKeyWord(KEY_ELSEIF))
@@ -1190,9 +1338,14 @@ bool ibPrecompileCode::CompileIf()
 		// write the output from all checks for the previous block
 		ExpectKeyword(KEY_ELSEIF);
 
+		if (IsCES())
+			ExpectDelimeter('(');
 		GetExpression();
+		if (IsCES())
+			ExpectDelimeter(')');
+		else
+			ExpectKeyword(KEY_THEN);
 
-		ExpectKeyword(KEY_THEN);
 		CompileBlock();
 	}
 
@@ -1203,7 +1356,10 @@ bool ibPrecompileCode::CompileIf()
 		CompileBlock();
 	}
 
-	ExpectKeyword(KEY_ENDIF);
+	// VES terminates with EndIf; CES closes via the trailing `}` already
+	// consumed by the last CompileBlock.
+	if (!IsCES())
+		ExpectKeyword(KEY_ENDIF);
 	return true;
 }
 
@@ -1211,11 +1367,18 @@ bool ibPrecompileCode::CompileWhile()
 {
 	ExpectKeyword(KEY_WHILE);
 
+	if (IsCES())
+		ExpectDelimeter('(');
 	GetExpression();
+	if (IsCES())
+		ExpectDelimeter(')');
+	else
+		ExpectKeyword(KEY_DO);
 
-	ExpectKeyword(KEY_DO);
 	CompileBlock();
-	ExpectKeyword(KEY_ENDDO);
+
+	if (!IsCES())
+		ExpectKeyword(KEY_ENDDO);
 
 	return true;
 }
@@ -1223,6 +1386,9 @@ bool ibPrecompileCode::CompileWhile()
 bool ibPrecompileCode::CompileFor()
 {
 	ExpectKeyword(KEY_FOR);
+
+	if (IsCES())
+		ExpectDelimeter('(');
 
 	int nStartPos = m_listLexem[m_cursor].m_numString;
 
@@ -1238,9 +1404,15 @@ bool ibPrecompileCode::CompileFor()
 	ExpectKeyword(KEY_TO);
 	GetExpression();
 
-	ExpectKeyword(KEY_DO);
+	if (IsCES())
+		ExpectDelimeter(')');
+	else
+		ExpectKeyword(KEY_DO);
+
 	CompileBlock();
-	ExpectKeyword(KEY_ENDDO);
+
+	if (!IsCES())
+		ExpectKeyword(KEY_ENDDO);
 
 	if (!(nStartPos < m_caretPos && m_listLexem[m_cursor].m_numString > m_caretPos))
 		m_activeContext->RemoveVariable(realName);
@@ -1251,6 +1423,9 @@ bool ibPrecompileCode::CompileFor()
 bool ibPrecompileCode::CompileForeach()
 {
 	ExpectKeyword(KEY_FOREACH);
+
+	if (IsCES())
+		ExpectDelimeter('(');
 
 	int nStartPos = m_listLexem[m_cursor].m_numString;
 
@@ -1503,6 +1678,92 @@ ibParamValue ibPrecompileCode::GetExpression(int priority)
 		ibParamValue sVariable2 = GetExpression(gs_operPriority['!']);
 		variable.m_paramType = wxT("NUMBER");
 	}
+	else if (lex.m_lexType == KEYWORD &&
+		(lex.m_numData == KEY_FUNCTION || lex.m_numData == KEY_PROCEDURE)) {
+		// Anonymous Function/Procedure expression (lambda).
+		// Push a child precompile context with parent = root so the body
+		// parses with params + locals visible to autocomplete. Lambda
+		// scope rule mirrors runtime: own params/locals + root-level
+		// Context bindings (Catalogs / Documents / Manager / system fns).
+		// The enclosing function's locals are intentionally invisible
+		// (matches CompileLambdaExpression's m_parentContext = nullptr
+		// discipline on the backend).
+		const long openKey = lex.m_numData;
+
+		ibPrecompileContext* const prevActive = m_activeContext;
+		m_activeContext = new ibPrecompileContext(GetContext());
+		m_activeContext->SetModule(this);
+		m_activeContext->m_returnKind = (openKey == KEY_FUNCTION)
+			? RETURN_LAMBDA_FUNCTION : RETURN_LAMBDA_PROCEDURE;
+
+		// Parse the parameter list — register each as a local in the
+		// lambda's context. Mirrors CompileFunction's signature loop;
+		// optional default values are consumed but their type isn't
+		// inferred (defaults are literal primitives, fine to ignore for
+		// autocomplete typing).
+		if (IsNextDelimeter('(')) {
+			ExpectDelimeter('(');
+			while (m_cursor + 1 < m_listLexem.size() && !IsNextDelimeter(')')) {
+				wxString type;
+				if (IsTypeVar())            type = GetTypeVar();
+				if (IsNextKeyWord(KEY_VAL)) ExpectKeyword(KEY_VAL);
+
+				wxString realName = ExpectIdentifier(true);
+
+				if (IsNextDelimeter('[')) {
+					ExpectDelimeter('[');
+					ExpectDelimeter(']');
+				}
+				else if (IsNextDelimeter('=')) {
+					ExpectDelimeter('=');
+					ExpectConstant();
+				}
+
+				ibValue valObject;
+				if (!type.IsEmpty()) {
+					try { valObject = ibValue::CreateObject(type); }
+					catch (...) {}
+				}
+				m_activeContext->AddVariable(realName, type, false, false, valObject);
+
+				if (IsNextDelimeter(')')) break;
+				ExpectDelimeter(',');
+			}
+			ExpectDelimeter(')');
+		}
+
+		// Body — CompileBlock handles both CES `{ … }` and VES
+		// keyword-fenced fall-through. Capture body span for cursor-
+		// inside check. allowSingleStmt=false: lambda body is multi-
+		// statement up to its EndFunction / EndProcedure / `}`, same as a
+		// named function body.
+		const int nStartContext = (m_cursor < (int)m_listLexem.size())
+			? m_listLexem[m_cursor].m_numString : 0;
+
+		CompileBlock(/*allowSingleStmt=*/false);
+
+		if (!IsCES()) {
+			if (openKey == KEY_FUNCTION) ExpectKeyword(KEY_ENDFUNCTION);
+			else                          ExpectKeyword(KEY_ENDPROCEDURE);
+		}
+
+		// Cursor inside lambda body → expose its context to autocomplete.
+		// Same pattern as CompileFunction's tail (line ~982).
+		if (m_cursor < (int)m_listLexem.size() &&
+			m_caretPos >= nStartContext &&
+			m_caretPos <= m_listLexem[m_cursor].m_numString) {
+			m_cursorContext = m_activeContext;
+		}
+
+		// Restore caller's context. Lambda's context is referenced by
+		// m_cursorContext (when caret hit it) and by AddVariable's parent
+		// chain — leaking into a member would shadow the next CompileBlock
+		// iteration's local-scope pushes.
+		m_activeContext = prevActive;
+
+		variable.m_paramType = wxT("FUNCTION");
+		return variable;
+	}
 	else if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NEW)) {
 
 		const wxString& objectName = ExpectIdentifier();
@@ -1727,6 +1988,11 @@ ibParamValue ibPrecompileCode::GetCurrentIdentifier(int& isSet)
 	const wxString& realName = ExpectIdentifier(true);
 	const wxString& name = stringUtils::MakeUpper(realName);
 
+	// Identifier's source-text position — used both for the caret-after-
+	// identifier teleport check below and as the declPos seed when
+	// GetVariable auto-declares this name (`a = expr` first-occurrence).
+	// declPos propagation keeps autocomplete from surfacing implicit
+	// locals whose first reference is below the caret.
 	const int nStartPos = m_listLexem[m_cursor].m_numString;
 
 	if (!m_calcValue && (nStartPos + realName.length() == m_caretPos ||
@@ -1840,7 +2106,7 @@ ibParamValue ibPrecompileCode::GetCurrentIdentifier(int& isSet)
 		}
 		else {
 			isSet = 1;
-			variable = GetVariable(realName, checkError);
+			variable = GetVariable(realName, checkError, nStartPos);
 		}
 	}
 
@@ -2068,9 +2334,9 @@ void ibPrecompileCode::AddVariable(const wxString& varName, const ibValue& value
  *   Resolve a variable by name in the active context, walking parent
  *   scopes. checkError=true suppresses auto-declaration on miss.
  */
-ibParamValue ibPrecompileCode::GetVariable(const wxString& name, bool checkError)
+ibParamValue ibPrecompileCode::GetVariable(const wxString& name, bool checkError, int declPos)
 {
-	return m_activeContext->GetVariable(name, true, checkError);
+	return m_activeContext->GetVariable(name, true, checkError, ibValue(), declPos);
 }
 
 /**

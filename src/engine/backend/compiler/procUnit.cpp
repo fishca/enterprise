@@ -660,7 +660,8 @@ public:
 	// ProcUnit::Execute snapshots m_pByteCode at entry.
 	void Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDelta)
 	{
-		if (GetFunction() == nullptr)
+		const auto* bfn = GetFunction();
+		if (bfn == nullptr)
 			ibBackendCoreException::Error(_("Cannot call: function value is not initialised"));
 
 		ibProcUnitState* const state = ibSession::GetPUState();
@@ -1147,9 +1148,8 @@ start_label:
 				const long callerArgCount = (long)index2;
 				ibValueFunction* fn = cvariable4.ConvertToType<ibValueFunction>();
 				const ibByteCode::ibByteFunction* bfn = fn ? fn->GetFunction() : nullptr;
-				if (bfn == nullptr) {
+				if (bfn == nullptr)
 					ibBackendCoreException::Error(_("Cannot call: value is not a callable function"));
-				}
 
 				const ibByteCode* pLocalByteCode = fn->GetParentBc();
 				const long lambdaParamCount = bfn->m_lCodeParamCount;

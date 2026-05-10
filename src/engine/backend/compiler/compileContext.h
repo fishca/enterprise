@@ -46,7 +46,7 @@ enum {
 };
 
 enum {
-	CODE_VBS = ibProgramSyntax::syntax_vbs,
+	CODE_VES = ibProgramSyntax::syntax_ves,
 	CODE_CES = ibProgramSyntax::syntax_ces
 };
 

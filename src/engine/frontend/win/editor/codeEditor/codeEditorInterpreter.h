@@ -20,6 +20,9 @@ struct ibPrecompileVariable
 	bool m_isTempVar = false;
 
 	int  m_number    = 0;
+	int  m_declPos   = 0;  // source-text offset of the declaration; 0 = always
+	                       // visible (parameter / context-injected). LoadSys-
+	                       // Keyword filters out variables with declPos > caret.
 
 	wxString m_name;     // variable name
 	wxString m_type;     // variable type (in english notation, when typed)
@@ -49,8 +52,8 @@ struct ibPrecompileContext
 
 	void SetModule(ibPrecompileCode* setModule) { m_module = setModule; }
 
-	ibParamValue GetVariable(const wxString& varName, bool findInParent = true, bool checkError = false, const ibValue& value = ibValue());
-	ibParamValue AddVariable(const wxString& varName, const wxString& varType = wxEmptyString, bool isExport = false, bool isTempVar = false, const ibValue& value = ibValue());
+	ibParamValue GetVariable(const wxString& varName, bool findInParent = true, bool checkError = false, const ibValue& value = ibValue(), int declPos = 0);
+	ibParamValue AddVariable(const wxString& varName, const wxString& varType = wxEmptyString, bool isExport = false, bool isTempVar = false, const ibValue& value = ibValue(), int declPos = 0);
 	void         SetVariable(const wxString& varName, const ibValue& value);
 
 	bool FindVariable(const wxString& name, ibValue& valContext = ibValue(), bool isContext = false);
@@ -189,7 +192,11 @@ protected:
 	bool CompileFunction();
 	bool CompileDeclaration();
 
-	bool CompileBlock();
+	// allowSingleStmt: when true (default), CES brace-less form
+	// `if (cond) stmt;` exits after exactly one statement. Module-level
+	// body passes false — there's no `{` opener but the body is a
+	// multi-statement sequence, not a single-stmt scope.
+	bool CompileBlock(bool allowSingleStmt = true);
 
 	bool CompileNewObject();
 	bool CompileGoto();
@@ -224,7 +231,7 @@ protected:
 
 	void AddVariable(const wxString& varName, const ibValue& value);
 
-	ibParamValue GetVariable(const wxString& varName, bool checkError = false);
+	ibParamValue GetVariable(const wxString& varName, bool checkError = false, int declPos = 0);
 	ibParamValue GetVariable();
 
 	void SetVariable(const wxString& varName, const ibValue& value);

@@ -68,7 +68,7 @@ void ibPrecompileContext::RemoveVariable(const wxString& name)
  *   a variable with the same name already exists the function returns
  *   an empty ibParamValue.
  */
-ibParamValue ibPrecompileContext::AddVariable(const wxString& paramName, const wxString& paramType, bool isExport, bool isTempVar, const ibValue& value)
+ibParamValue ibPrecompileContext::AddVariable(const wxString& paramName, const wxString& paramType, bool isExport, bool isTempVar, const ibValue& value, int declPos)
 {
 	if (FindVariable(paramName))   // already exists — re-declaration is an error
 		return ibParamValue();
@@ -82,6 +82,7 @@ ibParamValue ibPrecompileContext::AddVariable(const wxString& paramName, const w
 	currentVar.m_type = paramType;
 	currentVar.m_valObject = value;
 	currentVar.m_number = m_variables.size();
+	currentVar.m_declPos = declPos;
 
 	m_variables[stringUtils::MakeUpper(paramName)] = currentVar;
 
@@ -106,7 +107,7 @@ void ibPrecompileContext::SetVariable(const wxString& varName, const ibValue& va
  *   m_continueParent). When the name is not resolvable and checkError
  *   is false, the variable is auto-declared as a fresh local.
  */
-ibParamValue ibPrecompileContext::GetVariable(const wxString& name, bool findInParent, bool checkError, const ibValue& value)
+ibParamValue ibPrecompileContext::GetVariable(const wxString& name, bool findInParent, bool checkError, const ibValue& value, int declPos)
 {
 	int numCanUseLocalInParent = m_findLocalInParent;
 	ibParamValue Variable;
@@ -151,8 +152,11 @@ ibParamValue ibPrecompileContext::GetVariable(const wxString& name, bool findInP
 			return Variable;
 
 		bool isTempVar = name.Left(1) == "@";
-		// There was no declaration yet — auto-add it as a local.
-		AddVariable(name, wxEmptyString, false, isTempVar, value);
+		// There was no declaration yet — auto-add it as a local. declPos
+		// propagates so autocomplete only surfaces the var when the caret
+		// is past the first reference (typical implicit-decl pattern is
+		// `a = expr` — the LHS occurrence is the de-facto declaration).
+		AddVariable(name, wxEmptyString, false, isTempVar, value, declPos);
 	}
 
 	//determine the m_number and type of the variable

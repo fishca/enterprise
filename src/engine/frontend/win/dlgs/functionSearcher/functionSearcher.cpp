@@ -10,6 +10,7 @@
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/docView/docView.h"
 
+#include "frontend/win/editor/codeEditor/codeEditor.h"
 #include "frontend/win/editor/codeEditor/codeEditorParser.h"
 
 #define ICON_SIZE 16
@@ -170,11 +171,7 @@ void ibFunctionList::OnButtonOk(wxCommandEvent& event)
 				wxT("\r\n\r\n") : wxT("");
 
 			m_codeEditor->Replace(endPos, endPos,
-				offset +
-				wxT("Procedure ") + m_listProcedures->GetItemText(lSelectedItem) + wxT("(") + prcArgs + wxT(")\r\n")
-				wxT("\t\r\n")
-				wxT("EndProcedure")
-			);
+				offset + ibCodeEditor::MakeProcedureTemplate(procName, prcArgs));
 
 			m_codeEditor->GotoLine(line.m_line + (endPos > 0 ? 2 : 0));
 		}

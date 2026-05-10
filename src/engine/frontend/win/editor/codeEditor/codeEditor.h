@@ -17,7 +17,7 @@
 #include "frontend/mainFrame/settings/editorsettings.h"
 #include "frontend/mainFrame/settings/fontcolorsettings.h"
 
-#include "backend/compiler/compileCode.h"   // CODE_VBS / CODE_CES + GetCodeStyle for fold-mode dispatch
+#include "backend/compiler/compileCode.h"   // CODE_VES / CODE_CES + GetCodeStyle for fold-mode dispatch
 #include "backend/debugger/debugDefs.h"
 
 #include "frontend/win/editor/codeEditor/components/autoComplete.h"
@@ -227,33 +227,37 @@ private:
 
 			ClearFoldLevel();
 
-			// Dispatch depends on script syntax mode. VBS folds at
-			// keyword boundaries (Function/EndFunction, If/EndIf, …).
-			// CES folds at `{ }` brace boundaries — keyword tokens
-			// (Function / If / While / …) precede the block but the
-			// fold itself is on the brace pair, so keyword folds are
-			// suppressed in CES to avoid double-counting. Mode is
-			// read from ibCompileCode (process-global).
+			// Both syntax modes share the same keyword-fold openers
+			// (Procedure/Function/If/While/For/Try) and matching End*
+			// closers. CES adds `{ … }` brace folds on top — bodies
+			// that use `{` style fold on the brace pair, bodies that
+			// use the VES-style EndXxx terminator fold on the keyword
+			// pair. VES mode ignores braces (none in legitimate VES
+			// source). Hybrid `Procedure foo() { … } EndProcedure`
+			// folds at both levels; the outer keyword fold and the
+			// inner brace fold nest cleanly. Pure CES `Procedure foo()
+			// { … }` (no EndProcedure) leaves the keyword fold
+			// unclosed at end-of-file — the trailing-unclosed-fold
+			// trim in UpdateFoldLevel prunes it.
+			//
+			// Mode is read from ibCompileCode (process-global). The
+			// previous CES path suppressed keyword folds entirely,
+			// which made the Procedure / Function / If folds vanish
+			// the moment the user toggled to CES on legacy keyword-
+			// style source.
 			const bool isCES = (ibCompileCode::GetCodeStyle() == CODE_CES);
 
 			const auto& lexems = m_codeEditor->m_precompileModule->GetLexems();
 			for (const ibLexem& lex : lexems) {
 
-				if (isCES) {
-					// CES — brace-fenced. `{` opens, `}` closes.
-					// Lambda bodies, named function bodies, control-
-					// structure blocks all use the same brace pair,
-					// so a single FoldBrace kind covers everything.
-					if (lex.m_lexType == DELIMITER) {
-						if (lex.m_numData == '{')
-							OpenFold(lex.m_numLine, FoldBrace);
-						else if (lex.m_numData == '}')
-							CloseFold(lex.m_numLine, FoldBrace);
-					}
+				if (isCES && lex.m_lexType == DELIMITER) {
+					if (lex.m_numData == '{')
+						OpenFold(lex.m_numLine, FoldBrace);
+					else if (lex.m_numData == '}')
+						CloseFold(lex.m_numLine, FoldBrace);
 					continue;
 				}
 
-				// VBS — keyword-fenced.
 				if (lex.m_lexType != KEYWORD)
 					continue;
 
@@ -289,6 +293,14 @@ private:
 	};
 
 public:
+
+	// Build a `Procedure name(args) ... End`/`{...}` template suitable for
+	// inserting at a free spot in a module — CES uses brace-fenced bodies,
+	// VES uses keyword fences. Mode is read from ibCompileCode (process-
+	// global). Used by the visual editor's "create handler from event"
+	// path and the procedures-and-functions dialog.
+	static wxString MakeProcedureTemplate(const wxString& name,
+	                                       const wxString& args);
 
 	ibCodeEditor();
 	ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id = wxID_ANY,
@@ -378,6 +390,8 @@ protected:
 	void OnTextChange(wxStyledTextEvent& event);
 
 	void OnKeyDown(wxKeyEvent& event);
+	void OnCharAdded(wxStyledTextEvent& event);
+	void OnUpdateUI(wxStyledTextEvent& event);
 	void OnMouseMove(wxMouseEvent& event) {
 		LoadToolTip(event.GetPosition());
 		event.Skip();

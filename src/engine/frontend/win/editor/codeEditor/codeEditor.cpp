@@ -16,6 +16,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+wxString ibCodeEditor::MakeProcedureTemplate(const wxString& name, const wxString& args)
+{
+	const bool isCES = (ibCompileCode::GetCodeStyle() == CODE_CES);
+	if (isCES) {
+		return wxT("Procedure ") + name + wxT("(") + args + wxT(")\r\n")
+		       wxT("{\r\n")
+		       wxT("\t\r\n")
+		       wxT("}");
+	}
+	return wxT("Procedure ") + name + wxT("(") + args + wxT(")\r\n")
+	       wxT("\t\r\n")
+	       wxT("EndProcedure");
+}
+
 ibCodeEditor::ibCodeEditor()
 	: wxStyledTextCtrl(), m_ac(this), m_ct(this), m_fp(this)
 {
@@ -41,6 +55,7 @@ ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowI
 	Connect(wxEVT_STC_MODIFIED, wxStyledTextEventHandler(ibCodeEditor::OnTextChange), nullptr, this);
 
 	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(ibCodeEditor::OnKeyDown), nullptr, this);
+	Connect(wxEVT_STC_CHARADDED, wxStyledTextEventHandler(ibCodeEditor::OnCharAdded), nullptr, this);
 	Connect(wxEVT_MOTION, wxMouseEventHandler(ibCodeEditor::OnMouseMove), nullptr, this);
 
 	// On zoom step the line height jumps immediately while STC's per-page
@@ -91,6 +106,16 @@ ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowI
 
 	// Set fold flags
 	SetFoldFlags(wxSTC_FOLDFLAG_LINEBEFORE_CONTRACTED | wxSTC_FOLDFLAG_LINEAFTER_CONTRACTED);
+
+	// Brace highlight: foreground only, no bold or background, so the
+	// surrounding font metrics stay stable while the caret moves over
+	// braces. Triggered from wxEVT_STC_UPDATEUI via our manual matcher
+	// (wxSTC's BraceMatch needs the lexer to style brace characters
+	// and our custom styler doesn't, so it returns -1).
+	StyleSetForeground(wxSTC_STYLE_BRACELIGHT, *wxRED);
+	StyleSetForeground(wxSTC_STYLE_BRACEBAD, *wxRED);
+
+	Bind(wxEVT_STC_UPDATEUI, &ibCodeEditor::OnUpdateUI, this);
 
 	// Setup the dwell time before a tooltip is displayed.
 	SetMouseDwellTime(200);
@@ -220,7 +245,6 @@ void ibCodeEditor::SetEditorSettings(const ibEditorSettings& settings)
 
 	SetMarginType(DEF_BREAKPOINT_ID, wxSTC_MARGIN_SYMBOL);
 	SetMarginMask(DEF_BREAKPOINT_ID, ~(1024 | 256 | 512 | 128 | 64 | wxSTC_MASK_FOLDERS));
-	StyleSetBackground(DEF_BREAKPOINT_ID, *wxWHITE);
 
 	SetMarginWidth(DEF_BREAKPOINT_ID, symbolMargin);
 	SetMarginSensitive(DEF_BREAKPOINT_ID, true);
@@ -231,6 +255,16 @@ void ibCodeEditor::SetEditorSettings(const ibEditorSettings& settings)
 
 	SetMarginWidth(DEF_FOLDING_ID, symbolMargin);
 	SetMarginSensitive(DEF_FOLDING_ID, true);
+
+	// Three-step gradient across the gutter — leftmost (line numbers)
+	// darkest, breakpoint medium, fold margin lightest — so the gutter
+	// reads as a layered band that fades into the text area on the right.
+	// LINENUMBER margin bg comes from wxSTC_STYLE_LINENUMBER style (set
+	// in SetFontColorSettings); the symbol margins get explicit colors.
+	SetMarginBackground(DEF_BREAKPOINT_ID, wxColour(0xF0, 0xF0, 0xF0));
+	SetMarginBackground(DEF_FOLDING_ID,    wxColour(0xF6, 0xF6, 0xF6));
+	SetFoldMarginColour(true,   wxColour(0xF6, 0xF6, 0xF6));
+	SetFoldMarginHiColour(true, wxColour(0xF6, 0xF6, 0xF6));
 
 	m_enableAutoComplete = settings.GetEnableAutoComplete();
 }
@@ -250,8 +284,15 @@ void ibCodeEditor::SetFontColorSettings(const ibFontColorSettings& settings)
 	// a copy before passing it in.
 	wxFont font = settings.GetFont();
 
-	StyleClearAll();
+	// Set STYLE_DEFAULT font + colors BEFORE StyleClearAll so the cascade
+	// propagates the user's font (and point size) to every style index —
+	// otherwise styles we don't touch later (annotations, indent guides,
+	// callTip, etc.) keep the OS-default font and zoom adds +1pt to a
+	// different base, looking out of proportion with the rest of the text.
 	StyleSetFont(wxSTC_STYLE_DEFAULT, font);
+	StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).foreColor);
+	StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor);
+	StyleClearAll();
 
 	SetSelForeground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).foreColor);
 	SetSelBackground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).backColor);
@@ -331,9 +372,24 @@ void ibCodeEditor::SetFontColorSettings(const ibFontColorSettings& settings)
 	// (e.g. user opens Settings and saves) happens to pull it through.
 	StyleSetFont(wxSTC_STYLE_LINENUMBER, font);
 	StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
+	// Soften the gutter — muted gray digits on the darkest gradient step
+	// (line-number margin is leftmost; breakpoint + fold margins step
+	// progressively lighter, see the SetMarginBackground calls in
+	// SetEditorSettings).
+	StyleSetForeground(wxSTC_STYLE_LINENUMBER, wxColour(0xA0, 0xA0, 0xA0));
+	StyleSetBackground(wxSTC_STYLE_LINENUMBER, wxColour(0xE8, 0xE8, 0xE8));
 
 	// Set the caret color as the inverse of the background color so it's always visible.
 	SetCaretForeground(GetInverse(settings.GetColors(ibFontColorSettings::DisplayItem_Default).backColor));
+
+	// Reapply brace-highlight styles — StyleClearAll above resets every
+	// style index (incl. BRACELIGHT/BRACEBAD) to the OS default. Without
+	// also pushing the user's font here the brace would visibly shift
+	// (different glyph metrics) when the highlight kicks in.
+	StyleSetFont(wxSTC_STYLE_BRACELIGHT, font);
+	StyleSetForeground(wxSTC_STYLE_BRACELIGHT, *wxRED);
+	StyleSetFont(wxSTC_STYLE_BRACEBAD, font);
+	StyleSetForeground(wxSTC_STYLE_BRACEBAD, *wxRED);
 }
 
 bool ibCodeEditor::LoadModule()

@@ -20,7 +20,11 @@
 static std::array<int, 256> gs_operPriority = { 0 };
 
 // set code style by file extension
-static short gs_codeStyle = CODE_VBS;
+// CES is the default — modern brace/paren syntax with `;` terminators.
+// VES (Visual Basic-style ES + 1С/BSL mix) remains supported for legacy ES
+// configurations migrated from 1С / BSL; loading a VES module flips this
+// via SetCodeStyle().
+static short gs_codeStyle = CODE_CES;
 
 
 //////////////////////////////////////////////////////////////////////
@@ -1446,7 +1450,7 @@ bool ibCompileCode::EmitFunctionBody(ibCompileContext* /*context*/,
 
 	m_strCurFuncName = savedCurFuncName;
 
-	if (gs_codeStyle == CODE_VBS) {
+	if (gs_codeStyle == CODE_VES) {
 		// Closer keyword matches the OPENING keyword — derived from
 		// m_bCodeRet, which IsReturnFunction(m_numReturn) populated at
 		// signature parse. Both named and anonymous bodies dispatch
@@ -1783,7 +1787,7 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 			const ibLexem& nextLexem = GetLexem();
 			if (IDENTIFIER == nextLexem.m_lexType) {
 
-				if (gs_codeStyle == CODE_VBS)
+				if (gs_codeStyle == CODE_VES)
 					context->m_numTempVar = 0;
 
 				if (IsNextDelimeter(':')) {// this is a label task encountered
@@ -2312,7 +2316,7 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 
 	int nLastIFLine = m_cByteCode.m_listCode.size() - 1;
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_THEN);
 	else
 		GETDelimeter(wxT(')'));
@@ -2354,7 +2358,7 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 		m_cByteCode.m_listCode.emplace_back(std::move(code2));
 		nLastIFLine = m_cByteCode.m_listCode.size() - 1;
 
-		if (gs_codeStyle == CODE_VBS)
+		if (gs_codeStyle == CODE_VES)
 			GETKeyWord(KEY_THEN);
 		else
 			GETDelimeter(wxT(')'));
@@ -2389,7 +2393,7 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 			CompileBlock(context);
 	}
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_ENDIF);
 
 	const int numCurCompile = m_cByteCode.m_listCode.size();
@@ -2427,7 +2431,7 @@ bool ibCompileCode::CompileWhile(ibCompileContext* context)
 
 	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_DO);
 	else
 		GETDelimeter(wxT(')'));
@@ -2437,7 +2441,7 @@ bool ibCompileCode::CompileWhile(ibCompileContext* context)
 	else
 		CompileBlock(context);
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_ENDDO);
 
 	ibByteUnit code2;
@@ -2515,7 +2519,7 @@ bool ibCompileCode::CompileFor(ibCompileContext* context)
 
 	const int nStartFOR = m_cByteCode.m_listCode.size() - 1;
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_DO);
 	else
 		GETDelimeter(wxT(')'));
@@ -2525,7 +2529,7 @@ bool ibCompileCode::CompileFor(ibCompileContext* context)
 	else
 		CompileBlock(context);
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_ENDDO);
 
 	ibByteUnit code2;
@@ -2583,7 +2587,7 @@ bool ibCompileCode::CompileForeach(ibCompileContext* context)
 
 	const int numStartFOREACH = m_cByteCode.m_listCode.size() - 1;
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_DO);
 	else
 		GETDelimeter(wxT(')'));
@@ -2593,7 +2597,7 @@ bool ibCompileCode::CompileForeach(ibCompileContext* context)
 	else
 		CompileBlock(context);
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_ENDDO);
 
 	ibByteUnit code2;
@@ -2642,7 +2646,7 @@ bool ibCompileCode::CompileException(ibCompileContext* context)
 	else
 		CompileBlock(context);
 
-	if (gs_codeStyle == CODE_VBS)
+	if (gs_codeStyle == CODE_VES)
 		GETKeyWord(KEY_ENDTRY);
 
 	m_cByteCode.m_listCode[addrLine].m_param1.m_numIndex = m_cByteCode.m_listCode.size();

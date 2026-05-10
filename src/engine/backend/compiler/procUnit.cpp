@@ -571,39 +571,44 @@ inline ibValue GetValue(const ibValue& cValue1)
 }
 
 #pragma region iterator_support
+// Runtime holder for the @it_ slot. Wraps a shared_ptr to the
+// state and tracks whether the most recent transition into
+// OPER_FOREACH came via OPER_NEXT_ITER (the "hot" flag): NEXT_ITER
+// sets it, FOREACH consumes it. A re-entry with the flag clear means
+// we returned via Break from a previous outer-loop iteration; the
+// cursor is stale and must be reset.
 class ibValueIterator : public ibValue {
 	wxDECLARE_DYNAMIC_CLASS(ibValueIterator);
-	static ibValue s_defaultOwner;
 public:
-	ibValueIterator() : ibValue(ibValueTypes::TYPE_VALUE),
-		m_ownerValue(s_defaultOwner), m_currentPos(0) {
+	ibValueIterator()
+		: ibValue(ibValueTypes::TYPE_VALUE),
+		  m_hotFromNextIter(false) {}
+
+	explicit ibValueIterator(std::shared_ptr<ibValueIteratorState> state)
+		: ibValue(ibValueTypes::TYPE_VALUE),
+		  m_state(std::move(state)),
+		  m_hotFromNextIter(false) {}
+
+	virtual ~ibValueIterator() = default;
+
+	bool MoveNext(ibValue& current) {
+		return m_state ? m_state->MoveNext(current) : false;
 	}
-	ibValueIterator(ibValue& ownerValue) : ibValue(ibValueTypes::TYPE_VALUE),
-		m_ownerValue(ownerValue), m_currentPos(0) {
-		ResetIterator();
+	void ResetState() { if (m_state) m_state->Reset(); }
+
+	bool ConsumeHot() {
+		const bool h = m_hotFromNextIter;
+		m_hotFromNextIter = false;
+		return h;
 	}
-	virtual ~ibValueIterator() { Reset(); }
-	bool GetCurrentValue(ibValue& pvarParamValue) const {
-		if (m_currentPos >= m_ownerValue.GetIteratorCount())
-			return false;
-		CopyValue(pvarParamValue, m_ownerValue.GetIteratorAt(m_currentPos));
-		return true;
-	}
-	bool NextIterator() {
-		if (m_currentPos >= m_ownerValue.GetIteratorCount())
-			return false;
-		m_currentPos++;
-		return true;
-	};
-	void ResetIterator() { m_currentPos = 0; };
-protected:
-	unsigned long m_currentPos = 0;
+	void MarkHot() { m_hotFromNextIter = true; }
+
 private:
-	ibValue& m_ownerValue;
+	std::shared_ptr<ibValueIteratorState> m_state;
+	bool m_hotFromNextIter;
 };
 
 //**************************************************************************************************************
-ibValue ibValueIterator::s_defaultOwner;
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueIterator, ibValue);
 //**************************************************************************************************************
 
@@ -818,12 +823,28 @@ start_label:
 				break;
 			case OPER_FOREACH:
 			{
-				if (!variable2.HasIterator())
-					ibBackendCoreException::Error(_("Undefined value iterator"));
-				if (g_valueIterator != variable3.GetClassType())
-					CopyValue(variable3, ibValue(new ibValueIterator(variable2)));
+				bool needsCreate = (g_valueIterator != variable3.GetClassType());
+				if (!needsCreate) {
+					// Slot already holds an iterator. If we did NOT arrive
+					// via OPER_NEXT_ITER, an enclosing-loop iteration left
+					// the cursor mid-walk (Break leak). Drop and rebuild
+					// from variable2 — the OPER_LET above may have reassigned
+					// the iterable, so keeping the old snapshot would walk
+					// stale data.
+					ibValueIterator* it = variable3.ConvertToType<ibValueIterator>();
+					if (!it->ConsumeHot()) {
+						variable3.Reset();
+						needsCreate = true;
+					}
+				}
+				if (needsCreate) {
+					auto state = variable2.CreateIterator();
+					if (!state)
+						ibBackendCoreException::Error(_("Undefined value iterator"));
+					CopyValue(variable3, ibValue(new ibValueIterator(std::move(state))));
+				}
 				ibValueIterator* iterator = variable3.ConvertToType<ibValueIterator>();
-				if (!iterator->GetCurrentValue(variable1)) {
+				if (!iterator->MoveNext(variable1)) {
 					variable3.Reset(); lCodeLine = index4 - 1;
 				}
 			} break;
@@ -835,9 +856,14 @@ start_label:
 			} break;
 			case OPER_NEXT_ITER:
 			{
-				ibValueIterator* value_iterator =
-					variable1.ConvertToType<ibValueIterator>();
-				value_iterator->NextIterator();
+				// Sign the slot "hot" so the next OPER_FOREACH knows we
+				// arrived through normal iteration (not through Break +
+				// outer-loop re-entry). Advance happens inside
+				// OPER_FOREACH's MoveNext.
+				if (variable1.GetClassType() == g_valueIterator) {
+					ibValueIterator* it = variable1.ConvertToType<ibValueIterator>();
+					it->MarkHot();
+				}
 				lCodeLine = index2 - 1;
 			} break;
 			case OPER_ITER:

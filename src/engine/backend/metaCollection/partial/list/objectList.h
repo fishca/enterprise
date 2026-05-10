@@ -285,6 +285,15 @@ public:
 	// Single-batch paging — enums are tiny and the parent-position
 	// CASE/WHEN order doesn't support stable cursoring.
 
+	// Advertise DbFetch so script-side `For Each` routes through the
+	// universal cursor iterator. Filters / Sorting omitted because the
+	// CASE/WHEN order is fixed.
+	virtual Features GetFeatures() const override {
+		Features f;
+		f.flags |= Features::DbFetch;
+		return f;
+	}
+
 	// Universal Get*Fetch — frontend (ibDataViewCtrl) holds the deque,
 	// calls these to refill ahead/behind windows. Stateless: each call
 	// builds an ibFetchRequest and runs SQL through Fetch() below.

@@ -225,10 +225,7 @@ public:
 		unsigned int Count() const { return m_formOwner->m_listControl.size(); }
 
 		//Работа с итераторами:
-		virtual bool HasIterator() const { return true; }
-		virtual ibValue GetIteratorEmpty();
-		virtual ibValue GetIteratorAt(unsigned int idx);
-		virtual unsigned int GetIteratorCount() const { return Count(); }
+		virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override;
 	private:
 		ibValueForm* m_formOwner;
 		ibValueMethodHelper* m_methodHelper;

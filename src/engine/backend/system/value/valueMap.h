@@ -86,10 +86,7 @@ public:
 	void Clear() { m_containerValues.clear(); }
 
 	//Работа с итераторами:
-	virtual bool HasIterator() const { return true; }
-	virtual ibValue GetIteratorEmpty();
-	virtual ibValue GetIteratorAt(unsigned int idx);
-	virtual unsigned int GetIteratorCount() const { return m_containerValues.size(); }
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override;
 
 protected:
 

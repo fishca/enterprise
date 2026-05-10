@@ -55,6 +55,99 @@ std::future<void> ibValueModel::SubmitFetchAsync(std::function<void()> work)
 	return p.get_future();
 }
 
+namespace {
+// Cursor-paginated iteration over any flat paged model. Drives the
+// model's GetFirstFetch / GetNextFetch surface in fixed-size batches
+// and wraps each item via GetRowAt — the same factory the GUI uses to
+// turn an ibDataViewItem into a script-visible ReturnLine. RAM-paged
+// children pick up filter+sort consistency for free (their Get*Fetch
+// slices BuildVisibleView). DB-paged lists become script-iterable
+// without any per-class override.
+class ibValueModelPagedIteratorState : public ibValueIteratorState {
+public:
+	explicit ibValueModelPagedIteratorState(ibValueModel* model, int batchSize = 64)
+		: m_model(model), m_batchSize(batchSize),
+		  m_pos(0), m_started(false), m_exhausted(false) {}
+
+	bool MoveNext(ibValue& current) override {
+		if (!m_started) {
+			m_started = true;
+			m_model->GetFirstFetch(ibDataViewItem(), ibDataViewItem(),
+				m_batchSize, m_batch);
+			m_pos = 0;
+			if (m_batch.size() < static_cast<size_t>(m_batchSize))
+				m_exhausted = true;
+		} else {
+			++m_pos;
+			if (m_pos >= m_batch.size()) {
+				if (m_exhausted) return false;
+				ibDataViewItem anchor = m_batch.empty()
+					? ibDataViewItem()
+					: m_batch[m_batch.size() - 1];
+				ibDataViewItemArray nextBatch;
+				m_model->GetNextFetch(ibDataViewItem(), anchor,
+					m_batchSize, nextBatch);
+				if (nextBatch.empty()) {
+					m_exhausted = true;
+					m_batch.Clear();
+					return false;
+				}
+				if (nextBatch.size() < static_cast<size_t>(m_batchSize))
+					m_exhausted = true;
+				m_batch = std::move(nextBatch);
+				m_pos = 0;
+			}
+		}
+		if (m_pos >= m_batch.size()) return false;
+
+		auto* line = m_model->GetRowAt(m_batch[m_pos]);
+		if (line == nullptr) {
+			current = ibValue();
+		} else {
+			current = ibValue(static_cast<ibValue*>(line));
+		}
+		return true;
+	}
+
+	void Reset() override {
+		m_batch.Clear();
+		m_pos = 0;
+		m_started = false;
+		m_exhausted = false;
+	}
+
+	bool PeekSample(ibValue& current) const override {
+		current = m_model->GetEmptyRow();
+		// Default GetEmptyRow returns ibValue() (TYPE_EMPTY).
+		// Concrete model children override with a typed ReturnLine
+		// wrapped as TYPE_REFFER.
+		return current.m_typeClass != ibValueTypes::TYPE_EMPTY;
+	}
+
+private:
+	ibValueModel* m_model;
+	int m_batchSize;
+	ibDataViewItemArray m_batch;
+	size_t m_pos;
+	bool m_started;
+	bool m_exhausted;
+};
+
+inline bool IsFlatPagedModel(const ibValueModel::Features& f) {
+	const uint32_t paged = ibValueModel::Features::RamFetch
+		| ibValueModel::Features::DbFetch;
+	return (f.flags & paged) != 0
+		&& (f.flags & ibValueModel::Features::Tree) == 0;
+}
+} // namespace
+
+std::shared_ptr<ibValueIteratorState> ibValueModel::CreateIterator()
+{
+	if (IsFlatPagedModel(GetFeatures()))
+		return std::make_shared<ibValueModelPagedIteratorState>(this);
+	return ibValue::CreateIterator();
+}
+
 
 void ibValueModel::RowValueStartEdit(const ibDataViewItem& item, unsigned int col)
 {

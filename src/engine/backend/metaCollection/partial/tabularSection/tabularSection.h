@@ -240,24 +240,14 @@ public:
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-
-	virtual ibValue GetIteratorEmpty() override {
+	// Iterator runtime path lives on ibValueModel (cursor over Get*Fetch
+	// → BuildVisibleView for filter+sort consistency with the GUI).
+	// GetEmptyRow yields the typed skeleton for IntelliSense type hint.
+	virtual ibValue GetEmptyRow() override {
 		return ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, ibDataViewItem(nullptr));
 	}
 
-	virtual ibValue GetIteratorAt(unsigned int idx) override {
-		if (idx > (unsigned int)GetRowCount())
-			return wxEmptyValue;
-		return ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, GetItem(idx));
-	}
-
-	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
-
 protected:
-
-	void RefreshTabularSection();
 
 	bool m_readOnly;
 

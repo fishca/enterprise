@@ -185,16 +185,6 @@ bool ibValueTabularSectionDataObjectBase::CallAsFunc(const long lMethodNum, ibVa
 	return false;
 }
 
-void ibValueTabularSectionDataObjectBase::RefreshTabularSection() {
-
-	// Filter / sort live in m_filterRow / m_sortOrder; RAM-backed
-	// Get*Fetch evaluates them at slice time, so a refresh after
-	// mutation is just a NotifyReset — control wipes its buffer
-	// and re-fetches a freshly filtered + sorted view.
-	if (ibBackendException::IsEvalMode()) return;
-	NotifyReset();
-}
-
 //////////////////////////////////////////////////////////////////////
 //               ibValueTabularSectionDataObject                          //
 //////////////////////////////////////////////////////////////////////

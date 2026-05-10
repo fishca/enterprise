@@ -1262,11 +1262,22 @@ bool ibPrecompileCode::CompileForeach()
 	ExpectKeyword(KEY_IN);
 
 	ibParamValue collection = GetExpression();
-	m_activeContext->m_variables[name].m_valObject = collection.m_paramObject.GetIteratorEmpty();
+	{
+		ibValue skeleton;
+		auto state = collection.m_paramObject.CreateIterator();
+		if (state) state->PeekSample(skeleton);
+		m_activeContext->m_variables[name].m_valObject = skeleton;
+	}
 
-	ExpectKeyword(KEY_DO);
+	if (IsCES())
+		ExpectDelimeter(')');
+	else
+		ExpectKeyword(KEY_DO);
+
 	CompileBlock();
-	ExpectKeyword(KEY_ENDDO);
+
+	if (!IsCES())
+		ExpectKeyword(KEY_ENDDO);
 
 	if (!(nStartPos < m_caretPos && m_listLexem[m_cursor].m_numString > m_caretPos))
 		m_activeContext->RemoveVariable(realName);

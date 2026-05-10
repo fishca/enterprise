@@ -89,19 +89,28 @@ public:
 		m_listValue.clear();
 	}
 
-	//array support 
+	//array support
 	virtual bool SetAt(const ibValue& varKeyValue, const ibValue& varValue);
 	virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
 
 	//Working with iterators
-	virtual bool HasIterator() const {
-		return true;
-	}
-	virtual ibValue GetIteratorAt(unsigned int idx) {
-		return m_listValue[idx];
-	}
-	virtual unsigned int GetIteratorCount() const {
-		return Count();
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override {
+		class ArrayIteratorState : public ibValueIteratorState {
+		public:
+			explicit ArrayIteratorState(const std::vector<ibValue>& list) : m_list(list) {}
+			bool MoveNext(ibValue& current) override {
+				if (m_started) ++m_pos; else m_started = true;
+				if (m_pos >= m_list.size()) return false;
+				current = m_list[m_pos];
+				return true;
+			}
+			void Reset() override { m_pos = 0; m_started = false; }
+		private:
+			const std::vector<ibValue>& m_list;
+			size_t m_pos = 0;
+			bool m_started = false;
+		};
+		return std::make_shared<ArrayIteratorState>(m_listValue);
 	}
 };
 

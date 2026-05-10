@@ -1459,10 +1459,28 @@ public:
 	virtual wxString GetClassName() const override;
 	virtual wxString GetString() const override;
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-	virtual ibValue GetIteratorAt(unsigned int lPropNum) override { ibValue retValue; GetPropVal(lPropNum, retValue); return retValue; }
-	virtual unsigned int GetIteratorCount() const override { return m_methodHelper != nullptr ? m_methodHelper->GetNProps() : 0; }
+	//Working with iterators — walks named properties via GetPropVal
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override {
+		class State : public ibValueIteratorState {
+		public:
+			State(ibValue* host, unsigned int n) : m_host(host), m_n(n) {}
+			bool MoveNext(ibValue& current) override {
+				if (m_started) ++m_pos; else m_started = true;
+				if (m_pos >= m_n) return false;
+				current = ibValue();
+				m_host->GetPropVal(static_cast<long>(m_pos), current);
+				return true;
+			}
+			void Reset() override { m_pos = 0; m_started = false; }
+		private:
+			ibValue* m_host;
+			unsigned int m_n;
+			unsigned int m_pos = 0;
+			bool m_started = false;
+		};
+		const unsigned int n = m_methodHelper != nullptr ? m_methodHelper->GetNProps() : 0;
+		return std::make_shared<State>(this, n);
+	}
 
 protected:
 	virtual void PrepareEmptyObject();
@@ -1703,10 +1721,28 @@ public:
 	virtual wxString GetClassName() const override;
 	virtual wxString GetString() const override;
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-	virtual ibValue GetIteratorAt(unsigned int lPropNum) override { ibValue retValue; GetPropVal(lPropNum, retValue); return retValue; }
-	virtual unsigned int GetIteratorCount() const override { return m_methodHelper != nullptr ? m_methodHelper->GetNProps() : 0; }
+	//Working with iterators — walks named properties via GetPropVal
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override {
+		class State : public ibValueIteratorState {
+		public:
+			State(ibValue* host, unsigned int n) : m_host(host), m_n(n) {}
+			bool MoveNext(ibValue& current) override {
+				if (m_started) ++m_pos; else m_started = true;
+				if (m_pos >= m_n) return false;
+				current = ibValue();
+				m_host->GetPropVal(static_cast<long>(m_pos), current);
+				return true;
+			}
+			void Reset() override { m_pos = 0; m_started = false; }
+		private:
+			ibValue* m_host;
+			unsigned int m_n;
+			unsigned int m_pos = 0;
+			bool m_started = false;
+		};
+		const unsigned int n = m_methodHelper != nullptr ? m_methodHelper->GetNProps() : 0;
+		return std::make_shared<State>(this, n);
+	}
 
 protected:
 	const ibValueMetaObjectRegisterData* m_metaObject;
@@ -1980,20 +2016,12 @@ public:
 	virtual wxString GetClassName() const override;
 	virtual wxString GetString() const override;
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-
-	virtual ibValue GetIteratorEmpty() override {
+	// Iterator runtime path lives on ibValueModel (RamFetch cursor over
+	// BuildVisibleView). GetEmptyRow yields the typed skeleton that
+	// the iterator state surfaces as IntelliSense type hint.
+	virtual ibValue GetEmptyRow() override {
 		return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterReturnLine>(this, ibDataViewItem());
 	}
-
-	virtual ibValue GetIteratorAt(unsigned int idx) override {
-		if (idx > (unsigned int)GetRowCount())
-			return wxEmptyValue;
-		return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterReturnLine>(this, GetItem(idx));
-	}
-
-	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
 
 protected:
 
@@ -2135,10 +2163,28 @@ public:
 	virtual wxString GetClassName() const override;
 	virtual wxString GetString() const override;
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-	virtual ibValue GetIteratorAt(unsigned int lPropNum) override { ibValue retValue; GetPropVal(lPropNum, retValue); return retValue; }
-	virtual unsigned int GetIteratorCount() const override { return m_methodHelper != nullptr ? m_methodHelper->GetNProps() : 0; }
+	//Working with iterators — walks named properties via GetPropVal
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override {
+		class State : public ibValueIteratorState {
+		public:
+			State(ibValue* host, unsigned int n) : m_host(host), m_n(n) {}
+			bool MoveNext(ibValue& current) override {
+				if (m_started) ++m_pos; else m_started = true;
+				if (m_pos >= m_n) return false;
+				current = ibValue();
+				m_host->GetPropVal(static_cast<long>(m_pos), current);
+				return true;
+			}
+			void Reset() override { m_pos = 0; m_started = false; }
+		private:
+			ibValue* m_host;
+			unsigned int m_n;
+			unsigned int m_pos = 0;
+			bool m_started = false;
+		};
+		const unsigned int n = m_methodHelper != nullptr ? m_methodHelper->GetNProps() : 0;
+		return std::make_shared<State>(this, n);
+	}
 
 protected:
 

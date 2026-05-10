@@ -166,18 +166,33 @@ bool ibValueContainer::Property(const ibValue& varKeyValue, ibValue& cValueFound
 	return false;
 }
 
-ibValue ibValueContainer::GetIteratorEmpty()
+std::shared_ptr<ibValueIteratorState> ibValueContainer::CreateIterator()
 {
-	return ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>();
-}
-
-ibValue ibValueContainer::GetIteratorAt(unsigned int idx)
-{
-	if (m_containerValues.size() < idx)
-		return ibValue();
-	auto structurePos = m_containerValues.begin();
-	std::advance(structurePos, idx);
-	return ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>(structurePos->first, structurePos->second);
+	using MapT = std::decay_t<decltype(m_containerValues)>;
+	class State : public ibValueIteratorState {
+	public:
+		explicit State(const MapT& m) : m_map(m), m_it(m.begin()) {}
+		bool MoveNext(ibValue& current) override {
+			if (m_started) ++m_it; else m_started = true;
+			if (m_it == m_map.end()) return false;
+			ibValue valueCopy = m_it->second;
+			current = ibValue(static_cast<ibValue*>(
+				ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>(
+					m_it->first, valueCopy)));
+			return true;
+		}
+		void Reset() override { m_it = m_map.begin(); m_started = false; }
+		bool PeekSample(ibValue& current) const override {
+			current = ibValue(static_cast<ibValue*>(
+				ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>()));
+			return true;
+		}
+	private:
+		const MapT& m_map;
+		MapT::const_iterator m_it;
+		bool m_started = false;
+	};
+	return std::make_shared<State>(m_containerValues);
 }
 
 bool ibValueContainer::SetAt(const ibValue& varKeyValue, const ibValue& varValue)

@@ -1,11 +1,36 @@
 #ifndef __VALUE_H__
 #define __VALUE_H__
 
+#include <memory>
+
 #include "backend/backend_core.h"
 #include "backend/compiler/typeCtor.h"
 
 // Forward declaration - full definition in value_ptr.h included at end of file
 template <class T> class ibValuePtr;
+
+class ibValue;
+
+// Cursor-based iteration state. Yielded by ibValue::CreateIterator()
+// and driven by OPER_FOREACH / OPER_NEXT_ITER. Wrapped in shared_ptr
+// (held by the runtime ibValueIterator), no manual delete.
+class BACKEND_API ibValueIteratorState {
+public:
+	virtual ~ibValueIteratorState() = default;
+	// Advance to the next element and copy it into `current`. Returns
+	// false when the cursor is past the last element; the caller drops
+	// the state. After Reset() the next MoveNext() yields element 0.
+	virtual bool MoveNext(ibValue& current) = 0;
+	virtual void Reset() = 0;
+
+	// IntelliSense / editor type-hint. Writes a skeleton value of the
+	// element type into `current` so the editor's static parser knows
+	// what `x` is in `For Each x In container`. Returns false when no
+	// typed skeleton is available; caller is expected to pre-initialise
+	// `current` and treats it as untyped on a false return. Compile-
+	// time only; not invoked at runtime by OPER_FOREACH.
+	virtual bool PeekSample(ibValue& /*current*/) const { return false; }
+};
 
 extern BACKEND_API const ibValue wxEmptyValue;
 
@@ -882,12 +907,18 @@ public:
 		GetAt(varKeyValue, retValue);
 		return retValue;
 	}
-#pragma region iterator_support 
-	virtual bool HasIterator() const;
-
-	virtual ibValue GetIteratorEmpty();
-	virtual ibValue GetIteratorAt(unsigned int idx);
-	virtual unsigned int GetIteratorCount() const;
+#pragma region iterator_support
+	// Cursor-based iteration. Returns a state walked by OPER_FOREACH /
+	// OPER_NEXT_ITER; null means "this value isn't iterable" —
+	// OPER_FOREACH raises a runtime error in that case. shared_ptr
+	// matches the project convention for owned heap pointers.
+	//
+	// Base default delegates through the TYPE_REFFER chain to the
+	// underlying object; every container class supporting script-level
+	// `For Each` overrides this with its own walker. The state's
+	// PeekSample() doubles as the IntelliSense type hint, so there's
+	// no separate "empty element" surface on ibValue.
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator();
 #pragma endregion
 
 protected:

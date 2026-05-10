@@ -273,18 +273,12 @@ public:
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-	virtual ibValue GetIteratorEmpty() override {
+	// Iterator runtime path lives on ibValueModel — drives Get*Fetch
+	// in batches. GetEmptyRow yields the typed skeleton for the
+	// IntelliSense type hint that the iterator state surfaces.
+	virtual ibValue GetEmptyRow() override {
 		return ibValue::CreateAndPrepareValueRef<ibValueModelTableReturnLine>(this, ibDataViewItem(nullptr));
 	}
-	virtual ibValue GetIteratorAt(unsigned int idx) override {
-		if (idx > (unsigned int)GetRowCount())
-			return ibValue();
-		return ibValue::CreateAndPrepareValueRef<ibValueModelTableReturnLine>(this, GetItem(idx));
-	}
-
-	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
 
 private:
 

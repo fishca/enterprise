@@ -835,32 +835,11 @@ bool ibValue::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 //*                    iterator support                       *
 //*************************************************************
 
-ibValue ibValue::GetIteratorEmpty()
+std::shared_ptr<ibValueIteratorState> ibValue::CreateIterator()
 {
 	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
-		return m_pRef->GetIteratorEmpty();
-	return ibValue();
-}
-
-bool ibValue::HasIterator() const
-{
-	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
-		return m_pRef->HasIterator();
-	return false;
-}
-
-ibValue ibValue::GetIteratorAt(unsigned int idx)
-{
-	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
-		return m_pRef->GetIteratorAt(idx);
-	return ibValue();
-}
-
-unsigned int ibValue::GetIteratorCount() const
-{
-	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
-		return m_pRef->GetIteratorCount();
-	return 0;
+		return m_pRef->CreateIterator();
+	return nullptr;
 }
 
 //*************************************************************

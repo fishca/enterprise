@@ -371,18 +371,25 @@ public:
 		virtual ~ibValueModelColumnCollection() {}
 
 		//Working with iterators
-		virtual bool HasIterator() const {
-			return true;
-		}
-
-		virtual ibValue GetIteratorAt(unsigned int idx) {
-			if (idx > GetColumnCount())
-				return ibValue();
-			return GetColumnInfo(idx);
-		}
-
-		virtual unsigned int GetIteratorCount() const {
-			return GetColumnCount();
+		virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override {
+			class State : public ibValueIteratorState {
+			public:
+				explicit State(ibValueModelColumnCollection* host) : m_host(host) {}
+				bool MoveNext(ibValue& current) override {
+					if (m_started) ++m_pos; else m_started = true;
+					if (m_pos >= m_host->GetColumnCount()) return false;
+					ibValueModelColumnInfo* info = m_host->GetColumnInfo(m_pos);
+					if (info == nullptr) { current = ibValue(); return true; }
+					current = ibValue(static_cast<ibValue*>(info));
+					return true;
+				}
+				void Reset() override { m_pos = 0; m_started = false; }
+			private:
+				ibValueModelColumnCollection* m_host;
+				unsigned int m_pos = 0;
+				bool m_started = false;
+			};
+			return std::make_shared<State>(this);
 		}
 	};
 
@@ -493,6 +500,21 @@ public:
 	// impl forwards to ibDataViewModel::GetFeatures() so the GUI sees
 	// the same value via either path.
 	virtual Features GetFeatures() const { return Features{}; }
+
+	// Script-side iteration. Any flat paged model (RamFetch or DbFetch
+	// without Tree) auto-exposes a cursor that drives Get*Fetch in
+	// batches. RAM-paged children inherit filter+sort consistency with
+	// the GUI for free (their Get*Fetch slices BuildVisibleView). DB-
+	// paged lists (Catalog / Document / Register) become iterable
+	// without any per-class override. Tree models fall through to the
+	// base default (no iteration) — flat-walk over a tree would
+	// surprise users.
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override;
+
+	// IntelliSense type-hint factory — returns an empty (skeleton) row
+	// of the model's row type so the editor's static parser can offer
+	// completions on `For Each x In model`. Default is empty (no hint).
+	virtual ibValue GetEmptyRow() { return ibValue(); }
 
 	// Mutable sort accessor — the GUI uses this to insert / toggle
 	// system sort entries (e.g. folder-first prefix on Tree /

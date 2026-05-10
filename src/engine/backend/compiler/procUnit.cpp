@@ -25,6 +25,22 @@
 //                  no copy and no const_cast.
 namespace {
 
+// Outer-frame slot fetch with null guards. The bare deref
+// `*pppArrayList[slot + offset][idx]` segfaults (SEH access violation)
+// when the outer frame for that depth was never wired — the canonical
+// trigger is debugger Evaluate inside a lambda body: eval's pppArrayList
+// is laid out as [0=own, 1=host=lambda, 2=host's parent module, …], but
+// a lambda has no parent-module frame, so depth ≥ 2 lands on null. The
+// guards convert the segfault into an ibBackendException so the watch
+// panel surfaces an error message instead of taking down the process.
+inline ibValue*** kResolveOuterFrame(int slot, ibValue*** pppArrayList, bool bDelta)
+{
+	const int depth = slot + (bDelta ? 1 : 0);
+	if (pppArrayList == nullptr || depth < 0)
+		return nullptr;
+	return &pppArrayList[depth];
+}
+
 inline ibValue& ResolveWrite(int slot, int idx,
 							  ibValue** pRefLocVars,
 							  ibValue*** pppArrayList,
@@ -34,7 +50,13 @@ inline ibValue& ResolveWrite(int slot, int idx,
 		return *pRefLocVars[idx];
 	if (slot == DEF_VAR_CONST)
 		ibBackendCoreException::Error(_("Attempt to write to a constant value"));
-	return *pppArrayList[slot + (bDelta ? 1 : 0)][idx];
+	auto* row = kResolveOuterFrame(slot, pppArrayList, bDelta);
+	if (row == nullptr || *row == nullptr || (*row)[idx] == nullptr) {
+		ibBackendCoreException::Error(
+			_("Outer frame not bound at depth %d / idx %d (eval inside lambda?)"),
+			slot + (bDelta ? 1 : 0), idx);
+	}
+	return *(*row)[idx];
 }
 
 inline const ibValue& ResolveRead(int slot, int idx,
@@ -47,7 +69,13 @@ inline const ibValue& ResolveRead(int slot, int idx,
 		return *pRefLocVars[idx];
 	if (slot == DEF_VAR_CONST)
 		return pByteCode->m_listConst[idx];
-	return *pppArrayList[slot + (bDelta ? 1 : 0)][idx];
+	auto* row = kResolveOuterFrame(slot, pppArrayList, bDelta);
+	if (row == nullptr || *row == nullptr || (*row)[idx] == nullptr) {
+		ibBackendCoreException::Error(
+			_("Outer frame not bound at depth %d / idx %d (eval inside lambda?)"),
+			slot + (bDelta ? 1 : 0), idx);
+	}
+	return *(*row)[idx];
 }
 
 } // namespace
@@ -1888,6 +1916,31 @@ bool ibProcUnit::CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetVa
 			//         semantic coincidence, not a duplicate slot)
 			//   [3+] = host's parent modules (GetParent(1+))
 			m_pppArrayList[1] = pRunContext->m_pRefLocVars;
+
+			// Eval inside a lambda body: pRunContext->m_procUnit is the
+			// session's lambda shim, whose m_cCurContext is empty (the
+			// shim never runs its own module body — frames live directly
+			// in m_pppArrayList, wired by ibSession::CompileRoot). The
+			// outer Execute populated eval[2..] from each parent's
+			// m_cCurContext, so eval[2] landed on the shim's empty frame.
+			// Splice the shim's actual chain in at offset +1 (eval has one
+			// more own-frame layer above the shim) so depth ≥ 2 in the
+			// eval expression resolves into root mm's bound slots —
+			// Catalogs / Documents / Manager / common-module exports.
+			if (pRunContext->m_currentFunction != nullptr
+				&& pRunContext->m_currentFunction->IsLambda())
+			{
+				ibProcUnit* const shim = pRunContext->m_procUnit;
+				if (shim != nullptr && shim->m_pppArrayList != nullptr) {
+					const unsigned int shimSize = shim->GetParentCount() + 2;
+					const unsigned int evalSize = GetParentCount() + 2;
+					for (unsigned int k = 2; k < evalSize; ++k) {
+						const unsigned int srcIdx = k - 1;
+						if (srcIdx < shimSize)
+							m_pppArrayList[k] = shim->m_pppArrayList[srcIdx];
+					}
+				}
+			}
 		}
 	}
 	catch (...) {

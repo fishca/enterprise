@@ -11,10 +11,7 @@
 #include "frontend/docView/docView.h"
 
 #include <wx/file.h>
-#include <wx/datetime.h>
 #include <wx/stdpaths.h>
-#include <cstdarg>
-#include <cstdio>
 #include <cstring>
 
 void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
@@ -36,6 +33,22 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 					vObject.GetMethodHelper(i)
 				);
 			}
+		}
+		// LINQ chain-method surface — always offer after `.`. LINQ ops
+		// dispatch through OPER_CALL_LINQ + virtual DispatchLinqMethod,
+		// not the per-class m_methodHelper that GetNMethods walks, so
+		// without this loop the user never sees Where / Select / Count /
+		// etc. as suggestions. They apply to any iterable receiver; at
+		// IntelliSense time we don't know yet whether vObject yields a
+		// non-null CreateIterator (would require a runtime probe with
+		// allocation), so the cheap path is to always offer them. The
+		// user filters by typing.
+		for (const auto& info : ibValue::GetLinqMethodTable()) {
+			m_ac.Append(
+				ibContentType::eFunction,
+				info.name,
+				info.helper
+			);
 		}
 		for (long i = 0; i < vObject.GetNProps(); i++) {
 			// Scope-local props (ThisObject / ThisForm) must not
@@ -415,6 +428,7 @@ void ibCodeEditor::PrepareTABs()
 	// HEADER branch's applyIndent call.
 	const bool currLineIsBraceOpener = isCES && IsLineJustOpenBrace(rawBufferLine);
 	const int  softBodyExtra    = (prevIsSoftHeader && !currLineIsBraceOpener) ? 1 : 0;
+
 
 	// CES indent rewrite is no-shrink: fold parser only tracks `{...}`,
 	// so manual indents inside soft-body regions or hand-aligned closers

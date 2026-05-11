@@ -112,6 +112,13 @@ public:
 
 	ibValueStructure(bool readOnly) : ibValueContainer(readOnly) {}
 
+	// `New Structure("Field1, Field2, ...", value1, value2, ...)` —
+	// 1C-style ctor: first arg is comma-separated field-name list,
+	// subsequent args are corresponding values (missing values default
+	// to TYPE_EMPTY). No-arg form `New Structure` produces an empty
+	// structure to be populated via Insert(name, value) later.
+	virtual bool Init(ibValue** paParams, const long lSizeArray) override;
+
 	virtual void Delete(const ibValue& varKeyValue) override;
 	virtual void Insert(const ibValue& varKeyValue, const ibValue& cValue = ibValue()) override;
 	virtual bool Property(const ibValue& varKeyValue, ibValue& cValueFound) override;

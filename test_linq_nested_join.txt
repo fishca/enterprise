@@ -1,0 +1,51 @@
+// LINQ nested-FROM-with-JOIN smoke test — 2026-05-11 PM
+// Tests per-level state correctness after the refactor that moved
+// pendingJoins / hasGroup / groupsContainer off ibLinqContextData
+// into CompileLinqBlock locals.
+//
+// Topology:
+//   outer FROM orders ⟶ JOIN customers (outer-level join)
+//                    ⟶ nested FROM o.Items (inner-level foreach)
+//                    ⟶ SELECT { customer name, item }
+//
+// Verifies:
+//  * Outer JOIN trampoline emitted at OUTER NEXT_ITER (not double-emitted
+//    after inner NEXT_ITER).
+//  * Inner foreach over o.Items works inside outer body, after JOIN
+//    lookup bound `c` to the matched customer.
+//  * Per-row body Add fires for EACH item, not once per order.
+//
+// Expected output (order may differ — JOIN hash-iteration order is
+// std::map sorted-by-key):
+//   Alice: Apple
+//   Alice: Banana
+//   Bob: Cherry
+//   Alice: Date
+
+var apples = New Array;
+apples.Add("Apple");
+apples.Add("Banana");
+
+var cherries = New Array;
+cherries.Add("Cherry");
+
+var dates = New Array;
+dates.Add("Date");
+
+var orders = New Array;
+orders.Add(New Structure("CustId, Items", 1, apples));
+orders.Add(New Structure("CustId, Items", 2, cherries));
+orders.Add(New Structure("CustId, Items", 1, dates));
+
+var customers = New Array;
+customers.Add(New Structure("Id, Name", 1, "Alice"));
+customers.Add(New Structure("Id, Name", 2, "Bob"));
+
+var q = from o in orders
+        join c in customers on o.CustId equals c.Id
+        from item in o.Items
+        select c.Name + ": " + item;
+
+foreach (s in q) {
+    Message(s);
+}

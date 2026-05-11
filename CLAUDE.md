@@ -293,7 +293,7 @@ All 11 business object types with: attributes (full type qualifiers), tabular se
 
 ## Compiler Quick Reference
 
-- **Opcodes:** 67, defined in `src/engine/backend/compiler/codeDef.h` as `OPER_*` enumerators (lambda landed: `OPER_LFUNC` / `OPER_ENDLFUNC` body fences, `OPER_FUNC_PTR` materialise, `OPER_CALL_VAL` dynamic call)
+- **Opcodes:** defined in `src/engine/backend/compiler/codeDef.h` as `OPER_*` enumerators. Call-family: `OPER_CALL` (stack-frame named call), `OPER_CALL_CLOSURE` (named call with heap-promoted frame — callee has an inner lambda capturing locals), `OPER_CALL_METHOD` (per-class method dispatched by name string), `OPER_CALL_LINQ` (universal pipeline op dispatched by `ibLinqMethod` enum id, no string lookup), `OPER_CALL_LAMBDA` (dynamic call — target read from a slot at runtime, must wrap an `ibValueFunction`). Lambda body fences `OPER_LFUNC` / `OPER_ENDLFUNC`; materialise via `OPER_FUNC_PTR`
 - **Keywords:** 43, defined as `KEY_*` enumerators in the same file
 - **Built-in functions:** 91, registered in `ibSystemManager` (`src/engine/backend/system/systemManager.cpp`)
 - **Syntax modes:** VES (`If…Then…EndIf`, Visual-Basic-style with 1С/BSL mix) and CES (`if (…) { … }`, C-flavoured); both compile to the same bytecode. Mode is process-global on `ibCompileCode::SetCodeStyle()` / `GetCodeStyle()`. **CES is the default** for new configurations (2026-05-10); existing serialised configs preserve their stored Syntax. Wire token in metadata enum still reads `vbs` for back-compat — user-visible label is `ves`.

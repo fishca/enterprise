@@ -1,0 +1,51 @@
+// LINQ nested-FROM-with-inner-GROUP — known bug demo, 2026-05-11 PM
+//
+// Topology:
+//   from cat in categories
+//   from item in cat.Items
+//   group item.Name by item.Type
+//
+// Expected (correct per C# semantics): ONE flat result. Groups span
+// all items across all categories.
+//   Red:    [Apple, Wine]
+//   Yellow: [Banana, Beer]
+//
+// Actual (BUG): groupsContainer slot is allocated via parent-context
+// CreateVariable → PERSISTS across outer iters. First-iter init guard
+// (IsEmpty(groupsContainer)) fires ONCE for the whole LINQ expr, not
+// per outer iter. Per-row Insert into Container accumulates ALL items
+// across categories. Inner-level post-loop expansion (groups → __r.Add)
+// fires PER OUTER ITER, so __r gets the SAME groups duplicated.
+//
+// Additionally: Container.Insert throws on duplicate key. Second cat's
+// first item with already-seen Type would explode with
+// "Key 'X' is already using!" before any other symptom.
+//
+// Fix needed (deferred): reset groupsContainer to TYPE_EMPTY at
+// inner-foreach entry (via OPER_LET or OPER_NEW) so init guard fires
+// fresh each outer iter, OR move expansion to outer-foreach exit so it
+// runs once at end.
+
+var fruitItems = New Array;
+fruitItems.Add(New Structure("Type, Name", "Red",    "Apple"));
+fruitItems.Add(New Structure("Type, Name", "Yellow", "Banana"));
+
+var drinkItems = New Array;
+drinkItems.Add(New Structure("Type, Name", "Red",    "Wine"));
+drinkItems.Add(New Structure("Type, Name", "Yellow", "Beer"));
+
+var categories = New Array;
+categories.Add(New Structure("Name, Items", "Fruit",  fruitItems));
+categories.Add(New Structure("Name, Items", "Drinks", drinkItems));
+
+var q = from cat in categories
+        from item in cat.Items
+        group item.Name by item.Type;
+
+Message("group count: " + q.Count());
+foreach (g in q) {
+    Message(g.Key + " [" + g.Values.Count() + "]");
+    foreach (n in g.Values) {
+        Message("  " + n);
+    }
+}

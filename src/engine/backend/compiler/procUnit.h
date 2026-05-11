@@ -12,6 +12,15 @@ struct ibProcUnitState;   // procUnitState.h — forward decl; full type via ibS
 class ibValueFunction;
 class ibSession;
 
+// Invoke a lambda value with one argument from host (C++) code.
+// `callable` must wrap (directly or through TYPE_REFFER) an
+// ibValueFunction value; returns true on success, false if the
+// value is not a lambda. Used by host-side aggregation helpers
+// (ibValueArray::Sum/Min/Max/Average with selector λ) and other
+// callsites that need to fire a script lambda from C++ without
+// going through OPER_CALL_LAMBDA bytecode.
+BACKEND_API bool InvokeLambdaWithArg(ibValue& callable, ibValue& arg, ibValue& retVal);
+
 class BACKEND_API ibProcUnit {
 public:
 

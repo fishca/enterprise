@@ -214,6 +214,8 @@ void ibValue::Copy(const ibValue& cOld)
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		m_typeClass = ibValueTypes::TYPE_REFFER;
 		m_pRef = const_cast<ibValue*>(&cOld);
 		m_pRef->IncrRef();
@@ -255,6 +257,8 @@ void ibValue::Move(ibValue&& cOld)
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		m_typeClass = ibValueTypes::TYPE_REFFER;
 		m_pRef = const_cast<ibValue*>(&cOld);
 		m_pRef->IncrRef();
@@ -764,6 +768,8 @@ bool ibValue::IsEmpty() const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return false;
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef ? m_pRef->IsEmpty() : true;
@@ -866,6 +872,8 @@ bool ibValue::CompareValueGT(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() > cParam.GetString();
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueGT(cParam);
@@ -894,6 +902,8 @@ bool ibValue::CompareValueGE(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() >= cParam.GetString();
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueGE(cParam);
@@ -922,6 +932,8 @@ bool ibValue::CompareValueLS(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() < cParam.GetString();
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueLS(cParam);
@@ -950,6 +962,8 @@ bool ibValue::CompareValueLE(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() <= cParam.GetString();
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueLE(cParam);
@@ -982,6 +996,8 @@ bool ibValue::CompareValueEQ(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() == cParam.GetString() &&
 			GetClassType() == cParam.GetClassType();
 	case ibValueTypes::TYPE_REFFER:
@@ -1015,6 +1031,8 @@ bool ibValue::CompareValueNE(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() != cParam.GetString() ||
 			GetClassType() != cParam.GetClassType();
 	case ibValueTypes::TYPE_REFFER:
@@ -1150,13 +1168,18 @@ long ibValue::GetNMethods() const
 	return 0;
 }
 
+// Per-class method resolver. LINQ pipeline ops bypass this entirely —
+// compile-side emits OPER_CALL_LINQ via FindLinqMethodByName before
+// reaching the OPER_CALL_METHOD path.
 long ibValue::FindMethod(const wxString& strMethodName) const
 {
 	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->FindMethod(strMethodName);
 	ibValueMethodHelper* const methodHelper = GetPMethods();
-	if (methodHelper != nullptr)
-		return methodHelper->FindMethod(strMethodName);
+	if (methodHelper != nullptr) {
+		const long n = methodHelper->FindMethod(strMethodName);
+		if (n >= 0) return n;
+	}
 	return wxNOT_FOUND;
 }
 

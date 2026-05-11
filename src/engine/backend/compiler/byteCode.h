@@ -47,7 +47,7 @@ enum class ibVarKind : uint8_t {
 //                     visible cross-bc. m_lCodeLine is the entry IP.
 //   - ContextMethod — Pass-3 method of a Context binding (e.g. GetForm
 //                     on Manager). No own IP — calls dispatch via
-//                     OPER_CALL_M on the parent binding + method name.
+//                     OPER_CALL_METHOD on the parent binding + method name.
 //                     m_strContext holds the parent name; m_parentRef
 //                     points at the Context entry in m_listVar.
 enum class ibFnKind : uint8_t {
@@ -247,6 +247,15 @@ struct ibByteCode {
 		// helpers (IsContextMethod / IsExport).
 		ibFnKind  m_kind         = ibFnKind::Local;
 
+		// Closure capture — true when this function contains at least
+		// one inner lambda (any nesting depth). Set on the compile-side
+		// ibFunction during lambda body parse, mirrored here at compile
+		// finalize. At Phase B runtime drives heap-allocation of the
+		// frame on function entry so escaping lambdas can hold a
+		// shared_ptr to it; until Phase B lands, the field is a no-op
+		// marker (Phase A is compile-only).
+		bool      m_needsHeapFrame = false;
+
 		// Convenience predicates — preferred over inline `m_kind == X`
 		// at callsites. Symmetric with ibByteCodeVarInfo's helpers.
 		bool IsLocal()         const { return m_kind == ibFnKind::Local; }
@@ -269,7 +278,7 @@ struct ibByteCode {
 		wxString  m_strRealName;
 		// Parent-context name for context-method entries (e.g. method
 		// of "MANAGER"). Empty for regular module functions. When set,
-		// caller emits OPER_CALL_M on the parent context — analogous
+		// caller emits OPER_CALL_METHOD on the parent context — analogous
 		// to ibByteCodeVarInfo::m_strContext for context-props.
 		wxString  m_strContext;
 		// Param-name list parallel to m_listParam — separate vector
@@ -317,6 +326,7 @@ struct ibByteCode {
 			  m_kind(!src.m_strContext.IsEmpty() ? ibFnKind::ContextMethod
 			        : src.m_bExport              ? ibFnKind::Export
 			                                     : ibFnKind::Local),
+			  m_needsHeapFrame(src.m_needsHeapFrame),
 			  m_strRealName(src.m_strRealName),
 			  m_strContext(src.m_strContext)
 		{

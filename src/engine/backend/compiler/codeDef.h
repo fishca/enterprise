@@ -58,7 +58,28 @@ enum { //instruction types
 	OPER_SET_A,
 	OPER_GET_A,
 	OPER_ENTER_A,
-	OPER_CALL_M,
+	OPER_CALL_METHOD,
+	OPER_CALL_CLOSURE,    // function call where target has m_needsHeapFrame:
+	                      // allocate the callee frame on the heap (shared_ptr-
+	                      // managed ibRunContext) so that inner lambdas
+	                      // materialised during the call can capture the
+	                      // frame via weak_from_this(). Operand layout is
+	                      // identical to OPER_CALL; the split avoids a
+	                      // per-OPER_CALL FindFunctionByEntry probe + flag
+	                      // check on the hot non-closure path.
+	OPER_CALL_LINQ,       // universal pipeline method on an iterable receiver
+	                      // (Where / Select / OrderBy / GroupBy / Join /
+	                      // Skip / Take / Aggregate / ...). Compile detects
+	                      // LINQ method names at emit time and chooses this
+	                      // opcode instead of OPER_CALL_METHOD; runtime
+	                      // dispatches via the virtual DispatchLinqMethod
+	                      // on the receiver, reading the enum id directly
+	                      // from m_param3.m_numIndex (no FindMethod string
+	                      // resolution / const-pool lookup needed). Operand
+	                      // layout mirrors OPER_CALL_METHOD with one diff:
+	                      //   m_param3.m_numIndex = ibLinqMethod enum value
+	                      //                        (NOT a const-string index)
+	                      //   m_param3.m_numArray = caller arg count
 	OPER_GET_ARRAY,
 	OPER_SET_ARRAY,
 	OPER_CHECK_ARRAY,
@@ -93,7 +114,7 @@ enum { //instruction types
 	// for the compile-time scan and for the AOT-resilient first-fire
 	// extraction.
 	//
-	// OPER_CALL_VAL is the dynamic counterpart of OPER_CALL: the call
+	// OPER_CALL_LAMBDA is the dynamic counterpart of OPER_CALL: the call
 	// target is an ibValue (must wrap an ibValueFunction) read from a
 	// slot in m_param4 instead of a static index in m_param2. Frame push
 	// + param bind + jump-to-entry are the same machinery as OPER_CALL,
@@ -102,7 +123,7 @@ enum { //instruction types
 	// lambda bc).
 	OPER_LFUNC,
 	OPER_ENDLFUNC,
-	OPER_CALL_VAL,
+	OPER_CALL_LAMBDA,
 	OPER_END,
 };
 
@@ -164,6 +185,29 @@ enum { // numbers of keywords (in strict sequence as the values ​​themselves
 	KEY_ENDIFDEF,
 	KEY_REGION,
 	KEY_ENDREGION,
+	// === LINQ keywords ===
+	// Recognised by the compiler in CompileLinqExpression and (for
+	// FROM only) at expression-start in GetExpression / statement-start
+	// in CompileBlock. KEY_IN reuses the existing keyword above
+	// (already used by `For Each o In X`). All registered up-front so
+	// IsNextKeyWord(KEY_*) works without identifier-text fallback,
+	// and so the code editor's keyword highlighter picks them up the
+	// moment translateCode.cpp's s_listKeyWord is updated in lock-step.
+	KEY_FROM,           // `from <id> in <expr>`            — block entry
+	KEY_WHERE,          // `where <expr>`                    — filter
+	KEY_SELECT,         // `select <expr>`                   — projection
+	KEY_ORDERBY,        // `orderby <expr> [ascending|descending]`
+	KEY_ASCENDING,      // sort modifier (default)
+	KEY_DESCENDING,     // sort modifier
+	KEY_TAKE,           // `take <n>`                        — limit
+	KEY_SKIP,           // `skip <n>`                        — offset
+	KEY_DISTINCT,       // `distinct`                        — dedup
+	KEY_JOIN,           // `join <id> in <expr> on ...`      — inner join
+	KEY_ON,             // `... on <left> equals <right>`    — join key
+	KEY_EQUALS,         // join-key matcher (typed-vs '==' alt)
+	KEY_GROUP,          // `group <expr> by <key> [into <id>]`
+	KEY_BY,             // group-by / orderby key separator
+	KEY_INTO,           // `group ... into <id>`             — group binding
 	LastKeyWord
 };
 

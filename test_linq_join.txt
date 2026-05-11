@@ -1,0 +1,23 @@
+// LINQ JOIN smoke test — 2026-05-11 PM
+// Expected output:
+//   1 -> A=10
+//   2 -> B=20
+//   3 -> C=30
+
+var arr1 = New Array;
+arr1.Add(New Structure("Id, Name", 1, "A"));
+arr1.Add(New Structure("Id, Name", 2, "B"));
+arr1.Add(New Structure("Id, Name", 3, "C"));
+
+var arr2 = New Array;
+arr2.Add(New Structure("Id, Value", 1, 10));
+arr2.Add(New Structure("Id, Value", 2, 20));
+arr2.Add(New Structure("Id, Value", 3, 30));
+
+var q = from o in arr1
+        join c in arr2 on o.Id equals c.Id
+        select o.Name + "=" + c.Value;
+
+foreach (s in q) {
+    Message(s);
+}

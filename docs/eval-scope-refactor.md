@@ -35,7 +35,7 @@ Kinds:
 |----------------|----------------------------------------------------------|-----------------|
 | Local          | user-private function                                    | OPER_CALL       |
 | Export         | user-declared export function                            | OPER_CALL       |
-| ContextMethod  | method of a Context binding (`GetForm` of `Manager`)     | OPER_CALL_M     |
+| ContextMethod  | method of a Context binding (`GetForm` of `Manager`)     | OPER_CALL_METHOD |
 
 Cross-table: `ContextProp.m_parentRef` and `ContextMethod.m_parentRef`
 index into `m_listVar` (parent Context binding entry).

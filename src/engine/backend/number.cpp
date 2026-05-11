@@ -1108,6 +1108,18 @@ wxString ibNumber::ToString() const
 			out.append(fracLen - magLen, wxT('0'));
 			out += wxString(p, magLen);
 		}
+		// Trim trailing zeros after the decimal point — they're
+		// semantically redundant (5.00 == 5; 0.50 == 0.5). Division
+		// in ttmath/ibNumber produces high-precision results like
+		// 3.000000000000000000000000000000 even for integer-valued
+		// quotients; without trim, Message(15/5) prints 30 zeros.
+		// Only fires on the b.exp < 0 branch — pure integers with
+		// shifted exponent (1000000 = mantissa 1, exp +6) never enter
+		// here, so their trailing zeros stay (they're significant).
+		while (!out.IsEmpty() && out.Last() == wxT('0'))
+			out.RemoveLast();
+		if (!out.IsEmpty() && out.Last() == wxT('.'))
+			out.RemoveLast();
 	}
 	return out;
 }

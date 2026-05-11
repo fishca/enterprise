@@ -205,6 +205,16 @@ protected:
 	bool CompileFor();
 	bool CompileForeach();
 
+	// Block-syntax LINQ walker — minimal precompile. Parses
+	// `from <id> in <expr> [...clauses...] (select|group)`,
+	// registers from/let/join/group-into bindings in m_activeContext
+	// so `o.` inside the block sees `o`. Element-type inference is
+	// not done: bindings carry empty type. On unrecognised tail
+	// keyword the walker bails — the rest of the module parses
+	// normally. Mirrors backend ibCompileCode::CompileLinqExpression
+	// shape; see docs/linq.md "Editor integration".
+	ibParamValue CompileLinqExpression();
+
 protected:
 
 	bool CompileModule();

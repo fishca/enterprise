@@ -100,12 +100,28 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 				ibBackendCoreException::Error(_("Recursive call of modules!"));
 		};
 
+		// Closure capture state declared before tryEmit so the lambda
+		// can capture by reference. crossedLambda flips to true inside
+		// the parent-walk loop once a lambda boundary is crossed (or
+		// up front if `this` is itself a lambda body). isLambdaFunction
+		// gates the bc walk's topmost-only restriction and the rootCtx
+		// fallback for Context bindings.
+		bool isLambdaFunction = IsReturnLambda(m_numReturn);
+		bool crossedLambda    = isLambdaFunction;
+
 		// Visibility check + emit. Depth is the runtime frame index
 		// (m_pppArrayList layer); blockReturn switches it to
 		// DEF_VAR_TEMP for through-block reach. Returns true (with
 		// `out` filled) only if visibility budget allows.
+		//
+		// Closure capture bypass: once the walk has crossed at least
+		// one lambda boundary (crossedLambda), the
+		// numCanUseLocalInParent budget is shunted — a lambda must
+		// reach any enclosing function's locals regardless of the
+		// "one level up" default. Triple-nested lambdas (inner →
+		// outer through middle) decrement past 0 otherwise.
 		auto tryEmit = [&](const std::shared_ptr<ibVariable>& cur, int depth, bool blockReturn, ibParamUnit& out) {
-			if (!(m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || cur->m_bExport))
+			if (!(m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || cur->m_bExport || crossedLambda))
 				return false;
 			out.m_numArray = blockReturn ? (long long)DEF_VAR_TEMP : (long long)depth;
 			out.m_numIndex = cur->m_numVariable;
@@ -116,14 +132,16 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 		//search in parent contexts (modules)
 		if (bFindInParent) {
 
-			// Lambda boundary detection. `this` is the lambda's own
-			// functionContext for top-level lambda body code (var
-			// references at the top of the body). Block scopes inside
-			// the lambda hit the boundary by walking up to the
-			// containing functionContext (RETURN_LAMBDA_*). Either way
-			// we end up restricted to the top-parent bc when searching
-			// the bc chain below.
-			bool isLambdaFunction = IsReturnLambda(m_numReturn);
+			// (isLambdaFunction / crossedLambda declared above so that
+			// the tryEmit lambda's reference-capture sees a defined
+			// variable. Re-stated here for context: lambda boundary
+			// detection — `this` is the lambda's own functionContext
+			// for top-level lambda body code. Block scopes inside the
+			// lambda hit the boundary by walking up to the containing
+			// functionContext (RETURN_LAMBDA_*). Closure capture is
+			// stamped lazily on the resolved fn's m_needsHeapFrame
+			// when crossedLambda is true at the time of FindVariable
+			// hit.)
 
 			// 1. Compile-context chain (block → function → root of own
 			//    ibCompileCode, then up through parent compile-contexts
@@ -138,14 +156,23 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 				if (pCurContext->FindVariable(strVarName, currentVariable)) {
 					ibParamUnit variable;
 					if (tryEmit(currentVariable, numParent - numContext,
-					            pCurContext->m_numReturn == RETURN_BLOCK, variable))
+					            pCurContext->m_numReturn == RETURN_BLOCK, variable)) {
+						// Closure capture mark — stamp the ENCLOSING
+						// function's ibFunction (m_functionContext)
+						// directly. Module-body / block ctxs have
+						// m_functionContext == nullptr; skip them
+						// (block-locals delegate to fn frame anyway,
+						// module body lives in stable descriptor frame).
+						if (crossedLambda && pCurContext->m_functionContext)
+							pCurContext->m_functionContext->m_needsHeapFrame = true;
 						return variable;
+					}
 				}
 				numCanUseLocalInParent--;
 
-				if(IsReturnLambda(pCurContext->m_numReturn)){
+				if (IsReturnLambda(pCurContext->m_numReturn)) {
 					isLambdaFunction = true;
-					break;
+					crossedLambda    = true;
 				}
 			}
 
@@ -405,7 +432,7 @@ bool ibCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr
 		// Reached the top compile-context. Drop down to the parent
 		// BYTECODE chain — symmetric with FindVariable's fallback.
 		// Emitter (compileCode.cpp) decides direct OPER_CALL vs
-		// OPER_CALL_M based on foundedFunc->m_strContext.
+		// OPER_CALL_METHOD based on foundedFunc->m_strContext.
 		if (m_parentContext == nullptr) {
 			for (const ibByteCode* bc = m_compileModule->m_cByteCode.m_parent; bc != nullptr; bc = bc->m_parent) {
 				if (bc->FindFunction(strFuncName, foundedFunc)) {

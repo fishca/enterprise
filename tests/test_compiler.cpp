@@ -254,3 +254,115 @@ TEST(CompilerAOT, RealCompileOutputRoundTrips) {
 	EXPECT_TRUE(foundCounter)   << "exported 'counter' lost in AOT round-trip";
 	EXPECT_TRUE(foundIncrement) << "function 'Increment' lost in AOT round-trip";
 }
+
+// ===========================================================================
+// Closure capture — Phase A (compile-side emit only; runtime not wired)
+// ===========================================================================
+//
+// Verifies:
+//   * Lambda body references outer-fn local — compile succeeds (was
+//     ERROR_VAR_NOT_FOUND pre-Phase-A).
+//   * Outer fn's ibByteFunction.m_needsHeapFrame = true after lambda
+//     captures one of its locals.
+//   * Bytecode dump shows OPER_GET inside lambda body reading at
+//     m_numArray ≥ 1 (m_pppArrayList depth past lambda's own frame).
+//   * Functions with NO inner lambda stay at m_needsHeapFrame = false.
+
+namespace {
+
+// Find an ibByteFunction by real name (case-insensitive).
+const ibByteCode::ibByteFunction* FindFnByName(const ibByteCode& bc, const wxString& name) {
+	for (const auto& fn : bc.m_listFunc)
+		if (fn.m_strRealName.IsSameAs(name, false))
+			return &fn;
+	return nullptr;
+}
+
+// Find a lambda (kind == Lambda) — returns first match.
+const ibByteCode::ibByteFunction* FindFirstLambda(const ibByteCode& bc) {
+	for (const auto& fn : bc.m_listFunc)
+		if (fn.IsLambda())
+			return &fn;
+	return nullptr;
+}
+
+} // namespace
+
+TEST(ClosureCapture, LambdaReferencingOuterLocalCompiles) {
+	ibCompileCode cc(wxT("test"), wxT("memory"), false);
+	const wxString src =
+		wxT("Function makeAdder(n)\n")
+		wxT("  Return Function(x)\n")
+		wxT("           Return x + n;\n")
+		wxT("         EndFunction;\n")
+		wxT("EndFunction\n");
+	EXPECT_TRUE(TryCompile(cc, src)) << "lambda capturing outer 'n' should compile";
+}
+
+TEST(ClosureCapture, OuterFnMarkedNeedsHeapFrameAfterCapture) {
+	ibCompileCode cc(wxT("test"), wxT("memory"), false);
+	const wxString src =
+		wxT("Function makeAdder(n)\n")
+		wxT("  Return Function(x)\n")
+		wxT("           Return x + n;\n")
+		wxT("         EndFunction;\n")
+		wxT("EndFunction\n");
+	ASSERT_TRUE(TryCompile(cc, src));
+
+	const auto* outer = FindFnByName(cc.m_cByteCode, wxT("makeAdder"));
+	ASSERT_NE(outer, nullptr) << "makeAdder missing from m_listFunc";
+	EXPECT_TRUE(outer->m_needsHeapFrame)
+		<< "makeAdder must be marked: its 'n' is captured by inner lambda";
+}
+
+TEST(ClosureCapture, NoCaptureLeavesNeedsHeapFrameFalse) {
+	ibCompileCode cc(wxT("test"), wxT("memory"), false);
+	// No inner lambda → no capture → no heap-frame requirement.
+	const wxString src =
+		wxT("Function plainAdd(a, b)\n")
+		wxT("  Return a + b;\n")
+		wxT("EndFunction\n");
+	ASSERT_TRUE(TryCompile(cc, src));
+
+	const auto* fn = FindFnByName(cc.m_cByteCode, wxT("plainAdd"));
+	ASSERT_NE(fn, nullptr);
+	EXPECT_FALSE(fn->m_needsHeapFrame)
+		<< "fn without inner lambda must NOT be heap-promoted";
+}
+
+TEST(ClosureCapture, LambdaBodyEmitsDepthGreaterOrEqualOneForCapturedVar) {
+	ibCompileCode cc(wxT("test"), wxT("memory"), false);
+	const wxString src =
+		wxT("Function makeAdder(n)\n")
+		wxT("  Return Function(x)\n")
+		wxT("           Return x + n;\n")
+		wxT("         EndFunction;\n")
+		wxT("EndFunction\n");
+	ASSERT_TRUE(TryCompile(cc, src));
+
+	const auto* lambda = FindFirstLambda(cc.m_cByteCode);
+	ASSERT_NE(lambda, nullptr) << "lambda missing from m_listFunc";
+
+	// Walk lambda body opcodes [m_lCodeLine .. m_lCodeLine + (range)].
+	// EmitFunctionBody stamps body IPs into m_listCode; the lambda's
+	// reference to outer 'n' must produce an opcode whose source-slot
+	// parameter has m_numArray ≥ 1 (= depth past own frame).
+	const long startIp  = lambda->m_lCodeLine;
+	const long lastCode = (long)cc.m_cByteCode.m_listCode.size();
+	bool sawDepthGEOne = false;
+	for (long ip = startIp; ip < lastCode; ++ip) {
+		const ibByteUnit& u = cc.m_cByteCode.m_listCode[ip];
+		if (u.m_numOper == OPER_ENDLFUNC) break;
+		// Any of the four params reading from an outer frame (depth ≥ 1)
+		// counts; OPER_ADD's source operands sit on m_param2/m_param3.
+		if (u.m_param1.m_numArray >= 1 ||
+		    u.m_param2.m_numArray >= 1 ||
+		    u.m_param3.m_numArray >= 1 ||
+		    u.m_param4.m_numArray >= 1) {
+			sawDepthGEOne = true;
+			break;
+		}
+	}
+	EXPECT_TRUE(sawDepthGEOne)
+		<< "lambda body must reference captured outer at depth ≥ 1";
+}

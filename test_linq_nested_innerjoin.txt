@@ -1,0 +1,63 @@
+// LINQ nested-FROM-with-inner-JOIN where T references outer iter var
+// — known bug demo, 2026-05-11 PM
+//
+// Topology:
+//   from cat in categories
+//   join meta in cat.Metadata on cat.PrimaryKey equals meta.Id
+//   select ...
+//
+// Expected (correct): per outer iter, hash dict for current cat's
+// Metadata is built fresh, lookup against that cat's specific data.
+//
+// Actual (BUG): hashSlot is allocated via parent-context CreateVariable
+// → PERSISTS across outer iters. First-iter init guard
+// (IsEmpty(hashSlot)) fires ONCE for the whole LINQ expr. Hash built
+// from cat1.Metadata is reused for cat2 (whose .Metadata is a different
+// Array). Lookups against stale hash → wrong matches or misses.
+//
+// Additionally: Container.Insert throws on duplicate key. If different
+// cats share Metadata key values, second iter would crash on
+// `Key 'X' is already using!`.
+//
+// Expected output (no bug):
+//   Fruit/Apple: A1
+//   Fruit/Banana: A2
+//   Drinks/Wine: D1
+//   Drinks/Beer: D2
+//
+// Actual behaviour: either crash on dup-key Insert (second iter), or
+// silent wrong matches (Fruit metadata reused for Drinks).
+//
+// Fix needed (deferred): reset hashSlot at outer-foreach body entry
+// when T's lex-range references outer iter var. Compile-side detection
+// needed (scan T's identifiers for outer bindings); or always reset
+// (cheap one-iter rebuild).
+
+var fruitMeta = New Array;
+fruitMeta.Add(New Structure("Id, Tag", "Apple",  "A1"));
+fruitMeta.Add(New Structure("Id, Tag", "Banana", "A2"));
+
+var drinkMeta = New Array;
+drinkMeta.Add(New Structure("Id, Tag", "Wine", "D1"));
+drinkMeta.Add(New Structure("Id, Tag", "Beer", "D2"));
+
+var fruitKeys = New Array;
+fruitKeys.Add("Apple");
+fruitKeys.Add("Banana");
+
+var drinkKeys = New Array;
+drinkKeys.Add("Wine");
+drinkKeys.Add("Beer");
+
+var categories = New Array;
+categories.Add(New Structure("Name, Keys, Meta", "Fruit",  fruitKeys, fruitMeta));
+categories.Add(New Structure("Name, Keys, Meta", "Drinks", drinkKeys, drinkMeta));
+
+var q = from cat in categories
+        from key in cat.Keys
+        join meta in cat.Meta on key equals meta.Id
+        select cat.Name + "/" + key + ": " + meta.Tag;
+
+foreach (s in q) {
+    Message(s);
+}

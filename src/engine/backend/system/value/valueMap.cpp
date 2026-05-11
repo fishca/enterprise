@@ -218,6 +218,59 @@ bool ibValueContainer::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 
 #define st_error_conversion _("Error conversion value. Must be string!")
 
+bool ibValueStructure::Init(ibValue** paParams, const long lSizeArray)
+{
+	// No args → empty Structure ready for Insert later.
+	if (lSizeArray == 0 || paParams == nullptr)
+		return true;
+
+	// First arg must be a string with comma-separated field names.
+	const ibValue* fieldsArg = paParams[0];
+	if (fieldsArg == nullptr || fieldsArg->GetType() != ibValueTypes::TYPE_STRING) {
+		ibBackendCoreException::Error(
+			_("Structure ctor: first argument must be a comma-separated field name string"));
+		return false;
+	}
+
+	const wxString fieldsStr = fieldsArg->GetString();
+
+	// Single-pass scan: split on ',' and trim whitespace. wxStringTokenizer
+	// would also work but the manual form keeps trimming inline + avoids
+	// the include. Empty tokens (`,,`) are skipped.
+	size_t cursor = 0;
+	long valueIdx = 1;   // index into paParams for the value of the next field
+	while (cursor <= fieldsStr.size()) {
+		size_t comma = fieldsStr.find(wxT(','), cursor);
+		if (comma == wxString::npos) comma = fieldsStr.size();
+
+		// Trim leading whitespace.
+		size_t start = cursor;
+		while (start < comma
+			&& (fieldsStr[start] == wxT(' ') || fieldsStr[start] == wxT('\t')))
+			++start;
+
+		// Trim trailing whitespace.
+		size_t end = comma;
+		while (end > start
+			&& (fieldsStr[end - 1] == wxT(' ') || fieldsStr[end - 1] == wxT('\t')))
+			--end;
+
+		if (end > start) {
+			const wxString fieldName = fieldsStr.Mid(start, end - start);
+			ibValue value;
+			if (valueIdx < lSizeArray && paParams[valueIdx] != nullptr)
+				value = *paParams[valueIdx];
+			ibValueStructure::Insert(fieldName, value);
+			++valueIdx;
+		}
+
+		if (comma >= fieldsStr.size()) break;
+		cursor = comma + 1;
+	}
+
+	return true;
+}
+
 bool ibValueStructure::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {
 	if (varKeyValue.GetType() != ibValueTypes::TYPE_STRING) {

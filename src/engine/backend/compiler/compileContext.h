@@ -1,7 +1,10 @@
 #ifndef _COMPILE_CONTEXT__H_
 #define _COMPILE_CONTEXT__H_
 
+#include <memory>
+
 #include "backend/compiler/byteCode.h"
+#include "backend/compiler/compileContextLinqData.h"
 
 class BACKEND_API ibCompileCode;
 
@@ -206,6 +209,17 @@ struct ibCompileContext {
 		// carry the return-kind.
 		bool m_bCodeRet = false;
 
+		// Closure capture — set lazily by GetVariable when an
+		// identifier resolves into this function's m_listVariable
+		// past a crossed lambda boundary. PushCallFunction reads it
+		// directly to choose OPER_CALL vs OPER_CALL_CLOSURE (heap-frame
+		// variant). Mirrored to ibByteFunction::m_needsHeapFrame at
+		// EmitFunctionBody finalize via the templated ctor; the bc-
+		// side mirror is what OPER_CALL_LAMBDA reads at runtime to
+		// decide heap-promotion for a dynamically-called lambda
+		// whose body has its own inner-lambda capture chain.
+		bool m_needsHeapFrame = false;
+
 		wxString m_strRealName; //Function name
 		wxString m_strName; //Function name in uppercase
 		wxString m_strType; //type (in English notation), if it is a typed function
@@ -226,7 +240,7 @@ struct ibCompileContext {
 		// "Is this a context-related entry?" — context-method (bound
 		// to a binding's helper, m_bContext=true with m_strContext set)
 		// or any function with a parent context. Used by the call-path
-		// emitter to decide OPER_CALL vs OPER_CALL_M; mirrors
+		// emitter to decide OPER_CALL vs OPER_CALL_METHOD; mirrors
 		// ibVariable::IsContextRelated().
 		bool IsContextRelated() const {
 			return m_bContext || !m_strContext.IsEmpty();
@@ -350,6 +364,25 @@ struct ibCompileContext {
 	std::map<wxString, std::shared_ptr<ibFunction>> m_listFunction; //list of encountered function definitions
 
 	short m_numReturn;//RETURN operator processing mode: RETURN_NONE,RETURN_PROCEDURE,RETURN_FUNCTION
+
+	// LINQ — exclusive ownership of LINQ-scope compile state. Non-null
+	// only on the RETURN_BLOCK-kind context that CompileLinqExpression
+	// allocates for the LINQ scope. Lifetime tied to the context's
+	// shared_ptr lifetime. Allocated via std::make_unique in
+	// CompileLinqExpression; freed automatically when the context dies.
+	std::unique_ptr<ibLinqContextData> m_linqData;
+
+	// LINQ-scope predicate helpers. IsLinq() — this context IS the
+	// LINQ scope (carries m_linqData itself). IsInLinq() — this
+	// context or any ancestor is a LINQ scope; used by IntelliSense /
+	// validation hooks that need to know "are we inside a LINQ block?"
+	// without caring which level introduced the scope.
+	bool IsLinq() const { return m_linqData != nullptr; }
+	bool IsInLinq() const {
+		for (const ibCompileContext* c = this; c; c = c->m_parentContext)
+			if (c->m_linqData) return true;
+		return false;
+	}
 
 	//LOOPS
 	//Service attributes

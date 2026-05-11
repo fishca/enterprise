@@ -170,7 +170,13 @@ protected:
 
 	void GETKeyWord(int nKey);
 
-	wxString GETIdentifier(bool strRealName = false);
+	// strRealName — return source-case string from m_valData.m_sData
+	//   (otherwise the uppercase m_strData is returned).
+	// acceptKeyword — accept a KEYWORD lexem as if it were an identifier;
+	//   used in property-access positions (`obj.<X>`) where contextual
+	//   LINQ keywords (`Where`/`Select`/...) clash with valid method
+	//   names. Returns m_strData for keywords (their lexer-emitted form).
+	wxString GETIdentifier(bool strRealName = false, bool acceptKeyword = false);
 	ibValue GETConstant();
 
 	void AddLineInfo(ibByteUnit& code);
@@ -220,6 +226,53 @@ protected:
 	// fire (and then jumps past the body); subsequent re-execution of
 	// the same definition site re-fires the same materialisation.
 	ibParamUnit CompileLambdaExpression(ibCompileContext* context);
+
+	// LINQ — block expression triggered by KEY_FROM. GetExpression's
+	// KEYWORD switch catches `KEY_FROM` (mirroring KEY_NEW) and calls
+	// CompileLinqExpression which emits an inline foreach + array-build
+	// materialising the result into a temp slot. The surrounding
+	// assignment / declaration machinery copies the result via standard
+	// OPER_LET. KEY_FROM also handled at statement-level in CompileBlock
+	// for consistency with KEY_NEW.
+	//
+	// Multi-from (`from a in X from b in Y ...`) is implemented through
+	// recursive descent: CompileLinqExpression allocates the shared
+	// result array + counters, then enters CompileLinqBlock which emits
+	// one foreach. If the next token is KEY_FROM, it recursively calls
+	// itself inside the loop body (= nested foreach). Otherwise it
+	// processes the tail clauses (where/skip/take/select) at the
+	// deepest level. On unwind each level emits its own OPER_NEXT_ITER
+	// + back-patches.
+	//
+	// LINQ block compile state lives on ibCompileContext::m_linqData
+	// (non-owning pointer at a stack-allocated struct owned by
+	// CompileLinqExpression). CompileLinqBlock reads from the linq
+	// context's m_linqData — no extra parameter needed.
+	ibParamUnit CompileLinqExpression(ibCompileContext* context);
+
+	// CompileLinqBlock — outer entry: parses `<id> in <expr>` from
+	// source, emits OPER_LET + OPER_FOREACH, dives into the leaf
+	// (or recurses for nested-from). The `preBound` overload lets
+	// the post-block group-into expansion re-enter the leaf parsing
+	// machinery with a synthesized binding: caller pre-emits the
+	// OPER_LET / OPER_FOREACH, populates the binding fully (incl.
+	// foreachStartIp), and we skip the from-clause parse + slot
+	// allocation at the top. Body / leaf / NEXT_ITER / back-patches
+	// are shared between the two entries.
+	void CompileLinqBlock(ibCompileContext* linqCtx);
+	void CompileLinqBlock(ibCompileContext* linqCtx, const ibLinqBinding& preBound);
+	// JOIN lookup emit — KEY_JOIN already consumed by caller. Parses
+	// `b in T on K1 equals K2`, binds b, emits per-iter lookup + a
+	// placeholder OPER_GOTO to the (yet-unemitted) trampoline, pushes
+	// an ibLinqPendingJoin into the caller-owned `pendingJoins` vector.
+	// Trampoline is emitted after THIS level's NEXT_ITER by the
+	// matching CompileLinqBlock call. Local-per-level vector (not
+	// stored on ibLinqContextData) so nested from-levels don't share
+	// pending-trampoline state — each level emits trampolines for its
+	// own joins only.
+	void CompileLinqJoin(ibCompileContext* linqCtx,
+	                     std::vector<int>& whereSkipIps,
+	                     std::vector<ibLinqPendingJoin>& pendingJoins);
 
 	bool CompileDeclaration(ibCompileContext* context);
 	bool CompileBlock(ibCompileContext* context);

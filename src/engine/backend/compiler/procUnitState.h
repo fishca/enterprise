@@ -64,7 +64,7 @@ struct ibProcUnitState {
 	// session's m_lambdaRuntime (allocated alongside m_root, parent =
 	// root's procUnit). Fallback (no session): currently-dispatching
 	// ProcUnit — used by codeRunner sandbox runs where ibSession
-	// isn't bound. OPER_CALL_VAL caller swaps m_pByteCode for the
+	// isn't bound. OPER_CALL_LAMBDA caller swaps m_pByteCode for the
 	// dispatch and restores after; Execute snapshots m_pByteCode at
 	// entry so nested lambda calls don't clobber an outer view.
 	ibProcUnit* GetLambdaRuntime();

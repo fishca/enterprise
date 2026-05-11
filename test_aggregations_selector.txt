@@ -1,0 +1,40 @@
+// Lambda-selector aggregations smoke.
+// Previously deferred-until-closure: Sum(λ)/Min(λ)/Max(λ)/Average(λ).
+// Closure capture landed Phase A/B/C/D 2026-05-11 — теперь работает.
+
+// 1) Numeric array with projection
+var nums = New Array
+nums.Add(10)
+nums.Add(20)
+nums.Add(30)
+
+Message("=== T1 selector x => x * 2 ===")
+Message(nums.Sum(Function(x) Return x * 2 EndFunction))      // 120
+Message(nums.Min(Function(x) Return x * 2 EndFunction))      // 20
+Message(nums.Max(Function(x) Return x * 2 EndFunction))      // 60
+Message(nums.Average(Function(x) Return x * 2 EndFunction))  // 40
+
+// 2) Structures projected via field selector
+var orders = New Array
+orders.Add(New Structure("Name, Amount", "A", 100))
+orders.Add(New Structure("Name, Amount", "B", 250))
+orders.Add(New Structure("Name, Amount", "C",  50))
+
+Message("=== T2 selector o => o.Amount ===")
+Message(orders.Sum(Function(o) Return o.Amount EndFunction))      // 400
+Message(orders.Min(Function(o) Return o.Amount EndFunction))      // 50
+Message(orders.Max(Function(o) Return o.Amount EndFunction))      // 250
+Message(orders.Average(Function(o) Return o.Amount EndFunction))  // 133.33...
+
+// 3) Closure capture inside selector — captures outer multiplier
+var k = 3
+Message("=== T3 selector closes over outer k=3 ===")
+Message(nums.Sum(Function(x) Return x * k EndFunction))   // (10+20+30)*3 = 180
+
+// 4) Empty array
+var empty = New Array
+Message("=== T4 empty array (selector ignored) ===")
+Message(empty.Sum(Function(x) Return x EndFunction))      // empty
+Message(empty.Average(Function(x) Return x EndFunction))  // empty
+
+Message("=== suite done ===")

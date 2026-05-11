@@ -1,0 +1,119 @@
+// =============================================================
+// Closure capture — full smoke suite (Phases A/B/C/D + typed-enum)
+// =============================================================
+// Covers single-level capture, live-link mutation, independent
+// instances, triple-nested capture, LINQ chain closure, iterator
+// typed-dispatch. Final state of 2026-05-11 closure-capture arc.
+
+function makeAdder(n)
+    return Function(x)
+        return x + n
+    EndFunction
+EndFunction
+
+function counter()
+    var i = 0
+    return Function()
+        i = i + 1
+        return i
+    EndFunction
+EndFunction
+
+function outer(a)
+    return Function(b)
+        return Function(c)
+            return a + b + c
+        EndFunction
+    EndFunction
+EndFunction
+
+function makeMultiplier(factor)
+    return Function(value)
+        return value * factor
+    EndFunction
+EndFunction
+
+function makeAccumulator()
+    var total = 0
+    return Function(x)
+        total = total + x
+        return total
+    EndFunction
+EndFunction
+
+// === T01 single-level capture (makeAdder) ===
+Message("=== T01 ===")
+var add5 = makeAdder(5)
+Message(add5(10))   // 15
+Message(add5(100))  // 105
+
+// === T02 live-link mutation (counter, independent instances) ===
+Message("=== T02 ===")
+var c1 = counter()
+Message(c1())   // 1
+Message(c1())   // 2
+Message(c1())   // 3
+var c2 = counter()
+Message(c2())   // 1
+Message(c1())   // 4
+Message(c2())   // 2
+
+// === T03 triple-nested capture (outer/middle/inner) ===
+Message("=== T03 ===")
+var add10 = outer(10)
+var add10_20 = add10(20)
+Message(add10_20(30))   // 60
+Message(add10_20(5))    // 35
+var add10_100 = add10(100)
+Message(add10_100(1))   // 111
+Message(add10_20(7))    // 37
+
+// === T04 LINQ chain with closure capture ===
+Message("=== T04 ===")
+var arr = New Array
+arr.Add(1)
+arr.Add(2)
+arr.Add(3)
+arr.Add(4)
+arr.Add(5)
+var threshold  = 2
+var multiplier = 10
+var result = arr.Where(Function(x) Return x > threshold EndFunction).Select(Function(x) Return x * multiplier EndFunction).ToArray()
+Message("count=" + result.Count())
+For Each v In result Do
+    Message(v)   // 30, 40, 50
+EndDo
+
+// === T05 iterator dispatch (For Each + LINQ tail) ===
+Message("=== T05 ===")
+var arr2 = New Array
+arr2.Add(10)
+arr2.Add(20)
+arr2.Add(30)
+var sum = 0
+For Each x In arr2 Do
+    sum = sum + x
+EndDo
+Message(sum)   // 60
+var filtered = arr2.Where(Function(x) Return x >= 20 EndFunction).ToArray()
+Message("filtered count=" + filtered.Count())
+For Each v In filtered Do
+    Message(v)   // 20, 30
+EndDo
+
+// === T06 closure as event-style callback ===
+Message("=== T06 ===")
+var doubler = makeMultiplier(2)
+var tripler = makeMultiplier(3)
+Message(doubler(7))   // 14
+Message(tripler(7))   // 21
+Message(doubler(50))  // 100
+
+// === T07 inner lambda mutating outer's local (accumulator) ===
+Message("=== T07 ===")
+var acc = makeAccumulator()
+Message(acc(5))   // 5
+Message(acc(10))  // 15
+Message(acc(100)) // 115
+
+Message("=== suite done ===")

@@ -68,11 +68,18 @@ public:
 	ibValueTypes m_typeClass;
 	union {
 		bool          m_bData;  //TYPE_BOOL
-		ibNumber      m_fData;  //TYPE_NUMBER
 		wxLongLong_t  m_dData;  //TYPE_DATE
-		ibValue* m_pRef;	//TYPE_REFFER
+		ibValue*      m_pRef;   //TYPE_REFFER
 	};
 	wxString m_sData;  //TYPE_STRING
+	// TYPE_NUMBER — outside the union. ibNumber is a conditional
+	// heap-owner (lazy-grow BigImpl), so its ctor/dtor/operator= must
+	// run on type transitions; in a union those calls are skipped and
+	// the m_pRef pointer in the lower 4 bytes gets reinterpreted as a
+	// BigImpl* on the next ibNumber::Clear(), which deletes random
+	// memory. Same rule that already keeps wxString out of the union.
+	// Costs +8 bytes per ibValue.
+	ibNumber m_fData;
 public:
 
 	class BACKEND_API ibValueMethodHelper {
@@ -866,6 +873,91 @@ public:
 	 *  @return true if the method has a return value
 	 */
 	virtual bool HasRetVal(const long lMethodNum) const;
+
+	// LINQ — universal pipeline ops (Where / Select / OrderBy / ...) on
+	// every iterable value. Resolved at compile time by name via
+	// FindLinqMethodByName and emitted as OPER_CALL_LINQ (NOT
+	// OPER_CALL_METHOD); the opcode carries the ibLinqMethod enum id
+	// directly. Runtime dispatch goes through virtual DispatchLinqMethod —
+	// derived classes don't have to teach FindMethod / CallAsFunc about
+	// LINQ surface.
+
+	// LINQ method id — strongly-typed enum. Single source of truth
+	// for method-name resolution: name-string == enum-value's
+	// stringization (`Where` enumerator ↔ `"Where"` script-side
+	// method name). Adding a new op = append here AND an entry in
+	// GetLinqMethodTable() + a case in the dispatch switch
+	// (procUnitLinq.cpp). Runtime arg-count validation lives inside
+	// each dispatch case.
+	enum class ibLinqMethod : long {
+		Where,
+		Select,
+		Count,
+		ToArray,
+		First,
+		Any,
+		Distinct,
+		OrderBy,
+		OrderByDescending,
+		GroupBy,
+		Join,
+		Skip,
+		Take,
+		SkipWhile,
+		TakeWhile,
+		Reverse,
+		Concat,
+		Union,
+		Intersect,
+		Except,
+		Last,
+		LastOrDefault,
+		Single,
+		SingleOrDefault,
+		FirstOrDefault,
+		ElementAt,
+		ElementAtOrDefault,
+		Contains,
+		SequenceEqual,
+		Aggregate,
+		WhereIndexed,
+		SelectIndexed,
+	};
+
+	// Method-table entry — enum id + script-side name + one-line help
+	// for IntelliSense tooltips. Same table services compile-side
+	// FindLinqMethodByName (name → enum) and frontend autocomplete
+	// (after `.`, append every LINQ method as a suggestion). Single
+	// source of truth: no separate IB_LINQ_TRY macro per name in the
+	// resolver, no parallel list in the autocomplete loader.
+	struct ibLinqMethodInfo {
+		ibLinqMethod   id;
+		const wchar_t* name;
+		const wchar_t* helper;
+	};
+	static const std::vector<ibLinqMethodInfo>& GetLinqMethodTable();
+
+	// Compile-time resolver — script method name → enum value (or
+	// -1 if not a LINQ method). Used by the chain-method emit path
+	// (compileCode.cpp) to decide OPER_CALL_METHOD (per-class) vs
+	// OPER_CALL_LINQ (universal pipeline op). Case-insensitive match
+	// per OES convention. Implemented in terms of GetLinqMethodTable().
+	static long FindLinqMethodByName(const wxString& strMethodName);
+
+	// LINQ dispatch entry point — virtual so subclasses can override
+	// kind-specific behavior (e.g. ibValueQuery extending an existing
+	// pipeline rather than wrapping via CreateIterator + new state;
+	// ibValueArray returning concrete Array on ToArray() rather than
+	// materialising into a fresh one; DB-backed values pushing
+	// OrderBy / GroupBy / Join down to SQL). Default impl walks
+	// TYPE_REFFER chain to the underlying object, then dispatches
+	// through the central state-class machinery (file-scope helper
+	// in procUnit.cpp). One virtual entry rather than 32 keeps
+	// vtable bloat down — per-method virtuals can be lifted later
+	// when concrete override pressure surfaces (Phase 2 of the
+	// virtual-dispatch arc).
+	virtual void DispatchLinqMethod(ibLinqMethod method, ibValue& ret,
+	                                ibValue** args, long n);
 
 	/// Calls the method as a procedure
 	/**

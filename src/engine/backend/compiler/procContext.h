@@ -1,6 +1,8 @@
 #ifndef __PROC_CONTEXT__H__
 #define __PROC_CONTEXT__H__
 
+#include <memory>
+
 #include "byteCode.h"
 #include "compileContext.h"
 
@@ -48,7 +50,15 @@ struct ibRunContextSmall {
 	long m_lVarCount;
 };
 
-struct ibRunContext {
+// Inherits enable_shared_from_this so heap-promoted instances (created
+// via std::make_shared by OPER_CALL / OPER_CALL_LAMBDA when the called
+// function has ibByteFunction::m_needsHeapFrame=true) can hand out
+// shared_ptr<ibRunContext> copies at OPER_LFUNC capture time. Stack-
+// allocated instances (the common case — function has no inner
+// lambda) return an expired weak_ptr from weak_from_this() — used as
+// the runtime discriminator: "heap-promoted iff weak_from_this().lock()
+// is non-null". No separate kind flag needed.
+struct ibRunContext : std::enable_shared_from_this<ibRunContext> {
 
 	ibRunContext(int varCount = wxNOT_FOUND) :
 		m_lStart(0), m_lCurLine(0), m_lVarCount(0), m_lParamCount(0) {
@@ -100,6 +110,15 @@ struct ibRunContext {
 	}
 
 	ibProcUnit* m_procUnit = nullptr;
+
+	// Call-stack parent — set in OPER_CALL / OPER_CALL_METHOD / OPER_CALL_LAMBDA
+	// handlers when constructing the callee's frame. Raw pointer: the
+	// caller's frame is always alive for the duration of the call
+	// (either C-stack or a shared_ptr held by some outer ibRunContext
+	// or value). Walked at OPER_LFUNC materialise to identify
+	// heap-promoted ancestors that the new lambda value captures.
+	// nullptr for module-body entry (the Execute(bDelta=true) path).
+	ibRunContext* m_parentRunContext = nullptr;
 
 	// Bytecode-side function descriptor for the function this frame
 	// is executing. nullptr → frame is module-body (top-level

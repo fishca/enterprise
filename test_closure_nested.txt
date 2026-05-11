@@ -1,0 +1,27 @@
+// Phase C — nested lambda capture chain.
+//
+// outer fn → middle lambda → inner lambda. Inner captures BOTH
+// outer's `a` AND middle's `b`. Verifies m_capturedFrames walk
+// через два function boundaries.
+//
+// outer(10) returns middle (captures a=10).
+// middle(20) returns inner (captures a=10, b=20).
+// inner(30) → a + b + c = 10 + 20 + 30 = 60.
+
+function outer(a)
+    return Function(b)
+        return Function(c)
+            return a + b + c
+        EndFunction
+    EndFunction
+EndFunction
+
+var add10 = outer(10)
+var add10_20 = add10(20)
+Message(add10_20(30))   // expect 60
+Message(add10_20(5))    // expect 35 (a=10, b=20, c=5)
+
+// Independent path: another middle from same outer.
+var add10_100 = add10(100)
+Message(add10_100(1))   // expect 111 (a=10, b=100, c=1)
+Message(add10_20(7))    // expect 37 — add10_20 untouched

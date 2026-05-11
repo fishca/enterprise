@@ -514,14 +514,65 @@ void ibDebuggerServer::SendLocalVariables()
 		return info.m_scopeDepth <= m_runContext->m_currentScopeDepth;
 	};
 
+	// Closure capture (Phase F) — show captured outer frames as
+	// additional Locals entries with "<fn>.<var>" labels. Walks
+	// m_parentRunContext chain (set in OPER_CALL_LAMBDA to the lexical
+	// parent for lambdas); each heap-promoted ancestor
+	// (weak_from_this().lock() non-null = was allocated via
+	// make_shared = closure-related) contributes its UserLocal
+	// entries. Non-heap-promoted parents (regular call callers) are
+	// skipped — they belong to the call stack view, not Locals.
+	auto emitFromCtx = [&](ibRunContext* ctx, const wxString& prefix) {
+		const std::vector<ibByteCode::ibByteCodeVarInfo>* pTable = nullptr;
+		if (ctx->m_currentFunction != nullptr)
+			pTable = &ctx->m_currentFunction->m_listLocals;
+		else if (const ibByteCode* bc = ctx->GetByteCode())
+			pTable = &bc->m_listVar;
+		if (pTable == nullptr) return;
+		const long pVarCount = ctx->GetLocalCount();
+		for (const auto& v : *pTable) {
+			if (!v.IsUserLocal()) continue;
+			const bool inRange = v.m_slotIndex >= 0 && v.m_slotIndex < pVarCount;
+			ibValue* locRefValue = inRange ? ctx->m_pRefLocVars[v.m_slotIndex] : nullptr;
+			const wxString rendered = prefix.IsEmpty()
+				? v.m_strRealName
+				: (prefix + wxT(".") + v.m_strRealName);
+			commandChannel.w_stringZ(rendered);
+			commandChannel.w_stringZ(locRefValue ? locRefValue->GetString()    : wxString());
+			commandChannel.w_stringZ(locRefValue ? locRefValue->GetClassName() : wxString());
+			commandChannel.w_u32(locRefValue ? locRefValue->GetNProps() : 0);
+		}
+	};
+
+	// Pass 1 — count own + captured user-locals.
 	uint32_t emitCount = 0;
 	for (const auto& v : *table)
 		if (isLocalsViewable(v) && isInScope(v)) ++emitCount;
+	for (ibRunContext* p = m_runContext->m_parentRunContext; p != nullptr; p = p->m_parentRunContext) {
+		if (!p->weak_from_this().lock()) continue;   // skip stack-only frames
+		const auto* pTable = (p->m_currentFunction != nullptr)
+			? &p->m_currentFunction->m_listLocals
+			: (p->GetByteCode() != nullptr ? &p->GetByteCode()->m_listVar : nullptr);
+		if (pTable == nullptr) continue;
+		for (const auto& v : *pTable) if (v.IsUserLocal()) ++emitCount;
+	}
 	commandChannel.w_u32(emitCount);
+
+	// Pass 2 — emit own.
 	for (const auto& v : *table) {
 		if (!isLocalsViewable(v)) continue;
 		if (!isInScope(v)) continue;
 		emitVar(v, v.m_strRealName);
+	}
+
+	// Pass 2b — emit captured frames in chain order. Label =
+	// owning fn's m_strRealName (or "<module>" for module bodies).
+	for (ibRunContext* p = m_runContext->m_parentRunContext; p != nullptr; p = p->m_parentRunContext) {
+		if (!p->weak_from_this().lock()) continue;
+		const wxString fnName = p->m_currentFunction != nullptr
+			? p->m_currentFunction->m_strRealName
+			: wxString(wxT("<module>"));
+		emitFromCtx(p, fnName);
 	}
 
 	SendCommand(commandChannel.pointer(), commandChannel.size());

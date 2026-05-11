@@ -77,6 +77,25 @@ struct ibKeyWords s_listKeyWord[] =
 	{"#Endif"},
 	{"#Region"},
 	{"#EndRegion"},
+
+	// === LINQ keywords ===
+	// Order MUST match codeDef.h's KEY_FROM..KEY_INTO enum block —
+	// translator lookup is by index into s_listKeyWord.
+	{"From"},
+	{"Where"},
+	{"Select"},
+	{"OrderBy"},
+	{"Ascending"},
+	{"Descending"},
+	{"Take"},
+	{"Skip"},
+	{"Distinct"},
+	{"Join"},
+	{"On"},
+	{"Equals"},
+	{"Group"},
+	{"By"},
+	{"Into"},
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -681,7 +700,14 @@ bool ibTranslateCode::GetNumber(wxString* strNumber) const
 		SetError(ERROR_TRANSLATE_NUMBER, first_pos);
 		return false;
 	}
-	else if (IsWord() && m_strBuffer[next_pos] != wxT(' ')) {
+	else if (IsWord() && !wxIsspace(m_strBuffer[next_pos])) {
+		// Originally compared `!= ' '` — rejected `20\nselect` as
+		// "number-glued-to-word" because newline isn't the literal
+		// space char. IsWord() above calls SkipSpaces() (which advances
+		// past ALL whitespace incl. \n / \t), so the IsWord check
+		// might return true for a far-away identifier after a wide
+		// whitespace gap. Use wxIsspace at next_pos so any whitespace
+		// separator (space / tab / newline / CR) is accepted.
 		SetError(ERROR_TRANSLATE_NUMBER, error_pos);
 		return false;
 	}

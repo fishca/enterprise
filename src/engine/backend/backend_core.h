@@ -59,6 +59,8 @@ enum ibValueTypes {
 	TYPE_VALUE = 200, // value
 	TYPE_ENUM = 201, // enumeration
 	TYPE_OLE = 202, // ole object
+	TYPE_FUNCTION = 203, // anonymous-function / lambda value (ibValueFunction)
+	TYPE_ITERATOR = 204, // iterator wrapper (ibValueIterator)
 
 	TYPE_LAST,
 };

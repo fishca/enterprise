@@ -1,0 +1,300 @@
+// LINQ comprehensive smoke test suite — 2026-05-11 PM
+// Covers: from / where / let / select / orderby / join / group +
+// aggregations + nested-from + previously-buggy patterns now fixed.
+// Each test labelled with === markers; expected output documented inline.
+
+// ======================================================================
+// T01 — simplest: from + select
+// Expected: 1 2 3 4 5
+// ======================================================================
+Message("=== T01: from + select ===");
+var nums = New Array;
+nums.Add(1); nums.Add(2); nums.Add(3); nums.Add(4); nums.Add(5);
+var q01 = from x in nums select x;
+foreach (v in q01) { Message(v); }
+
+// ======================================================================
+// T02 — where filter
+// Expected: 3 4 5
+// ======================================================================
+Message("=== T02: where ===");
+var q02 = from x in nums where x >= 3 select x;
+foreach (v in q02) { Message(v); }
+
+// ======================================================================
+// T03 — let intermediate
+// Expected: 1 4 9 16 25
+// ======================================================================
+Message("=== T03: let ===");
+var q03 = from x in nums
+          var sq = x * x
+          select sq;
+foreach (v in q03) { Message(v); }
+
+// ======================================================================
+// T04 — skip / take
+// Expected: 2 3
+// ======================================================================
+Message("=== T04: skip+take ===");
+var q04 = from x in nums skip 1 take 2 select x;
+foreach (v in q04) { Message(v); }
+
+// ======================================================================
+// T05 — distinct (dup-removal)
+// Expected: 1 2 3 (one of each)
+// ======================================================================
+Message("=== T05: distinct ===");
+var dups = New Array;
+dups.Add(1); dups.Add(2); dups.Add(1); dups.Add(3); dups.Add(2);
+var q05 = from x in dups select x distinct;
+foreach (v in q05) { Message(v); }
+
+// ======================================================================
+// T06 — orderby ascending (default)
+// Expected: 1 1 2 3 4 5 6 9
+// ======================================================================
+Message("=== T06: orderby asc ===");
+var scattered = New Array;
+scattered.Add(3); scattered.Add(1); scattered.Add(4); scattered.Add(1);
+scattered.Add(5); scattered.Add(9); scattered.Add(2); scattered.Add(6);
+var q06 = from x in scattered orderby x select x;
+foreach (v in q06) { Message(v); }
+
+// ======================================================================
+// T07 — orderby descending
+// Expected: 9 6 5 4 3 2 1 1
+// ======================================================================
+Message("=== T07: orderby desc ===");
+var q07 = from x in scattered orderby x descending select x;
+foreach (v in q07) { Message(v); }
+
+// ======================================================================
+// T08 — orderby with negation (regression: was the trigger for the
+// unary-minus AddTypeSet bug from earlier in this session).
+// Expected: 9 6 5 4 3 2 1 1   (orderby -x ascending == orderby x desc)
+// ======================================================================
+Message("=== T08: orderby -x ===");
+var q08 = from x in scattered orderby -x select x;
+foreach (v in q08) { Message(v); }
+
+// ======================================================================
+// T09 — Array aggregations no-arg
+// Expected: sum=15  min=1  max=5  avg=3
+// ======================================================================
+Message("=== T09: Sum/Min/Max/Average ===");
+Message("sum=" + nums.Sum());
+Message("min=" + nums.Min());
+Message("max=" + nums.Max());
+Message("avg=" + nums.Average());   // 3 (after ibNumber ToString trim)
+
+// ======================================================================
+// T10 — select { ... } anonymous structure projection
+// Expected: lines like "1 -> 1", "2 -> 4", ...
+// Note: leading "" forces string-mode concat — ibValue's `+` for
+// NUMBER + STRING tries to parse STRING as NUMBER (number-mode) and
+// fails on " -> ".
+// ======================================================================
+Message("=== T10: select { } ===");
+var q10 = from x in nums select { N = x, Sq = x * x };
+foreach (row in q10) { Message("" + row.N + " -> " + row.Sq); }
+
+// ======================================================================
+// T11 — nested from (cartesian-like)
+// Expected: 9 rows: 1+10, 1+20, 1+30, 2+10, ...
+// ======================================================================
+Message("=== T11: nested from ===");
+var a = New Array; a.Add(1); a.Add(2); a.Add(3);
+var b = New Array; b.Add(10); b.Add(20); b.Add(30);
+var q11 = from x in a from y in b select x + y;
+foreach (v in q11) { Message(v); }
+
+// ======================================================================
+// T12 — JOIN inner (outer + customers)
+// Expected:
+//   A=10
+//   B=20
+//   C=30
+// ======================================================================
+Message("=== T12: join ===");
+var arr1 = New Array;
+arr1.Add(New Structure("Id, Name", 1, "A"));
+arr1.Add(New Structure("Id, Name", 2, "B"));
+arr1.Add(New Structure("Id, Name", 3, "C"));
+var arr2 = New Array;
+arr2.Add(New Structure("Id, Value", 1, 10));
+arr2.Add(New Structure("Id, Value", 2, 20));
+arr2.Add(New Structure("Id, Value", 3, 30));
+var q12 = from o in arr1
+          join c in arr2 on o.Id equals c.Id
+          select o.Name + "=" + c.Value;
+foreach (s in q12) { Message(s); }
+
+// ======================================================================
+// T13 — JOIN + WHERE combo
+// Expected: only Value >= 20
+//   B=20
+//   C=30
+// ======================================================================
+Message("=== T13: join + where ===");
+var q13 = from o in arr1
+          join c in arr2 on o.Id equals c.Id
+          where c.Value >= 20
+          select o.Name + "=" + c.Value;
+foreach (s in q13) { Message(s); }
+
+// ======================================================================
+// T14 — JOIN + nested FROM (validates per-level state refactor)
+// Expected: 4 rows
+//   Alice: Apple / Alice: Banana / Bob: Cherry / Alice: Date
+// ======================================================================
+Message("=== T14: join + nested from ===");
+var apples = New Array; apples.Add("Apple"); apples.Add("Banana");
+var cherries = New Array; cherries.Add("Cherry");
+var dates = New Array; dates.Add("Date");
+var orders = New Array;
+orders.Add(New Structure("CustId, Items", 1, apples));
+orders.Add(New Structure("CustId, Items", 2, cherries));
+orders.Add(New Structure("CustId, Items", 1, dates));
+var customers = New Array;
+customers.Add(New Structure("Id, Name", 1, "Alice"));
+customers.Add(New Structure("Id, Name", 2, "Bob"));
+var q14 = from o in orders
+          join c in customers on o.CustId equals c.Id
+          from item in o.Items
+          select c.Name + ": " + item;
+foreach (s in q14) { Message(s); }
+
+// ======================================================================
+// T15 — GROUP BY simple (terminal)
+// Expected: 3 groups (FR/UK/USA), Container sorted by key
+//   FR: 1 / UK: 2 / USA: 3
+// ======================================================================
+Message("=== T15: group by ===");
+var people = New Array;
+people.Add(New Structure("Country, Name", "USA", "Alice"));
+people.Add(New Structure("Country, Name", "UK",  "Carol"));
+people.Add(New Structure("Country, Name", "USA", "Bob"));
+people.Add(New Structure("Country, Name", "FR",  "Frank"));
+people.Add(New Structure("Country, Name", "UK",  "Dan"));
+people.Add(New Structure("Country, Name", "USA", "Eve"));
+var q15 = from p in people group p.Name by p.Country;
+Message("group count: " + q15.Count());
+foreach (g in q15) {
+    Message(g.Key + ": " + g.Values.Count());
+}
+
+// ======================================================================
+// T16 — GROUP BY + Sum via g.Values.Sum() (aggregation per group)
+// Expected:
+//   FR amount: 100
+//   UK amount: 50
+//   USA amount: 75
+// ======================================================================
+Message("=== T16: group + sum ===");
+var transactions = New Array;
+transactions.Add(New Structure("Country, Amount", "USA", 25));
+transactions.Add(New Structure("Country, Amount", "UK",  30));
+transactions.Add(New Structure("Country, Amount", "USA", 50));
+transactions.Add(New Structure("Country, Amount", "FR",  100));
+transactions.Add(New Structure("Country, Amount", "UK",  20));
+var q16 = from t in transactions
+          group t.Amount by t.Country;
+foreach (g in q16) {
+    Message(g.Key + " amount: " + g.Values.Sum());
+}
+
+// ======================================================================
+// T17 — nested FROM with GROUP at inner level (was a known bug;
+// fixed via expansion move to CompileLinqExpression post-call).
+// Expected: 2 flat groups across categories
+//   Red: 2 [Apple, Wine]
+//   Yellow: 2 [Banana, Beer]
+// ======================================================================
+Message("=== T17: nested from + inner group ===");
+var fruitItems = New Array;
+fruitItems.Add(New Structure("Type, Name", "Red",    "Apple"));
+fruitItems.Add(New Structure("Type, Name", "Yellow", "Banana"));
+var drinkItems = New Array;
+drinkItems.Add(New Structure("Type, Name", "Red",    "Wine"));
+drinkItems.Add(New Structure("Type, Name", "Yellow", "Beer"));
+var categories = New Array;
+categories.Add(New Structure("Name, Items", "Fruit",  fruitItems));
+categories.Add(New Structure("Name, Items", "Drinks", drinkItems));
+var q17 = from cat in categories
+          from item in cat.Items
+          group item.Name by item.Type;
+Message("group count: " + q17.Count());
+foreach (g in q17) {
+    Message(g.Key + ": " + g.Values.Count());
+    foreach (n in g.Values) {
+        Message("  " + n);
+    }
+}
+
+// ======================================================================
+// T18 — nested FROM with JOIN where T references outer (was bug;
+// now per-row reset emitted, slow but correct).
+// Expected: each cat's keys join against cat's own meta.
+//   Fruit/Apple: A1
+//   Fruit/Banana: A2
+//   Drinks/Wine: D1
+//   Drinks/Beer: D2
+// ======================================================================
+Message("=== T18: nested join outer-ref T ===");
+var fruitMeta = New Array;
+fruitMeta.Add(New Structure("Id, Tag", "Apple",  "A1"));
+fruitMeta.Add(New Structure("Id, Tag", "Banana", "A2"));
+var drinkMeta = New Array;
+drinkMeta.Add(New Structure("Id, Tag", "Wine", "D1"));
+drinkMeta.Add(New Structure("Id, Tag", "Beer", "D2"));
+var fruitKeys = New Array;
+fruitKeys.Add("Apple"); fruitKeys.Add("Banana");
+var drinkKeys = New Array;
+drinkKeys.Add("Wine"); drinkKeys.Add("Beer");
+var cats2 = New Array;
+cats2.Add(New Structure("Name, Keys, Meta", "Fruit",  fruitKeys, fruitMeta));
+cats2.Add(New Structure("Name, Keys, Meta", "Drinks", drinkKeys, drinkMeta));
+var q18 = from cat in cats2
+          from key in cat.Keys
+          join meta in cat.Meta on key equals meta.Id
+          select cat.Name + "/" + key + ": " + meta.Tag;
+foreach (s in q18) { Message(s); }
+
+// ======================================================================
+// T19 — empty source → empty result (no rows iterated)
+// Expected: just the marker line, no rows.
+// ======================================================================
+Message("=== T19: empty source ===");
+var empty = New Array;
+var q19 = from x in empty select x;
+Message("count: " + q19.Count());
+
+// ======================================================================
+// T20 — chain method-syntax: Where + Select + Count
+// Expected: 3 (number of nums where x >= 3)
+// ======================================================================
+Message("=== T20: chain Where+Count ===");
+var pred = Function(x) { Return x >= 3; }
+Message("chain count: " + nums.Where(pred).Count());
+
+// ======================================================================
+// T21 — chain Where + Select + ToArray + iterate
+// Expected: 9 16 25
+// ======================================================================
+Message("=== T21: chain Where+Select+ToArray ===");
+var proj = Function(x) { Return x * x; }
+var q21 = nums.Where(pred).Select(proj).ToArray();
+foreach (v in q21) { Message(v); }
+
+// ======================================================================
+// T22 — orderby + where + select combo
+// Expected: 5 4 3 (scattered ≥3 desc)
+// ======================================================================
+Message("=== T22: orderby + where ===");
+var q22 = from x in scattered
+          where x >= 3
+          orderby x descending
+          select x;
+foreach (v in q22) { Message(v); }
+
+Message("=== DONE ===");

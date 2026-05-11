@@ -5,6 +5,7 @@
 
 #include "compileCode.h"
 #include "procUnit.h"
+#include "procUnitValues.h"    // ibValueIterator / ibValueFunction / AsFunction / AsIterator
 #include "procUnitState.h"
 
 #include "debugger/debugServer.h"
@@ -12,6 +13,8 @@
 #include "session/session.h"   // ibSession::GetPUState() / GetLambdaRuntime()
 
 #include "appData.h"
+
+#include <algorithm>
 
 // Operand resolution for the bytecode interpreter. Three slot kinds:
 //   slot <= 0           — local frame (mutable).
@@ -382,180 +385,10 @@ inline void CompareValueNE(ibValue& cValue1, const ibValue& cValue2, const ibVal
 	cValue1.m_bData = cValue2.CompareValueNE(cValue3);
 }
 
-inline void CopyValue(ibValue& cValue1, ibValue& cValue2)
-{
-	if (&cValue1 == &cValue2)
-		return;
-
-	//checking variable availability and checking references
-	if (cValue1.m_bReadOnly) {
-		cValue1.SetValue(cValue2);
-		return;
-	}
-	else {//Reset
-		if (cValue1.m_pRef && cValue1.m_typeClass == ibValueTypes::TYPE_REFFER)
-			cValue1.m_pRef->DecrRef();
-
-		cValue1.m_typeClass = ibValueTypes::TYPE_EMPTY;
-		cValue1.m_sData = wxEmptyString;
-
-		cValue1.m_pRef = nullptr;
-	}
-
-	if (cValue2.m_typeClass == ibValueTypes::TYPE_REFFER) {
-		cValue1 = cValue2.GetValue();
-		return;
-	}
-
-	cValue1.m_typeClass = cValue2.m_typeClass;
-
-	switch (cValue2.m_typeClass)
-	{
-	case ibValueTypes::TYPE_NULL:
-		break;
-	case ibValueTypes::TYPE_BOOLEAN:
-		cValue1.m_bData = cValue2.m_bData;
-		break;
-	case ibValueTypes::TYPE_NUMBER:
-		cValue1.m_fData = cValue2.m_fData;
-		break;
-	case ibValueTypes::TYPE_STRING:
-		cValue1.m_sData = cValue2.m_sData;
-		break;
-	case ibValueTypes::TYPE_DATE:
-		cValue1.m_dData = cValue2.m_dData;
-		break;
-	case ibValueTypes::TYPE_REFFER:
-		cValue1.m_pRef = cValue2.m_pRef; cValue1.m_pRef->IncrRef();
-		break;
-	case ibValueTypes::TYPE_OLE:
-	case ibValueTypes::TYPE_ENUM:
-	case ibValueTypes::TYPE_VALUE:
-		cValue1.m_typeClass = ibValueTypes::TYPE_REFFER;
-		cValue1.m_pRef = &cValue2; cValue1.m_pRef->IncrRef();
-		break;
-	default: cValue1.m_typeClass = ibValueTypes::TYPE_EMPTY;
-	}
-}
-
-// CopyValue from rvalue — store into a local lvalue first, delegate
-// to the mutable overload (so TYPE_OLE/ENUM/VALUE aliasing path can
-// take &cValue2 of a stable address).
-inline void CopyValue(ibValue& cValue1, ibValue&& cValue2)
-{
-	ibValue tmp = std::move(cValue2);
-	CopyValue(cValue1, tmp);
-}
-
-// CopyValue from const source — direct field-copy without going
-// through Clone(). Same semantics as the mutable overload: simple
-// types are value-copied, TYPE_REFFER shares the m_pRef pointer,
-// TYPE_OLE/ENUM/VALUE alias cValue2 via GetRef() (the aliasing IS
-// the shared-state mechanism for these types). GetRef() is a const
-// method on ibValue and encapsulates the necessary cast — caller
-// stays cast-free.
-inline void CopyValue(ibValue& cValue1, const ibValue& cValue2)
-{
-	cValue1.m_typeClass = cValue2.m_typeClass;
-	switch (cValue2.m_typeClass)
-	{
-	case ibValueTypes::TYPE_NULL:
-		break;
-	case ibValueTypes::TYPE_BOOLEAN:
-		cValue1.m_bData = cValue2.m_bData;
-		break;
-	case ibValueTypes::TYPE_NUMBER:
-		cValue1.m_fData = cValue2.m_fData;
-		break;
-	case ibValueTypes::TYPE_STRING:
-		cValue1.m_sData = cValue2.m_sData;
-		break;
-	case ibValueTypes::TYPE_DATE:
-		cValue1.m_dData = cValue2.m_dData;
-		break;
-	case ibValueTypes::TYPE_REFFER:
-		cValue1.m_pRef = cValue2.m_pRef; cValue1.m_pRef->IncrRef();
-		break;
-	case ibValueTypes::TYPE_OLE:
-	case ibValueTypes::TYPE_ENUM:
-	case ibValueTypes::TYPE_VALUE:
-		cValue1.m_typeClass = ibValueTypes::TYPE_REFFER;
-		cValue1.m_pRef = cValue2.GetRef(); cValue1.m_pRef->IncrRef();
-		break;
-	default: cValue1.m_typeClass = ibValueTypes::TYPE_EMPTY;
-	}
-}
-
-inline void MoveValue(ibValue&& cValue1, ibValue&& cValue2)
-{
-	if (&cValue1 == &cValue2)
-		return;
-
-	cValue1.m_typeClass = cValue2.m_typeClass;
-
-	switch (cValue2.m_typeClass)
-	{
-	case ibValueTypes::TYPE_NULL:
-		break;
-	case ibValueTypes::TYPE_BOOLEAN:
-		cValue1.m_bData = std::move(cValue2.m_bData);
-		break;
-	case ibValueTypes::TYPE_NUMBER:
-		cValue1.m_fData = std::move(cValue2.m_fData);
-		break;
-	case ibValueTypes::TYPE_STRING:
-		cValue1.m_sData = std::move(cValue2.m_sData);
-		break;
-	case ibValueTypes::TYPE_DATE:
-		cValue1.m_dData = std::move(cValue2.m_dData);
-		break;
-	case ibValueTypes::TYPE_REFFER:
-		cValue1.m_pRef = cValue2.m_pRef;
-		cValue1.m_pRef->IncrRef();
-		break;
-	case ibValueTypes::TYPE_OLE:
-	case ibValueTypes::TYPE_ENUM:
-	case ibValueTypes::TYPE_VALUE:
-		cValue1.m_typeClass = ibValueTypes::TYPE_REFFER;
-		cValue1.m_pRef = &cValue2;
-		cValue1.m_pRef->IncrRef();
-		break;
-	default: cValue1.m_typeClass = ibValueTypes::TYPE_EMPTY;
-	}
-
-	cValue2.Reset();
-}
-
-inline bool IsEmptyValue(const ibValue& cValue1)
-{
-	return cValue1.IsEmpty();
-}
-
-#define IsHasValue(cValue1) (!IsEmptyValue(cValue1))
-
-inline void SetTypeBoolean(ibValue& cValue1, bool bValue)
-{
-	//check variable availability and reference check
-	if (cValue1.m_bReadOnly) {
-		cValue1.SetValue(bValue);
-		return;
-	}
-	cValue1.Reset();
-	cValue1.m_typeClass = ibValueTypes::TYPE_BOOLEAN;
-	cValue1.m_bData = bValue;
-}
-
-inline void SetTypeNumber(ibValue& cValue1, const ibNumber& fValue)
-{
-	//check variable availability and reference check
-	if (cValue1.m_bReadOnly) {
-		cValue1.SetValue(fValue);
-		return;
-	}
-	cValue1.Reset();
-	cValue1.m_typeClass = ibValueTypes::TYPE_NUMBER;
-	cValue1.m_fData = fValue;
-}
+// CopyValue / MoveValue / IsEmptyValue / IsHasValue / SetTypeBoolean /
+// SetTypeNumber moved to procUnitValues.h — procUnitLinq.cpp uses
+// them as well. Math + compare helpers stay below (only Execute uses
+// them).
 
 #define CheckAndError(variable, name)\
 {\
@@ -598,134 +431,22 @@ inline ibValue GetValue(const ibValue& cValue1)
 	return cValue1;
 }
 
-#pragma region iterator_support
-// Runtime holder for the @it_ slot. Wraps a shared_ptr to the
-// state and tracks whether the most recent transition into
-// OPER_FOREACH came via OPER_NEXT_ITER (the "hot" flag): NEXT_ITER
-// sets it, FOREACH consumes it. A re-entry with the flag clear means
-// we returned via Break from a previous outer-loop iteration; the
-// cursor is stale and must be reset.
-class ibValueIterator : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueIterator);
-public:
-	ibValueIterator()
-		: ibValue(ibValueTypes::TYPE_VALUE),
-		  m_hotFromNextIter(false) {}
+// ibValueIterator / ibValueFunction class definitions moved to
+// procUnitValues.h so procUnitLinq.cpp (and any other future LINQ-
+// adjacent TU) can hold them by value. Implementation-side artefacts —
+// wxIMPLEMENT_DYNAMIC_CLASS + the CLSID statics + ibValueFunction's
+// out-of-line bits — stay in this TU.
 
-	explicit ibValueIterator(std::shared_ptr<ibValueIteratorState> state)
-		: ibValue(ibValueTypes::TYPE_VALUE),
-		  m_state(std::move(state)),
-		  m_hotFromNextIter(false) {}
-
-	virtual ~ibValueIterator() = default;
-
-	bool MoveNext(ibValue& current) {
-		return m_state ? m_state->MoveNext(current) : false;
-	}
-	void ResetState() { if (m_state) m_state->Reset(); }
-
-	bool ConsumeHot() {
-		const bool h = m_hotFromNextIter;
-		m_hotFromNextIter = false;
-		return h;
-	}
-	void MarkHot() { m_hotFromNextIter = true; }
-
-private:
-	std::shared_ptr<ibValueIteratorState> m_state;
-	bool m_hotFromNextIter;
-};
-
-//**************************************************************************************************************
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueIterator, ibValue);
-//**************************************************************************************************************
-
 const ibClassID g_valueIterator = string_to_clsid("SO_ITER");
-#pragma endregion
-
-#pragma region function_value_support
-// First-class callable value. Backs OES anonymous functions (lambdas).
-// Lives heap-allocated; regular ibValue holders carry it via TYPE_REFFER
-// + m_pRef. Mirrors the inline ibValueIterator pattern above —
-// runtime-internal value type, never touched from the compiler side
-// (compile-side only emits OPER_LFUNC / OPER_CALL_VAL).
-//
-// Storage: pointer into parentBc->m_listFunc + the funcIndex at
-// which the lambda's ibByteFunction sits. Single source of truth —
-// frame shape (paramCount / varCount / bCodeRet), m_listParam (with
-// defaults), m_listParamRealName (param names), m_listLocals (locals
-// by name for eval), and the entry IP (m_lCodeLine) all live on
-// ibByteFunction itself, the same path named functions use.
-//
-// Lifetime: parentBc points into the session's bytecode storage; the
-// ibByteFunction inside m_listFunc is owned by parentBc. The value
-// must not outlive the session that produced it.
-class ibValueFunction : public ibValue {
-	wxDECLARE_DYNAMIC_CLASS(ibValueFunction);
-public:
-	ibValueFunction() : ibValue(ibValueTypes::TYPE_VALUE) {}
-
-	ibValueFunction(const ibByteCode* parentBc, long funcIndex)
-		: ibValue(ibValueTypes::TYPE_VALUE),
-		  m_parentBc(parentBc),
-		  m_funcIndex(funcIndex)
-	{}
-
-	const ibByteCode*                  GetParentBc()   const { return m_parentBc; }
-	long                               GetFuncIndex()  const { return m_funcIndex; }
-	const ibByteCode::ibByteFunction*  GetFunction()   const {
-		if (m_parentBc == nullptr) return nullptr;
-		if (m_funcIndex < 0 || m_funcIndex >= (long)m_parentBc->m_listFunc.size())
-			return nullptr;
-		return &m_parentBc->m_listFunc[m_funcIndex];
-	}
-
-	// Dispatch the lambda body. Resolves the session's lambda runtime
-	// (root mm's procUnit when session-bound; current dispatching
-	// ProcUnit on codeRunner sandbox), swaps m_pByteCode = parentBc
-	// for the call duration, runs Execute, restores bc on exit (incl.
-	// exceptions). Re-entrant lambda-in-lambda calls are safe because
-	// ProcUnit::Execute snapshots m_pByteCode at entry.
-	void Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDelta)
-	{
-		const auto* bfn = GetFunction();
-		if (bfn == nullptr)
-			ibBackendCoreException::Error(_("Cannot call: function value is not initialised"));
-
-		ibProcUnitState* const state = ibSession::GetPUState();
-		if (state == nullptr)
-			ibBackendCoreException::Error(_("Cannot call function value without interpreter state"));
-
-		ibProcUnit* runtime = state->GetLambdaRuntime();
-		if (runtime == nullptr)
-			ibBackendCoreException::Error(_("No runtime available for function-value call"));
-
-		// Swap m_pByteCode to the lambda's parent for the dispatch
-		// duration. Execute snapshots m_pByteCode at entry, so nested
-		// lambda-in-lambda calls don't clobber an outer view. Restore
-		// on both normal return and unwind.
-		const ibByteCode* prevBc = runtime->m_pByteCode;
-		runtime->m_pByteCode = m_parentBc;
-		try {
-			runtime->Execute(pContext, pvarRetValue, bDelta);
-		}
-		catch (...) {
-			runtime->m_pByteCode = prevBc;
-			throw;
-		}
-		runtime->m_pByteCode = prevBc;
-	}
-
-private:
-
-	const ibByteCode* m_parentBc  = nullptr;
-	long              m_funcIndex = -1;
-};
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueFunction, ibValue);
-
 const ibClassID g_valueFunction = string_to_clsid("VL_FUNC");
-#pragma endregion
+
+// LINQ machinery — CallLambdaWithArg / CallLambdaWith2Args /
+// InvokeLambdaWithArg, the iterator-state classes, ibValueQuery,
+// ibValueLinqDispatchImpl, ibValue::DispatchLinqMethod, and the
+// FindLinqMethodByName resolver all live in procUnitLinq.cpp.
 
 //////////////////////////////////////////////////////////////////////
 //						Construction/Destruction                    //
@@ -757,7 +478,7 @@ void ibProcUnit::Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDe
 	ibValue** pRefLocVars = pContext->m_pRefLocVars;
 
 	// Snapshot bc at entry. The session's lambda runtime swaps
-	// m_pByteCode per OPER_CALL_VAL dispatch; a nested lambda call
+	// m_pByteCode per OPER_CALL_LAMBDA dispatch; a nested lambda call
 	// would clobber the outer frame's view if we read this->m_pByteCode
 	// inside the loop. Local snapshot keeps each Execute invocation
 	// pinned to the bc it started with.
@@ -860,7 +581,7 @@ start_label:
 					// from variable2 — the OPER_LET above may have reassigned
 					// the iterable, so keeping the old snapshot would walk
 					// stale data.
-					ibValueIterator* it = variable3.ConvertToType<ibValueIterator>();
+					ibValueIterator* it = AsIterator(variable3);
 					if (!it->ConsumeHot()) {
 						variable3.Reset();
 						needsCreate = true;
@@ -872,7 +593,7 @@ start_label:
 						ibBackendCoreException::Error(_("Undefined value iterator"));
 					CopyValue(variable3, ibValue(new ibValueIterator(std::move(state))));
 				}
-				ibValueIterator* iterator = variable3.ConvertToType<ibValueIterator>();
+				ibValueIterator* iterator = AsIterator(variable3);
 				if (!iterator->MoveNext(variable1)) {
 					variable3.Reset(); lCodeLine = index4 - 1;
 				}
@@ -890,7 +611,7 @@ start_label:
 				// outer-loop re-entry). Advance happens inside
 				// OPER_FOREACH's MoveNext.
 				if (variable1.GetClassType() == g_valueIterator) {
-					ibValueIterator* it = variable1.ConvertToType<ibValueIterator>();
+					ibValueIterator* it = AsIterator(variable1);
 					it->MarkHot();
 				}
 				lCodeLine = index2 - 1;
@@ -916,7 +637,7 @@ start_label:
 						// safely passes a DEF_VAR_CONST slot. variable1 (write-
 						// resolve) would throw on const slots before reaching
 						// the m_bReadOnly check, breaking const literal args
-						// like `New Foo(3, 5)`. Mirrors OPER_CALL_M's pattern.
+						// like `New Foo(3, 5)`. Mirrors OPER_CALL_METHOD's pattern.
 						if (cvariable1.m_bReadOnly && cvariable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
 							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
 						}
@@ -959,7 +680,7 @@ start_label:
 					CopyValue(*pRetValue, vRet);
 				break;
 			}
-			case OPER_CALL_M://method call
+			case OPER_CALL_METHOD://method call
 			{
 				ibValue* pRetValue = &variable1;
 				ibValue* pVariable2 = &variable2;
@@ -970,7 +691,9 @@ start_label:
 				// (The previous "cache" path stored resolved method # /
 				// object ref into m_param4 on first call; never actually
 				// improved warm-path performance and complicated AOT.)
-				const long lMethodNum = pVariable2->FindMethod(funcName);
+				// LINQ pipeline ops (Where / Select / ...) are NOT handled
+				// here — compile-side emits OPER_CALL_LINQ for them.
+				long lMethodNum = pVariable2->FindMethod(funcName);
 
 				if (lMethodNum < 0)
 					CheckAndError(variable2, funcName);
@@ -978,18 +701,31 @@ start_label:
 				ibRunContextSmall cRunContext(std::max(array3, MAX_STATIC_VAR));
 				cRunContext.m_lParamCount = array3;
 
-				// too many parameters
-				const long paramCount = pVariable2->GetNParams(lMethodNum);
-
-				if (paramCount < cRunContext.m_lParamCount)
-					ibBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
-				else if (paramCount == wxNOT_FOUND && cRunContext.m_lParamCount == 0)
-					ibBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+				// too many parameters — per-class methods have a meaningful
+				// compile-time GetNParams.
+				{
+					const long paramCount = pVariable2->GetNParams(lMethodNum);
+					if (paramCount < cRunContext.m_lParamCount)
+						ibBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+					else if (paramCount == wxNOT_FOUND && cRunContext.m_lParamCount == 0)
+						ibBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+				}
 
 				//load parameters
 				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
 					lCodeLine++;
-					if (index1 >= 0 && !pVariable2->GetParamDefValue(lMethodNum, i, *cRunContext.m_pRefLocVars[i])) {
+					// OPER_SETCONST passes a constant directly from the
+					// const-pool. Without this branch the default OPER_SET
+					// path resolves param1 as a frame slot (m_numArray=0,
+					// m_numIndex=const-pool-idx) — fetches garbage, breaks
+					// `obj.Method("name", value)` where the name string is
+					// emitted as OPER_SETCONST. Mirrors the OPER_CALL
+					// arg-load below; missing here until first script call
+					// chain emitted via select-{ } anon Structure exposed it.
+					if (curCode.m_numOper == OPER_SETCONST) {
+						CopyValue(cRunContext.m_pLocVars[i], m_pByteCode->m_listConst[index1]);
+					}
+					else if (index1 >= 0 && !pVariable2->GetParamDefValue(lMethodNum, i, *cRunContext.m_pRefLocVars[i])) {
 						if (cvariable1.m_bReadOnly && cvariable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
 							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
 						}
@@ -1021,12 +757,63 @@ start_label:
 					pVariable2->CallAsProc(lMethodNum, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
 				} break;
 			}
+			case OPER_CALL_LINQ:
+			{ //universal pipeline method on an iterable receiver — Where /
+				// Select / OrderBy / GroupBy / Join / Skip / Take / ... .
+				// Compile-side (compileCode.cpp method-call emit) detects
+				// LINQ method names via ibValue::FindLinqMethodByName and
+				// chooses this opcode over OPER_CALL_METHOD. Operand layout
+				// mirrors OPER_CALL_METHOD with one diff:
+				//   m_param3.m_numIndex = ibLinqMethod enum value
+				//                         (NOT a const-string index)
+				//   m_param3.m_numArray = caller arg count
+				// Runtime reads the enum id straight, no FindMethod string
+				// walk, no const-pool lookup.
+				ibValue* pRetValue = &variable1;
+				ibValue* pVariable2 = &variable2;
+				const long enumId   = index3;   // ibLinqMethod (as long)
+				const long argCount = array3;
+
+				ibRunContextSmall cRunContext(std::max(argCount, (long)MAX_STATIC_VAR));
+				cRunContext.m_lParamCount = argCount;
+
+				//load parameters — same SET/SETCONST tape as OPER_CALL_METHOD
+				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
+					lCodeLine++;
+					if (curCode.m_numOper == OPER_SETCONST) {
+						CopyValue(cRunContext.m_pLocVars[i], m_pByteCode->m_listConst[index1]);
+					}
+					else {
+						if (cvariable1.m_bReadOnly && cvariable1.m_typeClass != ibValueTypes::TYPE_REFFER) {
+							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
+						}
+						else {
+							cRunContext.m_pRefLocVars[i] = &variable1;
+						}
+					}
+				}
+
+				// Virtual dispatch — subclasses can specialise behavior
+				// (e.g. ibValueArray short-circuiting Count / ElementAt /
+				// Contains to direct vector access). Default base impl
+				// walks TYPE_REFFER chain and delegates to the file-scope
+				// ibValueLinqDispatchImpl state-class machinery.
+				pVariable2->DispatchLinqMethod(
+					static_cast<ibValue::ibLinqMethod>(enumId),
+					*pRetValue,
+					cRunContext.m_pRefLocVars,
+					cRunContext.m_lParamCount);
+				break;
+			}
 			case OPER_CALL:
-			{ //call a regular function
+			{ //call a regular function — stack-frame fast path (target
+				// has no inner lambda, m_needsHeapFrame=false). Compile
+				// emits OPER_CALL_CLOSURE instead when heap promotion needed.
 				const long lModuleNumber = array2;
 				ibRunContext cRunContext(index3);
 				cRunContext.m_lStart = index2;
 				cRunContext.m_lParamCount = array3;
+				cRunContext.m_parentRunContext = pContext;
 				// Function bodies exit via OPER_RET / OPER_ENDFUNC /
 				// OPER_ENDLFUNC (all fall through to lCodeLine = lFinish;
 				// break), so callers don't need to range-bound the
@@ -1047,7 +834,7 @@ start_label:
 						// passes a DEF_VAR_CONST slot. variable1 (write-resolve)
 						// would throw on const slots before reaching the
 						// m_bReadOnly check, breaking const literal args like
-						// `someFunc(3, 5)`. Mirrors OPER_CALL_M and OPER_CALL_VAL.
+						// `someFunc(3, 5)`. Mirrors OPER_CALL_METHOD and OPER_CALL_LAMBDA.
 						if (cvariable1.m_bReadOnly || index2 == 1) {//pass parameter by value
 							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
 						}
@@ -1057,6 +844,38 @@ start_label:
 					}
 				}
 				m_ppArrayCode[lModuleNumber]->Execute(&cRunContext, pRetValue, false);
+				break;
+			}
+			case OPER_CALL_CLOSURE:
+			{ //function call — heap-frame variant. Target has
+				// m_needsHeapFrame=true (some inner lambda captures
+				// a local from it). Allocate frame via make_shared so
+				// escaping lambdas can hold a shared_ptr at OPER_LFUNC
+				// materialise time, keeping the frame alive past return.
+				// Operand layout identical to OPER_CALL.
+				const long lModuleNumber = array2;
+				std::shared_ptr<ibRunContext> heapCtx = std::make_shared<ibRunContext>(index3);
+				heapCtx->m_lStart = index2;
+				heapCtx->m_lParamCount = array3;
+				heapCtx->m_parentRunContext = pContext;
+				const ibByteCode* pLocalByteCode = m_ppArrayCode[lModuleNumber]->m_pByteCode;
+				ibValue* pRetValue = &variable1;
+				//load parameters — same SET/SETCONST tape as OPER_CALL
+				for (long i = 0; i < heapCtx->m_lParamCount; i++) {
+					lCodeLine++;
+					if (curCode.m_numOper == OPER_SETCONST) {
+						CopyValue(heapCtx->m_pLocVars[i], pLocalByteCode->m_listConst[index1]);
+					}
+					else {
+						if (cvariable1.m_bReadOnly || index2 == 1) {
+							CopyValue(heapCtx->m_pLocVars[i], cvariable1);
+						}
+						else {
+							heapCtx->m_pRefLocVars[i] = &variable1;
+						}
+					}
+				}
+				m_ppArrayCode[lModuleNumber]->Execute(heapCtx.get(), pRetValue, false);
 				break;
 			}
 			case OPER_SET_ARRAY:
@@ -1149,14 +968,43 @@ start_label:
 				{
 					ibBackendCoreException::Error(_("Cannot create function value (invalid lambda operands)"));
 				}
-				CopyValue(variable1, ibValue(new ibValueFunction(m_pByteCode, funcIdx)));
+				ibValueFunction* newFn = new ibValueFunction(m_pByteCode, funcIdx);
+				// Cache m_needsHeapFrame from the bytecode fn once at
+				// materialise so OPER_CALL_LAMBDA doesn't have to go
+				// through m_parentBc->m_listFunc[funcIdx] each invoke.
+				{
+					const auto* bfnLfunc = (funcIdx >= 0 && funcIdx < (long)m_pByteCode->m_listFunc.size())
+						? &m_pByteCode->m_listFunc[funcIdx] : nullptr;
+					if (bfnLfunc) newFn->m_needsHeapFrame = bfnLfunc->m_needsHeapFrame;
+				}
+				// Closure capture (Phase B) — walk the call-stack chain
+				// via m_parentRunContext; each heap-promoted ancestor
+				// (weak_from_this().lock() returns non-null) gets its
+				// shared_ptr copied into the new lambda's
+				// m_capturedFrames. Stack-allocated frames return an
+				// expired weak_ptr and are skipped — they couldn't be
+				// captured anyway (frame dies on return; no inner
+				// lambda flagged the enclosing fn at compile time so
+				// no heap promotion happened at OPER_CALL).
+				//
+				// Order: index 0 = direct enclosing frame (the
+				// materialising lambda's caller), index 1 = next outer,
+				// .... Matches the depth math from Phase A's GetVariable
+				// (numParent - numContext counting): emit depth = 1
+				// reads m_capturedFrames[0], depth = 2 reads [1], etc.
+				for (ibRunContext* p = pContext; p != nullptr; p = p->m_parentRunContext) {
+					std::shared_ptr<ibRunContext> sp = p->weak_from_this().lock();
+					if (sp)
+						newFn->m_capturedFrames.push_back(std::move(sp));
+				}
+				CopyValue(variable1, ibValue(newFn));
 				// Skip past the body — body opcodes are inert at
-				// module-init walk and reached only via OPER_CALL_VAL
+				// module-init walk and reached only via OPER_CALL_LAMBDA
 				// during normal execution.
 				lCodeLine = endIp;
 				break;
 			}
-			case OPER_CALL_VAL: {
+			case OPER_CALL_LAMBDA: {
 				
 				// m_param4 = source ibValue holding the callable (must
 				//            wrap an ibValueFunction via TYPE_REFFER + m_pRef)
@@ -1174,7 +1022,7 @@ start_label:
 				// in m_param2.m_numIndex (= listParam.size() at the call site).
 				// Read before the param-bind loop shifts curCode off CALL_VAL.
 				const long callerArgCount = (long)index2;
-				ibValueFunction* fn = cvariable4.ConvertToType<ibValueFunction>();
+				ibValueFunction* fn = AsFunction(cvariable4);
 				const ibByteCode::ibByteFunction* bfn = fn ? fn->GetFunction() : nullptr;
 				if (bfn == nullptr)
 					ibBackendCoreException::Error(_("Cannot call: value is not a callable function"));
@@ -1193,13 +1041,40 @@ start_label:
 						callerArgCount, lambdaParamCount);
 				}
 
-				ibRunContext cRunContext(lambdaVarCount);
-				cRunContext.m_lStart          = lambdaEntryIp + 1;  // first body opcode
-				cRunContext.m_lParamCount     = lambdaParamCount;
+				// Heap-promote the lambda's frame when its body captures
+				// from yet-deeper enclosing fns. Read the flag directly
+				// off the ibValueFunction value — cached at OPER_LFUNC
+				// materialise; one indirection, no detour through
+				// m_parentBc->m_listFunc[funcIdx].
+				const bool useHeapFrame = fn->m_needsHeapFrame;
+				std::shared_ptr<ibRunContext> heapCtx;
+				ibRunContext  stackCtx;
+				ibRunContext* pNewCtx = nullptr;
+				if (useHeapFrame) {
+					heapCtx = std::make_shared<ibRunContext>(lambdaVarCount);
+					pNewCtx = heapCtx.get();
+				} else {
+					stackCtx.SetLocalCount(lambdaVarCount);
+					pNewCtx = &stackCtx;
+				}
+				pNewCtx->m_lStart          = lambdaEntryIp + 1;  // first body opcode
+				pNewCtx->m_lParamCount     = lambdaParamCount;
 				// Stamp the lambda's ibByteFunction so debugger / call-stack
 				// renders "<lambda@N>" with proper params + locals; eval
 				// host detection uses bfn->m_listLocals to resolve names.
-				cRunContext.m_currentFunction = bfn;
+				pNewCtx->m_currentFunction = bfn;
+				// For OPER_LFUNC chain-walks inside this lambda body to
+				// reach the lambda's LEXICAL outer scope (not its dynamic
+				// caller), wire m_parentRunContext to the first captured
+				// frame. The captured chain (fn->m_capturedFrames) holds
+				// shared_ptrs to the enclosing fn frames at materialise
+				// time — that's the closure's defining scope. Empty chain
+				// (top-level lambda with no captures) falls back to the
+				// dynamic caller so debugger / stack-walk still sees
+				// something sensible.
+				pNewCtx->m_parentRunContext = !fn->m_capturedFrames.empty()
+					? fn->m_capturedFrames[0].get()
+					: pContext;
 				ibValue* pRetValue = &variable1;
 
 				// Phase 1 — consume caller-supplied OPER_SET / OPER_SETCONST.
@@ -1210,14 +1085,14 @@ start_label:
 				for (long i = 0; i < callerArgCount; i++) {
 					lCodeLine++;
 					if (curCode.m_numOper == OPER_SETCONST) {
-						CopyValue(cRunContext.m_pLocVars[i], pLocalByteCode->m_listConst[index1]);
+						CopyValue(pNewCtx->m_pLocVars[i], pLocalByteCode->m_listConst[index1]);
 					}
 					else if (curCode.m_numOper == OPER_SET) {
 						if (cvariable1.m_bReadOnly || index2 == 1) {
-							CopyValue(cRunContext.m_pLocVars[i], cvariable1);
+							CopyValue(pNewCtx->m_pLocVars[i], cvariable1);
 						}
 						else {
-							cRunContext.m_pRefLocVars[i] = &variable1;
+							pNewCtx->m_pRefLocVars[i] = &variable1;
 						}
 					}
 					else {
@@ -1244,10 +1119,10 @@ start_label:
 							_("Missing required argument '%s' to function value"),
 							nm);
 					}
-					CopyValue(cRunContext.m_pLocVars[i], pLocalByteCode->m_listConst[puDef.m_numIndex]);
+					CopyValue(pNewCtx->m_pLocVars[i], pLocalByteCode->m_listConst[puDef.m_numIndex]);
 				}
 
-				fn->Execute(&cRunContext, pRetValue, false);
+				fn->Execute(pNewCtx, pRetValue, false);
 				break;
 			}
 			// Tape declarators (self-describing bytecode, AOT-ready).
@@ -1982,3 +1857,5 @@ bool ibProcUnit::CompileExpression(ibRunContext* pRunContext, ibValue& pvarRetVa
 
 SYSTEM_TYPE_REGISTER(ibValueIterator, "Iterator", g_valueIterator);
 SYSTEM_TYPE_REGISTER(ibValueFunction, "Function", g_valueFunction);
+// ibValueQuery + g_valueQuery moved to procUnitLinq.cpp along with the
+// rest of the LINQ runtime; SYSTEM_TYPE_REGISTER for it lives there.

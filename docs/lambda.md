@@ -97,10 +97,10 @@ Four lambda-related opcodes in `compiler/codeDef.h`:
 | `OPER_LFUNC` | lambda body entry; materialises an `ibValueFunction` value at the dest slot. Distinct from `OPER_FUNC` so the containing named-function's module-init skip-through (`while not OPER_ENDFUNC`) doesn't terminate prematurely on a nested lambda's terminator. | `m_param1` = dest slot, `m_param2.m_numIndex` = end IP (matches OPER_ENDLFUNC, used for body skip), `m_param3.m_numIndex` = `funcIndex` into `m_listFunc` |
 | `OPER_ENDLFUNC` | lambda body close — pairs with `OPER_LFUNC`. Falls through to `lCodeLine = lFinish; break` like `OPER_ENDFUNC`. | — |
 | `OPER_FUNC_PTR` | retired — `OPER_LFUNC` itself materialises the value (kept for historical log-message references; runtime case-block was removed) | — |
-| `OPER_CALL_VAL` | dynamic counterpart of `OPER_CALL` — call target is read from a slot at runtime, must wrap an `ibValueFunction`. Caller-supplied arg count is stamped at compile (validated at runtime against the lambda's param count); missing tail filled from `m_listParam[i].m_defaultValue`. | `m_param1` = return-value dest, `m_param2.m_numIndex` = caller-supplied arg count, `m_param4` = source slot holding the callable |
+| `OPER_CALL_LAMBDA` | dynamic counterpart of `OPER_CALL` — call target is read from a slot at runtime, must wrap an `ibValueFunction`. Caller-supplied arg count is stamped at compile (validated at runtime against the lambda's param count); missing tail filled from `m_listParam[i].m_defaultValue`. | `m_param1` = return-value dest, `m_param2.m_numIndex` = caller-supplied arg count, `m_param4` = source slot holding the callable |
 
-`OPER_CALL_VAL`'s param-bind loop reuses the same inline `OPER_SET` /
-`OPER_SETCONST` instructions that follow `OPER_CALL` and `OPER_CALL_M`.
+`OPER_CALL_LAMBDA`'s param-bind loop reuses the same inline `OPER_SET` /
+`OPER_SETCONST` instructions that follow `OPER_CALL` and `OPER_CALL_METHOD`.
 
 ---
 
@@ -153,14 +153,14 @@ overridden to `Lambda` and `m_strRealName` is set to `<lambda@<lo>>`.
 from the templated ctor `ibByteFunction(long, const CompileFn&)` —
 identical to named-function path.
 
-### Caller-side emit (`OPER_CALL_VAL`)
+### Caller-side emit (`OPER_CALL_LAMBDA`)
 
 When `(` follows an identifier, three branches in order in
 `GetCurrentIdentifier`:
 
-1. `m_rootContext->FindFunction(...)` → `OPER_CALL_M` (context-method).
+1. `m_rootContext->FindFunction(...)` → `OPER_CALL_METHOD` (context-method).
 2. `context->FindVariable(...)` resolves to a regular Local / Export
-   variable → `OPER_CALL_VAL` on its slot. Caller-supplied arg count
+   variable → `OPER_CALL_LAMBDA` on its slot. Caller-supplied arg count
    stamped in `m_param2.m_numIndex` (= `listParam.size()`).
 3. Fallback to `GetCallFunction` → resolves as named function or
    queues for forward-ref binding.
@@ -221,7 +221,7 @@ EndProcedure
 
 ## Runtime arg-count handling
 
-Each `OPER_CALL_VAL` carries the caller's actual arg count (= number of
+Each `OPER_CALL_LAMBDA` carries the caller's actual arg count (= number of
 inline `OPER_SET` / `OPER_SETCONST` ops emitted right after).
 
 | caller args vs lambda paramCount | runtime behavior |
@@ -244,7 +244,7 @@ existing debugger / eval infrastructure works without lambda-specific
 code:
 
 - **Call stack** — `runContext->m_currentFunction` is set by
-  `OPER_CALL_VAL` to the lambda's `ibByteFunction`. Debugger renders
+  `OPER_CALL_LAMBDA` to the lambda's `ibByteFunction`. Debugger renders
   `<lambda@N>(p0=…, p1=…)` from `m_strRealName` + `m_listParamRealName`
   + `m_listParam`. (Pre-fix it inherited `<initializer>`.)
 - **Eval / watch by name** — `m_compileModule->GetEvalHostFunction()`
@@ -267,7 +267,7 @@ Name-keyed lookups in `m_listFunc` (`FindFunction`, `FindMethod`,
 ## AOT format
 
 Bumped to **v5** (2026-05-10 PM). v3→v4 added the `m_param2` arg-count
-stamp on `OPER_CALL_VAL`; v4→v5 swapped the lambda metadata model from
+stamp on `OPER_CALL_LAMBDA`; v4→v5 swapped the lambda metadata model from
 inline `ibLambdaInfo` (operand-resident: paramCount/varCount/bCodeRet
 on OPER_LFUNC's m_param3/m_param4) to `m_listFunc`-resident
 `ibByteFunction` (single source of truth, frame shape derived via
@@ -285,8 +285,8 @@ Backend / compiler:
 - `src/engine/backend/compiler/compileContext.h` — `RETURN_LAMBDA_FUNCTION` / `RETURN_LAMBDA_PROCEDURE` enum kinds
 - `src/engine/backend/compiler/compileContext.cpp` — lambda body scope discipline + rootCtx fallback for Context bindings
 - `src/engine/backend/compiler/compileCode.h` — split helper decls (`ParseFunctionSignature`, `EmitFunctionBody`, `CompileLambdaExpression`)
-- `src/engine/backend/compiler/compileCode.cpp` — lambda compile + push to `m_listFunc` with kind=Lambda + Variable-callable branch + `OPER_CALL_VAL` emit with arg-count stamp
-- `src/engine/backend/compiler/procUnit.cpp` — runtime cases for `OPER_LFUNC` / `OPER_ENDLFUNC` / `OPER_CALL_VAL` + `ibValueFunction` class
+- `src/engine/backend/compiler/compileCode.cpp` — lambda compile + push to `m_listFunc` with kind=Lambda + Variable-callable branch + `OPER_CALL_LAMBDA` emit with arg-count stamp
+- `src/engine/backend/compiler/procUnit.cpp` — runtime cases for `OPER_LFUNC` / `OPER_ENDLFUNC` / `OPER_CALL_LAMBDA` + `ibValueFunction` class
 - `src/engine/backend/compiler/procUnitState.h` — `GetLambdaRuntime()` accessor
 - `src/engine/backend/session/session.cpp` — lambda runtime shim setup in `CompileRoot` (parent chain to root + common modules)
 
@@ -330,17 +330,17 @@ how to deal with functions.
 
 A few independent fixes landed alongside option A:
 
-- **`OPER_CALL_VAL` arg-count stamp** (`m_param2.m_numIndex` = caller
+- **`OPER_CALL_LAMBDA` arg-count stamp** (`m_param2.m_numIndex` = caller
   arg count). v4 cache rows had `m_param2` at 0 → dispatch treated
   every dynamic call as "0 args supplied" and threw missing-required
   even when the source explicitly passed args.
-- **Const-arg audit** (`OPER_NEW`, `OPER_CALL`, `OPER_CALL_VAL`) —
+- **Const-arg audit** (`OPER_NEW`, `OPER_CALL`, `OPER_CALL_LAMBDA`) —
   fixed a class of latent bugs where const literal args triggered
   "Attempt to write to a constant value" under specific binding
   shapes. Net win for non-lambda OES users too.
 - **`ENDLFUNC` fall-through** — early Phase B iterations had the
   case-block as a NOP, which let body flow continue past the
-  terminator into the caller's `OPER_FUNC_PTR + OPER_CALL_VAL` →
+  terminator into the caller's `OPER_FUNC_PTR + OPER_CALL_LAMBDA` →
   infinite recursion. Resolved by the standard
   `OPER_RET → OPER_ENDFUNC → OPER_END` fallthrough chain.
 

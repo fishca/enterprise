@@ -45,7 +45,7 @@ constexpr uint32_t kAOTMagic         = 0x31434250u; // 'PBC1' little-endian
 // because the m_lFinish s32 is gone; strict version check rejects v2
 // as cache miss → safe recompile + repopulate.
 //
-// v4 (2026-05-10): OPER_CALL_VAL now carries the caller's actual arg
+// v4 (2026-05-10): OPER_CALL_LAMBDA now carries the caller's actual arg
 // count in m_param2.m_numIndex (set by EmitCallVal). v3 cache rows had
 // that field at 0, so dispatch would treat every dynamic call as
 // "0 args supplied" and fall into the missing-required-argument throw
@@ -88,7 +88,14 @@ constexpr uint32_t kAOTMagic         = 0x31434250u; // 'PBC1' little-endian
 // body-scan + vector<bool> approach with a single integer compare.
 // v8 readers loading v9 would mis-read the extra s32, mis-aligning
 // downstream fields. Bump rejects v8 → safe recompile + repopulate.
-constexpr uint16_t kAOTFormatVersion = 9;
+//
+// v10 (2026-05-12): OPER_CALL_LINQ added between OPER_CALL_CLOSURE and
+// OPER_GET_ARRAY (codeDef.h). Every opcode from OPER_GET_ARRAY through
+// OPER_END shifted +1 in numeric value. v9 blobs persist raw m_numOper
+// integers, so a v9 reader loading a v10-written blob (or vice versa)
+// would dispatch the wrong handler on every post-shift opcode. Bump
+// rejects v9 → safe recompile + repopulate. Payload layout unchanged.
+constexpr uint16_t kAOTFormatVersion = 10;
 constexpr uint16_t kAOTFlagPortable  = 0x0001;       // unused — host-endian today
 
 // Sentinel for an over-large collection — guards Deserialize against

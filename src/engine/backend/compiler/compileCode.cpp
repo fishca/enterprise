@@ -489,10 +489,18 @@ void ibCompileCode::GETKeyWord(int nKey)
  * identifier string
  */
 
-wxString ibCompileCode::GETIdentifier(bool strRealName)
+wxString ibCompileCode::GETIdentifier(bool strRealName, bool acceptKeyword)
 {
 	const ibLexem& lex = GetLexem();
 	if (lex.m_lexType != IDENTIFIER) {
+		// In property-access positions (`obj.<X>`) contextual LINQ
+		// keywords (Where/Select/...) must work as method names.
+		// When acceptKeyword is on, take the keyword's string form
+		// from m_strData (lexer-emitted, source-cased on KEYWORD
+		// lexems) and proceed as if it were an identifier.
+		if (acceptKeyword && lex.m_lexType == KEYWORD) {
+			return lex.m_strData;
+		}
 		m_numCurrentCompile--;
 		SetError(ERROR_IDENTIFIER_DEFINE);
 		return wxEmptyString;
@@ -1028,7 +1036,7 @@ bool ibCompileCode::CompileModule()
 	// functions are already mirrored per-function by CompileFunction;
 	// this loop completes the table with the binding methods (e.g.
 	// GetForm of Manager). lAddress = -1 marks "no own IP" — runtime
-	// dispatches via OPER_CALL_M on the parent binding instead of
+	// dispatches via OPER_CALL_METHOD on the parent binding instead of
 	// OPER_CALL.
 	//
 	// "User funcs win" — skip the push if a function with the same
@@ -1140,14 +1148,21 @@ bool ibCompileCode::PushCallFunction(const std::shared_ptr<ibCallFunction>& call
 	code.m_strModuleName = callFunction->m_strModuleName;
 
 	if (foundedFunc->m_bContext) { // virtual function - calling replacements with the construct Context.FunctionName(...)
-		code.m_numOper = OPER_CALL_M;
+		code.m_numOper = OPER_CALL_METHOD;
 		code.m_param1 = callFunction->m_puRetValue;		// variable into which the value is returned
 		code.m_param2 = callFunction->m_puContextVal;	// variable on which the method is called
 		code.m_param3.m_numIndex = GetConstString(callFunction->m_strName);	// number of the called method from the list of encountered methods
 		code.m_param3.m_numArray = numDefCount;	// number of parameters
 	}
 	else {
-		code.m_numOper = OPER_CALL;
+		// OPER_CALL vs OPER_CALL_CLOSURE — same operand layout, different
+		// runtime path. _L variant heap-allocates the callee frame
+		// (shared_ptr<ibRunContext>) so inner lambdas materialised
+		// during the call can capture it. m_needsHeapFrame is settled
+		// by the time we get here: backward refs see the fully-compiled
+		// callee directly; forward refs land in m_listCallFunc and
+		// PushCallFunction reruns at finalize when all bodies are done.
+		code.m_numOper = foundedFunc->m_needsHeapFrame ? OPER_CALL_CLOSURE : OPER_CALL;
 		code.m_param1 = callFunction->m_puRetValue;	// variable into which the value is returned
 		code.m_param2.m_numArray = numModule;		// module number
 		code.m_param2.m_numIndex = foundedFunc->m_nStart;	// starting position
@@ -1512,6 +1527,10 @@ bool ibCompileCode::EmitFunctionBody(ibCompileContext* /*context*/,
 	// false for Lambda kind so cross-bc resolvers ignore them).
 	// FindFunctionByEntry sees them — that's what makes the debugger
 	// stack and eval host detection work for anonymous bodies.
+	// m_needsHeapFrame travels into byteFn via the templated ctor's
+	// initializer list (src.m_needsHeapFrame → byteFn.m_needsHeapFrame).
+	// Compile-side ibFunction was lazily stamped by GetVariable when
+	// an inner lambda captured a local from this frame.
 	ibByteCode::ibByteFunction byteFn(lAddress, *createdFunction);
 	for (auto it : functionContext->m_listVariable) {
 		if (it.second->m_bTempVar) continue;
@@ -1526,6 +1545,7 @@ bool ibCompileCode::EmitFunctionBody(ibCompileContext* /*context*/,
 	} else if (byteFn.m_strRealName.IsEmpty()) {
 		byteFn.m_strRealName = createdFunction->m_strName;
 	}
+
 	m_cByteCode.m_listFunc.push_back(std::move(byteFn));
 
 	return true;
@@ -1534,13 +1554,18 @@ bool ibCompileCode::EmitFunctionBody(ibCompileContext* /*context*/,
 ibParamUnit ibCompileCode::CompileLambdaExpression(ibCompileContext* context)
 {
 
-	// Parse signature into a context that parents into m_rootContext
-	// (NOT the caller's `context`). Lambda scoping discipline: the
-	// body sees ONLY root configuration's bindings (Context bindings
-	// reached via bc parent walk — Catalogs / Documents / CommonModules
-	// / system functions) plus own params / locals. NOT current
-	// module's compile-context, no module-level vars, no outer-
-	// function locals. Closures rejected.
+	// Parse signature into a context that parents into m_rootContext.
+	// Closure capture (Phase A 2026-05-11+): m_parentContext rewired
+	// below to the CALLER's context so the lambda body's GetVariable
+	// can walk past the lambda boundary into outer fn locals (resolved
+	// at depth ≥ 1 via existing m_pppArrayList chain layout —
+	// the lambda boundary `break` in GetVariable was lifted at the
+	// same time). Previously this line nullified m_parentContext,
+	// enforcing the strict isolation discipline that has been
+	// superseded by the per-frame heap-promotion design (see
+	// docs/closure-capture.md). Runtime wiring still pending — Phase A
+	// is compile-only; running code that captures outer locals crashes
+	// until Phase B lands.
 	std::shared_ptr<ibCompileContext::ibFunction> createdFunction;
 	std::unique_ptr<ibCompileContext> functionContextOwner;
 	int errorPlace = 0;
@@ -1551,7 +1576,13 @@ ibParamUnit ibCompileCode::CompileLambdaExpression(ibCompileContext* context)
 	}
 
 	ibCompileContext* functionContext = functionContextOwner.get();
-	functionContext->m_parentContext = nullptr;
+	functionContext->m_parentContext = context;
+
+	// Closure capture marking is lazy — see ibCompileContext::GetVariable.
+	// When an identifier resolves past a lambda boundary into some outer
+	// ctx, GetVariable stamps that ctx's m_needsHeapFrame = true. No
+	// eager walk here: ctxs that nothing captures from stay unmarked
+	// regardless of how many lambdas they enclose.
 
 
 	// Emit OPER_LFUNC + params + body + OPER_ENDLFUNC inline.
@@ -1600,6 +1631,1311 @@ ibParamUnit ibCompileCode::CompileLambdaExpression(ibCompileContext* context)
 	// reads the upper half (zero) instead of the real pointer.
 
 	return target;
+}
+
+// ============================================================
+// LINQ block compile path — eager inline foreach + array build.
+//
+// Recognised at the start of any assignment RHS (CompileDeclaration's
+// `=` branch hooks IsLinqBlockStart and routes here). Materialises
+// the LINQ result into a temp Array slot which the caller's OPER_LET
+// copies into the destination variable. Surface: `from <id> in <expr>`
+// + where / let / skip / take / select / distinct / orderby / group /
+// join (all extensions hang off the same shared compile-state struct).
+//
+// Diagnostics — previous LinqCompileLog/LinqLog `linq.log` streams
+// were stripped 2026-05-12 after the LINQ surface stabilised. If
+// compile-side tracing is needed again, prefer wxLogDebug at coarse
+// entry points rather than per-row writes.
+// ============================================================
+
+// === LINQ compile-state types ===
+// Definitions live in compileContextLinqData.h (included via
+// compileContext.h) so unique_ptr<ibLinqContextData> on
+// ibCompileContext can resolve to a complete type.
+
+// Outer entry — consumes KEY_FROM itself, allocates the shared LINQ
+// state on stack, sets up the RETURN_BLOCK-kind context, wires the
+// back-pointer, and dives into CompileLinqBlock. Callers step back
+// the lexem cursor (mirrors CompileLambdaExpression idiom) so this
+// function owns the KEY_FROM consumption uniformly.
+ibParamUnit ibCompileCode::CompileLinqExpression(ibCompileContext* context)
+{
+	GETKeyWord(KEY_FROM);
+
+	// Allocate the fake LINQ context — child of caller, RETURN_BLOCK
+	// kind so bindings register in this child's m_listVariable but
+	// the actual slots land in the host frame via CreateVariable's
+	// chain-delegation logic. LINQ-distinction is the non-null
+	// m_linqData on this context; no RETURN_LINQ enum tag needed.
+	auto linqCtxOwner = std::shared_ptr<ibCompileContext>(
+		context->CreateContext(RETURN_BLOCK));
+	linqCtxOwner->m_linqData = std::make_unique<ibLinqContextData>();
+	ibLinqContextData& data = *linqCtxOwner->m_linqData;
+
+
+	// Diagnostic: walk parent chain to see how far visibility reaches.
+	int chainDepth = 0;
+	for (ibCompileContext* c = linqCtxOwner->m_parentContext; c; c = c->m_parentContext) {
+		++chainDepth;
+		if (chainDepth > 10) break;
+	}
+
+	// Result accumulator + counters — allocate in CALLER's context
+	// (not the linq scope) so slot references survive after the
+	// linq context (and its m_linqData) destruct.
+	data.m_resultArray = context->CreateVariable();
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_NEW;
+		c.m_param1 = data.m_resultArray;
+		c.m_param2.m_numIndex = GetConstString(wxT("Array"));
+		c.m_param2.m_numArray = 0;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	data.m_skipCounter = context->CreateVariable();
+	data.m_takeCounter = context->CreateVariable();
+	data.m_constOne    = context->CreateVariable();
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_CONSTN; c.m_param1 = data.m_skipCounter;
+		c.m_param2.m_numIndex = 0;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_CONSTN; c.m_param1 = data.m_takeCounter;
+		c.m_param2.m_numIndex = 0;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_CONSTN; c.m_param1 = data.m_constOne;
+		c.m_param2.m_numIndex = 1;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	// Allocate orderby parallel-keys array. Empty unless ORDERBY clause
+	// fires inside CompileLinqBlock; in that case rows are pushed in
+	// lock-step with __r.Add(addValue).
+	data.m_orderKeys = context->CreateVariable();
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_NEW;
+		c.m_param1 = data.m_orderKeys;
+		c.m_param2.m_numIndex = GetConstString(wxT("Array"));
+		c.m_param2.m_numArray = 0;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	CompileLinqBlock(linqCtxOwner.get());
+
+	// Post-block GROUP BY expansion — runs ONCE after the outermost
+	// foreach (and all its nested levels) exhausts. data.m_groupsContainer
+	// has been populated by per-row Insert at whichever level the
+	// `group X by K` keyword appeared.
+	//
+	// Two flavours:
+	//   * Terminal `group X by K` (no `into`) — emit one
+	//     `New Structure("Key, Values", pair.Key, pair.Value)` per
+	//     pair directly into resultArray.
+	//   * Non-terminal `group X by K into g` — open a new foreach
+	//     over m_groupsContainer, bind `g` to the per-pair Structure,
+	//     and re-enter CompileLinqBlock to parse the continuation
+	//     clauses (where / select / orderby on g). The cursor is
+	//     still positioned at the continuation's first token (outer
+	//     CompileLinqBlock left it there).
+	if (data.m_hasGroup) {
+
+		const ibParamUnit expIn   = linqCtxOwner->GetVariable(wxT("@group_exp_in"),  true, false, false, true);
+		const ibParamUnit expIt   = linqCtxOwner->GetVariable(wxT("@group_exp_it"),  true, false, false, true);
+		const ibParamUnit expPair = linqCtxOwner->GetVariable(wxT("@group_exp_pair"), true, false, false, true);
+
+		// @group_exp_in := groupsContainer.
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_LET;
+			c.m_param1 = expIn;
+			c.m_param2 = data.m_groupsContainer;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+
+		if (data.m_hasGroupInto) {
+			// Non-terminal: open new foreach, bind g to Structure(Key, Values),
+			// re-enter CompileLinqBlock for the continuation clauses. The
+			// continuation's leaf parser uses the same WHERE/SELECT/orderby/
+			// distinct machinery as the original LINQ body, emits Add(addValue)
+			// to data.m_resultArray, then NEXT_ITER + back-patches itself.
+
+			ibLinqBinding bg;
+			bg.name       = data.m_groupIntoName;
+			bg.origin     = ibLinqBinding::FromGroup;
+			bg.valueSlot  = linqCtxOwner->GetVariable(data.m_groupIntoName);
+			bg.iterInSlot = expIn;
+			bg.iterItSlot = expIt;
+
+			// OPER_FOREACH header — iter-var is `expPair`, NOT g. g gets
+			// derived from pair inside the body.
+			const int expForeachIp = (int)m_cByteCode.m_listCode.size();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_FOREACH;
+				c.m_param1 = expPair;
+				c.m_param2 = expIn;
+				c.m_param3 = expIt;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			bg.foreachStartIp = expForeachIp;
+
+			// Body prefix: extract pair.Key + pair.Value, build g = Structure.
+			const ibParamUnit keySlot = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_GET_A;
+				c.m_param1 = keySlot;
+				c.m_param2 = expPair;
+				c.m_param3.m_numIndex = GetConstString(wxT("Key"));
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			const ibParamUnit valuesSlot = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_GET_A;
+				c.m_param1 = valuesSlot;
+				c.m_param2 = expPair;
+				c.m_param3.m_numIndex = GetConstString(wxT("Value"));
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			const ibParamUnit fieldsNameConst = FindConst(ibValue(wxT("Key, Values")));
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_NEW;
+				c.m_param1 = bg.valueSlot;
+				c.m_param2.m_numIndex = GetConstString(wxT("Structure"));
+				c.m_param2.m_numArray = 3;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = fieldsNameConst;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = keySlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = valuesSlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+
+			// Clear the hasGroup / hasGroupInto flags BEFORE re-entering —
+			// CompileLinqBlock's leaf parser uses them to suppress SELECT /
+			// Add; for the continuation we want those to fire normally
+			// against g. m_groupsContainer slot stays valid (foreach reads
+			// it via expIn).
+			data.m_hasGroup     = false;
+			data.m_hasGroupInto = false;
+
+			// Re-enter CompileLinqBlock with the synthetic binding.
+			CompileLinqBlock(linqCtxOwner.get(), bg);
+		}
+		else {
+			// Terminal: emit one Structure{Key, Values} per pair → __r.Add.
+			const int expForeachIp = (int)m_cByteCode.m_listCode.size();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_FOREACH;
+				c.m_param1 = expPair;
+				c.m_param2 = expIn;
+				c.m_param3 = expIt;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+
+			const ibParamUnit keySlot = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_GET_A;
+				c.m_param1 = keySlot;
+				c.m_param2 = expPair;
+				c.m_param3.m_numIndex = GetConstString(wxT("Key"));
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			const ibParamUnit valuesSlot = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_GET_A;
+				c.m_param1 = valuesSlot;
+				c.m_param2 = expPair;
+				c.m_param3.m_numIndex = GetConstString(wxT("Value"));
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+
+			const ibParamUnit groupRow         = context->CreateVariable();
+			const ibParamUnit fieldsNameConst  = FindConst(ibValue(wxT("Key, Values")));
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_NEW;
+				c.m_param1 = groupRow;
+				c.m_param2.m_numIndex = GetConstString(wxT("Structure"));
+				c.m_param2.m_numArray = 3;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = fieldsNameConst;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = keySlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = valuesSlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_CALL_METHOD;
+				c.m_param1 = context->CreateVariable();
+				c.m_param2 = data.m_resultArray;
+				c.m_param3.m_numIndex = GetConstString(wxT("Add"));
+				c.m_param3.m_numArray = 1;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = groupRow;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_NEXT_ITER;
+				c.m_param1 = expIt;
+				c.m_param2.m_numIndex = expForeachIp;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			m_cByteCode.m_listCode[expForeachIp].m_param4.m_numIndex =
+				(long)m_cByteCode.m_listCode.size();
+		}
+	}
+
+	// Post-loop ORDERBY emit — resultArray.SortByKeys(orderKeys, descending).
+	// Sits AFTER all OPER_NEXT_ITER's (CompileLinqBlock's tail) so the
+	// arrays are fully populated when sort runs.
+	if (data.m_hasOrderBy) {
+		ibParamUnit descConst = context->CreateVariable();
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_CONSTN;
+			c.m_param1 = descConst;
+			c.m_param2.m_numIndex = data.m_orderByDescending ? 1 : 0;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+		// __r.SortByKeys(__keys, descending) — OPER_CALL_METHOD + 2 args.
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_CALL_METHOD;
+			c.m_param1 = context->CreateVariable();   // throwaway ret
+			c.m_param2 = data.m_resultArray;
+			c.m_param3.m_numIndex = GetConstString(wxT("SortByKeys"));
+			c.m_param3.m_numArray = 2;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_SET;
+			c.m_param1 = data.m_orderKeys;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_SET;
+			c.m_param1 = descConst;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+	}
+
+	const ibParamUnit resultSlot = data.m_resultArray;   // capture before scope ends
+	return resultSlot;
+}
+
+// Recursive worker — one `from <id> in <expr>` clause plus either
+// (a) recursive call to itself for the next `from` (nested foreach),
+// or (b) tail clauses (where/skip/take/select) + Add at the deepest
+// level. Each level emits its own OPER_FOREACH header on entry and
+// matching OPER_NEXT_ITER + back-patches on unwind. Works for any
+// nesting depth — single `from`, multi-from chain, or a tree once
+// let/join/group/into bind new variables at branch points.
+//
+// Caller (CompileLinqExpression for outermost, or self-recursive
+// call) has already consumed KEY_FROM and we start with the binding
+// name.
+void ibCompileCode::CompileLinqBlock(ibCompileContext* linqCtx)
+{
+	// linqCtx — the fake LINQ context (RETURN_BLOCK kind with non-null
+	// m_linqData as the LINQ marker, allocated once by
+	// CompileLinqExpression). All binding registration +
+	// expression compilation goes through it; lookups walk parent
+	// chain so outer-scope locals stay visible (closure capture).
+	// State (m_bindings, m_resultArray, counters, ...) lives on
+	// linqCtx->m_linqData — the back-pointer at the stack-allocated
+	// ibLinqContextData in CompileLinqExpression.
+	ibCompileContext* const context = linqCtx;
+
+	const wxString bindRealName = GETIdentifier(true);
+	const wxString bindUpper    = stringUtils::MakeUpper(bindRealName);
+	GETKeyWord(KEY_IN);
+
+	ibLinqBinding b;
+	b.name       = bindRealName;
+	b.origin     = ibLinqBinding::FromSource;
+	b.valueSlot  = context->GetVariable(bindRealName);
+	b.iterInSlot = context->GetVariable(bindUpper + wxT("@in_"), true, false, false, true);
+	b.iterItSlot = context->GetVariable(bindUpper + wxT("@it_"), true, false, false, true);
+
+	// OPER_LET @in_ := source-expression
+	{
+		const ibParamUnit srcSlot = GetExpression(context);
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_LET;
+		c.m_param1 = b.iterInSlot;
+		c.m_param2 = srcSlot;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	// OPER_FOREACH header
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_FOREACH;
+		c.m_param1 = b.valueSlot;
+		c.m_param2 = b.iterInSlot;
+		c.m_param3 = b.iterItSlot;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+		b.foreachStartIp = (int)m_cByteCode.m_listCode.size() - 1;
+	}
+
+	// Delegate to the pre-bound entry (which assumes OPER_LET +
+	// OPER_FOREACH already emitted and `b` fully populated).
+	CompileLinqBlock(linqCtx, b);
+}
+
+// Pre-bound overload — caller has emitted OPER_LET / OPER_FOREACH and
+// filled `preBound` (incl. foreachStartIp). Used by `group ... into g`
+// continuation to re-enter the leaf-clause / NEXT_ITER machinery with
+// `g` as a synthetic binding over m_groupsContainer's pair rows.
+void ibCompileCode::CompileLinqBlock(ibCompileContext* linqCtx, const ibLinqBinding& preBound)
+{
+	ibLinqContextData& data = *linqCtx->m_linqData;
+	ibCompileContext* const context = linqCtx;
+
+	// Per-from-level state — local to THIS CompileLinqBlock call so
+	// recursion (nested from) doesn't pollute outer levels. Each
+	// level owns its own pending join trampolines (emitted at THIS
+	// level's NEXT_ITER, absolute-ip GOTO from body requires same
+	// scope). GROUP's data.m_hasGroup + data.m_groupsContainer are linq-scope
+	// (data.m_*) — expansion fires once after the outermost
+	// CompileLinqBlock returns, in CompileLinqExpression.
+	std::vector<ibLinqPendingJoin> pendingJoins;
+
+	ibLinqBinding b = preBound;
+	data.m_bindings.push_back(b);
+	context->StartLoopList();
+
+
+	// Multiple WHERE clauses are allowed (each emits its own OPER_IF);
+	// all skip-targets back-patch to the same post-Add ip below.
+	// JOIN-miss OPER_IFs also push here — single "skip current row,
+	// continue iter" patch point for both clause kinds.
+	std::vector<int> whereSkipIps;
+
+	// JOIN clauses appear after `from`, before tail clauses (C# grammar).
+	// Each emits per-iter lookup inline in outer body + records an
+	// ibLinqPendingJoin for the trampoline (hash build) emitted after
+	// outer NEXT_ITER. Multiple joins at the same level are allowed.
+	// The "if !found, skip-to-next-iter" OPER_IF goes into whereSkipIps
+	// directly so end-of-body patches both clause kinds uniformly.
+	while (IsNextKeyWord(KEY_JOIN)) {
+		GETKeyWord(KEY_JOIN);
+		CompileLinqJoin(context, whereSkipIps, pendingJoins);
+	}
+
+	if (IsNextKeyWord(KEY_FROM)) {
+		// === Recurse — nested `from` adds another foreach depth ===
+		GETKeyWord(KEY_FROM);
+		CompileLinqBlock(context);
+	}
+	else {
+		// === Innermost level — process tail clauses + Add ===
+		// WHERE and let-clauses (`var alias = ...` or implicit
+		// `alias = ...`) can interleave freely between `from` and
+		// `select` / `skip` / `take`. Unified while-loop handles any
+		// order, matching C# LINQ grammar.
+		while (true) {
+			// WHERE clause
+			if (IsNextKeyWord(KEY_WHERE)) {
+				GETKeyWord(KEY_WHERE);
+				const ibParamUnit whereExpr = GetExpression(context);
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_IF;
+				c.m_param1 = whereExpr;
+				c.m_param2.m_numIndex = 0;  // back-patched below
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+				whereSkipIps.push_back((int)m_cByteCode.m_listCode.size() - 1);
+				continue;
+			}
+
+			// ORDERBY clause — compile key expression per-row, optional
+			// ASCENDING/DESCENDING. The expression's natural result slot
+			// may carry DEF_VAR_TEMP marker (for compound expressions like
+			// `o * -1`) which can interact badly with subsequent
+			// OPER_SET arg loads. Copy into a stable regular slot via
+			// OPER_LET so __keys.Add reads it as a normal variable.
+			if (IsNextKeyWord(KEY_ORDERBY)) {
+				GETKeyWord(KEY_ORDERBY);
+				const ibParamUnit rawKey = GetExpression(context);
+
+				// Stable copy — allocate regular slot, OPER_LET copies
+				// the per-iteration expression result into it. This slot
+				// is what __keys.Add reads further down.
+				data.m_orderByKeySlot = context->CreateVariable();
+				{
+					ibByteUnit c; AddLineInfo(c);
+					c.m_numOper = OPER_LET;
+					c.m_param1 = data.m_orderByKeySlot;
+					c.m_param2 = rawKey;
+					m_cByteCode.m_listCode.emplace_back(std::move(c));
+				}
+				data.m_hasOrderBy = true;
+				if (IsNextKeyWord(KEY_DESCENDING)) {
+					GETKeyWord(KEY_DESCENDING);
+					data.m_orderByDescending = true;
+				} else if (IsNextKeyWord(KEY_ASCENDING)) {
+					GETKeyWord(KEY_ASCENDING);
+					data.m_orderByDescending = false;
+				}
+				continue;
+			}
+
+			// Let-clause — `var alias = <expr>` or implicit `alias = <expr>`.
+			// Both emit OPER_LET + push FromLet binding so subsequent
+			// clauses see `alias` via standard context lookup.
+			bool hasExplicitKw = false;
+			if (IsNextKeyWord(KEY_VAR)) {
+				GETKeyWord(KEY_VAR);
+				hasExplicitKw = true;
+			}
+			else {
+				// Implicit — 2-token peek <IDENTIFIER> '='. Identifier
+				// must not be a clause-terminator keyword (those are
+				// caught by SKIP/TAKE/SELECT branches below and never
+				// reach this peek).
+				const size_t pos = (size_t)m_numCurrentCompile;
+				if (pos + 1 >= m_listLexem.size()) break;
+				const ibLexem& l0 = m_listLexem[pos];
+				const ibLexem& l1 = m_listLexem[pos + 1];
+				if (l0.m_lexType != IDENTIFIER) break;
+				if (l1.m_lexType != DELIMITER || l1.m_numData != '=') break;
+			}
+
+			const wxString aliasReal = GETIdentifier(true);
+			GETDelimeter('=');
+			const ibParamUnit aliasSlot = context->GetVariable(aliasReal);
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_LET;
+				c.m_param1 = aliasSlot;
+				c.m_param2 = GetExpression(context);
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			ibLinqBinding lb;
+			lb.name      = aliasReal;
+			lb.origin    = ibLinqBinding::FromLet;
+			lb.valueSlot = aliasSlot;
+			data.m_bindings.push_back(lb);
+		}
+
+		// SKIP — counter++, if (counter <= N) goto next-iter.
+		if (IsNextKeyWord(KEY_SKIP)) {
+			GETKeyWord(KEY_SKIP);
+			const ibParamUnit skipExpr = GetExpression(context);
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_ADD;
+				c.m_param1 = data.m_skipCounter;
+				c.m_param2 = data.m_skipCounter;
+				c.m_param3 = data.m_constOne;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			const ibParamUnit tmpLE = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_LE;
+				c.m_param1 = tmpLE;
+				c.m_param2 = data.m_skipCounter;
+				c.m_param3 = skipExpr;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_IF;
+				c.m_param1 = tmpLE;
+				c.m_param2.m_numIndex = 0;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			const int skipIfIp = (int)m_cByteCode.m_listCode.size() - 1;
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_GOTO;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+				const int gotoIp = (int)m_cByteCode.m_listCode.size() - 1;
+				auto* pList = context->m_listContinue[context->m_numDoNumber];
+				if (pList != nullptr) pList->emplace_back(gotoIp);
+			}
+			m_cByteCode.m_listCode[skipIfIp].m_param2.m_numIndex =
+				(long)m_cByteCode.m_listCode.size();
+		}
+
+		// TAKE — if (counter >= N) goto break-out; else counter++.
+		if (IsNextKeyWord(KEY_TAKE)) {
+			GETKeyWord(KEY_TAKE);
+			const ibParamUnit takeExpr = GetExpression(context);
+			const ibParamUnit tmpGE = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_GE;
+				c.m_param1 = tmpGE;
+				c.m_param2 = data.m_takeCounter;
+				c.m_param3 = takeExpr;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_IF;
+				c.m_param1 = tmpGE;
+				c.m_param2.m_numIndex = 0;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			const int takeIfIp = (int)m_cByteCode.m_listCode.size() - 1;
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_GOTO;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+				const int gotoIp = (int)m_cByteCode.m_listCode.size() - 1;
+				auto* pList = context->m_listBreak[context->m_numDoNumber];
+				if (pList != nullptr) pList->emplace_back(gotoIp);
+			}
+			m_cByteCode.m_listCode[takeIfIp].m_param2.m_numIndex =
+				(long)m_cByteCode.m_listCode.size();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_ADD;
+				c.m_param1 = data.m_takeCounter;
+				c.m_param2 = data.m_takeCounter;
+				c.m_param3 = data.m_constOne;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+		}
+
+		// GROUP — terminal projection: `group X by K`. Mutually exclusive
+		// with SELECT at this level. Aggregates rows into a Container
+		// (key → Array bucket) via per-row lookup-or-create. Post-loop
+		// (after outer NEXT_ITER, before foreach m_param4 patch), an
+		// expansion foreach walks the Container and pushes one
+		// `New Structure("Key, Values", pair.Key, pair.Value)` into
+		// __r — result is Array<Structure{Key, Values:Array}>. WHERE /
+		// ORDERBY before group operate on raw rows (filter / sort before
+		// grouping). No `into` form yet — group is terminal, no further
+		// clauses operating on groups.
+		if (IsNextKeyWord(KEY_GROUP)) {
+			GETKeyWord(KEY_GROUP);
+			data.m_hasGroup = true;
+
+			// Allocate persistent slots (in caller's context via
+			// CreateVariable's RETURN_BLOCK chain-delegation).
+			data.m_groupsContainer = context->CreateVariable();
+
+			// First-iter init guard — mirror of JOIN's hashSlot init.
+			// `tmp_isEmpty = !data.m_groupsContainer` (untyped OPER_NOT →
+			// IsEmpty path: TYPE_EMPTY → true, TYPE_VALUE → false).
+			// OPER_IF jumps when condition is FALSE (Container non-empty);
+			// fall through emits OPER_NEW once on first iter.
+			const ibParamUnit tmpIsEmpty = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_NOT;
+				c.m_param1 = tmpIsEmpty;
+				c.m_param2 = data.m_groupsContainer;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			const int initSkipIfIp = (int)m_cByteCode.m_listCode.size();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_IF;
+				c.m_param1 = tmpIsEmpty;
+				c.m_param2.m_numIndex = 0;  // back-patched after OPER_NEW
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_NEW;
+				c.m_param1 = data.m_groupsContainer;
+				c.m_param2.m_numIndex = GetConstString(wxT("Container"));
+				c.m_param2.m_numArray = 0;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			m_cByteCode.m_listCode[initSkipIfIp].m_param2.m_numIndex =
+				(long)m_cByteCode.m_listCode.size();
+
+			// Parse X (value to group) — eval inline per iter.
+			const ibParamUnit groupValueSlot = GetExpression(context);
+
+			GETKeyWord(KEY_BY);
+
+			// Parse K (group key) — eval inline per iter.
+			const ibParamUnit groupKeySlot = GetExpression(context);
+
+			// Per-row lookup-or-create:
+			//   bucketSlot = (uninit)
+			//   found = data.m_groupsContainer.Property(K, bucketSlot)
+			//   OPER_IF found, skipCreate     ← jump if found
+			//   bucketSlot = New("Array")
+			//   data.m_groupsContainer.Insert(K, bucketSlot)
+			//   skipCreate:
+			//   bucketSlot.Add(X)
+			const ibParamUnit bucketSlot = context->CreateVariable();
+			const ibParamUnit foundSlot  = context->CreateVariable();
+
+			// found = data.m_groupsContainer.Property(K, bucketSlot)
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_CALL_METHOD;
+				c.m_param1 = foundSlot;
+				c.m_param2 = data.m_groupsContainer;
+				c.m_param3.m_numIndex = GetConstString(wxT("Property"));
+				c.m_param3.m_numArray = 2;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = groupKeySlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = bucketSlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			// OPER_IF jumps on EMPTY/falsy condition — natural for
+			// "if !cond, skip body" patterns. We want the inverse here:
+			// "if found, skip create". Invert via OPER_NOT so OPER_IF
+			// jumps when foundSlot is TRUE (notFound is empty/false).
+			const ibParamUnit notFoundSlot = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_NOT;
+				c.m_param1 = notFoundSlot;
+				c.m_param2 = foundSlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			const int createSkipIfIp = (int)m_cByteCode.m_listCode.size();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_IF;
+				c.m_param1 = notFoundSlot;
+				c.m_param2.m_numIndex = 0;   // back-patched below
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			// Create branch: bucketSlot = New("Array"); data.m_groupsContainer.Insert(K, bucketSlot).
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_NEW;
+				c.m_param1 = bucketSlot;
+				c.m_param2.m_numIndex = GetConstString(wxT("Array"));
+				c.m_param2.m_numArray = 0;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_CALL_METHOD;
+				c.m_param1 = context->CreateVariable();  // throwaway ret
+				c.m_param2 = data.m_groupsContainer;
+				c.m_param3.m_numIndex = GetConstString(wxT("Insert"));
+				c.m_param3.m_numArray = 2;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = groupKeySlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = bucketSlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			// skipCreate label.
+			m_cByteCode.m_listCode[createSkipIfIp].m_param2.m_numIndex =
+				(long)m_cByteCode.m_listCode.size();
+
+			// bucketSlot.Add(X) — append the per-row value to the bucket.
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_CALL_METHOD;
+				c.m_param1 = context->CreateVariable();   // throwaway ret
+				c.m_param2 = bucketSlot;
+				c.m_param3.m_numIndex = GetConstString(wxT("Add"));
+				c.m_param3.m_numArray = 1;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = groupValueSlot;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+
+			// `... into <g>` — non-terminal group. CompileLinqExpression's
+			// post-block expansion will detect m_hasGroupInto, open a new
+			// foreach over m_groupsContainer, bind <g> to Structure{Key,
+			// Values} per pair, and re-enter CompileLinqBlock for the
+			// continuation clauses. We do NOT parse the continuation here
+			// — outer level's leaf parser falls through (hasGroup=true
+			// suppresses SELECT/Add); cursor stays at the continuation's
+			// first token, where post-block picks it up.
+			if (IsNextKeyWord(KEY_INTO)) {
+				GETKeyWord(KEY_INTO);
+				data.m_groupIntoName = GETIdentifier(true);
+				data.m_hasGroupInto  = true;
+			}
+		}
+
+		// SELECT — projection. Three forms:
+		//   select <expr>                          → single value
+		//   select { name = expr, name = expr }    → anonymous row (Structure)
+		//   <omitted>                              → implicit, addValue = binding
+		// For the `{}` form we emit New("Structure") + a chain of
+		// .Insert(name, value) calls; the structure slot becomes addValue.
+		// Skipped entirely when GROUP BY took the projection slot.
+		ibParamUnit addValue = b.valueSlot;
+		if (!data.m_hasGroup && IsNextKeyWord(KEY_SELECT)) {
+			GETKeyWord(KEY_SELECT);
+
+			if (IsNextDelimeter('{')) {
+				GETDelimeter('{');
+
+				const ibParamUnit structSlot = context->CreateVariable();
+				// structSlot := New("Structure")
+				{
+					ibByteUnit c; AddLineInfo(c);
+					c.m_numOper = OPER_NEW;
+					c.m_param1 = structSlot;
+					c.m_param2.m_numIndex = GetConstString(wxT("Structure"));
+					c.m_param2.m_numArray = 0;
+					m_cByteCode.m_listCode.emplace_back(std::move(c));
+				}
+
+				// Field list — `name = expr` pairs separated by `,`.
+				int fieldCount = 0;
+				while (!IsNextDelimeter('}')) {
+					const wxString fieldName = GETIdentifier(true);
+					GETDelimeter('=');
+					const ibParamUnit fieldValue = GetExpression(context);
+
+					// structSlot.Insert(fieldName, fieldValue)
+					// OPER_CALL_METHOD + 2 arg ops (SETCONST for name, SET for value).
+					{
+						ibByteUnit c; AddLineInfo(c);
+						c.m_numOper = OPER_CALL_METHOD;
+						c.m_param1 = context->CreateVariable();  // throwaway ret
+						c.m_param2 = structSlot;
+						c.m_param3.m_numIndex = GetConstString(wxT("Insert"));
+						c.m_param3.m_numArray = 2;
+						m_cByteCode.m_listCode.emplace_back(std::move(c));
+					}
+					// arg 1: field name as string constant
+					{
+						ibByteUnit c; AddLineInfo(c);
+						c.m_numOper = OPER_SETCONST;
+						c.m_param1.m_numIndex = GetConstString(fieldName);
+						m_cByteCode.m_listCode.emplace_back(std::move(c));
+					}
+					// arg 2: field value
+					{
+						ibByteUnit c; AddLineInfo(c);
+						c.m_numOper = OPER_SET;
+						c.m_param1 = fieldValue;
+						m_cByteCode.m_listCode.emplace_back(std::move(c));
+					}
+
+					++fieldCount;
+					if (IsNextDelimeter(',')) GETDelimeter(',');
+				}
+				GETDelimeter('}');
+
+				addValue = structSlot;
+			}
+			else {
+				addValue = GetExpression(context);
+			}
+		}
+
+		// DISTINCT modifier — `distinct` after select. Dedupes addValue
+		// against already-Added rows via __r.Contains (bool). Earlier
+		// Find/NOT approach broke when Find returned index 0 because
+		// IsEmpty(NUMBER 0) is true (treats 0 as falsy). Contains
+		// returns TYPE_BOOLEAN unambiguously: true=found, false=not.
+		// shouldAdd = NOT Contains works correctly: IsEmpty(bool true)
+		// is false → NOT true bool = false → IF FALSY → skip Add.
+		int distinctSkipIp = -1;
+		if (IsNextKeyWord(KEY_DISTINCT)) {
+			GETKeyWord(KEY_DISTINCT);
+
+			// tmpHas := __r.Contains(addValue)
+			const ibParamUnit tmpHas = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_CALL_METHOD;
+				c.m_param1 = tmpHas;
+				c.m_param2 = data.m_resultArray;
+				c.m_param3.m_numIndex = GetConstString(wxT("Contains"));
+				c.m_param3.m_numArray = 1;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = addValue;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			// shouldAdd := NOT tmpHas  (true iff not present)
+			const ibParamUnit shouldAdd = context->CreateVariable();
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_NOT;
+				c.m_param1 = shouldAdd;
+				c.m_param2 = tmpHas;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			// IF shouldAdd, skipAddIp  — jumps past Add when found.
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_IF;
+				c.m_param1 = shouldAdd;
+				c.m_param2.m_numIndex = 0;  // back-patch below
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			distinctSkipIp = (int)m_cByteCode.m_listCode.size() - 1;
+		}
+
+		// Body: resultArray.Add(addValue).
+		// Suppressed when GROUP BY took over — group-by emitted its own
+		// per-row aggregation (lookup-or-create bucket + bucket.Add(X))
+		// inline above; the result array gets populated post-loop by
+		// the group expansion (foreach pair → __r.Add(New Structure)).
+		if (!data.m_hasGroup) {
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_CALL_METHOD;
+				c.m_param1 = context->CreateVariable();   // throwaway ret slot
+				c.m_param2 = data.m_resultArray;
+				c.m_param3.m_numIndex = GetConstString(wxT("Add"));
+				c.m_param3.m_numArray = 1;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+			{
+				ibByteUnit c; AddLineInfo(c);
+				c.m_numOper = OPER_SET;
+				c.m_param1 = addValue;
+				m_cByteCode.m_listCode.emplace_back(std::move(c));
+			}
+		}
+
+		// Body: orderKeys.Add(orderByKeySlot) — lock-step with __r.Add.
+		// Same skip-path: distinct/where back-patches land past both.
+		if (data.m_hasOrderBy) {
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_CALL_METHOD;
+			c.m_param1 = context->CreateVariable();   // throwaway ret slot
+			c.m_param2 = data.m_orderKeys;
+			c.m_param3.m_numIndex = GetConstString(wxT("Add"));
+			c.m_param3.m_numArray = 1;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+
+			ibByteUnit setC; AddLineInfo(setC);
+			setC.m_numOper = OPER_SET;
+			setC.m_param1 = data.m_orderByKeySlot;
+			m_cByteCode.m_listCode.emplace_back(std::move(setC));
+		}
+
+		// Back-patch DISTINCT skip target → past the Add (= NEXT_ITER).
+		if (distinctSkipIp >= 0) {
+			m_cByteCode.m_listCode[distinctSkipIp].m_param2.m_numIndex =
+				(long)m_cByteCode.m_listCode.size();
+		}
+
+		// Back-patch all WHERE skip targets → past the Add (= NEXT_ITER).
+		for (const int ifIp : whereSkipIps) {
+			m_cByteCode.m_listCode[ifIp].m_param2.m_numIndex =
+				(long)m_cByteCode.m_listCode.size();
+		}
+	}
+
+	// === Close this level's loop ===
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_NEXT_ITER;
+		c.m_param1 = b.iterItSlot;
+		c.m_param2.m_numIndex = b.foreachStartIp;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	// === JOIN trampolines (Phase 1.5) ===
+	// Live AFTER outer NEXT_ITER and BEFORE the foreach m_param4 patch
+	// (= loop-exit target). NEXT_ITER always jumps back (never falls
+	// through), so trampolines are unreachable in normal flow. On loop
+	// exhaustion, OPER_FOREACH's m_param4 = post-trampolines ip, so
+	// they're skipped on exit too. Reached only via the per-iter
+	// conditional OPER_GOTO placeholder emitted inside the body by
+	// CompileLinqJoin — fires once on first iter, the trampoline
+	// builds the hash + jumps back to that join's skip_label.
+	for (const ibLinqPendingJoin& pj : pendingJoins) {
+		const int trampolineLabel = (int)m_cByteCode.m_listCode.size();
+
+		// Patch the body-side placeholder GOTO to land here.
+		m_cByteCode.m_listCode[pj.placeholderGotoIp].m_param1.m_numIndex =
+			trampolineLabel;
+
+		// hashSlot = New("Container") — first-iter init of the dict.
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_NEW;
+			c.m_param1 = pj.hashSlot;
+			c.m_param2.m_numIndex = GetConstString(wxT("Container"));
+			c.m_param2.m_numArray = 0;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+
+		// Replay T's lex range — eval inner source ONCE into a temp.
+		const int savedCursorT = m_numCurrentCompile;
+		m_numCurrentCompile = pj.tLexStart;
+		const ibParamUnit innerSrcSlot = GetExpression(linqCtx);
+		m_numCurrentCompile = savedCursorT;
+
+		// Inner foreach: foreach pj.bindSlot in innerSrcSlot.
+		// We reuse pj.bindSlot as the inner iter-var; after hash build
+		// it gets overwritten per outer-iter via Property's out-param.
+		const ibParamUnit innerInSlot =
+			linqCtx->GetVariable(wxString::Format(wxT("@join_in_%d"),
+				(int)pendingJoins.size()), true, false, false, true);
+		const ibParamUnit innerItSlot =
+			linqCtx->GetVariable(wxString::Format(wxT("@join_it_%d"),
+				(int)pendingJoins.size()), true, false, false, true);
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_LET;
+			c.m_param1 = innerInSlot;
+			c.m_param2 = innerSrcSlot;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+		const int innerForeachIp = (int)m_cByteCode.m_listCode.size();
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_FOREACH;
+			c.m_param1 = pj.bindSlot;
+			c.m_param2 = innerInSlot;
+			c.m_param3 = innerItSlot;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+
+		// Replay K2's lex range — emit K2 reading from pj.bindSlot
+		// (which is the inner iter var here).
+		const int savedCursorK2 = m_numCurrentCompile;
+		m_numCurrentCompile = pj.k2LexStart;
+		const ibParamUnit k2Slot = GetExpression(linqCtx);
+		m_numCurrentCompile = savedCursorK2;
+
+		// hashSlot.Insert(k2Slot, bindSlot) — OPER_CALL_METHOD with 2 args.
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_CALL_METHOD;
+			c.m_param1 = linqCtx->CreateVariable();   // throwaway ret
+			c.m_param2 = pj.hashSlot;
+			c.m_param3.m_numIndex = GetConstString(wxT("Insert"));
+			c.m_param3.m_numArray = 2;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_SET;
+			c.m_param1 = k2Slot;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_SET;
+			c.m_param1 = pj.bindSlot;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+
+		// Close inner foreach.
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_NEXT_ITER;
+			c.m_param1 = innerItSlot;
+			c.m_param2.m_numIndex = innerForeachIp;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+		m_cByteCode.m_listCode[innerForeachIp].m_param4.m_numIndex =
+			(long)m_cByteCode.m_listCode.size();
+
+		// GOTO back to the per-iter lookup's skip_label (return into
+		// outer body after first-iter build).
+		{
+			ibByteUnit c; AddLineInfo(c);
+			c.m_numOper = OPER_GOTO;
+			c.m_param1.m_numIndex = pj.skipLabelIp;
+			m_cByteCode.m_listCode.emplace_back(std::move(c));
+		}
+	}
+
+	m_cByteCode.m_listCode[b.foreachStartIp].m_param4.m_numIndex =
+		(long)m_cByteCode.m_listCode.size();
+
+	// GROUP BY expansion intentionally NOT emitted here — moved to
+	// CompileLinqExpression's post-block emit so it fires ONCE after
+	// the outermost foreach exhausts (not per inner-foreach exit).
+	// Per-row aggregation (Insert into data.m_groupsContainer) is
+	// emitted in the KEY_GROUP branch at whichever level the group
+	// keyword appeared.
+
+	context->FinishLoopList(m_cByteCode,
+		(long)m_cByteCode.m_listCode.size() - 1,
+		(long)m_cByteCode.m_listCode.size());
+}
+
+void ibCompileCode::CompileLinqJoin(ibCompileContext* linqCtx,
+	std::vector<int>& whereSkipIps,
+	std::vector<ibLinqPendingJoin>& pendingJoins)
+{
+	// KEY_JOIN already consumed by caller. Grammar:
+	//   join <bindName> in <T> on <K1> equals <K2>
+	//
+	// Emit per-iter lookup INLINE in outer body (current ip):
+	//   1. tmp_isEmpty = !hashSlot          (OPER_NOT)
+	//   2. OPER_IF tmp_isEmpty, skipLabel   (jump on hashSlot non-empty)
+	//   3. OPER_GOTO trampolineLabel        (placeholder, back-patched)
+	//   4. skipLabel:
+	//   5. found = hashSlot.Property(K1, bindSlot)
+	//   6. OPER_IF found, end-of-body        (back-patched via whereSkipIps)
+	//
+	// T and K2 lex ranges saved by parse-and-discard so the trampoline
+	// (emitted after outer NEXT_ITER) can replay them in the build
+	// context (T pre-loop, K2 inside inner foreach where bindSlot is
+	// the iter var).
+	ibLinqContextData& data = *linqCtx->m_linqData;
+
+	const wxString joinName = GETIdentifier(true);
+	GETKeyWord(KEY_IN);
+
+	ibLinqPendingJoin pj;
+
+	// Save T's lex range. Parse-and-discard: GetExpression advances
+	// the cursor + emits bytecode; we resize m_listCode back to drop
+	// the emit (replayed later at trampoline emit time). Side effects
+	// like constant-pool inserts and var auto-decl persist but are
+	// idempotent across the second parse.
+	pj.tLexStart = m_numCurrentCompile;
+	{
+		const size_t preSize = m_cByteCode.m_listCode.size();
+		GetExpression(linqCtx);
+		m_cByteCode.m_listCode.resize(preSize);
+	}
+	pj.tLexEnd = m_numCurrentCompile;
+
+	// Detect outer-iter-referenced T: scan T's lex range for any
+	// IDENTIFIER matching a binding name from m_bindings EXCEPT the
+	// most-recently-pushed (= current level's from). If matched, the
+	// hash dict built from T@iter-1 is stale for iter-2 — mark for
+	// per-row reset at the lookup site. Constant T (or T referencing
+	// only globals not in m_bindings) keeps one-shot rebuild.
+	if (data.m_bindings.size() > 1) {
+		// All but the last m_bindings entry are outer bindings.
+		const size_t lastIdx = data.m_bindings.size() - 1;
+		for (int pos = pj.tLexStart;
+		     pos < pj.tLexEnd && pos < (int)m_listLexem.size();
+		     ++pos)
+		{
+			const ibLexem& lex = m_listLexem[pos];
+			if (lex.m_lexType != IDENTIFIER) continue;
+			const wxString lexName = lex.m_valData.GetString();
+			for (size_t i = 0; i < lastIdx; ++i) {
+				if (stringUtils::CompareString(data.m_bindings[i].name, lexName)) {
+					pj.m_needsReset = true;
+					break;
+				}
+			}
+			if (pj.m_needsReset) break;
+		}
+	}
+
+	GETKeyWord(KEY_ON);
+
+	// Bind b in the linq scope. Slot persists across iterations; on
+	// each outer iter it's overwritten by hashSlot.Property's out-param.
+	pj.bindSlot = linqCtx->GetVariable(joinName);
+
+	// Parse K1 inline — emits at current ip (outer body, per-iter).
+	// K1 reads `o` (already bound by the enclosing FROM).
+	const ibParamUnit k1Slot = GetExpression(linqCtx);
+
+	GETKeyWord(KEY_EQUALS);
+
+	// Save K2's lex range — same parse-and-discard pattern. K2
+	// references bindSlot which is bound NOW (above), so the parse
+	// resolves the identifier; emit goes to the discarded buffer.
+	pj.k2LexStart = m_numCurrentCompile;
+	{
+		const size_t preSize = m_cByteCode.m_listCode.size();
+		GetExpression(linqCtx);
+		m_cByteCode.m_listCode.resize(preSize);
+	}
+	pj.k2LexEnd = m_numCurrentCompile;
+
+	// Persistent hash slot — survives across outer iters; first-iter
+	// trampoline allocates the Container into it.
+	pj.hashSlot = linqCtx->CreateVariable();
+
+	// Per-row reset for outer-referenced T — `hashSlot = empty` so
+	// the IsEmpty guard below falls through to trampoline rebuild on
+	// EVERY row. This sacrifices the hash amortisation (O(M²) instead
+	// of O(M+N)) for correctness when T depends on outer iter vars.
+	// Hoisting reset to outer-foreach body entry (one rebuild per
+	// outer iter) is deferred — requires lookahead through level-N's
+	// CompileLinqBlock before emitting OPER_FOREACH header.
+	if (pj.m_needsReset) {
+		// OPER_LET hashSlot = (default empty ibValue from const pool).
+		// We can't easily emit "set TYPE_EMPTY" inline; the cleanest
+		// trigger is OPER_NEW for an empty array / undefined slot —
+		// but simpler is to leverage the IsEmpty path: assign a
+		// known-empty constant. Use a const-pool empty ibValue.
+		const ibParamUnit emptyConst = FindConst(ibValue());
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_LET;
+		c.m_param1 = pj.hashSlot;
+		c.m_param2 = emptyConst;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	// (1) tmp_isEmpty = !hashSlot. Untyped OPER_NOT writes BOOLEAN
+	// via SetTypeBoolean(IsEmptyValue) — TYPE_EMPTY → true, otherwise
+	// false. Compile-side m_strType stays empty so no +TYPE_DELTA
+	// inference fires (kept on the untyped IsEmpty path).
+	const ibParamUnit tmpIsEmpty = linqCtx->CreateVariable();
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_NOT;
+		c.m_param1 = tmpIsEmpty;
+		c.m_param2 = pj.hashSlot;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	// (2) OPER_IF tmp_isEmpty, skipLabel
+	// OPER_IF jumps when condition is FALSE (per runtime: if !cond,
+	// goto). tmpIsEmpty TRUE on first iter (empty hash) → fall through
+	// to GOTO trampoline. FALSE on subsequent (built) → jump to
+	// skipLabel past the trampoline GOTO.
+	const int condIfIp = (int)m_cByteCode.m_listCode.size();
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_IF;
+		c.m_param1 = tmpIsEmpty;
+		c.m_param2.m_numIndex = 0;  // back-patched after the GOTO emit
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	// (3) OPER_GOTO trampolineLabel (placeholder — trampoline emitted
+	// after outer NEXT_ITER patches param1 with its ip).
+	pj.placeholderGotoIp = (int)m_cByteCode.m_listCode.size();
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_GOTO;
+		c.m_param1.m_numIndex = 0;   // back-patched in trampoline emit loop
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	// (4) skipLabel — back-patch the conditional IF to land here on
+	// subsequent iters (hashSlot non-empty path).
+	pj.skipLabelIp = (int)m_cByteCode.m_listCode.size();
+	m_cByteCode.m_listCode[condIfIp].m_param2.m_numIndex = pj.skipLabelIp;
+
+	// (5) found = hashSlot.Property(K1, bindSlot)
+	// Property writes the matched value into its 2nd-arg slot (bindSlot)
+	// on hit; returns false on miss (bindSlot left as previous content).
+	const ibParamUnit foundSlot = linqCtx->CreateVariable();
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_CALL_METHOD;
+		c.m_param1 = foundSlot;
+		c.m_param2 = pj.hashSlot;
+		c.m_param3.m_numIndex = GetConstString(wxT("Property"));
+		c.m_param3.m_numArray = 2;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_SET;
+		c.m_param1 = k1Slot;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_SET;
+		c.m_param1 = pj.bindSlot;
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+
+	// (6) OPER_IF found, end-of-body  — on miss (foundSlot=false),
+	// jump past the Add. End-of-body back-patches via whereSkipIps,
+	// shared with WHERE clauses at this level.
+	const int missSkipIp = (int)m_cByteCode.m_listCode.size();
+	{
+		ibByteUnit c; AddLineInfo(c);
+		c.m_numOper = OPER_IF;
+		c.m_param1 = foundSlot;
+		c.m_param2.m_numIndex = 0;   // back-patched at end of body
+		m_cByteCode.m_listCode.emplace_back(std::move(c));
+	}
+	whereSkipIps.push_back(missSkipIp);
+
+	// Push binding so subsequent clauses see `b` via standard linq
+	// context lookup. Origin FromJoin in case future clauses (e.g.
+	// `into g` group-join) need to distinguish.
+	ibLinqBinding jb;
+	jb.name      = joinName;
+	jb.origin    = ibLinqBinding::FromJoin;
+	jb.valueSlot = pj.bindSlot;
+	data.m_bindings.push_back(jb);
+
+	pendingJoins.push_back(pj);
 }
 
 /**
@@ -1719,6 +3055,15 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 				break;
 			case KEY_NEW:
 				CompileNewObject(context);
+				break;
+			case KEY_FROM:
+				// LINQ as top-level statement — result-array is emitted
+				// into a temp slot and discarded. Symmetric with KEY_NEW
+				// at statement-level (`New("Array")` on its own is also
+				// pointless but legal). Most uses go through assignment
+				// RHS where the result is captured. CompileLinqExpression
+				// consumes KEY_FROM itself.
+				CompileLinqExpression(context);
 				break;
 			case KEY_IF:
 				CompileIf(context);
@@ -2118,7 +3463,7 @@ ibParamUnit ibCompileCode::GetCurrentIdentifier(ibCompileContext* context, int& 
 
 			ibByteUnit code;
 			AddLineInfo(code);
-			code.m_numOper = OPER_CALL_M;
+			code.m_numOper = OPER_CALL_METHOD;
 
 			// variable on which the method is called
 			code.m_param2 = context->GetVariable(foundedFunc->m_strContext, true, false, true);
@@ -2141,7 +3486,7 @@ ibParamUnit ibCompileCode::GetCurrentIdentifier(ibCompileContext* context, int& 
 			// function-pointer / any ibValueFunction-wrapping ibValue).
 			// This sits between the context-method check above and the
 			// named-function fallback below: regular Local / Export
-			// vars get OPER_CALL_VAL on their slot; runtime then verifies
+			// vars get OPER_CALL_LAMBDA on their slot; runtime then verifies
 			// at dispatch that the value really wraps an ibValueFunction.
 			// Excludes context-bindings (Manager, ThisForm — m_bContext)
 			// and externals (m_bExternal) — those aren't user-callable
@@ -2203,7 +3548,7 @@ ibParamUnit ibCompileCode::GetCurrentIdentifier(ibCompileContext* context, int& 
 
 				ibByteUnit code;
 				AddLineInfo(code);
-				code.m_numOper = OPER_CALL_VAL;
+				code.m_numOper = OPER_CALL_LAMBDA;
 				variable = context->CreateVariable();
 				code.m_param1 = variable;                                  // return-value dest
 				code.m_param4 = context->GetVariable(strRealName, true, false);  // source callable slot
@@ -2215,8 +3560,8 @@ ibParamUnit ibCompileCode::GetCurrentIdentifier(ibCompileContext* context, int& 
 				m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 				// Inline OPER_SET for each parameter — same layout as
-				// OPER_CALL_M / OPER_CALL. Runtime walks these via
-				// lCodeLine++ inside its OPER_CALL_VAL handler.
+				// OPER_CALL_METHOD / OPER_CALL. Runtime walks these via
+				// lCodeLine++ inside its OPER_CALL_LAMBDA handler.
 				for (unsigned int i = 0; i < listParam.size(); i++) {
 					ibByteUnit code;
 					AddLineInfo(code);
@@ -2329,7 +3674,9 @@ loopLabel:
 
 	if (IsNextDelimeter('.')) { // this is a method call ��� �������� ����������� �������
 		GETDelimeter('.');
-		wxString strIdentifier = GETIdentifier(true);
+		// acceptKeyword=true: contextual LINQ keywords (Where/Select/...)
+		// must work as method names in property-access positions.
+		wxString strIdentifier = GETIdentifier(true, /*acceptKeyword*/true);
 		const int numConst = GetConstString(strIdentifier);
 		if (IsNextDelimeter('(')) { // this is a method call
 			std::vector <ibParamUnit> listParam;
@@ -2352,10 +3699,25 @@ loopLabel:
 
 			ibByteUnit code;
 			AddLineInfo(code);
-			code.m_numOper = OPER_CALL_M;
-			code.m_param2 = variable; // variable on which the method is called
-			code.m_param3.m_numIndex = numConst;//number of the called method from the list of encountered methods
-			code.m_param3.m_numArray = listParam.size();// number of parameters
+
+			// LINQ pipeline ops (Where / Select / OrderBy / ... ) detected
+			// by name at emit time → OPER_CALL_LINQ carries the ibLinqMethod
+			// enum value directly in m_param3.m_numIndex (no const-string
+			// indirection, no runtime FindMethod walk). Per-class methods
+			// (Add / Insert / Contains / ...) still go through OPER_CALL_METHOD.
+			const long linqEnum = ibValue::FindLinqMethodByName(strIdentifier);
+			if (linqEnum >= 0) {
+				code.m_numOper = OPER_CALL_LINQ;
+				code.m_param2 = variable;                          // receiver
+				code.m_param3.m_numIndex = linqEnum;               // ibLinqMethod enum id (NOT a const-pool index)
+				code.m_param3.m_numArray = listParam.size();       // caller arg count
+			}
+			else {
+				code.m_numOper = OPER_CALL_METHOD;
+				code.m_param2 = variable; // variable on which the method is called
+				code.m_param3.m_numIndex = numConst;//number of the called method from the list of encountered methods
+				code.m_param3.m_numArray = listParam.size();// number of parameters
+			}
 			variable = context->CreateVariable();
 			code.m_param1 = variable;// variable into which the value is returned
 			m_cByteCode.m_listCode.emplace_back(std::move(code));
@@ -2940,6 +4302,16 @@ ibParamUnit ibCompileCode::GetExpression(ibCompileContext* context, int nPriorit
 			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
 	}
+	else if (lex.m_lexType == KEYWORD && lex.m_numData == KEY_FROM) {
+		// LINQ block expression — `from <id> in <expr> ... select <expr>`.
+		// Step back so CompileLinqExpression's own GETKeyWord(KEY_FROM)
+		// can re-consume the keyword via its standard path; mirrors the
+		// CompileLambdaExpression idiom below. Returns the slot of the
+		// materialised result array (eager Phase 1: inline foreach +
+		// array build).
+		m_numCurrentCompile--;
+		variable = CompileLinqExpression(context);
+	}
 	else if (lex.m_lexType == KEYWORD &&
 		(lex.m_numData == KEY_FUNCTION || lex.m_numData == KEY_PROCEDURE)) {
 		// Anonymous Function/Procedure as expression — Phase A lambda.
@@ -2979,18 +4351,21 @@ ibParamUnit ibCompileCode::GetExpression(ibCompileContext* context, int nPriorit
 	}
 	else if ((lex.m_lexType == DELIMITER && lex.m_numData == '+') || (lex.m_lexType == DELIMITER && lex.m_numData == '-')) {
 
-		// check the admissibility of such assignment
-		const int numCurPriority = gs_operPriority[lex.m_numData];
-
-		if (nPriority >= numCurPriority) {
-			SetError(ERROR_EXPRESSION);// �ompare the priorities of the left (previous operation) and the currently running operation
-			return ibParamUnit();
-		}
+		// Unary sign at expression-start position — always allowed,
+		// regardless of caller's binary-priority context. Earlier this
+		// branch compared nPriority (caller's binary op priority, e.g.
+		// `*` priority when invoked from `a * -b`) against
+		// gs_operPriority[lex.m_numData] (which holds the BINARY
+		// priority of `-`/`+`) and errored out for `a * -b` because
+		// `*` binary priority > `-` binary priority. But syntactically
+		// the sign here is unary — we're at expression-start, no LHS
+		// to subtract from. RHS-recursion priority is 100 (super-high)
+		// to keep `- a + b` parsing as `(-a) + b`, not `-(a + b)`.
 
 		// this is a user-defined expression sign
 		if (lex.m_numData == '+') { // do nothing (ignore)
 			ibByteUnit code;
-			variable = GetExpression(context, nPriority);
+			variable = GetExpression(context, 100);   // super high priority!
 			if (!variable.m_strType.IsEmpty()) {
 				CheckTypeDef(variable, ibValue::GetNameObjectFromVT(ibValueTypes::TYPE_NUMBER));
 			}
@@ -3010,6 +4385,7 @@ ibParamUnit ibCompileCode::GetExpression(ibCompileContext* context, int nPriorit
 			code.m_param2 = variable;
 			variable = context->CreateVariable();
 			variable.m_strType = ibValue::GetNameObjectFromVT(ibValueTypes::TYPE_NUMBER, true);
+			AddTypeSet(variable);
 			code.m_param1 = variable;
 			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}

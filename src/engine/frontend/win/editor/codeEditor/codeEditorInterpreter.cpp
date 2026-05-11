@@ -1160,6 +1160,14 @@ bool ibPrecompileCode::CompileBlock(bool allowSingleStmt)
 			case KEY_CONTINUE: ExpectKeyword(KEY_CONTINUE); break;
 			case KEY_BREAK: ExpectKeyword(KEY_BREAK); break;
 
+			case KEY_FROM:
+				// Statement-level LINQ — rare but legal at compile time
+				// (`from o in arr select o;` discarded result, side-effecty
+				// only via lambda invocations). Walker registers bindings
+				// so caret-inside-query autocomplete works.
+				CompileLinqExpression();
+				break;
+
 			case KEY_FUNCTION:
 			case KEY_PROCEDURE:
 			{
@@ -1458,6 +1466,198 @@ bool ibPrecompileCode::CompileForeach()
 		m_activeContext->RemoveVariable(realName);
 
 	return true;
+}
+
+// Block-syntax LINQ precompile walker — see header. Minimal pass:
+//   - Each `from <id> in <expr>` / `join <id> in <expr> on K1 equals K2`
+//     registers <id> as a binding in m_activeContext (untyped).
+//   - `let <id> = <expr>` (KEY_VAR form) registers <id>.
+//   - `group ... into <id>` registers <id>.
+//   - All other clauses (where/skip/take/orderby/select/distinct/group
+//     terminal) are parsed enough to advance the cursor past them so
+//     the host CompileBlock loop resumes at the next statement.
+//
+// Bindings live in m_activeContext for the duration of the walk. After
+// the walker returns, only those active when the caret was inside the
+// query's lex range survive (mirror of CompileForeach's
+// nStartPos/m_caretPos discipline at line ~1465). Real LINQ scoping is
+// per-block with RETURN_BLOCK chain delegation; precompile flattens
+// everything onto the active context for IntelliSense convenience.
+ibParamValue ibPrecompileCode::CompileLinqExpression()
+{
+	const int nStartPos = (m_cursor + 1 < (int)m_listLexem.size())
+		? m_listLexem[m_cursor + 1].m_numString
+		: 0;
+
+	std::vector<wxString> introducedBindings;
+	auto registerBinding = [&](const wxString& realName) {
+		if (realName.IsEmpty()) return;
+		m_activeContext->AddVariable(realName, wxEmptyString, false, false, ibValue());
+		introducedBindings.push_back(realName);
+	};
+
+	// ---- Outer from-clauses. At least one is required (caller ensured
+	//      KEY_FROM is next), and subsequent `from` chains additional
+	//      bindings (multi-source LINQ).
+	while (IsNextKeyWord(KEY_FROM)) {
+		ExpectKeyword(KEY_FROM);
+		const wxString bindingName = ExpectIdentifier(true);
+		if (!IsNextKeyWord(KEY_IN)) break;
+		ExpectKeyword(KEY_IN);
+		GetExpression();   // source expression; element type unknown
+		registerBinding(bindingName);
+	}
+
+	// ---- Tail clauses. Loop until we hit a terminator (`;`, `,`, `)`)
+	//      or an unrecognised keyword.
+	bool sawSelectOrGroupTerminal = false;
+	while (m_cursor + 1 < (int)m_listLexem.size() && !sawSelectOrGroupTerminal) {
+		const ibLexem& lex = m_listLexem[m_cursor + 1];
+
+		if (lex.m_lexType == DELIMITER && (lex.m_numData == ';'
+			|| lex.m_numData == ',' || lex.m_numData == ')'
+			|| lex.m_numData == '}'))
+			break;
+
+		if (lex.m_lexType != KEYWORD) break;
+
+		switch (lex.m_numData) {
+
+			case KEY_WHERE:
+				ExpectKeyword(KEY_WHERE);
+				GetExpression();
+				break;
+
+			case KEY_VAR: {
+				// let-clause: `var <id> = <expr>` introduces a new
+				// binding (LET in C# LINQ; KEY_LET enum was retired,
+				// KEY_VAR reused per linq.md grammar).
+				ExpectKeyword(KEY_VAR);
+				const wxString letName = ExpectIdentifier(true);
+				if (IsNextDelimeter('=')) {
+					ExpectDelimeter('=');
+					GetExpression();
+				}
+				registerBinding(letName);
+				break;
+			}
+
+			case KEY_SKIP:
+				ExpectKeyword(KEY_SKIP);
+				GetExpression();
+				break;
+
+			case KEY_TAKE:
+				ExpectKeyword(KEY_TAKE);
+				GetExpression();
+				break;
+
+			case KEY_ORDERBY:
+				ExpectKeyword(KEY_ORDERBY);
+				GetExpression();
+				if (IsNextKeyWord(KEY_ASCENDING))  ExpectKeyword(KEY_ASCENDING);
+				if (IsNextKeyWord(KEY_DESCENDING)) ExpectKeyword(KEY_DESCENDING);
+				break;
+
+			case KEY_JOIN: {
+				// `join <id> in <T> on <K1> equals <K2> [into <g>]`
+				ExpectKeyword(KEY_JOIN);
+				const wxString joinName = ExpectIdentifier(true);
+				if (IsNextKeyWord(KEY_IN)) ExpectKeyword(KEY_IN);
+				GetExpression();   // T
+				if (IsNextKeyWord(KEY_ON)) ExpectKeyword(KEY_ON);
+				GetExpression();   // K1
+				if (IsNextKeyWord(KEY_EQUALS)) ExpectKeyword(KEY_EQUALS);
+				GetExpression();   // K2
+				registerBinding(joinName);
+				if (IsNextKeyWord(KEY_INTO)) {
+					ExpectKeyword(KEY_INTO);
+					const wxString groupName = ExpectIdentifier(true);
+					registerBinding(groupName);
+				}
+				break;
+			}
+
+			case KEY_GROUP: {
+				// `group <X> by <K> [into <g>]`. Terminal when no `into`.
+				ExpectKeyword(KEY_GROUP);
+				GetExpression();   // X
+				if (IsNextKeyWord(KEY_BY)) ExpectKeyword(KEY_BY);
+				GetExpression();   // K
+				if (IsNextKeyWord(KEY_INTO)) {
+					ExpectKeyword(KEY_INTO);
+					const wxString groupName = ExpectIdentifier(true);
+					registerBinding(groupName);
+					// continue parsing the tail — `into g` is non-terminal
+				} else {
+					sawSelectOrGroupTerminal = true;   // terminal group
+				}
+				break;
+			}
+
+			case KEY_SELECT: {
+				ExpectKeyword(KEY_SELECT);
+				if (IsNextDelimeter('{')) {
+					// Anonymous structure: `{ name = expr, name = expr }`
+					ExpectDelimeter('{');
+					while (m_cursor + 1 < (int)m_listLexem.size()
+						&& !IsNextDelimeter('}')) {
+						ExpectIdentifier(true);
+						if (IsNextDelimeter('=')) ExpectDelimeter('=');
+						GetExpression();
+						if (IsNextDelimeter(',')) ExpectDelimeter(',');
+						else break;
+					}
+					if (IsNextDelimeter('}')) ExpectDelimeter('}');
+				} else {
+					GetExpression();
+				}
+				sawSelectOrGroupTerminal = true;
+				break;
+			}
+
+			case KEY_DISTINCT:
+				// Modifier on select — consume but don't terminate (in case
+				// distinct appears as the very last keyword without an
+				// explicit select).
+				ExpectKeyword(KEY_DISTINCT);
+				break;
+
+			case KEY_FROM: {
+				// Additional from-clause inside the tail (rare — usually
+				// at the start, but grammar allows it after where/let).
+				ExpectKeyword(KEY_FROM);
+				const wxString bindingName = ExpectIdentifier(true);
+				if (IsNextKeyWord(KEY_IN)) {
+					ExpectKeyword(KEY_IN);
+					GetExpression();
+				}
+				registerBinding(bindingName);
+				break;
+			}
+
+			default:
+				// Unknown keyword — bail to host parser.
+				goto done;
+		}
+	}
+
+done:
+	// Bindings stay visible only if the caret landed inside the query's
+	// lex range; otherwise drop them to avoid leaking into surrounding
+	// statements (mirrors CompileForeach line ~1465).
+	const int nEndPos = (m_cursor < (int)m_listLexem.size())
+		? m_listLexem[m_cursor].m_numString
+		: 0;
+	const bool caretInsideBlock = (nStartPos < (int)m_caretPos && nEndPos > (int)m_caretPos);
+	if (!caretInsideBlock) {
+		for (const wxString& name : introducedBindings)
+			m_activeContext->RemoveVariable(name);
+	}
+
+	ibParamValue result;
+	result.m_paramType = wxT("Array");   // LINQ block evaluates to an Array
+	return result;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1763,6 +1963,16 @@ ibParamValue ibPrecompileCode::GetExpression(int priority)
 
 		variable.m_paramType = wxT("FUNCTION");
 		return variable;
+	}
+	else if (lex.m_lexType == KEYWORD && lex.m_numData == KEY_FROM) {
+		// Block-syntax LINQ expression entry. Walker consumes the whole
+		// query (from / where / let / skip / take / orderby / group /
+		// join / select / distinct) and registers bindings so the user's
+		// caret-inside-block sees them in autocomplete. Result type is
+		// "Array" — the LINQ block always evaluates to an Array result
+		// (or after .Add via __r at the runtime end).
+		m_cursor--;   // step back so the walker sees KEY_FROM
+		return CompileLinqExpression();
 	}
 	else if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NEW)) {
 

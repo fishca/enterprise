@@ -228,6 +228,13 @@ void ibTranslateCode::LoadKeyWords()
 	}
 }
 
+// `IsAllowedKey` is declared on ibTranslateCode but its body lives in
+// compileCode.cpp — the gate needs the active code-style (gs_codeStyle,
+// owned by ibCompileCode), and putting the body there keeps the include
+// chain one-way (compile → translate, never the reverse). `IsKeyWord`
+// below dispatches through it so lexer / highlighter / autocomplete /
+// parser all inherit the CES-vs-VES filter from one place.
+
 //////////////////////////////////////////////////////////////////////
 // Translating
 //////////////////////////////////////////////////////////////////////
@@ -946,8 +953,18 @@ int ibTranslateCode::IsKeyWord(const wxString& strKeyWord)
 	// query up by the same normalisation lets us use std::map::find's
 	// O(log N) instead of a full linear scan on every lexer token.
 	auto it = ms_listHashKeyWord.find(stringUtils::MakeUpper(strKeyWord));
-	if (it != ms_listHashKeyWord.end())
-		return static_cast<int>(reinterpret_cast<intptr_t>(it->second)) - 1;
+	if (it != ms_listHashKeyWord.end()) {
+		const int idx = static_cast<int>(reinterpret_cast<intptr_t>(it->second)) - 1;
+		// Code-style gate: hides VES-only block-fence keywords (Then /
+		// Do / End*) when CES is active. Body lives in compileCode.cpp
+		// so the gate reads gs_codeStyle without flipping the include
+		// chain. Hidden keywords look like plain identifiers to every
+		// consumer of IsKeyWord — lexer, syntax highlighter, the CES
+		// parser (which then rejects them as unknown identifiers).
+		if (!IsAllowedKey(idx))
+			return wxNOT_FOUND;
+		return idx;
+	}
 
 	return wxNOT_FOUND;
 }

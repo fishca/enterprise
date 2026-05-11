@@ -136,6 +136,13 @@ public:
 	// derived class.
 	virtual bool IsExpressionOnly() const { return false; }
 
+	// Compile-time block-scope nesting depth. ++ on `{` (RETURN_BLOCK
+	// CompileBlock entry), -- on matching `}`. Stamped into each var
+	// at PushVariable time as ibVariable::m_scopeDepth → mirrors into
+	// ibByteCodeVarInfo::m_scopeDepth → SendLocalVariables filter at
+	// runtime. Function / lambda body envelopes don't push.
+	int m_compileScopeDepth = 0;
+
 	// matching external variables
 	std::map<wxString, ibValue*> m_listExternValue;
 

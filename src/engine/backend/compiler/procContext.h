@@ -71,6 +71,13 @@ struct ibRunContext {
 		}
 
 		for (long i = 0; i < m_lVarCount; i++) m_pRefLocVars[i] = &m_pLocVars[i];
+
+		// Reset block-scope nesting depth — frame starts at depth 0
+		// (fn-frame / module-body). OPER_CTX_BEGIN bumps, OPER_CTX_END
+		// drops. SendLocalVariables filters by entry.m_scopeDepth <=
+		// m_currentScopeDepth so block-locals are hidden before / after
+		// their owning `{ }`.
+		m_currentScopeDepth = 0;
 	}
 
 	long GetLocalCount() const { return m_lVarCount; }
@@ -111,6 +118,13 @@ struct ibRunContext {
 
 	ibValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
 	ibValue** m_pRefLocVars = nullptr;
+
+	// Current block-scope nesting depth. Push (++) on OPER_CTX_BEGIN,
+	// pop (--) on OPER_CTX_END. SendLocalVariables filter:
+	//   entry.m_scopeDepth <= m_currentScopeDepth → visible.
+	// 0 at frame entry → only entries stamped 0 (fn-frame / module-body
+	// level) show until execution enters a `{ }` block.
+	int m_currentScopeDepth = 0;
 
 	std::map<wxString, std::shared_ptr<ibProcUnitEvaluate>> m_listEval;
 };

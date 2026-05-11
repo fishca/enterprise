@@ -346,6 +346,14 @@ public:
 	static std::map<wxString, void*> ms_listHashKeyWord;
 	static void LoadKeyWords();
 
+	// Per-keyword availability gate. Reads the active code-style and
+	// hides VES-only block-fence keywords (Then / Do / EndIf / EndDo /
+	// EndFunction / EndProcedure / EndTry) when CES is active — brace-
+	// style sources have no place for them. `IsKeyWord` consults this
+	// itself, so lexer / highlighter / autocomplete / parser inherit
+	// the filter without per-callsite plumbing.
+	static bool IsAllowedKey(int keywordId);
+
 protected:
 
 #ifdef UTF8_LEXEM_TRANSLATE

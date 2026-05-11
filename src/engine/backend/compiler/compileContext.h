@@ -77,6 +77,7 @@ struct ibCompileContext {
 			  // bc-info is never a temp.
 			  m_bTempVar(false),
 			  m_bScoped(info.m_bScoped),
+			  m_scopeDepth(info.m_scopeDepth),
 			  m_numVariable(info.m_slotIndex),
 			  m_clsid(info.m_clsid),
 			  m_strName(strVariableName),
@@ -99,6 +100,13 @@ struct ibCompileContext {
 		// to children through cross-bc resolution. Mirrored to
 		// ibByteCode::ibByteCodeVarInfo::m_bScoped at compile finalize.
 		bool m_bScoped;
+		// Nesting depth of the OPER_CTX_BEGIN stack at declaration site.
+		// 0 = fn-frame / module-body. Stamped at PushVariable time from
+		// m_compileModule->m_activeScopes.size(). Copied into bc-side
+		// ibByteCodeVarInfo::m_scopeDepth at compile finalize; runtime
+		// compares against ibRunContext::m_currentScopeDepth to gate
+		// debugger Locals visibility.
+		int m_scopeDepth = 0;
 		unsigned int m_numVariable;
 		// Target class id for External / Context entries — used by the
 		// runtime pre-flight to verify the bound ibValue matches the

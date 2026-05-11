@@ -503,12 +503,24 @@ void ibDebuggerServer::SendLocalVariables()
 		return;
 	}
 
+	// Scope-depth filter — block-locals carry compile-time
+	// m_scopeDepth > 0; runtime tracks m_currentScopeDepth via
+	// OPER_CTX_BEGIN (push, ++) / CTX_END (pop, --). Entry is visible
+	// iff its declared depth ≤ current depth. Fn-frame / module-body
+	// vars are stamped 0 → always visible.
+	auto isInScope = [&](const ibByteCode::ibByteCodeVarInfo& info) -> bool {
+		if (info.m_slotIndex < 0 || info.m_slotIndex >= frameVarCount)
+			return false;
+		return info.m_scopeDepth <= m_runContext->m_currentScopeDepth;
+	};
+
 	uint32_t emitCount = 0;
 	for (const auto& v : *table)
-		if (isLocalsViewable(v)) ++emitCount;
+		if (isLocalsViewable(v) && isInScope(v)) ++emitCount;
 	commandChannel.w_u32(emitCount);
 	for (const auto& v : *table) {
 		if (!isLocalsViewable(v)) continue;
+		if (!isInScope(v)) continue;
 		emitVar(v, v.m_strRealName);
 	}
 

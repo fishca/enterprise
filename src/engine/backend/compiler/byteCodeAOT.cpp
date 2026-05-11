@@ -58,7 +58,37 @@ constexpr uint32_t kAOTMagic         = 0x31434250u; // 'PBC1' little-endian
 // .m_param3.m_numIndex now stores the funcIndex; m_param3.m_numArray /
 // m_param4.m_numIndex (was paramCount / bCodeRet) are unused. v4 readers
 // would still load but dispatch from stale operands → bump rejects.
-constexpr uint16_t kAOTFormatVersion = 5;
+//
+// v6 (2026-05-10 evening pass 2): per-IP scope tracking for CES `{ }`
+// block scopes. Added s32 m_scopeId on ibByteCodeVarInfo + vector
+// <ScopeRange> on ibByteFunction / ibByteCode. Reverted in v7.
+//
+// v7 (2026-05-10 evening pass 3): block-scope tracking removed —
+// AddVariable RETURN_BLOCK now delegates to parent (mirroring
+// CreateVariable), so block-scope vars share the host frame at compile
+// time too. Per-IP filter became degenerate dead code. v6 readers
+// trying to load v7 would over-read and corrupt the next field; v7
+// readers trying to load v6 would under-read and leave the trailing
+// scope vector data as garbage in subsequent fields. Strict version
+// equality rejects both directions → safe recompile + repopulate.
+//
+// v8 (2026-05-10 evening pass 4): runtime block-scope cleanup —
+// OPER_CTX_BEGIN/END are now emitted ONLY for RETURN_BLOCK ctxs
+// (function/lambda body envelope no longer wraps them). OPER_CTX_END
+// carries [startSlot, endSlot] in m_param1.{m_numIndex, m_numArray};
+// runtime Resets those frame slots to TYPE_EMPTY so debugger Locals
+// (filtered by isInitialised) stops showing block-local vars after
+// control leaves the block.
+//
+// v9 (2026-05-11): scope-depth visibility. Each ibByteCodeVarInfo
+// gets s32 m_scopeDepth — the compile-time nesting depth at decl.
+// Runtime ibRunContext bumps m_currentScopeDepth on OPER_CTX_BEGIN,
+// drops on CTX_END; SendLocalVariables emits entries where
+// m_scopeDepth <= ctx.m_currentScopeDepth. Replaces v8's per-call
+// body-scan + vector<bool> approach with a single integer compare.
+// v8 readers loading v9 would mis-read the extra s32, mis-aligning
+// downstream fields. Bump rejects v8 → safe recompile + repopulate.
+constexpr uint16_t kAOTFormatVersion = 9;
 constexpr uint16_t kAOTFlagPortable  = 0x0001;       // unused — host-endian today
 
 // Sentinel for an over-large collection — guards Deserialize against
@@ -202,6 +232,7 @@ bool WriteVarInfo(ibWriterMemory& w, const ibByteCode::ibByteCodeVarInfo& v) {
 	w.w_s32((int32_t)v.m_parentRef);
 	w.w_stringZ(v.m_strRealName);
 	w.w_stringZ(v.m_strContext);
+	w.w_s32((int32_t)v.m_scopeDepth); // v9
 	return true;
 }
 
@@ -213,6 +244,7 @@ void ReadVarInfo(const ibReaderMemory& r, ibByteCode::ibByteCodeVarInfo& v) {
 	v.m_parentRef = (long)r.r_s32();
 	r.r_stringZ(v.m_strRealName);
 	r.r_stringZ(v.m_strContext);
+	v.m_scopeDepth = (int)r.r_s32(); // v9
 }
 
 bool WriteParam(ibWriterMemory& w, const ibByteCode::ibByteParam& p) {

@@ -26,7 +26,6 @@ static std::array<int, 256> gs_operPriority = { 0 };
 // via SetCodeStyle().
 static short gs_codeStyle = CODE_CES;
 
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction ibCompileCode
 //////////////////////////////////////////////////////////////////////
@@ -103,6 +102,31 @@ void ibCompileCode::SetCodeStyle(short codeStyle)
 {
 	gs_codeStyle = codeStyle;
 }
+
+// Definition of ibTranslateCode::IsAllowedKey — declared on the base
+// (translateCode.h), bodied here so the gate can read gs_codeStyle
+// without forcing translateCode.cpp to include compileCode.h. The
+// include chain stays one-way (compile → translate). In CES, block-
+// fence keywords (Then / Do / EndIf / EndDo / EndFunction /
+// EndProcedure / EndTry) are filtered out — they have no syntactic
+// place in brace-style sources. VES leaves every keyword in.
+bool ibTranslateCode::IsAllowedKey(int keywordId)
+{
+	if (gs_codeStyle == CODE_CES) {
+		switch (keywordId) {
+			case KEY_THEN:
+			case KEY_DO:
+			case KEY_ENDIF:
+			case KEY_ENDDO:
+			case KEY_ENDFUNCTION:
+			case KEY_ENDPROCEDURE:
+			case KEY_ENDTRY:
+				return false;
+		}
+	}
+	return true;
+}
+
 
 short ibCompileCode::GetCodeStyle()
 {
@@ -771,6 +795,8 @@ bool ibCompileCode::CompileDeclaration(ibCompileContext* context)
 	while (true) {
 		wxString strRealName = GETIdentifier(true);
 		wxString strName = stringUtils::MakeUpper(strRealName);
+
+
 		int numParent = 0;
 		ibCompileContext* pCurContext = context;
 		while (pCurContext) {
@@ -1507,6 +1533,7 @@ bool ibCompileCode::EmitFunctionBody(ibCompileContext* /*context*/,
 
 ibParamUnit ibCompileCode::CompileLambdaExpression(ibCompileContext* context)
 {
+
 	// Parse signature into a context that parents into m_rootContext
 	// (NOT the caller's `context`). Lambda scoping discipline: the
 	// body sees ONLY root configuration's bindings (Context bindings
@@ -1525,6 +1552,7 @@ ibParamUnit ibCompileCode::CompileLambdaExpression(ibCompileContext* context)
 
 	ibCompileContext* functionContext = functionContextOwner.get();
 	functionContext->m_parentContext = nullptr;
+
 
 	// Emit OPER_LFUNC + params + body + OPER_ENDLFUNC inline.
 	// EmitFunctionBody discriminates lambda vs named via
@@ -1566,6 +1594,10 @@ ibParamUnit ibCompileCode::CompileLambdaExpression(ibCompileContext* context)
 	lfuncCode.m_param1 = target;
 	lfuncCode.m_param2.m_numIndex = endlfuncIp;
 	lfuncCode.m_param3.m_numIndex = funcIndex;
+
+	// NOTE: ibParamUnit::m_numIndex is wxLongLong_t (8 bytes) — cast to int
+	// for %d, otherwise variadic packs 8 bytes and the next arg (caller_ctx)
+	// reads the upper half (zero) instead of the real pointer.
 
 	return target;
 }
@@ -1631,18 +1663,44 @@ if(!sKey.m_strType.IsEmpty())\
 
 bool ibCompileCode::CompileBlock(ibCompileContext* context)
 {
+
 	bool bCompileBlock = false;
 
-	if (gs_codeStyle == CODE_CES && (context->m_numReturn != RETURN_NONE && context->m_numReturn != RETURN_BLOCK) || IsNextDelimeter(wxT('{'))) {
+	// CES `{` consumption rules:
+	//   * module-level (RETURN_NONE): NEVER consume `{` here — a top-level
+	//     `{...}` is a free block, handled by the inner `{` branch which
+	//     recurses with a fresh RETURN_BLOCK child. If we ate `{` here the
+	//     module body would think the brace was its own envelope, then
+	//     loop forever on the matching `}` in the `}` branch (RETURN_NONE
+	//     doesn't break, and the m_numCurrentCompile-- step-back re-feeds
+	//     the same `}` next iteration → 224k-line scope.log circa 2026-05-10).
+	//   * function / lambda body (RETURN_PROCEDURE / FUNCTION / LAMBDA_*):
+	//     require `{` — caller (CompileFunction / CompileLambdaExpression)
+	//     consumed everything up to the body, so the brace is the next
+	//     lexem.
+	//   * block body (RETURN_BLOCK): caller did m_numCurrentCompile-- on
+	//     the `{` it saw, so the brace is back in the stream — must consume.
+	//   * control-structure body without braces (`if (x) stmt;`) is also
+	//     RETURN_BLOCK with no `{` — guarded by IsNextDelimeter check below.
+	if (gs_codeStyle == CODE_CES && context->m_numReturn != RETURN_NONE && IsNextDelimeter(wxT('{'))) {
 		GETDelimeter(wxT('{'));
 		bCompileBlock = true;
-		// Tape declarator: explicit `{` block scope. AOT loader uses
-		// CTX_BEGIN/CTX_END pairs to reconstruct nested scope ranges
-		// without re-running the compile pass. NOP at runtime.
-		ibByteUnit declCtx;
-		AddLineInfo(declCtx);
-		declCtx.m_numOper = OPER_CTX_BEGIN;
-		m_cByteCode.m_listCode.emplace_back(std::move(declCtx));
+
+		// CTX_BEGIN/END are emitted only for RETURN_BLOCK — actual
+		// nested block scopes. Function / lambda body envelopes use
+		// the OPER_FUNC frame. Runtime bumps ibRunContext::
+		// m_currentScopeDepth on CTX_BEGIN, drops on CTX_END;
+		// SendLocalVariables filters Locals rows by entry depth.
+		if (context->m_numReturn == RETURN_BLOCK) {
+			++m_compileScopeDepth;
+
+			ibByteUnit declCtx;
+			AddLineInfo(declCtx);
+			declCtx.m_numOper = OPER_CTX_BEGIN;
+			m_cByteCode.m_listCode.emplace_back(std::move(declCtx));
+
+		}
+
 	}
 
 	while (true) {
@@ -1866,17 +1924,30 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 			{
 				m_numCurrentCompile--;// step back
 
+
 				const int numTempVar = context->m_numTempVar;
 				CompileBlock(CreateLocalContext(context));
 				context->m_numTempVar = numTempVar;
+
 			}
 			else if (gs_codeStyle == CODE_CES && nextLexem.m_lexType == DELIMITER
 				&& nextLexem.m_numData == wxT('}'))
 			{
+				// `}` at the module-level body is a syntax error — there
+				// was no opening `{` to match. Without this branch we'd
+				// step-back and re-read the same `}` forever. Function /
+				// lambda / block bodies step back so the caller's
+				// GETDelimeter('}') consumes the brace, then break out of
+				// the body loop.
+				if (context->m_numReturn == RETURN_NONE) {
+					SetError(ERROR_CODE);
+					return false;
+				}
+
 				m_numCurrentCompile--;// step back
 
-				if (context->m_numReturn != RETURN_NONE)
-					break;
+
+				break;
 			}
 			else if (nextLexem.m_lexType == ENDPROGRAM) {
 				break;
@@ -1894,13 +1965,20 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 
 	if (gs_codeStyle == CODE_CES && bCompileBlock) {
 		GETDelimeter(wxT('}'));
-		// Tape declarator: explicit `}` close — pairs with CTX_BEGIN
-		// emitted at `{`. NOP at runtime.
-		ibByteUnit declCtxEnd;
-		AddLineInfo(declCtxEnd);
-		declCtxEnd.m_numOper = OPER_CTX_END;
-		m_cByteCode.m_listCode.emplace_back(std::move(declCtxEnd));
+
+		// Pair with CTX_BEGIN — emit only for RETURN_BLOCK.
+		if (context->m_numReturn == RETURN_BLOCK) {
+			if (m_compileScopeDepth > 0) --m_compileScopeDepth;
+
+			ibByteUnit declCtxEnd;
+			AddLineInfo(declCtxEnd);
+			declCtxEnd.m_numOper = OPER_CTX_END;
+			m_cByteCode.m_listCode.emplace_back(std::move(declCtxEnd));
+
+		}
+
 	}
+
 
 	return true;
 }//CompileBlock
@@ -2069,12 +2147,40 @@ ibParamUnit ibCompileCode::GetCurrentIdentifier(ibCompileContext* context, int& 
 			// and externals (m_bExternal) — those aren't user-callable
 			// in Phase A. ContextProp (m_strContext non-empty) goes
 			// through OPER_GET_A elsewhere.
+			// `context->FindVariable` is OWN-scope only (does not walk
+			// parents). For nested block scopes (RETURN_BLOCK) we MUST
+			// walk the parent compile-context chain manually — otherwise
+			// a lambda assigned in an outer block (e.g. `a = Function...`
+			// in block-A, then `a()` called from block-A's nested
+			// block-B-block-C) is not visible at the call site and the
+			// emitter falls through to GetCallFunction → "Procedure or
+			// function not detected (a)". Stop at the first match (own
+			// scope wins over parents — same nearest-binding rule as
+			// GetVariable's parent loop).
 			std::shared_ptr<ibCompileContext::ibVariable> foundedCallableVar = nullptr;
-			const bool isCallableVar = context->FindVariable(strRealName, foundedCallableVar)
+			bool foundCallable = false;
+			bool foundInBlockScope = false;
+			for (ibCompileContext* pCur = context; pCur != nullptr; pCur = pCur->m_parentContext) {
+				if (pCur->FindVariable(strRealName, foundedCallableVar)) {
+					foundCallable = true;
+					foundInBlockScope = (pCur->m_numReturn == RETURN_BLOCK);
+					break;
+				}
+			}
+			// Block-scope vars (var declared inside `{...}` in CES) get
+			// PushVariable'd with contextVar=true so the runtime emission
+			// path treats them as outer-frame slots — same routing as
+			// real Context bindings (Manager / ThisForm). For dispatch
+			// purposes we must still recognize them as user-callable
+			// values: distinguish by the ctx they were found in
+			// (RETURN_BLOCK ⇒ block-scope artifact, NOT a real context
+			// binding). Real Context bindings live on m_rootContext
+			// (numReturn == RETURN_NONE).
+			const bool isCallableVar = foundCallable
 				&& foundedCallableVar
 				&& foundedCallableVar->m_strContext.IsEmpty()
-				&& !foundedCallableVar->m_bContext
-				&& !foundedCallableVar->m_bExternal;
+				&& !foundedCallableVar->m_bExternal
+				&& (!foundedCallableVar->m_bContext || foundInBlockScope);
 
 			if (isCallableVar) {
 				std::vector<ibParamUnit> listParam;
@@ -2697,6 +2803,7 @@ ibParamUnit ibCompileCode::GetCallFunction(ibCompileContext* context, const wxSt
 	std::shared_ptr<ibCompileContext::ibFunction> foundedFunc = nullptr;
 	(void)GetFunction(callFunc->m_strName, foundedFunc);
 
+
 	if (foundedFunc != nullptr && m_strCurFuncName != callFunc->m_strName) {
 
 		if (!PushCallFunction(callFunc))
@@ -2709,6 +2816,7 @@ ibParamUnit ibCompileCode::GetCallFunction(ibCompileContext* context, const wxSt
 		SetError(ERROR_CALL_FUNCTION, strRealName);
 		return ibParamUnit();
 	}
+
 
 	code.m_numOper = OPER_GOTO;// jump to the end of the bytecode where the expanded call will be made
 	m_cByteCode.m_listCode.emplace_back(std::move(code));

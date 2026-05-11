@@ -1258,8 +1258,22 @@ start_label:
 			// path; AOT phase makes them derived from these declarators.
 			case OPER_FUNC_PARAM:
 			case OPER_FUNC_LOCAL:
+				break;
 			case OPER_CTX_BEGIN:
+				// Block enter — bump runtime scope depth. SendLocalVariables
+				// filter (entry.m_scopeDepth <= m_currentScopeDepth) then
+				// includes vars stamped at this depth or shallower.
+				++pContext->m_currentScopeDepth;
+				break;
 			case OPER_CTX_END:
+				// Block exit — drop depth. No slot Reset: block-locals
+				// are stamped m_scopeDepth > new current, so they're
+				// invisible to Locals via the filter; user code can't
+				// reach them through compile-time scope rules either.
+				// Loop re-entry's first OPER_LET overwrites the slot
+				// anyway.
+				if (pContext->m_currentScopeDepth > 0)
+					--pContext->m_currentScopeDepth;
 				break;
 			case OPER_SET_TYPE:
 				variable1.SetType(ibValue::GetVTByID(array2));
@@ -1762,6 +1776,7 @@ public:
 		m_cByteCode.m_bExpressionOnly = true;
 		m_cByteCode.m_parent = pRunContext ? pRunContext->GetByteCode() : nullptr;
 		m_rootContext->m_numFindLocalInParent = 2;
+
 	}
 
 	// Construct from a (host bc, host fn) pair — for paths where
@@ -1773,6 +1788,7 @@ public:
 		m_cByteCode.m_bExpressionOnly = true;
 		m_cByteCode.m_parent = hostBc;
 		m_rootContext->m_numFindLocalInParent = 2;
+
 	}
 
 	bool IsExpressionOnly() const override { return true; }
@@ -1793,6 +1809,7 @@ bool ibProcUnit::Evaluate(const wxString& strExpression, ibRunContext* pRunConte
 
 	if (strExpression.IsEmpty() || pRunContext == nullptr)
 		return false;
+
 
 	ibBackendException::ibEvalModeScope evalScope;
 

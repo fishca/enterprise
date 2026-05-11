@@ -166,6 +166,16 @@ struct ibByteCode {
 		// the variable list matches the user's source.
 		wxString  m_strRealName;
 
+		// Compile-time scope nesting depth at the var's declaration
+		// site. 0 = fn-frame / module-body level (always visible).
+		// 1+ = nested inside that many open `{ }` blocks. Runtime
+		// tracks current depth via OPER_CTX_BEGIN (++) / CTX_END (--);
+		// SendLocalVariables filters entries by m_scopeDepth <=
+		// ctx.m_currentScopeDepth so a debugger paused outside the
+		// block (current depth less than entry's stamp) doesn't see
+		// rows for vars declared inside it.
+		int       m_scopeDepth = 0;
+
 		// Parent-context name for context-prop entries (e.g. "Catalogs"
 		// is a prop of "MANAGER"). Empty for regular vars. When set,
 		// this entry is NOT a flat extern slot — `m_slotIndex` is a
@@ -193,7 +203,8 @@ struct ibByteCode {
 			          : (v.m_strType.IsEmpty() ? 0 : ibValue::GetIDObjectFromString(v.m_strType))),
 			  m_bScoped(v.m_bScoped),
 			  m_strRealName(v.m_strRealName),
-			  m_strContext(v.m_strContext)
+			  m_strContext(v.m_strContext),
+			  m_scopeDepth(v.m_scopeDepth)
 		{
 			// Derive m_kind from the compile-side flags:
 			//   m_strContext non-empty  → ContextProp  (prop of binding)

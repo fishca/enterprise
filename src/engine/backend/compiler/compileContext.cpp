@@ -11,8 +11,9 @@
 
 ibParamUnit ibCompileContext::CreateVariable(const wxString& strPrefix)
 {
-	if (m_numReturn == RETURN_BLOCK)
+	if (m_numReturn == RETURN_BLOCK) {
 		return m_parentContext->CreateVariable(strPrefix);
+	}
 
 	const wxString& strTempName =
 		wxString::Format(strPrefix + wxT("%d"), ++m_numTempVar); //@temp_ - to ensure the uniqueness of the name
@@ -20,6 +21,7 @@ ibParamUnit ibCompileContext::CreateVariable(const wxString& strPrefix)
 	ibParamUnit variable =
 		GetVariable(strTempName, false, false, false, true); //we look for a temporary variable only in the local context
 	variable.m_numArray = DEF_VAR_TEMP; //flag of a temporary local variable
+
 	return variable;
 }
 
@@ -31,6 +33,7 @@ ibParamUnit ibCompileContext::CreateVariable(const wxString& strPrefix)
 ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
 	const wxString& typeVar, bool exportVar, bool contextVar, bool tempVar)
 {
+
 	// Dup-check is OWN-scope only — direct find_if on m_listVariable.
 	// Going through FindVariable would also hit bytecode-fallback
 	// (parent module entries), which is wrong: declaring `Var X` here
@@ -43,13 +46,19 @@ ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
 	}
 
 	if (m_numReturn == RETURN_BLOCK) {
-
-		ibParamUnit variable = CreateVariable(wxT("@context"));
-
-		PushVariable(strVarName, wxT(""), variable.m_numIndex,
-			typeVar, exportVar, true, tempVar);
-
-		return variable;
+		// Symmetric to CreateVariable's RETURN_BLOCK branch: delegate to
+		// the enclosing fn/module ctx. Block-scope and parent share the
+		// runtime frame at execute time anyway (CTX_BEGIN/END are NOPs
+		// — slots stay in host frame), so semantically there's nothing
+		// to keep separate at compile time either. Both explicit
+		// `var x` and implicit `x = expr` end up as plain function /
+		// module locals, visible to debugger Locals + eval at any IP.
+		// Loses C-style block-scope shadowing — same simplification as
+		// VES (no block scope at all). The previous side-channel
+		// (m_blockScopeLocals + per-IP m_scopeId / m_blockScopes filter)
+		// becomes degenerate / dead but stays in tree for AOT v6
+		// stability; subsequent cleanup pass can strip it.
+		return m_parentContext->AddVariable(strVarName, typeVar, exportVar, contextVar, tempVar);
 	}
 
 	unsigned int numVariable = m_listVariable.size();
@@ -62,6 +71,7 @@ ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
 	variable.m_numArray = 0;
 	variable.m_strType = typeVar;
 	variable.m_numIndex = numVariable;
+
 
 	return variable;
 }
@@ -233,7 +243,10 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 			return ibParamUnit();
 		}
 
-		// there was no variable declaration yet - add
+		// there was no variable declaration yet - add. AddVariable
+		// itself delegates RETURN_BLOCK -> parent (mirroring CreateVariable),
+		// so implicit `name = expr` inside `{ }` lands in the enclosing
+		// fn/module ctx automatically — no walk-target gymnastics here.
 		return AddVariable(strVarName, wxEmptyString, contextVar, contextVar, tempVar);
 	}
 
@@ -277,6 +290,13 @@ void ibCompileContext::PushVariable(const wxString& strVarName, const wxString& 
 	currentVariable->m_bTempVar = tempVar;
 	currentVariable->m_strType = typeVar;
 	currentVariable->m_numVariable = numVariable;
+	// Stamp the scope-nesting depth at the call site. Runtime
+	// debugger Locals filter compares this against an ibRunContext-side
+	// counter pushed by OPER_CTX_BEGIN / popped by OPER_CTX_END.
+	// 0 = fn-frame / module-body (no enclosing `{ }` open at decl time).
+	currentVariable->m_scopeDepth = m_compileModule
+		? m_compileModule->m_compileScopeDepth
+		: 0;
 
 	m_listVariable.insert_or_assign(
 		currentVariable->m_strName, std::move(currentVariable)
@@ -353,6 +373,10 @@ bool ibCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<
 	else if (it != m_listVariable.end()) {
 		foundedVar = it->second;
 		return true;
+	}
+
+	if (m_parentContext != nullptr) {
+	} else {
 	}
 
 	foundedVar = nullptr;

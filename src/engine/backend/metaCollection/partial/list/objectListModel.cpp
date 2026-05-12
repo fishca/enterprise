@@ -84,53 +84,6 @@ bool ibValueModelTreeDataObjectFolderRef::GetAttrByRow(const ibDataViewItem& ite
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool ibValueModelTreeDataObjectFolderRef::SetParentTopItem(const ibDataViewItem& item)
-{
-	if (!item.IsOk())
-	{
-		m_topParentGuid.reset();
-		return true;
-	}
-
-	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(item);
-	if (node == nullptr)
-		return false;
-
-	m_topParentGuid = node->GetGuid();
-	return true;
-}
-
-ibDataViewItem ibValueModelTreeDataObjectFolderRef::GetParentTopItem() const
-{
-	std::function<void(ibValueTreeListNode*, ibValueTreeListNode*&, const ibGuid&)> findGuid =
-		[&findGuid](ibValueTreeListNode* parent, ibValueTreeListNode*& foundedNode, const ibGuid& guid)
-		{
-			if (guid == parent->GetGuid()) { foundedNode = parent; return; }
-			else if (foundedNode != nullptr) { return; }
-
-			for (unsigned int n = 0; n < parent->GetChildCount(); n++) {
-				ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(parent->GetChild(n));
-				if (child != nullptr)
-					findGuid(child, foundedNode, guid);
-				if (foundedNode != nullptr) break;
-			}
-		};
-
-	ibValueTreeListNode* foundedNode = nullptr;
-	for (unsigned int c = 0; c < GetRoot()->GetChildCount(); c++) {
-		ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(GetRoot()->GetChild(c));
-		if (child != nullptr) findGuid(child, foundedNode, m_topParentGuid);
-		if (foundedNode != nullptr) break;
-	}
-
-	if (foundedNode != nullptr)
-		return ibDataViewItem(foundedNode);
-
-	return ibDataViewItem(nullptr);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void ibValueListRegisterObject::GetValueByRow(wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col) const
 {

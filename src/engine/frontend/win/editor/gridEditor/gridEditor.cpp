@@ -271,42 +271,47 @@ void ibGridEditor::OnMouseRightDown(ibGridEvent& event)
 
 		wxMenuItem* item = nullptr; wxMenu menuPopup;
 		item = menuPopup.Append(wxID_COPY, _("Copy"));
-		item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY, wxART_MENU));
+		item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_COPY, wxART_MENU));
 		item = menuPopup.Append(wxID_PASTE, _("Paste"));
-		item->SetBitmap(wxArtProvider::GetBitmap(wxART_PASTE, wxART_MENU));
+		item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PASTE, wxART_MENU));
 
 		if (!ibGrid::CanEnableCellControl())
 			menuPopup.Enable(wxID_PASTE, false);
 
 		item = menuPopup.Append(wxID_DELETE, _("Delete"));
-		item->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
+		item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DELETE, wxART_MENU));
 
 		if (event.GetRow() == wxNOT_FOUND &&
 			event.GetCol() != wxNOT_FOUND) {
 			menuPopup.AppendSeparator();
 			item = menuPopup.Append(wxID_HIDE_CELL, _("Hide"));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_MINUS, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_MINUS, wxART_MENU));
 			item = menuPopup.Append(wxID_SHOW_CELL, _("Display"));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PLUS, wxART_MENU));
 			item = menuPopup.Append(wxID_COL_WIDTH, _("Column width..."));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_FULL_SCREEN, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_FULL_SCREEN, wxART_MENU));
 		}
 		else if (event.GetRow() != wxNOT_FOUND &&
 			event.GetCol() == wxNOT_FOUND) {
 			menuPopup.AppendSeparator();
 			item = menuPopup.Append(wxID_HIDE_CELL, _("Hide"));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_MINUS, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_MINUS, wxART_MENU));
 			item = menuPopup.Append(wxID_SHOW_CELL, _("Display"));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PLUS, wxART_MENU));
 			item = menuPopup.Append(wxID_ROW_HEIGHT, _("Row height..."));
-			item->SetBitmap(wxArtProvider::GetBitmap(wxART_FULL_SCREEN, wxART_MENU));
+			item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_FULL_SCREEN, wxART_MENU));
 		}
 
 		menuPopup.AppendSeparator();
 		item = menuPopup.Append(wxID_PROPERTIES, _("Properties"));
-		item->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
+		item->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PROPERTY, wxART_SERVICE));
 
-		if (ibGrid::PopupMenu(&menuPopup, event.GetPosition())) {
+		// event.GetPosition() is in the coords of whichever sub-window (label,
+		// area, gridWin) fired the right-click, but PopupMenu expects coords
+		// relative to ibGrid itself — the two differ by the label/area offsets,
+		// which is why the menu could pop up in the wrong place. Passing no
+		// position makes wx pop it at the real mouse cursor.
+		if (ibGrid::PopupMenu(&menuPopup)) {
 			event.Skip();
 		}
 	}
@@ -733,19 +738,13 @@ void ibGridEditor::OnScroll(wxScrollWinEvent& event)
 
 	if (event.GetEventType() == wxEVT_SCROLLWIN_THUMBTRACK ||
 		event.GetEventType() == wxEVT_SCROLLWIN_THUMBRELEASE) {
+		// Scale the thumb delta to pixels so forward/backward drag both
+		// trigger the append/delete path and the thumb stays glued to the
+		// content as it grows.
 		const int position = ibGrid::GetScrollPos(event.GetOrientation());
-		if (event.GetOrientation() == wxOrientation::wxVERTICAL) {
-			if (position < event.GetPosition())
-				scroll = 0;
-			else if (position > event.GetPosition())
-				scroll = -(position - event.GetPosition());
-		}
-		else if (event.GetOrientation() == wxOrientation::wxHORIZONTAL) {
-			if (position < event.GetPosition())
-				scroll = 0;
-			else if (position > event.GetPosition())
-				scroll = -(position - event.GetPosition());
-		}
+		const int delta = event.GetPosition() - position;
+		const int unit = (event.GetOrientation() == wxOrientation::wxVERTICAL) ? uy : ux;
+		scroll = delta * unit;
 	}
 	else if (event.GetEventType() == wxEVT_SCROLLWIN_TOP ||
 		event.GetEventType() == wxEVT_SCROLLWIN_LINEUP)
@@ -796,13 +795,28 @@ void ibGridEditor::OnScroll(wxScrollWinEvent& event)
 
 	if (scroll > 0 && event.GetOrientation() == wxOrientation::wxVERTICAL) {
 		if (y1 >= ibGrid::GetNumberRows() - ibGrid::GetNumberFrozenRows() - 1) {
-			ibGrid::AppendRows();
+			// append enough rows to fit the requested scroll target — single
+			// AppendRows() per scroll produced visible "jerks" when the user
+			// page-scrolled or dragged the thumb.
+			const int targetBottom = sy + scroll + h;
+			int rowsToAdd = 1;
+			const int rowStep = wxMax(1, ibCalcGridScale(m_defaultRowHeight, GetGridZoom()));
+			const int curBottom = ibGrid::GetRowBottom(ibGrid::GetNumberRows() - 1, GetGridZoom());
+			if (targetBottom > curBottom)
+				rowsToAdd = wxMax(1, (targetBottom - curBottom + rowStep - 1) / rowStep);
+			ibGrid::AppendRows(rowsToAdd);
 			ibGrid::SetScrollPos(wxOrientation::wxVERTICAL, (sy + scroll) / uy);
 		}
 	}
 	else if (scroll > 0 && event.GetOrientation() == wxOrientation::wxHORIZONTAL) {
 		if (x1 >= ibGrid::GetNumberCols() - ibGrid::GetNumberFrozenCols() - 1) {
-			ibGrid::AppendCols();
+			const int targetRight = sx + scroll + w;
+			int colsToAdd = 1;
+			const int colStep = wxMax(1, ibCalcGridScale(m_defaultColWidth, GetGridZoom()));
+			const int curRight = ibGrid::GetColRight(ibGrid::GetNumberCols() - 1, GetGridZoom());
+			if (targetRight > curRight)
+				colsToAdd = wxMax(1, (targetRight - curRight + colStep - 1) / colStep);
+			ibGrid::AppendCols(colsToAdd);
 			ibGrid::SetScrollPos(wxOrientation::wxHORIZONTAL, (sx + scroll) / ux);
 		}
 	}
@@ -841,8 +855,20 @@ void ibGridEditor::OnSize(wxSizeEvent& event)
 
 	sx *= ux; sy *= uy;
 
-	const int w = event.m_size.x;
-	const int h = event.m_size.y;
+	// event.m_size is the whole ibGrid, feeding that straight into XToCol/YToRow
+	// lands past the last column/row and triggers spurious AppendCols/Rows
+	// ("infinite" scroll). Subtract the chrome width/height from the event size
+	// so we get the real gridWin-visible area — works even on the very first
+	// OnSize before CalcWindowSizes has run (can't rely on m_gridWin's client
+	// size then: it's still zero).
+	const int chromeX = ibCalcGridScale(m_rowLabelWidth, GetGridZoom())
+		+ (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0)
+		+ GetRowOutlineSize();
+	const int chromeY = ibCalcGridScale(m_colLabelHeight, GetGridZoom())
+		+ (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0)
+		+ GetColOutlineSize();
+	const int w = wxMax(0, event.m_size.x - chromeX);
+	const int h = wxMax(0, event.m_size.y - chromeY);
 
 	int x0 = ibGrid::XToCol(sx);
 	int y0 = ibGrid::YToRow(sy);
@@ -1100,4 +1126,77 @@ void ibGridEditor::OnProperties(wxCommandEvent& event)
 {
 	m_propertySpreadsheet->ShowInspector();
 }
-#pragma endregion  
+
+// ---------- outline grouping (called from ibSpreadsheetEditView menu) ----
+
+namespace {
+int NextRowLevelIn(const std::vector<ibGridCellGroup>& groups, int first, int last)
+{
+	int mx = 0;
+	for (const auto& g : groups)
+		if (g.m_start >= first && g.m_end <= last) mx = wxMax(mx, g.m_level);
+	return mx + 1;
+}
+} // namespace
+
+void ibGridEditor::GroupSelectedRows()
+{
+	for (const auto& cell : ibGrid::GetSelectedBlocks()) {
+		const int first = cell.GetTopRow();
+		const int last  = cell.GetBottomRow();
+		if (first < 0 || last < first) continue;
+		AddRowGroup(first, last, NextRowLevelIn(m_rowGroupAt, first, last), false);
+	}
+	CalcDimensions();
+	if (m_rowOutlineWin) m_rowOutlineWin->Refresh();
+}
+
+void ibGridEditor::UngroupSelectedRows()
+{
+	for (const auto& cell : ibGrid::GetSelectedBlocks()) {
+		const int first = cell.GetTopRow();
+		const int last  = cell.GetBottomRow();
+		int best = -1, bestLvl = 0;
+		for (size_t i = 0; i < m_rowGroupAt.size(); ++i) {
+			const auto& g = m_rowGroupAt[i];
+			if (g.m_start >= first && g.m_end <= last && g.m_level > bestLvl) {
+				best = (int)i; bestLvl = g.m_level;
+			}
+		}
+		if (best >= 0) DeleteRowGroup(best);
+	}
+	CalcDimensions();
+	if (m_rowOutlineWin) m_rowOutlineWin->Refresh();
+}
+
+void ibGridEditor::GroupSelectedCols()
+{
+	for (const auto& cell : ibGrid::GetSelectedBlocks()) {
+		const int first = cell.GetLeftCol();
+		const int last  = cell.GetRightCol();
+		if (first < 0 || last < first) continue;
+		AddColGroup(first, last, NextRowLevelIn(m_colGroupAt, first, last), false);
+	}
+	CalcDimensions();
+	if (m_colOutlineWin) m_colOutlineWin->Refresh();
+}
+
+void ibGridEditor::UngroupSelectedCols()
+{
+	for (const auto& cell : ibGrid::GetSelectedBlocks()) {
+		const int first = cell.GetLeftCol();
+		const int last  = cell.GetRightCol();
+		int best = -1, bestLvl = 0;
+		for (size_t i = 0; i < m_colGroupAt.size(); ++i) {
+			const auto& g = m_colGroupAt[i];
+			if (g.m_start >= first && g.m_end <= last && g.m_level > bestLvl) {
+				best = (int)i; bestLvl = g.m_level;
+			}
+		}
+		if (best >= 0) DeleteColGroup(best);
+	}
+	CalcDimensions();
+	if (m_colOutlineWin) m_colOutlineWin->Refresh();
+}
+
+#pragma endregion

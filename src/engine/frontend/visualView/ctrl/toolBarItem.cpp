@@ -1,5 +1,9 @@
 #include "toolbar.h"
 #include "backend/appData.h"
+#ifdef OES_USE_WEB
+#include "frontend/web/webWindow.h"
+#include "backend/backend_picture.h"
+#endif
 
 //***********************************************************************************
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
@@ -16,8 +20,42 @@ ibValueToolBarItem::ibValueToolBarItem() : ibValueControl()
 {
 }
 
-void ibValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+wxObject* ibValueToolBarItem::Create(ibFrontendWindow* /*wxparent*/, ibVisualHost* /*visualHost*/)
 {
+#ifdef OES_USE_WEB
+	// Web: real render shim. Caption priority:
+	//   1. GetItemCaption(owner's action collection) — resolves a
+	//      system action's caption when per-tool m_propertyTitle is
+	//      empty (Auto representation). ibValueToolbar::Create
+	//      populates m_actionArray up front so this works.
+	//   2. m_propertyTitle — Designer-set per-tool title.
+	//   3. GetControlName() — internal fallback so truly-unlabelled
+	//      tools at least carry their name ("MainToolbarClose" etc.).
+	wxString caption;
+	if (ibValueToolbar* owner = GetOwner())
+		caption = GetItemCaption(owner->GetActionArray());
+	if (caption.IsEmpty())
+		caption = m_propertyTitle->GetValueAsTranslateString();
+	if (caption.IsEmpty())
+		caption = GetControlName();
+
+	ibWebToolBarItem* item = new ibWebToolBarItem(caption, GetControlID());
+	item->Enable(m_propertyEnabled->GetValueAsBoolean());
+	return item;
+#else
+	// Desktop: wxAuiToolBar::AddTool fires in OnCreated below with
+	// the parent toolbar. Create just returns a placeholder that
+	// OnCreated's SetUserData picks up as a unique lookup key.
+	return new ibNoObject;
+#endif
+}
+
+void ibValueToolBarItem::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+{
+#ifdef OES_USE_WEB
+	(void)wxobject; (void)wxparent; (void)visualHost; (void)firstСreated;
+	// Web: Create already built the shim; nothing live to poke.
+#else
 	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(wxparent);
 	wxASSERT(toolbar);
 	wxAuiToolBarItem* toolItem = toolbar->AddTool(GetControlID(),
@@ -45,13 +83,74 @@ void ibValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVis
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
+#endif
 }
 
-void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void ibValueToolBarItem::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
+#ifdef OES_USE_WEB
+	(void)visualHost;
+	// Mirror desktop OnUpdated's Auto/Picture/PictureAndText/Text
+	// switch — representation drives whether the browser shows
+	// icon, text, or both. Caption + picture come from the tool's
+	// own property OR the action collection (via GetItemCaption /
+	// GetItemPicture helpers).
+	ibWebToolBarItem* item = static_cast<ibWebToolBarItem*>(wxobject);
+
+	ibValueToolbar* owner = GetOwner();
+	const ibActionCollection& coll = owner ? owner->GetActionArray()
+	                                       : ibActionCollection();
+
+	// Effective representation — Auto resolves through collection.
+	ibRepresentation rep = m_propertyRepresentation->GetValueAsEnum();
+	if (rep == ibRepresentation::ibRepresentation_Auto)
+		rep = GetItemRepresentation(coll);
+
+	// Always resolve the caption (independent of representation) so the
+	// browser has it available. The client decides show/hide based on
+	// representation; emitting the caption unconditionally also helps
+	// accessibility (aria-label, tooltip fallback).
+	wxString caption = GetItemCaption(coll);
+	if (caption.IsEmpty())
+		caption = m_propertyTitle->GetValueAsTranslateString();
+	if (caption.IsEmpty())
+		caption = GetControlName();
+
+	// hasPicture: any non-Text mode that ends up with a real bitmap
+	// from the tool's own property or the action's picture.
+	const wxBitmap bmp = (rep == ibRepresentation::ibRepresentation_Text)
+		? wxNullBitmap
+		: GetItemPicture(coll);
+	const bool hasPic = bmp.IsOk();
+
+	// data:image/png;base64,... so the browser can <img src> it directly.
+	// ibBackendPicture::CreateBase64Image handles the PNG encode.
+	wxString pictureUri;
+	if (hasPic) {
+		const wxString b64 = ibBackendPicture::CreateBase64Image(bmp.ConvertToImage());
+		if (!b64.IsEmpty())
+			pictureUri = wxT("data:image/png;base64,") + b64;
+	}
+
+	item->SetLabel(caption);
+	item->SetRepresentation(static_cast<int>(rep));
+	item->SetHasPicture(hasPic);
+	item->SetPictureDataUri(pictureUri);
+	item->Enable(m_propertyEnabled->GetValueAsBoolean());
+#else
+	(void)wxobject;
+	(void)visualHost;
+#endif
+}
+
+void ibValueToolBarItem::OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost)
+{
+#ifdef OES_USE_WEB
+	(void)wxobject; (void)wxparent; (void)visualHost;
+#else
 	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(wxparent);
 	wxASSERT(toolbar);
 
@@ -157,24 +256,29 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 
 	toolbar->InvalidateBestSize();
+#endif
 }
 
 void ibValueToolBarItem::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
+#ifdef OES_USE_WEB
+	(void)obj; (void)visualHost;
+#else
 	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 
 	toolbar->DestroyTool(GetControlID());
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
+#endif
 }
 
 bool ibValueToolBarItem::CanDeleteControl() const
@@ -198,8 +302,20 @@ ibValueToolBarSeparator::ibValueToolBarSeparator() : ibValueControl()
 {
 }
 
-void ibValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+wxObject* ibValueToolBarSeparator::Create(ibFrontendWindow* /*wxparent*/, ibVisualHost* /*visualHost*/)
 {
+#ifdef OES_USE_WEB
+	return new ibWebToolBarSeparator(GetControlID());
+#else
+	return new ibNoObject;
+#endif
+}
+
+void ibValueToolBarSeparator::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+{
+#ifdef OES_USE_WEB
+	(void)wxobject; (void)wxparent; (void)visualHost; (void)firstСreated;
+#else
 	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	wxASSERT(toolbar);
 	wxAuiToolBarItem* toolItem = toolbar->AddSeparator();
@@ -207,13 +323,17 @@ void ibValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, 
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
+#endif
 }
 
-void ibValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void ibValueToolBarSeparator::OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
+#ifdef OES_USE_WEB
+	(void)wxobject; (void)wxparent; (void)visualHost;
+#else
 	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	wxASSERT(toolbar);
 
@@ -231,15 +351,20 @@ void ibValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, 
 
 	toolbar->Realize();
 	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
-		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
+		toolbar->SetToolBarMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
+#endif
 }
 
 void ibValueToolBarSeparator::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
+#ifdef OES_USE_WEB
+	(void)obj; (void)visualHost;
+#else
 	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	if (toolbar) toolbar->DestroyTool(GetControlID());
+#endif
 }
 
 bool ibValueToolBarSeparator::CanDeleteControl() const

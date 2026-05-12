@@ -119,20 +119,43 @@ void ibFrontendDocMDIFrame::ActivateView(ibMetaView* view, bool activate) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "frontend/win/dlgs/authorization.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
+#include "backend/moduleManager/moduleManager.h"
+#include "backend/metadataConfiguration.h"
 
-bool ibFrontendDocMDIFrame::AuthenticationUser(const wxString& userName, const wxString& userPassword) const
+bool ibFrontendDocMDIFrame::Initialize(ibSession* session)
 {
-	if (appData == nullptr)
+	// Bind-only. Runtime start deferred to Show() → EnsureRuntime() so
+	// activeMetaData is guaranteed populated (LoadMetadata runs between
+	// Initialize and Show in the app flow).
+	m_session = session;
+	return m_session != nullptr;
+}
+
+bool ibFrontendDocMDIFrame::EnsureRuntime()
+{
+	if (m_session == nullptr || activeMetaData == nullptr)
 		return false;
 
-	ibDialogAuthentication dlg;
+	// Re-entry guard — root module manager lives on the session; if it's
+	// already installed the runtime was started on a previous Show().
+	if (m_session->GetManagerModule() != nullptr)
+		return true;
 
-	dlg.SetLogin(userName);
-	dlg.SetPassword(userPassword);
+	const ibSessionKind kind = m_session->GetKind();
+	const bool wantsRuntime =
+		(kind == ibSessionKind::Enterprise) ||
+		(kind == ibSessionKind::WebClient)  ||
+		(kind == ibSessionKind::Service);
+	if (!wantsRuntime)
+		return true;
 
-	return dlg.ShowModal() != wxID_CANCEL;
+	// CreateRoot + CompileRoot already happened in OnRun after LoadMetadata
+	// — frame->Initialize is the runtime-start phase, only InitRuntime here.
+	if (auto* mm = m_session->GetManagerModule())
+		mm->AttachRuntime(m_session);
+	return true;
 }
 
 ibMetaData* ibFrontendDocMDIFrame::FindMetadataByPath(const wxString& strFileName) const
@@ -168,6 +191,9 @@ ibBackendValueForm* ibFrontendDocMDIFrame::CreateNewForm(const ibValueMetaObject
 {
 	ibControlFrame* ownerControl = dynamic_cast<ibControlFrame*>(backendControl);
 	wxASSERT(!(backendControl == nullptr && ownerControl != nullptr));
+	// Parent descriptor wiring happens inside ibValueForm's ctor — it
+	// already receives ownerControl; for the UI path (null owner) it
+	// falls back to backend_mainFrame->GetSession()->GetManagerModule().
 	return ibValue::CreateAndPrepareValueRef<ibValueForm>(creator, ownerControl, srcObject, formGuid);
 }
 
@@ -207,14 +233,14 @@ bool ibFrontendDocMDIFrame::UpdateFormUniqueKey(const ibUniqueKeyPair& guid)
 bool ibFrontendDocMDIFrame::ShowSpreadsheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument)
 {
 	class ibSpreadsheetMemoryDocument :
-		public ibSpreadsheetFilibDocument {
+		public ibSpreadsheetFileDocument {
 	public:
 
 		ibSpreadsheetMemoryDocument(const wxString& strTitle, const wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument) :
-			ibSpreadsheetFilibDocument(spreadSheetDocument)
+			ibSpreadsheetFileDocument(spreadSheetDocument)
 		{
-			ibSpreadsheetFilibDocument::SetTitle(strTitle);
-			ibSpreadsheetFilibDocument::SetFilename(strTitle);
+			ibSpreadsheetFileDocument::SetTitle(strTitle);
+			ibSpreadsheetFileDocument::SetFilename(strTitle);
 		}
 
 		virtual bool OnCreate(const wxString& path, long flags) override {

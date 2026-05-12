@@ -20,11 +20,37 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValue, wxObject);
 #endif
 
 #ifdef DEBUG_VALUE
-static unsigned int s_nCreateCount = 0;
+#include <atomic>
+#include <iostream>
+#include <sstream>
+#include <thread>
+#include <wx/log.h>
+
+// Atomic counter — Create/Delete can race across the HTTP and worker
+// threads on the web build, and even on desktop if the designer's debug
+// thread manipulates values. A plain unsigned int would UB.
+static std::atomic<unsigned int> s_nCreateCount{0};
+
+// Cross-platform debugger sink. wxLogDebug already does the right
+// thing per OS:
+//   MSW  — OutputDebugString (visible in VS Output pane) + default
+//          wxLogStderr sink when no wxApp (we have wxInitializer only).
+//   GTK  — stderr.
+//   OSX  — NSLog (visible in Xcode Console).
+// Writing std::cerr on top of that duplicates every line on MSW.
+static inline void DebugValueEmit(const char* tag, unsigned int count) {
+	std::ostringstream os;
+	os << tag << ' ' << count
+	   << " tid=" << std::this_thread::get_id();
+	wxLogDebug(wxT("%s"), wxString::FromUTF8(os.str().c_str()));
+}
 #define DEBUG_VALUE_CREATE() \
-	if (wxTheApp != NULL) wxLogDebug(wxT("Create %d"), s_nCreateCount++); 
-#else 
-#define DEBUG_VALUE_CREATE() 
+	DebugValueEmit("Create", s_nCreateCount.fetch_add(1) + 1);
+#define DEBUG_VALUE_DELETE() \
+	DebugValueEmit("Delete", s_nCreateCount.fetch_sub(1) - 1);
+#else
+#define DEBUG_VALUE_CREATE()
+#define DEBUG_VALUE_DELETE()
 #endif
 
 //**********************************************************************
@@ -146,9 +172,7 @@ ibValue::~ibValue()
 {
 	if (m_typeClass == ibValueTypes::TYPE_REFFER && m_pRef && m_pRef != this)
 		m_pRef->DecrRef();
-#ifdef DEBUG_VALUE
-	if (wxTheApp != NULL) wxLogDebug(wxT("Delete %d"), --s_nCreateCount);
-#endif
+	DEBUG_VALUE_DELETE();
 }
 
 void ibValue::Reset()
@@ -190,6 +214,8 @@ void ibValue::Copy(const ibValue& cOld)
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		m_typeClass = ibValueTypes::TYPE_REFFER;
 		m_pRef = const_cast<ibValue*>(&cOld);
 		m_pRef->IncrRef();
@@ -231,6 +257,8 @@ void ibValue::Move(ibValue&& cOld)
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		m_typeClass = ibValueTypes::TYPE_REFFER;
 		m_pRef = const_cast<ibValue*>(&cOld);
 		m_pRef->IncrRef();
@@ -435,8 +463,7 @@ bool ibValue::SetNumber(const wxString& strNumber)
 	Reset();
 
 	ibNumber fData = 0;
-	unsigned int nSuccessful = fData.FromString(strNumber.ToStdWstring());
-	if (nSuccessful > 0)
+	if (!fData.FromString(strNumber))
 		return false;
 
 	m_typeClass = ibValueTypes::TYPE_NUMBER;
@@ -591,8 +618,8 @@ ibNumber ibValue::GetNumber() const
 		strVal.Trim(false);
 		strVal.MakeUpper();
 		ibNumber number;
-		unsigned int nSuccessful = number.FromString(strVal.ToStdWstring());
-		if (nSuccessful > 0) ibBackendCoreException::Error(_("Cannot convert string to number!"));
+		if (!number.FromString(strVal))
+			ibBackendCoreException::Error(_("Cannot convert string to number!"));
 		return number;
 	}
 	case ibValueTypes::TYPE_DATE:
@@ -741,6 +768,8 @@ bool ibValue::IsEmpty() const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return false;
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef ? m_pRef->IsEmpty() : true;
@@ -812,32 +841,11 @@ bool ibValue::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 //*                    iterator support                       *
 //*************************************************************
 
-ibValue ibValue::GetIteratorEmpty()
+std::shared_ptr<ibValueIteratorState> ibValue::CreateIterator()
 {
 	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
-		return m_pRef->GetIteratorEmpty();
-	return ibValue();
-}
-
-bool ibValue::HasIterator() const
-{
-	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
-		return m_pRef->HasIterator();
-	return false;
-}
-
-ibValue ibValue::GetIteratorAt(unsigned int idx)
-{
-	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
-		return m_pRef->GetIteratorAt(idx);
-	return ibValue();
-}
-
-unsigned int ibValue::GetIteratorCount() const
-{
-	if (m_pRef && m_typeClass == ibValueTypes::TYPE_REFFER)
-		return m_pRef->GetIteratorCount();
-	return 0;
+		return m_pRef->CreateIterator();
+	return nullptr;
 }
 
 //*************************************************************
@@ -864,6 +872,8 @@ bool ibValue::CompareValueGT(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() > cParam.GetString();
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueGT(cParam);
@@ -892,6 +902,8 @@ bool ibValue::CompareValueGE(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() >= cParam.GetString();
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueGE(cParam);
@@ -920,6 +932,8 @@ bool ibValue::CompareValueLS(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() < cParam.GetString();
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueLS(cParam);
@@ -948,6 +962,8 @@ bool ibValue::CompareValueLE(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() <= cParam.GetString();
 	case ibValueTypes::TYPE_REFFER:
 		return m_pRef->CompareValueLE(cParam);
@@ -980,6 +996,8 @@ bool ibValue::CompareValueEQ(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() == cParam.GetString() &&
 			GetClassType() == cParam.GetClassType();
 	case ibValueTypes::TYPE_REFFER:
@@ -1013,6 +1031,8 @@ bool ibValue::CompareValueNE(const ibValue& cParam) const
 	case ibValueTypes::TYPE_ENUM:
 	case ibValueTypes::TYPE_OLE:
 	case ibValueTypes::TYPE_VALUE:
+	case ibValueTypes::TYPE_FUNCTION:
+	case ibValueTypes::TYPE_ITERATOR:
 		return GetString() != cParam.GetString() ||
 			GetClassType() != cParam.GetClassType();
 	case ibValueTypes::TYPE_REFFER:
@@ -1119,6 +1139,25 @@ bool ibValue::IsPropWritable(const long lPropNum) const
 	return true;
 }
 
+bool ibValue::IsPropScoped(const long lPropNum) const
+{
+	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
+		return m_pRef->IsPropScoped(lPropNum);
+	ibValueMethodHelper* const methodHelper = GetPMethods();
+	if (methodHelper != nullptr)
+		return methodHelper->IsPropScoped(lPropNum);
+	return false;
+}
+
+long ibValue::ibValueMethodHelper::AppendProp(const wxString& strPropName, bool readable, bool writable, bool scoped, const long lPropNum, const long lPropAlias)
+{
+	const unsigned int flags =
+		(readable ? eProp_Readable : 0u) |
+		(writable ? eProp_Writable : 0u) |
+		(scoped   ? eProp_Scoped   : 0u);
+	return AppendProp(strPropName, flags, lPropNum, lPropAlias);
+}
+
 long ibValue::GetNMethods() const
 {
 	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
@@ -1129,13 +1168,18 @@ long ibValue::GetNMethods() const
 	return 0;
 }
 
+// Per-class method resolver. LINQ pipeline ops bypass this entirely —
+// compile-side emits OPER_CALL_LINQ via FindLinqMethodByName before
+// reaching the OPER_CALL_METHOD path.
 long ibValue::FindMethod(const wxString& strMethodName) const
 {
 	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->FindMethod(strMethodName);
 	ibValueMethodHelper* const methodHelper = GetPMethods();
-	if (methodHelper != nullptr)
-		return methodHelper->FindMethod(strMethodName);
+	if (methodHelper != nullptr) {
+		const long n = methodHelper->FindMethod(strMethodName);
+		if (n >= 0) return n;
+	}
 	return wxNOT_FOUND;
 }
 
@@ -1211,10 +1255,10 @@ void ibValue::PrepareNames() const
 }
 
 //get the current value (relevant for aggregate objects or dialog objects)
-ibValue ibValue::GetValue(bool getThis)
+ibValue ibValue::GetValue(bool getThis) const
 {
 	if (getThis)
-		return this;
+		return const_cast<ibValue*>(this);  // legacy: returns this-as-pointer-via-converting-ctor
 	if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->GetValue(true); // true - a sign of creating a new variable - a reference to an aggregate object
 	return *this;

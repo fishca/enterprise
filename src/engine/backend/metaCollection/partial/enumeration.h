@@ -1,4 +1,4 @@
-#ifndef __ENUMERATION_H__
+﻿#ifndef __ENUMERATION_H__
 #define __ENUMERATION_H__
 
 #include "commonObject.h"
@@ -64,14 +64,14 @@ public:
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) { return nullptr; }
-	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
+	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const { return nullptr; }
+	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
+	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
 #pragma endregion
 
 	//get module object in compose object 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return nullptr; }
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual const ibValueMetaObjectModule* GetObjectModule() const { return nullptr; }
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const { return m_propertyManagerModule->GetMetaObject(); }
 
 	//descriptions...
 	wxString GetDataPresentation(const ibValueDataObject* objValue) const;
@@ -83,7 +83,7 @@ public:
 protected:
 
 	//predefined array 
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 		array = { m_propertyAttributeReference->GetMetaObject() };
 		return true;
 	}
@@ -94,10 +94,10 @@ protected:
 	}
 
 	//create manager
-	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
+	virtual ibValueManagerDataObject* CreateManagerDataObjectValue() const;
 
 	//create object data with meta form
-	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
+	virtual ibSourceDataObject* CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const;
 
 	//load & save metaData from DB 
 	virtual bool LoadData(ibReaderMemory& reader);
@@ -134,7 +134,7 @@ private:
 		return true;
 	}
 
-	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyModuleManager = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
+	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyManagerModule = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
 
 	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
 	ibPropertyList* m_propertyDefFormList = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &ibValueMetaObjectEnumeration::FillFormList);

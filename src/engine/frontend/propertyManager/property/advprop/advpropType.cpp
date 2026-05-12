@@ -1,4 +1,4 @@
-#include "advpropType.h"
+﻿#include "advpropType.h"
 
 #include "backend/propertyManager/property/propertyType.h"
 #include "backend/propertyManager/property/variant/variantType.h"
@@ -52,6 +52,13 @@ void ibPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, c
 						choice.GetValue(), so->GetClassType()
 					);
 				}
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Characteristic)) {
+					auto metaObject = so->GetMetaObject();
+					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
+					m_valChoices.insert_or_assign(
+						choice.GetValue(), so->GetClassType()
+					);
+				}
 			}
 			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_List)) {
@@ -78,6 +85,13 @@ void ibPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, c
 					);
 				}
 				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_RecordManager)) {
+					auto metaObject = so->GetMetaObject();
+					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
+					m_valChoices.insert_or_assign(
+						choice.GetValue(), so->GetClassType()
+					);
+				}
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Characteristic)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
@@ -386,7 +400,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 						groupIcon, groupIcon);
 
 					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
-						ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+						const ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<const ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
 							ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
@@ -405,6 +419,34 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							}
 						}
 					}
+
+					if (so->GetClassType() == g_metaChartOfCharacteristicTypesCLSID) {
+
+						const int groupIcon = imageList->Add(so->GetClassIcon());
+						const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), wxT("Characteristic"),
+							groupIcon, groupIcon);
+
+						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Characteristic)) {
+							const ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<const ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+							{
+								int icon = imageList->Add(registerData->GetIcon());
+								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
+								wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
+									icon, icon,
+									itemData);
+
+								if (data != nullptr) {
+									const ibTypeDescription& td = data->GetTypeDesc();
+									tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? ibCheckTree::CHECKED : ibCheckTree::CHECKED_DISABLED : allowEdit ? ibCheckTree::UNCHECKED : ibCheckTree::UNCHECKED_DISABLED);
+									tc->Check(newItem, td.ContainType(so->GetClassType()));
+								}
+								else {
+									tc->SetItemState(newItem, allowEdit ? ibCheckTree::UNCHECKED : ibCheckTree::UNCHECKED_DISABLED);
+									tc->Check(newItem, false);
+								}
+							}
+						}
+					}
 				}
 				else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 
@@ -413,7 +455,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 						groupIcon, groupIcon);
 
 					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_List)) {
-						ibValueMetaObjectGenericData* registerData = dynamic_cast<ibValueMetaObjectGenericData*>(so->GetMetaObject());
+						const ibValueMetaObjectGenericData* registerData = dynamic_cast<const ibValueMetaObjectGenericData*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
 							ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
@@ -434,6 +476,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 					}
 				}
 				else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
+					
 					if (so->GetClassType() != g_metaEnumerationCLSID) {
 
 						int groupIcon = imageList->Add(so->GetClassIcon());
@@ -441,7 +484,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							groupIcon, groupIcon);
 
 						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Object)) {
-							ibValueMetaObjectRecordData* registerData = dynamic_cast<ibValueMetaObjectRecordData*>(so->GetMetaObject());
+							const ibValueMetaObjectRecordData* registerData = dynamic_cast<const ibValueMetaObjectRecordData*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
@@ -461,6 +504,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							}
 						}
 					}
+					
 					if (so->GetClassType() != g_metaDataProcessorCLSID && so->GetClassType() != g_metaReportCLSID)
 					{
 						int groupIcon = imageList->Add(so->GetClassIcon());
@@ -468,7 +512,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 							groupIcon, groupIcon);
 
 						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
-							ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+							const ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<const ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
@@ -555,7 +599,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			wxBoxSizer* stringSizer = new wxBoxSizer(wxHORIZONTAL);
 			wxStaticText* stSLength = new wxStaticText(dlg, wxID_ANY, _("Length:"), wxDefaultPosition, wxDefaultSize);
 			stSLength->Wrap(-1);
-			stringSizer->Add(stSLength, 0, wxALL, 5);
+			stringSizer->Add(stSLength, 0, wxALL, dlg->FromDIP(5));
 
 			wxSpinCtrl* tcSLength = new wxSpinCtrl(dlg, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, MAX_LENGTH_STRING);
 			stringSizer->Add(tcSLength, 0, wxBOTTOM | wxRIGHT, 0);
@@ -571,12 +615,12 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			);
 
 			tcSLength->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
-			topsizer->Add(stringSizer, 0, 0, 5);
+			topsizer->Add(stringSizer, 0, 0, dlg->FromDIP(5));
 
 			wxBoxSizer* dateSizer = new wxBoxSizer(wxHORIZONTAL);
 			wxStaticText* stDDateFormat = new wxStaticText(dlg, wxID_ANY, _("Date format:"), wxDefaultPosition, wxDefaultSize);
 			stDDateFormat->Wrap(-1);
-			dateSizer->Add(stDDateFormat, 0, wxALL, 5);
+			dateSizer->Add(stDDateFormat, 0, wxALL, dlg->FromDIP(5));
 
 			wxArrayString cDDateFormatChoices; auto ch = dlgProp->GetDateTime();
 			for (unsigned int idx = 0; idx < ch.GetCount(); idx++) {
@@ -596,12 +640,12 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			);
 
 			cDDateFormat->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
-			topsizer->Add(dateSizer, 0, 0, 5);
+			topsizer->Add(dateSizer, 0, 0, dlg->FromDIP(5));
 
 			wxBoxSizer* numberSizer = new wxBoxSizer(wxHORIZONTAL);
 			wxStaticText* stNLength = new wxStaticText(dlg, wxID_ANY, _("Length:"), wxDefaultPosition, wxDefaultSize);
 			stNLength->Wrap(-1);
-			numberSizer->Add(stNLength, 0, wxALL, 5);
+			numberSizer->Add(stNLength, 0, wxALL, dlg->FromDIP(5));
 
 			wxSpinCtrl* tcNLength = new wxSpinCtrl(dlg, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, MAX_PRECISION_NUMBER);
 			numberSizer->Add(tcNLength, 0, wxBOTTOM | wxRIGHT, 0);
@@ -620,10 +664,10 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 
 			wxStaticText* stNScale = new wxStaticText(dlg, wxID_ANY, _("Scale:"), wxDefaultPosition, wxDefaultSize);
 			stNScale->Wrap(-1);
-			numberSizer->Add(stNScale, 0, wxTOP | wxBOTTOM | wxLEFT, 5);
+			numberSizer->Add(stNScale, 0, wxTOP | wxBOTTOM | wxLEFT, dlg->FromDIP(5));
 
 			wxSpinCtrl* tcNScale = new wxSpinCtrl(dlg, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS);
-			numberSizer->Add(tcNScale, 0, wxRIGHT | wxLEFT, 5);
+			numberSizer->Add(tcNScale, 0, wxRIGHT | wxLEFT, dlg->FromDIP(5));
 			tcNScale->SetValue(typeDesc.GetScale());
 
 			tcNScale->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED,
@@ -639,7 +683,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			);
 
 			tcNScale->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
-			topsizer->Add(numberSizer, 0, 0, 5);
+			topsizer->Add(numberSizer, 0, 0, dlg->FromDIP(5));
 
 			tc->SetDoubleBuffered(true);
 
@@ -690,7 +734,7 @@ wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 			topsizer->SetSizeHints(dlg);
 
 			if (!wxPropertyGrid::IsSmallScreen()) {
-				dlg->SetSize(400, 300);
+				dlg->SetSize(dlg->FromDIP(wxSize(400, 300)));
 				dlg->Move(pg->GetGoodEditorDialogPosition(prop, dlg->GetSize()));
 			}
 

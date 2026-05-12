@@ -4,6 +4,7 @@
 #include <wx/wx.h>
 
 #include "frontend/frontend.h"
+#include "frontend/frontendTypes.h"
 
 #include "backend/compiler/value.h"
 #include "backend/propertyManager/propertyManager.h"
@@ -123,6 +124,24 @@ public:
 
 	virtual ibFormID GetControlID() const { return m_controlId; }
 
+	// If the id was never populated (typed-factory controls, demo
+	// forms, etc.), synthesise one via GenerateNewID — analogue of
+	// wxID_ANY on desktop. Idempotent after first call: once
+	// m_controlId is non-zero, returns it unchanged. Lets web
+	// Create() rely on a stable id without each caller repeating the
+	// if-then-generate dance.
+	//
+	// Falls back to leaving m_controlId == 0 when there is no owner
+	// form (synthetic /demo trees, detached controls) — in that case
+	// the ibWebWindow ctor's own auto-id counter kicks in and the
+	// node is at least uniquely addressable even though it's not
+	// findable through form->FindControlByID.
+	ibFormID EnsureControlID() {
+		if (m_controlId == 0 && GetOwnerForm() != nullptr)
+			GenerateNewID();
+		return m_controlId;
+	}
+
 	/**
 	* Support control name
 	*/
@@ -162,7 +181,10 @@ public:
 	virtual void ExecuteMenu(ibVisualHost* visualHost, int id) {}
 
 	/**
-	* Get wxObject from visual view (if exist)
+	* Get wxObject from visual view (if exist). Resolved through the
+	* form's ibVisualHost map both on desktop (wxWindow-keyed) and on
+	* web (ibWebWindow / ibWebSizer keyed). The dispatcher downcasts
+	* to ibWebWindow* for HandleRequest.
 	*/
 	wxObject* GetWxObject() const;
 
@@ -194,7 +216,7 @@ public:
 	/**
 	* Create an instance of the wxObject and return a pointer
 	*/
-	virtual wxObject* Create(wxWindow* wndParent, ibVisualHost* visualHost) {
+	virtual wxObject* Create(ibFrontendWindow* wndParent, ibVisualHost* visualHost) {
 		return new ibNoObject;
 	}
 
@@ -206,7 +228,7 @@ public:
 	* @param wxobject The object which was just created.
 	* @param wxparent The wxWidgets parent - the wxObject that the created object was added to.
 	*/
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) {};
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) {};
 
 	/**
 	* Allows components to respond when selected in object tree.
@@ -227,7 +249,7 @@ public:
 	* @param wxobject The object which was just updated.
 	* @param wxparent The wxWidgets parent - the wxObject that the updated object was added to.
 	*/
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) {};
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) {};
 
 	/**
 	 * Cleanup (do the reverse of Create)
@@ -238,11 +260,11 @@ public:
 
 	// call current event
 	template <typename ...Types>
-	bool CallAsEvent(const ibEvent* event, Types&&... args) {
+	bool CallAsEvent(const ibEvent* event, Types&&... args) const {
 		if (event == nullptr)
 			return false;
 		const wxString& eventValue = event->GetValue();
-		ibProcUnit* formProcUnit = GetFormProcUnit();
+		std::shared_ptr<ibProcUnit> formProcUnit = GetFormProcUnit();
 		if (formProcUnit != nullptr && !eventValue.IsEmpty()) {
 			ibValue eventCancel = false;
 			try {
@@ -263,8 +285,8 @@ public:
 
 	//call current form
 	template <typename ...Types>
-	bool CallAsEvent(const wxString& functionName, Types&&... args) {
-		ibProcUnit* formProcUnit = GetFormProcUnit();
+	bool CallAsEvent(const wxString& functionName, Types&&... args) const {
+		std::shared_ptr<ibProcUnit> formProcUnit = GetFormProcUnit();
 		if (formProcUnit != nullptr && !functionName.IsEmpty()) {
 			try {
 				formProcUnit->CallAsProc(
@@ -291,7 +313,12 @@ public:
 	virtual bool HasQuickChoice() const;
 	virtual void ChoiceProcessing(ibValue& vSelected) {}
 
+#ifndef OES_USE_WEB
+	// Designer-only: find the editor notebook that currently holds the
+	// form this control belongs to. The notebook class itself is web-
+	// excluded (see visualHost.h), so the accessor goes with it.
 	ibFrontendVisualEditorNotebook* FindVisualEditor() const;
+#endif
 
 	//support printing 
 	virtual wxPrintout* CreatePrintout() const { return nullptr; }
@@ -329,10 +356,7 @@ public:
 		unsigned int Count() const { return m_controlEvent->GetEventCount(); }
 
 		//Работа с итераторами:
-		virtual bool HasIterator() const { return true; }
-		virtual ibValue GetIteratorEmpty();
-		virtual ibValue GetIteratorAt(unsigned int idx);
-		virtual unsigned int GetIteratorCount() const { return Count(); }
+		virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override;
 
 	private:
 		ibValueFrame* m_controlEvent;
@@ -370,9 +394,6 @@ public:
 	*/
 	virtual ibFormID GetTypeForm() const = 0;
 
-	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const = 0;
-
 	//counter
 	virtual void ControlIncrRef() { ibValue::IncrRef(); }
 	virtual void ControlDecrRef() { ibValue::DecrRef(); }
@@ -402,6 +423,9 @@ public:
 
 	virtual bool IsEditable() const;
 
+	//runtime 
+	std::shared_ptr<ibProcUnit> GetFormProcUnit() const;
+
 public:
 
 	static inline wxArrayString GetAllowedUserProperty() {
@@ -426,7 +450,7 @@ public:
 
 	//load & save object in metaObject 
 	bool LoadControl(const ibValueMetaObjectFormBase* metaForm, ibReaderMemory& dataReader);
-	bool SaveControl(const ibValueMetaObjectFormBase* metaForm, ibWriterMemory dataWritter = ibWriterMemory(), bool copy_form = false);
+	bool SaveControl(const ibValueMetaObjectFormBase* metaForm, ibWriterMemory& dataWritter, bool copy_form = false);
 
 protected:
 

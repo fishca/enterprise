@@ -102,6 +102,8 @@ class FRONTEND_API ibGridCornerLabelWindow;
 class FRONTEND_API ibGridEvent;
 class FRONTEND_API ibGridRowAreaWindow;
 class FRONTEND_API ibGridRowLabelWindow;
+class FRONTEND_API ibGridRowOutlineWindow;
+class FRONTEND_API ibGridColOutlineWindow;
 class FRONTEND_API ibGridWindow;
 class FRONTEND_API ibGridSubwindow;
 class FRONTEND_API ibGridTypeRegistry;
@@ -1218,6 +1220,14 @@ struct ibGridCellArea {
 
 	wxString m_areaLabel;
 	int m_start = -1, m_end = -1;
+};
+
+// Outline grouping lives in its own container, orthogonal to the label areas.
+struct ibGridCellGroup {
+	int  m_start = -1;
+	int  m_end   = -1;
+	int  m_level = 1;     // >= 1; 0 reserved for "not a group"
+	bool m_collapsed = false;
 };
 
 // ----------------------------------------------------------------------------
@@ -2600,6 +2610,40 @@ public:
 	int GetRowAreaCount() const { return m_rowAreaAt.GetCount(); }
 	int GetColAreaCount() const { return m_colAreaAt.GetCount(); }
 
+	// ------ outline / grouping (separate from label areas) ------
+	// Groups live in m_rowGroupAt / m_colGroupAt. level >= 1 (deeper = closer
+	// to cells). Toggle hides/shows rows inside [start, end] via HideRow/ShowRow.
+	int  AddRowGroup(int first, int last, int level = 1, bool collapsed = false);
+	int  AddColGroup(int first, int last, int level = 1, bool collapsed = false);
+	void DeleteRowGroup(int idx);
+	void DeleteColGroup(int idx);
+	int  GetRowGroupCount() const { return (int)m_rowGroupAt.size(); }
+	int  GetColGroupCount() const { return (int)m_colGroupAt.size(); }
+	const ibGridCellGroup* GetRowGroupByIdx(int idx) const {
+		return (idx >= 0 && (size_t)idx < m_rowGroupAt.size()) ? &m_rowGroupAt[idx] : nullptr;
+	}
+	const ibGridCellGroup* GetColGroupByIdx(int idx) const {
+		return (idx >= 0 && (size_t)idx < m_colGroupAt.size()) ? &m_colGroupAt[idx] : nullptr;
+	}
+	void SetRowGroupCollapsed(int idx, bool collapsed);
+	void SetColGroupCollapsed(int idx, bool collapsed);
+	bool ToggleRowGroup(int idx);
+	bool ToggleColGroup(int idx);
+	int  GetMaxRowGroupLevel() const;
+	int  GetMaxColGroupLevel() const;
+
+	// Outline pane — visible only when at least one group is defined.
+	bool GridRowOutlineEnabled() const { return !m_rowGroupAt.empty(); }
+	bool GridColOutlineEnabled() const { return !m_colGroupAt.empty(); }
+	int  GetRowOutlineSize() const;
+	int  GetColOutlineSize() const;
+	void DrawRowOutline(wxDC& dc);
+	void DrawColOutline(wxDC& dc);
+	int  HitTestRowOutlineButton(const wxPoint& pt) const;
+	int  HitTestColOutlineButton(const wxPoint& pt) const;
+	wxRect GetRowGroupButtonRect(int idx) const;
+	wxRect GetColGroupButtonRect(int idx) const;
+
 	// ------ cell brake accessors
 	//
 	//support printing 
@@ -3120,6 +3164,15 @@ protected:
 	ibGridCellAreaArray m_rowAreaAt;
 	ibGridCellAreaArray m_colAreaAt;
 
+	// Outline groups — separate storage from label areas.
+	std::vector<ibGridCellGroup> m_rowGroupAt;
+	std::vector<ibGridCellGroup> m_colGroupAt;
+
+	// Outline/grouping subwindows (Excel [+]/[-] brackets). Created unconditionally
+	// alongside the other subwindows but only shown when any group is defined.
+	ibGridRowOutlineWindow* m_rowOutlineWin = nullptr;
+	ibGridColOutlineWindow* m_colOutlineWin = nullptr;
+
 	//Row positions
 	wxArrayInt m_rowBrakeAt;
 
@@ -3275,6 +3328,8 @@ protected:
 	friend class ibGridColLabelWindow;
 	friend class ibGridRowAreaWindow;
 	friend class ibGridRowLabelWindow;
+	friend class ibGridRowOutlineWindow;
+	friend class ibGridColOutlineWindow;
 	friend class ibGridWindow;
 	friend class ibGridHeaderRenderer;
 

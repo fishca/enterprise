@@ -83,11 +83,11 @@ public:
 
 	operator ibGuidImpl() const;
 
-	// convert to string using std::snprintf() and std::string
-	std::string str() const;
+	// convert to string using std::snprintf() and wxString
+	wxString str() const;
 
-	// conversion operator for string 
-	operator std::string() const { return str(); }
+	// conversion operator for string
+	operator wxString() const { return str(); }
 
 	const std::array<unsigned char, 16>& bytes() const;
 	void swap(ibGuid& other);

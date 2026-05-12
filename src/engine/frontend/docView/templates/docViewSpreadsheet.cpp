@@ -22,8 +22,13 @@ enum
 	wxID_BORDER_BOTTOM,
 	wxID_BORDER_ALL,
 	wxID_BORDER_AROUND,
-	wxID_BORDER_NONE, 
-	wxID_EDITABLE
+	wxID_BORDER_NONE,
+	wxID_EDITABLE,
+
+	wxID_GROUP_ROW,
+	wxID_UNGROUP_ROW,
+	wxID_GROUP_COL,
+	wxID_UNGROUP_COL,
 };
 
 // ----------------------------------------------------------------------------
@@ -58,6 +63,10 @@ EVT_MENU(wxID_BORDER_ALL, ibSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDER_AROUND, ibSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDER_NONE, ibSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_EDITABLE, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_GROUP_ROW, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_UNGROUP_ROW, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_GROUP_COL, ibSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_UNGROUP_COL, ibSpreadsheetEditView::OnMenuEvent)
 wxEND_EVENT_TABLE()
 
 bool ibSpreadsheetEditView::OnCreate(ibMetaDocument* doc, long flags)
@@ -140,6 +149,18 @@ wxMenuBar* ibSpreadsheetEditView::CreateMenuBar() const
 		menuItem->Enable(doc ? doc->IsEditable() : true);
 		menuItem->Check(m_gridEditor->IsEditable());
 
+		wxMenu* menuGroup = new wxMenu;
+		menuItem = menuGroup->Append(wxID_GROUP_ROW, _("Group rows"));
+		menuItem->Enable(m_gridEditor->IsEditable());
+		menuItem = menuGroup->Append(wxID_UNGROUP_ROW, _("Ungroup rows"));
+		menuItem->Enable(m_gridEditor->IsEditable());
+		menuGroup->AppendSeparator();
+		menuItem = menuGroup->Append(wxID_GROUP_COL, _("Group columns"));
+		menuItem->Enable(m_gridEditor->IsEditable());
+		menuItem = menuGroup->Append(wxID_UNGROUP_COL, _("Ungroup columns"));
+		menuItem->Enable(m_gridEditor->IsEditable());
+		menu->AppendSubMenu(menuGroup, _("Grouping"));
+
 		menuItem = menu->AppendSeparator();
 		menuItem = menu->Append(wxID_MERGE_CELL, _("Merge cells"));
 		menuItem->Enable(m_gridEditor->IsEditable());
@@ -171,19 +192,19 @@ wxPrintout* ibSpreadsheetEditView::OnCreatePrintout()
 
 void ibSpreadsheetEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 {
-	toolbar->AddTool(wxID_MERGE_CELL, _("Merge cells"), wxArtProvider::GetBitmap(wxART_MERGE_CELL, wxART_DOC_TEMPLATE), _("Merge cells"), wxItemKind::wxITEM_NORMAL);
+	toolbar->AddTool(wxID_MERGE_CELL, _("Merge cells"), wxArtProvider::GetBitmapBundle(wxART_MERGE_CELL, wxART_DOC_TEMPLATE), _("Merge cells"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_MERGE_CELL, m_gridEditor->IsEditable());
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_AREA_ADD, _("Add area"), wxArtProvider::GetBitmap(wxART_ADD_SECTION, wxART_DOC_TEMPLATE), _("Add area"), wxItemKind::wxITEM_NORMAL);
+	toolbar->AddTool(wxID_AREA_ADD, _("Add area"), wxArtProvider::GetBitmapBundle(wxART_ADD_SECTION, wxART_DOC_TEMPLATE), _("Add area"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_AREA_ADD, m_gridEditor->IsEditable());
-	toolbar->AddTool(wxID_AREA_DELETE, _("Delete area"), wxArtProvider::GetBitmap(wxART_REMOVE_SECTION, wxART_DOC_TEMPLATE), _("Remove area"), wxItemKind::wxITEM_NORMAL);
+	toolbar->AddTool(wxID_AREA_DELETE, _("Delete area"), wxArtProvider::GetBitmapBundle(wxART_REMOVE_SECTION, wxART_DOC_TEMPLATE), _("Remove area"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_AREA_DELETE, m_gridEditor->IsEditable());
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_SHOW_CELL, _("Show cells"), wxArtProvider::GetBitmap(wxART_SHOW_CELL, wxART_DOC_TEMPLATE), _("Show cells"));
-	toolbar->AddTool(wxID_SHOW_HEADER, _("Show headers"), wxArtProvider::GetBitmap(wxART_SHOW_HEADER, wxART_DOC_TEMPLATE), _("Show headers"));
-	toolbar->AddTool(wxID_SHOW_AREA, _("Show area"), wxArtProvider::GetBitmap(wxART_SHOW_SECTION, wxART_DOC_TEMPLATE), _("Show area"));
+	toolbar->AddTool(wxID_SHOW_CELL, _("Show cells"), wxArtProvider::GetBitmapBundle(wxART_SHOW_CELL, wxART_DOC_TEMPLATE), _("Show cells"));
+	toolbar->AddTool(wxID_SHOW_HEADER, _("Show headers"), wxArtProvider::GetBitmapBundle(wxART_SHOW_HEADER, wxART_DOC_TEMPLATE), _("Show headers"));
+	toolbar->AddTool(wxID_SHOW_AREA, _("Show area"), wxArtProvider::GetBitmapBundle(wxART_SHOW_SECTION, wxART_DOC_TEMPLATE), _("Show area"));
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_DOCK_TABLE, _("Freeze row/col table"), wxArtProvider::GetBitmap(wxART_BORDER, wxART_DOC_TEMPLATE), _("Freeze row/col table"));
+	toolbar->AddTool(wxID_DOCK_TABLE, _("Freeze row/col table"), wxArtProvider::GetBitmapBundle(wxART_BORDER, wxART_DOC_TEMPLATE), _("Freeze row/col table"));
 	toolbar->EnableTool(wxID_DOCK_TABLE, m_gridEditor->IsEditable());
 }
 
@@ -223,6 +244,18 @@ void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 	{
 	case wxID_MERGE_CELL:
 		m_gridEditor->MergeCells();
+		break;
+	case wxID_GROUP_ROW:
+		m_gridEditor->GroupSelectedRows();
+		break;
+	case wxID_UNGROUP_ROW:
+		m_gridEditor->UngroupSelectedRows();
+		break;
+	case wxID_GROUP_COL:
+		m_gridEditor->GroupSelectedCols();
+		break;
+	case wxID_UNGROUP_COL:
+		m_gridEditor->UngroupSelectedCols();
 		break;
 	case wxID_AREA_ADD:
 		m_gridEditor->AddArea();
@@ -314,6 +347,12 @@ void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 
 	case wxID_EDITABLE:
 		m_gridEditor->EnableEditing(!m_gridEditor->IsEditable());
+		// Toolbar buttons and menu items were gated on IsEditable() at build
+		// time (OnCreateToolbar / CreateMenuBar) but no wxUpdateUIEvent
+		// handlers exist to resync them on mode flip. Force a rebuild through
+		// mainFrame->ActivateView so both come back in the correct state.
+		if (mainFrame != nullptr)
+			mainFrame->ActivateView(this, true);
 		break;
 	}
 
@@ -326,7 +365,7 @@ void ibSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 
 wxIMPLEMENT_ABSTRACT_CLASS(ibSpreadsheetDocument, ibMetaDocument);
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetFilibDocument, ibSpreadsheetDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetFileDocument, ibSpreadsheetDocument);
 wxIMPLEMENT_DYNAMIC_CLASS(ibSpreadsheetEditDocument, ibSpreadsheetDocument);
 
 wxCommandProcessor* ibSpreadsheetDocument::OnCreateCommandProcessor()
@@ -341,10 +380,10 @@ ibGridEditor* ibSpreadsheetDocument::GetGridCtrl() const
 }
 
 // ----------------------------------------------------------------------------
-// ibSpreadsheetFilibDocument: wxDocument and wxGrid married
+// ibSpreadsheetFileDocument: wxDocument and wxGrid married
 // ----------------------------------------------------------------------------
 
-bool ibSpreadsheetFilibDocument::OnCreate(const wxString& path, long flags)
+bool ibSpreadsheetFileDocument::OnCreate(const wxString& path, long flags)
 {
 	if (!ibMetaDocument::OnCreate(path, flags))
 		return false;
@@ -354,7 +393,7 @@ bool ibSpreadsheetFilibDocument::OnCreate(const wxString& path, long flags)
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool ibSpreadsheetFilibDocument::DoOpenDocument(const wxString& filename)
+bool ibSpreadsheetFileDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_spreadSheetDocument->LoadFromFile(filename))
 		return false;
@@ -362,7 +401,7 @@ bool ibSpreadsheetFilibDocument::DoOpenDocument(const wxString& filename)
 	return GetGridCtrl()->LoadDocument(m_spreadSheetDocument->GetSpreadsheetDesc());
 }
 
-bool ibSpreadsheetFilibDocument::DoSaveDocument(const wxString& filename)
+bool ibSpreadsheetFileDocument::DoSaveDocument(const wxString& filename)
 {
 	if (!GetGridCtrl()->SaveDocument(m_spreadSheetDocument->GetSpreadsheetDesc()))
 		return false;

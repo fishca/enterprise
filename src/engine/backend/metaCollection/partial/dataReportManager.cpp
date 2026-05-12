@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : report - manager
 ////////////////////////////////////////////////////////////////////////////
@@ -9,7 +9,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectReport, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectReport::GetModuleManager()  const { return m_metaObject->GetModuleManager(); }
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectReport::GetManagerModule() const { return m_metaObject->GetManagerModule(); }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +77,7 @@ bool ibValueManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, i
 	{
 		ibMetaDataReport* metaReport = new ibMetaDataReport();
 		if (metaReport->LoadFromFile(paParams[0]->GetString())) {
-			ibValueModuleManagerExternalReport* moduleManager = metaReport->GetModuleManager();
+			ibValueModuleManagerExternalReport* moduleManager = metaReport->GetManagerModule();
 			pvarRetValue = moduleManager->GetObjectValue();
 			return true;
 		}

@@ -3,8 +3,14 @@
 
 #include "backend/system/value/valueEvent.h"
 
+// Pointer-to-member referenced by the toolbar item's property
+// initializer (&ibValueToolBarItem::GetToolAction in toolBar.h). Used
+// by the designer to list available Actions for the tool item's
+// Action property. Web build never exercises the walker (no property
+// editor), but the symbol must exist for the pointer to link.
 bool ibValueToolBarItem::GetToolAction(ibEventAction* evtList)
 {
+#ifndef OES_USE_WEB
 	ibValueToolbar* toolbar = dynamic_cast<ibValueToolbar*> (m_parent);
 	if (toolbar == nullptr) return false;
 	ibValueFrame* sourceElement = toolbar->GetActionSrc() != wxNOT_FOUND ? FindControlByID(toolbar->GetActionSrc()) : nullptr;
@@ -25,4 +31,8 @@ bool ibValueToolBarItem::GetToolAction(ibEventAction* evtList)
 	}
 
 	return true;
+#else
+	(void)evtList;
+	return false;
+#endif
 }

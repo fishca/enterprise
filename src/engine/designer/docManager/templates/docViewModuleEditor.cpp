@@ -6,7 +6,10 @@ enum {
 	wxID_REMOVE_COMMENTS,
 	wxID_SYNTAX_CONTROL,
 	wxID_GOTOLINE,
-	wxID_PROCEDURES_FUNCTIONS
+	wxID_PROCEDURES_FUNCTIONS,
+	wxID_FORMAT_CODE,
+	wxID_INCREASE_INDENT,
+	wxID_DECREASE_INDENT
 };
 
 // ----------------------------------------------------------------------------
@@ -27,12 +30,15 @@ EVT_MENU(wxID_REMOVE_COMMENTS, ibModuleEditView::OnMenuEvent)
 EVT_MENU(wxID_SYNTAX_CONTROL, ibModuleEditView::OnMenuEvent)
 EVT_MENU(wxID_GOTOLINE, ibModuleEditView::OnMenuEvent)
 EVT_MENU(wxID_PROCEDURES_FUNCTIONS, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_FORMAT_CODE, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_INCREASE_INDENT, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_DECREASE_INDENT, ibModuleEditView::OnMenuEvent)
 
 wxEND_EVENT_TABLE()
 
 bool ibModuleEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	m_codeEditor = new ibCodeEditor(doc, m_viewFrame, wxID_ANY,
+	m_codeEditor = new ibCodeEditorDesigner(doc, m_viewFrame, wxID_ANY,
 		wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 
 	m_codeEditor->SetReadOnly(flags == wxDOC_READONLY);
@@ -80,7 +86,7 @@ bool ibModuleEditView::OnClose(bool deleteWindow)
 	return false;
 }
 
-#include "win/editor/codeEditor/codeEditorPrintOut.h"
+#include "frontend/win/editor/codeEditor/codeEditorPrintOut.h"
 
 wxPrintout* ibModuleEditView::OnCreatePrintout()
 {
@@ -95,21 +101,28 @@ void ibModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 		return;
 
 	if (!toolbar->GetToolCount()) {
-		toolbar->AddTool(wxID_ADD_COMMENTS, _("Add comments"), wxArtProvider::GetBitmap(wxART_ADD_COMMENT, wxART_DOC_MODULE), _("Add"), wxItemKind::wxITEM_NORMAL);
+		toolbar->AddTool(wxID_ADD_COMMENTS, _("Add comments"), wxArtProvider::GetBitmapBundle(wxART_ADD_COMMENT, wxART_DOC_MODULE), _("Add"), wxItemKind::wxITEM_NORMAL);
 		toolbar->EnableTool(wxID_ADD_COMMENTS, m_codeEditor->IsEditable());
-		toolbar->AddTool(wxID_REMOVE_COMMENTS, _("Remove comments"), wxArtProvider::GetBitmap(wxART_REMOVE_COMMENT, wxART_DOC_MODULE), _("Remove"), wxItemKind::wxITEM_NORMAL);
+		toolbar->AddTool(wxID_REMOVE_COMMENTS, _("Remove comments"), wxArtProvider::GetBitmapBundle(wxART_REMOVE_COMMENT, wxART_DOC_MODULE), _("Remove"), wxItemKind::wxITEM_NORMAL);
 		toolbar->EnableTool(wxID_REMOVE_COMMENTS, m_codeEditor->IsEditable());
 		toolbar->AddSeparator();
-		toolbar->AddTool(wxID_SYNTAX_CONTROL, _("Syntax control"), wxArtProvider::GetBitmap(wxART_SYNTAX_CONTROL, wxART_DOC_MODULE), _("Syntax"), wxItemKind::wxITEM_NORMAL);
+		toolbar->AddTool(wxID_SYNTAX_CONTROL, _("Syntax control"), wxArtProvider::GetBitmapBundle(wxART_SYNTAX_CONTROL, wxART_DOC_MODULE), _("Syntax"), wxItemKind::wxITEM_NORMAL);
 		toolbar->EnableTool(wxID_SYNTAX_CONTROL, m_codeEditor->IsEditable());
 		toolbar->AddSeparator();
-		toolbar->AddTool(wxID_GOTOLINE, _("Goto line"), wxArtProvider::GetBitmap(wxART_GOTO_LINE, wxART_DOC_MODULE), _("Goto"), wxItemKind::wxITEM_NORMAL);
-		toolbar->AddTool(wxID_PROCEDURES_FUNCTIONS, _("Procedures and functions"), wxArtProvider::GetBitmap(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"), wxItemKind::wxITEM_NORMAL);
+		toolbar->AddTool(wxID_GOTOLINE, _("Goto line"), wxArtProvider::GetBitmapBundle(wxART_GOTO_LINE, wxART_DOC_MODULE), _("Goto"), wxItemKind::wxITEM_NORMAL);
+		toolbar->AddTool(wxID_PROCEDURES_FUNCTIONS, _("Procedures and functions"), wxArtProvider::GetBitmapBundle(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"), wxItemKind::wxITEM_NORMAL);
+		toolbar->AddSeparator();
+		toolbar->AddTool(wxID_FORMAT_CODE, _("Format selection"), wxArtProvider::GetBitmapBundle(wxART_FORMAT_CODE, wxART_DOC_MODULE), _("Format"), wxItemKind::wxITEM_NORMAL);
+		toolbar->EnableTool(wxID_FORMAT_CODE, m_codeEditor->IsEditable());
+		toolbar->AddTool(wxID_INCREASE_INDENT, _("Increase indent"), wxArtProvider::GetBitmapBundle(wxART_GO_FORWARD, wxART_TOOLBAR, wxSize(16, 16)), _("Indent"), wxItemKind::wxITEM_NORMAL);
+		toolbar->EnableTool(wxID_INCREASE_INDENT, m_codeEditor->IsEditable());
+		toolbar->AddTool(wxID_DECREASE_INDENT, _("Decrease indent"), wxArtProvider::GetBitmapBundle(wxART_GO_BACK, wxART_TOOLBAR, wxSize(16, 16)), _("Unindent"), wxItemKind::wxITEM_NORMAL);
+		toolbar->EnableTool(wxID_DECREASE_INDENT, m_codeEditor->IsEditable());
 	}
 }
 
-#include "win/dlg/lineInput/lineInput.h"
-#include "win/dlg/functionSearcher/functionSearcher.h"
+#include "frontend/win/dlgs/lineInput/lineInput.h"
+#include "frontend/win/dlgs/functionSearcher/functionSearcher.h"
 
 void ibModuleEditView::OnMenuEvent(wxCommandEvent& event)
 {
@@ -142,6 +155,15 @@ void ibModuleEditView::OnMenuEvent(wxCommandEvent& event)
 	}
 	else if (event.GetId() == wxID_PROCEDURES_FUNCTIONS) {
 		m_codeEditor->ShowMethods();
+	}
+	else if (event.GetId() == wxID_FORMAT_CODE) {
+		m_codeEditor->FormatSelection();
+	}
+	else if (event.GetId() == wxID_INCREASE_INDENT) {
+		m_codeEditor->IncreaseIndent();
+	}
+	else if (event.GetId() == wxID_DECREASE_INDENT) {
+		m_codeEditor->DecreaseIndent();
 	}
 }
 

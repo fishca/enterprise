@@ -1,9 +1,54 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko, wxFormBuilder
-//	Description : visual client host  
+//	Description : visual client host
 ////////////////////////////////////////////////////////////////////////////
 
 #include "visualHostClient.h"
+
+#ifdef OES_USE_WEB
+#include <iostream>
+#include "frontend/web/webChildFrame.h"
+#include "frontend/web/webSizer.h"
+
+// Web-side dtor: tear down the control tree through ClearVisualHost
+// before ~ibWebWindow takes over. ClearVisualHost fires each control's
+// Cleanup hook (script-side OnClose / resource release) in post-order
+// and wipes m_baseObjects, so by the time the sizer / children get
+// cascade-destroyed there are no stale back-pointers anywhere. Without
+// this the default dtor would run ~ibWebWindow directly — fine for a
+// plain window, but the host owns runtime state (form refcount, event
+// bindings, per-control cleanup hooks) that the desktop mirror releases
+// via ClearControl(m_valueForm, true). Matches that semantics.
+ibVisualHostClient::~ibVisualHostClient()
+{
+	std::cerr << "[life] ~ibVisualHostClient " << this
+		<< " form=" << (void*)GetValueForm() << std::endl;
+	ClearVisualHost();
+}
+
+// Push the form's caption to the owning tab (ibWebDocChildFrame) so
+// /session reports the new title. The host is parented under the tab
+// via SetParent; cast-and-SetTitle is the web analogue of desktop's
+// wxDocument::SetTitle chain.
+void ibVisualHostClient::SetCaption(const wxString& strCaption)
+{
+	if (auto* tab = dynamic_cast<ibWebDocChildFrame*>(GetParent()))
+		tab->SetTitle(strCaption);
+}
+
+// Mirror desktop: mutate the root BoxSizer's orientation so child
+// layout rebuilds on the next response reflect the new axis. The
+// host owns the root sizer via SetSizer; only wxBoxSizer-style
+// sizers carry an orientation (grid sizers drop the call silently).
+void ibVisualHostClient::SetOrientation(int orient)
+{
+	if (auto* box = dynamic_cast<ibWebBoxSizer*>(GetSizer()))
+		box->SetOrientation(orient);
+}
+
+#else  // !OES_USE_WEB
+// Desktop-only implementation: wxScrolledCanvas-hosted form, MDI tab,
+// wxDocView Doc/View machinery.
 
 ibVisualHostClient::ibVisualHostClient(ibFormVisualDocument* document, ibValueForm* valueForm, wxWindow* parent) :
 	ibVisualHost(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize),
@@ -125,3 +170,5 @@ void ibVisualHostClient::SetOrientation(int orient)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
+
+#endif // !OES_USE_WEB

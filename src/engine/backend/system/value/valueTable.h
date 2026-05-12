@@ -9,7 +9,7 @@
 const ibClassID g_valueTableCLSID = string_to_clsid("VL_TABL");
 
 //Table support
-class BACKEND_API ibValueModelTable : public ibValueModelTableBase {
+class BACKEND_API ibValueModelTable : public ibValueModelRamTableBase {
 	wxDECLARE_DYNAMIC_CLASS(ibValueModelTable);
 private:
 	// methods:
@@ -182,7 +182,6 @@ public:
 public:
 
 	virtual ibDataViewItem FindRowValue(const ibValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const;
 
 	virtual bool AutoCreateColumn() const { return true; }
 
@@ -264,7 +263,7 @@ public:
 
 #pragma region _tabular_data_
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return nullptr; }
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return nullptr; }
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const { return g_valueTableCLSID; }
@@ -274,18 +273,12 @@ public:
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-	virtual ibValue GetIteratorEmpty() override {
+	// Iterator runtime path lives on ibValueModel — drives Get*Fetch
+	// in batches. GetEmptyRow yields the typed skeleton for the
+	// IntelliSense type hint that the iterator state surfaces.
+	virtual ibValue GetEmptyRow() override {
 		return ibValue::CreateAndPrepareValueRef<ibValueModelTableReturnLine>(this, ibDataViewItem(nullptr));
 	}
-	virtual ibValue GetIteratorAt(unsigned int idx) override {
-		if (idx > (unsigned int)GetRowCount())
-			return ibValue();
-		return ibValue::CreateAndPrepareValueRef<ibValueModelTableReturnLine>(this, GetItem(idx));
-	}
-
-	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
 
 private:
 

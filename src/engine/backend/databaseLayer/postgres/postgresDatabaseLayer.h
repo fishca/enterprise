@@ -59,12 +59,17 @@ public:
 	/// clone database  
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerPostgres(*this); }
 
-	// transaction support
-	virtual void BeginTransaction();
-	virtual void Commit();
-	virtual void RollBack();
+	// IsActiveTransaction uses the base-class default (m_txDepth > 0).
+	// Driver transaction primitives (DoBeginTransaction / DoCommit /
+	// DoRollBack) are protected — see below.
 
-	virtual bool IsActiveTransaction();
+	// Pessimistic row-lock probe for ibSessionRegistry's designer-
+	// exclusive policy. PG implementation: BEGIN → SELECT ... FOR
+	// UPDATE NOWAIT → ROLLBACK. NOWAIT makes the probe fail-fast when
+	// another connection holds the row, so a live owner surfaces as
+	// a caught exception instead of a blocked probe thread.
+	virtual bool TryProbeRowLock(const wxString& tableName,
+		const wxString& pkColumn, const wxString& pkValue) override;
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool DatabaseExists(const wxString& table);
@@ -91,9 +96,13 @@ protected:
 	// ibPreparedStatement support
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
 
-private:
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
-	bool m_transaction_is_active; 
+private:
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	ibInterfacePostgres* m_pInterface;

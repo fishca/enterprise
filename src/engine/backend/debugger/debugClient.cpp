@@ -5,6 +5,7 @@
 
 #include "debugClient.h"
 #include "backend/metadataConfiguration.h"
+#include "backend/session/session.h"
 
 #include "backend/fileSystem/fs.h"
 #if _USE_NET_COMPRESSOR == 1
@@ -44,6 +45,7 @@ void ibDebuggerClient::Continue()
 {
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_Continue);
+	commandChannel.w_stringZ(m_currentSessionGuid);
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
@@ -51,6 +53,7 @@ void ibDebuggerClient::StepOver()
 {
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_StepOver);
+	commandChannel.w_stringZ(m_currentSessionGuid);
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
@@ -58,6 +61,7 @@ void ibDebuggerClient::StepInto()
 {
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_StepInto);
+	commandChannel.w_stringZ(m_currentSessionGuid);
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
@@ -65,6 +69,7 @@ void ibDebuggerClient::Pause()
 {
 	ibWriterMemory commandChannel;
 	commandChannel.w_u16(CommandId_Pause);
+	commandChannel.w_stringZ(m_currentSessionGuid);
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
@@ -87,7 +92,7 @@ void ibDebuggerClient::InitializeModule(const wxString& strModuleName, unsigned 
 void ibDebuggerClient::PatchModule(const wxString& strModuleName, unsigned int line, int line_offset)
 {
 	auto breakpoint_iterator = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (breakpoint_iterator != m_listBreakpoint.end()) {
 
@@ -114,7 +119,7 @@ void ibDebuggerClient::PatchModule(const wxString& strModuleName, unsigned int l
 	}
 
 	auto module_offset_iterator = std::find_if(m_listOffsetBreakpoint.begin(), m_listOffsetBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (module_offset_iterator != m_listOffsetBreakpoint.end()) {
 
@@ -169,7 +174,7 @@ bool ibDebuggerClient::SaveModule(const wxString& strModuleName, unsigned int li
 {
 	//initialize breakpoint 
 	auto breakpoint_iterator = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (breakpoint_iterator != m_listBreakpoint.end()) {
 
@@ -189,7 +194,7 @@ bool ibDebuggerClient::SaveModule(const wxString& strModuleName, unsigned int li
 
 	//initialize offsets 
 	auto module_offset_iterator = std::find_if(m_listOffsetBreakpoint.begin(), m_listOffsetBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (module_offset_iterator != m_listOffsetBreakpoint.end()) {
 
@@ -224,12 +229,12 @@ bool ibDebuggerClient::SaveModule(const wxString& strModuleName, unsigned int li
 void ibDebuggerClient::RemoveModule(const wxString& strModuleName)
 {
 	auto breakpoint_iterator = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 	if (breakpoint_iterator != m_listBreakpoint.end())
 		m_listBreakpoint[breakpoint_iterator->first].clear();
 
 	auto module_offset_iterator = std::find_if(m_listOffsetBreakpoint.begin(), m_listOffsetBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 	if (module_offset_iterator != m_listOffsetBreakpoint.end())
 		m_listOffsetBreakpoint[module_offset_iterator->first].clear();
 }
@@ -331,6 +336,8 @@ bool ibDebuggerClient::RemoveBreakpoint(const wxString& strModuleName, unsigned 
 		locOffsetPrev = it->second;
 	}
 	std::map<unsigned int, int>::iterator itOffset = list_module_offset.find(startLine);
+	if (itOffset == list_module_offset.end())
+		return false;
 	std::map<unsigned int, int>& list_breakpoint = m_listBreakpoint[strModuleName];
 	std::map<unsigned int, int>::iterator breakpoint_iterator = list_breakpoint.find(itOffset->first);
 	unsigned int currLine = itOffset->first;
@@ -359,12 +366,12 @@ void ibDebuggerClient::RemoveAllBreakpoint()
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 	if (RemoveAllBreakpointInDB()) {
 		m_listBreakpoint.clear();
-		if (backend_mainFrame != nullptr) {
-			backend_mainFrame->RefreshFrame();
-		}
+		if (auto* frame = ibSession::CurrentFrame())
+			frame->RefreshFrame();
 	}
 	else {
-		wxMessageBox("Error in : void ibDebuggerClient::RemoveAllBreakpoint()");
+		if (auto* frame = ibSession::CurrentFrame())
+			frame->ShowModalMessage("Error in : void ibDebuggerClient::RemoveAllBreakpoint()", wxT("RemoveAllBreakpoint"), wxOK | wxCENTRE);
 	}
 }
 
@@ -469,7 +476,7 @@ void ibDebuggerClient::EvaluateAutocomplete(const wxString& strFileName, const w
 std::vector<unsigned int> ibDebuggerClient::GetDebugList(const wxString& strModuleName)
 {
 	auto breakpoint_iterator = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
-		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+		[&strModuleName](const auto& pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
 	if (breakpoint_iterator == m_listBreakpoint.end())
 		return std::vector<unsigned int>();
@@ -582,6 +589,12 @@ void ibDebuggerClient::ibDebuggerClientConnection::EntryClient()
 
 		if (!TestDestroy() && connected) {
 
+			// disable Nagle — debugger protocol is bursty with tiny packets (step, eval, locals)
+			int flag = 1;
+			m_socketClient->SetOption(IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+			// keepalive — detect a crashed/killed server within seconds instead of hours
+			m_socketClient->SetOption(SOL_SOCKET, SO_KEEPALIVE, &flag, sizeof(flag));
+
 			///////////////////////////////////////////////////////////////////////
 			ibWriterMemory commandChannel;
 			commandChannel.w_u16(CommandId_VerifyConnection);
@@ -634,19 +647,40 @@ void ibDebuggerClient::ibDebuggerClientConnection::EntryClient()
 
 					if (m_socketClient != nullptr && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
 						m_socketClient->ReadMsg(&length, sizeof(unsigned int));
-						if (m_socketClient != nullptr && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
-							wxMemoryBuffer bufferData(length);
-							m_socketClient->ReadMsg(bufferData.GetData(), length);
-							if (m_connectionType == ConnectionType::ConnectionType_Debugger && length > 0) {
+						// short read on the length header — treat as disconnect
+						if (m_socketClient->LastCount() != sizeof(unsigned int))
+							break;
+						// guard against hostile/garbled server sending an absurd size
+						static const unsigned int kMaxDebugPacket = 16u * 1024u * 1024u;
+						if (length > kMaxDebugPacket)
+							break;
+						if (m_socketClient == nullptr)
+							break;
+						// No second WaitForRead before the payload —
+						// the socket was created with wxSOCKET_BLOCK |
+						// wxSOCKET_WAITALL so ReadMsg blocks until
+						// every requested byte arrives. The previous
+						// WaitForRead(0, 50ms) gate timed out under
+						// network jitter / multi-tab debug traffic
+						// and skipped the payload while the length
+						// had already been consumed; the next outer
+						// iteration read the payload's first bytes
+						// as a fresh length header (huge value),
+						// tripped the kMaxDebugPacket guard, and
+						// detached. Symmetric fix to the server side.
+						wxMemoryBuffer bufferData(length);
+						m_socketClient->ReadMsg(bufferData.GetData(), length);
+						if (m_socketClient->LastCount() != length)
+							break;
+						if (m_connectionType == ConnectionType::ConnectionType_Debugger && length > 0) {
 #if _USE_NET_COMPRESSOR == 1
-								BYTE* dest = nullptr; unsigned int dest_sz = 0;
-								_decompressLZ(&dest, &dest_sz, bufferData.GetData(), bufferData.GetBufSize());
-								RecvCommand(dest, dest_sz); free(dest);
+							BYTE* dest = nullptr; unsigned int dest_sz = 0;
+							_decompressLZ(&dest, &dest_sz, bufferData.GetData(), length);
+							RecvCommand(dest, dest_sz); free(dest);
 #else
-								RecvCommand(bufferData.GetData(), bufferData.GetBufSize());
-#endif 
-								length = 0;
-							}
+							RecvCommand(bufferData.GetData(), length);
+#endif
+							length = 0;
 						}
 					}
 
@@ -694,7 +728,7 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 		commandReader.r_stringZ(m_userName);
 		commandReader.r_stringZ(m_compName);
 
-		m_verifiedConnection = activeMetaData->GetConfigGuid() == m_confGuid;
+		m_verifiedConnection = activeMetaData->GetConfigGuid() == ibGuid(m_confGuid);
 
 		if (m_verifiedConnection && m_connectionType == ConnectionType::ConnectionType_Waiter)
 			m_connectionType = ConnectionType::ConnectionType_Debugger;
@@ -731,12 +765,12 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 		commandChannel.w_u32(ms_debugClient->m_listBreakpoint.size());
 
 		//send breakpoints 
-		for (auto breakpoint : ms_debugClient->m_listBreakpoint) {
+		for (const auto& breakpoint : ms_debugClient->m_listBreakpoint) {
 
 			commandChannel.w_u32(breakpoint.second.size());
 			commandChannel.w_stringZ(breakpoint.first);
 
-			for (auto line : breakpoint.second) {
+			for (const auto& line : breakpoint.second) {
 				commandChannel.w_u32(line.first);
 			}
 		}
@@ -748,13 +782,20 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 		ms_debugClient->m_enterLoop = true;
 		ms_debugClient->m_activeSocket = this;
 
-		wxString strFileName; commandReader.r_stringZ(strFileName);
-		wxString strModuleName; commandReader.r_stringZ(strModuleName);
+		// New first field: sessionGuid (which session in wenterprise-server
+		// hit the breakpoint). On desktop enterprise.exe this is the main
+		// session's guid; on wes one of the per-tab WebClient sessions.
+		wxString sessionGuid;     commandReader.r_stringZ(sessionGuid);
+		wxString strFileName;     commandReader.r_stringZ(strFileName);
+		wxString strModuleName;   commandReader.r_stringZ(strModuleName);
 
 		ibDebugLineData data;
+		data.m_sessionGuid = sessionGuid;
 		data.m_fileName = strFileName;
 		data.m_moduleName = strModuleName;
 		data.m_line = ms_debugClient->GetLineOffset(strModuleName, commandReader.r_s32());
+
+		ms_debugClient->m_currentSessionGuid = sessionGuid;
 
 		ms_debugClient->CallAfter(
 			&ibDebuggerClient::ibDebuggerClientAdapter::OnEnterLoop, m_socketClient, data
@@ -765,11 +806,13 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 		ms_debugClient->m_enterLoop = false;
 		ms_debugClient->m_activeSocket = nullptr;
 
-		const wxString& strFileName = commandReader.r_stringZ();
-		const wxString& strModuleName = commandReader.r_stringZ();
+		wxString sessionGuid;          commandReader.r_stringZ(sessionGuid);
+		const wxString& strFileName    = commandReader.r_stringZ();
+		const wxString& strModuleName  = commandReader.r_stringZ();
 
 		ibDebugLineData data;
 
+		data.m_sessionGuid = sessionGuid;
 		data.m_fileName = strFileName;
 		data.m_moduleName = strModuleName;
 		data.m_line = ms_debugClient->GetLineOffset(strModuleName, commandReader.r_s32());
@@ -901,17 +944,17 @@ void ibDebuggerClient::ibDebuggerClientConnection::RecvCommand(void* pointer, un
 
 		ibLocalWindowData locData;
 
-		//generate event 	
+		//generate event
 		unsigned int attributeCount = commandReader.r_u32();
 		for (unsigned int i = 0; i < attributeCount; i++) {
-			bool tempVar = commandReader.r_u8();
+			// Server pre-filters temps from m_listLocals — every entry
+			// reaching the wire is user-visible.
 			wxString strName, strValue, strType;
 			commandReader.r_stringZ(strName);
 			commandReader.r_stringZ(strValue);
 			commandReader.r_stringZ(strType);
 			unsigned int attributeChildCount = commandReader.r_u32();
-			if (!tempVar)
-				locData.AddLocalVar(strName, strValue, strType, attributeChildCount > 0);
+			locData.AddLocalVar(strName, strValue, strType, attributeChildCount > 0);
 		}
 
 		ms_debugClient->CallAfter(

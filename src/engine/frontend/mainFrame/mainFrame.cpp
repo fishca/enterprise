@@ -9,6 +9,8 @@
 //application data
 #include "backend/appData.h"
 
+#include "frontend/session/guiSession.h"
+
 //common 
 #include "frontend/docView/docManager.h"
 #include "frontend/mainFrame/objinspect/objinspect.h"
@@ -32,11 +34,11 @@ void ibFrontendDocMDIFrame::InitFrame(ibFrontendDocMDIFrame* frame)
 
 bool ibFrontendDocMDIFrame::ShowFrame()
 {
-	if (s_instance != nullptr && !s_instance->IsShown() && !ibApplicationData::IsForceExit()) {
+	if (s_instance != nullptr && !s_instance->IsShown() && !ibSession::IsCurrentForceExit()) {
 
 		s_instance->CreateGUI();
 
-		s_instance->SetSize(800, 600);
+		s_instance->SetClientSize(s_instance->FromDIP(wxSize(800, 600)));
 		s_instance->SetFocus();
 
 		s_instance->Center();
@@ -102,7 +104,7 @@ bool ibFrontendDocMDIFrame::Create(const wxString& title,
 	return true;
 }
 
-wxWindow* ibFrontendDocMDIFrame::CreateChildFrame(ibMetaView* view, const wxPoint& pos, const wxSize& size, long style)
+ibFrontendWindow* ibFrontendDocMDIFrame::CreateChildFrame(ibMetaView* view, const wxPoint& pos, const wxSize& size, long style)
 {
 	// create a child valueForm of appropriate class for the current mode
 	ibMetaDocument* document = view->GetDocument();
@@ -146,7 +148,7 @@ void ibFrontendDocMDIFrame::RaiseFrame()
 {
 	if (!m_callRaiseFrame && ibFrontendDocMDIFrame::IsFocusable()) {
 		CallAfter([&]() {
-			if (!ibApplicationData::IsForceExit())
+			if (!ibSession::IsCurrentForceExit())
 				ibFrontendDocMDIFrame::Raise();
 			m_callRaiseFrame = false;
 			}
@@ -178,7 +180,9 @@ wxAuiMDIClientWindow* ibFrontendDocMDIFrame::OnCreateClient()
 		wxAuiMDIClientWindowImpl() : wxAuiMDIClientWindow() {}
 		wxAuiMDIClientWindowImpl(wxAuiMDIParentFrame* parent, long style = 0) : wxAuiMDIClientWindow(parent, style) {
 #ifdef __WXOSX__
-			SetBackgroundColour(wxColour(68, 88, 123)); // THEME_COLOUR_MAIN
+			// Use the system background instead of the old hard-coded blue —
+			// respects dark/light mode.
+			SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_APPWORKSPACE));
 			SetBackgroundStyle(wxBG_STYLE_SYSTEM);
 			Bind(wxEVT_PAINT, &wxAuiMDIClientWindowImpl::OnPaint, this);
 			Bind(wxEVT_ERASE_BACKGROUND, &wxAuiMDIClientWindowImpl::OnEraseBackground, this);
@@ -254,6 +258,10 @@ bool ibFrontendDocMDIFrame::Destroy()
 ibFrontendDocMDIFrame::~ibFrontendDocMDIFrame()
 {
 	if (s_instance == this) s_instance = nullptr;
+
+	// Notify the owning session so its observer-pointer doesn't dangle when
+	// wx destroys top-level frames before wxApp::OnExit fires Session::Close.
+	if (m_guiSession != nullptr) m_guiSession->DetachFrame(this);
 
 	// deinitialize the valueForm manager
 	m_mgr.UnInit();

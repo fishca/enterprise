@@ -5,6 +5,17 @@
 
 #include "form.h"
 #include "backend/metaCollection/partial/commonObject.h"
+#ifdef OES_USE_WEB
+// ibWebTimer full type needed for the dtor's delete in the idle-handler
+// cleanup loop — ibFrontendTimer resolves to ibWebTimer on this build.
+#include "frontend/web/webTimer.h"
+#else
+#include <wx/timer.h>
+#endif
+
+#ifdef OES_USE_WEB
+#include <iostream>
+#endif
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueForm, ibValueFrame);
 
@@ -13,7 +24,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueForm, ibValueFrame);
 //****************************************************************************
 
 ibValueForm::ibValueForm(const ibValueMetaObjectFormBase* creator, ibControlFrame* ownerControl,
-	ibSourceDataObject* srcObject, const ibUniqueKey& formGuid) : ibValueFrame(), ibModuleDataObject(),
+	ibSourceDataObject* srcObject, const ibUniqueKey& formGuid) : ibValueFrame(), ibRuntimeModuleDataObject(),
 	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr),
 	m_formCollectionControl(ibValue::CreateAndPrepareValueRef<ibValueFormCollectionControl>(this)),
 	m_formType(defaultFormType), m_closeOnChoice(true), m_closeOnOwnerClose(true), m_formModified(false)
@@ -27,13 +38,18 @@ ibValueForm::ibValueForm(const ibValueMetaObjectFormBase* creator, ibControlFram
 
 ibValueForm::~ibValueForm()
 {
-	for (auto pair : m_idleHandlerArray) {
-		wxTimer* timer = pair.second;
-		if (timer->IsRunning()) {
-			timer->Stop();
-		}
+#ifdef OES_USE_WEB
+	std::cerr << "[life] ~ibValueForm " << this << std::endl;
+#endif
+	// Idle-handler timers unified via ibFrontendTimer typedef + shared_ptr
+	// ownership (wxTimer on desktop, ibWebTimer on web). Stop + Unbind
+	// synchronously; the shared_ptr's dtor finishes the disposal when
+	// the map destructs below.
+	for (auto& pair : m_idleHandlerArray) {
+		auto& timer = pair.second;
+		if (!timer) continue;
+		if (timer->IsRunning()) timer->Stop();
 		timer->Unbind(wxEVT_TIMER, &ibValueForm::OnIdleHandler, this);
-		delete timer;
 	}
 
 	for (unsigned int idx = GetChildCount(); idx > 0; idx--) {
@@ -51,13 +67,16 @@ void ibValueForm::Update(wxObject* wxobject, ibVisualHost* visualHost)
 	UpdateForm();
 }
 
-void ibValueForm::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void ibValueForm::OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
-	//lay out parent window 
+#ifndef OES_USE_WEB
+	// Parent-layout pass — Web has no live wxWindow to re-layout; the
+	// browser handles it on the next JSON response.
 	wxWindow* wndParent = visualHost->GetParent();
 	if (wndParent) {
 		wndParent->Layout();
 	}
+#endif
 }
 
 //**********************************************************************************
@@ -163,9 +182,12 @@ void ibValueForm::PrepareNames() const
 	//default element
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendProp(thisForm, true, false, eThisForm, eSystem);
-	m_methodHelper->AppendProp(wxT("Controls"), true, false, eControls, eSystem);
-	m_methodHelper->AppendProp(wxT("DataSource"), true, false, eDataSource, eSystem);
+	// ThisForm is a bc-internal self-prop (ThisForm of binding "ThisForm") —
+	// keep scoped so IntelliSense / debug-watch / eval don't surface it.
+	// Controls / DataSource are real form properties — must stay visible.
+	m_methodHelper->AppendProp(thisForm, true, false, true, eThisForm, eSystem);
+	m_methodHelper->AppendProp(wxT("Controls"), true, false, false, eControls, eSystem);
+	m_methodHelper->AppendProp(wxT("DataSource"), true, false, false, eDataSource, eSystem);
 	m_methodHelper->AppendProp(wxT("Modified"), eModified, eSystem);
 	m_methodHelper->AppendProp(wxT("FormOwner"), eFormOwner, eSystem);
 	m_methodHelper->AppendProp(wxT("UniqueKey"), eUniqueKey, eSystem);
@@ -190,25 +212,7 @@ void ibValueForm::PrepareNames() const
 		m_methodHelper->AppendProp(property->GetName(), idx, eProperty);
 	}
 
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportVariable : byteCode->m_listExportVar)
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			for (auto exportFunction : byteCode->m_listExportFunc)
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 
 	for (auto& control : m_listControl) {
 		if (!control->HasValueInControl())
@@ -336,7 +340,7 @@ bool ibValueForm::CallAsProc(const long lMethodNum, ibValue** paParams, const lo
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecAsProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
@@ -353,7 +357,7 @@ bool ibValueForm::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibVal
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

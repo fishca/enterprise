@@ -28,7 +28,7 @@ This document covers how to build OES on Windows (MSBuild), macOS (CMake), and L
 | Windows SDK | 10.0.17763 or later | Installed by VS workload |
 | Git | Any recent | For submodule initialisation |
 
-MSBuild is the only supported build system on Windows. CMake support is planned but not yet available.
+MSBuild is the only supported build system on Windows. CMake (`CMakeLists.txt` at repo root) targets macOS / Linux — see the per-platform sections below; bring-up on Windows is in progress.
 
 ### macOS
 
@@ -40,7 +40,7 @@ MSBuild is the only supported build system on Windows. CMake support is planned 
 | Firebird client | `brew install firebird-client` (optional — Firebird embedded is bundled) |
 | PostgreSQL client | `brew install postgresql` (optional) |
 
-> **Note:** CMake support is under active development. A top-level `CMakeLists.txt` does not yet exist in the repository. The steps below represent the intended workflow.
+> **Note:** A top-level `CMakeLists.txt` is in place; the macOS / Linux build path is operational. The wxWidgets submodule is built in-tree, so external wx is optional.
 
 ### Linux (Ubuntu 22.04 / Debian 12)
 

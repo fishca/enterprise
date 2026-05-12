@@ -142,7 +142,7 @@ wxPGEditorDialogAdapter* ibPGListProperty::GetEditorDialog() const
 			topsizer->SetSizeHints(dlg);
 
 			if (!wxPropertyGrid::IsSmallScreen()) {
-				dlg->SetSize(400, 300);
+				dlg->SetSize(dlg->FromDIP(wxSize(400, 300)));
 				dlg->Move(pg->GetGoodEditorDialogPosition(prop, dlg->GetSize()));
 			}
 

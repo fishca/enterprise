@@ -16,6 +16,9 @@
 #include <wx/arrstr.h>
 #include <wx/variant.h>
 
+#include <memory>
+#include <vector>
+
 #include "databaseLayerDef.h"
 #include "databaseErrorReporter.h"
 #include "databaseStringConverter.h"
@@ -25,7 +28,13 @@
 WX_DECLARE_HASH_SET(ibDatabaseResultSet*, wxPointerHash, wxPointerEqual, DatabaseResultSetHashSet);
 WX_DECLARE_HASH_SET(ibPreparedStatement*, wxPointerHash, wxPointerEqual, DatabaseStatementHashSet);
 
-class BACKEND_API ibDatabaseLayer : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
+class ibDatabaseConnectionHolder;
+class ibConnectionPool;
+
+class BACKEND_API ibDatabaseLayer
+	: public ibDatabaseErrorReporter
+	, public ibDatabaseStringConverter
+	, public std::enable_shared_from_this<ibDatabaseLayer>
 {
 public:
 	/// Constructor
@@ -47,18 +56,84 @@ public:
 	virtual ibDatabaseLayer *Clone() = 0;
 
 	// transaction support
-	
-	/// Begin a transaction
-	virtual void BeginTransaction() = 0;
-	
-	/// Commit the current transaction
-	virtual void Commit() = 0;
-	
-	/// Rollback the current transaction
-	virtual void RollBack() = 0;
 
-	/// Is the transaction to the database active?
-	virtual bool IsActiveTransaction() = 0;
+	// Optional transaction attributes. Struct so future knobs (lock
+	// timeout, isolation level override) can land without changing the
+	// BeginTransaction signature again. Default-constructed value
+	// preserves historical behaviour — every existing caller works
+	// unchanged.
+	//
+	// `noWait` — when true, row-lock contention raises a lock conflict
+	// immediately instead of blocking. Used by row-lock probes
+	// (TryProbeRowLock). On FB maps to `isc_tpb_nowait`; other drivers
+	// approximate via session-level lock_timeout settings or ignore.
+	//
+	// `readOnly` — caller promises this TX won't issue DML. The driver
+	// can then pick an isolation that doesn't acquire write-intent locks
+	// (FB 4+: read_committed + read_consistency for snapshot-style
+	// reads without long-running snapshot TX; PostgreSQL: SET TRANSACTION
+	// READ ONLY). Drivers that don't have a cheap read-only mode silently
+	// ignore the flag.
+	struct ibTxOptions {
+		bool noWait = false;
+		bool readOnly = false;
+	};
+
+	// Transaction support — nested-safe counter layer.
+	//
+	// Public BeginTransaction / Commit / RollBack are non-virtual
+	// wrappers that implement depth-counter + aborted-flag semantics
+	// so that nested calls (Document.Write triggering register writes
+	// triggering their own transactions; runtime BeginTransaction
+	// wrapping several object writes) collapse onto a single real
+	// driver transaction:
+	//
+	//   - First Begin drives DoBeginTransaction; subsequent nested
+	//     Begins only bump the counter.
+	//   - Commit on the outermost level drives DoCommit — unless any
+	//     inner RollBack fired, in which case the aborted flag turns
+	//     the outer Commit into a real DoRollBack. "Inner rollback
+	//     poisons outer commit."
+	//   - RollBack sets the aborted flag and decrements; when the
+	//     counter reaches 0 the real DoRollBack fires.
+	//
+	// Drivers override DoBeginTransaction / DoCommit / DoRollBack with
+	// their dialect-specific SQL or native API calls. Drivers must
+	// NOT touch m_txDepth / m_txAborted directly — the base owns them.
+
+	/// Begin a transaction. The default options preserve historical
+	/// (wait-mode, read-committed, read-write) behaviour.
+	void BeginTransaction(const ibTxOptions& opts = {});
+
+	/// Commit the current transaction (or RollBack if any inner level
+	/// called RollBack first — see the aborted-flag semantics above).
+	void Commit();
+
+	/// Rollback the current transaction.
+	void RollBack();
+
+	/// Is a transaction currently open on this layer? Derived from the
+	/// depth counter so nested levels report active correctly.
+	bool IsActiveTransaction() { return m_txDepth > 0; }
+
+	/// Holder that currently has this layer reserved for an active TX,
+	/// or nullptr if the layer is not pinned. Set by the connection
+	/// pool's ReserveTx (depth 0→1 on Begin), cleared by ReleaseTx
+	/// (1→0 on Commit/RollBack). Identity-only — the layer doesn't
+	/// share-own the holder; the holder calls ReleaseTx before its
+	/// dtor so this back-pointer is always valid while non-null.
+	ibDatabaseConnectionHolder* GetHolder() const { return m_holder; }
+
+	/// True while at least one ibPreparedStatement / ibDatabaseResultSet
+	/// is alive on this layer. The pool consults this in Checkout so a
+	/// conn whose result set is mid-iteration cannot be handed to
+	/// another caller — the driver-side cursor would race. Goes back
+	/// to false when every tracked stmt/rs has been closed or
+	/// destructed (LogStatementForCleanup / LogResultSetForCleanup
+	/// pair with the set-removal in Close()).
+	bool IsBusy() const {
+		return !m_ResultSets.empty() || !m_Statements.empty();
+	}
 
 	// Define formatted run query 
 
@@ -179,6 +254,42 @@ public:
 
 	virtual int GetDatabaseLayerType() const = 0;
 
+	// ---- Row-level pessimistic locks (cluster-level session coordination) ----
+	//
+	// Used by ibSessionRegistry to hold / probe pessimistic locks on rows of
+	// sys_session. The lock is the source of truth for "owner process still
+	// alive" — when the connection that holds the lock drops, the DB engine
+	// rolls back its transaction and the lock is released, so peer processes
+	// see the row as free and can DELETE it as a zombie.
+	//
+	// Default implementations here return false / no-op — registry treats
+	// that as "not supported on this driver" and falls back to heartbeat-
+	// timestamp based liveness (fine for single-process SQLite).
+	//
+	// HoldRowLocks opens a dedicated transaction on THIS connection and
+	// locks each row identified by (tableName, pkColumn = pkValues[i])
+	// via the driver's pessimistic row lock (FB: SELECT ... WITH LOCK;
+	// PG/MySQL/MSSQL: SELECT ... FOR UPDATE). Transaction stays open
+	// until ReleaseRowLocks() commits. Calling again with a new set
+	// commits the prior TX before starting a fresh one. Returns true if
+	// every requested row was locked.
+	virtual bool HoldRowLocks(const wxString& tableName,
+	                          const wxString& pkColumn,
+	                          const std::vector<wxString>& pkValues) { (void)tableName; (void)pkColumn; (void)pkValues; return false; }
+
+	// Release the hold from HoldRowLocks (commits the internal TX). No-op
+	// if nothing is held. Always paired with HoldRowLocks.
+	virtual void ReleaseRowLocks() {}
+
+	// Non-blocking probe: try to take a short-term exclusive lock on
+	// (tableName, pkColumn = pkValue). Returns true if acquired —
+	// signalling that no other connection holds the row, so the caller
+	// may treat it as a zombie and DELETE it. The probe transaction is
+	// rolled back before return so no lock survives the call.
+	virtual bool TryProbeRowLock(const wxString& tableName,
+	                             const wxString& pkColumn,
+	                             const wxString& pkValue) { (void)tableName; (void)pkColumn; (void)pkValue; return false; }
+
 	/// Close all result set objects that have been generated but not yet closed
 	void CloseResultSets();
 
@@ -199,8 +310,35 @@ protected:
 
 	/// Prepare a SQL statement which can be reused with different parameters
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery) = 0;
-	
+
+	// Driver-specific transaction operations. Called by the non-virtual
+	// wrappers above only at depth transitions (0→1 for DoBegin, 1→0
+	// for DoCommit / DoRollBack); intermediate nested levels never
+	// reach the driver. Drivers implement these with their dialect's
+	// transaction SQL or native API — and do NOT manipulate m_txDepth
+	// or m_txAborted themselves.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) = 0;
+	virtual void DoCommit() = 0;
+	virtual void DoRollBack() = 0;
+
 protected:
+
+	/// Nested-transaction depth counter. Owned by the base-class
+	/// Begin / Commit / RollBack wrappers; drivers must not touch it.
+	int m_txDepth = 0;
+
+	/// "Aborted" flag — set by any RollBack while a transaction is
+	/// still open, cleared when the outermost level finally resolves.
+	/// Makes the outermost Commit fall through to a real DoRollBack
+	/// so an inner failure can poison an otherwise successful outer
+	/// commit.
+	bool m_txAborted = false;
+
+	/// Back-pointer to the holder that has this layer reserved for an
+	/// active TX. Maintained exclusively by ibConnectionPool — see
+	/// ReserveTx / ReleaseTx. nullptr when not pinned.
+	ibDatabaseConnectionHolder* m_holder = nullptr;
+	friend class ibConnectionPool;
 
 	/// Add result set object pointer to the list for "garbage collection"
 	void LogResultSetForCleanup(ibDatabaseResultSet* pResultSet) { m_ResultSets.insert(pResultSet); }
@@ -238,6 +376,64 @@ private:
 	ibDatabaseResultSet* DoRunQueryWithResultsUtf8(const wxChar* format, ...);
 	ibPreparedStatement* DoPrepareStatementUtf8(const wxChar* format, ...);
 #endif
+};
+
+#include <memory>
+
+// RAII guard for an ibDatabaseResultSet* obtained from ibDatabaseLayer::RunQueryWithResults
+// or ibPreparedStatement::RunQueryWithResults. Calls rs->Close() and db->CloseResultSet(rs)
+// in the destructor so early returns and exceptions don't leak. The db parameter accepts
+// either a raw ibDatabaseLayer* or a std::shared_ptr<ibDatabaseLayer> (the common form
+// across OES — e.g. the db_query macro returns shared_ptr by value).
+class BACKEND_API ibResultSetGuard {
+public:
+	ibResultSetGuard(ibDatabaseLayer* db, ibDatabaseResultSet* rs) : m_db(db), m_rs(rs) {}
+	ibResultSetGuard(const std::shared_ptr<ibDatabaseLayer>& db, ibDatabaseResultSet* rs) : m_db(db.get()), m_rs(rs) {}
+	~ibResultSetGuard() { reset(nullptr); }
+	ibResultSetGuard(const ibResultSetGuard&) = delete;
+	ibResultSetGuard& operator=(const ibResultSetGuard&) = delete;
+
+	ibDatabaseResultSet* get() const { return m_rs; }
+	ibDatabaseResultSet* operator->() const { return m_rs; }
+	explicit operator bool() const { return m_rs != nullptr; }
+
+	void reset(ibDatabaseResultSet* rs) {
+		if (m_rs != nullptr && m_db != nullptr) {
+			m_rs->Close();
+			m_db->CloseResultSet(m_rs);
+		}
+		m_rs = rs;
+	}
+
+private:
+	ibDatabaseLayer* m_db;
+	ibDatabaseResultSet* m_rs;
+};
+
+// RAII guard for an ibPreparedStatement* obtained from ibDatabaseLayer::PrepareStatement.
+// Calls db->CloseStatement(stmt) in the destructor. Same shared_ptr accommodation as above.
+class BACKEND_API ibStatementGuard {
+public:
+	ibStatementGuard(ibDatabaseLayer* db, ibPreparedStatement* stmt) : m_db(db), m_stmt(stmt) {}
+	ibStatementGuard(const std::shared_ptr<ibDatabaseLayer>& db, ibPreparedStatement* stmt) : m_db(db.get()), m_stmt(stmt) {}
+	~ibStatementGuard() { reset(nullptr); }
+	ibStatementGuard(const ibStatementGuard&) = delete;
+	ibStatementGuard& operator=(const ibStatementGuard&) = delete;
+
+	ibPreparedStatement* get() const { return m_stmt; }
+	ibPreparedStatement* operator->() const { return m_stmt; }
+	explicit operator bool() const { return m_stmt != nullptr; }
+
+	void reset(ibPreparedStatement* stmt) {
+		if (m_stmt != nullptr && m_db != nullptr) {
+			m_db->CloseStatement(m_stmt);
+		}
+		m_stmt = stmt;
+	}
+
+private:
+	ibDatabaseLayer* m_db;
+	ibPreparedStatement* m_stmt;
 };
 
 #endif // __DATABASE_LAYER_H__

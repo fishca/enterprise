@@ -1,4 +1,4 @@
-#ifndef _MANAGER_CATALOG_H__
+﻿#ifndef _MANAGER_CATALOG_H__
 #define _MANAGER_CATALOG_H__
 
 #include "catalog.h"
@@ -12,17 +12,17 @@ public:
 
 	ibValueReferenceDataObject* EmptyRef() const;
 
-	ibValueManagerDataObjectCatalog(ibValueMetaObjectCatalog* metaObject = nullptr) : m_metaObject(metaObject) {}
+	ibValueManagerDataObjectCatalog(const ibValueMetaObjectCatalog* metaObject = nullptr) : m_metaObject(metaObject) {}
 	virtual ~ibValueManagerDataObjectCatalog() {}
 
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const;
-	virtual ibValueMetaObjectCatalog* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const;
+	virtual const ibValueMetaObjectCatalog* GetMetaObject() const { return m_metaObject; }
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
 
 protected:
-	ibValueMetaObjectCatalog* m_metaObject;
+	const ibValueMetaObjectCatalog* m_metaObject;
 private:
 	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectCatalog);
 };

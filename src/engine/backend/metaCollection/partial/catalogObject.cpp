@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : catalog object
 ////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,9 @@
 #include "backend/metaData.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "reference/reference.h"
-#include "backend/databaseLayer/databaseLayer.h"
+#include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
 
 #include "backend/fileSystem/fs.h"
@@ -16,7 +17,7 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-ibValueRecordDataObjectCatalog::ibValueRecordDataObjectCatalog(ibValueMetaObjectCatalog* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
+ibValueRecordDataObjectCatalog::ibValueRecordDataObjectCatalog(const ibValueMetaObjectCatalog* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
 	ibValueRecordDataObjectHierarchyRef(metaObject, objGuid, objMode)
 {
 }
@@ -132,36 +133,38 @@ ibBackendValueForm* ibValueRecordDataObjectCatalog::GetFormValue(const wxString&
 //*                                   Catalog events                                            *
 //***********************************************************************************************
 
-#include "backend/backend_mainFrame.h"
-
 bool ibValueRecordDataObjectCatalog::WriteObject()
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		// Acquire a pool connection for this method's worth of DB
+		// work. Nested calls (register writes, BeforeWrite/OnWrite
+		// script hooks that start their own transactions) inherit
+		// this connection via TL; the base-class counter collapses
+		// their BeginTransaction / Commit onto this outer TX.
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
-		if (!ibBackendException::IsEvalMode()) 
+		if (!ibBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Write()) {
 				ibBackendAccessException::Error();
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 				{
-					db_query_active_transaction.BeginTransaction();
+					scope.SafeBeginTransaction();
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+						ExecAsProc(wxT("BeforeWrite"), cancel);
 
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
@@ -172,7 +175,7 @@ bool ibValueRecordDataObjectCatalog::WriteObject()
 					
 					if (!IsSetUniqueIdentifier()) {
 						ibValue prefix = "", standartProcessing = true;
-						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
+						ExecAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
 							generateUniqueIdentifier = 
 								ibValueRecordDataObjectCatalog::GenerateUniqueIdentifier(prefix.GetString());
@@ -182,24 +185,24 @@ bool ibValueRecordDataObjectCatalog::WriteObject()
 					if (!SaveData()) {
 						if (generateUniqueIdentifier)
 							ibValueRecordDataObjectCatalog::ResetUniqueIdentifier();
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+						ExecAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
 								ibValueRecordDataObjectCatalog::ResetUniqueIdentifier();
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 					}
 
-					db_query_active_transaction.CommitTransaction();
+					scope.SafeCommitTransaction();
 
 					if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
 					else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
@@ -216,9 +219,12 @@ bool ibValueRecordDataObjectCatalog::DeleteObject()
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		// Acquire a pool connection for this method's DB work; nested
+		// calls (BeforeDelete / OnDelete script hooks) inherit it via
+		// the thread-local slot. See WriteObject for the full pattern.
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -240,39 +246,38 @@ bool ibValueRecordDataObjectCatalog::DeleteObject()
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 				{
-					db_query_active_transaction.BeginTransaction();
+					scope.SafeBeginTransaction();
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+						ExecAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
 					if (!DeleteData()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to delete object in db!")); 
 						return false;
 					}
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
+						ExecAsProc(wxT("OnDelete"), cancel);
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!")); 
 							return false;
 						}
 					}
 
-					db_query_active_transaction.CommitTransaction();
+					scope.SafeCommitTransaction();
 
 					if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
 				}
@@ -313,7 +318,7 @@ void ibValueRecordDataObjectCatalog::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
-	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, eThisObject, eSystem);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, true, eThisObject, eSystem);
 
 	//set object name
 	wxString objectName;
@@ -334,7 +339,7 @@ void ibValueRecordDataObjectCatalog::PrepareNames() const
 	}
 
 	//fill custom tables 
-	for (const auto object : m_metaObject->GetTableArrayObject()) {
+	for (const auto object : m_metaObject->GetGenericTableArrayObject()) {
 		if (object->IsDeleted())
 			continue;
 		if (!object->GetObjectNameAsString(objectName))
@@ -347,27 +352,7 @@ void ibValueRecordDataObjectCatalog::PrepareNames() const
 			eTable
 		);
 	}
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-			for (auto exportVariable : byteCode->m_listExportVar) {
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
 bool ibValueRecordDataObjectCatalog::SetPropVal(const long lPropNum, const ibValue& varPropVal)
@@ -455,7 +440,7 @@ bool ibValueRecordDataObjectCatalog::CallAsFunc(const long lMethodNum, ibValue& 
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

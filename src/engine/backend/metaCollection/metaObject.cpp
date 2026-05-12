@@ -648,3 +648,55 @@ bool ibValueMetaObject::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 }
 
 ibRestructureInfo s_restructureInfo;
+
+#include "backend/backend_exception.h"
+#include "backend/session/session.h"
+#include "backend/session/sessionRegistry.h"
+
+namespace {
+	// True if the most recent RequireExclusiveForDDL on this thread
+	// auto-acquired exclusive mode. ReleaseAutoExclusive uses it to know
+	// whether to drop the flag (don't drop if the caller had it before).
+	thread_local bool ts_acquiredByGate = false;
+}
+
+void ibRestructureInfo::RequireExclusiveForDDL()
+{
+	ts_acquiredByGate = false;
+
+	// Already exclusive? Caller (or previous gate) holds it. Don't touch.
+	if (appData->ExclusiveMode()) return;
+
+	// Bootstrap path — no current session / no registry yet (e.g. first-open
+	// auto-save triggered by m_configNew during LoadDatabase before the
+	// session is attached). Nobody else can be connected at this stage, so
+	// skip the gate entirely.
+	auto* session  = ibSession::Current();
+	auto* registry = appData != nullptr ? appData->GetSessionRegistry() : nullptr;
+	if (session == nullptr || registry == nullptr) return;
+
+	// Normal apply — try to acquire exclusive. Succeeds only if we are the
+	// sole live session in the cluster; holds the flag for the rest of the
+	// apply, blocking newcomers.
+	const auto verdict = registry->SetExclusive(session, true);
+	if (verdict == ibSession::ibExclusiveResult::Granted) {
+		ts_acquiredByGate = true;
+		return;
+	}
+
+	ibBackendCoreException::Error(
+		_("Structure (DDL) changes require exclusive mode. Other sessions "
+		  "are connected — disconnect them and try again. "
+		  "Code-only changes (modules, forms) can be saved without it."));
+}
+
+void ibRestructureInfo::ReleaseAutoExclusive()
+{
+	if (!ts_acquiredByGate) return;
+	ts_acquiredByGate = false;
+	auto* session  = ibSession::Current();
+	auto* registry = appData != nullptr ? appData->GetSessionRegistry() : nullptr;
+	if (session != nullptr && registry != nullptr) {
+		registry->SetExclusive(session, false);
+	}
+}

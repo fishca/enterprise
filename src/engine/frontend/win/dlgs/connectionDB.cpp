@@ -6,73 +6,44 @@ ibDialogConnection::ibDialogConnection(wxWindow* parent, wxWindowID id, const wx
 	wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
-	wxDialog::SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INACTIVECAPTION));
+	// Drop the INACTIVECAPTION yellow tint — native window background reads
+	// correctly against every OS theme.
+
+	const int kPad = FromDIP(6);
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-	wxBoxSizer* sizerServer = new wxBoxSizer(wxHORIZONTAL);
 
-	m_staticTextServer = new wxStaticText(this, wxID_ANY, _("Server:"), wxDefaultPosition, wxDefaultSize, 0);
-	m_staticTextServer->Wrap(-1);
-	sizerServer->Add(m_staticTextServer, 1, wxALIGN_CENTER_VERTICAL, 0);
+	wxFlexGridSizer* grid = new wxFlexGridSizer(/*rows*/ 0, /*cols*/ 2, kPad, kPad);
+	grid->AddGrowableCol(1, 1);
 
-	m_textCtrlServer = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	sizerServer->Add(m_textCtrlServer, 3, wxALL | wxEXPAND, 5);
-	mainSizer->Add(sizerServer, 0, wxEXPAND, 5);
+	auto addRow = [&](wxStaticText*& label, const wxString& text,
+		wxTextCtrl*& ctrl, long ctrlStyle) {
+		label = new wxStaticText(this, wxID_ANY, text);
+		ctrl  = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, ctrlStyle);
+		grid->Add(label, 0, wxALIGN_CENTER_VERTICAL);
+		grid->Add(ctrl,  1, wxEXPAND);
+	};
 
-	wxBoxSizer* sizerPort = new wxBoxSizer(wxHORIZONTAL);
+	addRow(m_staticTextServer,   _("Server:"),   m_textCtrlServer,   0);
+	addRow(m_staticTextPort,     _("Port:"),     m_textCtrlPort,     0);
+	addRow(m_staticTextUser,     _("User:"),     m_textCtrlUser,     0);
+	addRow(m_staticTextPassword, _("Password:"), m_textCtrlPassword, wxTE_PASSWORD);
+	addRow(m_staticTextDataBase, _("Database:"), m_textCtrlDataBase, 0);
 
-	m_staticTextPort = new wxStaticText(this, wxID_ANY, _("Port:"), wxDefaultPosition, wxDefaultSize, 0);
-	m_staticTextPort->Wrap(-1);
-	sizerPort->Add(m_staticTextPort, 1, wxALIGN_CENTER_VERTICAL, 0);
-
-	m_textCtrlPort = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	sizerPort->Add(m_textCtrlPort, 3, wxALL | wxEXPAND, 5);
-	mainSizer->Add(sizerPort, 0, wxEXPAND, 5);
-
-	wxBoxSizer* sizerUser = new wxBoxSizer(wxHORIZONTAL);
-
-	m_staticTextUser = new wxStaticText(this, wxID_ANY, _("User:"), wxDefaultPosition, wxDefaultSize, 0);
-	m_staticTextUser->Wrap(-1);
-	sizerUser->Add(m_staticTextUser, 1, wxALIGN_CENTER_VERTICAL, 0);
-
-	m_textCtrlUser = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	sizerUser->Add(m_textCtrlUser, 3, wxALL | wxEXPAND, 5);
-	mainSizer->Add(sizerUser, 0, wxEXPAND, 5);
-
-	wxBoxSizer* sizerPassword = new wxBoxSizer(wxHORIZONTAL);
-
-	m_staticTextPassword = new wxStaticText(this, wxID_ANY, _("Password:"), wxDefaultPosition, wxDefaultSize, 0);
-	m_staticTextPassword->Wrap(-1);
-	sizerPassword->Add(m_staticTextPassword, 1, wxALIGN_CENTER_VERTICAL, 0);
-
-	m_textCtrlPassword = new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD);
-	sizerPassword->Add(m_textCtrlPassword, 3, wxALL | wxEXPAND, 5);
-	mainSizer->Add(sizerPassword, 0, wxEXPAND, 5);
-
-	wxBoxSizer* sizerDataBase = new wxBoxSizer(wxHORIZONTAL);
-
-	m_staticTextDataBase = new wxStaticText(this, wxID_ANY, _("Database:"), wxDefaultPosition, wxDefaultSize, 0);
-	m_staticTextDataBase->Wrap(-1);
-	sizerDataBase->Add(m_staticTextDataBase, 1, wxALIGN_CENTER_VERTICAL, 0);
-
-	m_textCtrlDataBase = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	sizerDataBase->Add(m_textCtrlDataBase, 3, wxALL | wxEXPAND, 5);
-	mainSizer->Add(sizerDataBase, 0, wxEXPAND, 5);
+	mainSizer->Add(grid, 0, wxALL | wxEXPAND, kPad * 2);
 
 	wxBoxSizer* bSizerButton = new wxBoxSizer(wxHORIZONTAL);
+	m_buttonTestConnection = new wxButton(this, wxID_ANY, _("Test connection"));
+	m_buttonSaveConnection = new wxButton(this, wxID_ANY, _("Save connection"));
+	// Right-aligned button bar, default theme colouring.
+	bSizerButton->AddStretchSpacer(1);
+	bSizerButton->Add(m_buttonTestConnection, 0, wxRIGHT, kPad);
+	bSizerButton->Add(m_buttonSaveConnection, 0);
 
-	m_buttonTestConnection = new wxButton(this, wxID_ANY, _("Test connection"), wxDefaultPosition, wxDefaultSize, 0);
-	m_buttonTestConnection->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK));
-
-	bSizerButton->Add(m_buttonTestConnection, 0, wxALL, 5);
-
-	m_buttonSaveConnection = new wxButton(this, wxID_ANY, _("Save connection"), wxDefaultPosition, wxDefaultSize, 0);
-	m_buttonSaveConnection->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_ACTIVECAPTION));
-
-	bSizerButton->Add(m_buttonSaveConnection, 1, wxALL, 5);
-	mainSizer->Add(bSizerButton, 1, wxEXPAND, 5);
+	mainSizer->Add(bSizerButton, 0, wxALL | wxEXPAND, kPad * 2);
 
 	wxDialog::SetSizer(mainSizer);
+	mainSizer->SetSizeHints(this);
 	wxDialog::Layout();
 	wxDialog::Centre(wxBOTH);
 

@@ -265,7 +265,7 @@ bool ibDatabaseLayerMySQL::IsOpen()
 }
 
 // transaction support
-void ibDatabaseLayerMySQL::BeginTransaction()
+void ibDatabaseLayerMySQL::DoBeginTransaction(const ibTxOptions& opts)
 {
 	ResetErrorCodes();
 
@@ -276,9 +276,18 @@ void ibDatabaseLayerMySQL::BeginTransaction()
 		SetErrorMessage(ConvertFromUnicodeStream(m_pInterface->GetMysqlError()((MYSQL*)m_pDatabase)));
 		ThrowDatabaseException();
 	}
+
+	// InnoDB's NOWAIT is either per-statement (`SELECT ... FOR UPDATE NOWAIT`,
+	// MySQL 8+) or session-level via `innodb_lock_wait_timeout`. Setting
+	// session-level here scopes nowait to this connection; registry uses
+	// a dedicated probe connection so this doesn't leak to other work.
+	if (opts.noWait) {
+		try { DoRunQuery(wxT("SET SESSION innodb_lock_wait_timeout = 1"), false); }
+		catch (...) { /* best-effort */ }
+	}
 }
 
-void ibDatabaseLayerMySQL::Commit()
+void ibDatabaseLayerMySQL::DoCommit()
 {
 	ResetErrorCodes();
 
@@ -298,7 +307,7 @@ void ibDatabaseLayerMySQL::Commit()
 	}
 }
 
-void ibDatabaseLayerMySQL::RollBack()
+void ibDatabaseLayerMySQL::DoRollBack()
 {
 	ResetErrorCodes();
 
@@ -318,9 +327,39 @@ void ibDatabaseLayerMySQL::RollBack()
 	}
 }
 
-bool ibDatabaseLayerMySQL::IsActiveTransaction()
+// IsActiveTransaction inherits the base-class default (m_txDepth > 0).
+
+bool ibDatabaseLayerMySQL::TryProbeRowLock(const wxString& tableName,
+                                            const wxString& pkColumn,
+                                            const wxString& pkValue)
 {
-	return false;
+	// MySQL 8+ supports `SELECT ... FOR UPDATE NOWAIT`; older servers
+	// ignore the NOWAIT keyword but honour the session-level
+	// `innodb_lock_wait_timeout = 1` set inside BeginTransaction({noWait}).
+	// Either path turns a contended row into an exception within ~1s.
+	try { BeginTransaction({ /*.noWait=*/true }); }
+	catch (...) { return false; }
+
+	const wxString sql = wxT("SELECT ") + pkColumn + wxT(" FROM ")
+		+ tableName + wxT(" WHERE ") + pkColumn
+		+ wxT(" = ? FOR UPDATE NOWAIT");
+	ibPreparedStatement* stmt = DoPrepareStatement(sql);
+	bool gotLock = false;
+	if (stmt) {
+		stmt->SetParamString(1, pkValue);
+		try {
+			ibDatabaseResultSet* rs = stmt->RunQueryWithResults();
+			if (rs) {
+				if (rs->Next()) gotLock = true;
+				rs->Close();
+				CloseResultSet(rs);
+			}
+		}
+		catch (...) { gotLock = false; }
+		CloseStatement(stmt);
+	}
+	try { RollBack(); } catch (...) {}
+	return gotLock;
 }
 
 // query database

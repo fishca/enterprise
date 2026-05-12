@@ -1,0 +1,29 @@
+// Phase D — LINQ chain syntax with closure capture.
+//
+// Pre-Phase-B: `arr.Where(Function(x) Return x > threshold EndFunction)`
+// failed because `threshold` (outer-scope var) wasn't visible inside
+// lambda. Phase A/B closure capture should make this work out-of-the-box.
+//
+// arr.Where(x > threshold).Select(x * multiplier) → expected:
+//   filter: 3, 4, 5
+//   project: 30, 40, 50
+
+var arr = New Array
+arr.Add(1)
+arr.Add(2)
+arr.Add(3)
+arr.Add(4)
+arr.Add(5)
+
+var threshold  = 2
+var multiplier = 10
+
+var filtered = arr.Where(Function(x) Return x > threshold EndFunction)
+var projected = filtered.Select(Function(x) Return x * multiplier EndFunction)
+var result = projected.ToArray()
+
+Message("count=" + result.Count())
+
+For Each v In result Do
+    Message(v)
+EndDo

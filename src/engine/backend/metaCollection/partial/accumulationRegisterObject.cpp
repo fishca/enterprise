@@ -1,7 +1,8 @@
 #include "accumulationRegister.h"
 
 #include "backend/appData.h"
-#include "backend/databaseLayer/databaseLayer.h"
+#include "backend/session/session.h"
+#include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -10,9 +11,9 @@ bool ibValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bo
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -22,38 +23,37 @@ bool ibValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bo
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query_active_transaction.BeginTransaction();
+				scope.SafeBeginTransaction();
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					ExecAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!SaveData(replace, clearTable)) {
-					db_query_active_transaction.RollBackTransaction();
+					scope.SafeRollBackTransaction();
 					ibBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					ExecAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
-				db_query_active_transaction.CommitTransaction();
+				scope.SafeCommitTransaction();
 			}
 
 			m_objModified = false;
@@ -67,9 +67,9 @@ bool ibValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -79,38 +79,37 @@ bool ibValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query_active_transaction.BeginTransaction();
+				scope.SafeBeginTransaction();
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					ExecAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
-					db_query_active_transaction.RollBackTransaction();
+					scope.SafeRollBackTransaction();
 					ibBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					ExecAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
-				db_query_active_transaction.CommitTransaction();
+				scope.SafeCommitTransaction();
 			}
 
 			m_objModified = false;
@@ -159,7 +158,7 @@ void ibValueRecordSetObjectAccumulationRegister::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("Selected"), wxT("Selected()"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
-	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, prop::eThisObject, wxNOT_FOUND);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, true, prop::eThisObject, wxNOT_FOUND);
 	m_methodHelper->AppendProp(wxT("Filter"), true, false, prop::eFilter, wxNOT_FOUND);
 }
 
@@ -194,7 +193,7 @@ bool ibValueRecordSetObjectAccumulationRegister::CallAsFunc(const long lMethodNu
 		pvarRetValue = (unsigned int)GetRowCount();
 		return true;
 	case func::eClear:
-		ibValueModelTableBase::Clear();
+		ibValueModelRamTableBase::Clear();
 		return true;
 	case func::eLoad:
 		LoadDataFromTable(paParams[0]->ConvertToType<ibValueModelTableBase>());

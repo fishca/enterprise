@@ -2,9 +2,33 @@
 #define _PROCUNIT_H__
 
 #include "procContext.h"
+#include "compileCode.h"  // ibProcUnitEvaluate owns std::unique_ptr<ibCompileCode>
+
+struct ibProcUnitState;   // procUnitState.h — forward decl; full type via ibSession::GetPUState()
+
+// Forward decl — ibValueFunction lives inline in procUnit.cpp; needs
+// access to ibProcUnit::m_pByteCode for the swap-and-restore pattern
+// in its Execute() implementation.
+class ibValueFunction;
+class ibSession;
+
+// Invoke a lambda value with one argument from host (C++) code.
+// `callable` must wrap (directly or through TYPE_REFFER) an
+// ibValueFunction value; returns true on success, false if the
+// value is not a lambda. Used by host-side aggregation helpers
+// (ibValueArray::Sum/Min/Max/Average with selector λ) and other
+// callsites that need to fire a script lambda from C++ without
+// going through OPER_CALL_LAMBDA bytecode.
+BACKEND_API bool InvokeLambdaWithArg(ibValue& callable, ibValue& arg, ibValue& retVal);
 
 class BACKEND_API ibProcUnit {
 public:
+
+	friend class ibValueFunction;
+	// ibSession::CompileRoot wires the per-session lambda runtime
+	// shim's frame array directly — needs access to m_pppArrayList /
+	// m_ppArrayCode / m_cCurContext.
+	friend class ibSession;
 
 	//Constructors/destructors
 	ibProcUnit() : m_numAutoDeleteParent(0),
@@ -16,26 +40,7 @@ public:
 	virtual ~ibProcUnit() { Clear(); }
 
 	//Methods
-	void Reset() {
-
-		if (m_pppArrayList != nullptr) {
-			wxDELETEA(m_pppArrayList);
-		}
-
-		if (m_ppArrayCode != nullptr) {
-			wxDELETE(m_ppArrayCode);
-		}
-
-		if (m_currentRunModule == this) {
-			m_currentRunModule = nullptr;
-		}
-
-		m_numAutoDeleteParent = 0;
-
-		m_pppArrayList = nullptr;
-		m_ppArrayCode = nullptr;
-		m_pByteCode = nullptr;
-	}
+	void Reset();
 
 	void Clear() {
 		m_procParent.clear();
@@ -65,14 +70,25 @@ public:
 	}
 
 	unsigned int GetParentCount() const { return m_procParent.size(); }
-	ibByteCode* GetByteCode() const { return m_pByteCode; }
+	const ibByteCode* GetByteCode() const { return m_pByteCode; }
 
-	void Execute(ibByteCode& ByteCode) { Execute(ByteCode, nullptr, true); }
-	void Execute(ibByteCode& ByteCode, bool bRunModule) { Execute(ByteCode, nullptr, bRunModule); }
-	void Execute(ibByteCode& ByteCode, ibValue& pvarRetValue, bool bRunModule = true) { Execute(ByteCode, &pvarRetValue, bRunModule); }
+	// Execute(bytecode, binder, retVal). Bytecode is a pure template
+	// (m_listVar entries with kind ∈ {External, Context} declare the
+	// binding contract); binder carries the live ibValue* slots filled
+	// by manager via SetVar().
+	void Execute(const ibByteCode& bc, ibByteBinder& br) { Execute(bc, br, nullptr); }
+	void Execute(const ibByteCode& bc, ibByteBinder& br, ibValue& pvarRetValue) { Execute(bc, br, &pvarRetValue); }
+
+	// Internal ibByteCode-only overloads — used by eval / nested call
+	// paths that don't need a real binding session (extern frames
+	// inherited via m_pppArrayList from a parent procunit). Construct
+	// an empty binder internally bound to bc's m_listVar.
+	void Execute(const ibByteCode& bc) { ibByteBinder br(bc.m_listVar, /*delta=*/true); Execute(bc, br, nullptr); }
+	void Execute(const ibByteCode& bc, bool delta) { ibByteBinder br(bc.m_listVar, delta); Execute(bc, br, nullptr); }
+	void Execute(const ibByteCode& bc, ibValue& pvarRetValue, bool delta = true) { ibByteBinder br(bc.m_listVar, delta); Execute(bc, br, &pvarRetValue); }
 
 private:
-	void Execute(ibByteCode& ByteCode, ibValue* pvarRetValue, bool bRunModule = true);
+	void Execute(const ibByteCode& bc, ibByteBinder& br, ibValue* pvarRetValue);
 	void Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDelta); // bDelta=true - flag for executing module operators that come at the end of functions and procedures
 public:
 
@@ -114,66 +130,52 @@ public:
 	bool GetPropVal(const wxString& strPropName, ibValue& pvarPropVal);
 	bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);//attribute value
 
-	//run module 
-	static ibProcUnit* GetCurrentRunModule() { return m_currentRunModule; }
-	static void ClearCurrentRunModule() { m_currentRunModule = nullptr; }
-
-	//run context
-	static void AddRunContext(ibRunContext* runContext) { ms_runContext.push_back(runContext); }
-	static unsigned int GetCountRunContext() { return ms_runContext.size(); }
-
-	static ibRunContext* GetPrevRunContext() {
-		if (ms_runContext.size() < 2)
-			return nullptr;
-		return ms_runContext[ms_runContext.size() - 2];
-	}
-
-	static ibRunContext* GetCurrentRunContext() {
-		if (!ms_runContext.size())
-			return nullptr;
-		return ms_runContext.back();
-	}
-
-	static ibRunContext* GetRunContext(unsigned int idx) {
-		if (ms_runContext.size() < idx)
-			return nullptr;
-		return ms_runContext[idx];
-	}
-
-	static void BackRunContext() { ms_runContext.pop_back(); }
-
-	static ibByteCode* GetCurrentByteCode() {
-		const ibRunContext* runContext = GetCurrentRunContext();
-		if (runContext != nullptr)
-			return runContext->GetByteCode();
-		return nullptr;
-	}
-
-	static void Raise();
+	// Interpreter state (currentRunModule, runContext stack, errorPlace,
+	// recCount) lives on ibProcUnitState — accessed through
+	// ibSession::GetPUState()->X. The previous static forwarders on
+	// ibProcUnit (GetCurrentRunModule / GetCurrentRunContext / Raise /
+	// ...) were removed; callers go through GetPUState() directly,
+	// which returns nullptr when no session is bound and lets the
+	// caller decide on the null-handling policy explicitly.
 
 protected:
 
 	//attributes:
 	int m_numAutoDeleteParent; //flag for deleting the parent module
-	ibByteCode* m_pByteCode = nullptr;
+	const ibByteCode* m_pByteCode = nullptr;
 	ibValue*** m_pppArrayList = {}; //pointers to arrays of variable pointers (0 - local variables, 1 - variables of the current module, 2 and higher - variables of parent modules)
 	ibProcUnit** m_ppArrayCode = {}; //pointers to arrays of executable modules (0 - current module, 1 and higher - parent modules)
 	std::vector <ibProcUnit*> m_procParent;
 
-	//static attributes
-	static ibProcUnit* m_currentRunModule;
+	// Per-thread state (m_currentRunModule, ms_runContext, s_nRecCount,
+	// s_errorPlace) lives as thread_local in procUnit.cpp. The storage
+	// cannot be declared `static thread_local` on an exported (BACKEND_API)
+	// class — MSVC C2492 forbids the combination. Access goes through the
+	// static inline/out-of-line methods below, each of which forwards to
+	// the file-scope thread_local in procUnit.cpp.
 
 	ibRunContext m_cCurContext;
-
-	//static attributes
-	static std::vector <ibRunContext*> ms_runContext; //list of executable module codes
 };
 
 class BACKEND_API ibProcUnitEvaluate : public ibProcUnit {
 public:
 
+	// Direct ownership of the eval's compile-code. Replaces the old
+	// `delete m_pByteCode->m_compileModule` cleanup that reached
+	// through the bytecode back-pointer. The compile-code is stamped
+	// here BEFORE CompileExpression so that even if compile throws,
+	// the unique_ptr cleans it up — no manual error-path handling
+	// needed in the caller.
+	void TakeCompileCode(std::unique_ptr<ibCompileCode> compileCode) {
+		m_compileCode = std::move(compileCode);
+	}
+	ibCompileCode* GetCompileCode() const { return m_compileCode.get(); }
+
 	//Constructors/destructors
-	virtual ~ibProcUnitEvaluate();
+	virtual ~ibProcUnitEvaluate() = default;
+
+private:
+	std::unique_ptr<ibCompileCode> m_compileCode;
 };
 
-#endif 
+#endif

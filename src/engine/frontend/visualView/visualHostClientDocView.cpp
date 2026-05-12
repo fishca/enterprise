@@ -2,6 +2,10 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
+#ifdef OES_USE_WEB
+#include <iostream>
+#endif
+
 static std::set<ibFormVisualDocument*> s_createdDocFormArray = {};
 
 //********************************************************************************************
@@ -45,8 +49,8 @@ bool ibFormVisualDocument::OnCreate(const wxString& path, long flags)
 		const ibValueMetaObjectFormBase* creator = m_valueForm->GetFormMetaObject();
 		if (creator != nullptr) {
 			ibFormVisualDocument::SetIcon(creator->GetIcon());
+			ibFormVisualDocument::SetFilename(creator->GetFileName());
 		}
-		ibFormVisualDocument::SetFilename(creator->GetFileName());
 	}
 
 	ibFormVisualDocument::SetTitle(m_valueForm->GetCaption());
@@ -108,11 +112,11 @@ bool ibFormVisualDocument::Save()
 		success = sourceObject != nullptr ?
 			sourceObject->SaveModify() : true;
 	}
-	catch (const ibBackendAccessException* err) {
-		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendAccessException& err) {
+		ibValueSystemFunction::Alert(err.GetErrorDescription());
 		success = false;
 	}
-	catch (const ibBackendException*) {
+	catch (const ibBackendException&) {
 		ibValueSystemFunction::Alert(_("An error occurred while trying to save the form!"));
 		success = false;
 	}
@@ -158,6 +162,10 @@ ibFormVisualDocument::ibFormVisualDocument(ibValueForm* valueForm)
 
 ibFormVisualDocument::~ibFormVisualDocument()
 {
+#ifdef OES_USE_WEB
+	std::cerr << "[life] ~ibFormVisualDocument " << this
+		<< " form=" << (void*)GetValueForm() << std::endl;
+#endif
 	s_createdDocFormArray.erase(this);
 }
 
@@ -282,6 +290,17 @@ ibFormVisualDocument* ibFormVisualDocument::FindDocByUniqueKey(const ibUniqueKey
 
 bool ibFormVisualDocument::UpdateFormUniqueKey(const ibUniqueKeyPair& formKey)
 {
+	// Lookup by stable instance GUID, NOT by composite key:
+	//  * `m_objGuid` is per-instance (set once by the ctor), shared
+	//    between the manager's m_objGuid and the form's m_formKey
+	//    because they reference the same ibUniqueKeyPair instance.
+	//  * `m_keyValues` changes when the user edits a dimension —
+	//    using operator== (which dispatches to enUniqueKey →
+	//    m_keyValues compare) would miss the form right after save
+	//    because form still holds the OLD keyValues at this point.
+	// The whole purpose of this method is to write the NEW keyValues
+	// onto the form, so we must locate it by the stable identity
+	// (m_objGuid), then replace m_formKey with the fresh pair.
 	std::set<ibFormVisualDocument*>::iterator foundedForm =
 		std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
 			[formKey](const ibFormVisualDocument* visualDoc) {
@@ -306,6 +325,13 @@ bool ibFormVisualDocument::UpdateFormUniqueKey(const ibUniqueKeyPair& formKey)
 
 wxPrintout* ibFormVisualEditView::OnCreatePrintout()
 {
+#ifdef OES_USE_WEB
+	// Printing reaches back through wxWindow::FindFocus() and
+	// ibVisualHost::GetObjectBase (a map of wx widgets). Neither exists
+	// on web — printing would need a dedicated "render-current-form-to-
+	// PDF" endpoint instead. Until then, no printout.
+	return nullptr;
+#else
 	wxWindow* focusedWindow = wxWindow::FindFocus();
 	while (focusedWindow != nullptr) {
 
@@ -317,6 +343,7 @@ wxPrintout* ibFormVisualEditView::OnCreatePrintout()
 	}
 
 	return nullptr;
+#endif
 }
 
 bool ibFormVisualEditView::OnCreate(ibMetaDocument* doc, long flags)
@@ -373,10 +400,20 @@ bool ibFormVisualEditView::OnClose(bool deleteWindow)
 	//if (CDocMDIFrame::Get())
 	//	Activate(false);
 
+#ifndef OES_USE_WEB
+	// GetFrame() returns a wxWindow (the wxDocChildFrame hosting this
+	// view on desktop). On web the view's "frame" is an ibWebDocChildFrame
+	// living in ibWebFrame's tab vector — its lifetime is managed by
+	// the session's tab close path, not by the view. So no Destroy here.
+	//
+	// This runs through the CloseForm → CallAfter defer path
+	// (formObject.cpp), so we're on a fresh idle dispatch — safe to
+	// Destroy synchronously.
 	if (deleteWindow) {
 		GetFrame()->Destroy();
 		SetFrame(nullptr);
 	}
+#endif
 
 	return ibMetaView::OnClose(deleteWindow);
 }
@@ -384,7 +421,14 @@ bool ibFormVisualEditView::OnClose(bool deleteWindow)
 void ibFormVisualEditView::OnClosingDocument()
 {
 	if (m_visualHost != nullptr) {
+#ifdef OES_USE_WEB
+		// wxTheApp is null in wfrontend.dll (no wxApp instance, just
+		// wxInitializer). Delete inline — safe because the web host
+		// isn't an evented wxWindow, just an ibWebWindow-derived node.
+		delete m_visualHost;
+#else
 		wxTheApp->ScheduleForDestruction(m_visualHost);
+#endif
 		m_visualHost = nullptr;
 	}
 }
@@ -393,7 +437,14 @@ void ibFormVisualEditView::OnClosingDocument()
 
 ibFormVisualEditView::~ibFormVisualEditView()
 {
+#ifdef OES_USE_WEB
+	if (m_visualHost != nullptr) {
+		delete m_visualHost;
+		m_visualHost = nullptr;
+	}
+#else
 	if (m_visualHost != nullptr && !wxTheApp->IsScheduledForDestruction(m_visualHost)) {
 		wxTheApp->ScheduleForDestruction(m_visualHost);
 	}
+#endif
 }

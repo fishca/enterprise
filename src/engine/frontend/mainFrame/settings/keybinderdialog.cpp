@@ -6,6 +6,7 @@
 
 #include <map>
 #include <algorithm>
+#include <functional>
 #include <assert.h>
 
 BEGIN_EVENT_TABLE(ibDialogKeyBinder, wxPanel)
@@ -41,53 +42,53 @@ ibDialogKeyBinder::ibDialogKeyBinder(wxWindow* parent, int id, wxPoint pos, wxSi
 	fgSizer3->SetFlexibleDirection(wxBOTH);
 
 	m_staticText1 = new wxStaticText(this, wxID_ANY, _("Commands:"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer3->Add(m_staticText1, 0, wxALL, 5);
+	fgSizer3->Add(m_staticText1, 0, wxALL, FromDIP(5));
 
 	m_commandTreeCtrl = new wxTreeCtrl(this, ID_CommandTree, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE);
-	fgSizer3->Add(m_commandTreeCtrl, 0, wxALL | wxEXPAND, 5);
+	fgSizer3->Add(m_commandTreeCtrl, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_commandTreeCtrl->SetDoubleBuffered(true);
 
-	fgSizer2->Add(fgSizer3, 1, wxEXPAND, 5);
+	fgSizer2->Add(fgSizer3, 1, wxEXPAND, FromDIP(5));
 
 	wxFlexGridSizer* fgSizer5 = new wxFlexGridSizer(8, 1, 0, 0);
 	fgSizer5->AddGrowableRow(1);
 	fgSizer5->SetFlexibleDirection(wxVERTICAL);
 
 	m_staticText2 = new wxStaticText(this, wxID_ANY, _("Current Shortcuts:"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer5->Add(m_staticText2, 0, wxALL, 5);
+	fgSizer5->Add(m_staticText2, 0, wxALL, FromDIP(5));
 
 	m_shortcutsListCtrl = new wxListBox(this, ID_ShortcutsList, wxDefaultPosition, wxDefaultSize, 0, nullptr, 0);
-	fgSizer5->Add(m_shortcutsListCtrl, 0, wxALL | wxEXPAND, 5);
+	fgSizer5->Add(m_shortcutsListCtrl, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* bSizer1 = new wxBoxSizer(wxHORIZONTAL);
 
 	m_removeButton = new wxButton(this, ID_Remove, _("Remove"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer1->Add(m_removeButton, 0, wxALL, 5);
+	bSizer1->Add(m_removeButton, 0, wxALL, FromDIP(5));
 
 	m_removeAllButton = new wxButton(this, ID_RemoveAll, _("Remove All"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer1->Add(m_removeAllButton, 0, wxALL, 5);
+	bSizer1->Add(m_removeAllButton, 0, wxALL, FromDIP(5));
 
-	fgSizer5->Add(bSizer1, 1, wxEXPAND, 5);
+	fgSizer5->Add(bSizer1, 1, wxEXPAND, FromDIP(5));
 
 	m_staticText3 = new wxStaticText(this, wxID_ANY, _("New:"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer5->Add(m_staticText3, 0, wxALL, 5);
+	fgSizer5->Add(m_staticText3, 0, wxALL, FromDIP(5));
 
 	m_keyMonitorCtrl = new ibTextCtrlKeyMonitor(this, ID_KeyMonitor, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer5->Add(m_keyMonitorCtrl, 0, wxALL | wxEXPAND, 5);
+	fgSizer5->Add(m_keyMonitorCtrl, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_staticText4 = new wxStaticText(this, wxID_ANY, _("Currently Assigned:"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer5->Add(m_staticText4, 0, wxALL, 5);
+	fgSizer5->Add(m_staticText4, 0, wxALL, FromDIP(5));
 
 	m_currentlyAssignedCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
-	fgSizer5->Add(m_currentlyAssignedCtrl, 0, wxALL | wxEXPAND, 5);
+	fgSizer5->Add(m_currentlyAssignedCtrl, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_addButton = new wxButton(this, ID_Add, _("Add"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer5->Add(m_addButton, 0, wxALL | wxEXPAND, 5);
+	fgSizer5->Add(m_addButton, 0, wxALL | wxEXPAND, FromDIP(5));
 
-	fgSizer2->Add(fgSizer5, 1, wxEXPAND, 5);
+	fgSizer2->Add(fgSizer5, 1, wxEXPAND, FromDIP(5));
 
-	fgSizer1->Add(fgSizer2, 1, wxEXPAND, 5);
+	fgSizer1->Add(fgSizer2, 1, wxEXPAND, FromDIP(5));
 
 	wxFlexGridSizer* fgSizer6 = new wxFlexGridSizer(3, 1, 0, 0);
 	fgSizer6->AddGrowableCol(0);
@@ -95,14 +96,14 @@ ibDialogKeyBinder::ibDialogKeyBinder(wxWindow* parent, int id, wxPoint pos, wxSi
 	fgSizer6->SetFlexibleDirection(wxBOTH);
 
 	m_staticText9 = new wxStaticText(this, wxID_ANY, _("Description:"), wxDefaultPosition, wxDefaultSize, 0);
-	fgSizer6->Add(m_staticText9, 0, wxALL, 5);
+	fgSizer6->Add(m_staticText9, 0, wxALL, FromDIP(5));
 
 	m_descriptionCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
 	m_descriptionCtrl->SetMinSize(wxSize(-1, 50));
 
-	fgSizer6->Add(m_descriptionCtrl, 1, wxALL | wxEXPAND, 5);
+	fgSizer6->Add(m_descriptionCtrl, 1, wxALL | wxEXPAND, FromDIP(5));
 
-	fgSizer1->Add(fgSizer6, 1, wxEXPAND, 5);
+	fgSizer1->Add(fgSizer6, 1, wxEXPAND, FromDIP(5));
 
 	this->SetSizer(fgSizer1);
 	this->Layout();
@@ -116,26 +117,41 @@ ibDialogKeyBinder::~ibDialogKeyBinder()
 
 void ibDialogKeyBinder::Initialize()
 {
-	// Add the commands to the tree.
+	// Add the commands to the tree. Group strings can be hierarchical —
+	// AddCommandsFromMenu builds them as "Top / Sub / Subsub" so that
+	// menu nesting (File → Recent → Clear) maps onto a nested tree here
+	// instead of one flat group line per leaf submenu.
 	wxTreeItemId root = m_commandTreeCtrl->AddRoot(_("Commands"));
-	std::map<wxString, wxTreeItemId> groups;
+	std::map<wxString, wxTreeItemId> groupNodeByPath;
+
+	std::function<wxTreeItemId(const wxString&)> getOrCreateGroup =
+		[&](const wxString& path) -> wxTreeItemId {
+		auto it = groupNodeByPath.find(path);
+		if (it != groupNodeByPath.end())
+			return it->second;
+
+		// Find parent path (everything before the last " / ") and the
+		// leaf label (everything after). Top-level group has no parent
+		// separator and parents to root.
+		const wxString sep = wxT(" / ");
+		const size_t cut = path.rfind(sep);
+		wxTreeItemId parent;
+		wxString label;
+		if (cut == wxString::npos) {
+			parent = root;
+			label  = path;
+		} else {
+			parent = getOrCreateGroup(path.substr(0, cut));
+			label  = path.substr(cut + sep.length());
+		}
+		wxTreeItemId node = m_commandTreeCtrl->AppendItem(parent, label);
+		groupNodeByPath.emplace(path, node);
+		return node;
+	};
 
 	for (unsigned int i = 0; i < m_commands.size(); ++i)
 	{
-		std::map<wxString, wxTreeItemId>::iterator iterator = groups.find(m_commands[i]->group);
-
-		wxTreeItemId groupNode;
-
-		if (iterator == groups.end())
-		{
-			// We haven't encountered this group yet, so create a new node for it.
-			groupNode = m_commandTreeCtrl->AppendItem(root, m_commands[i]->group);
-			groups.emplace(std::make_pair(m_commands[i]->group, groupNode));
-		}
-		else
-		{
-			groupNode = iterator->second;
-		}
+		wxTreeItemId groupNode = getOrCreateGroup(m_commands[i]->group);
 
 		CommandData* data = new CommandData;
 		data->command = m_commands[i];
@@ -145,11 +161,9 @@ void ibDialogKeyBinder::Initialize()
 		label.Replace("&", "");
 
 		m_commandTreeCtrl->AppendItem(groupNode, label, -1, -1, data);
-
 	}
 
 	m_commandTreeCtrl->Expand(root);
-
 }
 
 void ibDialogKeyBinder::OnCommandTreeSelectionChanged(wxTreeEvent& event)

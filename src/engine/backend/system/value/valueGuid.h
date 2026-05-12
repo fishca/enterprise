@@ -18,7 +18,7 @@ public:
 	virtual bool Init(ibValue **paParams, const long lSizeArray);
 
 	virtual wxString GetString() const {
-		return wxString(m_guid.str());
+		return m_guid;
 	}
 
 	//check is empty
@@ -28,12 +28,12 @@ public:
 
 	//operator '=='
 	virtual bool CompareValueEQ(const ibValue &cParam) const {
-		return m_guid == cParam.GetString(); 
+		return m_guid == ibGuid(cParam.GetString());
 	}
-	
+
 	//operator '!='
-	virtual bool CompareValueNE(const ibValue &cParam) const { 
-		return m_guid != cParam.GetString(); 
+	virtual bool CompareValueNE(const ibValue &cParam) const {
+		return m_guid != ibGuid(cParam.GetString());
 	}
 
 private:

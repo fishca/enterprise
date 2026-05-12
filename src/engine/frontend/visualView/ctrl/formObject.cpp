@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : frame object
 ////////////////////////////////////////////////////////////////////////////
@@ -9,17 +9,37 @@
 #include "frontend/docView/docManager.h"
 #include "backend/srcExplorer.h"
 #include "backend/moduleManager/moduleManager.h"
+#include "backend/session/session.h"
 #include "frontend/visualView/visualHostClient.h"
+#ifdef OES_USE_WEB
+// ibWebTimer full type for `new ibFrontendTimer()` in AttachIdleHandler.
+#include "frontend/web/webTimer.h"
+#else
+#include <wx/timer.h>
+#endif
 
 //*************************************************************************************************
 //*                                    System attribute                                           *
 //*************************************************************************************************
 
+// BuildForm now runs on both builds — both control families are needed.
+// tableBox.h compiles cleanly under OES_USE_WEB (wx-heavy includes are
+// already ifdef'd inside it).
 #include "toolBar.h"
 #include "tableBox.h"
+#ifdef OES_USE_WEB
+#include "frontend/web/webApplication.h"
+#include "frontend/web/webFrame.h"
+#include "backend/backend_mainFrame.h"
+#endif
 
 void ibValueForm::BuildForm(const ibFormID& formType)
 {
+	// Auto-build runs on both desktop and web. Desktop renders the full
+	// wxDataView tablebox; web emits a placeholder via ibWebStubControl
+	// (tableBox.cpp web stub block). Toolbar + Tool + ToolSeparator +
+	// Checkbox + Textctrl all have real web renderers — only the
+	// tablebox/column visuals are pending.
 	m_formType = formType;
 
 	if (m_sourceObject != nullptr) {
@@ -241,10 +261,37 @@ void ibValueForm::InitializeForm(const ibValueMetaObjectFormBase* creator,
 	if (creator != nullptr)
 		m_formType = creator->GetTypeForm();
 
+	// Runtime-tree parent is determined here — srcObject is set only
+	// in this method, and the form's metadata + module-manager root
+	// are reachable through the creator. Form sits under the bound
+	// data-record descriptor (catalog/document/external DP object) if
+	// any; otherwise directly under the metadata's root. Subsequent
+	// BindVariable / InitializeRuntime pick up this parent to wire
+	// their compile / procUnit scope chain on creation.
+	ibRuntimeModuleDataObject* sourceDesc =
+		dynamic_cast<ibRuntimeModuleDataObject*>(srcObject);
+	ibRuntimeModuleDataObject* descParent = sourceDesc;
+	if (descParent == nullptr && creator != nullptr) {
+		ibSession* session = ibSession::Current();
+		if (session != nullptr) {
+			if (ibValueModuleManager* mm = session->GetManagerModule())
+				descParent = mm;
+		}
+	}
+	if (descParent != nullptr)
+		ibRuntimeModuleDataObject::SetParent(descParent);
+
 	//SetReadOnly(readOnly);
 }
 
 #include "backend/system/systemManager.h"
+
+// Form's meta-object drives lazy compile-module creation via
+// BindContextVariable when m_compileModule is not yet wired.
+const ibValueMetaObjectModuleBase* ibValueForm::GetMetaForCompile() const
+{
+	return m_metaFormObject;
+}
 
 bool ibValueForm::InitializeFormModule()
 {
@@ -255,43 +302,22 @@ bool ibValueForm::InitializeFormModule()
 			return false;
 		}
 
-		const ibMetaData* metaData = m_metaFormObject->GetMetaData();
-		wxASSERT(metaData);
-		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
-		wxASSERT(moduleManager);
+		// Parent is already wired in InitializeForm(). BindVariable +
+		// InitializeRuntime lazily create compile module / ProcUnit
+		// and pick up the parent's scope chain on creation. Run is
+		// Designer-guarded; Compile internally too. Session linkage
+		// flows through the parent chain (descriptor в†’ root в†’ session).
+		BindContextVariable(thisForm, this);
+		InitializeRuntime();
 
-		ibModuleDataObject* sourceObjectValue =
-			dynamic_cast<ibModuleDataObject*>(m_sourceObject);
-
-		if (m_compileModule == nullptr) {
-			m_compileModule = new ibCompileModule(m_metaFormObject);
-			m_compileModule->SetParent(
-				sourceObjectValue != nullptr ? sourceObjectValue->GetCompileModule() :
-				moduleManager->GetCompileModule()
-			);
-			m_compileModule->AddContextVariable(thisForm, this);
+		try {
+			Compile();
+			Run(true);
 		}
-
-		if (!appData->DesignerMode()) {
-
-			try {
-				m_compileModule->Compile();
-			}
-			catch (const ibBackendException* err) {
-				if (!appData->DesignerMode())
-					throw(err);
-				return false;
-			};
-
-			if (m_procUnit == nullptr) {
-				m_procUnit = new ibProcUnit();
-				m_procUnit->SetParent(
-					sourceObjectValue != nullptr ? sourceObjectValue->GetProcUnit() :
-					moduleManager->GetProcUnit()
-				);
-			}
-
-			m_procUnit->Execute(m_compileModule->m_cByteCode, true);
+		catch (const ibBackendException&) {
+			if (!appData->DesignerMode())
+				throw;
+			return false;
 		}
 
 		PrepareNames();
@@ -454,6 +480,7 @@ void ibValueForm::UpdateForm()
 	if (ibBackendException::IsEvalMode())
 		return;
 
+	
 	ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
@@ -462,11 +489,20 @@ void ibValueForm::UpdateForm()
 			ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
 
 		if (visualView != nullptr) {
-			visualView->Freeze();
-			visualView->UpdateVisualHost();
-			visualView->Thaw();
+#ifndef OES_USE_WEB
+			// Freeze/Thaw suppress wxWindow repaints during the rebuild.
+			// Web build serialises a fresh JSON tree on every request,
+			// so there's no mid-render flicker to hide — call the host
+			// walker directly.
+						visualView->Freeze();
+#endif
+						visualView->UpdateVisualHost();
+			#ifndef OES_USE_WEB
+						visualView->Thaw();
+#endif
 		}
 	}
+
 }
 
 bool ibValueForm::CloseForm(bool force)
@@ -483,7 +519,27 @@ bool ibValueForm::CloseForm(bool force)
 	ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
-		return ownerDocForm->DeleteAllViews();
+#ifdef OES_USE_WEB
+		// Defer the wxDocument::DeleteAllViews — it would delete the
+		// view, host, AND every control (including the toolbar that
+		// just fired the OnTool we're in). Mark the tab; the
+		// session's Dispatch epilogue drains pending closes AFTER
+		// the wxEvent chain unwinds.
+		if (auto* webFrame = dynamic_cast<ibWebFrame*>(ibSession::CurrentFrame())) {
+			webFrame->MarkTabForCloseByForm(this);
+		}
+		return true;
+#else
+		// Same hazard on desktop — wxDocument::DeleteAllViews deletes
+		// the view (a wxEvtHandler) plus every control synchronously.
+		// If CloseForm was invoked from within the toolbar's tool
+		// event (Save-and-close command), control returns to
+		// wxAuiToolBar::OnLeftUp on freed memory в†’ UAF in
+		// wxEvtHandler::TryHereOnly. Defer the deletion through
+		// CallAfter so the click event fully unwinds first.
+		ownerDocForm->CallAfter([doc = ownerDocForm]{ doc->DeleteAllViews(); });
+		return true;
+#endif
 	}
 
 	return true;
@@ -491,24 +547,40 @@ bool ibValueForm::CloseForm(bool force)
 
 void ibValueForm::HelpForm()
 {
+#ifndef OES_USE_WEB
+	// Modal message box — desktop-only. Web would surface help through
+	// an HTTP response instead; wiring is deferred.
 	wxMessageBox(
 		_("Help will appear here sometime, but not today.")
 	);
+#endif
 }
 
+#ifndef OES_USE_WEB
 #include "frontend/win/dlgs/formEditor.h"
+#endif
 
 void ibValueForm::ChangeForm()
 {
+#ifndef OES_USE_WEB
+	// Designer-mode modal form-editor dialog. No web counterpart — the
+	// designer doesn't run in wfrontend.dll.
 	ibDialogFormEditor dlg(this);
 	dlg.ShowModal();
+#endif
 }
 
+#ifndef OES_USE_WEB
 #include "frontend/win/dlgs/generation.h"
+#endif
 
 bool ibValueForm::GenerateForm(ibValueRecordDataObjectRef* obj) const
 {
-	ibValueMetaObjectRecordDataMutableRef* metaObject = obj->GetMetaObject();
+#ifdef OES_USE_WEB
+	(void)obj;
+	return false;
+#else
+	const ibValueMetaObjectRecordDataMutableRef* metaObject = obj->GetMetaObject();
 	wxASSERT(metaObject);
 	ibMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -532,6 +604,7 @@ bool ibValueForm::GenerateForm(ibValueRecordDataObjectRef* obj) const
 	}
 	selectDataType->Destroy();
 	return false;
+#endif
 }
 
 //**********************************************************************************
@@ -551,12 +624,16 @@ ibValueFrame* ibValueForm::CreateControl(const wxString& clsControl, ibValueFram
 	// ademas, el objeto se insertara a continuacion del objeto seleccionado
 	ibValueFrame* newControl = ibValueForm::CreateObject(clsControl, parentControl);
 	wxASSERT(newControl);
+	// Live-tree insertion: feed the new ibValueFrame into the host.
+	// Desktop's CreateControl does the incremental wx-tree edit; web's
+	// is a no-op and the next HTTP response rebuilds. Shared call site.
 	if (!ibBackendException::IsEvalMode()) {
 		ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 		if (ownerDocForm != nullptr) {
 			ibVisualHostClient* visualView = ownerDocForm->GetFirstView() ?
 				ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
-			visualView->CreateControl(newControl);
+			if (visualView != nullptr)
+				visualView->CreateControl(newControl);
 		}
 	}
 
@@ -574,12 +651,15 @@ void ibValueForm::RemoveControl(ibValueFrame* control)
 	//get parent obj
 	ibValueFrame* currentControl = control;
 	wxASSERT(currentControl);
+	// Symmetric to CreateControl — desktop does the wx-tree removal,
+	// web is a no-op and the next HTTP response rebuilds.
 	if (!ibBackendException::IsEvalMode()) {
 		ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 		if (ownerDocForm != nullptr) {
 			ibVisualHostClient* visualView = ownerDocForm->GetFirstView() ?
 				ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
-			visualView->RemoveControl(currentControl);
+			if (visualView != nullptr)
+				visualView->RemoveControl(currentControl);
 		}
 	}
 
@@ -609,6 +689,28 @@ void ibValueForm::RemoveControl(ibValueFrame* control)
 	m_formCollectionControl->PrepareNames();
 }
 
+void ibValueForm::OnIdleHandler(wxTimerEvent& event)
+{
+	if (m_procUnit != nullptr) {
+		// Upcast the map's shared_ptr<ibFrontendTimer>::get() to wxObject*
+		// for the comparison — event.GetEventObject() returns wxObject*
+		// and both wxTimer / ibWebTimer derive from wxObject, so the
+		// upcast is well-defined. Body lives here (not inline in the
+		// header) so the complete type of ibWebTimer is visible on
+		// the web build.
+		auto iterator = std::find_if(m_idleHandlerArray.begin(), m_idleHandlerArray.end(),
+			[&event](const auto& pair) {
+				return static_cast<wxObject*>(pair.second.get()) == event.GetEventObject();
+			}
+		);
+
+		if (iterator != m_idleHandlerArray.end())
+			CallAsEvent(iterator->first);
+	}
+
+	event.Skip();
+}
+
 void ibValueForm::AttachIdleHandler(const wxString& procedureName, int interval, bool single)
 {
 	if (appData->DesignerMode())
@@ -624,14 +726,20 @@ void ibValueForm::AttachIdleHandler(const wxString& procedureName, int interval,
 		}
 	}
 
+	// Unified body across desktop and web via ibFrontendTimer typedef.
+	// Desktop: wxTimer fires inside wxApp's main loop; web: ibWebTimer's
+	// std::thread + PostWork drives ProcessPendingEvents on the session
+	// worker. Either way the wxEVT_TIMER dispatches to the same
+	// ibValueForm::OnIdleHandler, which matches event.GetEventObject()
+	// against m_idleHandlerArray entries — one code path, two tick
+	// sources.
 	if (m_procUnit != nullptr && m_procUnit->FindMethod(procedureName, true)) {
 		auto it = m_idleHandlerArray.find(procedureName);
 		if (it == m_idleHandlerArray.end()) {
-			wxTimer* timer = new wxTimer();
+			auto timer = std::make_shared<ibFrontendTimer>();
 			timer->Bind(wxEVT_TIMER, &ibValueForm::OnIdleHandler, this);
-			if (timer->Start(interval * 1000, single)) {
+			if (timer->Start(interval * 1000, single))
 				m_idleHandlerArray.insert_or_assign(procedureName, timer);
-			}
 		}
 	}
 }
@@ -651,16 +759,18 @@ void ibValueForm::DetachIdleHandler(const wxString& procedureName)
 		}
 	}
 
+	// Unified teardown — both wxTimer and ibWebTimer expose Stop + Unbind;
+	// shared_ptr's dtor (on map erase) disposes the timer after we've
+	// stopped its thread / message-pump hook.
 	if (m_procUnit != nullptr && m_procUnit->FindMethod(procedureName, true)) {
 		auto it = m_idleHandlerArray.find(procedureName);
 		if (it != m_idleHandlerArray.end()) {
-			wxTimer* timer = it->second;
+			std::shared_ptr<ibFrontendTimer> timer = it->second;
 			m_idleHandlerArray.erase(it);
-			if (timer != nullptr && timer->IsRunning()) {
+			if (timer && timer->IsRunning())
 				timer->Stop();
-			}
-			timer->Unbind(wxEVT_TIMER, &ibValueForm::OnIdleHandler, this);
-			delete timer;
+			if (timer)
+				timer->Unbind(wxEVT_TIMER, &ibValueForm::OnIdleHandler, this);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : tabular sections - model
 ////////////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ bool ibValueRecordSetObject::SetValueByRow(const wxVariant& variant,
 	if (node == nullptr)
 		return false;
 
-	ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
+	const ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
 	ibValueMetaObjectAttributeBase* metaObjectAttribute = metaObject->FindAnyAttributeObjectByFilter(col);
 	wxASSERT(metaObject);

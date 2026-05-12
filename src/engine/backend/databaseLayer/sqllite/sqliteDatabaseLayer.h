@@ -44,12 +44,10 @@ public:
 	/// clone database  
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerSQLite(*this); }
 
-	// transaction support
-	virtual void BeginTransaction();
-	virtual void Commit();
-	virtual void RollBack();
-
-	virtual bool IsActiveTransaction();
+	// IsActiveTransaction inherits the base-class default
+	// (m_txDepth > 0). Driver transaction primitives
+	// (DoBeginTransaction / DoCommit / DoRollBack) are protected —
+	// see below.
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool TableExists(const wxString& table);
@@ -73,6 +71,12 @@ protected:
 	// ibPreparedStatement support
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
 	ibPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bLogForCleanup);
+
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
 private:
 

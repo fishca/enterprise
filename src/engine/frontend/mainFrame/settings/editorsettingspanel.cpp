@@ -65,7 +65,7 @@ ibPanelEditorSettings::ibPanelEditorSettings( wxWindow* parent, int id, wxPoint 
 		
     m_mostRecentlyUsedTabSwitching = new wxCheckBox( this, ID_MostRecentlyUsedTabSwitching, _("Most recently used tab switching"), wxDefaultPosition, wxDefaultSize, 0 );
 
-    environmentSizer->Add( m_mostRecentlyUsedTabSwitching, 0, wxALL, 5);
+    environmentSizer->Add( m_mostRecentlyUsedTabSwitching, 0, wxALL, FromDIP(5));
 
     fgSizer2->Add( environmentSizer, 1, wxALL|wxEXPAND, 5 );
 

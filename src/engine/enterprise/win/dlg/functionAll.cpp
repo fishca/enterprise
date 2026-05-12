@@ -21,7 +21,7 @@ ibDialogFunctionAll::ibDialogFunctionAll(wxWindow* parent, wxWindowID id, const 
 	wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
 	m_treeCtrlElements = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_SINGLE | wxTR_HIDE_ROOT | wxTR_TWIST_BUTTONS);
 	m_treeCtrlElements->SetDoubleBuffered(true);
-	bSizer->Add(m_treeCtrlElements, 1, wxALL | wxEXPAND, 5);
+	bSizer->Add(m_treeCtrlElements, 1, wxALL | wxEXPAND, FromDIP(5));
 
 	// Connect Events
 	m_treeCtrlElements->Connect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(ibDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick), nullptr, this);
@@ -92,6 +92,21 @@ void ibDialogFunctionAll::BuildTree()
 	for (auto accumulationRegister : activeMetaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
 		const int imageIndex = imageList->Add(accumulationRegister->GetIcon());
 		m_treeCtrlElements->AppendItem(accumulationRegisters, accumulationRegister->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(accumulationRegister));
+	}
+	wxTreeItemId chartsOfCharacteristicTypes = AppendGroupItem(root, g_metaChartOfCharacteristicTypesCLSID, _("Charts of characteristic types"));
+	for (auto chartOfCharacteristicTypes : activeMetaData->GetAnyArrayObject(g_metaChartOfCharacteristicTypesCLSID)) {
+		const int imageIndex = imageList->Add(chartOfCharacteristicTypes->GetIcon());
+		m_treeCtrlElements->AppendItem(chartsOfCharacteristicTypes, chartOfCharacteristicTypes->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(chartOfCharacteristicTypes));
+	}
+	wxTreeItemId chartsOfAccounts = AppendGroupItem(root, g_metaChartOfAccountsCLSID, _("Charts of accounts"));
+	for (auto chartOfAccounts : activeMetaData->GetAnyArrayObject(g_metaChartOfAccountsCLSID)) {
+		const int imageIndex = imageList->Add(chartOfAccounts->GetIcon());
+		m_treeCtrlElements->AppendItem(chartsOfAccounts, chartOfAccounts->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(chartOfAccounts));
+	}
+	wxTreeItemId accountingRegisters = AppendGroupItem(root, g_metaAccountingRegisterCLSID, _("Accounting registers"));
+	for (auto accountingRegister : activeMetaData->GetAnyArrayObject(g_metaAccountingRegisterCLSID)) {
+		const int imageIndex = imageList->Add(accountingRegister->GetIcon());
+		m_treeCtrlElements->AppendItem(accountingRegisters, accountingRegister->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(accountingRegister));
 	}
 
 	m_treeCtrlElements->ExpandAll();

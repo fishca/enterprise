@@ -58,6 +58,8 @@
     <ClCompile Include="propertyManager\property\advprop\advpropModule.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropNumber.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropOwner.cpp" />
+    <ClCompile Include="propertyManager\property\advprop\advpropChartOfCharacteristicTypes.cpp" />
+    <ClCompile Include="propertyManager\property\advprop\advpropChartOfAccounts.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropPicture.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropPoint.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropRecord.cpp" />
@@ -153,7 +155,6 @@
     <ClCompile Include="visualView\pageWindow.cpp" />
     <ClCompile Include="visualView\visualHostClient.cpp" />
     <ClCompile Include="visualView\visualHostClientDocView.cpp" />
-    <ClCompile Include="visualView\visualHostClient_impl.cpp" />
     <ClCompile Include="visualView\visualHost.cpp" />
     <ClCompile Include="visualView\visualHostEvent.cpp" />
     <ClCompile Include="win\ctrls\charts\wxareachart.cpp" />
@@ -279,13 +280,17 @@
     <ClCompile Include="win\ctrls\charts\wxtimeserieschartctrl.cpp" />
     <ClCompile Include="win\ctrls\charts\wxtimeserieschartoptions.cpp" />
     <ClCompile Include="win\ctrls\checktree.cpp" />
+    <ClCompile Include="win\ctrls\controlButton.cpp" />
     <ClCompile Include="win\ctrls\controlCheckboxEditor.cpp" />
+    <ClCompile Include="win\ctrls\controlStaticText.cpp" />
     <ClCompile Include="win\ctrls\controlTextEditor.cpp" />
     <ClCompile Include="win\ctrls\dataview\headerctrlcmn.cpp" />
     <ClCompile Include="win\ctrls\dataview\headerctrlg.cpp" />
     <ClCompile Include="win\ctrls\tableView.cpp" />
     <ClCompile Include="win\ctrls\dataview\datavcmn.cpp" />
     <ClCompile Include="win\ctrls\dataview\datavgen.cpp" />
+    <ClCompile Include="win\ctrls\dataview\datavgen.paged.cpp" />
+    <ClCompile Include="win\ctrls\dataview\datavgen.scrollbar.cpp" />
     <ClCompile Include="win\ctrls\dynamicBorder.cpp" />
     <ClCompile Include="win\ctrls\grid\gridext.cpp" />
     <ClCompile Include="win\ctrls\grid\gridextctrl.cpp" />
@@ -295,6 +300,8 @@
     <ClCompile Include="win\dlgs\about.cpp" />
     <ClCompile Include="win\dlgs\activeUser.cpp" />
     <ClCompile Include="win\dlgs\applyChange.cpp" />
+    <ClCompile Include="session\guiSession.cpp" />
+    <ClCompile Include="session\workerPoolGUI.cpp" />
     <ClCompile Include="win\dlgs\authorization.cpp" />
     <ClCompile Include="win\dlgs\colHeight.cpp" />
     <ClCompile Include="win\dlgs\connectionDB.cpp" />
@@ -314,6 +321,19 @@
     <ClCompile Include="win\editor\gridEditor\gridProperty.cpp" />
     <ClCompile Include="win\editor\textEditor\textEditor.cpp" />
     <ClCompile Include="win\editor\textEditor\textEditorPrintOut.cpp" />
+    <ClCompile Include="win\editor\codeEditor\codeEditor.cpp" />
+    <ClCompile Include="win\editor\codeEditor\codeEditorInterpreter.cpp" />
+    <ClCompile Include="win\editor\codeEditor\codeEditorInterpreterContext.cpp" />
+    <ClCompile Include="win\editor\codeEditor\codeEditorLoader.cpp" />
+    <ClCompile Include="win\editor\codeEditor\codeEditorParser.cpp" />
+    <ClCompile Include="win\editor\codeEditor\codeEditorPrintOut.cpp" />
+    <ClCompile Include="win\editor\codeEditor\components\autoComplete.cpp" />
+    <ClCompile Include="win\editor\codeEditor\components\callTip.cpp" />
+    <ClCompile Include="win\editor\codeEditor\components\helpers\listBoxVisualData.cpp" />
+    <ClCompile Include="win\editor\codeEditor\components\helpers\listBoxWnd.cpp" />
+    <ClCompile Include="win\editor\codeEditor\components\helpers\popupWnd.cpp" />
+    <ClCompile Include="win\dlgs\functionSearcher\functionSearcher.cpp" />
+    <ClCompile Include="win\dlgs\lineInput\lineInput.cpp" />
     <ClCompile Include="win\theme\luna_dockart.cpp" />
     <ClCompile Include="win\theme\luna_tabart.cpp" />
     <ClCompile Include="win\theme\luna_toolbarart.cpp" />
@@ -357,6 +377,8 @@
     <ClInclude Include="propertyManager\property\advprop\advpropModule.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropNumber.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropOwner.h" />
+    <ClInclude Include="propertyManager\property\advprop\advpropChartOfCharacteristicTypes.h" />
+    <ClInclude Include="propertyManager\property\advprop\advpropChartOfAccounts.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropPicture.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropPoint.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropRecord.h" />
@@ -514,7 +536,9 @@
     <ClInclude Include="win\ctrls\charts\wxtimeserieschartctrl.h" />
     <ClInclude Include="win\ctrls\charts\wxtimeserieschartoptions.h" />
     <ClInclude Include="win\ctrls\checktree.h" />
+    <ClInclude Include="win\ctrls\controlButton.h" />
     <ClInclude Include="win\ctrls\controlCheckboxEditor.h" />
+    <ClInclude Include="win\ctrls\controlStaticText.h" />
     <ClInclude Include="win\ctrls\controlTextEditor.h" />
     <ClInclude Include="win\ctrls\dataview\headerctrlg.h" />
     <ClInclude Include="win\ctrls\tableView.h" />
@@ -533,6 +557,8 @@
     <ClInclude Include="win\dlgs\about.h" />
     <ClInclude Include="win\dlgs\activeUser.h" />
     <ClInclude Include="win\dlgs\applyChange.h" />
+    <ClInclude Include="session\guiSession.h" />
+    <ClInclude Include="session\workerPoolGUI.h" />
     <ClInclude Include="win\dlgs\authorization.h" />
     <ClInclude Include="win\dlgs\choiceTemplate.h" />
     <ClInclude Include="win\dlgs\colHeight.h" />
@@ -550,6 +576,19 @@
     <ClInclude Include="win\editor\gridEditor\gridPrintout.h" />
     <ClInclude Include="win\editor\textEditor\textEditor.h" />
     <ClInclude Include="win\editor\textEditor\textEditorPrintOut.h" />
+    <ClInclude Include="win\editor\codeEditor\codeEditor.h" />
+    <ClInclude Include="win\editor\codeEditor\codeEditorInterpreter.h" />
+    <ClInclude Include="win\editor\codeEditor\codeEditorParser.h" />
+    <ClInclude Include="win\editor\codeEditor\codeEditorPrintOut.h" />
+    <ClInclude Include="win\editor\codeEditor\components\autoComplete.h" />
+    <ClInclude Include="win\editor\codeEditor\components\callTip.h" />
+    <ClInclude Include="win\editor\codeEditor\components\helpers\fontAscent.h" />
+    <ClInclude Include="win\editor\codeEditor\components\helpers\listBoxVisualData.h" />
+    <ClInclude Include="win\editor\codeEditor\components\helpers\listBoxWnd.h" />
+    <ClInclude Include="win\editor\codeEditor\components\helpers\popupWnd.h" />
+    <ClInclude Include="win\editor\codeEditor\res\bitmaps_res.h" />
+    <ClInclude Include="win\dlgs\functionSearcher\functionSearcher.h" />
+    <ClInclude Include="win\dlgs\lineInput\lineInput.h" />
     <ClInclude Include="win\theme\luna_dockart.h" />
     <ClInclude Include="win\theme\luna_tabart.h" />
     <ClInclude Include="win\theme\luna_toolbarart.h" />
@@ -636,7 +675,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;WXUSINGDLL;_CONSOLE;%(PreprocessorDefinitions);FRONTEND_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;WXUSINGDLL;_CONSOLE;%(PreprocessorDefinitions);FRONTEND_EXPORTS</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(oes3rdParty)wxWidgets\lib\vc_dll\mswud;$(oes3rdParty)wxWidgets\include;$(oesEngine);$(oesSrcDir)include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

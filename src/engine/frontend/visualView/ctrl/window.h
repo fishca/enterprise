@@ -2,6 +2,7 @@
 #define __WINDOW_BASE_H__
 
 #include "control.h"
+#include "frontend/frontendTypes.h"
 
 #define FORM_ACTION 1
 
@@ -14,7 +15,7 @@ public:
 
 	ibValueWindow();
 
-	//load & save object in control 
+	//load & save object in control
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
@@ -22,7 +23,13 @@ public:
 
 protected:
 
-	void UpdateWindow(wxWindow* window);
+	// Apply the shared window properties (size/font/colour on desktop,
+	// enabled/visible/label on both) onto the frontend object created
+	// by the derived control's Create(). ibFrontendWindow resolves to
+	// wxWindow on desktop and ibWebWindow on web — web skips the wx-
+	// only knobs (sizes, font, colours) and just syncs what ibWebWindow
+	// actually stores.
+	void UpdateWindow(ibFrontendWindow* window);
 
 	ibPropertyCategory* m_categoryWindow = ibPropertyObject::CreatePropertyCategory(wxT("Window"), _("Window"));
 	ibPropertySize* m_propertyMinSize = ibPropertyObject::CreateProperty<ibPropertySize>(m_categoryWindow, wxT("MinimumSize"), _("Minimum size"), _("Sets the minimum size of the window, to indicate to the sizer layout mechanism that this is the minimum required size."), wxDefaultSize);

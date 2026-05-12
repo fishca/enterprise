@@ -31,6 +31,8 @@ enum {
 //definitions
 #define UTF8_LEXEM_TRANSLATE 
 
+class BACKEND_API ibTranslateCode;
+
 //storing one primitive from the source code
 struct ibLexem {
 
@@ -42,19 +44,28 @@ struct ibLexem {
 	wxString m_strData;			// or identifier name (variable, function, etc.)
 	ibValue m_valData;			// value, if it is a constant or real identifier name
 
-	//additional information:
-	wxString m_strModuleName;	// module name (since it is possible to include connections from different modules)
-	wxString m_strDocPath;		// unique path to the document
-	wxString m_strFileName;		// file path (if external processing)
+	// Per-lexem source attribution lives on the owning ibTranslateCode —
+	// every lexem of one module shares the same module name / doc-path /
+	// file name. Storing them per-lexem (as 3 wxStrings) was a measurable
+	// hit during retokenization: 4 wxString members × N lexems per
+	// reserve/_Reallocate amplified the modify-event handler cost.
+	// m_translateCode must outlive the lexem; for #define lexems stored
+	// in ibDefineCollection it is reset to nullptr (string accessors
+	// return empty) and rebound by the consumer at expansion time.
+	const ibTranslateCode* m_translateCode = nullptr;
 
 	unsigned int m_numLine;		//source line number (for breakpoints)
 	unsigned int m_numString;	//source text number (for error output)
 
 #ifdef UTF8_LEXEM_TRANSLATE
-	unsigned int m_numUtf8String; //source text number 
+	unsigned int m_numUtf8String; //source text number
 #endif
 
 public:
+
+	const wxString& GetModuleName() const;
+	const wxString& GetDocPath()    const;
+	const wxString& GetFileName()   const;
 
 	unsigned int GetLine() const { return m_numLine + 1; }
 	unsigned int GetLength() const {
@@ -90,14 +101,29 @@ public:
 	{
 	}
 
+	// Bind to owning translate up front — used by ibTranslateCode ctors
+	// for the recycled m_current_lex member so the back-pointer is set
+	// in the mem-init list, no post-ctor assignment.
+	explicit ibLexem(const ibTranslateCode* tc) :
+		m_lexType(0),
+		m_numData(0),
+		m_translateCode(tc),
+		m_numLine(0),
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_numString(0),
+		m_numUtf8String(0)
+#else
+		m_numString(0)
+#endif
+	{
+	}
+
 	ibLexem(const ibLexem& src) :
 		m_lexType(src.m_lexType),
 		m_numData(src.m_numData),
 		m_strData(src.m_strData),
 		m_valData(src.m_valData),
-		m_strModuleName(src.m_strModuleName),
-		m_strDocPath(src.m_strDocPath),
-		m_strFileName(src.m_strFileName),
+		m_translateCode(src.m_translateCode),
 		m_numLine(src.m_numLine),
 #ifdef UTF8_LEXEM_TRANSLATE
 		m_numString(src.m_numString),
@@ -108,14 +134,16 @@ public:
 	{
 	}
 
-	ibLexem(ibLexem&& src) :
+	// noexcept move so vector<ibLexem>::reserve / emplace_back use moves
+	// (pointer-swap of wxString internals, ibValue tagged-union move) on
+	// realloc instead of falling back to copy for strong-exception
+	// guarantee.
+	ibLexem(ibLexem&& src) noexcept :
 		m_lexType(src.m_lexType),
 		m_numData(src.m_numData),
 		m_strData(std::move(src.m_strData)),
 		m_valData(std::move(src.m_valData)),
-		m_strModuleName(std::move(src.m_strModuleName)),
-		m_strDocPath(std::move(src.m_strDocPath)),
-		m_strFileName(std::move(src.m_strFileName)),
+		m_translateCode(src.m_translateCode),
 		m_numLine(src.m_numLine),
 #ifdef UTF8_LEXEM_TRANSLATE
 		m_numString(src.m_numString),
@@ -126,6 +154,9 @@ public:
 	{
 		src.m_lexType = 0;
 		src.m_numData = 0;
+		// m_translateCode intentionally not nulled — recycled m_current_lex
+		// keeps its back-pointer across emplace_back(std::move(...)), so
+		// the ibTranslateCode ctor's one-time bind is enough.
 		src.m_numLine = 0;
 		src.m_numString = 0;
 #ifdef UTF8_LEXEM_TRANSLATE
@@ -145,15 +176,12 @@ public:
 
 		m_valData = src.m_valData;
 		m_strData = src.m_strData;
-
-		m_strModuleName = src.m_strModuleName;
-		m_strDocPath = src.m_strDocPath;
-		m_strFileName = src.m_strFileName;
+		m_translateCode = src.m_translateCode;
 
 		return *this;
 	}
 
-	ibLexem& operator =(ibLexem&& src)
+	ibLexem& operator =(ibLexem&& src) noexcept
 	{
 		m_lexType = src.m_lexType;
 		m_numData = src.m_numData;
@@ -162,13 +190,11 @@ public:
 
 		m_valData = std::move(src.m_valData);
 		m_strData = std::move(src.m_strData);
-
-		m_strModuleName = std::move(src.m_strModuleName);
-		m_strDocPath = std::move(src.m_strDocPath);
-		m_strFileName = std::move(src.m_strFileName);
+		m_translateCode = src.m_translateCode;
 
 		src.m_lexType = 0;
 		src.m_numData = 0;
+		// m_translateCode kept on src — see move-ctor comment.
 		src.m_numLine = 0;
 		src.m_numString = 0;
 #ifdef UTF8_LEXEM_TRANSLATE
@@ -189,6 +215,10 @@ the text of the executable code, the second procedure performs translation
 ****************************************************/
 
 class BACKEND_API ibTranslateCode {
+	// ibLexem reads m_strModuleName / m_strDocPath / m_strFileName via
+	// its back-pointer accessors (GetModuleName / GetDocPath / GetFileName)
+	// — those fields are protected, so grant friendship.
+	friend struct ibLexem;
 
 	//class for storing user definitions
 	class ibDefineCollection {
@@ -315,6 +345,14 @@ public:
 
 	static std::map<wxString, void*> ms_listHashKeyWord;
 	static void LoadKeyWords();
+
+	// Per-keyword availability gate. Reads the active code-style and
+	// hides VES-only block-fence keywords (Then / Do / EndIf / EndDo /
+	// EndFunction / EndProcedure / EndTry) when CES is active — brace-
+	// style sources have no place for them. `IsKeyWord` consults this
+	// itself, so lexer / highlighter / autocomplete / parser inherit
+	// the filter without per-callsite plumbing.
+	static bool IsAllowedKey(int keywordId);
 
 protected:
 

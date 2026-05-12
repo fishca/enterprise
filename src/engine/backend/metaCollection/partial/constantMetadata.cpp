@@ -66,8 +66,6 @@ bool ibValueMetaObjectConstant::OnCreateMetaObject(ibMetaData* metaData, int fla
 
 bool ibValueMetaObjectConstant::OnLoadMetaObject(ibMetaData* metaData)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
 	if (!m_propertyModule->GetMetaObject()->OnLoadMetaObject(metaData))
 		return false;
@@ -109,13 +107,11 @@ bool ibValueMetaObjectConstant::OnAfterRunMetaObject(int flags)
 	if (!m_propertyModule->GetMetaObject()->OnAfterRunMetaObject(flags))
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 
 		if (ibValueMetaObjectAttribute::OnAfterRunMetaObject(flags))
-			return moduleManager->AddCompileModule(m_propertyModule->GetMetaObject(), CreateRecordDataObjectValue());
+			return cc->AddCompileModule(m_propertyModule->GetMetaObject(), CreateRecordDataObjectValue());
 
 		return false;
 	}
@@ -128,12 +124,10 @@ bool ibValueMetaObjectConstant::OnBeforeCloseMetaObject()
 	if (!m_propertyModule->GetMetaObject()->OnBeforeCloseMetaObject())
 		return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 
-		if (moduleManager->RemoveCompileModule(m_propertyModule->GetMetaObject()))
+		if (cc->RemoveCompileModule(m_propertyModule->GetMetaObject()))
 			return ibValueMetaObjectAttribute::OnAfterCloseMetaObject();
 
 		return false;
@@ -155,7 +149,7 @@ bool ibValueMetaObjectConstant::OnAfterCloseMetaObject()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ibBackendValueForm* ibValueMetaObjectConstant::GetObjectForm()
+ibBackendValueForm* ibValueMetaObjectConstant::GetObjectForm() const
 {
 	ibBackendValueForm* const foundedForm = ibBackendValueForm::FindFormByUniqueKey(nullptr, nullptr, m_metaGuid);
 	if (foundedForm == nullptr)

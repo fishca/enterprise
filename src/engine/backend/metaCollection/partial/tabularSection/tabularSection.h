@@ -5,7 +5,7 @@
 
 #include "backend/metaCollection/table/metaTableObject.h"
 
-class BACKEND_API ibValueTabularSectionDataObjectBase : public ibValueModelTableBase {
+class BACKEND_API ibValueTabularSectionDataObjectBase : public ibValueModelRamTableBase {
 	wxDECLARE_ABSTRACT_CLASS(ibValueTabularSectionDataObjectBase);
 private:
 
@@ -44,8 +44,17 @@ public:
 
 	virtual bool HasDefaultCompare() const override { return false; }
 
+	// TabularSection — RAM-backed (inherited) + user filter row +
+	// column sort UI.  BuildVisibleView on the base picks up
+	// m_filterRow / m_sortOrder so the GUI's filter/sort affordances
+	// drive Get*Fetch slicing automatically.
+	virtual Features GetFeatures() const override {
+		auto f = ibValueModelRamTableBase::GetFeatures();
+		f.flags |= Features::Filters | Features::Sorting;
+		return f;
+	}
+
 	virtual ibDataViewItem FindRowValue(const ibValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const;
 
 	//set meta/get meta
 	virtual bool SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal);
@@ -142,13 +151,13 @@ public:
 		ibValueMethodHelper* m_methodHelper;
 	};
 
-	ibValueMetaObjectTableData* GetMetaObject() const { return m_metaTable; }
+	const ibValueMetaObjectTableData* GetMetaObject() const { return m_metaTable; }
 	ibMetaID GetMetaID() const { return m_metaTable ? m_metaTable->GetMetaID() : wxNOT_FOUND; }
 
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
 
 	//Get ref class 
 	virtual ibClassID GetSourceClassType() const { return GetClassType(); }
@@ -161,7 +170,7 @@ public:
 		m_methodHelper(nullptr), m_readOnly(false) {
 	}
 
-	ibValueTabularSectionDataObjectBase(ibValueDataObject* objectValue, ibValueMetaObjectTableData* tableObject, bool readOnly = false) :
+	ibValueTabularSectionDataObjectBase(ibValueDataObject* objectValue, const ibValueMetaObjectTableData* tableObject, bool readOnly = false) :
 		m_objectValue(objectValue), m_metaTable(tableObject),
 		m_recordColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectColumnCollection>(this)),
 		m_methodHelper(new ibValueMethodHelper()), m_readOnly(readOnly) {
@@ -231,34 +240,18 @@ public:
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-
-	virtual ibValue GetIteratorEmpty() override {
+	// Iterator runtime path lives on ibValueModel (cursor over Get*Fetch
+	// → BuildVisibleView for filter+sort consistency with the GUI).
+	// GetEmptyRow yields the typed skeleton for IntelliSense type hint.
+	virtual ibValue GetEmptyRow() override {
 		return ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, ibDataViewItem(nullptr));
 	}
 
-	virtual ibValue GetIteratorAt(unsigned int idx) override {
-		if (idx > (unsigned int)GetRowCount())
-			return wxEmptyValue;
-		return ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, GetItem(idx));
-	}
-
-	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
-
 protected:
-
-	void RefreshTabularSection();
-
-	virtual void RefreshModel(const ibDataViewItem& topItem = ibDataViewItem(nullptr),
-		const int countPerPage = defaultCountPerPage)
-	{
-		RefreshTabularSection();
-	}
 
 	bool m_readOnly;
 
-	ibValueMetaObjectTableData* m_metaTable;
+	const ibValueMetaObjectTableData* m_metaTable;
 
 	ibValueDataObject* m_objectValue;
 	ibValuePtr<ibValueTabularSectionDataObjectColumnCollection> m_recordColumnCollection;
@@ -270,7 +263,7 @@ class BACKEND_API ibValueTabularSectionDataObject : public ibValueTabularSection
 public:
 
 	ibValueTabularSectionDataObject();
-	ibValueTabularSectionDataObject(class ibValueRecordDataObject* recordObject, ibValueMetaObjectTableData* tableObject);
+	ibValueTabularSectionDataObject(class ibValueRecordDataObject* recordObject, const ibValueMetaObjectTableData* tableObject);
 	virtual ~ibValueTabularSectionDataObject() {}
 };
 
@@ -281,9 +274,9 @@ public:
 	bool IsReadAfter() const { return m_readAfter; }
 
 	ibValueTabularSectionDataObjectRef();
-	ibValueTabularSectionDataObjectRef(class ibValueReferenceDataObject* reference, ibValueMetaObjectTableData* tableObject, bool readAfter = false);
-	ibValueTabularSectionDataObjectRef(class ibValueRecordDataObjectRef* recordObject, ibValueMetaObjectTableData* tableObject);
-	ibValueTabularSectionDataObjectRef(class ibValueSelectorRecordDataObject* selectorObject, ibValueMetaObjectTableData* tableObject);
+	ibValueTabularSectionDataObjectRef(class ibValueReferenceDataObject* reference, const ibValueMetaObjectTableData* tableObject, bool readAfter = false);
+	ibValueTabularSectionDataObjectRef(class ibValueRecordDataObjectRef* recordObject, const ibValueMetaObjectTableData* tableObject);
+	ibValueTabularSectionDataObjectRef(class ibValueSelectorRecordDataObject* selectorObject, const ibValueMetaObjectTableData* tableObject);
 
 	virtual ~ibValueTabularSectionDataObjectRef() {}
 

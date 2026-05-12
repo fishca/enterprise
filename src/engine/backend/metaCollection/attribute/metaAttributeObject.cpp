@@ -61,7 +61,7 @@ ibSelectMode ibValueMetaObjectAttribute::GetSelectMode() const
 		return ibSelectMode::ibSelectMode_Items;
 	const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(GetTypeDesc().GetFirstClsid());
 	if (so != nullptr) {
-		ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
+		const ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<const ibValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
 		if (so->GetMetaTypeCtor() == ibCtorObjectMetaType::ibCtorObjectMetaType_Reference && metaObject != nullptr)
 			return (ibSelectMode)m_propertySelectMode->GetValueAsInteger();
 		return ibSelectMode::ibSelectMode_Items;

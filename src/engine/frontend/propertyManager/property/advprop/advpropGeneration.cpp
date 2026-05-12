@@ -40,6 +40,8 @@ ibPGGenerationProperty::ibPGGenerationProperty(const ibPropertyObject* property,
 {
     FillByClsid(g_metaCatalogCLSID);
     FillByClsid(g_metaDocumentCLSID);
+    FillByClsid(g_metaChartOfCharacteristicTypesCLSID);
+    FillByClsid(g_metaChartOfAccountsCLSID);
 
     //m_flags |= wxPGFlags::ReadOnly;
     m_flags |= wxPGPropertyFlags_ActiveButton; // Property button always enabled.
@@ -159,7 +161,7 @@ wxPGEditorDialogAdapter* ibPGGenerationProperty::GetEditorDialog() const
             topsizer->SetSizeHints(dlg);
 
             if (!wxPropertyGrid::IsSmallScreen()) {
-                dlg->SetSize(400, 300);
+                dlg->SetSize(dlg->FromDIP(wxSize(400, 300)));
                 dlg->Move(pg->GetGoodEditorDialogPosition(prop, dlg->GetSize()));
             }
 
@@ -175,6 +177,8 @@ wxPGEditorDialogAdapter* ibPGGenerationProperty::GetEditorDialog() const
             if (metaData != nullptr) {
                 FillByClsid(metaData, g_metaCatalogCLSID, tc, data);
                 FillByClsid(metaData, g_metaDocumentCLSID, tc, data);
+                FillByClsid(metaData, g_metaChartOfCharacteristicTypesCLSID, tc, data);
+                FillByClsid(metaData, g_metaChartOfAccountsCLSID, tc, data);
             }
 
             tc->ExpandAll(); int res = dlg->ShowModal();

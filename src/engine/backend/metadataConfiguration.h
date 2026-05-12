@@ -1,6 +1,8 @@
 #ifndef _CONFIG_METADATA_H__
 #define _CONFIG_METADATA_H__
 
+#include <vector>
+
 #include "backend/metadata.h"
 #include "backend/appData.h"
 
@@ -54,15 +56,10 @@ public:
 	virtual bool LoadDataFromBuffer(const wxMemoryBuffer& buffer) { return true; }
 	virtual bool SaveDataToBuffer(wxMemoryBuffer& buffer) { return true; }
 
-	//get common module 
-	virtual ibValueModuleManagerConfiguration* GetModuleManager() const = 0;
+	//get common metadata
 	virtual ibValueMetaObjectConfiguration* GetCommonMetaObject() const = 0;
 
-	//start/exit module 
-	virtual bool StartMainModule(bool force = false) = 0;
-	virtual bool ExitMainModule(bool force = false) = 0;
-
-	// get config metadata in storage 
+	// get config metadata in storage
 	virtual ibMetaDataConfigurationBase* GetConfiguration() const { return nullptr; }
 
 	//get config type 
@@ -140,21 +137,9 @@ public:
 	//load/save form file
 	virtual bool LoadConfigFromBuffer(const wxMemoryBuffer& buffer);
 
-	virtual ibValueModuleManagerConfiguration* GetModuleManager() const { return m_moduleManager; }
 	virtual ibValueMetaObjectConfiguration* GetCommonMetaObject() const { return m_commonObject; }
 
-	//start/exit module 
-	virtual bool StartMainModule(bool force = false) {
-		return m_moduleManager != nullptr ?
-			m_moduleManager->StartMainModule() : false;
-	}
-
-	virtual bool ExitMainModule(bool force = false) {
-		return m_moduleManager != nullptr ?
-			m_moduleManager->ExitMainModule(force) : false;
-	}
-
-	//get config type 
+	//get config type
 	virtual ibConfigType GetConfigType() const { return ibConfigType::ibConfigType_File; };
 
 protected:
@@ -180,7 +165,6 @@ protected:
 	wxString m_md5Hash;
 	//common meta object
 	ibValueMetaObjectConfiguration* m_commonObject;
-	ibValueModuleManagerConfiguration* m_moduleManager;
 };
 
 class BACKEND_API ibMetaDataConfiguration : public ibMetaDataConfigurationFile {

@@ -2,11 +2,40 @@
 #define __TABLE_BOX_H__
 
 #include "backend/tableInfo.h"
+// ibValueEnumeration template + AddEnumeration come from here; on
+// desktop they were pulled in transitively through tableView.h. Web
+// build skips tableView.h, so add the direct include.
+#include "backend/compiler/enumUnit.h"
 
 #include "frontend/visualView/ctrl/window.h"
 #include "frontend/visualView/ctrl/typeControl.h"
 
+#ifndef OES_USE_WEB
+// Desktop pulls in the full wxDataView-based viewer. Web build keeps
+// only the structural surface BuildForm calls (SetControlName /
+// SetSource / SetVisibleColumn / Create-as-stub) and ifdefs out every
+// wxDataView-touching method declaration — the real Create / event
+// handlers / model wiring are desktop-only.
 #include "frontend/win/ctrls/tableView.h"
+#else
+// Web build: mirror the dataview-enum literals tableBox.h's enum classes
+// reference. These match dataview.h verbatim; keeping them in one place
+// avoids dragging the full wxDataView headers into the web compile.
+enum ibDataViewSelectionMode {
+	ibDataViewSelectCell = 0,
+	ibDataViewSelectRow  = 1,
+};
+enum ibDataViewViewMode {
+	ibDataViewTree,
+	ibDataViewHierarchical,
+	ibDataViewList,
+};
+// wxDVC_DEFAULT_WIDTH constant from dataview.h used by ibPropertyUInteger
+// default in tableBoxColumn. Same value as wx core uses (80).
+#ifndef wxDVC_DEFAULT_WIDTH
+#define wxDVC_DEFAULT_WIDTH 80
+#endif
+#endif
 
 //********************************************************************************************
 //*                                 define commom clsid									     *
@@ -69,7 +98,7 @@ public:
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual ibValueMetaObjectCompositeData* GetSourceMetaObject() const;
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const;
 	//get ref class 
 	virtual ibClassID GetSourceClassType() const;
 	//Get presentation 
@@ -112,11 +141,11 @@ public:
 		return _("TableBox") + wxT(": ") + _("<empty source>");
 	}
 
-	//control factory 
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	//control factory
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//get component type 
@@ -164,15 +193,35 @@ public:
 
 	//other
 	void AddColumn();
+#ifndef OES_USE_WEB
 	void CreateColumnCollection(ibDataViewCtrl* tableCtrl = nullptr);
+#endif
 
 	void CreateTable(bool recreateModel = false);
 
 	void CreateModel(bool recreateModel = false);
 	void RefreshModel(bool recreateModel = false);
 
-	// get current line if exist 
+	// get current line if exist
 	ibValueModel::ibValueModelReturnLine* GetCurrentLine() const { return m_tableCurrentLine; }
+
+	// Single source of truth for programmatic current-line mutation.
+	// All non-user-click paths (OnIdle restore from createdValue /
+	// ownerControl / changedValue, script-side SetPropVal CurrentRow,
+	// paged-bootstrap focus restore) route through here so
+	// m_tableCurrentLine, ctrl's selection, optionally ctrl's current
+	// row and viewport visibility stay consistent.  Pass nullptr for
+	// `line` to clear.  The script Selection event is fired in both
+	// directions (user click via OnSelectionChanged, programmatic
+	// here) so listeners get a unified signal regardless of source.
+	//
+	// `focus = false` records the current line + drives selection
+	// highlight without grabbing keyboard focus or scrolling the
+	// viewport — for cross-table coordinated updates, batch
+	// programmatic replays, or any "track current line silently"
+	// flow where the user shouldn't see their cursor jump.
+	void ApplyCurrentLine(ibValueModel::ibValueModelReturnLine* line,
+	                      bool focus = true);
 
 	void SetCalculateColumnPos() { m_need_calculate_pos = true; }
 
@@ -182,7 +231,8 @@ protected:
 
 	void CalculateColumnPos();
 
-	//events 
+#ifndef OES_USE_WEB
+	//events — wxDataView-bound, desktop only
 	void OnColumnClick(ibDataViewEvent& event);
 	void OnColumnReordered(ibDataViewEvent& event);
 
@@ -199,6 +249,7 @@ protected:
 	void OnItemValueChanged(ibDataViewEvent& event);
 
 	void OnItemStartInserting(ibDataViewEvent& event);
+	void OnItemStartAdding(ibDataViewEvent& event);
 	void OnItemStartDeleting(ibDataViewEvent& event);
 
 	void OnViewSet(ibDataViewEvent& event);
@@ -214,12 +265,7 @@ protected:
 
 	void OnCommandMenu(wxCommandEvent& event);
 	void OnContextMenu(ibDataViewEvent& event);
-
-	void OnSize(wxSizeEvent& event);
-	void OnIdle(wxIdleEvent& event);
-
-	// the methods to be called from the window event handlers
-	void HandleOnScroll(wxScrollWinEvent& event);
+#endif // !OES_USE_WEB
 
 private:
 
@@ -241,15 +287,20 @@ private:
 	ibEventControl* m_eventOnActivateRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("OnActivateRow"), _("Activate row"), _("When row is activated"), wxArrayString{ {wxT("Control")} });
 	ibEventControl* m_eventBeforeAddRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("BeforeAddRow"), _("Before add row"), _("When row addition mode is called"), wxArrayString{ wxT("Control"), wxT("Cancel"), wxT("Clone") });
 	ibEventControl* m_eventBeforeDeleteRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("BeforeDeleteRow"), _("Before delete row"), _("When row deletion is called"), wxArrayString{ wxT("Control"), wxT("Cancel") });
+	// After-add / after-delete pair — fires for GUI-driven add / delete
+	// (via wxEVT_DATAVIEW_ITEM_START_ADDING / _START_DELETING handlers)
+	// and for owner-driven createdValue path in OnUpdated that lands a fresh
+	// row through ApplyCurrentLine.  Lets script observe creation regardless
+	// of source.  _START_INSERTING (Insert / Copy at position) does NOT fire
+	// OnAddRow — Copy semantics are distinct from Add.
+	ibEventControl* m_eventOnAddRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("OnAddRow"), _("On add row"), _("When a new row has been inserted"), wxArrayString{ wxT("Control"), wxT("RowAdded") });
+	ibEventControl* m_eventOnDeleteRow = ibPropertyObject::CreateEvent<ibEventControl>(m_categoryEvent, wxT("OnDeleteRow"), _("On delete row"), _("When a row has been deleted"), wxArrayString{ wxT("Control"), wxT("RowDeleted") });
 
 #pragma endregion 
 
-	bool m_dataViewCreated, m_dataViewUpdated,
-		m_dataViewSelected, m_dataViewSizeChanged;
+	bool m_dataViewCreated, m_dataViewSelected;
 
 	bool m_need_calculate_pos;
-
-	wxSize m_dataViewSize;
 
 	ibValuePtr<ibValueModel> m_tableModel;
 	ibValuePtr<ibValueModel::ibValueModelReturnLine> m_tableCurrentLine;
@@ -341,9 +392,9 @@ public:
 	virtual wxString GetControlTitle() const;
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	virtual bool CanDeleteControl() const;

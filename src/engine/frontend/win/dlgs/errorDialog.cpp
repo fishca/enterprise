@@ -39,20 +39,20 @@ ibDialogError::ibDialogError(ibFrontendDocMDIFrame* parent, wxWindowID id,
 	m_errorOutput->SetMarginWidth(DEF_IMAGE_ID, FromDIP(16));
 	m_errorOutput->SetMarginSensitive(DEF_IMAGE_ID, true);
 
-	bSizerMain->Add(m_errorOutput, 1, wxEXPAND | wxALL, 5);
+	bSizerMain->Add(m_errorOutput, 1, wxEXPAND | wxALL, FromDIP(5));
 
 	wxBoxSizer* m_bSizerButtons = new wxBoxSizer(wxVERTICAL);
 
 	m_buttonCloseWindow = new wxButton(this, wxID_ANY, _("Close window"), wxDefaultPosition, wxDefaultSize, 0);
-	m_bSizerButtons->Add(m_buttonCloseWindow, 0, wxALL | wxEXPAND, 5);
+	m_bSizerButtons->Add(m_buttonCloseWindow, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_buttonGotoDesigner = new wxButton(this, wxID_ANY, _("Go to designer"), wxDefaultPosition, wxDefaultSize, 0);
-	m_bSizerButtons->Add(m_buttonGotoDesigner, 0, wxALL | wxEXPAND, 5);
+	m_bSizerButtons->Add(m_buttonGotoDesigner, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_buttonCloseProgram = new wxButton(this, wxID_ANY, _("Close program"), wxDefaultPosition, wxDefaultSize, 0);
-	m_bSizerButtons->Add(m_buttonCloseProgram, 0, wxALL | wxEXPAND, 5);
+	m_bSizerButtons->Add(m_buttonCloseProgram, 0, wxALL | wxEXPAND, FromDIP(5));
 
-	bSizerMain->Add(m_bSizerButtons, 0, wxEXPAND, 5);
+	bSizerMain->Add(m_bSizerButtons, 0, wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(bSizerMain);
 	wxDialog::Layout();

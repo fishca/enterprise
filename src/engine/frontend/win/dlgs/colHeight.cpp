@@ -9,7 +9,7 @@ ibDialogColWidth::ibDialogColWidth(ibGridEditor* parent, wxWindowID id, const wx
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* rowSizer = new wxBoxSizer(wxHORIZONTAL);
 	m_maximumCol = new wxCheckBox(this, wxID_ANY, _("Maximun column width"), wxDefaultPosition, wxDefaultSize, 0);
-	rowSizer->Add(m_maximumCol, 0, wxALL, 5);
+	rowSizer->Add(m_maximumCol, 0, wxALL, FromDIP(5));
 
 	int width = 0;
 
@@ -28,8 +28,8 @@ ibDialogColWidth::ibDialogColWidth(ibGridEditor* parent, wxWindowID id, const wx
 
 	m_spinCtrlWidth = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 999, width);
 	m_spinCtrlWidth->SetDigits(2);
-	rowSizer->Add(m_spinCtrlWidth, 0, 0, 5);
-	mainSizer->Add(rowSizer, 1, wxEXPAND, 5);
+	rowSizer->Add(m_spinCtrlWidth, 0, 0, FromDIP(5));
+	mainSizer->Add(rowSizer, 1, wxEXPAND, FromDIP(5));
 
 	m_sdbSizerBottom = new wxStdDialogButtonSizer();
 	m_sdbSizerBottomOK = new wxButton(this, wxID_OK);
@@ -38,7 +38,7 @@ ibDialogColWidth::ibDialogColWidth(ibGridEditor* parent, wxWindowID id, const wx
 	m_sdbSizerBottom->AddButton(m_sdbSizerBottomCancel);
 	m_sdbSizerBottom->Realize();
 
-	mainSizer->Add(m_sdbSizerBottom, 1, wxEXPAND, 5);
+	mainSizer->Add(m_sdbSizerBottom, 1, wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(mainSizer);
 	wxDialog::Layout();

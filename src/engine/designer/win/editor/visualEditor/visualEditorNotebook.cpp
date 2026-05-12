@@ -2,12 +2,13 @@
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-#include "win/editor/codeEditor/codeEditorParser.h"
+#include "frontend/win/editor/codeEditor/codeEditor.h"
+#include "frontend/win/editor/codeEditor/codeEditorParser.h"
 
 void ibVisualEditorNotebook::CreateVisualEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, long flags)
 {
-	wxAuiNotebook::AddPage(m_visualEditor, _("Designer"), false, wxArtProvider::GetBitmap(wxART_DESIGNER_PAGE, wxART_DOC_FORM));
-	wxAuiNotebook::AddPage(m_codeEditor, _("Code"), false, wxArtProvider::GetBitmap(wxART_CODE_PAGE, wxART_DOC_FORM));
+	wxAuiNotebook::AddPage(m_visualEditor, _("Designer"), false, wxArtProvider::GetBitmapBundle(wxART_DESIGNER_PAGE, wxART_DOC_FORM));
+	wxAuiNotebook::AddPage(m_codeEditor, _("Code"), false, wxArtProvider::GetBitmapBundle(wxART_CODE_PAGE, wxART_DOC_FORM));
 	m_visualEditor->SetReadOnly(flags == wxDOC_READONLY);
 	m_codeEditor->SetReadOnly(flags == wxDOC_READONLY);
 	wxAuiNotebook::SetSelection(wxNOTEBOOK_PAGE_DESIGNER);
@@ -63,8 +64,8 @@ void ibVisualEditorNotebook::ModifyEvent(ibEvent* event, const wxVariant& oldVal
 
 	const wxString& strEvent = newValue.GetString();
 
-	unsigned int lineStart = m_codeEditor->GetLineCount();
-	unsigned int lineEnd = lineStart;
+	unsigned int m_lineStart = m_codeEditor->GetLineCount();
+	unsigned int m_lineEnd = m_lineStart;
 
 	bool changeSel = true;
 
@@ -78,31 +79,31 @@ void ibVisualEditorNotebook::ModifyEvent(ibEvent* event, const wxVariant& oldVal
 
 	if (parser.ParseModule(m_codeEditor->GetText())) {
 		for (auto content : parser.GetAllContent()) {
-			if (content.eType == ibContentType::eProcedure ||
-				content.eType == ibContentType::eFunction ||
-				content.eType == ibContentType::eExportProcedure ||
-				content.eType == ibContentType::eExportFunction) {
-				lineStart = content.nLineStart; lineEnd = content.nLineEnd;
-				if (stringUtils::CompareString(content.strName, oldValue) && !stringUtils::CompareString(content.strName, newValue) && changeSel) {
+			if (content.m_eType == ibContentType::eProcedure ||
+				content.m_eType == ibContentType::eFunction ||
+				content.m_eType == ibContentType::eExportProcedure ||
+				content.m_eType == ibContentType::eExportFunction) {
+				m_lineStart = content.m_lineStart; m_lineEnd = content.m_lineEnd;
+				if (stringUtils::CompareString(content.m_name, oldValue) && !stringUtils::CompareString(content.m_name, newValue) && changeSel) {
 					int answer = wxMessageBox(_("Do you rename an existing procedure?"), _("Rename"), wxYES_NO | wxCENTRE);
 					if (answer == wxYES) {
-						wxString currentLine = m_codeEditor->GetLine(content.nLineStart);
-						currentLine.Replace(content.strName, newValue);
-						m_codeEditor->Replace(m_codeEditor->GetLineEndPosition(content.nLineStart - 1) + 1, m_codeEditor->GetLineEndPosition(content.nLineStart) + 1, currentLine);
-						procFounded = true; lineStart = content.nLineStart; lineEnd = content.nLineEnd;
+						wxString currentLine = m_codeEditor->GetLine(content.m_lineStart);
+						currentLine.Replace(content.m_name, newValue);
+						m_codeEditor->Replace(m_codeEditor->GetLineEndPosition(content.m_lineStart - 1) + 1, m_codeEditor->GetLineEndPosition(content.m_lineStart) + 1, currentLine);
+						procFounded = true; m_lineStart = content.m_lineStart; m_lineEnd = content.m_lineEnd;
 					}
 					break;
 				}
-				else if (stringUtils::CompareString(content.strName, newValue)) {
-					procFounded = true; lineStart = content.nLineStart; lineEnd = content.nLineEnd;
+				else if (stringUtils::CompareString(content.m_name, newValue)) {
+					procFounded = true; m_lineStart = content.m_lineStart; m_lineEnd = content.m_lineEnd;
 					break;
 				}
-				else if (stringUtils::CompareString(content.strName, oldValue) && !changeSel) {
+				else if (stringUtils::CompareString(content.m_name, oldValue) && !changeSel) {
 					int answer = wxMessageBox(_("Do you delete an existing procedure?"), _("Delete"), wxYES_NO | wxCENTRE);
 					if (answer == wxYES) {
 						m_codeEditor->Replace(
-							m_codeEditor->GetLineEndPosition(content.nLineStart - 1) + 1,
-							m_codeEditor->GetLineEndPosition(content.nLineEnd + 1),
+							m_codeEditor->GetLineEndPosition(content.m_lineStart - 1) + 1,
+							m_codeEditor->GetLineEndPosition(content.m_lineEnd + 1),
 							wxEmptyString
 						);
 					}
@@ -125,20 +126,16 @@ void ibVisualEditorNotebook::ModifyEvent(ibEvent* event, const wxVariant& oldVal
 			wxAuiNotebook::SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
 
 		if (!procFounded) {
-			int endPos = m_codeEditor->GetLineEndPosition(lineEnd);
+			int endPos = m_codeEditor->GetLineEndPosition(m_lineEnd);
 			wxString offset = endPos > 0 ?
 				wxT("\r\n\r\n") : wxT("");
 			m_codeEditor->Replace(endPos, endPos,
-				offset +
-				wxT("Procedure ") + strEvent + wxT("(") + prcArgs + wxT(")\r\n")
-				"\t\r\n"
-				wxT("EndProcedure")
-			);
+				offset + ibCodeEditor::MakeProcedureTemplate(strEvent, prcArgs));
 			int patchLine = endPos > 0 ?
 				2 : -1;
-			lineStart = lineEnd + patchLine;
+			m_lineStart = m_lineEnd + patchLine;
 		}
-		m_codeEditor->GotoLine(lineStart);
+		m_codeEditor->GotoLine(m_lineStart);
 		m_codeEditor->SetSTCFocus(true);
 	}
 

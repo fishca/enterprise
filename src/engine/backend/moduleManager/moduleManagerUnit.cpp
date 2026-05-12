@@ -7,15 +7,20 @@
 
 #include "backend/system/systemManager.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueModuleManager::ibValueModuleUnit, ibValue);
 
 ibValueModuleManager::ibValueModuleUnit::ibValueModuleUnit(ibValueModuleManager *moduleManager, ibValueMetaObjectModuleBase *moduleObject, bool managerModule) :
-	ibValue(ibValueTypes::TYPE_VALUE, true), ibModuleDataObject(new ibCompileCommonModule(moduleObject)),
+	ibValue(ibValueTypes::TYPE_VALUE, true), ibRuntimeModuleDataObject(new ibCompileCommonModule(moduleObject)),
 	m_methodHelper(new ibValueMethodHelper()),
 	m_moduleManager(moduleManager),
 	m_moduleObject(moduleObject)
 {
+	// Parent chain in the runtime tree — common module sits directly
+	// under its owning root module manager. Enables GetSession() walks
+	// from nested scripts without relying on ambient ibSessionScope.
+	SetParent(moduleManager);
 }
 
 ibValueModuleManager::ibValueModuleUnit::~ibValueModuleUnit()
@@ -25,31 +30,24 @@ ibValueModuleManager::ibValueModuleUnit::~ibValueModuleUnit()
 
 #define objectManager wxT("Manager")
 
-//common module 
+//common module
 bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
 {
 	wxASSERT(m_moduleManager != nullptr);
 
-	m_compileModule->SetParent(m_moduleManager->GetCompileModule());
-	//create singleton "manager"
-	m_compileModule->AddContextVariable(objectManager, m_moduleManager->GetObjectManager());
+	// Parent already wired in ctor (SetParent(moduleManager)). Bind
+	// the module-scope "Manager" singleton that scripts reach via
+	// Manager.<method>() inside common modules.
+	BindContextVariable(objectManager, m_moduleManager->GetObjectManager());
 
-	wxDELETE(m_procUnit);
-
-	if (!appData->DesignerMode()) {
-		try {
-			m_compileModule->Compile();
-			// у глобального модуля код исполняется в главном модуле! 
-			if (!ibValueModuleUnit::IsGlobalModule()) {
-				m_procUnit = new ibProcUnit();
-				m_procUnit->SetParent(m_moduleManager->GetProcUnit());
-				m_procUnit->Execute(m_compileModule->m_cByteCode, false);
-			}
-		}
-		catch (const ibBackendException *){
-			return false;
-		};
+	// Compile only — per-session ProcUnit comes from AttachRuntime.
+	try {
+		Compile();
 	}
+	catch (const ibBackendException& err) {
+		wxLogWarning(_("Common module init failed: %s"), err.GetErrorDescription());
+		return false;
+	};
 
 	ibValueModuleUnit::PrepareNames();
 	return true;
@@ -62,7 +60,7 @@ bool ibValueModuleManager::ibValueModuleUnit::DestroyCommonModule()
 	m_compileModule->RemoveVariable(objectManager);
 	m_compileModule->Reset();
 
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 	return true;
 }
 
@@ -70,32 +68,19 @@ void ibValueModuleManager::ibValueModuleUnit::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
 bool ibValueModuleManager::ibValueModuleUnit::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
-	return ibModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecAsProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
 bool ibValueModuleManager::ibValueModuleUnit::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

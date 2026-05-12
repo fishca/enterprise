@@ -9,10 +9,7 @@
 
 #include "backend/backend_mainFrame.h"
 #include "frontend/frontend.h"
-
-#if defined(backend_mainFrame)
-#undef backend_mainFrame
-#endif
+#include "frontend/frontendTypes.h"   // ibFrontendWindow typedef
 
 class ibMetaView;
 
@@ -37,7 +34,7 @@ class ibMetaView;
 #define wxAUI_WHITE_COLOUR wxColour(255, 255, 255) 
 
 class FRONTEND_API ibFrontendDocMDIFrame :
-	public ibBackendDocMDIFrame, public wxAuiMDIParentFrame,
+	public ibBackendDocFrame, public wxAuiMDIParentFrame,
 	public wxDocParentFrameAnyBase {
 public:
 
@@ -48,7 +45,27 @@ public:
 	virtual void Modify(bool modify) {}
 	virtual bool IsModified() const { return false; }
 
-	virtual bool AuthenticationUser(const wxString& userName, const wxString& userPassword) const;
+	// Session this frame was initialized for. Set once via Initialize()
+	// (see below) right after OpenSession in the phased startup flow.
+	// Frames that go through the legacy monolithic Connect() read it
+	// through the base-class fallback to appData's main ticket.
+	virtual ibSession* GetSession() const override { return m_session; }
+
+	// GUI-session back-link — populated by ibGUISession::AttachFrame.
+	// Null until the derived session claims this frame; stays null for
+	// frames built by the legacy mainFrameCreate path. Use GetSession()
+	// for plain ibSession*-typed code; reach for ibGUISession* only
+	// when GUI-specific plumbing (module manager per-session, debugger
+	// hooks) matters.
+	void SetGUISession(class ibGUISession* s) { m_guiSession = s; }
+	class ibGUISession* GetGUISession() const { return m_guiSession; }
+
+	// Bind session to this frame. Called once right after session->Open
+	// succeeds, BEFORE LoadMetadata — so AllowRun/AllowClose and any
+	// session-aware UI already see the session even while metadata is
+	// being compiled. Runtime start (CreateRoot + AttachRuntime)
+	// is deferred to Show() so activeMetaData is guaranteed populated.
+	virtual bool Initialize(ibSession* session);
 
 	virtual ibMetaData* FindMetadataByPath(const wxString& strFileName) const;
 
@@ -80,6 +97,14 @@ public:
 	virtual void RefreshFrame() override;
 	virtual void RaiseFrame() override;
 
+	// Desktop modal-message primitive — wxMessageBox with this frame
+	// as the parent so the dialog stays attached. Backend callers use
+	// session->GetFrame()->ShowModalMessage(...) instead of raw
+	// wxMessageBox so the backend stays wx-ignorant.
+	int ShowModalMessage(const wxString& message, const wxString& caption, int style) override {
+		return wxMessageBox(message, caption, style, this);
+	}
+
 	virtual wxAuiToolBar* GetMainFrameToolbar() const { return m_mainFrameToolbar; }
 	virtual wxAuiToolBar* GetDocToolbar() const { return m_docToolbar; }
 
@@ -90,7 +115,10 @@ public:
 
 	virtual void SetTitle(const wxString& title) override { wxAuiMDIParentFrame::SetTitle(title); }
 	virtual void SetStatusText(const wxString& text, int number = 0) override { wxAuiMDIParentFrame::SetStatusText(text, number); }
-	virtual bool Show(bool show = true) override { return (show && AllowRun() || !show && AllowClose()) && wxAuiMDIParentFrame::Show(show); }
+	virtual bool Show(bool show = true) override {
+		if (show && !EnsureRuntime()) return false;
+		return (show && AllowRun() || !show && AllowClose()) && wxAuiMDIParentFrame::Show(show);
+	}
 
 #if wxUSE_MENUS
 	virtual void SetMenuBar(wxMenuBar* pMenuBar) override;
@@ -124,7 +152,24 @@ protected:
 	}
 
 	virtual bool AllowRun() const { return true; }
+
+public:
+	// Soft-close veto hook. Called from wx's EVT_CLOSE_WINDOW handler when
+	// the user clicks [X], and from ibGUISession::OnDestroySession when
+	// EndJob(false) lands from script — both flows must consult the same
+	// veto (BeforeExit script for enterprise; unsaved-config dialog for
+	// designer). Default true means "allow close"; subclass returns false
+	// to cancel.
 	virtual bool AllowClose() const { return true; }
+
+protected:
+
+	// Lazy runtime start — first Show() after LoadMetadata creates the
+	// root module manager and wires per-session ProcUnits onto the
+	// metadata descriptors. No-op on later shows (re-enter guarded by
+	// session->GetManagerModule()) and on kinds that don't run scripts
+	// (Designer / Launcher / WebServer). Called from Show().
+	bool EnsureRuntime();
 
 	ibFrontendDocMDIFrame(const wxString& title,
 		const wxPoint& pos = wxDefaultPosition,
@@ -142,7 +187,12 @@ public:
 
 	virtual ~ibFrontendDocMDIFrame();
 
-	static wxWindow* CreateChildFrame(ibMetaView* view,
+	// Returns ibFrontendWindow* (typedef → wxWindow on desktop,
+	// ibWebWindow on web) so the signature reads the same across
+	// builds even though this static is desktop-only today. Keeps the
+	// door open for a shared signature if the web frame ever adopts
+	// the same factory entry point.
+	static ibFrontendWindow* CreateChildFrame(ibMetaView* view,
 		const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
 
 	static ibObjectInspector* GetObjectInspector() {
@@ -193,6 +243,20 @@ protected:
 	};
 
 	static ibFrontendDocMDIFrame* s_instance;
+
+	// Bound at Initialize(). Drives AllowRun/AllowClose and any
+	// session-aware UI actions. Raw pointer — session outlives frame
+	// (registry's m_own keeps it alive until ibSession::Close()).
+	ibSession* m_session = nullptr;
+
+	// GUI-session back-link — set by ibGUISession::AttachFrame when the
+	// derived session (ibEnterpriseSession / ibDesignerSession) instantiates
+	// this frame in its OnCreateSession. Lets frame handlers reach the
+	// per-session runtime (module manager, ProcUnit map, ibValueSystemFunction
+	// once it goes non-static) without routing through wxApp singletons.
+	// Non-owning; session owns the frame and clears this pointer on its
+	// dtor via SetGUISession(nullptr) before `delete m_frame`.
+	class ibGUISession* m_guiSession = nullptr;
 
 	ibObjectInspector* m_objectInspector;
 

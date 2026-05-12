@@ -1,17 +1,16 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : tabular sections
 ////////////////////////////////////////////////////////////////////////////
 
 #include "tabularSection.h"
 
-#include "backend/appData.h"
+#include "backend/session/session.h"
 
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
 #include "backend/metaCollection/partial/commonObject.h"
-
 bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool createData)
 {
 	if (m_objectValue->IsNewObject() && !srcGuid.isValid()) {
@@ -19,26 +18,37 @@ bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool cr
 		return false;
 	}
 
-	ibValueModelTableBase::Clear();
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	const auto db = ses_query;
+	ibValueModelRamTableBase::Clear();
+	const ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
-	const wxString& sqlQuery = "SELECT * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "'";
-	ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults(sqlQuery);
+	
+	ibStatementGuard sel(db, db->PrepareStatement("SELECT * FROM " + tableName + " WHERE uuid = ?;"));
+	if (!sel) return false;
+	sel->SetParamString(1, srcGuid.str());
+	ibDatabaseResultSet* resultSet = sel->RunQueryWithResults();
 	if (resultSet == nullptr)
 		return false;
+	long loadedRow = 0;
 	while (resultSet->Next()) {
 		ibValueTableRow* rowData = new ibValueTableRow();
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (m_metaTable->IsNumberLine(object->GetMetaID()))
 				continue;
-			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet, createData);
+			ibValue& slot = rowData->AppendTableValue(object->GetMetaID());
+			const wxString fldName = object->GetFieldNameDB();
+			const int dbType = resultSet->GetResultInt(fldName + wxT("_TYPE"));
+			const wxString dbStr = resultSet->GetResultString(fldName + wxT("_S"));
+			ibValueMetaObjectAttributeBase::GetValueAttribute(object, slot, resultSet, createData);
+			
 		}
-		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
-
+		ibValueModelRamTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+		++loadedRow;
 	}
+	
 
-	db_query->CloseResultSet(resultSet);
+	db->CloseResultSet(resultSet);
 
 	m_readAfter = true;
 	return true;
@@ -53,8 +63,10 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	if (m_readOnly)
 		return true;
 
+	
+
 	bool hasError = false;
-	//check fill attributes 
+	//check fill attributes
 	bool fillCheck = true; long currLine = 1;
 	for (long row = 0; row < GetRowCount(); row++) {
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
@@ -78,9 +90,10 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	if (!ibValueTabularSectionDataObjectRef::DeleteData())
 		return false;
 
+	const auto db = ses_query;
 	ibValueMetaObjectAttributePredefined* numLine = m_metaTable->GetNumberLine();
 	wxASSERT(numLine);
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	const ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	ibReference* reference_impl = new ibReference(metaObject->GetMetaID(), m_objectValue->GetGuid());
 
@@ -99,9 +112,13 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	}
 	queryText += ");";
 
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
-	if (statement == nullptr)
+	
+
+	ibStatementGuard statement(db, db->PrepareStatement(queryText));
+	if (!statement) {
+		delete reference_impl;
 		return false;
+	}
 
 	ibNumber numberLine = 1;
 	for (long row = 0; row < GetRowCount(); row++) {
@@ -109,33 +126,65 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 			break;
 		int position = 2;
 		statement->SetParamString(1, m_objectValue->GetGuid());
+		ibValueTableRow* rowNode = GetViewData<ibValueTableRow>(GetItem(row));
+		
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+			const int posBefore = position;
 			if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
 				ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(row));
 				wxASSERT(node);
+				const ibValue& v = node->GetTableValue(object->GetMetaID());
+				
 				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
-					node->GetTableValue(object->GetMetaID()),
-					statement,
+					v,
+					statement.get(),
 					position
 				);
 			}
 			else {
+				
 				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
 					numberLine++,
-					statement,
+					statement.get(),
 					position
 				);
 			}
+			
 		}
 
 		hasError = statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR;
+		
 	}
 
-	db_query->CloseStatement(statement);
-	delete reference_impl;
+	// Post-INSERT verification: read back what FB actually has for this uuid.
+	{
+		ibStatementGuard sel(db, db->PrepareStatement(
+			"SELECT * FROM " + tableName + " WHERE uuid = ?;"));
+		if (sel) {
+			sel->SetParamString(1, m_objectValue->GetGuid());
+			ibDatabaseResultSet* rs = sel->RunQueryWithResults();
+			if (rs != nullptr) {
+				long verifyRow = 0;
+				while (rs->Next()) {
+					for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+						if (m_metaTable->IsNumberLine(object->GetMetaID()))
+							continue;
+						const wxString fldName = object->GetFieldNameDB();
+						const int dbType = rs->GetResultInt(fldName + wxT("_TYPE"));
+						const wxString dbStr = rs->GetResultString(fldName + wxT("_S"));
+						
+					}
+					++verifyRow;
+				}
+				db->CloseResultSet(rs);
+			}
+		}
+	}
 
+	delete reference_impl;
+	
 	return !hasError;
 }
 
@@ -144,9 +193,14 @@ bool ibValueTabularSectionDataObjectRef::DeleteData()
 	if (m_readOnly || m_objectValue->IsNewObject())
 		return true;
 
-	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	const auto db = ses_query;
+	const ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
-	db_query->RunQuery("DELETE FROM " + tableName + " WHERE uuid = '" + m_objectValue->GetGuid() + "';");
+	ibStatementGuard del(db, db->PrepareStatement("DELETE FROM " + tableName + " WHERE uuid = ?;"));
+	if (del) {
+		del->SetParamString(1, m_objectValue->GetGuid());
+		del->RunQuery();
+	}
 	return true;
 }

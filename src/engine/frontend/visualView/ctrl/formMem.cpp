@@ -1,8 +1,15 @@
 #include "form.h"
 #include "backend/metaCollection/metaFormObject.h"
 
+#ifdef OES_USE_WEB
+#include <iostream>
+#include <iomanip>
+#endif
+
 bool ibValueForm::LoadForm(const wxMemoryBuffer& formData)
 {
+	if (formData.GetDataLen() == 0)
+		return false;
 	ibReaderMemory readerData(formData);
 	u64 clsid = 0;
 	std::shared_ptr<ibReaderMemory>readerMemory(readerData.open_chunk_iterator(clsid));
@@ -20,6 +27,9 @@ bool ibValueForm::LoadForm(const wxMemoryBuffer& formData)
 	}
 	std::shared_ptr <ibReaderMemory>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 	//SetReadOnly(m_metaFormObject->IsEditable());
+	wxASSERT_MSG(readerDataMemory, wxT("ibValueForm::LoadForm: eDataBlock missing — form was saved with empty writer (check ibValueFrame::SaveControl signature)"));
+	if (!readerDataMemory)
+		return false;
 	if (!LoadControl(m_metaFormObject, *readerDataMemory)) {
 		return false;
 	}
@@ -50,8 +60,26 @@ bool ibValueForm::LoadChildForm(ibReaderMemory& readerData, ibValueFrame* contro
 				break;
 			wxASSERT(clsid != 0);
 			ibValueFrame* newControl = ibValueForm::NewObject(clsid, controlParent, false);
+#ifdef OES_USE_WEB
+			if (newControl == nullptr) {
+				std::cerr << "[LoadChildForm] NewObject returned nullptr for clsid=0x"
+					<< std::hex << clsid << std::dec
+					<< " — unregistered control type; skipping subtree" << std::endl;
+				// Skip this control's subtree so we don't crash in LoadControl
+				// with a null this, and so the remaining siblings can still load.
+				prevReaderMetaMemory = readerMetaMemory;
+				continue;
+			}
+#else
+			wxASSERT_MSG(newControl != nullptr, wxT("ibValueForm::LoadChildForm: unregistered clsid"));
+			if (newControl == nullptr)
+				return false;
+#endif
 			//newControl->SetReadOnly(m_propEnabled);
 			std::shared_ptr <ibReaderMemory>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
+			wxASSERT_MSG(readerDataMemory, wxT("ibValueForm::LoadChildForm: eDataBlock missing for child control"));
+			if (!readerDataMemory)
+				return false;
 			if (!newControl->LoadControl(m_metaFormObject, *readerDataMemory))
 				return false;
 			std::shared_ptr <ibReaderMemory> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
@@ -77,6 +105,7 @@ wxMemoryBuffer ibValueForm::SaveForm()
 	if (!SaveControl(m_metaFormObject, writerDataMemory)) {
 		return wxMemoryBuffer();
 	}
+	wxASSERT_MSG(writerDataMemory.size() > 0, wxT("ibValueForm::SaveForm: SaveControl produced empty block — check that writer is passed by reference"));
 	writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
 	ibWriterMemory writerChildMemory;
 	if (!SaveChildForm(writerChildMemory, this))
@@ -100,6 +129,7 @@ bool ibValueForm::SaveChildForm(ibWriterMemory& writerData, ibValueFrame* contro
 		if (!child->SaveControl(m_metaFormObject, writerDataMemory)) {
 			return false;
 		}
+		wxASSERT_MSG(writerDataMemory.size() > 0, wxT("ibValueForm::SaveChildForm: child SaveControl produced empty block"));
 		writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
 		ibWriterMemory writerChildMemory;
 		if (!SaveChildForm(writerChildMemory, child)) {

@@ -5,18 +5,35 @@
 #include "backend/backend_spreadsheet.h"
 #include "backend/system/systemEnum.h"
 
-#define backend_mainFrame \
-	ibBackendDocMDIFrame::GetDocMDIFrame() \
+class ibSession;
 
-class BACKEND_API ibBackendDocMDIFrame {
+// The frame is not a process-level singleton — it belongs to ibSession.
+// Every caller reaches its frame through a session pointer available
+// in its own scope:
+//
+//   - Runtime callers (script exec, error reporter): walk up the
+//     current ProcUnit to ibProcUnitRoot → session → frame.
+//   - Object-method callers (ibRuntimeModuleDataObject subclasses):
+//     `GetSession()->GetFrame()` (GetSession walks parent chain).
+//   - Process-lifecycle callers (metadata config hooks, property
+//     dtor): `appData->GetMainSession()->GetFrame()`.
+//   - Web per-tab: `ibWebSession::Session()->GetFrame()`.
+
+class BACKEND_API ibBackendDocFrame {
 protected:
-	ibBackendDocMDIFrame();
+	ibBackendDocFrame() = default;
 public:
 
-	static ibBackendDocMDIFrame* GetDocMDIFrame();
-
-	virtual ~ibBackendDocMDIFrame();
+	virtual ~ibBackendDocFrame() = default;
 	virtual wxFrame* GetFrameHandler() const = 0;
+
+	// Session this frame drives. Desktop: the single process session,
+	// forwarded from appData->GetMainSession(). Web (ibWebFrame): the
+	// per-cookie session bound at construction. Used by UI-originated
+	// form-open paths (sidebar / menu / toolbar click) where no
+	// ownerControl is available to walk a descriptor parent chain.
+	// Default nullptr — headless / pre-session bootstrap paths.
+	virtual ibSession* GetSession() const { return nullptr; }
 
 	virtual class ibMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
 	virtual void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const {}
@@ -63,16 +80,24 @@ public:
 	virtual void Message(const wxString& strMessage, ibStatusMessage status) {}
 	virtual void ClearMessage() {}
 
+	// Frontend-facing modal-message primitive. Backend code routes every
+	// wxMessageBox call through here so the GUI-only dependency stays on
+	// the frontend side — desktop frame calls wxMessageBox with itself
+	// as parent; web frame (future) emits an HTTP notification / toast.
+	// Default base: do nothing, returns 0 (Cancel-equivalent). `style` is
+	// the wx bitmask (wxOK / wxYES_NO / wxICON_WARNING …); the returned
+	// int is the wx pressed-button code.
+	//
+	// Not named `MessageBox` — the Win32 header defines that as a macro
+	// mapping to MessageBoxW, which renames the virtual and breaks the
+	// backend/frontend link across the wfrontend DLL boundary.
+	// Body is out-of-line in backend_mainFrame.cpp so backend.dll exports
+	// a concrete symbol that wfrontend.dll can pick up via dllimport.
+	virtual int ShowModalMessage(const wxString& message, const wxString& caption, int style);
+
 	virtual void RefreshFrame() = 0;
 	virtual void RaiseFrame() = 0;
 
-	virtual bool AuthenticationUser(const wxString& userName, const wxString& userPassword) const { return false; }
-
-public:
-	virtual void OnInitializeConfiguration(enum ibConfigType cfg) {}
-	virtual void OnDestroyConfiguration(enum ibConfigType cfg) {}
-private:
-	static ibBackendDocMDIFrame* ms_mainFrame;
 };
 
 #endif

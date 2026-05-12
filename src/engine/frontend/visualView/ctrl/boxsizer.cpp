@@ -1,4 +1,7 @@
 #include "sizer.h"
+#ifdef OES_USE_WEB
+#include "frontend/web/webSizer.h"
+#endif
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueBoxSizer, ibValueSizer)
 
@@ -10,24 +13,35 @@ ibValueBoxSizer::ibValueBoxSizer() : ibValueSizer()
 {
 }
 
-wxObject* ibValueBoxSizer::Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/)
+wxObject* ibValueBoxSizer::Create(ibFrontendWindow* /*parent*/, ibVisualHost* /*visualHost*/)
 {
+#ifdef OES_USE_WEB
+	// Sizers have no ctor parent on wx either — the owner (wxWindow or
+	// another sizer) adopts them via SetSizer / Add. Walker does the
+	// analogous SetParent on web.
+	return new ibWebBoxSizer(m_propertyOrient->GetValueAsInteger());
+#else
 	return new wxBoxSizer(m_propertyOrient->GetValueAsInteger());
+#endif
 }
 
-void ibValueBoxSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost *visualHost, bool firstСreated)
+void ibValueBoxSizer::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost *visualHost, bool firstСreated)
 {
 }
 
 void ibValueBoxSizer::Update(wxObject* wxobject, ibVisualHost *visualHost)
 {
-	wxBoxSizer *boxSizer = dynamic_cast<wxBoxSizer *>(wxobject);
-
-	if (boxSizer != nullptr) {
-		boxSizer->SetOrientation(m_propertyOrient->GetValueAsInteger());
-		boxSizer->SetMinSize(m_propertyMinSize->GetValueAsSize());
-	}
-
+	// static_cast: Create() guarantees the type (wxBoxSizer desktop,
+	// ibWebBoxSizer web); walker returns the same pointer unchanged.
+	// Web's SetMinSize is a no-op (CSS layout), see ibWebSizer.
+	if (wxobject == nullptr) return;
+#ifdef OES_USE_WEB
+	ibWebBoxSizer* boxSizer = static_cast<ibWebBoxSizer*>(wxobject);
+#else
+	wxBoxSizer*    boxSizer = static_cast<wxBoxSizer*>(wxobject);
+#endif
+	boxSizer->SetOrientation(m_propertyOrient->GetValueAsInteger());
+	boxSizer->SetMinSize(m_propertyMinSize->GetValueAsSize());
 	UpdateSizer(boxSizer);
 }
 

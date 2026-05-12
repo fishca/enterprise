@@ -53,10 +53,17 @@ public:
 	// ------ area value accessors
 	//
 	virtual void PutArea(
-		const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc) = 0;
+		const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc,
+		unsigned int groupLevel = 0) = 0;
 
 	virtual void JoinArea(
-		const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc) = 0;
+		const wxObjectDataPtr<class ibBackendSpreadsheetObject>& doc,
+		unsigned int groupLevel = 0) = 0;
+
+	// A single outline group was added via the block API (BeginRowGroup/EndRowGroup).
+	// Default = no-op so existing notifiers keep compiling.
+	virtual void RowAreaAdded(unsigned int start, unsigned int end, unsigned int level) {}
+	virtual void ColAreaAdded(unsigned int start, unsigned int end, unsigned int level) {}
 };
 
 class BACKEND_API ibBackendSpreadsheetObject : public wxRefCounter {
@@ -91,8 +98,17 @@ public:
 	ibSpreadsheetDescription GetArea(int rowLeft, int rowRight, int colTop = -1, int colBottom = -1);
 	ibSpreadsheetDescription GetAreaByName(const wxString& strAreaLeftName, const wxString& strAreaTopName = wxT(""));
 
-	void PutArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
-	void JoinArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
+	void PutArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, unsigned int groupLevel = 0);
+	void JoinArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, unsigned int groupLevel = 0);
+
+	// Block-style outline grouping. Nest freely: BeginRowGroup(); Put(doc, 1);
+	// BeginRowGroup(); Put(doc, 2); EndRowGroup(); EndRowGroup();
+	// On End* the range between the matching Begin* and the current row/col
+	// count becomes a new outline group at depth = stack size + 1.
+	void BeginRowGroup();
+	void EndRowGroup();
+	void BeginColGroup();
+	void EndColGroup();
 
 	// ------ grid dimensions
 	//
@@ -260,6 +276,10 @@ private:
 
 	//cell desc
 	ibSpreadsheetDescription m_spreadsheetDesc;
+
+	// Stacks of Begin*Group row/col counts — each End* pops and emits a group.
+	std::vector<int> m_rowGroupStack;
+	std::vector<int> m_colGroupStack;
 
 	//param value
 	std::map<wxString, ibValue> m_paramVector;

@@ -10,12 +10,13 @@
 #include "backend/system/value/valueTable.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 ibValue ibValueManagerDataObjectAccountingRegister::Balance(const ibValue& cPeriod, const ibValue& cAccount, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -247,7 +248,7 @@ ibValue ibValueManagerDataObjectAccountingRegister::Balance(const ibValue& cPeri
 	sqlQuery += ") AS T1";
 
 	// Prepare and bind parameters
-	ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 	if (statement == nullptr)
 		return retTable;
@@ -314,17 +315,17 @@ ibValue ibValueManagerDataObjectAccountingRegister::Balance(const ibValue& cPeri
 		wxDELETE(retLine);
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 
 	return retTable;
 }
 
 ibValue ibValueManagerDataObjectAccountingRegister::Turnovers(const ibValue& cBeginOfPeriod, const ibValue& cEndOfPeriod, const ibValue& cAccount, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -572,7 +573,7 @@ ibValue ibValueManagerDataObjectAccountingRegister::Turnovers(const ibValue& cBe
 	sqlQuery += ") AS T1";
 
 	// Prepare and bind parameters
-	ibPreparedStatement* statement = db_query->PrepareStatement(sqlQuery);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
 
 	if (statement == nullptr)
 		return retTable;
@@ -644,21 +645,19 @@ ibValue ibValueManagerDataObjectAccountingRegister::Turnovers(const ibValue& cBe
 		wxDELETE(retLine);
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 
 	return retTable;
 }
 
 ibValue ibValueManagerDataObjectAccountingRegister::DrCrTurnovers(const ibValue& cBeginOfPeriod, const ibValue& cEndOfPeriod, const ibValue& cAccount, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
-	// DrCrTurnovers requires a complex correlated subquery (debit account x credit account pairs).
-	// Return empty table with proper column structure for now.
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
 	ibValueModelTable::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
@@ -692,14 +691,271 @@ ibValue ibValueManagerDataObjectAccountingRegister::DrCrTurnovers(const ibValue&
 		);
 	}
 
+	// Parse dimension filter
+	ibValueStructure* valFilter = nullptr; std::map<ibValueMetaObjectAttributeBase*, ibValue> selFilter;
+	if (cFilter.ConvertToValue(valFilter)) {
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			ibValue vSelValue;
+			if (valFilter->Property(object->GetName(), vSelValue)) {
+				selFilter.insert_or_assign(
+					object, vSelValue
+				);
+			}
+		}
+	}
+
+	// Check if account filter is provided
+	bool hasAccountFilter = !cAccount.IsEmpty();
+
+	// Get SQL field info for key columns
+	wxString accountFieldName = m_metaObject->GetRegisterAccount()->GetFieldNameDB();
+	ibValueMetaObjectAttributeBase::ibSQLField sqlColAccount =
+		ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterAccount());
+	ibValueMetaObjectAttributeBase::ibSQLField sqlColRecordType =
+		ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterRecordType());
+	ibValueMetaObjectAttributeBase::ibSQLField sqlColRecorder =
+		ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterRecorder());
+	ibValueMetaObjectAttributeBase::ibSQLField sqlColLineNumber =
+		ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterLineNumber());
+
+	// DrCrTurnovers: self-join on Recorder+LineNumber to pair debit and credit rows.
+	// dr alias = debit side (RecordType=0), cr alias = credit side (RecordType=1).
+	//
+	// The outer SELECT wraps the inner self-join to produce column names
+	// compatible with GetValueAttribute (fieldName_TYPE, fieldName_N, fieldName_RTRef, etc.).
+	// AccountDr uses prefix "AccountDr" and AccountCr uses prefix "AccountCr".
+
+	wxString tableName = m_metaObject->GetTableNameDB();
+
+	// --- Outer SELECT: aliases for GetValueAttribute compatibility ---
+	wxString sqlQuery = " SELECT ";
+
+	// AccountDr fields: alias dr.Account sub-columns to AccountDr_TYPE, AccountDr_B, AccountDr_RTRef, AccountDr_RRRef etc.
+	{
+		sqlQuery += "dr." + sqlColAccount.m_fieldTypeName + " AS AccountDr_TYPE";
+		for (auto dataType : sqlColAccount.m_types) {
+			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				// e.g. fieldName_N -> AccountDr_N, fieldName_B -> AccountDr_B, etc.
+				wxString suffix = dataType.m_field.m_fieldName.Mid(accountFieldName.Len());
+				sqlQuery += ", dr." + dataType.m_field.m_fieldName + " AS AccountDr" + suffix;
+			}
+			else {
+				sqlQuery += ", dr." + dataType.m_field.m_fieldRefName.m_fieldRefType + " AS AccountDr_RTRef";
+				sqlQuery += ", dr." + dataType.m_field.m_fieldRefName.m_fieldRefName + " AS AccountDr_RRRef";
+			}
+		}
+	}
+
+	// AccountCr fields: alias cr.Account sub-columns to AccountCr_TYPE, AccountCr_N, AccountCr_RTRef, etc.
+	{
+		sqlQuery += ", cr." + sqlColAccount.m_fieldTypeName + " AS AccountCr_TYPE";
+		for (auto dataType : sqlColAccount.m_types) {
+			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				wxString suffix = dataType.m_field.m_fieldName.Mid(accountFieldName.Len());
+				sqlQuery += ", cr." + dataType.m_field.m_fieldName + " AS AccountCr" + suffix;
+			}
+			else {
+				sqlQuery += ", cr." + dataType.m_field.m_fieldRefName.m_fieldRefType + " AS AccountCr_RTRef";
+				sqlQuery += ", cr." + dataType.m_field.m_fieldRefName.m_fieldRefName + " AS AccountCr_RRRef";
+			}
+		}
+	}
+
+	// Resource amount aggregates: SUM(dr.Amount)
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
+		ibValueMetaObjectAttributeBase::ibSQLField sqlResource = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+		sqlQuery += ", dr." + sqlResource.m_fieldTypeName;
+		sqlQuery += ", CAST(SUM(dr." + sqlResource.m_types[0].m_field.m_fieldName + ") AS NUMERIC) AS " + sqlResource.m_types[0].m_field.m_fieldName + "_Amount_";
+	}
+
+	// FROM with self-join
+	sqlQuery += " FROM " + tableName + " dr";
+	sqlQuery += " INNER JOIN " + tableName + " cr ON ";
+
+	// Join on Recorder
+	{
+		bool firstJoin = true;
+		for (auto dataType : sqlColRecorder.m_types) {
+			if (!firstJoin) sqlQuery += " AND ";
+			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				sqlQuery += "dr." + dataType.m_field.m_fieldName + " = cr." + dataType.m_field.m_fieldName;
+			}
+			else {
+				sqlQuery += "dr." + dataType.m_field.m_fieldRefName.m_fieldRefType + " = cr." + dataType.m_field.m_fieldRefName.m_fieldRefType;
+				sqlQuery += " AND dr." + dataType.m_field.m_fieldRefName.m_fieldRefName + " = cr." + dataType.m_field.m_fieldRefName.m_fieldRefName;
+			}
+			firstJoin = false;
+		}
+	}
+
+	// WHERE clause
+	sqlQuery += " WHERE ";
+
+	// dr.RecordType = 0 (Debit)
+	sqlQuery += "dr." + sqlColRecordType.m_types[0].m_field.m_fieldName + " = 0.0";
+
+	// cr.RecordType = 1 (Credit)
+	sqlQuery += " AND cr." + sqlColRecordType.m_types[0].m_field.m_fieldName + " = 1.0";
+
+	// dr.Active = true AND cr.Active = true
+	ibValueMetaObjectAttributeBase::ibSQLField sqlColActive =
+		ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterActive());
+	sqlQuery += " AND dr." + sqlColActive.m_types[0].m_field.m_fieldName + " = ?";
+	sqlQuery += " AND cr." + sqlColActive.m_types[0].m_field.m_fieldName + " = ?";
+
+	// Period range: dr.Period >= ? AND dr.Period <= ?
+	ibValueMetaObjectAttributeBase::ibSQLField sqlColPeriod =
+		ibValueMetaObjectAttributeBase::GetSQLFieldData(m_metaObject->GetRegisterPeriod());
+	sqlQuery += " AND dr." + sqlColPeriod.m_types[0].m_field.m_fieldName + " >= ?";
+	sqlQuery += " AND dr." + sqlColPeriod.m_types[0].m_field.m_fieldName + " <= ?";
+
+	// Account filter on debit side (manually prefixed with dr. for self-join)
+	if (hasAccountFilter) {
+		sqlQuery += " AND dr." + sqlColAccount.m_fieldTypeName + " = ?";
+		for (auto dataType : sqlColAccount.m_types) {
+			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				sqlQuery += " AND dr." + dataType.m_field.m_fieldName + " = ?";
+			}
+			else {
+				sqlQuery += " AND dr." + dataType.m_field.m_fieldRefName.m_fieldRefType + " = ?";
+				sqlQuery += " AND dr." + dataType.m_field.m_fieldRefName.m_fieldRefName + " = ?";
+			}
+		}
+	}
+
+	// Dimension filters on debit side (manually prefixed with dr. for self-join)
+	for (auto& filter : selFilter) {
+		ibValueMetaObjectAttributeBase::ibSQLField sqlDim = ibValueMetaObjectAttributeBase::GetSQLFieldData(filter.first);
+		sqlQuery += " AND dr." + sqlDim.m_fieldTypeName + " = ?";
+		for (auto dataType : sqlDim.m_types) {
+			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				sqlQuery += " AND dr." + dataType.m_field.m_fieldName + " = ?";
+			}
+			else {
+				sqlQuery += " AND dr." + dataType.m_field.m_fieldRefName.m_fieldRefType + " = ?";
+				sqlQuery += " AND dr." + dataType.m_field.m_fieldRefName.m_fieldRefName + " = ?";
+			}
+		}
+	}
+
+	// GROUP BY AccountDr, AccountCr
+	sqlQuery += " GROUP BY ";
+
+	// Group by dr.Account fields
+	{
+		sqlQuery += "dr." + sqlColAccount.m_fieldTypeName;
+		for (auto dataType : sqlColAccount.m_types) {
+			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				sqlQuery += ", dr." + dataType.m_field.m_fieldName;
+			}
+			else {
+				sqlQuery += ", dr." + dataType.m_field.m_fieldRefName.m_fieldRefType;
+				sqlQuery += ", dr." + dataType.m_field.m_fieldRefName.m_fieldRefName;
+			}
+		}
+	}
+
+	// Group by cr.Account fields
+	{
+		sqlQuery += ", cr." + sqlColAccount.m_fieldTypeName;
+		for (auto dataType : sqlColAccount.m_types) {
+			if (dataType.m_type != ibValueMetaObjectAttributeBase::ibFieldTypes::ibFieldTypes_Reference) {
+				sqlQuery += ", cr." + dataType.m_field.m_fieldName;
+			}
+			else {
+				sqlQuery += ", cr." + dataType.m_field.m_fieldRefName.m_fieldRefType;
+				sqlQuery += ", cr." + dataType.m_field.m_fieldRefName.m_fieldRefName;
+			}
+		}
+	}
+
+	// Group by resource type names
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
+		ibValueMetaObjectAttributeBase::ibSQLField sqlResource = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+		sqlQuery += ", dr." + sqlResource.m_fieldTypeName;
+	}
+
+	// HAVING - filter out zero amounts
+	sqlQuery += " HAVING "; bool firstHaving = true;
+
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
+		wxString orCase = (!firstHaving ? "OR (" : "");
+		wxString orCaseEnd = (!firstHaving ? ")" : "");
+		ibValueMetaObjectAttributeBase::ibSQLField sqlResource = ibValueMetaObjectAttributeBase::GetSQLFieldData(object);
+		sqlQuery += orCase + " CAST(SUM(dr." + sqlResource.m_types[0].m_field.m_fieldName
+			+ ") AS NUMERIC) " + orCaseEnd + " <> 0.0";
+		firstHaving = false;
+	}
+
+	// Prepare and bind parameters
+	ibPreparedStatement* statement = ses_query->PrepareStatement(sqlQuery);
+
+	if (statement == nullptr)
+		return retTable;
+
+	int position = 1;
+
+	// dr.Active = true, cr.Active = true
+	ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
+	ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterActive(), true, statement, position);
+
+	// Period range
+	ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cBeginOfPeriod.GetDate(), statement, position);
+	ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterPeriod(), cEndOfPeriod.GetDate(), statement, position);
+
+	// Account filter
+	if (hasAccountFilter) {
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_metaObject->GetRegisterAccount(), cAccount, statement, position);
+	}
+
+	// Dimension filters
+	for (auto& filter : selFilter) {
+		ibValueMetaObjectAttributeBase::SetValueAttribute(filter.first, filter.second, statement, position);
+	}
+
+	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+
+	if (resultSet == nullptr)
+		return retTable;
+
+	while (resultSet->Next()) {
+		ibValueModelTable::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
+		wxASSERT(retLine);
+
+		// Read AccountDr - aliased to "AccountDr" prefix, compatible with GetValueAttribute(fieldName, metaAttr, ...)
+		{
+			ibValue retVal;
+			if (ibValueMetaObjectAttributeBase::GetValueAttribute(wxT("AccountDr"), m_metaObject->GetRegisterAccount(), retVal, resultSet))
+				retLine->SetAt(wxT("AccountDr"), retVal);
+		}
+
+		// Read AccountCr - aliased to "AccountCr" prefix
+		{
+			ibValue retVal;
+			if (ibValueMetaObjectAttributeBase::GetValueAttribute(wxT("AccountCr"), m_metaObject->GetRegisterAccount(), retVal, resultSet))
+				retLine->SetAt(wxT("AccountCr"), retVal);
+		}
+
+		// Read resource amounts
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			ibValue retVal;
+			if (ibValueMetaObjectAttributeBase::GetValueAttribute(object->GetFieldNameDB() + "_N_Amount_", ibValueMetaObjectAttributeBase::ibFieldTypes_Number, object, retVal, resultSet))
+				retLine->SetAt(object->GetName() + "_Amount", retVal);
+		}
+		wxDELETE(retLine);
+	}
+
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
+
 	return retTable;
 }
 
 ibValue ibValueManagerDataObjectAccountingRegister::BalanceAndTurnovers(const ibValue& cBeginOfPeriod, const ibValue& cEndOfPeriod, const ibValue& cAccount, const ibValue& cFilter)
 {
-	if (db_query != nullptr && !db_query->IsOpen())
+	if (ses_query != nullptr && !ses_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
-	else if (db_query == nullptr)
+	else if (ses_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
 	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
@@ -1122,7 +1378,7 @@ ibValue ibValueManagerDataObjectAccountingRegister::BalanceAndTurnovers(const ib
 	}
 
 	// Prepare and bind parameters
-	ibPreparedStatement* statement = db_query->PrepareStatement(outerQuery);
+	ibPreparedStatement* statement = ses_query->PrepareStatement(outerQuery);
 
 	if (statement == nullptr)
 		return retTable;
@@ -1215,8 +1471,8 @@ ibValue ibValueManagerDataObjectAccountingRegister::BalanceAndTurnovers(const ib
 		wxDELETE(retLine);
 	}
 
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
+	ses_query->CloseResultSet(resultSet);
+	ses_query->CloseStatement(statement);
 
 	return retTable;
 }

@@ -210,6 +210,11 @@ public:
 		return m_propertyGlobalModule->GetValueAsBoolean();
 	}
 
+	// Manager-module flag — false on plain common module, true on
+	// ibValueMetaObjectManagerModule. Replaces the explicit managerModule
+	// argument that was passed to mm->AddCommonModule.
+	virtual bool IsManagerModule() const { return false; }
+
 	/**
 	* Property events
 	*/
@@ -239,7 +244,9 @@ public:
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
-	//module manager is started or exit 
+	virtual bool IsManagerModule() const override { return true; }
+
+	//module manager is started or exit
 	virtual bool OnBeforeRunMetaObject(int flags);
 	virtual bool OnAfterRunMetaObject(int flags);
 

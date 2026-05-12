@@ -184,14 +184,13 @@ namespace typeConv
 			}
 			else
 			{
-				//return wxArtProvider::GetBitmap( rid, cid + wxT("_C") ){
-				wxBitmap bmp = wxArtProvider::GetBitmap(rid, cid + wxT("_C"));
+				wxBitmap bmp = wxArtProvider::GetBitmapBundle(rid, cid + wxT("_C")).GetBitmap(wxDefaultSize);
 
 				if (!bmp.IsOk()) {
 					// Create another bitmap of the appropriate size to show it's invalid.
 					// We can get here if the user entered a custom wxArtID which, presumably,
 					// they will have already installed in their app.
-					bmp = wxArtProvider::GetBitmap(wxT("wxART_MISSING_IMAGE"), cid + wxT("_C"));
+					bmp = wxArtProvider::GetBitmapBundle(wxT("wxART_MISSING_IMAGE"), cid + wxT("_C")).GetBitmap(wxDefaultSize);
 
 					if (bmp.IsOk()) {
 						wxMemoryDC dc;
@@ -814,7 +813,7 @@ namespace typeConv
 
 	inline ibNumber StringToNumber(const wxString& str) {
 		ibNumber out;
-		out.FromString(str.ToStdWstring());
+		out.FromString(str);
 		return out;
 	}
 

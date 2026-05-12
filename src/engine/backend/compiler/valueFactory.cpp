@@ -142,9 +142,18 @@ ibClassID ibValue::GetTypeIDByRef(const wxClassInfo* classInfo)
 
 ibClassID ibValue::GetTypeIDByRef(const ibValue* objectRef)
 {
+	// All "object-reference" tags resolve through wxClassInfo (the
+	// subclass's wxDECLARE_DYNAMIC_CLASS registration). Any tag NOT
+	// in this set falls through to objectRef->GetClassType() — which
+	// for primitive types returns the right id, but for unrecognized
+	// reference-shaped tags causes infinite recursion through
+	// GetClassType ↔ GetTypeIDByRef. Add new TYPE_* here when adding
+	// to ibValueTypes enum.
 	if (objectRef->m_typeClass != ibValueTypes::TYPE_VALUE &&
 		objectRef->m_typeClass != ibValueTypes::TYPE_OLE &&
-		objectRef->m_typeClass != ibValueTypes::TYPE_ENUM) {
+		objectRef->m_typeClass != ibValueTypes::TYPE_ENUM &&
+		objectRef->m_typeClass != ibValueTypes::TYPE_FUNCTION &&
+		objectRef->m_typeClass != ibValueTypes::TYPE_ITERATOR) {
 		return objectRef->GetClassType();
 	}
 	const wxClassInfo* classInfo = objectRef->GetClassInfo();

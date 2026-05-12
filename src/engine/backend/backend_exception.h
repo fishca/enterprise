@@ -104,14 +104,19 @@ protected:
 
 public:
 
+	// Thrown by value, caught by const reference. Virtual destructor keeps
+	// polymorphic dynamic-cast/catch-by-base behaviour well-defined across
+	// ibBackendCoreException / ibBackendInterruptException / ibBackendAccessException.
+	virtual ~ibBackendException() = default;
+
 	WX_DEFINE_VARARG_FUNC(static wxString, Format, 1, (const wxFormatErrorString&),
 		DoFormatWchar, DoFormatUtf8);
 
 	//get error description
 	const wxString GetErrorDescription() const { return m_strErrorDescription; }
 
-	//error from proc unit/compile module 
-	static void ProcessError(const ibBackendException* err, const struct ibByteUnit& error);
+	//error from proc unit/compile module
+	static void ProcessError(const ibBackendException& err, const struct ibByteUnit& error);
 	static void ProcessError(const wxString& strFileName,
 		const wxString& strModuleName, const wxString& strDocPath,
 		const unsigned int currPos, const unsigned int currLine,
@@ -129,6 +134,30 @@ public:
 
 	static void SetEvalMode(bool mode = true);
 	static bool IsEvalMode();
+
+	// Saves the current eval-mode flag in ctor, restores it in dtor.
+	// Use to wrap ibProcUnit::Evaluate so an inner throw doesn't leak
+	// the flag onto the session.
+	class ibEvalModeScope {
+	public:
+		explicit ibEvalModeScope(bool newMode = true)
+			: m_previous(ibBackendException::IsEvalMode())
+		{
+			if (m_previous != newMode)
+				ibBackendException::SetEvalMode(newMode);
+		}
+
+		~ibEvalModeScope() {
+			if (ibBackendException::IsEvalMode() != m_previous)
+				ibBackendException::SetEvalMode(m_previous);
+		}
+
+		ibEvalModeScope(const ibEvalModeScope&) = delete;
+		ibEvalModeScope& operator=(const ibEvalModeScope&) = delete;
+
+	private:
+		const bool m_previous;
+	};
 
 protected:
 
@@ -188,6 +217,6 @@ public:
 	static void Error();
 };
 
-#pragma endregion 
+#pragma endregion
 
-#endif 
+#endif

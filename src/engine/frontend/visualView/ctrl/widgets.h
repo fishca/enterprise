@@ -22,8 +22,8 @@ public:
 	virtual wxString GetControlTitle() const { return GetCaption(); }
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -35,9 +35,10 @@ public:
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
+
 protected:
 
-	//events 
+	//events
 	void OnButtonPressed(wxCommandEvent& event);
 
 private:
@@ -63,8 +64,8 @@ public:
 	ibValueStaticText();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -72,7 +73,7 @@ public:
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
-	//load & save object in control 
+	//load & save object in control
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
@@ -136,8 +137,8 @@ public:
 	virtual wxString GetControlTitle() const;
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -184,12 +185,23 @@ protected:
 	void OnOpenButtonPressed(wxCommandEvent& event);
 	void OnClearButtonPressed(wxCommandEvent& event);
 
+#ifdef OES_USE_WEB
+	// Web-side commit handler. Bound to wxEVT_TEXT on the ibWebTextCtrl
+	// in Create(). Reads the new string from event.GetString(),
+	// coerces it to the backing ibValue type (mirrors the desktop
+	// TextProcessing path), writes through SetControlValue and fires
+	// the OnChange script via CallAsEvent — same single source of
+	// truth as OnTextEnter / OnKillFocus on desktop.
+	void OnWebTextChanged(wxCommandEvent& event);
+#endif
+
+
 private:
 
 	bool GetChoiceForm(ibPropertyList* property);
-	
+
 	bool m_textModified;
-	
+
 	ibValue m_selValue;
 
 	ibPropertyCategory* m_categoryText = ibPropertyObject::CreatePropertyCategory(wxT("Textbox"), _("Textbox"));
@@ -227,8 +239,8 @@ public:
 	ibValueComboBox();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -246,8 +258,8 @@ public:
 	ibValueChoice();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -266,8 +278,8 @@ public:
 	ibValueListBox();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -324,8 +336,8 @@ public:
 	virtual wxString GetControlTitle() const;
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -355,8 +367,9 @@ public:
 
 protected:
 
-	//events 
+	//events
 	void OnClickedCheckbox(wxCommandEvent& event);
+
 
 private:
 
@@ -390,8 +403,8 @@ public:
 	virtual wxString GetControlTitle() const { return GetCaption(); }
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -418,10 +431,10 @@ public:
 	ibValueStaticLine();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//support icons
@@ -446,10 +459,10 @@ public:
 	ibValueSlider();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//support icons
@@ -477,10 +490,10 @@ public:
 	ibValueGauge();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//support icons

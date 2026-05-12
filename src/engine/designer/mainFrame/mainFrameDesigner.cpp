@@ -230,50 +230,26 @@ bool ibFrontendDocMDIFrameDesigner::Show(bool show)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibFrontendDocMDIFrameDesigner::OnInitializeConfiguration(ibConfigType cfg)
-{
-	ibDebuggerClientBridge::SetDebuggerClientBridge(new ibDebuggerClientBridgeDesigner);
-}
-
-void ibFrontendDocMDIFrameDesigner::OnDestroyConfiguration(ibConfigType cfg)
-{
-	ibDebuggerClientBridge::SetDebuggerClientBridge(nullptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include "backend/metadataConfiguration.h"
 
 bool ibFrontendDocMDIFrameDesigner::AllowRun() const
 {
-	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
-		return true;
-
-	return false;
+	// Designer is compile-only — no session runtime, no BeforeStart /
+	// OnStart script events. Always allow frame show.
+	return true;
 }
 
 bool ibFrontendDocMDIFrameDesigner::AllowClose() const
 {
-	if (activeMetaData != nullptr) {
-
-		bool allowClose = true;
-
-		if (IsModified()) {
-			const int answer = wxMessageBox(wxString::Format(_("Configuration '%s' has been changed. Save?"), activeMetaData->GetConfigName()),
-				wxTheApp->GetAppDisplayName(), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
-			if (answer == wxYES) {
-				allowClose = activeMetaData->SaveDatabase();
-			}
-			else if (answer == wxCANCEL) {
-				allowClose = false;
-			}
-			else {
-				allowClose = true;
-			}
-		}
-
-		return allowClose && activeMetaData->ExitMainModule();
+	// Unsaved-config confirmation is a designer-only concern; no
+	// BeforeExit / OnExit script events (no runtime to fire them on).
+	if (activeMetaData != nullptr && IsModified()) {
+		const int answer = wxMessageBox(wxString::Format(_("Configuration '%s' has been changed. Save?"), activeMetaData->GetConfigName()),
+			wxTheApp->GetAppDisplayName(), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
+		if (answer == wxYES)
+			return activeMetaData->SaveDatabase();
+		if (answer == wxCANCEL)
+			return false;
 	}
-
 	return true;
 }

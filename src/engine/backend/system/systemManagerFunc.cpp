@@ -15,6 +15,7 @@
 #include "backend/compiler/translateCode.h"
 #include "backend/compiler/procUnit.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 #include "systemManagerEnum.h"
 
@@ -43,59 +44,33 @@ wxString ibValueSystemFunction::String(const ibValue& cValue)
 ibNumber ibValueSystemFunction::Round(const ibValue& cValue, int precision, ibRoundMode mode)
 {
 	ibNumber fNumber = cValue.GetNumber();
+	if (precision > MAX_PRECISION_NUMBER) precision = MAX_PRECISION_NUMBER;
 
-	if (precision > MAX_PRECISION_NUMBER) {
-		precision = MAX_PRECISION_NUMBER;
-	}
-
-	ttmath::Int<TTMATH_BITS(128)> nDelta;
-	if (!fNumber.ToInt(nDelta)) {
-		fNumber = fNumber - nDelta;
-	}
-
-	ibNumber fTemp = 10;
-	fTemp.Pow(precision + 1);
-	fTemp = fTemp * fNumber;
-
-	ttmath::Int<TTMATH_BITS(128)> N;
-	fTemp.ToInt(N);
-
-	//округление - в зависимости от метода
+	// ibNumber::Round implements half-away-from-zero. The Round15as20 mode matches
+	// that exactly; the default mode is "round half down" (only digits >= 6 round
+	// up). Approximated by subtracting 0.4 of the last kept place's unit before
+	// rounding for the default mode — equivalent to old ttmath behaviour.
 	if (mode == ibRoundMode::ibRoundMode_Round15as20) {
-		if (N % 10 >= 5) N = N / 10 + 1;
-		else N = N / 10;
-	}
-	else {
-		if (N % 10 >= 6)
-			N = N / 10 + 1;
-		else N = N / 10;
+		return fNumber.Round(precision);
 	}
 
-	ibNumber G = 10; G.Pow(precision);
-
-	if (!fTemp.FromInt(N))
-	{
-		fTemp = fTemp / G;
-		fTemp.Add(nDelta);
-
-		return fTemp;
-	}
-
-	return 0;
+	// Default: round half down. Build adjustment = 0.4 * 10^-precision and shrink
+	// magnitude so anything < .5 stays down, .5..<.6 rounds down, .6..<1 rounds up.
+	ibNumber adjust = ibNumber(4);
+	for (int i = 0; i < precision + 1; ++i) adjust /= ibNumber(10);
+	if (fNumber.IsSign()) fNumber += adjust;
+	else                  fNumber -= adjust;
+	return fNumber.Round(precision);
 }
 
 ibValue ibValueSystemFunction::Int(const ibValue& cValue)
 {
-	ttmath::Int<TTMATH_BITS(128)> int128;
-	ibNumber fNumber = cValue.GetNumber();
-	if (!fNumber.ToInt(int128)) return ibValue(ibNumber(int128));
-	else return ibValue(ibNumber(0));
+	return ibValue(cValue.GetNumber().Trunc());
 }
 
 ibNumber ibValueSystemFunction::Log10(const ibValue& cValue)
 {
-	ibNumber fNumber = cValue.GetNumber();
-	return 	fNumber.Log(fNumber, 10);
+	return cValue.GetNumber().Log(ibNumber(10));
 }
 
 ibNumber ibValueSystemFunction::Ln(const ibValue& cValue)
@@ -218,46 +193,51 @@ int ibValueSystemFunction::StrLineCount(const ibValue& cSource)
 
 wxString ibValueSystemFunction::StrGetLine(const ibValue& cValue, unsigned int nLine)
 {
-	wxString stringValue = cValue.GetString() + wxT("\r\n");
+	if (nLine == 0) return wxEmptyString;
 
-	unsigned int nLast = 0;
-	unsigned int nStartLine = 1;
+	const wxString src = cValue.GetString();
+	if (src.IsEmpty()) return wxEmptyString;
 
-	//********блок для ускорения
-	static wxString _csStaticSource;
+	// Per-thread cache: callers usually iterate lines sequentially (1, 2, 3...);
+	// remember where the last requested line started so the next call resumes
+	// from there instead of rescanning from offset 0. Worker-pool-safe: no
+	// shared static state across threads.
+	struct Cache {
+		wxString     source;
+		size_t       startPos = 0;
+		unsigned int line     = 1;
+	};
+	thread_local Cache cache;
 
-	static unsigned int _nStaticLast = 0;
-	static unsigned int _nStaticLine = 0;
-
-	if (_csStaticSource == stringValue)
-	{
-		if (_nStaticLine <= nLine)
-		{
-			nLast = _nStaticLast;//т.е. начинаем поиск не с начала
-			nStartLine = _nStaticLine;
-		}
+	size_t       pos     = 0;
+	unsigned int curLine = 1;
+	if (cache.source == src && cache.line <= nLine) {
+		pos     = cache.startPos;
+		curLine = cache.line;
 	}
 
-	//перебираем строчки втупую
-	for (unsigned int i = nStartLine;; i++)
-	{
-		unsigned int nIndex = stringValue.find(wxT("\r\n"), nLast);
+	const size_t len = src.length();
+	while (true) {
+		// Find next line break — handles \r\n, \n, and lone \r.
+		const size_t brk = src.find_first_of(wxT("\r\n"), pos);
+		const size_t lineEnd = (brk == wxString::npos) ? len : brk;
 
-		if (nIndex < 0) return wxEmptyString;
-
-		if (i == nLine)
-		{
-			_csStaticSource = stringValue;
-			_nStaticLast = nIndex + 2;
-			_nStaticLine = nLine + 1;
-
-			return stringValue.Mid(nLast, nIndex - nLast);
+		if (curLine == nLine) {
+			// Refresh cache for the most likely next call (line nLine+1).
+			cache.source   = src;
+			cache.startPos = pos;
+			cache.line     = curLine;
+			return src.Mid(pos, lineEnd - pos);
 		}
 
-		nLast = nIndex + 2;
-	}
+		if (brk == wxString::npos) return wxEmptyString; // beyond last line
 
-	return wxEmptyString;
+		// Advance past the line break (handle CRLF as a single break).
+		pos = brk + 1;
+		if (src[brk] == wxT('\r') && pos < len && src[pos] == wxT('\n'))
+			++pos;
+		++curLine;
+	}
 }
 
 wxString ibValueSystemFunction::Upper(const ibValue& cSource)
@@ -304,10 +284,16 @@ ibValue ibValueSystemFunction::CurrentDate()
 }
 
 ibValue ibValueSystemFunction::WorkingDate() {
-	ms_workDate.SetHour(0);
-	ms_workDate.SetMinute(0);
-	ms_workDate.SetSecond(0);
-	return ms_workDate;
+	// Session-aware via ibSession::Current() — when a worker scope is
+	// active the session's m_workDate is used; otherwise process-wide
+	// ms_workDate (codeRunner / pre-Connect bootstrap).
+	wxDateTime d = ibSession::Current() != nullptr
+		? ibSession::Current()->GetWorkDate()
+		: ms_workDate;
+	d.SetHour(0);
+	d.SetMinute(0);
+	d.SetSecond(0);
+	return d;
 }
 
 ibValue ibValueSystemFunction::AddMonth(const ibValue& cData, int nMonthAdd)
@@ -488,11 +474,11 @@ wxString ibValueSystemFunction::GetTempFileName()
 	);
 }
 
-//--- Работа с окнами: 
+//--- Работа с окнами:
 ibBackendValueForm* ibValueSystemFunction::ActiveWindow()
 {
-	return backend_mainFrame ?
-		backend_mainFrame->ActiveWindow() : nullptr;
+	auto* frame = ibSession::CurrentFrame();
+	return frame != nullptr ? frame->ActiveWindow() : nullptr;
 }
 
 //--- Специальные:
@@ -501,11 +487,13 @@ void ibValueSystemFunction::Message(const wxString& strMessage, ibStatusMessage 
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->Message(strMessage, status);
+	// Frame is responsible for thread safety. Web's ibWebFrame::Message
+	// queues under a mutex; desktop's eventual override (if it ever
+	// touches wx UI) must marshal to the main thread itself. The old
+	// `wxIsMainThread() return` guard blocked legitimate calls from the
+	// per-session worker thread on web.
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->Message(strMessage, status);
 }
 
 void ibValueSystemFunction::Alert(const wxString& strMessage) //Alert
@@ -513,12 +501,12 @@ void ibValueSystemFunction::Alert(const wxString& strMessage) //Alert
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
-	if (backend_mainFrame != nullptr) {
-		wxMessageBox(strMessage, _("Warning"), wxICON_WARNING, backend_mainFrame->GetFrameHandler());
-	}
+	// Frontend-owned: frame knows whether to pop a wx-modal (desktop)
+	// or emit a toast/HTTP notification (web). ShowModalMessage on web
+	// parks the worker on a future until the client replies — safe to
+	// call from any thread that owns the script's execution context.
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->ShowModalMessage(strMessage, _("Warning"), wxICON_WARNING | wxOK);
 }
 
 ibValue ibValueSystemFunction::Question(const wxString& strMessage, ibQuestionMode mode)//Question
@@ -538,9 +526,14 @@ ibValue ibValueSystemFunction::Question(const wxString& strMessage, ibQuestionMo
 	else if (mode == ibQuestionMode::ibQuestionMode_YesNoCancel)
 		wndStyle = wxYES | wxNO | wxCANCEL;
 
-	int retCode = wxMessageBox(strMessage, _("Question"), wndStyle | wxICON_QUESTION,
-		backend_mainFrame ? backend_mainFrame->GetFrameHandler() : nullptr
-	);
+	// Route through the frame's MessageBox virtual so backend stays
+	// wx-free here. No frame = script is running in a context without
+	// UI (daemon, codeRunner) — default to "Cancel" to keep flows that
+	// assume success conservative.
+	auto* frame = ibSession::CurrentFrame();
+	int retCode = frame != nullptr
+		? frame->ShowModalMessage(strMessage, _("Question"), wndStyle | wxICON_QUESTION)
+		: wxCANCEL;
 
 	ibValuibQuestionReturnCode* retValue = ibValue::CreateAndPrepareValueRef<ibValuibQuestionReturnCode>();
 	switch (retCode) {
@@ -569,12 +562,11 @@ void ibValueSystemFunction::SetStatus(const wxString& sStatus)
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
-	if (backend_mainFrame != nullptr) {
-		backend_mainFrame->SetStatusText(sStatus);
-	}
+	// Frame override owns thread safety; web's SetStatusText just stores
+	// a wxString under no lock (single owner). See Message() above for
+	// the reasoning behind dropping the wxIsMainThread() guard.
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->SetStatusText(sStatus);
 }
 
 void ibValueSystemFunction::ClearMessage()
@@ -582,19 +574,13 @@ void ibValueSystemFunction::ClearMessage()
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->ClearMessage();
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->ClearMessage();
 }
 
 void ibValueSystemFunction::SetError(const wxString& strError)
 {
 	if (ibBackendException::IsEvalMode())
-		return;
-
-	if (!wxIsMainThread())
 		return;
 
 	ibBackendCoreException::Error(strError);
@@ -605,10 +591,8 @@ void ibValueSystemFunction::Raise(const wxString& strError)
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
-	ibProcUnit::Raise();
+	if (auto* puState = ibSession::GetPUState())
+		puState->Raise();
 	ibBackendCoreException::Error(strError);
 }
 
@@ -627,8 +611,9 @@ bool ibValueSystemFunction::IsEmptyValue(const ibValue& cData)
 
 ibValue ibValueSystemFunction::Evaluate(const wxString& strExpression)
 {
+	auto* puState = ibSession::GetPUState();
 	ibValue retValue;
-	ibProcUnit::Evaluate(strExpression, ibProcUnit::GetCurrentRunContext(), retValue, false);
+	ibProcUnit::Evaluate(strExpression, puState ? puState->GetCurrentRunContext() : nullptr, retValue, false);
 	return retValue;
 }
 
@@ -636,8 +621,9 @@ void ibValueSystemFunction::Execute(const wxString& strExpression)
 {
 	if (ibBackendException::IsEvalMode())
 		return;
+	auto* puState = ibSession::GetPUState();
 	ibValue retValue;
-	ibProcUnit::Evaluate(strExpression, ibProcUnit::GetCurrentRunContext(), retValue, true);
+	ibProcUnit::Evaluate(strExpression, puState ? puState->GetCurrentRunContext() : nullptr, retValue, true);
 }
 
 //boolean 
@@ -711,72 +697,29 @@ wxString ibValueSystemFunction::Format(ibValue& cData, const wxString& fmt)
 	}
 	case ibValueTypes::TYPE_NUMBER:
 	{
-		ttmath::Conv conv;
-
-		auto foundedND = paParams.find(ND);
-		if (foundedND != paParams.end()) {
-			conv.precision = wxAtoi(foundedND->second);
-			conv.trim_zeroes = true;
-		}
-
-		auto foundedNFD = paParams.find(NFD);
-		if (foundedNFD != paParams.end()) {
-			conv.round = wxAtoi(foundedNFD->second);
-			conv.trim_zeroes = false;
-		}
-
-		auto foundedNDS = paParams.find(NDS);
-		if (foundedNDS != paParams.end()) {
-			conv.comma = foundedNDS->second[0];
-		}
-
-		auto foundedNGS = paParams.find(NGS);
-		if (foundedNGS != paParams.end()) {
-			conv.comma2 = foundedNGS->second[0];
-		}
-
-		auto foundedNG = paParams.find(NG);
-		if (foundedNG != paParams.end()) {
-			wxString group, group_digits; bool digits = false;
-			for (auto c : foundedNG->second) {
-				if (c == ',') {
-					digits = true;
-					continue;
-				}
-				if (digits == false) {
-					group += c;
-				}
-				else {
-					group_digits += c;
-				}
-			}
-			group.Trim(true);
-			group.Trim(false);
-			group_digits.Trim(true);
-			group_digits.Trim(false);
-
-			conv.group = wxAtoi(group);
-			if (!group_digits.IsEmpty()) {
-				conv.group_digits = wxAtoi(group_digits);
-			}
-		}
-
-		auto foundedNLZ = paParams.find(NLZ);
-		if (foundedNLZ != paParams.end()) {
-			conv.leading_zero = true;
-		}
-
 		ibNumber number = cData.GetNumber();
 
+		// NZ: replacement string when value is exactly zero.
 		if (number.IsZero()) {
 			auto foundedNZ = paParams.find(NZ);
-
 			if (foundedNZ != paParams.end()) {
 				return foundedNZ->second;
 			}
 		}
 
-		return number.ToString(conv);
+		ibNumber::Format fmt;
+		auto fnd = paParams.find(NFD);
+		if (fnd != paParams.end()) fmt.fracDigits = wxAtoi(fnd->second);
+		fnd = paParams.find(ND);
+		if (fnd != paParams.end()) fmt.precision  = wxAtoi(fnd->second);
+		fnd = paParams.find(NDS);
+		if (fnd != paParams.end() && !fnd->second.IsEmpty()) fmt.decimalSep = fnd->second[0];
+		fnd = paParams.find(NGS);
+		if (fnd != paParams.end() && !fnd->second.IsEmpty()) fmt.groupSep   = fnd->second[0];
+		fnd = paParams.find(NG);
+		if (fnd != paParams.end()) fmt.groupSize  = wxAtoi(fnd->second);
+
+		return number.ToString(fmt);
 	}
 	case ibValueTypes::TYPE_DATE:
 
@@ -901,9 +844,8 @@ void ibValueSystemFunction::SetAppTitle(const wxString& sTitle)//SetAppTitle
 {
 	if (ibBackendException::IsEvalMode())
 		return;
-	if (backend_mainFrame != nullptr) {
-		backend_mainFrame->SetTitle(sTitle);
-	}
+	if (auto* frame = ibSession::CurrentFrame())
+		frame->SetTitle(sTitle);
 }
 
 wxString ibValueSystemFunction::UserDir() {
@@ -922,6 +864,16 @@ bool ibValueSystemFunction::ExclusiveMode() {
 	return appData->ExclusiveMode();
 }
 
+void ibValueSystemFunction::SetExclusive(bool on) {
+	// Acquire/release exclusive mode for the calling session. Throws
+	// ibBackendCoreException with a localized reason on rejection — the
+	// script's try/except is the natural retry point.
+	auto* s = ibSession::Current();
+	if (s == nullptr)
+		ibBackendCoreException::Error(_("No active session"));
+	s->SetExclusive(on);
+}
+
 wxString ibValueSystemFunction::GeneralLanguage() {
 	return appData->GetUserLanguageCode();
 }
@@ -930,15 +882,13 @@ wxString ibValueSystemFunction::GeneralLanguage() {
 
 void ibValueSystemFunction::EndJob(bool force) //EndJob
 {
-	if (force) {
-		ibApplicationData::ForceExit();
-	}
-	else if (activeMetaData != nullptr) {
-		ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
-		if (moduleManager->DestroyMainModule()) {
-			ibApplicationData::ForceExit();
-		}
-	}
+	// Just close the current session through the manager. force=true
+	// skips BeforeExit / OnExit veto checks. The registry's
+	// OnLastDisconnect listener fires when the auth-counter hits 0 and
+	// requests ForceExit there — declined by keep-alive predicates if
+	// other clients (web tabs, etc.) are still live.
+	if (auto* session = ibSession::Current())
+		session->Close(force);
 }
 
 void ibValueSystemFunction::UserInterruptProcessing()
@@ -1017,7 +967,7 @@ void ibValueSystemFunction::BeginTransaction()
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	db_query->BeginTransaction();
+	ses_query->BeginTransaction();
 }
 
 void ibValueSystemFunction::CommitTransaction()
@@ -1025,7 +975,7 @@ void ibValueSystemFunction::CommitTransaction()
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	db_query->Commit();
+	ses_query->Commit();
 }
 
 void ibValueSystemFunction::RollBackTransaction()
@@ -1033,5 +983,5 @@ void ibValueSystemFunction::RollBackTransaction()
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	db_query->RollBack();
+	ses_query->RollBack();
 }

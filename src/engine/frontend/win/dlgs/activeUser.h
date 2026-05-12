@@ -19,7 +19,7 @@
 class FRONTEND_API ibDialogActiveUser : public wxDialog {
 	wxListCtrl* m_activeTable;
 	std::shared_ptr<wxTimer> m_activeTableScanner;
-	ibGuid m_sessionArrayHash; 
+	ibGuid m_sessionArrayHash;
 public:
 
 	void RefreshActiveUserTable();
@@ -28,9 +28,15 @@ public:
 	virtual ~ibDialogActiveUser();
 
 protected:
-	void OnIdleHandler(wxTimerEvent& event) { 
+	void OnIdleHandler(wxTimerEvent& event) {
 		RefreshActiveUserTable();
 	}
+	// Right-click on a row → context menu with Kick / Reload. Both
+	// write to sys_session.signal via ibSessionRegistry; the owning
+	// process picks the directive up on its next JobCheckSignal tick.
+	void OnContextMenu(wxListEvent& event);
+	void OnKickSelected(wxCommandEvent& event);
+	void OnReloadSelected(wxCommandEvent& event);
 };
 
 #endif 

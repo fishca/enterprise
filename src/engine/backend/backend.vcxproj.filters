@@ -22,6 +22,9 @@
     <ClInclude Include="moduleManager\moduleManager.h">
       <Filter>moduleManager</Filter>
     </ClInclude>
+    <ClInclude Include="compiler\cache\byteCodeCache.h">
+      <Filter>compiler\cache</Filter>
+    </ClInclude>
     <ClInclude Include="compiler\compileModule.h">
       <Filter>compiler</Filter>
     </ClInclude>
@@ -32,6 +35,12 @@
       <Filter>databaseLayer</Filter>
     </ClInclude>
     <ClInclude Include="databaseLayer\databaseErrorReporter.h">
+      <Filter>databaseLayer</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\connectionPool.h">
+      <Filter>databaseLayer</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\connectionScope.h">
       <Filter>databaseLayer</Filter>
     </ClInclude>
     <ClInclude Include="databaseLayer\databaseLayer.h">
@@ -86,6 +95,9 @@
     <ClInclude Include="compiler\compileContext.h">
       <Filter>compiler</Filter>
     </ClInclude>
+    <ClInclude Include="compiler\compileContextLinqData.h">
+      <Filter>compiler</Filter>
+    </ClInclude>
     <ClInclude Include="compiler\enumFactory.h">
       <Filter>compiler</Filter>
     </ClInclude>
@@ -96,6 +108,9 @@
       <Filter>compiler</Filter>
     </ClInclude>
     <ClInclude Include="compiler\procUnit.h">
+      <Filter>compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler\procUnitValues.h">
       <Filter>compiler</Filter>
     </ClInclude>
     <ClInclude Include="compiler\translateCode.h">
@@ -212,45 +227,6 @@
     <ClInclude Include="stringUtils.h" />
     <ClInclude Include="typeconv.h" />
     <ClInclude Include="clsid.h" />
-    <ClInclude Include="compiler\ttmath\ttmath.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathbig.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathdec.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathint.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathmisc.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathobjects.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathparser.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmaththreads.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathtypes.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathuint.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathuint_noasm.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathuint_x86.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler\ttmath\ttmathuint_x86_64.h">
-      <Filter>compiler\ttmath</Filter>
-    </ClInclude>
     <ClInclude Include="number.h" />
     <ClInclude Include="fileSystem\fs.h">
       <Filter>fileSystem</Filter>
@@ -335,6 +311,9 @@
     <ClInclude Include="metaCollection\partial\chartOfAccounts.h">
       <Filter>metaCollection\partial</Filter>
     </ClInclude>
+    <ClInclude Include="metaCollection\partial\chartOfAccountsSubcontoTable.h">
+      <Filter>metaCollection\partial</Filter>
+    </ClInclude>
     <ClInclude Include="metaCollection\partial\chartOfAccountsEnum.h">
       <Filter>metaCollection\partial</Filter>
     </ClInclude>
@@ -396,6 +375,12 @@
       <Filter>metaCollection\table</Filter>
     </ClInclude>
     <ClInclude Include="metaCollection\partial\list\objectList.h">
+      <Filter>metaCollection\partial\list</Filter>
+    </ClInclude>
+    <ClInclude Include="metaCollection\partial\list\listSqlBuilder.h">
+      <Filter>metaCollection\partial\list</Filter>
+    </ClInclude>
+    <ClInclude Include="metaCollection\partial\list\registerSqlBuilder.h">
       <Filter>metaCollection\partial\list</Filter>
     </ClInclude>
     <ClInclude Include="metaCollection\partial\reference\reference.h">
@@ -644,6 +629,13 @@
     <ClInclude Include="value_ptr.h" />
     <ClInclude Include="restructureInfo.h" />
     <ClInclude Include="tableView.h" />
+    <ClInclude Include="propertyManager\property\propertyChartOfCharacteristicTypes.h">
+      <Filter>propertyManager\property</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\propertyChartOfAccounts.h">
+      <Filter>propertyManager\property</Filter>
+    </ClInclude>
+    <ClInclude Include="characteristicCtor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -683,6 +675,12 @@
     </ClCompile>
     <ClCompile Include="appData.cpp" />
     <ClCompile Include="uniqueKey.cpp" />
+    <ClCompile Include="databaseLayer\connectionPool.cpp">
+      <Filter>databaseLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="databaseLayer\connectionScope.cpp">
+      <Filter>databaseLayer</Filter>
+    </ClCompile>
     <ClCompile Include="databaseLayer\databaseErrorReporter.cpp">
       <Filter>databaseLayer</Filter>
     </ClCompile>
@@ -730,6 +728,9 @@
       <Filter>compiler</Filter>
     </ClCompile>
     <ClCompile Include="compiler\procUnit.cpp">
+      <Filter>compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler\procUnitLinq.cpp">
       <Filter>compiler</Filter>
     </ClCompile>
     <ClCompile Include="compiler\translateCode.cpp">
@@ -852,6 +853,7 @@
     <ClCompile Include="metadataConfiguration.cpp" />
     <ClCompile Include="roleHelper.cpp" />
     <ClCompile Include="appDataQuery.cpp" />
+    <ClCompile Include="userInfo.cpp" />
     <ClCompile Include="metadataConfigurationQuery.cpp" />
     <ClCompile Include="metaCollection\metaObjectMetadataQuery.cpp">
       <Filter>metaCollection</Filter>
@@ -946,7 +948,16 @@
     <ClCompile Include="metaCollection\partial\commonObjectProperty.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
-    <ClCompile Include="metaCollection\partial\commonObjectQuery.cpp">
+    <ClCompile Include="metaCollection\partial\commonObjectMetaQuery.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\commonObjectRefQuery.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\commonObjectManagerQuery.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\commonObjectRecordSetQuery.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\accumulationRegisterEnum.cpp">
@@ -1046,6 +1057,9 @@
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataProperty.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\chartOfAccountsSubcontoTable.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\chartOfAccountsObject.cpp">
@@ -1213,6 +1227,12 @@
     <ClCompile Include="metaCollection\partial\list\objectList.cpp">
       <Filter>metaCollection\partial\list</Filter>
     </ClCompile>
+    <ClCompile Include="metaCollection\partial\list\listSqlBuilder.cpp">
+      <Filter>metaCollection\partial\list</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\list\registerSqlBuilder.cpp">
+      <Filter>metaCollection\partial\list</Filter>
+    </ClCompile>
     <ClCompile Include="metaCollection\partial\list\objectListAction.cpp">
       <Filter>metaCollection\partial\list</Filter>
     </ClCompile>
@@ -1318,6 +1338,7 @@
     </ClCompile>
     <ClCompile Include="tableInfo.cpp" />
     <ClCompile Include="moduleInfo.cpp" />
+    <ClCompile Include="number.cpp" />
     <ClCompile Include="compiler\value_res.cpp">
       <Filter>compiler</Filter>
     </ClCompile>
@@ -1481,6 +1502,12 @@
     <ClCompile Include="compiler\valueSerialization.cpp">
       <Filter>compiler</Filter>
     </ClCompile>
+    <ClCompile Include="compiler\byteCodeAOT.cpp">
+      <Filter>compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler\cache\byteCodeCache.cpp">
+      <Filter>compiler\cache</Filter>
+    </ClCompile>
     <ClCompile Include="metadataSerialization.cpp" />
     <ClCompile Include="system\value\valueDatabaseLayer.cpp">
       <Filter>system\value</Filter>
@@ -1499,6 +1526,16 @@
       <Filter>system\value</Filter>
     </ClCompile>
     <ClCompile Include="tableView.cpp" />
+    <ClCompile Include="propertyManager\property\propertyChartOfAccounts.cpp">
+      <Filter>propertyManager\property</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\propertyChartOfCharacteristicTypes.cpp">
+      <Filter>propertyManager\property</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataQuery.cpp">
+      <Filter>metaCollection\partial</Filter>
+    </ClCompile>
+    <ClCompile Include="characteristicCtor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">
@@ -1509,6 +1546,9 @@
     </Filter>
     <Filter Include="compiler">
       <UniqueIdentifier>{154d9ec9-4ee0-4bf9-9618-e99db35efcbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="compiler\cache">
+      <UniqueIdentifier>{4b2d1a0e-4f82-4f33-8e7e-1e9a2c5f4a01}</UniqueIdentifier>
     </Filter>
     <Filter Include="databaseLayer">
       <UniqueIdentifier>{a817edbf-c64d-499d-8148-46d695095097}</UniqueIdentifier>
@@ -1533,9 +1573,6 @@
     </Filter>
     <Filter Include="databaseLayer\postgres">
       <UniqueIdentifier>{d30249ca-7a5a-4c3a-a1ec-b642a76dc60b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="compiler\ttmath">
-      <UniqueIdentifier>{11f6fbf3-fc95-4f2a-9d6d-c9ef57c273a3}</UniqueIdentifier>
     </Filter>
     <Filter Include="fileSystem">
       <UniqueIdentifier>{abe9471e-5391-4bba-a9f7-6f050759d4b2}</UniqueIdentifier>
@@ -1702,11 +1739,6 @@
       <Filter>databaseLayer\firebird\engine\dll</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="backend.conf" />
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="compiler\ttmath\ttmathuint_x86_64_msvc.asm">
-      <Filter>compiler\ttmath</Filter>
-    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\backend.rc">

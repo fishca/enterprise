@@ -5,6 +5,7 @@
 
 #include "metaModuleObject.h"
 #include "backend/appData.h"
+#include "backend/compiler/cache/byteCodeCache.h"
 
 //***********************************************************************
 //*                           ModuleObject                              *
@@ -39,6 +40,13 @@ bool ibValueMetaObjectModuleBase::OnSaveMetaObject(int flags)
 		const wxString& strBuffer = GetModuleText();
 		debugClient->SaveModule(GetDocPath(),
 			1 + std::count(strBuffer.begin(), strBuffer.end(), wxT('\n')));
+		// AOT cache row for this descriptor is now stale — Designer
+		// just persisted new source text. Drop the row so the next
+		// runtime session that compiles this module refreshes the
+		// blob via the cache-miss path in
+		// ibRuntimeModuleDataObject::Compile. Best-effort; if the
+		// table doesn't exist yet the call is a no-op.
+		ibByteCodeCache::Invalidate(GetGuid());
 	}
 
 	return ibValueMetaObject::OnSaveMetaObject(flags);
@@ -46,6 +54,12 @@ bool ibValueMetaObjectModuleBase::OnSaveMetaObject(int flags)
 
 bool ibValueMetaObjectModuleBase::OnDeleteMetaObject()
 {
+	if (appData->DesignerMode()) {
+		// Hygiene — orphan rows survive harmlessly (no descriptor
+		// queries them again) but bloating sys_bytecode_cache serves
+		// no purpose.
+		ibByteCodeCache::Invalidate(GetGuid());
+	}
 	return ibValueMetaObject::OnDeleteMetaObject();
 }
 
@@ -147,38 +161,35 @@ bool ibValueMetaObjectCommonModule::OnDeleteMetaObject()
 
 bool ibValueMetaObjectCommonModule::OnRenameMetaObject(const wxString& newName)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->RenameCommonModule(this, newName))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->RenameCommonModule(this, newName))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnRenameMetaObject(newName);
 }
 
 bool ibValueMetaObjectCommonModule::OnBeforeRunMetaObject(int flags)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->AddCommonModule(this, false, (flags & newObjectFlag) != 0))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->AddCommonModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnBeforeRunMetaObject(flags);
 }
 
 bool ibValueMetaObjectCommonModule::OnAfterRunMetaObject(int flags)
 {
-	return ibValueMetaObjectModuleBase::OnBeforeRunMetaObject(flags);
+	return ibValueMetaObjectModuleBase::OnAfterRunMetaObject(flags);
 }
 
 bool ibValueMetaObjectCommonModule::OnBeforeCloseMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->RemoveCommonModule(this))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->RemoveCommonModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnAfterCloseMetaObject();
 }
@@ -194,11 +205,10 @@ bool ibValueMetaObjectCommonModule::OnAfterCloseMetaObject()
 
 bool ibValueMetaObjectManagerModule::OnBeforeRunMetaObject(int flags)
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->AddCommonModule(this, true, (flags & newObjectFlag) != 0))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->AddCommonModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnBeforeRunMetaObject(flags);
 }
@@ -210,11 +220,10 @@ bool ibValueMetaObjectManagerModule::OnAfterRunMetaObject(int flags)
 
 bool ibValueMetaObjectManagerModule::OnBeforeCloseMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	if (!moduleManager->RemoveCommonModule(this))
-		return false;
+	if (auto* storage = m_metaData->GetModuleStorage()) {
+		if (!storage->RemoveCommonModule(this))
+			return false;
+	}
 
 	return ibValueMetaObjectModuleBase::OnBeforeCloseMetaObject();
 }

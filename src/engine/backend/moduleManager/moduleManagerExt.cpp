@@ -3,6 +3,7 @@
 #include "backend/metadataConfiguration.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 //////////////////////////////////////////////////////////////////////////////////
 #define thisObject wxT("ThisObject")
@@ -12,27 +13,30 @@
 
 ibCompileModule* ibValueModuleManagerExternalDataProcessor::GetCompileModule() const
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
 
-ibProcUnit* ibValueModuleManagerExternalDataProcessor::GetProcUnit() const
+std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalDataProcessor::GetProcUnit() const
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
 
 std::map<wxString, ibValue*>& ibValueModuleManagerExternalDataProcessor::GetContextVariables()
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
 
 ibValueModuleManagerExternalDataProcessor::ibValueModuleManagerExternalDataProcessor(ibMetaData* metadata, ibValueMetaObjectDataProcessor* metaObject)
-	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetModuleObject() : nullptr)
+	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetObjectModule() : nullptr)
 {
 	m_objectValue = new ibValueRecordDataObjectDataProcessor(metaObject);
 	//set complile module 
@@ -59,35 +63,38 @@ bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 	if (m_initialized)
 		return true;
 
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 
-	m_compileModule->SetParent(moduleManager->GetCompileModule());
-	m_compileModule->AddContextVariable(thisObject, m_objectValue);
+	// Imperative pipeline — SetParent cascades compile+procUnit parents
+	// to configuration root's; BindContextVariable wires thisObject;
+	// InitializeRuntime / Compile / Run drive the top-level.
+	ibRuntimeModuleDataObject::SetParent(moduleManager);
+	BindContextVariable(thisObject, m_objectValue);
 
-	//initialize procUnit
-	wxDELETE(m_procUnit);
-
-	//set complile module 
+	// m_objectValue (the external DP's script-visible object) shares the
+	// same compile module — it's the script-side wrapper around the
+	// same source. Set before InitializeObject so the object sees it.
 	m_objectValue->m_compileModule = m_compileModule;
 
-	//initialize object 
 	m_objectValue->InitializeObject();
 
 	if (!appData->DesignerMode()) {
-
-		m_procUnit = new ibProcUnit();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
-
-		//set proc unit 
+		InitializeRuntime();
+		// Share procUnit with m_objectValue — both descriptors reach
+		// the same runtime; shared_ptr co-ownership keeps the unit
+		// alive until the last of them drops.
 		m_objectValue->m_procUnit = m_procUnit;
 
 		try {
-			m_compileModule->Compile();
-			//and run... 
-			m_procUnit->Execute(m_compileModule->m_cByteCode);
+			Compile();
+			Run();
 		}
-		catch (const ibBackendException*) {
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("External module '%s' init failed: %s"),
+				m_objectValue ? m_objectValue->GetClassName() : wxString(wxEmptyString),
+				err.GetErrorDescription());
 			return false;
 		};
 	}
@@ -110,7 +117,7 @@ bool ibValueModuleManagerExternalDataProcessor::DestroyMainModule()
 		return true;
 
 	m_compileModule->Reset();
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 
 	//set complile module 
 	//set proc unit
@@ -134,10 +141,10 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 	if (!m_initialized)
 		return false;
 
-	//incrRef - for control delete 
+	//incrRef - for control delete
 	m_objectValue->IncrRef();
 
-	ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
+	const ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
 	wxASSERT(commonObject);
 	ibValueMetaObjectFormBase* defFormObject = commonObject->GetDefaultFormByID
 	(
@@ -147,25 +154,12 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 	if (defFormObject != nullptr) {
 
 		ibBackendValueForm* result = nullptr;
+		// Cache lives on the form's own metadata (external DP for .epf, main config
+		// for embedded DP) — m_metaManager->GetMetaData() is the configuration
+		// passed to base ctor and would miss for external DPs.
+		ibCompileValueCache* cc = defFormObject->GetMetaData()->GetCompileCache();
 
-		if (!ibValueModuleManager::FindCompileModule(defFormObject, result)) {
-
-			//valueForm = defFormObject->CreateForm(
-			//	nullptr, m_objectValue
-			//);
-			//try {
-			//	if (valueForm->InitializeFormModule()) {
-			//		valueForm->ShowForm();
-			//	}
-			//}
-			//catch (...) {
-			//	wxDELETE(valueForm);
-			//	if (!appData->DesignerMode()) {
-			//		//decrRef - for control delete 
-			//		m_objectValue->DecrRef();
-			//		return false;
-			//	}
-			//}
+		if (!cc || !cc->FindCompileModule(defFormObject, result)) {
 
 			result = ibValueMetaObjectFormBase::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
 
@@ -173,7 +167,7 @@ bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 				result->ShowForm();
 			}
 			else if (!appData->DesignerMode()) {
-				//decrRef - for control delete 
+				//decrRef - for control delete
 				m_objectValue->DecrRef();
 				return false;
 			}
@@ -221,27 +215,30 @@ bool ibValueModuleManagerExternalDataProcessor::ExitMainModule(bool force)
 
 ibCompileModule* ibValueModuleManagerExternalReport::GetCompileModule() const
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
 
-ibProcUnit* ibValueModuleManagerExternalReport::GetProcUnit() const
+std::shared_ptr<ibProcUnit> ibValueModuleManagerExternalReport::GetProcUnit() const
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
 
 std::map<wxString, ibValue*>& ibValueModuleManagerExternalReport::GetContextVariables()
 {
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
 
 ibValueModuleManagerExternalReport::ibValueModuleManagerExternalReport(ibMetaData* metadata, ibValueMetaObjectReport* metaObject)
-	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetModuleObject() : nullptr)
+	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetObjectModule() : nullptr)
 {
 	m_objectValue = new ibValueRecordDataObjectReport(metaObject);
 	//set complile module 
@@ -268,33 +265,31 @@ bool ibValueModuleManagerExternalReport::CreateMainModule()
 	if (m_initialized)
 		return true;
 
-	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 
-	m_compileModule->SetParent(moduleManager->GetCompileModule());
-	m_compileModule->AddContextVariable(thisObject, m_objectValue);
+	// Imperative pipeline — see ExternalDataProcessor::CreateMainModule
+	// for the same shape; parent cascade, context var, shared procUnit
+	// with m_objectValue.
+	ibRuntimeModuleDataObject::SetParent(moduleManager);
+	BindContextVariable(thisObject, m_objectValue);
 
-	//initialize procUnit
-	wxDELETE(m_procUnit);
-
-	//set complile module 
 	m_objectValue->m_compileModule = m_compileModule;
-
-	//initialize object 
 	m_objectValue->InitializeObject();
 
 	if (!appData->DesignerMode()) {
-
-		m_procUnit = new ibProcUnit();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
-		//set proc unit 
+		InitializeRuntime();
 		m_objectValue->m_procUnit = m_procUnit;
 
 		try {
-			m_compileModule->Compile();
-			m_procUnit->Execute(m_compileModule->m_cByteCode);
+			Compile();
+			Run();
 		}
-		catch (const ibBackendException*) {
+		catch (const ibBackendException& err) {
+			wxLogWarning(_("External module '%s' re-init failed: %s"),
+				m_objectValue ? m_objectValue->GetClassName() : wxString(wxEmptyString),
+				err.GetErrorDescription());
 			return false;
 		};
 	}
@@ -317,7 +312,7 @@ bool ibValueModuleManagerExternalReport::DestroyMainModule()
 		return true;
 
 	m_compileModule->Reset();
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 
 	//set complile module 
 	//set proc unit 
@@ -342,10 +337,10 @@ bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 	if (!m_initialized)
 		return false;
 
-	//incrRef - for control delete 
+	//incrRef - for control delete
 	m_objectValue->IncrRef();
 
-	ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
+	const ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
 	wxASSERT(commonObject);
 	ibValueMetaObjectFormBase* defFormObject = commonObject->GetDefaultFormByID
 	(
@@ -354,24 +349,10 @@ bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 
 	if (defFormObject != nullptr) {
 		ibBackendValueForm* result = nullptr;
-		if (!ibValueModuleManager::FindCompileModule(defFormObject, result)) {
-
-			//valueForm = defFormObject->CreateForm(
-			//	nullptr, m_objectValue
-			//);
-			//try {
-			//	if (valueForm->InitializeFormModule()) {
-			//		valueForm->ShowForm();
-			//	}
-			//}
-			//catch (...) {
-			//	wxDELETE(valueForm);
-			//	if (!appData->DesignerMode()) {
-			//		//decrRef - for control delete 
-			//		m_objectValue->DecrRef();
-			//		return false;
-			//	}
-			//}
+		// Cache lives on the form's own metadata — see the symmetric DataProcessor
+		// path above for rationale.
+		ibCompileValueCache* cc = defFormObject->GetMetaData()->GetCompileCache();
+		if (!cc || !cc->FindCompileModule(defFormObject, result)) {
 
 			result = ibValueMetaObjectFormBase::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
 
@@ -379,7 +360,7 @@ bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 				result->ShowForm();
 			}
 			else if (!appData->DesignerMode()) {
-				//decrRef - for control delete 
+				//decrRef - for control delete
 				m_objectValue->DecrRef();
 				return false;
 			}
@@ -439,27 +420,7 @@ void ibValueModuleManagerExternalDataProcessor::PrepareNames() const
 		}
 	}
 
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-			for (auto exportVariable : byteCode->m_listExportVar) {
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
 bool ibValueModuleManagerExternalDataProcessor::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
@@ -469,7 +430,7 @@ bool ibValueModuleManagerExternalDataProcessor::CallAsFunc(const long lMethodNum
 		return m_objectValue->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
@@ -534,27 +495,7 @@ void ibValueModuleManagerExternalReport::PrepareNames() const
 			m_methodHelper->CopyProp(methodHelper, idx);
 		}
 	}
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-			for (auto exportVariable : byteCode->m_listExportVar) {
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
 bool ibValueModuleManagerExternalReport::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
@@ -564,7 +505,7 @@ bool ibValueModuleManagerExternalReport::CallAsFunc(const long lMethodNum, ibVal
 		return m_objectValue->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

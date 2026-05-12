@@ -77,6 +77,25 @@ struct ibKeyWords s_listKeyWord[] =
 	{"#Endif"},
 	{"#Region"},
 	{"#EndRegion"},
+
+	// === LINQ keywords ===
+	// Order MUST match codeDef.h's KEY_FROM..KEY_INTO enum block —
+	// translator lookup is by index into s_listKeyWord.
+	{"From"},
+	{"Where"},
+	{"Select"},
+	{"OrderBy"},
+	{"Ascending"},
+	{"Descending"},
+	{"Take"},
+	{"Skip"},
+	{"Distinct"},
+	{"Join"},
+	{"On"},
+	{"Equals"},
+	{"Group"},
+	{"By"},
+	{"Into"},
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -160,10 +179,25 @@ void ibTranslateCode::ibDefineCollection::SetDefine(const wxString& strName, con
 }
 
 //////////////////////////////////////////////////////////////////////
+// ibLexem — out-of-line accessors (need ibTranslateCode definition)
+//////////////////////////////////////////////////////////////////////
+
+const wxString& ibLexem::GetModuleName() const {
+	return m_translateCode ? m_translateCode->m_strModuleName : wxEmptyString;
+}
+const wxString& ibLexem::GetDocPath() const {
+	return m_translateCode ? m_translateCode->m_strDocPath : wxEmptyString;
+}
+const wxString& ibLexem::GetFileName() const {
+	return m_translateCode ? m_translateCode->m_strFileName : wxEmptyString;
+}
+
+//////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
 ibTranslateCode::ibTranslateCode() : m_defineList(nullptr),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
@@ -173,20 +207,20 @@ m_nModePreparing(LEXEM_ADD)
 
 ibTranslateCode::ibTranslateCode(const wxString& strModuleName, const wxString& strDocPath) : m_defineList(nullptr),
 m_strModuleName(strModuleName), m_strDocPath(strDocPath),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
-	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords();
 }
 
 ibTranslateCode::ibTranslateCode(const wxString& strFileName) : m_defineList(nullptr),
 m_strFileName(strFileName),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
-	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords();
 }
 
 ibTranslateCode::~ibTranslateCode()
@@ -212,6 +246,13 @@ void ibTranslateCode::LoadKeyWords()
 		s_listHelpDescription[strEng] = &s_listKeyWord[i].m_strShortDescription;
 	}
 }
+
+// `IsAllowedKey` is declared on ibTranslateCode but its body lives in
+// compileCode.cpp — the gate needs the active code-style (gs_codeStyle,
+// owned by ibCompileCode), and putting the body there keeps the include
+// chain one-way (compile → translate, never the reverse). `IsKeyWord`
+// below dispatches through it so lexer / highlighter / autocomplete /
+// parser all inherit the CES-vs-VES filter from one place.
 
 //////////////////////////////////////////////////////////////////////
 // Translating
@@ -271,9 +312,12 @@ void ibTranslateCode::Load(const wxString& strCode)
 #endif // wxUSE_UNICODE
 		);
 
-		const size_t alloc_size = CalcAllocSize();
-		if (alloc_size > m_listLexem.capacity())
-			m_listLexem.reserve(alloc_size + 1000);
+		// Capacity is reserved by the full-PrepareLexem path (after its
+		// clear()) so we don't move stale lexems into a new buffer just
+		// to drop them. Incremental PrepareLexem(line, ...) reuses the
+		// existing capacity; it depends on the previous parse's lexems
+		// being intact for its rewind/patch logic, so Load must not
+		// touch m_listLexem.
 	}
 }
 
@@ -656,7 +700,14 @@ bool ibTranslateCode::GetNumber(wxString* strNumber) const
 		SetError(ERROR_TRANSLATE_NUMBER, first_pos);
 		return false;
 	}
-	else if (IsWord() && m_strBuffer[next_pos] != wxT(' ')) {
+	else if (IsWord() && !wxIsspace(m_strBuffer[next_pos])) {
+		// Originally compared `!= ' '` — rejected `20\nselect` as
+		// "number-glued-to-word" because newline isn't the literal
+		// space char. IsWord() above calls SkipSpaces() (which advances
+		// past ALL whitespace incl. \n / \t), so the IsWord check
+		// might return true for a far-away identifier after a wide
+		// whitespace gap. Use wxIsspace at next_pos so any whitespace
+		// separator (space / tab / newline / CR) is accepted.
 		SetError(ERROR_TRANSLATE_NUMBER, error_pos);
 		return false;
 	}
@@ -923,18 +974,22 @@ bool ibTranslateCode::IsEnd() const
 
 int ibTranslateCode::IsKeyWord(const wxString& strKeyWord)
 {
-	//auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
-	//	[strKeyWord](const std::pair<const wxString, void*>& pair) -> bool {
-	//		return stringUtils::CompareString(pair.first, strKeyWord);
-	//	}
-	//);
-
-	//if (it != ms_listHashKeyWord.end())
-	//	return ((int)it->second) - 1;
-
-	for (auto& pair : ms_listHashKeyWord) {
-		if (stringUtils::CompareString(pair.first, strKeyWord))
-			return static_cast<int>(reinterpret_cast<intptr_t>(pair.second)) - 1;
+	// Keys in ms_listHashKeyWord are stored uppercase at load time
+	// (see LoadKeyWords — stringUtils::MakeUpper on every entry). Looking the
+	// query up by the same normalisation lets us use std::map::find's
+	// O(log N) instead of a full linear scan on every lexer token.
+	auto it = ms_listHashKeyWord.find(stringUtils::MakeUpper(strKeyWord));
+	if (it != ms_listHashKeyWord.end()) {
+		const int idx = static_cast<int>(reinterpret_cast<intptr_t>(it->second)) - 1;
+		// Code-style gate: hides VES-only block-fence keywords (Then /
+		// Do / End*) when CES is active. Body lives in compileCode.cpp
+		// so the gate reads gs_codeStyle without flipping the include
+		// chain. Hidden keywords look like plain identifiers to every
+		// consumer of IsKeyWord — lexer, syntax highlighter, the CES
+		// parser (which then rejects them as unknown identifiers).
+		if (!IsAllowedKey(idx))
+			return wxNOT_FOUND;
+		return idx;
 	}
 
 	return wxNOT_FOUND;
@@ -962,6 +1017,14 @@ wxString ibTranslateCode::GetKeyWord(int k)
 bool ibTranslateCode::PrepareLexem()
 {
 	m_listLexem.clear();
+
+	// Reserve capacity here (after clear) instead of in Load — that way
+	// the reserve grows from an empty vector with no per-element move
+	// work, and incremental PrepareLexem(line, ...) (which depends on
+	// previous-parse lexems being intact) is unaffected.
+	const size_t alloc_size = CalcAllocSize();
+	if (alloc_size > m_listLexem.capacity())
+		m_listLexem.reserve(alloc_size + 1000);
 
 	if (m_defineList == nullptr) {
 		m_defineList = new ibDefineCollection();
@@ -997,9 +1060,8 @@ bool ibTranslateCode::PrepareLexem()
 
 	while (!IsEnd()) {
 
-		m_current_lex.m_strModuleName = m_strModuleName;
-		m_current_lex.m_strDocPath = m_strDocPath;
-		m_current_lex.m_strFileName = m_strFileName;
+		// m_current_lex.m_translateCode is bound once in the ctor and
+		// preserved across emplace_back moves — no per-iteration write here.
 
 		m_current_lex.m_numLine = m_currentLine;
 		m_current_lex.m_numString = m_currentPos;//if an error occurs later, this is the string that should be returned to the user
@@ -1022,9 +1084,10 @@ bool ibTranslateCode::PrepareLexem()
 #ifdef UTF8_LEXEM_TRANSLATE
 						m_current_lex->m_numUtf8String = m_currentUtf8Pos;
 #endif
-						m_current_lex->m_strModuleName = m_strModuleName;
-						m_current_lex->m_strDocPath = m_strDocPath;
-						m_current_lex->m_strFileName = m_strFileName;
+						// Rebind to consumer's translate so source attribution
+						// follows the expansion site (consumer's module name /
+						// doc path), not the original definition's.
+						m_current_lex->m_translateCode = this;
 						m_listLexem.push_back(*m_current_lex);
 					}
 					continue;
@@ -1248,9 +1311,7 @@ bool ibTranslateCode::PrepareLexem()
 	m_current_lex.m_lexType = ENDPROGRAM;
 	m_current_lex.m_numData = 0;
 
-	m_current_lex.m_strModuleName = m_strModuleName;
-	m_current_lex.m_strDocPath = m_strDocPath;
-	m_current_lex.m_strFileName = m_strFileName;
+	// m_translateCode bound at ctor time, kept through moves.
 
 	m_current_lex.m_numLine = total_line + m_currentLine;
 	m_current_lex.m_numString = total_pos + m_currentPos;
@@ -1298,6 +1359,11 @@ void ibTranslateCode::PrepareFromCurrent(int nMode, const wxString& strName)
 	else if (nMode == LEXEM_ADD) {
 		for (unsigned int i = 0; i < translate.m_listLexem.size() - 1; i++) {//excluding ENDPROGRAM
 			m_listLexem.push_back(translate.m_listLexem[i]);
+			// Re-anchor to caller's translate — the local `translate`
+			// object dies when this function returns; lexems' back-pointer
+			// would otherwise dangle. translate.m_strModuleName was set
+			// to ours above so the strings are identical.
+			m_listLexem.back().m_translateCode = this;
 		}
 
 		m_currentLine = translate.m_currentLine;
@@ -1351,68 +1417,15 @@ void ibTranslateCode::OnSetParent(ibTranslateCode* setParent)
 
 size_t ibTranslateCode::CalcAllocSize() const {
 
-	ibTranslateCode translate;
-
-	translate.Clear();
-
-	translate.m_strBuffer.assign(m_strBuffer);
-	translate.m_strBUFFER.assign(m_strBUFFER);
-
-	translate.m_bufferSize = m_bufferSize;
-
-	size_t alloc_size = 1;
-
-	while (!translate.IsEnd()) {
-		if (translate.IsWord()) {
-			try {
-				(void)translate.GetWord();
-				alloc_size++;
-			}
-			catch (...)
-			{
-			}
-		}
-		else if (translate.IsNumber() || translate.IsString() || translate.IsDate()) {
-			if (translate.IsNumber()) {
-				try {
-					(void)translate.GetNumber();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-			else if (translate.IsString()) {
-				try {
-					(void)translate.GetString();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-			else if (translate.IsDate()) {
-				try {
-					(void)translate.GetDate();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-		}
-		else {
-			try {
-				(void)translate.GetByte();
-				alloc_size++;
-			}
-			catch (...)
-			{
-			}
-		}
-	}
-
-	return alloc_size;
+	// Heuristic — average token is ~4 source chars (identifiers, numbers,
+	// short keywords, single-char delimiters; whitespace and comments
+	// don't produce lexems). +16 for tiny inputs. The previous version
+	// ran a full tokenizer pass over a copy of both buffers just to
+	// count and ate ~46% of the Enter-keypress OnTextChange handler.
+	// Slight over-estimate is intentional — vector::reserve takes the
+	// extra capacity without complaint, and one cheap arithmetic op
+	// beats a second tokenization round.
+	return m_bufferSize > 0 ? (m_bufferSize / 4) + 16 : 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

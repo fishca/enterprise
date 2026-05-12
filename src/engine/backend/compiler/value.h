@@ -1,11 +1,36 @@
 #ifndef __VALUE_H__
 #define __VALUE_H__
 
+#include <memory>
+
 #include "backend/backend_core.h"
 #include "backend/compiler/typeCtor.h"
 
 // Forward declaration - full definition in value_ptr.h included at end of file
 template <class T> class ibValuePtr;
+
+class ibValue;
+
+// Cursor-based iteration state. Yielded by ibValue::CreateIterator()
+// and driven by OPER_FOREACH / OPER_NEXT_ITER. Wrapped in shared_ptr
+// (held by the runtime ibValueIterator), no manual delete.
+class BACKEND_API ibValueIteratorState {
+public:
+	virtual ~ibValueIteratorState() = default;
+	// Advance to the next element and copy it into `current`. Returns
+	// false when the cursor is past the last element; the caller drops
+	// the state. After Reset() the next MoveNext() yields element 0.
+	virtual bool MoveNext(ibValue& current) = 0;
+	virtual void Reset() = 0;
+
+	// IntelliSense / editor type-hint. Writes a skeleton value of the
+	// element type into `current` so the editor's static parser knows
+	// what `x` is in `For Each x In container`. Returns false when no
+	// typed skeleton is available; caller is expected to pre-initialise
+	// `current` and treats it as untyped on a false return. Compile-
+	// time only; not invoked at runtime by OPER_FOREACH.
+	virtual bool PeekSample(ibValue& /*current*/) const { return false; }
+};
 
 extern BACKEND_API const ibValue wxEmptyValue;
 
@@ -43,11 +68,18 @@ public:
 	ibValueTypes m_typeClass;
 	union {
 		bool          m_bData;  //TYPE_BOOL
-		ibNumber      m_fData;  //TYPE_NUMBER
 		wxLongLong_t  m_dData;  //TYPE_DATE
-		ibValue* m_pRef;	//TYPE_REFFER
+		ibValue*      m_pRef;   //TYPE_REFFER
 	};
 	wxString m_sData;  //TYPE_STRING
+	// TYPE_NUMBER — outside the union. ibNumber is a conditional
+	// heap-owner (lazy-grow BigImpl), so its ctor/dtor/operator= must
+	// run on type transitions; in a union those calls are skipped and
+	// the m_pRef pointer in the lower 4 bytes gets reinterpreted as a
+	// BigImpl* on the next ibNumber::Clear(), which deletes random
+	// memory. Same rule that already keeps wxString out of the union.
+	// Costs +8 bytes per ibValue.
+	ibNumber m_fData;
 public:
 
 	class BACKEND_API ibValueMethodHelper {
@@ -65,30 +97,88 @@ public:
 			long m_lAlias, m_lData;
 		};
 
+		// Bit-flags for prop visibility / mutability.
+		enum ibPropFlags : unsigned int {
+			eProp_None     = 0,
+			eProp_Readable = 1u << 0,
+			eProp_Writable = 1u << 1,
+			// Scope-local prop (ThisObject / ThisForm / similar): when
+			// the host bc is mirrored to ibByteCode::m_listVar, this
+			// flag travels into ibByteCodeVarInfo::m_bScoped, and the
+			// cross-bc resolver (template FindVariable) skips the
+			// entry. Children resolving `ThisObject` therefore can't
+			// silently reach the parent's record.
+			eProp_Scoped   = 1u << 2,
+		};
+
 		struct ibValueMethodHelperProperty {
 
-			ibValueMethodHelperProperty(const wxString& strPropName, bool readable, bool writable, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
-				: m_fieldName(strPropName), m_readable(readable), m_writable(writable), m_lAlias(lPropAlias), m_lData(lData)
+			// Flag-based ctor — primary entry point. Use for new
+			// callsites and any prop that needs eProp_Scoped or other
+			// non-readable/writable bits.
+			ibValueMethodHelperProperty(const wxString& strPropName, unsigned int flags, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strPropName), m_flags(flags), m_lAlias(lPropAlias), m_lData(lData)
 			{
 			}
 
+			// Legacy ctor — converts two bools (readable, writable)
+			// into the flags word so existing AppendProp(bool, bool,
+			// ...) overloads keep working without touching every
+			// callsite. Old props default to non-scoped.
+			ibValueMethodHelperProperty(const wxString& strPropName, bool readable, bool writable, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strPropName),
+				  m_flags((readable ? eProp_Readable : 0u) | (writable ? eProp_Writable : 0u)),
+				  m_lAlias(lPropAlias), m_lData(lData)
+			{
+			}
+
+			// 3-bool ctor — same as legacy plus an explicit `scoped`
+			// argument. Readable for callsites that prefer bool args
+			// over OR'd flag literals (ThisObject / ThisForm / etc).
+			ibValueMethodHelperProperty(const wxString& strPropName, bool readable, bool writable, bool scoped, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strPropName),
+				  m_flags((readable ? eProp_Readable : 0u) | (writable ? eProp_Writable : 0u) | (scoped ? eProp_Scoped : 0u)),
+				  m_lAlias(lPropAlias), m_lData(lData)
+			{
+			}
+
+			bool IsReadable() const { return (m_flags & eProp_Readable) != 0; }
+			bool IsWritable() const { return (m_flags & eProp_Writable) != 0; }
+			bool IsScoped()   const { return (m_flags & eProp_Scoped)   != 0; }
+
 			wxString m_fieldName;
-			bool m_readable = true;
-			bool m_writable = true;
+			unsigned int m_flags = eProp_Readable | eProp_Writable;
 			long m_lAlias, m_lData;
+		};
+
+		// Bit-flags for method capabilities — counterpart to ibPropFlags.
+		enum ibMethodFlags : unsigned int {
+			eMethod_None      = 0,
+			eMethod_HasReturn = 1u << 0,   // function (returns) vs procedure (no return)
+			eMethod_Scoped    = 1u << 1,   // bc-local — invisible to children
 		};
 
 		struct ibValueMethodHelperMethod {
 
-			ibValueMethodHelperMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
-				: m_fieldName(strMethodName), m_strHelper(strHelper), m_paramCount(paramCount), m_hasRet(hasRet), m_lAlias(lPropAlias), m_lData(lData)
+			ibValueMethodHelperMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, unsigned int flags, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strMethodName), m_strHelper(strHelper), m_paramCount(paramCount), m_flags(flags), m_lAlias(lPropAlias), m_lData(lData)
 			{
 			}
+
+			// Legacy ctor — convert hasRet bool into the flags word.
+			ibValueMethodHelperMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldName(strMethodName), m_strHelper(strHelper), m_paramCount(paramCount),
+				  m_flags(hasRet ? eMethod_HasReturn : 0u), m_lAlias(lPropAlias), m_lData(lData)
+			{
+			}
+
+			bool HasReturn() const { return (m_flags & eMethod_HasReturn) != 0; }
+			bool IsScoped()  const { return (m_flags & eMethod_Scoped)    != 0; }
 
 			wxString m_fieldName;
 			wxString m_strHelper;
 			long m_paramCount = 0;
-			bool m_hasRet = true;
+			unsigned int m_flags = 0;
 			long m_lAlias, m_lData;
 		};
 
@@ -158,13 +248,27 @@ public:
 		inline long AppendProp(const wxString& strPropName, bool readable, bool writable, const long lPropNum) { return AppendProp(strPropName, readable, writable, lPropNum, wxNOT_FOUND); }
 
 		inline long AppendProp(const wxString& strPropName, bool readable, bool writable, const long lPropNum, const long lPropAlias) {
+			const unsigned int flags = (readable ? eProp_Readable : 0u) | (writable ? eProp_Writable : 0u);
+			return AppendProp(strPropName, flags, lPropNum, lPropAlias);
+		}
+
+		// 3-bool variant — same as legacy plus explicit `scoped`.
+		// Out-of-line so the symbol is properly exported from
+		// backend.dll for wfrontend / other consumers (otherwise MSVC
+		// in Debug emits __imp_ stubs that the inline body can't
+		// satisfy across the DLL boundary).
+		long AppendProp(const wxString& strPropName, bool readable, bool writable, bool scoped, const long lPropNum, const long lPropAlias);
+
+		// Flag-based variant. Use eProp_Readable | eProp_Writable
+		// (or | eProp_Scoped for bc-local entries like ThisObject).
+		inline long AppendProp(const wxString& strPropName, unsigned int flags, const long lPropNum, const long lPropAlias) {
 
 			//auto iterator = std::find_if(m_propHelper.begin(), m_propHelper.end(),
 			//	[strPropName](const auto& f) { return stringUtils::CompareString(f.m_fieldName, strPropName); });
 			//if (iterator != m_propHelper.end())
 			//	return std::distance(m_propHelper.begin(), iterator);
 
-			m_propHelper.emplace_back(strPropName, readable, writable, lPropAlias, lPropNum);
+			m_propHelper.emplace_back(strPropName, flags, lPropAlias, lPropNum);
 			return m_propHelper.size();
 		}
 
@@ -210,13 +314,23 @@ public:
 		virtual bool IsPropReadable(const long lPropNum) const {
 			if (lPropNum > GetNProps())
 				return false;
-			return m_propHelper[lPropNum].m_readable;
+			return m_propHelper[lPropNum].IsReadable();
 		}
 
 		virtual bool IsPropWritable(const long lPropNum) const {
 			if (lPropNum > GetNProps())
 				return false;
-			return m_propHelper[lPropNum].m_writable;
+			return m_propHelper[lPropNum].IsWritable();
+		}
+
+		// Scope-local props (ThisObject / ThisForm / similar) must
+		// not leak across bc boundaries. Pass-3 PrepareModuleData
+		// reads this and stamps ibCompileContext::ibVariable::m_bScoped
+		// on the freshly pushed entry.
+		virtual bool IsPropScoped(const long lPropNum) const {
+			if (lPropNum > GetNProps())
+				return false;
+			return m_propHelper[lPropNum].IsScoped();
 		}
 
 		const long GetNProps() const noexcept { return m_propHelper.size(); }
@@ -300,7 +414,15 @@ public:
 		bool HasRetVal(const long lMethodNum) const {
 			if (lMethodNum > GetNMethods())
 				return true;
-			return m_methodHelper[lMethodNum].m_hasRet;
+			return m_methodHelper[lMethodNum].HasReturn();
+		}
+
+		// Scope-local method (bc-local — invisible to children
+		// through cross-bc resolution). Symmetric with IsPropScoped.
+		bool IsMethodScoped(const long lMethodNum) const {
+			if (lMethodNum > GetNMethods())
+				return false;
+			return m_methodHelper[lMethodNum].IsScoped();
 		}
 
 		long GetNParams(const long lMethodNum) const {
@@ -594,7 +716,28 @@ public:
 
 	void SetData(const ibValue& varValue); //setting the value without changing the type
 
-	virtual ibValue GetValue(bool getThis = false);
+	virtual ibValue GetValue(bool getThis = false) const;
+
+	// Produce a fresh, independent copy of the value. For simple types
+	// (Boolean / Number / String / Date / Null / Empty) the data is
+	// value-copied — caller can mutate without touching the source.
+	// Aggregate / reference types must override to provide their own
+	// clone semantics; the base default returns an undefined value to
+	// surface "tried to clone something that doesn't support it" as
+	// an empty result rather than a silent share.
+	virtual ibValue Clone() const {
+		switch (m_typeClass) {
+		case ibValueTypes::TYPE_EMPTY:
+		case ibValueTypes::TYPE_NULL:
+		case ibValueTypes::TYPE_BOOLEAN:
+		case ibValueTypes::TYPE_NUMBER:
+		case ibValueTypes::TYPE_STRING:
+		case ibValueTypes::TYPE_DATE:
+			return *this;  // value-copy of the simple-type payload
+		default:
+			return ibValue();  // no own clone — undefined
+		}
+	}
 
 	virtual bool GetBoolean() const;
 	virtual int GetInteger() const { return GetNumber().ToInt(); }
@@ -675,6 +818,10 @@ public:
 	 */
 	virtual bool IsPropWritable(const long lPropNum) const;
 
+	/// Is property scope-local (bc-local — invisible to children
+	/// through cross-bc resolution; ThisObject / ThisForm / etc.)?
+	virtual bool IsPropScoped(const long lPropNum) const;
+
 	/// Returns number of component methods
 	/**
 	 *  @return number of component  methods
@@ -727,6 +874,91 @@ public:
 	 */
 	virtual bool HasRetVal(const long lMethodNum) const;
 
+	// LINQ — universal pipeline ops (Where / Select / OrderBy / ...) on
+	// every iterable value. Resolved at compile time by name via
+	// FindLinqMethodByName and emitted as OPER_CALL_LINQ (NOT
+	// OPER_CALL_METHOD); the opcode carries the ibLinqMethod enum id
+	// directly. Runtime dispatch goes through virtual DispatchLinqMethod —
+	// derived classes don't have to teach FindMethod / CallAsFunc about
+	// LINQ surface.
+
+	// LINQ method id — strongly-typed enum. Single source of truth
+	// for method-name resolution: name-string == enum-value's
+	// stringization (`Where` enumerator ↔ `"Where"` script-side
+	// method name). Adding a new op = append here AND an entry in
+	// GetLinqMethodTable() + a case in the dispatch switch
+	// (procUnitLinq.cpp). Runtime arg-count validation lives inside
+	// each dispatch case.
+	enum class ibLinqMethod : long {
+		Where,
+		Select,
+		Count,
+		ToArray,
+		First,
+		Any,
+		Distinct,
+		OrderBy,
+		OrderByDescending,
+		GroupBy,
+		Join,
+		Skip,
+		Take,
+		SkipWhile,
+		TakeWhile,
+		Reverse,
+		Concat,
+		Union,
+		Intersect,
+		Except,
+		Last,
+		LastOrDefault,
+		Single,
+		SingleOrDefault,
+		FirstOrDefault,
+		ElementAt,
+		ElementAtOrDefault,
+		Contains,
+		SequenceEqual,
+		Aggregate,
+		WhereIndexed,
+		SelectIndexed,
+	};
+
+	// Method-table entry — enum id + script-side name + one-line help
+	// for IntelliSense tooltips. Same table services compile-side
+	// FindLinqMethodByName (name → enum) and frontend autocomplete
+	// (after `.`, append every LINQ method as a suggestion). Single
+	// source of truth: no separate IB_LINQ_TRY macro per name in the
+	// resolver, no parallel list in the autocomplete loader.
+	struct ibLinqMethodInfo {
+		ibLinqMethod   id;
+		const wchar_t* name;
+		const wchar_t* helper;
+	};
+	static const std::vector<ibLinqMethodInfo>& GetLinqMethodTable();
+
+	// Compile-time resolver — script method name → enum value (or
+	// -1 if not a LINQ method). Used by the chain-method emit path
+	// (compileCode.cpp) to decide OPER_CALL_METHOD (per-class) vs
+	// OPER_CALL_LINQ (universal pipeline op). Case-insensitive match
+	// per OES convention. Implemented in terms of GetLinqMethodTable().
+	static long FindLinqMethodByName(const wxString& strMethodName);
+
+	// LINQ dispatch entry point — virtual so subclasses can override
+	// kind-specific behavior (e.g. ibValueQuery extending an existing
+	// pipeline rather than wrapping via CreateIterator + new state;
+	// ibValueArray returning concrete Array on ToArray() rather than
+	// materialising into a fresh one; DB-backed values pushing
+	// OrderBy / GroupBy / Join down to SQL). Default impl walks
+	// TYPE_REFFER chain to the underlying object, then dispatches
+	// through the central state-class machinery (file-scope helper
+	// in procUnit.cpp). One virtual entry rather than 32 keeps
+	// vtable bloat down — per-method virtuals can be lifted later
+	// when concrete override pressure surfaces (Phase 2 of the
+	// virtual-dispatch arc).
+	virtual void DispatchLinqMethod(ibLinqMethod method, ibValue& ret,
+	                                ibValue** args, long n);
+
 	/// Calls the method as a procedure
 	/**
 	 *  @param lMethodNum - method index (starting with 0)
@@ -767,12 +999,18 @@ public:
 		GetAt(varKeyValue, retValue);
 		return retValue;
 	}
-#pragma region iterator_support 
-	virtual bool HasIterator() const;
-
-	virtual ibValue GetIteratorEmpty();
-	virtual ibValue GetIteratorAt(unsigned int idx);
-	virtual unsigned int GetIteratorCount() const;
+#pragma region iterator_support
+	// Cursor-based iteration. Returns a state walked by OPER_FOREACH /
+	// OPER_NEXT_ITER; null means "this value isn't iterable" —
+	// OPER_FOREACH raises a runtime error in that case. shared_ptr
+	// matches the project convention for owned heap pointers.
+	//
+	// Base default delegates through the TYPE_REFFER chain to the
+	// underlying object; every container class supporting script-level
+	// `For Each` overrides this with its own walker. The state's
+	// PeekSample() doubles as the IntelliSense type hint, so there's
+	// no separate "empty element" surface on ibValue.
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator();
 #pragma endregion
 
 protected:

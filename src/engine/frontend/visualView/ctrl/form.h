@@ -30,7 +30,7 @@ const ibClassID g_controlFormCLSID = string_to_clsid("CT_FRME");
 //********************************************************************************************
 
 class FRONTEND_API ibValueForm :
-	public ibBackendValueForm, public ibValueFrame, public ibModuleDataObject
+	public ibBackendValueForm, public ibValueFrame, public ibRuntimeModuleDataObject
 {
 	wxDECLARE_DYNAMIC_CLASS(ibValueForm);
 
@@ -136,11 +136,14 @@ public:
 
 	virtual bool InitializeFormModule();
 
+	// Form's meta-object drives lazy compile-module creation inside
+	// ibRuntimeModuleDataObject::BindContextVariable. Form has m_metaFormObject
+	// set at InitializeForm time, long before m_compileModule exists.
+	virtual const class ibValueMetaObjectModuleBase* GetMetaForCompile() const override;
+
 	//get metaData
 	virtual ibMetaData* GetMetaData() const;
 
-	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const { return m_procUnit; }
 	virtual ibValueForm* GetImplValueRef() const override {
 		return const_cast<ibValueForm*>(this);
 	}
@@ -148,13 +151,29 @@ public:
 	virtual ibSourceDataObject* GetSourceObject() const { return m_sourceObject; }
 	virtual const ibValueMetaObjectFormBase* GetFormMetaObject() const { return m_metaFormObject; }
 
-	ibValueMetaObjectGenericData* GetMetaObject() const;
+	const ibValueMetaObjectGenericData* GetMetaObject() const;
 
 	// get control caption
 	virtual wxString GetControlTitle() const;
 
 	ibValue GetCreatedValue() const { return m_createdValue; }
 	ibValue GetChangedValue() const { return m_changedValue; }
+
+	// One-shot consume — read and reset.  NotifyCreate/NotifyChange set
+	// these to drive position-to-new on the next UpdateForm.  Without
+	// clearing, every subsequent UpdateForm (manual Refresh, sort, idle
+	// reset) sees the same value and re-positions, bouncing the user's
+	// later selection back to the create / change row.
+	ibValue ConsumeCreatedValue() {
+		ibValue v = m_createdValue;
+		m_createdValue = wxEmptyValue;
+		return v;
+	}
+	ibValue ConsumeChangedValue() {
+		ibValue v = m_changedValue;
+		m_changedValue = wxEmptyValue;
+		return v;
+	}
 
 	virtual ibValueForm* GetOwnerForm() const {
 		return const_cast<ibValueForm*>(this);
@@ -206,10 +225,7 @@ public:
 		unsigned int Count() const { return m_formOwner->m_listControl.size(); }
 
 		//Работа с итераторами:
-		virtual bool HasIterator() const { return true; }
-		virtual ibValue GetIteratorEmpty();
-		virtual ibValue GetIteratorAt(unsigned int idx);
-		virtual unsigned int GetIteratorCount() const { return Count(); }
+		virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override;
 	private:
 		ibValueForm* m_formOwner;
 		ibValueMethodHelper* m_methodHelper;
@@ -273,7 +289,7 @@ public:
 
 	//special proc
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost);
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost);
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost);
 
 	//actionData
 	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
@@ -300,20 +316,12 @@ private:
 	void RefreshDocForm();
 	bool CloseDocForm();
 
-	void OnIdleHandler(wxTimerEvent& event) {
+	// Body in formObject.cpp — needs ibWebTimer complete type on web
+	// for the wxObject* upcast (frontendTypes.h only forward-declares
+	// ibWebTimer). Inline in the header dragged web-specific includes
+	// into every desktop TU.
+	void OnIdleHandler(wxTimerEvent& event);
 
-		if (m_procUnit != nullptr) {
-
-			auto iterator = std::find_if(m_idleHandlerArray.begin(), m_idleHandlerArray.end(),
-				[event](const auto pair) { return pair.second == event.GetEventObject(); }
-			);
-
-			if (iterator != m_idleHandlerArray.end())
-				CallAsEvent(iterator->first);
-		}
-
-		event.Skip();
-	}
 
 	enum
 	{
@@ -338,7 +346,14 @@ private:
 	ibSourceDataObject* m_sourceObject;
 
 	std::set<ibValueControl*> m_listControl;
-	std::map<wxString, wxTimer*> m_idleHandlerArray;
+	// ibFrontendTimer = wxTimer on desktop, ibWebTimer on web. Both
+	// inherit wxEvtHandler + produce wxTimerEvent where GetEventObject()
+	// returns the timer instance — so OnIdleHandler's lookup matches
+	// uniformly across builds. shared_ptr removes the manual delete on
+	// teardown paths (form dtor, DetachIdleHandler, exception unwinds) —
+	// same ownership flavour as m_valueForm's ibValuePtr but here we
+	// don't need intrusive refcount, std is enough.
+	std::map<wxString, std::shared_ptr<ibFrontendTimer>> m_idleHandlerArray;
 
 	ibValuePtr<ibValueFormCollectionControl> m_formCollectionControl;
 

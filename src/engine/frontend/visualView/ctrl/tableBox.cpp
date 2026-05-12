@@ -1,5 +1,9 @@
 #include "tableBox.h"
+#ifndef OES_USE_WEB
+// Renderer pulls in dataview.h (wxDataView heavy). Web stubs don't
+// touch the renderer at all.
 #include "tableBoxColumnRenderer.h"
+#endif
 
 #include "form.h"
 
@@ -7,7 +11,6 @@
 #include "backend/system/value/valueTable.h"
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
-
 //***********************************************************************************
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
@@ -16,6 +19,10 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTableBox, ibValueWindow);
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumTableBoxSelectionMode, ibValue);
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumTableBoxViewMode, ibValue);
+
+#ifdef OES_USE_WEB
+#include "frontend/web/webWindow.h"
+#endif
 
 //***********************************************************************************
 //*                                 Special tablebox func                           *
@@ -52,6 +59,7 @@ bool ibValueModelTableBox::SetControlValue(const ibValue& varControlVal)
 
 void ibValueModelTableBox::AddColumn()
 {
+#ifndef OES_USE_WEB
 	wxASSERT(m_formOwner);
 
 	ibValueModelTableBoxColumn* columnTable = wxDynamicCast(m_formOwner->NewObject(g_controlTableBoxColumnCLSID, this), ibValueModelTableBoxColumn);
@@ -69,8 +77,10 @@ void ibValueModelTableBox::AddColumn()
 	}
 
 	g_visualHostContext->RefreshEditor();
+#endif
 }
 
+#ifndef OES_USE_WEB
 void ibValueModelTableBox::CreateColumnCollection(ibDataViewCtrl* dataViewCtrl)
 {
 	if (appData->DesignerMode())
@@ -139,13 +149,14 @@ void ibValueModelTableBox::CreateColumnCollection(ibDataViewCtrl* dataViewCtrl)
 			visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 
 		wxASSERT(visualView);
-		//fix size in parent window 
+		//fix size in parent window
 		wxWindow* wndParent = visualView->GetParent();
 		if (wndParent != nullptr) {
 			wndParent->Layout();
 		}
 	}
 }
+#endif // !OES_USE_WEB
 
 void ibValueModelTableBox::CreateTable(bool recreateModel) {
 
@@ -200,6 +211,47 @@ void ibValueModelTableBox::RefreshModel(bool recreateModel)
 	ibValueModelTableBox::CreateModel(recreateModel);
 }
 
+void ibValueModelTableBox::ApplyCurrentLine(
+	ibValueModel::ibValueModelReturnLine* line, bool focus)
+{
+	m_tableCurrentLine = line;
+
+#ifndef OES_USE_WEB
+	auto* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(GetWxObject());
+	if (dataViewCtrl != nullptr) {
+		if (line == nullptr) {
+			dataViewCtrl->UnselectAllRows();
+		}
+		else {
+			const ibDataViewItem item = line->GetLineItem();
+			if (item.IsOk()) {
+				// Select() itself routes to the bootstrap-restore
+				// channel for paged models when the row isn't yet
+				// in the tree (stub case) — see ibDataViewCtrl::Select.
+				dataViewCtrl->UnselectAllRows();
+				dataViewCtrl->Select(item);
+				if (focus) {
+					// SetCurrentItem moves keyboard focus / edit-on-Enter
+					// anchor; EnsureVisible scrolls the viewport.  Both
+					// skipped on `focus=false` — selection highlight only.
+					dataViewCtrl->SetCurrentItem(item);
+					dataViewCtrl->EnsureVisible(item);
+				}
+			}
+		}
+	}
+#else
+	(void)focus;
+#endif
+
+	// Selection script event is intentionally NOT fired here — the line
+	// passed in for programmatic restore is often a stub from
+	// FindRowValue (GUID-only, body empty) and the user-side handler
+	// would crash reading unpopulated columns.  User-click path goes
+	// through OnSelectionChanged which fires the event with a real
+	// fetched row.  For "new row created" observation use OnAddRow.
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 
 ibSourceObject* ibValueModelTableBox::GetSourceObject() const
@@ -207,7 +259,7 @@ ibSourceObject* ibValueModelTableBox::GetSourceObject() const
 	return m_formOwner ? m_formOwner->GetSourceObject() : nullptr;
 }
 
-ibValueMetaObjectCompositeData* ibValueModelTableBox::GetSourceMetaObject() const
+const ibValueMetaObjectCompositeData* ibValueModelTableBox::GetSourceMetaObject() const
 {
 	wxASSERT(m_tableModel);
 	if (m_tableModel == nullptr) return nullptr;
@@ -232,7 +284,7 @@ bool ibValueModelTableBox::FilterSource(const ibSourceExplorer& src, const ibMet
 
 ibValueModelTableBox::ibValueModelTableBox() : ibValueWindow(), ibTypeControlFactory(),
 m_tableModel(nullptr), m_tableCurrentLine(nullptr),
-m_dataViewCreated(false), m_dataViewSelected(false), m_dataViewUpdated(false), m_dataViewSizeChanged(false),
+m_dataViewCreated(false), m_dataViewSelected(false),
 m_need_calculate_pos(false)
 {
 	m_propertySource->SetValue(ibTypeDescription(g_valueTableCLSID));
@@ -244,8 +296,22 @@ m_need_calculate_pos(false)
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+#ifndef OES_USE_WEB
+// Resolve a row identity (reference / column value) to the model's
+// per-row return line wrapper, returning nullptr on miss so the caller
+// can fall through to the next candidate value. Used only by
+// OnUpdated's wxDataView-bound restore logic — web build doesn't link.
+static ibValueModel::ibValueModelReturnLine*
+ResolveLineByValue(ibValueModel* model, const ibValue& value)
+{
+	const ibDataViewItem& item = model->FindRowValue(value);
+	return item.IsOk() ? model->GetRowAt(item) : nullptr;
+}
+#endif
+
 void ibValueModelTableBox::CalculateColumnPos()
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
 
@@ -304,12 +370,17 @@ void ibValueModelTableBox::CalculateColumnPos()
 			}
 		}
 	}
+#endif // !OES_USE_WEB
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-wxObject* ibValueModelTableBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* ibValueModelTableBox::Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
+#ifdef OES_USE_WEB
+	(void)wxparent; (void)visualHost;
+	return new ibWebStubControl(wxT("tablebox"));
+#else
 	ibTableViewCtrl* dataViewCtrl = new ibTableViewCtrl(wxparent, wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
@@ -336,6 +407,7 @@ wxObject* ibValueModelTableBox::Create(wxWindow* wxparent, ibVisualHost* visualH
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_VALUE_CHANGED, &ibValueModelTableBox::OnItemValueChanged, this);
 
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_INSERTING, &ibValueModelTableBox::OnItemStartInserting, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_ADDING, &ibValueModelTableBox::OnItemStartAdding, this);
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_DELETING, &ibValueModelTableBox::OnItemStartDeleting, this);
 
 #if wxUSE_DRAG_AND_DROP 
@@ -348,15 +420,9 @@ wxObject* ibValueModelTableBox::Create(wxWindow* wxparent, ibVisualHost* visualH
 
 		dataViewCtrl->GenericGetHeader()->Bind(wxEVT_HEADER_RESIZING, &ibValueModelTableBox::OnHeaderResizing, this);
 
-		dataViewCtrl->Bind(wxEVT_SCROLLWIN_TOP, &ibValueModelTableBox::HandleOnScroll, this);
-		dataViewCtrl->Bind(wxEVT_SCROLLWIN_BOTTOM, &ibValueModelTableBox::HandleOnScroll, this);
-		dataViewCtrl->Bind(wxEVT_SCROLLWIN_LINEUP, &ibValueModelTableBox::HandleOnScroll, this);
-		dataViewCtrl->Bind(wxEVT_SCROLLWIN_LINEDOWN, &ibValueModelTableBox::HandleOnScroll, this);
-		dataViewCtrl->Bind(wxEVT_SCROLLWIN_PAGEUP, &ibValueModelTableBox::HandleOnScroll, this);
-		dataViewCtrl->Bind(wxEVT_SCROLLWIN_PAGEDOWN, &ibValueModelTableBox::HandleOnScroll, this);
-
-		dataViewCtrl->Bind(wxEVT_SCROLLWIN_THUMBTRACK, &ibValueModelTableBox::HandleOnScroll, this);
-		dataViewCtrl->Bind(wxEVT_SCROLLWIN_THUMBRELEASE, &ibValueModelTableBox::HandleOnScroll, this);
+		// Scroll-driven prefetch lives inside ibDataViewCtrl::OnScrollEvent —
+		// the control owns viewport state and triggers RequestForward /
+		// RequestBackward on the model directly.
 
 		dataViewCtrl->GetMainWindow()->Bind(wxEVT_LEFT_DOWN, &ibValueModelTableBox::OnMainWindowClick, this);
 
@@ -365,18 +431,17 @@ wxObject* ibValueModelTableBox::Create(wxWindow* wxparent, ibVisualHost* visualH
 		dataViewCtrl->EnableDropTarget(wxDF_UNICODETEXT);
 #endif // wxUSE_DRAG_AND_DROP && wxUSE_UNICODE
 
-		dataViewCtrl->Bind(wxEVT_SIZE, &ibValueModelTableBox::OnSize, this);
-		dataViewCtrl->Bind(wxEVT_IDLE, &ibValueModelTableBox::OnIdle, this);
-
 		dataViewCtrl->Bind(wxEVT_MENU, &ibValueModelTableBox::OnCommandMenu, this);
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &ibValueModelTableBox::OnContextMenu, this);
 	}
 
 	return dataViewCtrl;
+#endif // OES_USE_WEB
 }
 
-void ibValueModelTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+void ibValueModelTableBox::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) ibValueModelTableBox::CreateModel();
@@ -385,23 +450,31 @@ void ibValueModelTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibV
 		&& firstСreated) {
 		ibValueModelTableBox::AddColumn();
 	}
+#endif
 }
 
+#ifndef OES_USE_WEB
 #include <wx/itemattr.h>
+#endif
 
 void ibValueModelTableBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl =
 		dynamic_cast<ibTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) {
 		UpdateWindow(dataViewCtrl);
 	}
+#endif
 }
 
-void ibValueModelTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void ibValueModelTableBox::OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(wxobject);
+
+
 
 	if (dataViewCtrl != nullptr) {
 
@@ -410,9 +483,24 @@ void ibValueModelTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibV
 			m_tableModel->GetDataViewModel() : nullptr;
 
 		if (dataViewNewModel != dataViewOldModel) {
-			if (dataViewOldModel == nullptr) dataViewCtrl->SetFocus();
+			// Fresh control attaching to an existing model (form rebuild
+			// after createdValue / changedValue notify): m_tableCurrentLine
+			// holds the just-applied target from the previous control's
+			// ApplyCurrentLine — preserve it and re-route through Select
+			// on the new control so the bootstrap-restore channel picks
+			// up the new row.  Real model swap (oldModel != null && new !=
+			// old) still resets — different dataset, old line meaningless.
+			const bool freshControl = (dataViewOldModel == nullptr);
+			if (freshControl) dataViewCtrl->SetFocus();
 			dataViewCtrl->AssociateModel(dataViewNewModel);
-			m_tableCurrentLine.Reset();
+			if (!freshControl) {
+				m_tableCurrentLine.Reset();
+			}
+			else if (m_tableCurrentLine != nullptr) {
+				const ibDataViewItem item = m_tableCurrentLine->GetLineItem();
+				if (item.IsOk())
+					dataViewCtrl->Select(item);
+			}
 		}
 
 		if (appData->DesignerMode()) {
@@ -448,17 +536,88 @@ void ibValueModelTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibV
 
 		dataViewCtrl->SetHeaderAttr(attr);
 
-		if (!appData->DesignerMode())
-			m_dataViewCreated = m_dataViewUpdated = true;
+		if (!appData->DesignerMode()) {
+			m_dataViewCreated = true;
+
+			// Force-refetch flag on the control.  All UpdateForm
+			// entry points (form's Update button via enUpdate,
+			// NotifyCreate/Change/Delete from a child form save) reach
+			// here through the visual walker — and "UpdateForm" always
+			// means "data may have changed, re-pull".  The rest
+			// (size, sort, filter, first-time bind) is handled by the
+			// control internally on its own idle pass.
+			// SchedulePagedRefresh is debounced via
+			// m_pagedRefreshScheduled, so coalesces with any
+			// concurrent notifier-driven refresh.
+			//
+			// Selection seed chain — ApplyCurrentLine routes through
+			// Select(item), which on paged stamps the bootstrap-
+			// restore channel; when bootstrap fires on the next idle
+			// it matches via IsEqualTo against the freshly-fetched
+			// batch (FindRowValue returns a GUID-stub for paged
+			// catalogs/documents) and lands focus on the new row.
+			// If the row no longer exists, selection drops silently.
+			if (m_tableModel != nullptr && m_formOwner != nullptr) {
+
+
+				dataViewCtrl->SchedulePagedRefresh();
+
+				ibValueModel::ibValueModelReturnLine* line = nullptr;
+
+				// Consume createdValue / changedValue once per save —
+				// clearing prevents the same anchor from re-positioning
+				// the user on every subsequent manual Refresh / sort /
+				// filter, bouncing back to the create row indefinitely.
+				const ibValue createdValue = m_formOwner->ConsumeCreatedValue();
+				if (!createdValue.IsEmpty()) {
+					line = ResolveLineByValue(m_tableModel, createdValue);
+				}
+				else if (!m_dataViewSelected) {
+					ibValueFrame* ownerControl = m_formOwner->GetOwnerControl();
+					if (ownerControl != nullptr && m_tableCurrentLine == nullptr) {
+						ibValue retValue; ownerControl->GetControlValue(retValue);
+						line = ResolveLineByValue(m_tableModel, retValue);
+					}
+					m_dataViewSelected = true;
+				}
+
+				if (line == nullptr) {
+					// Always consume changedValue when no createdValue /
+					// ownerControl line was resolved.  Post-edit save on a
+					// row already selected (m_tableCurrentLine != nullptr)
+					// needs this path: NotifyChange from manager-save
+					// fires `ownerForm->m_changedValue` with the row's
+					// fresh identity, and we replace the stale current
+					// line with a stub matching the new identity.
+					// ConsumeChangedValue clears the field, so the next
+					// OnUpdated cycle won't re-position uninitialized.
+					const ibValue changedValue = m_formOwner->ConsumeChangedValue();
+					if (!changedValue.IsEmpty()) {
+						line = ResolveLineByValue(m_tableModel, changedValue);
+					}
+				}
+
+				if (line != nullptr) {
+					ApplyCurrentLine(line);
+				}
+			}
+		}
+
+		if (m_need_calculate_pos) {
+			CalculateColumnPos();
+			m_need_calculate_pos = false;
+		}
 	}
+#endif // !OES_USE_WEB
 }
 
 void ibValueModelTableBox::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(obj);
-	m_dataViewCreated = m_dataViewUpdated = false;
+	m_dataViewCreated = false;
 	if (dataViewCtrl != nullptr) dataViewCtrl->AssociateModel(nullptr);
-	m_tableCurrentLine.Reset();
+#endif
 }
 
 //***********************************************************************************
@@ -485,6 +644,8 @@ bool ibValueModelTableBox::LoadData(ibReaderMemory& reader)
 	m_eventBeforeAddRow->LoadData(reader);
 	m_eventBeforeDeleteRow->LoadData(reader);
 	m_eventOnActivateRow->LoadData(reader);
+	m_eventOnAddRow->LoadData(reader);
+	m_eventOnDeleteRow->LoadData(reader);
 
 	return ibValueWindow::LoadData(reader);
 }
@@ -509,6 +670,8 @@ bool ibValueModelTableBox::SaveData(ibWriterMemory& writer)
 	m_eventBeforeAddRow->SaveData(writer);
 	m_eventBeforeDeleteRow->SaveData(writer);
 	m_eventOnActivateRow->SaveData(writer);
+	m_eventOnAddRow->SaveData(writer);
+	m_eventOnDeleteRow->SaveData(writer);
 
 	return ibValueWindow::SaveData(writer);
 }
@@ -546,22 +709,23 @@ bool ibValueModelTableBox::SetPropVal(const long lPropNum, const ibValue& varPro
 		}
 		else if (lPropData == eCurrentRow) {
 			ibValueModelTableBase::ibValueModelReturnLine* tableReturnLine = nullptr;
-			if (varPropVal.ConvertToValue(tableReturnLine)) {
-				if (m_tableModel == tableReturnLine->GetOwnerModel())
-					m_tableCurrentLine = tableReturnLine;
-				else m_tableCurrentLine.Reset();
+			if (varPropVal.ConvertToValue(tableReturnLine)
+			    && m_tableModel == tableReturnLine->GetOwnerModel()) {
+				ApplyCurrentLine(tableReturnLine);
 			}
 			else {
-				m_tableCurrentLine.Reset();
+				ApplyCurrentLine(nullptr);
 			}
 		}
 	}
 
 	bool result = ibValueFrame::SetPropVal(lPropNum, varPropVal);
 
+#ifndef OES_USE_WEB
 	if (refreshColumn && m_tableModel != nullptr && m_tableModel->AutoCreateColumn()) {
 		ibValueModelTableBox::CreateColumnCollection();
 	}
+#endif
 
 	return result;
 }
@@ -582,6 +746,25 @@ bool ibValueModelTableBox::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 	}
 	return ibValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
+
+#ifdef OES_USE_WEB
+// Methods declared in tableBox.h but normally implemented in the
+// auxiliary tableBox*.cpp files (Event/Property/Action/Menu) — those
+// aren't compiled on web, so provide no-op stubs here so the linker
+// finds them.
+void ibValueModelTableBox::OnPropertyCreated(ibProperty* /*property*/) {}
+bool ibValueModelTableBox::OnPropertyChanging(ibProperty* /*property*/, const wxVariant& /*newValue*/) { return true; }
+void ibValueModelTableBox::OnPropertyChanged(ibProperty* /*property*/, const wxVariant& /*oldValue*/, const wxVariant& /*newValue*/) {}
+
+ibValueModelTableBox::ibActionCollection ibValueModelTableBox::GetActionCollection(const ibFormID& /*formType*/)
+{
+	return ibActionCollection();
+}
+void ibValueModelTableBox::ExecuteAction(const ibActionID& /*lNumAction*/, ibBackendValueForm* /*srcForm*/) {}
+
+void ibValueModelTableBox::PrepareDefaultMenu(wxMenu* /*m_menu*/) {}
+void ibValueModelTableBox::ExecuteMenu(ibVisualHost* /*visualHost*/, int /*id*/) {}
+#endif // OES_USE_WEB
 
 //***********************************************************************
 //*                       Register in runtime                           *

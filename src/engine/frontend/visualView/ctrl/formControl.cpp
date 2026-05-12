@@ -27,24 +27,33 @@ ibValueForm::ibValueFormCollectionControl::~ibValueFormCollectionControl()
 	wxDELETE(m_methodHelper);
 }
 
-ibValue ibValueForm::ibValueFormCollectionControl::GetIteratorEmpty()
+std::shared_ptr<ibValueIteratorState> ibValueForm::ibValueFormCollectionControl::CreateIterator()
 {
-	return ibValue::CreateAndPrepareValueRef<ibValueContainer::ibValueReturnContainer>();
-}
-
-ibValue ibValueForm::ibValueFormCollectionControl::GetIteratorAt(unsigned int idx)
-{
-	if (m_formOwner->m_listControl.size() < idx)
-		return ibValue();
-
-	auto structurePos = m_formOwner->m_listControl.begin();
-	std::advance(structurePos, idx);
-
-	ibValue controlValue(*structurePos);
-	return ibValue::CreateAndPrepareValueRef<ibValueContainer::ibValueReturnContainer>(
-		(*structurePos)->GetControlName(),
-		controlValue
-	);
+	using ListT = std::decay_t<decltype(m_formOwner->m_listControl)>;
+	class State : public ibValueIteratorState {
+	public:
+		explicit State(const ListT& list) : m_list(list), m_it(list.begin()) {}
+		bool MoveNext(ibValue& current) override {
+			if (m_started) ++m_it; else m_started = true;
+			if (m_it == m_list.end()) return false;
+			ibValue controlValue(*m_it);
+			current = ibValue(static_cast<ibValue*>(
+				ibValue::CreateAndPrepareValueRef<ibValueContainer::ibValueReturnContainer>(
+					(*m_it)->GetControlName(), controlValue)));
+			return true;
+		}
+		void Reset() override { m_it = m_list.begin(); m_started = false; }
+		bool PeekSample(ibValue& current) const override {
+			current = ibValue(static_cast<ibValue*>(
+				ibValue::CreateAndPrepareValueRef<ibValueContainer::ibValueReturnContainer>()));
+			return true;
+		}
+	private:
+		const ListT& m_list;
+		ListT::const_iterator m_it;
+		bool m_started = false;
+	};
+	return std::make_shared<State>(m_formOwner->m_listControl);
 }
 
 bool ibValueForm::ibValueFormCollectionControl::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)

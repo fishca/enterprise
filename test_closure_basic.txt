@@ -1,0 +1,21 @@
+// Phase A — compile-side closure capture test.
+//
+// Verifies:
+//   * Lambda body references outer-fn local `n`.
+//   * Compile resolves `n` past lambda boundary, emits OPER_GET
+//     with m_numArray = 1 (lambda's m_pppArrayList[1] = captured
+//     outer frame in Phase B layout).
+//   * makeAdder's ibByteFunction.m_needsHeapFrame == true.
+//
+// Runtime stays broken — Phase B wires m_pppArrayList[1]. Until
+// then, calling add5(10) would read from a null/wrong frame.
+// Don't invoke; compile-only.
+
+function makeAdder(n)
+    return Function(x)
+        return x + n
+    EndFunction
+EndFunction
+
+var add5 = makeAdder(5)
+// Message(add5(10))   // expect 15 once Phase B lands

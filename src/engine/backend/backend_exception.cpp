@@ -8,6 +8,8 @@
 #include "backend/metadataConfiguration.h"
 #include "backend/debugger/debugServer.h"
 #include "backend/appData.h"
+#include "backend/compiler/procUnit.h"
+#include "backend/session/session.h"
 
 #include "backend_mainFrame.h"
 
@@ -85,7 +87,12 @@ static wxString gs_listErrorString[] =
 
 //////////////////////////////////////////////////////////////////////
 
-static bool gs_evalMode = false, gs_processBackendError = false;
+// Eval-mode and processing-backend-error flags moved from thread_local
+// onto ibSession (m_evalMode, m_processingBackendError). Per-session
+// scope means three sessions in debug-watch don't silence the other
+// two running regular business logic, and a debug worker thread can
+// read the parked session's eval-mode through Current() redirect
+// instead of seeing its own (always-false) thread_local.
 
 //////////////////////////////////////////////////////////////////////
 // Error handling
@@ -98,14 +105,15 @@ ibBackendException::ibBackendException(const wxString& strErrorDescription)
 	wxLogDebug(strErrorDescription);
 #endif // !DEBUG
 
-	ibProcUnit::Raise();
+	if (auto* puState = ibSession::GetPUState())
+		puState->Raise();
 
 	ms_strError = strErrorDescription;
 }
 
 #include "backend/metaCollection/metaModuleObject.h"
 
-void ibBackendException::ProcessError(const ibBackendException* err, const ibByteUnit& error)
+void ibBackendException::ProcessError(const ibBackendException& err, const ibByteUnit& error)
 {
 	const bool isEvalMode = ibBackendException::IsEvalMode();
 
@@ -113,7 +121,7 @@ void ibBackendException::ProcessError(const ibBackendException* err, const ibByt
 	const wxString& strModuleName = error.m_strModuleName;
 	const wxString& strDocPath = error.m_strDocPath;
 
-	if (err != nullptr && !err->m_errorHandled) {
+	if (!err.m_errorHandled) {
 
 		if (activeMetaData != nullptr) {
 
@@ -125,13 +133,17 @@ void ibBackendException::ProcessError(const ibBackendException* err, const ibByt
 				wxASSERT(foundedDoc);
 				strModuleData = foundedDoc->GetModuleText();
 			}
-			else if (!isEvalMode && !strFileName.IsEmpty() && backend_mainFrame != nullptr) {
-				const ibMetaData* metadata = backend_mainFrame->FindMetadataByPath(strFileName);
-				wxASSERT(metadata);
-				const ibGuid& guidDocPath = error.m_strDocPath;
-				const ibValueMetaObjectModuleBase* foundedDoc = metadata->FindAnyObjectByFilter<ibValueMetaObjectModuleBase>(guidDocPath, true);
-				wxASSERT(foundedDoc);
-				strModuleData = foundedDoc->GetModuleText();
+			else if (!isEvalMode && !strFileName.IsEmpty()) {
+				// Frame from the session's CurrentFrame() shortcut —
+				// reaches this thread's pinned session via worker scope.
+				if (auto* frame = ibSession::CurrentFrame()) {
+					const ibMetaData* metadata = frame->FindMetadataByPath(strFileName);
+					wxASSERT(metadata);
+					const ibGuid& guidDocPath = error.m_strDocPath;
+					const ibValueMetaObjectModuleBase* foundedDoc = metadata->FindAnyObjectByFilter<ibValueMetaObjectModuleBase>(guidDocPath, true);
+					wxASSERT(foundedDoc);
+					strModuleData = foundedDoc->GetModuleText();
+				}
 			}
 
 			const wxString strCodeError = isEvalMode ? wxString(wxEmptyString) :
@@ -140,7 +152,7 @@ void ibBackendException::ProcessError(const ibBackendException* err, const ibByt
 			ibBackendException::ProcessExceptionError(strFileName,
 				strModuleName, strDocPath,
 				error.m_numString, isEvalMode ? error.m_numLine : error.m_numLine + 1,
-				strCodeError, wxNOT_FOUND, err->GetErrorDescription()
+				strCodeError, wxNOT_FOUND, err.GetErrorDescription()
 			);
 		}
 		else {
@@ -148,15 +160,17 @@ void ibBackendException::ProcessError(const ibBackendException* err, const ibByt
 			ibBackendException::ProcessExceptionError(strFileName,
 				strModuleName, strDocPath,
 				error.m_numString, error.m_numLine + 1,
-				wxEmptyString, wxNOT_FOUND, err->GetErrorDescription()
+				wxEmptyString, wxNOT_FOUND, err.GetErrorDescription()
 			);
 		}
 
-		err->m_errorHandled = true;
+		err.m_errorHandled = true;
 	}
 
-	//throw this exception
-	throw(err);
+	// Rethrow the in-flight exception — ProcessError is always called from a
+	// catch block in procUnit, so `throw;` keeps the same object propagating
+	// (preserving m_errorHandled) without allocating a new copy.
+	throw;
 }
 
 void ibBackendException::ProcessError(const wxString& strFileName,
@@ -178,40 +192,52 @@ wxString ibBackendException::ProcessExceptionError(const wxString& strFileName,
 {
 	wxString strErrorMessage;
 
-	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (gs_evalMode ? wxString(wxT(" ")) : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
+	const bool isEvalMode = ibBackendException::IsEvalMode();
+	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (isEvalMode ? wxString(wxT(" ")) : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
 	strErrorMessage += (codeError > 0 ? ibBackendException::Format(codeError, strErrorDesc) : strErrorDesc) + wxT("\n");
-	strErrorMessage += (gs_evalMode ? wxString(wxEmptyString) : strCodeError);
+	strErrorMessage += (isEvalMode ? wxString(wxEmptyString) : strCodeError);
 
-	if (gs_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
+	if (isEvalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
 
-	if (!gs_evalMode && backend_mainFrame != nullptr) {
+	if (!isEvalMode) {
 
-		// set stack 
-		wxString strStackMessage;
+		// Frame via the session pinned by the worker scope — single
+		// canonical entry point through ibSession::CurrentFrame.
+		// Null when no scope is active or session has no UI.
+		auto* frame = ibSession::CurrentFrame();
 
-		for (unsigned int i = 0; i < ibProcUnit::GetCountRunContext(); i++) {
-			const ibRunContext* stackContext = ibProcUnit::GetRunContext(i);
-			wxASSERT(stackContext);
-			const ibByteCode* stackByteCode = stackContext->GetByteCode();
-			wxASSERT(stackByteCode);
-			strStackMessage += wxString::Format(wxT("\n%i: %s (#line %d)"),
-				i + 1,
-				stackByteCode->m_strModuleName,
-				stackByteCode->m_listCode[stackContext->m_lCurLine].m_numLine + 1
+		if (frame != nullptr) {
+			// set stack
+			wxString strStackMessage;
+
+			auto* puState = ibSession::GetPUState();
+			const unsigned int frameCount = puState ? puState->GetCountRunContext() : 0;
+			for (unsigned int i = 0; i < frameCount; i++) {
+				const ibRunContext* stackContext = puState->GetRunContext(i);
+				wxASSERT(stackContext);
+				const ibByteCode* stackByteCode = stackContext->GetByteCode();
+				wxASSERT(stackByteCode);
+				strStackMessage += wxString::Format(wxT("\n%i: %s (#line %d)"),
+					i + 1,
+					stackByteCode->m_strModuleName,
+					stackByteCode->m_listCode[stackContext->m_lCurLine].m_numLine + 1
+				);
+			}
+
+			if (auto* sess = ibSession::Current())
+				sess->SetProcessingBackendError(true);
+
+			//show message
+			frame->BackendError(
+				strFileName,
+				strDocPath,
+				currLine,
+				strErrorMessage + (strStackMessage.IsEmpty() ? wxT("") : wxT("\n\nCall stack:") + strStackMessage)
 			);
+
+			if (auto* sess = ibSession::Current())
+				sess->SetProcessingBackendError(false);
 		}
-
-		gs_processBackendError = true;
-
-		//show message
-		backend_mainFrame->BackendError(
-			strFileName,
-			strDocPath,
-			currLine,
-			strErrorMessage + (strStackMessage.IsEmpty() ? wxT("") : wxT("\n\nCall stack:") + strStackMessage)
-		);
-
-		gs_processBackendError = false;
 	}
 
 	ms_strError = strErrorMessage;
@@ -236,17 +262,20 @@ const wxString& ibBackendException::GetErrorDesc(int codeError)
 
 bool ibBackendException::IsErrorOutputProcessing()
 {
-	return gs_processBackendError;
+	auto* sess = ibSession::Current();
+	return sess != nullptr && sess->IsProcessingBackendError();
 }
 
 void ibBackendException::SetEvalMode(bool mode)
 {
-	gs_evalMode = mode;
+	if (auto* sess = ibSession::Current())
+		sess->SetEvalMode(mode);
 }
 
 bool ibBackendException::IsEvalMode()
 {
-	return gs_evalMode;
+	auto* sess = ibSession::Current();
+	return sess != nullptr && sess->IsEvalMode();
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -311,8 +340,8 @@ wxString ibBackendException::FindErrorCodeLine(const wxString& strBuffer, unsign
 	unsigned int currLine = 1 + strBuffer.Left(startPos).Replace(wxT('\n'), wxT('\n'));
 
 	wxString strError = wxString::Format(wxT("%s <<?>> %s"), strBuffer.Mid(startPos, currPos - startPos), strBuffer.Mid(currPos, endPos - currPos));
-	strError.Replace('\r', '\0');
-	strError.Replace('\t', ' ');
+	strError.Replace(wxT("\r"), wxEmptyString);
+	strError.Replace(wxT("\t"), wxT(" "));
 
 	stringUtils::TrimAll(strError);
 
@@ -332,7 +361,7 @@ void ibBackendCoreException::DoErrorWchar(const wxChar* format, ...)
 	const wxString& strErrorBuffer =
 		FormatV(format, args);
 
-	throw(new ibBackendCoreException(strErrorBuffer));
+	throw ibBackendCoreException(strErrorBuffer);
 }
 #endif
 
@@ -347,12 +376,12 @@ void ibBackendCoreException::DoErrorUtf8(const wxChar* format, ...)
 
 void ibBackendInterruptException::Error()
 {
-	throw(new ibBackendInterruptException);
+	throw ibBackendInterruptException();
 }
 
 void ibBackendAccessException::Error()
 {
-	throw(new ibBackendAccessException);
+	throw ibBackendAccessException();
 }
 
 #pragma endregion

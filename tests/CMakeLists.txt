@@ -29,6 +29,13 @@ FetchContent_MakeAvailable(googletest)
 add_executable(oes_tests
     test_clsid.cpp
     test_value.cpp
+    test_number.cpp
+    test_byteCodeAOT.cpp
+    test_compiler.cpp
+    test_runtime.cpp
+    test_connectionPool.cpp
+    test_session.cpp
+    test_pagingRamTable.cpp
 )
 
 target_link_libraries(oes_tests

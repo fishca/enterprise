@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : constants - db
 ////////////////////////////////////////////////////////////////////////////
@@ -8,20 +8,18 @@
 #include "backend/system/systemManager.h"
 
 #include "backend/appData.h"
+#include "backend/databaseLayer/connectionPool.h"
+#include "backend/session/session.h"
 
 //***********************************************************************
 //*                           constant value                            *
 //***********************************************************************
 
-ibValueRecordDataObjectConstant* ibValueMetaObjectConstant::CreateRecordDataObjectValue()
+ibValueRecordDataObjectConstant* ibValueMetaObjectConstant::CreateRecordDataObjectValue() const
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
 	ibValueRecordDataObjectConstant* pDataRef = nullptr;
-
-	if (appData->DesignerMode()) {
-		if (!moduleManager->FindCompileModule(m_propertyModule->GetMetaObject(), pDataRef))
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (!cc->FindCompileModule(m_propertyModule->GetMetaObject(), pDataRef))
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectConstant>(this);
 	}
 	else {
@@ -37,46 +35,42 @@ ibValueRecordDataObjectConstant* ibValueMetaObjectConstant::CreateRecordDataObje
 
 bool ibValueRecordDataObjectConstant::InitializeObject(const ibValueRecordDataObjectConstant* source)
 {
-	ibMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibSession* session = ibSession::Current();
+	ibValueModuleManager* moduleManager = session ? session->GetManagerModule() : nullptr;
 	wxASSERT(moduleManager);
 
-	if (!m_compileModule) {
-		m_compileModule = new ibCompileModule(m_metaObject->GetModuleObject());
-		m_compileModule->SetParent(moduleManager->GetCompileModule());
-		m_compileModule->AddContextVariable(wxT("ThisObject"), this);
-	}
+	// Descriptor parent first — subsequent BindVariable /
+	// InitializeRuntime picks up the parent on lazy creation, no
+	// after-fact cascade needed.
+	ibRuntimeModuleDataObject::SetParent(moduleManager);
+	BindContextVariable(wxT("ThisObject"), this);
 
 	try {
 		m_constValue = GetConstValue();
 	}
-	catch (const ibBackendException* err) {
+	catch (const ibBackendException&) {
 		if (!appData->DesignerMode())
-			throw(err);
+			throw;
 		return false;
 	}
 
-	if (!appData->DesignerMode()) {
-		m_procUnit = new ibProcUnit();
-		m_procUnit->SetParent(moduleManager->GetProcUnit());
-		try {
-			m_compileModule->Compile();
-		}
-		catch (const ibBackendException* err) {
-			if (!appData->DesignerMode())
-				throw(err);
-			return false;
-		};
-		m_procUnit->Execute(m_compileModule->m_cByteCode, true);
+	InitializeRuntime();
+	try {
+		Compile();
 	}
+	catch (const ibBackendException&) {
+		if (!appData->DesignerMode())
+			throw;
+		return false;
+	};
+	Run(true);
 
 	PrepareNames();
 	//is Ok
 	return true;
 }
 
-ibValueRecordDataObjectConstant::ibValueRecordDataObjectConstant(ibValueMetaObjectConstant* metaObject)
+ibValueRecordDataObjectConstant::ibValueRecordDataObjectConstant(const ibValueMetaObjectConstant* metaObject)
 	: m_metaObject(metaObject), m_objModified(false), m_methodHelper(new ibValueMethodHelper())
 {
 	InitializeObject();
@@ -219,27 +213,7 @@ void ibValueRecordDataObjectConstant::PrepareNames() const
 		true, true, eValue, eSystem
 	);
 
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-			for (auto exportVariable : byteCode->m_listExportVar) {
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
 bool ibValueRecordDataObjectConstant::SetPropVal(const long lPropNum, const ibValue& varPropVal)
@@ -329,126 +303,101 @@ ibValue ibValueRecordDataObjectConstant::GetConstValue() const
 	return ret;
 }
 
-#include "backend/backend_mainFrame.h"
-#include "backend/databaseLayer/databaseErrorCodes.h" 
+#include "backend/databaseLayer/databaseErrorCodes.h"
 
 bool ibValueRecordDataObjectConstant::SetConstValue(const ibValue& cValue)
 {
-	if (!appData->DesignerMode()) {
+	if (appData->DesignerMode())
+		return true;
 
-		const ibValue& constValue = m_constValue;
+	if (!m_metaObject->AccessRight_Write()) {
+		ibBackendAccessException::Error();
+		return false;
+	}
 
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
-			ibBackendCoreException::Error(_("Database is not open!"));
+	const ibValue& constValue = m_constValue;
 
-		if (!m_metaObject->AccessRight_Write()) {
-			ibBackendAccessException::Error();
+	// Session-bound RAII scope — Acquires the session's conn, scope dtor
+	// rolls back any uncommitted TX on early return / exception.
+	ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+	if (!scope || !scope->IsOpen())
+		ibBackendCoreException::Error(_("Database is not open!"));
+
+	const wxString& tableName = m_metaObject->GetTableNameDB();
+	ibBackendValueForm* const valueForm = GetForm();
+
+	scope.SafeBeginTransaction();
+
+	auto rollback = [&]() {
+		m_constValue = constValue;
+		scope.SafeRollBackTransaction();
+	};
+
+	{
+		ibValue cancel = false;
+		ExecAsProc(wxT("BeforeWrite"), cancel);
+		if (cancel.GetBoolean()) {
+			rollback();
+			ibBackendCoreException::Error(_("failed to write object in db!"));
 			return false;
 		}
+	}
 
-		const wxString& tableName = m_metaObject->GetTableNameDB();
-		const wxString& fieldName = m_metaObject->GetFieldNameDB();
+	m_constValue = m_metaObject->AdjustValue(cValue);
 
-		if (db_query->TableExists(tableName)) {
+	if (m_metaObject->FillCheck() && m_constValue.IsEmpty()) {
+		const wxString fillError =
+			wxString::Format(_("""%s"" is a required field"), m_metaObject->GetSynonym());
+		ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
+		rollback();
+		return false;
+	}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
-			{
-				ibBackendValueForm* const valueForm = GetForm();
+	wxString sqlText;
+	const bool isFB = (scope->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD);
+	if (isFB) {
+		sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_metaObject); ++i)
+			sqlText += "?,";
+		sqlText += "'6') MATCHING(RECORD_KEY);";
+	} else {
+		sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_metaObject); ++i)
+			sqlText += "?,";
+		sqlText += "'6') ON CONFLICT (RECORD_KEY) DO UPDATE SET "
+		         + ibValueMetaObjectAttributeBase::GetExcludeSQLFieldName(m_metaObject) + ";";
+	}
 
-				db_query_active_transaction.BeginTransaction();
-				{
-					ibValue cancel = false;
+	ibStatementGuard statement(scope.get(), scope->PrepareStatement(
+		sqlText, tableName, ibValueMetaObjectAttributeBase::GetSQLFieldName(m_metaObject)));
+	if (!statement) {
+		rollback();
+		return false;
+	}
 
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+	int position = 1;
+	ibValueMetaObjectAttributeBase::SetValueAttribute(
+		m_metaObject, m_constValue, statement.get(), position);
 
-					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("failed to write object in db!"));
-						return false;
-					}
-				}
+	if (statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR) {
+		rollback();
+		ibBackendCoreException::Error(_("Failed to write object in db!"));
+		return false;
+	}
 
-				m_constValue = m_metaObject->AdjustValue(cValue);
-
-				//check fill attributes 
-				bool fillCheck = true;
-
-				if (m_metaObject->FillCheck()) {
-					if (m_constValue.IsEmpty()) {
-						wxString fillError =
-							wxString::Format(_("""%s"" is a required field"), m_metaObject->GetSynonym());
-						ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
-						fillCheck = false;
-					}
-				}
-
-				if (!fillCheck) {
-					m_constValue = constValue;
-					return false;
-				}
-
-				wxString sqlText = "";
-
-				if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
-					sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-					for (unsigned int idx = 0; idx < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_metaObject); idx++) {
-						sqlText += "?,";
-					}
-					sqlText += "'6')";
-					sqlText += " ON CONFLICT (RECORD_KEY) ";
-					sqlText += " DO UPDATE SET " + ibValueMetaObjectAttributeBase::GetExcludeSQLFieldName(m_metaObject) + ";";
-				}
-				else {
-					sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-					for (unsigned int idx = 0; idx < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_metaObject); idx++) {
-						sqlText += "?,";
-					}
-					sqlText += "'6') MATCHING(RECORD_KEY);";
-				}
-
-				ibPreparedStatement* statement =
-					db_query->PrepareStatement(sqlText, tableName, ibValueMetaObjectAttributeBase::GetSQLFieldName(m_metaObject));
-
-				if (statement == nullptr) {
-					m_constValue = constValue;
-					return false;
-				}
-
-				int position = 1;
-
-				ibValueMetaObjectAttributeBase::SetValueAttribute(
-					m_metaObject,
-					m_constValue,
-					statement,
-					position
-				);
-
-				bool hasError = statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR;
-				db_query->CloseStatement(statement);
-
-				if (hasError) {
-					m_constValue = constValue;
-					db_query_active_transaction.RollBackTransaction();
-					ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
-				}
-
-				{
-					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
-					if (cancel.GetBoolean()) {
-						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
-					}
-				}
-
-				db_query_active_transaction.CommitTransaction();
-
-				if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
-			}
+	{
+		ibValue cancel = false;
+		ExecAsProc(wxT("OnWrite"), cancel);
+		if (cancel.GetBoolean()) {
+			rollback();
+			ibBackendCoreException::Error(_("Failed to write object in db!"));
+			return false;
 		}
 	}
+
+	scope.SafeCommitTransaction();
+
+	if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
 
 	return true;
 }

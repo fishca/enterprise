@@ -24,6 +24,7 @@
 #include "artProvider/codeEditor/syntaxControl.xpm"
 #include "artProvider/codeEditor/gotoLine.xpm"
 #include "artProvider/codeEditor/proceduresFunctions.xpm"
+#include "artProvider/codeEditor/formatCode.xpm"
 
 #include "artProvider/designer/designerPage.xpm"
 #include "artProvider/designer/codePage.xpm"
@@ -91,6 +92,7 @@ protected:
 			{ wxART_DOC_MODULE, wxART_SYNTAX_CONTROL, s_syntaxControl_xpm },
 			{ wxART_DOC_MODULE, wxART_GOTO_LINE, s_gotoLine_xpm },
 			{ wxART_DOC_MODULE, wxART_PROC_AND_FUNC, s_proceduresFunctions_xpm },
+			{ wxART_DOC_MODULE, wxART_FORMAT_CODE, s_formatCode_xpm },
 
 			// ******* wxART_DOC_FORM *******
 			{ wxART_DOC_FORM, wxART_DESIGNER_PAGE, s_designerPage_xpm },

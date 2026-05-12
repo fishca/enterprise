@@ -1,10 +1,11 @@
-#ifndef __CHART_OF_ACCOUNTS_H__
+﻿#ifndef __CHART_OF_ACCOUNTS_H__
 #define __CHART_OF_ACCOUNTS_H__
 
 #include "commonObject.h"
 #include "reference/reference.h"
 #include "chartOfAccountsEnum.h"
-#include "backend/propertyManager/property/propertyOwner.h"
+#include "chartOfAccountsSubcontoTable.h"
+#include "backend/propertyManager/property/propertyChartOfCharacteristicTypes.h"
 
 //********************************************************************************************
 //*                                  Factory & metaData                                      *
@@ -48,8 +49,10 @@ public:
 	ibValueMetaObjectAttributePredefined* GetCurrency() const { return m_propertyAttributeCurrency->GetMetaObject(); }
 	ibValueMetaObjectAttributePredefined* GetMaxSubcontoCount() const { return m_propertyAttributeMaxSubcontoCount->GetMetaObject(); }
 
+	ibValueMetaObjectSubcontoKindsTable* GetSubcontoKindsTable() const { return m_propertySubcontoKindsTable->GetMetaObject(); }
+
 	// Chart of Characteristic Types binding (determines available subconto types)
-	ibPropertyOwner* GetChartOfCharacteristicTypes() const { return m_propertyChartOfCharacteristicTypes; }
+	ibPropertyChartOfCharacteristicTypes* GetChartOfCharacteristicTypes() const { return m_propertyChartOfCharacteristicTypes; }
 
 	//default constructor
 	ibValueMetaObjectChartOfAccounts();
@@ -89,19 +92,19 @@ public:
 
 #pragma region _form_builder_h_
 	//support form
-	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
+	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
+	virtual ibBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
+	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
+	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
+	virtual ibBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
 #pragma endregion
 
 	//descriptions...
 	wxString GetDataPresentation(const ibValueDataObject* objValue) const;
 
 	//get module object in compose object
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual const ibValueMetaObjectModule* GetObjectModule() const { return m_propertyObjectModule->GetMetaObject(); }
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const { return m_propertyManagerModule->GetMetaObject(); }
 
 	/**
 	* Property events
@@ -113,7 +116,7 @@ public:
 protected:
 
 	//predefined array
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 		array = {
 			m_propertyAttributePredefined->GetMetaObject(),
 			m_propertyAttributeCode->GetMetaObject(),
@@ -131,6 +134,12 @@ protected:
 		return true;
 	}
 
+	virtual bool FillArrayObjectByPredefinedTable(
+		std::vector<ibValueMetaObjectTableData*>& array) const {
+		array = { m_propertySubcontoKindsTable->GetMetaObject() };
+		return true;
+	}
+
 	//searched array
 	virtual bool FillArrayObjectBySearched(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 		array = {
@@ -141,13 +150,16 @@ protected:
 	}
 
 	//create manager
-	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
+	virtual ibValueManagerDataObject* CreateManagerDataObjectValue() const;
 
 	//create empty object
-	virtual ibValueRecordDataObjectHierarchyRef* CreateObjectRefValue(ibObjectMode mode, const ibGuid& guid = wxNullGuid);
+	virtual ibValueRecordDataObjectHierarchyRef* CreateObjectRefValue(ibObjectMode mode, const ibGuid& guid = wxNullGuid) const;
 
 	//create object data with meta form
-	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
+	virtual ibSourceDataObject* CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const;
+
+	//create and update table 
+	virtual bool CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
 
 	//load & save metaData from DB
 	virtual bool LoadData(ibReaderMemory& reader);
@@ -209,8 +221,8 @@ private:
 		return true;
 	}
 
-	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModuleObject = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
-	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyModuleManager = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
+	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyObjectModule = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
+	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyManagerModule = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
 
 	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
 
@@ -225,34 +237,31 @@ private:
 
 	ibPropertyCategory* m_categoryAccounting = ibPropertyObject::CreatePropertyCategory(wxT("Accounting"), _("Accounting"));
 
-	ibPropertyInnerAttribute<>* m_propertyAttributeAccountType = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryAccounting,
-		ibValueMetaObjectCompositeData::CreateNumber(wxT("AccountType"), _("Account type"), wxEmptyString, 1, 0, ibItemMode::ibItemMode_Folder_Item));
+	ibPropertyContainer<>* m_propertyAttributeAccountType = ibPropertyObject::CreateProperty<ibPropertyContainer<>>(m_categoryAccounting,
+		ibValueMetaObjectCompositeData::CreateSpecialType(wxT("AccountType"), _("Account type"), wxEmptyString, g_enumAccountTypeCLSID, false, ibValueEnumAccountType::CreateDefEnumValue()));
 
-	ibPropertyInnerAttribute<>* m_propertyAttributeOffBalance = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryAccounting,
+	ibPropertyContainer<>* m_propertyAttributeOffBalance = ibPropertyObject::CreateProperty<ibPropertyContainer<>>(m_categoryAccounting,
 		ibValueMetaObjectCompositeData::CreateBoolean(wxT("OffBalance"), _("Off-balance"), wxEmptyString, ibItemMode::ibItemMode_Folder_Item));
 
-	ibPropertyInnerAttribute<>* m_propertyAttributeQuantitative = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryAccounting,
+	ibPropertyContainer<>* m_propertyAttributeQuantitative = ibPropertyObject::CreateProperty<ibPropertyContainer<>>(m_categoryAccounting,
 		ibValueMetaObjectCompositeData::CreateBoolean(wxT("Quantitative"), _("Quantitative"), wxEmptyString, ibItemMode::ibItemMode_Folder_Item));
 
-	ibPropertyInnerAttribute<>* m_propertyAttributeCurrency = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryAccounting,
+	ibPropertyContainer<>* m_propertyAttributeCurrency = ibPropertyObject::CreateProperty<ibPropertyContainer<>>(m_categoryAccounting,
 		ibValueMetaObjectCompositeData::CreateBoolean(wxT("Currency"), _("Currency accounting"), wxEmptyString, ibItemMode::ibItemMode_Folder_Item));
 
-	ibPropertyInnerAttribute<>* m_propertyAttributeMaxSubcontoCount = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryAccounting,
+	ibPropertyContainer<>* m_propertyAttributeMaxSubcontoCount = ibPropertyObject::CreateProperty<ibPropertyContainer<>>(m_categoryAccounting,
 		ibValueMetaObjectCompositeData::CreateNumber(wxT("MaxSubcontoCount"), _("Max subconto count"), wxEmptyString, 1, 0, ibItemMode::ibItemMode_Folder_Item));
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Chart of Characteristic Types binding (determines subconto types available for this chart of accounts)
 	ibPropertyCategory* m_categoryData = ibPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
-	ibPropertyOwner* m_propertyChartOfCharacteristicTypes = ibPropertyObject::CreateProperty<ibPropertyOwner>(m_categoryData, wxT("ChartOfCharacteristicTypes"), _("Chart of characteristic types"));
+	ibPropertyChartOfCharacteristicTypes* m_propertyChartOfCharacteristicTypes = ibPropertyObject::CreateProperty<ibPropertyChartOfCharacteristicTypes>(m_categoryData, wxT("ChartOfCharacteristicTypes"), _("Chart of characteristic types"));
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Predefined tabular section "SubcontoKinds" — created in OnCreateMetaObject
-	// Columns: SubcontoKind (ref to ПВХ), Order (number), SummaryOnly (boolean)
-	ibValueMetaObjectTableData* m_subcontoKindsTable = nullptr;
-
-	// Helper to find or create the predefined SubcontoKinds table
-	ibValueMetaObjectTableData* FindSubcontoKindsTable() const;
-	void CreateSubcontoKindsTable(ibMetaData* metaData, int flags);
+	// Predefined tabular section "SubcontoKinds" — own meta class with predefined columns
+	// Created manually because ibPropertyContainer template can't pass args to non-default constructor via wxClassInfo
+	ibPropertyContainer<ibValueMetaObjectSubcontoKindsTable>* m_propertySubcontoKindsTable =
+		ibPropertyObject::CreateProperty<ibPropertyContainer<ibValueMetaObjectSubcontoKindsTable>>(m_categoryAccounting, wxT("SubcontoKinds"), _("Subconto kinds"));
 
 	friend class ibValueRecordDataObjectChartOfAccounts;
 	friend class ibMetaData;
@@ -263,7 +272,7 @@ private:
 //********************************************************************************************
 
 class ibValueRecordDataObjectChartOfAccounts : public ibValueRecordDataObjectHierarchyRef {
-	ibValueRecordDataObjectChartOfAccounts(ibValueMetaObjectChartOfAccounts* metaObject, const ibGuid& objGuid = wxNullGuid, ibObjectMode objMode = ibObjectMode::OBJECT_ITEM);
+	ibValueRecordDataObjectChartOfAccounts(const ibValueMetaObjectChartOfAccounts* metaObject, const ibGuid& objGuid = wxNullGuid, ibObjectMode objMode = ibObjectMode::OBJECT_ITEM);
 	ibValueRecordDataObjectChartOfAccounts(const ibValueRecordDataObjectChartOfAccounts& source);
 public:
 

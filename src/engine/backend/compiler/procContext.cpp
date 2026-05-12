@@ -26,7 +26,7 @@ ibRunContext::~ibRunContext()
 	}
 }
 
-ibByteCode* ibRunContext::GetByteCode() const
+const ibByteCode* ibRunContext::GetByteCode() const
 {
 	return m_procUnit != nullptr ?
 		m_procUnit->GetByteCode() : nullptr;

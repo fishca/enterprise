@@ -1,6 +1,7 @@
 #include "valueDatabase.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValuePreparedStatement, ibValue);
 
@@ -21,7 +22,7 @@ ibValuePreparedStatement::ibValuePreparedStatement(ibPreparedStatement* prepared
 ibValuePreparedStatement::~ibValuePreparedStatement()
 {
 	if (m_preparedStatement != nullptr)
-		db_query->CloseStatement(m_preparedStatement);
+		ses_query->CloseStatement(m_preparedStatement);
 }
 
 void ibValuePreparedStatement::PrepareNames() const

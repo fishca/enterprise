@@ -260,7 +260,7 @@ bool ibDatabaseLayerODBC::IsOpen()
 	return m_bIsConnected;
 }
 
-void ibDatabaseLayerODBC::BeginTransaction()
+void ibDatabaseLayerODBC::DoBeginTransaction(const ibTxOptions& opts)
 {
 	ResetErrorCodes();
 
@@ -270,9 +270,18 @@ void ibDatabaseLayerODBC::BeginTransaction()
 		InterpretErrorCodes(nRet);
 		ThrowDatabaseException();
 	}
+
+	// MSSQL's session-level lock-wait is set via `SET LOCK_TIMEOUT 0`.
+	// Works for any ODBC-linked MSSQL backend; other DBMSes behind ODBC
+	// ignore the statement (some error-out). Wrapped so a failing
+	// driver just falls back to default wait-mode.
+	if (opts.noWait) {
+		try { DoRunQuery(wxT("SET LOCK_TIMEOUT 0"), false); }
+		catch (...) { /* best-effort — MSSQL: ok; other DBMSes: no-op */ }
+	}
 }
 
-void ibDatabaseLayerODBC::Commit()
+void ibDatabaseLayerODBC::DoCommit()
 {
 	ResetErrorCodes();
 
@@ -291,7 +300,7 @@ void ibDatabaseLayerODBC::Commit()
 	}
 }
 
-void ibDatabaseLayerODBC::RollBack()
+void ibDatabaseLayerODBC::DoRollBack()
 {
 	ResetErrorCodes();
 
@@ -310,9 +319,40 @@ void ibDatabaseLayerODBC::RollBack()
 	}
 }
 
-bool ibDatabaseLayerODBC::IsActiveTransaction()
+// IsActiveTransaction inherits the base-class default (m_txDepth > 0).
+
+bool ibDatabaseLayerODBC::TryProbeRowLock(const wxString& tableName,
+                                           const wxString& pkColumn,
+                                           const wxString& pkValue)
 {
-	return false;
+	// Targets MSSQL (the common ODBC-reached backend). `SET LOCK_TIMEOUT 0`
+	// on the session turns blocking locks into immediate errors;
+	// `WITH (UPDLOCK, ROWLOCK)` asks MSSQL to take a row-level update
+	// lock for the SELECT. Combined, a held row surfaces as an
+	// exception instead of a blocked probe.
+	try { BeginTransaction({ /*.noWait=*/true }); }
+	catch (...) { return false; }
+
+	const wxString sql = wxT("SELECT ") + pkColumn + wxT(" FROM ")
+		+ tableName + wxT(" WITH (UPDLOCK, ROWLOCK) WHERE ")
+		+ pkColumn + wxT(" = ?");
+	ibPreparedStatement* stmt = DoPrepareStatement(sql);
+	bool gotLock = false;
+	if (stmt) {
+		stmt->SetParamString(1, pkValue);
+		try {
+			ibDatabaseResultSet* rs = stmt->RunQueryWithResults();
+			if (rs) {
+				if (rs->Next()) gotLock = true;
+				rs->Close();
+				CloseResultSet(rs);
+			}
+		}
+		catch (...) { gotLock = false; }
+		CloseStatement(stmt);
+	}
+	try { RollBack(); } catch (...) {}
+	return gotLock;
 }
 
 int ibDatabaseLayerODBC::DoRunQuery(const wxString& strQuery, bool bParseQuery)

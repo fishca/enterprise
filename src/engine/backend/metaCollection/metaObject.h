@@ -37,6 +37,7 @@ const ibClassID g_metaTemplateCLSID = string_to_clsid("MD_TMPL");
 const ibClassID g_metaModuleCLSID = string_to_clsid("MD_MOD");
 const ibClassID g_metaManagerCLSID = string_to_clsid("MD_MNGR");
 const ibClassID g_metaTableCLSID = string_to_clsid("MD_TBL");
+const ibClassID g_metaSubcontoKindsTableCLSID = string_to_clsid("MD_SKTB");
 const ibClassID g_metaEnumCLSID = string_to_clsid("MD_ENUM");
 const ibClassID g_metaDimensionCLSID = string_to_clsid("MD_DMNT");
 const ibClassID g_metaResourceCLSID = string_to_clsid("MD_RESS");
@@ -255,9 +256,9 @@ public:
 	//filter children element
 	virtual bool FilterChild(const ibClassID& clsid) const { return false; }
 
-	//process choice 
+	//process choice
 	virtual bool ProcessChoice(ibBackendControlFrame* ownerValue,
-		const wxString& strFormName, int selMode) {
+		const wxString& strFormName, enum ibSelectMode selMode) const {
 		return true;
 	}
 
@@ -356,10 +357,10 @@ public:
 		return array;
 	}
 
-#pragma endregion 
+#pragma endregion
 #pragma region __filter_h__
 
-	//any 
+	//any
 	template <typename _T1 = ibValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id) const {
 		return FindObjectByFilter<_T1>(id, {});
@@ -484,7 +485,7 @@ protected:
 			}
 		}
 
-		//self 
+		//self
 		if (stringUtils::CompareString(name, GetName()))
 			return dynamic_cast<_T1*>(const_cast<ibValueMetaObject*>(this));
 
@@ -531,7 +532,7 @@ protected:
 			}
 		}
 
-		//self 
+		//self
 		if (CompareId(id))
 			return dynamic_cast<_T1*>(const_cast<ibValueMetaObject*>(this));
 
@@ -578,7 +579,7 @@ protected:
 			}
 		}
 
-		//self 
+		//self
 		if (CompareGuid(id))
 			return dynamic_cast<_T1*>(const_cast<ibValueMetaObject*>(this));
 

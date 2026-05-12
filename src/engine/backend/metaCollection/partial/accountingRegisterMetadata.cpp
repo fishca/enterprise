@@ -1,9 +1,10 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : accounting register metaData
 ////////////////////////////////////////////////////////////////////////////
 
 #include "accountingRegister.h"
+#include "chartOfAccounts.h"
 #include "list/objectList.h"
 #include "backend/metadataConfiguration.h"
 #include "backend/moduleManager/moduleManager.h"
@@ -12,8 +13,8 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectAccountingRegister, ibValueMetaObject
 
 ibValueMetaObjectAccountingRegister::ibValueMetaObjectAccountingRegister() : ibValueMetaObjectRegisterData()
 {
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
 }
 
 ibValueMetaObjectAccountingRegister::~ibValueMetaObjectAccountingRegister()
@@ -28,7 +29,7 @@ ibValueMetaObjectFormBase* ibValueMetaObjectAccountingRegister::GetDefaultFormBy
 }
 
 #pragma region _form_builder_h_
-ibBackendValueForm* ibValueMetaObjectAccountingRegister::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectAccountingRegister::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(strFormName, eFormList, ownerControl,
 		ibValue::CreateAndPrepareValueRef<ibValueListRegisterObject>(this, eFormList), formGuid);
@@ -47,8 +48,8 @@ bool ibValueMetaObjectAccountingRegister::LoadData(ibReaderMemory& dataReader)
 	if (!m_propertyChartOfAccounts->LoadData(dataReader))
 		return false;
 
-	(*m_propertyModuleObject)->LoadMeta(dataReader);
-	(*m_propertyModuleManager)->LoadMeta(dataReader);
+	(*m_propertyObjectModule)->LoadMeta(dataReader);
+	(*m_propertyManagerModule)->LoadMeta(dataReader);
 	return ibValueMetaObjectRegisterData::LoadData(dataReader);
 }
 
@@ -64,8 +65,8 @@ bool ibValueMetaObjectAccountingRegister::SaveData(ibWriterMemory& dataWritter)
 	if (!m_propertyChartOfAccounts->SaveData(dataWritter))
 		return false;
 
-	(*m_propertyModuleObject)->SaveMeta(dataWritter);
-	(*m_propertyModuleManager)->SaveMeta(dataWritter);
+	(*m_propertyObjectModule)->SaveMeta(dataWritter);
+	(*m_propertyManagerModule)->SaveMeta(dataWritter);
 	return ibValueMetaObjectRegisterData::SaveData(dataWritter);
 }
 
@@ -79,8 +80,8 @@ bool ibValueMetaObjectAccountingRegister::OnCreateMetaObject(ibMetaData* metaDat
 		(*m_propertyAttributeSubconto1)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeSubconto2)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeSubconto3)->OnCreateMetaObject(metaData, flags) &&
-		(*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags) &&
-		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags);
+		(*m_propertyManagerModule)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyObjectModule)->OnCreateMetaObject(metaData, flags);
 }
 
 bool ibValueMetaObjectAccountingRegister::OnLoadMetaObject(ibMetaData* metaData)
@@ -90,8 +91,8 @@ bool ibValueMetaObjectAccountingRegister::OnLoadMetaObject(ibMetaData* metaData)
 	if (!(*m_propertyAttributeSubconto1)->OnLoadMetaObject(metaData)) return false;
 	if (!(*m_propertyAttributeSubconto2)->OnLoadMetaObject(metaData)) return false;
 	if (!(*m_propertyAttributeSubconto3)->OnLoadMetaObject(metaData)) return false;
-	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData)) return false;
-	if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertyManagerModule)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertyObjectModule)->OnLoadMetaObject(metaData)) return false;
 	return ibValueMetaObjectRegisterData::OnLoadMetaObject(metaData);
 }
 
@@ -102,8 +103,8 @@ bool ibValueMetaObjectAccountingRegister::OnSaveMetaObject(int flags)
 	if (!(*m_propertyAttributeSubconto1)->OnSaveMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeSubconto2)->OnSaveMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeSubconto3)->OnSaveMetaObject(flags)) return false;
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags)) return false;
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyManagerModule)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyObjectModule)->OnSaveMetaObject(flags)) return false;
 	return ibValueMetaObjectRegisterData::OnSaveMetaObject(flags);
 }
 
@@ -114,18 +115,16 @@ bool ibValueMetaObjectAccountingRegister::OnDeleteMetaObject()
 	if (!(*m_propertyAttributeSubconto1)->OnDeleteMetaObject()) return false;
 	if (!(*m_propertyAttributeSubconto2)->OnDeleteMetaObject()) return false;
 	if (!(*m_propertyAttributeSubconto3)->OnDeleteMetaObject()) return false;
-	if (!(*m_propertyModuleManager)->OnDeleteMetaObject()) return false;
-	if (!(*m_propertyModuleObject)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyManagerModule)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyObjectModule)->OnDeleteMetaObject()) return false;
 	return ibValueMetaObjectRegisterData::OnDeleteMetaObject();
 }
 
 bool ibValueMetaObjectAccountingRegister::OnReloadMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordSetObjectAccountingRegister* recordSet = nullptr;
-		if (moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), recordSet)) {
+		if (cc->FindCompileModule(m_propertyObjectModule->GetMetaObject(), recordSet)) {
 			if (!recordSet->InitializeObject()) return false;
 		}
 	}
@@ -141,8 +140,8 @@ bool ibValueMetaObjectAccountingRegister::OnBeforeRunMetaObject(int flags)
 	if (!(*m_propertyAttributeSubconto1)->OnBeforeRunMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeSubconto2)->OnBeforeRunMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeSubconto3)->OnBeforeRunMetaObject(flags)) return false;
-	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags)) return false;
-	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyManagerModule)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyObjectModule)->OnBeforeRunMetaObject(flags)) return false;
 	registerSelection();
 	return ibValueMetaObjectRegisterData::OnBeforeRunMetaObject(flags);
 }
@@ -154,11 +153,9 @@ bool ibValueMetaObjectAccountingRegister::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyAttributeSubconto1)->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeSubconto2)->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeSubconto3)->OnAfterRunMetaObject(flags)) return false;
-	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) return false;
-	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertyManagerModule)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertyObjectModule)->OnAfterRunMetaObject(flags)) return false;
 
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 
 	// Set Account field type from Chart of Accounts binding
 	const ibMetaDescription& metaDesc = m_propertyChartOfAccounts->GetValueAsMetaDesc();
@@ -178,9 +175,40 @@ bool ibValueMetaObjectAccountingRegister::OnAfterRunMetaObject(int flags)
 	else
 		(*m_propertyAttributeAccount)->SetFlag(metaDisableFlag);
 
-	if (appData->DesignerMode()) {
+	// Set Subconto1/2/3 types from РџР’РҐ linked to the Chart of Accounts
+	// Find the Chart of Accounts and get its РџР’РҐ binding
+	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+		const ibValueMetaObject* chartOfAccounts = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
+		if (chartOfAccounts != nullptr) {
+			// Cast to ibValueMetaObjectChartOfAccounts to access РџР’РҐ binding
+			const ibValueMetaObjectChartOfAccounts* chartOfAccountsObj = nullptr;
+			if (chartOfAccounts->ConvertToValue(chartOfAccountsObj) && chartOfAccountsObj != nullptr) {
+				ibPropertyChartOfCharacteristicTypes* pvhBinding = chartOfAccountsObj->GetChartOfCharacteristicTypes();
+				if (pvhBinding != nullptr) {
+					const ibMetaDescription& pvhDesc = pvhBinding->GetValueAsMetaDesc();
+					ibTypeDescription subcontoTypeDesc;
+					for (unsigned int pvhIdx = 0; pvhIdx < pvhDesc.GetTypeCount(); pvhIdx++) {
+						const ibValueMetaObject* pvh = m_metaData->FindAnyObjectByFilter(pvhDesc.GetByIdx(pvhIdx));
+						if (pvh != nullptr) {
+							const ibCtorMetaValueType* pvhCtor = m_metaData->GetTypeCtor(pvh, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
+							if (pvhCtor != nullptr)
+								subcontoTypeDesc.AppendMetaType(pvhCtor->GetClassType());
+						}
+					}
+					// Set all subconto fields to accept РџР’РҐ reference types
+					if (subcontoTypeDesc.GetClsidCount() > 0) {
+						(*m_propertyAttributeSubconto1)->SetDefaultMetaType(subcontoTypeDesc);
+						(*m_propertyAttributeSubconto2)->SetDefaultMetaType(subcontoTypeDesc);
+						(*m_propertyAttributeSubconto3)->SetDefaultMetaType(subcontoTypeDesc);
+					}
+				}
+			}
+		}
+	}
+
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRegisterData::OnAfterRunMetaObject(flags)) {
-			if (!moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateRecordSetObjectValue())) return false;
+			if (!cc->AddCompileModule(m_propertyObjectModule->GetMetaObject(), CreateRecordSetObjectValue())) return false;
 			return true;
 		}
 	}
@@ -194,13 +222,11 @@ bool ibValueMetaObjectAccountingRegister::OnBeforeCloseMetaObject()
 	if (!(*m_propertyAttributeSubconto1)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyAttributeSubconto2)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyAttributeSubconto3)->OnBeforeCloseMetaObject()) return false;
-	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject()) return false;
-	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject()) return false;
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (!(*m_propertyManagerModule)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertyObjectModule)->OnBeforeCloseMetaObject()) return false;
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRegisterData::OnBeforeCloseMetaObject()) {
-			if (!moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject())) return false;
+			if (!cc->RemoveCompileModule(m_propertyObjectModule->GetMetaObject())) return false;
 			return true;
 		}
 	}
@@ -214,8 +240,8 @@ bool ibValueMetaObjectAccountingRegister::OnAfterCloseMetaObject()
 	if (!(*m_propertyAttributeSubconto1)->OnAfterCloseMetaObject()) return false;
 	if (!(*m_propertyAttributeSubconto2)->OnAfterCloseMetaObject()) return false;
 	if (!(*m_propertyAttributeSubconto3)->OnAfterCloseMetaObject()) return false;
-	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject()) return false;
-	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyManagerModule)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyObjectModule)->OnAfterCloseMetaObject()) return false;
 	unregisterSelection();
 	return ibValueMetaObjectRegisterData::OnAfterCloseMetaObject();
 }
@@ -229,30 +255,28 @@ void ibValueMetaObjectAccountingRegister::OnCreateFormObject(ibValueMetaObjectFo
 void ibValueMetaObjectAccountingRegister::OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm)
 {
 	if (metaForm->GetTypeForm() == eFormList && m_propertyDefFormList->GetValueAsInteger() == metaForm->GetMetaID())
-		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
+		m_propertyDefFormList->SetValue(wxNOT_FOUND);
 }
 
 #include "accountingRegisterManager.h"
 
-ibValueManagerDataObject* ibValueMetaObjectAccountingRegister::CreateManagerDataObjectValue()
+ibValueManagerDataObject* ibValueMetaObjectAccountingRegister::CreateManagerDataObjectValue() const
 {
 	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectAccountingRegister>(this);
 }
 
-ibValueRecordSetObject* ibValueMetaObjectAccountingRegister::CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey)
+ibValueRecordSetObject* ibValueMetaObjectAccountingRegister::CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey) const
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordSetObject* pDataRef = nullptr;
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
+		if (!cc->FindCompileModule(m_propertyObjectModule->GetMetaObject(), pDataRef))
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectAccountingRegister>(this, uniqueKey);
 		return pDataRef;
 	}
 	return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectAccountingRegister>(this, uniqueKey);
 }
 
-ibSourceDataObject* ibValueMetaObjectAccountingRegister::CreateSourceObject(ibValueMetaObjectFormBase* metaObject)
+ibSourceDataObject* ibValueMetaObjectAccountingRegister::CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const
 {
 	switch (metaObject->GetTypeForm()) {
 	case eFormList: return ibValue::CreateAndPrepareValueRef<ibValueListRegisterObject>(this, metaObject->GetTypeForm());
@@ -267,9 +291,9 @@ bool ibValueMetaObjectAccountingRegister::CreateAndUpdateTableDB(ibMetaDataConfi
 
 bool ibValueMetaObjectAccountingRegister::CreateAndUpdateRegisterTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
 {
-	//TODO: Implement DDL for accounting register table
-	// Uses same pattern as AccumulationRegister::CreateAndUpdateBalancesTableDB
-	// but with Account, RecordType, Subconto1..3 predefined columns
+	// Delegates to the base class which handles all predefined attributes
+	// (LineActive, Period, RecordType, Account, Subconto1-3, Recorder, LineNumber)
+	// via FillArrayObjectByPredefinedAttribute, plus user-defined dimensions and resources.
 	return ibValueMetaObjectRegisterData::CreateAndUpdateTableDB(srcMetaData, srcMetaObject, flags);
 }
 

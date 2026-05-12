@@ -1,4 +1,4 @@
-#ifndef _ENUMERATION_MANAGER_H__
+﻿#ifndef _ENUMERATION_MANAGER_H__
 #define _ENUMERATION_MANAGER_H__
 
 #include "enumeration.h"
@@ -7,11 +7,11 @@ class ibValueManagerDataObjectEnumeration :
 	public ibValueManagerDataObject {
 public:
 
-	ibValueManagerDataObjectEnumeration(ibValueMetaObjectEnumeration* metaObject = nullptr) : m_metaObject(metaObject) {}
+	ibValueManagerDataObjectEnumeration(const ibValueMetaObjectEnumeration* metaObject = nullptr) : m_metaObject(metaObject) {}
 	virtual ~ibValueManagerDataObjectEnumeration() {}
 
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const;
-	virtual ibValueMetaObjectEnumeration* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const;
+	virtual const ibValueMetaObjectEnumeration* GetMetaObject() const { return m_metaObject; }
 
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
@@ -20,7 +20,7 @@ public:
 	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 
 protected:
-	ibValueMetaObjectEnumeration* m_metaObject;
+	const ibValueMetaObjectEnumeration* m_metaObject;
 private:
 	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectEnumeration);
 };

@@ -359,20 +359,20 @@ void ibDataProcessorTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeIt
 		&& !metaObject->PrepareContextMenu(defaultMenu))
 	{
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)));
+		menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)));
 		menuItem->Enable(!m_bReadOnly);
 		menuItem = defaultMenu->Append(ID_METATREE_EDIT, _("Edit"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)));
+		menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)));
 		menuItem = defaultMenu->Append(ID_METATREE_DELETE, _("Delete"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)));
+		menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)));
 		menuItem->Enable(!m_bReadOnly);
 		defaultMenu->AppendSeparator();
 		menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
+		menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PROPERTY, wxART_SERVICE));
 	}
 	else if (!metaObject) {
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)));
+		menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)));
 		menuItem->Enable(!m_bReadOnly);
 	}
 }

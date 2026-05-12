@@ -97,8 +97,19 @@ void ibFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 	m_frameMenuBar->Append(m_menuEdit, wxGetStockLabel(wxID_EDIT));
 
 	m_menuDebug = new wxMenu;
-	m_menuDebug->Append(wxID_DESIGNER_DEBUG_START, _("Start debugging"));
-	m_menuDebug->Append(wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING, _("Start without debugging"));
+
+	// "Start debugging" → GUI / Web
+	wxMenu* subStart = new wxMenu;
+	subStart->Append(wxID_DESIGNER_DEBUG_START, _("Thick client (GUI)"));
+	subStart->Append(wxID_DESIGNER_DEBUG_START_WEB, _("Web client"));
+	m_menuDebug->AppendSubMenu(subStart, _("Start debugging"));
+
+	// "Start without debugging" → GUI / Web
+	wxMenu* subStartNoDebug = new wxMenu;
+	subStartNoDebug->Append(wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING, _("Thick client (GUI)"));
+	subStartNoDebug->Append(wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING_WEB, _("Web client"));
+	m_menuDebug->AppendSubMenu(subStartNoDebug, _("Start without debugging"));
+
 	m_menuDebug->Append(wxID_DESIGNER_DEBUG_ATTACH_FOR_DEBUGGING, _("Attach for debugging..."));
 	m_menuDebug->AppendSeparator();
 
@@ -117,14 +128,14 @@ void ibFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 	wxMenuItem* menuItem = nullptr;
 	
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE, _("Open database configuration"));
-	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE, wxART_FRONTEND, wxSize(16, 16)));
+	menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DATABASE, wxART_FRONTEND, wxSize(16, 16)));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());	
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE, _("Rollback to database configuration"));
-	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE_ROOLBACK, wxART_FRONTEND, wxSize(16, 16)));
+	menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DATABASE_ROOLBACK, wxART_FRONTEND, wxSize(16, 16)));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database configuration"));
-	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE_APPLY, wxART_FRONTEND, wxSize(16, 16)));
+	menuItem->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DATABASE_APPLY, wxART_FRONTEND, wxSize(16, 16)));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
 	m_menuConfiguration->AppendSeparator();
@@ -170,6 +181,8 @@ void ibFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 
 	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnStartDebug, this, wxID_DESIGNER_DEBUG_START);
 	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug, this, wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnStartDebugWeb, this, wxID_DESIGNER_DEBUG_START_WEB);
+	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebugWeb, this, wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING_WEB);
 	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnAttachForDebugging, this, wxID_DESIGNER_DEBUG_ATTACH_FOR_DEBUGGING);
 
 	Bind(wxEVT_MENU, &ibFrontendDocMDIFrameDesigner::OnRunDebugCommand, this, wxID_DESIGNER_DEBUG_EDIT_POINT, wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS);

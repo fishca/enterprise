@@ -1,9 +1,318 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko, wxFormBuilder
-//	Description : visual editor 
+//	Description : visual editor
 ////////////////////////////////////////////////////////////////////////////
 
 #include "visualHost.h"
+#ifdef OES_USE_WEB
+
+#include "ctrl/frame.h"
+#include "ctrl/form.h"
+#include "ctrl/sizer.h"
+#include "ctrl/window.h"
+#include "formdefs.h"
+#include "frontend/web/webSizer.h"
+
+namespace {
+
+// Recursive walker — stays inside this TU. Parent is passed as the
+// typed pair (parentWindow, parentSizer) with exactly one non-null —
+// lets the branches use static_cast on the created object since
+// ibValueFrame::GetComponentType already discriminates the subtype
+// (COMPONENT_TYPE_FRAME / _WINDOW → ibWebWindow,
+// COMPONENT_TYPE_SIZER → ibWebSizer, _SIZERITEM transparent).
+//
+// Controls that haven't been ported fall through (GetComponentType
+// says one thing but Create returns ibNoObject) — the null-check on
+// `created` catches that; static_cast below only runs when it's safe.
+void AppendChildControls(ibValueFrame* node,
+	ibWebWindow* parentWindow, ibWebSizer* parentSizer,
+	ibVisualHost* host, const ibWebSizer::AddParams* pendingParams)
+{
+	if (node == nullptr || (parentWindow == nullptr && parentSizer == nullptr))
+		return;
+	for (unsigned int i = 0; i < node->GetChildCount(); ++i) {
+		ibValueFrame* child = dynamic_cast<ibValueFrame*>(node->GetChild(i));
+		if (child == nullptr)
+			continue;
+
+		const int componentType = child->GetComponentType();
+
+		// SIZERITEM: transparent carrier of Add params (proportion /
+		// flag / border / stretch). Captured and forwarded into the
+		// grandchild's Add/SetSizer. No visual node created.
+		if (componentType == COMPONENT_TYPE_SIZERITEM) {
+			auto* sizerItem = static_cast<ibValueSizerItem*>(child);
+			ibWebSizer::AddParams params;
+			params.proportion = sizerItem->GetProportion();
+			params.flag       = static_cast<int>(sizerItem->GetFlagBorder())
+			                   | static_cast<int>(sizerItem->GetFlagState());
+			params.border     = sizerItem->GetBorder();
+			AppendChildControls(child, parentWindow, parentSizer, host, &params);
+			continue;
+		}
+
+		// Create() expects ibFrontendWindow* (= ibWebWindow* on web).
+		// If we're sitting inside a sizer, walk up its owner chain
+		// to the nearest window (sizers don't own widgets; they
+		// belong to a window via SetSizer).
+		ibWebWindow* createParent = parentWindow;
+		if (createParent == nullptr) {
+			for (ibWebSizer* s = parentSizer; s != nullptr; ) {
+				wxObject* owner = s->GetOwner();
+				if (auto* w = dynamic_cast<ibWebWindow*>(owner)) {
+					createParent = w;
+					break;
+				}
+				s = dynamic_cast<ibWebSizer*>(owner);
+			}
+		}
+
+		// Ensure the ibValueFrame owns a non-zero controlId BEFORE the
+		// web shim is built. Otherwise ibWebWindow's own auto-id pool
+		// (starting at 1'000'000) steps in, the browser sees that id in
+		// node.id, but form->FindControlByID searches ibValueFrame ids
+		// only — the click POST /action/<id> lookup misses and commands
+		// silently no-op. Metadata-saved ids keep their values; only
+		// controls that loaded with m_controlId == 0 get freshly minted.
+		if (child->GetControlID() == 0 && child->GetOwnerForm() != nullptr)
+			child->GenerateNewID();
+		wxObject* created = child->Create(createParent, host);
+
+		// ibNoObject is the "empty" sentinel ibValueFrame::Create
+		// returns when a subclass isn't ported to web (base returns
+		// `new ibNoObject`). It's non-null but not an ibWebWindow /
+		// ibWebSizer — static_cast below would be UB. One dynamic_cast
+		// here is the safety filter; the rest of the path is then
+		// invariant-safe and uses static_cast.
+		if (created == nullptr || dynamic_cast<ibNoObject*>(created) != nullptr) {
+			AppendChildControls(child, parentWindow, parentSizer, host, nullptr);
+			continue;
+		}
+
+		ibWebWindow* nextWindow = parentWindow;
+		ibWebSizer*  nextSizer  = parentSizer;
+
+		switch (componentType) {
+		case COMPONENT_TYPE_FRAME:
+		case COMPONENT_TYPE_WINDOW:
+		// COMPONENT_TYPE_ABSTRACT components (toolbar items /
+		// separators) don't own a wx widget on desktop — their
+		// OnCreated uses the parent toolbar's AddTool directly —
+		// but on web we do render them as children of the parent
+		// container (ibWebToolbar). Their Create override returns
+		// an ibWebWindow-derived render shim.
+		case COMPONENT_TYPE_ABSTRACT: {
+			// Component type says it's a window; Create for this type
+			// returns an ibWebWindow subclass on web by construction.
+			// The controlId is set inside Create (the ibValueXxx knows
+			// its own GetControlID), so the walker doesn't stamp it.
+			ibWebWindow* win = static_cast<ibWebWindow*>(created);
+			if (parentWindow != nullptr)
+				win->SetParent(parentWindow);
+			else if (parentSizer != nullptr)
+				parentSizer->Add(win,
+					pendingParams ? *pendingParams : ibWebSizer::AddParams{});
+			host->AppendInnerControl(child, win);   // windows only
+			nextWindow = win;
+			nextSizer  = nullptr;
+			break;
+		}
+		case COMPONENT_TYPE_SIZER: {
+			ibWebSizer* siz = static_cast<ibWebSizer*>(created);
+			if (parentWindow != nullptr)
+				parentWindow->SetSizer(siz);
+			else if (parentSizer != nullptr)
+				parentSizer->Add(siz,
+					pendingParams ? *pendingParams : ibWebSizer::AddParams{});
+			nextWindow = nullptr;
+			nextSizer  = siz;
+			break;
+		}
+		default:
+			// Unknown / unported component type — no web node to
+			// attach. Descend with the parent we already had so any
+			// future transparent subtypes still get walked.
+			break;
+		}
+
+		// Self-Update: push property values into the raw shim Create
+		// produced. Runs BEFORE recursing into children, so children
+		// see the parent's state already applied.
+		child->Update(created, host);
+
+		// Pending params consumed by the first real Add/SetSizer
+		// above; clear for recursive descent.
+		AppendChildControls(child, nextWindow, nextSizer, host, nullptr);
+
+		// OnCreated / OnUpdated fire AFTER children have fully run
+		// their own Create + Update passes — matches desktop's
+		// GenerateControl order (post-order OnCreated), so parent
+		// hooks can assume their children are wired up.
+		child->OnCreated(created, createParent, host, /*firstCreated*/ true);
+		child->OnUpdated(created, createParent, host);
+	}
+}
+
+} // namespace
+
+bool ibVisualHost::CreateVisualHost()
+{
+	ibValueForm* form = GetValueForm();
+	if (form == nullptr)
+		return false;
+	// Seed a default root ibWebBoxSizer(wxVERTICAL) on the host if the
+	// form hasn't already placed a top-level sizer — mirrors desktop's
+	// GetBackgroundWindow()->SetSizer(new wxBoxSizer(wxVERTICAL)). Keeps
+	// SetOrientation target-addressable: the host always has a BoxSizer
+	// to mutate, even for forms whose root child is a WINDOW. Walker is
+	// still invoked with parentWindow = this (the host), so top-level
+	// WINDOW children keep going through SetParent as before; a top-
+	// level SIZER child still replaces this seeded one via the walker's
+	// `parentWindow->SetSizer(siz)` branch. Net effect: SetOrientation
+	// has something to grab onto on a bare form, and nothing else about
+	// the existing layout flow changes.
+	if (GetSizer() == nullptr)
+		SetSizer(new ibWebBoxSizer(wxVERTICAL));
+	// Apply the form's declared orientation to the root sizer —
+	// mirrors desktop CreateVisualHost which does the same right
+	// after SetCaption. Forms designed with horizontal root layout
+	// (wxHORIZONTAL) then stack children across, not down.
+	SetOrientation(form->GetOrient());
+	// Pass parentSizer = root (parentWindow = nullptr) so top-level
+	// controls get Added to the root sizer, the way desktop feeds
+	// them through GetFrameSizer(). Before this, a WINDOW child
+	// preferred SetParent(host) and ended up as a bare m_children
+	// entry — rendered as a stacked block-level div ignoring the
+	// sizer's orientation. A top-level SIZER child still replaces
+	// the root via the walker's `parentSizer->Add(siz)` branch, and
+	// nested controls follow the same pattern as before.
+	auto* rootSizer = static_cast<ibWebSizer*>(GetSizer());
+	AppendChildControls(form, nullptr, rootSizer, this, nullptr);
+	return true;
+}
+
+namespace {
+// Walk the existing ibValueFrame tree, call Update + OnUpdated on
+// each node that has a matching web shim. Mirrors the desktop
+// RefreshControl pass (per-element property refresh without tearing
+// down the tree). Skips ibValueFrames with no entry in the host's
+// map — those are structural elements (SizerItem) or unported types.
+void UpdateChildControls(ibValueFrame* node, ibVisualHost* host,
+	ibWebWindow* parentWindow)
+{
+	if (node == nullptr) return;
+	for (unsigned int i = 0; i < node->GetChildCount(); ++i) {
+		ibValueFrame* child = dynamic_cast<ibValueFrame*>(node->GetChild(i));
+		if (child == nullptr) continue;
+
+		wxObject* obj = host->GetWxObject(child);
+		ibWebWindow* childWin = dynamic_cast<ibWebWindow*>(obj);
+
+		// Self Update FIRST (pushes fresh properties), children
+		// recurse next, then OnUpdated fires post-order.
+		if (obj != nullptr)
+			child->Update(obj, host);
+
+		UpdateChildControls(child, host,
+			childWin != nullptr ? childWin : parentWindow);
+
+		if (obj != nullptr)
+			child->OnUpdated(obj, parentWindow, host);
+	}
+}
+} // namespace
+
+bool ibVisualHost::UpdateVisualHost()
+{
+	// Refresh pass: walk the tree, invoke Update / OnUpdated on each
+	// live web node. Web shims that want to push fresh property values
+	// into their node override Update (textctrl value, tool caption,
+	// checkbox state, …); no-op implementations leave the node alone,
+	// and the stateless rebuild (ClearVisualHost + CreateVisualHost)
+	// remains available for structural changes that can't be done
+	// in place.
+	ibValueForm* form = GetValueForm();
+	if (form == nullptr)
+		return false;
+	UpdateChildControls(form, this, this);
+	return true;
+}
+
+namespace {
+// Post-order Cleanup pass: children first, then parent — so a control
+// whose Cleanup assumes its children are still reachable sees them
+// before they're wiped. Mirrors desktop ibVisualHost::ClearControl.
+void CleanupChildControls(ibValueFrame* node, ibVisualHost* host)
+{
+	if (node == nullptr) return;
+	for (unsigned int i = 0; i < node->GetChildCount(); ++i) {
+		ibValueFrame* child = dynamic_cast<ibValueFrame*>(node->GetChild(i));
+		if (child == nullptr) continue;
+		CleanupChildControls(child, host);
+		if (wxObject* obj = host->GetWxObject(child))
+			child->Cleanup(obj, host);
+	}
+}
+} // namespace
+
+bool ibVisualHost::ClearVisualHost()
+{
+	// Walker allocates nodes with raw `new` and parents them under the
+	// host — we own them and must delete here before rebuilding,
+	// otherwise each CreateAndUpdate would leak the previous pass's
+	// tree. Before deleting, fire each control's Cleanup so custom
+	// controls see the "about to be removed" hook symmetrical to
+	// Create. Three slots to clear: the ibWebWindow children (direct
+	// siblings), the optional ibWebSizer set via SetSizer, and the
+	// (ibValueFrame → wxObject) index populated by the walker.
+	if (ibValueForm* form = GetValueForm())
+		CleanupChildControls(form, this);
+	m_baseObjects.clear();      // wipe after Cleanup so callbacks can still look up siblings
+	while (!GetChildren().empty()) {
+		ibWebWindow* c = GetChildren().back();
+		c->SetParent(nullptr);  // detaches from our m_children
+		delete c;
+	}
+	SetSizer(nullptr);          // deletes the previous pass's sizer tree
+	return true;
+}
+
+ibValueFrame* ibVisualHost::GetObjectBase(const wxObject* wxobject) const
+{
+	// Reverse index — iterate m_baseObjects; only desktop has call
+	// sites today. Kept defined on web so the virtual's symbol
+	// exists for anything that links against both.
+	for (const auto& kv : m_baseObjects) {
+		if (kv.second == wxobject)
+			return kv.first;
+	}
+	return nullptr;
+}
+
+wxObject* ibVisualHost::GetWxObject(const ibValueFrame* baseobject) const
+{
+	auto it = m_baseObjects.find(const_cast<ibValueFrame*>(baseobject));
+	return it != m_baseObjects.end() ? it->second : nullptr;
+}
+
+// Incremental lifecycle hooks — no-ops on web. The script-side caller
+// mutated the ibValueFrame tree; the next HTTP response's
+// ClearVisualHost + CreateVisualHost picks up the change. Defined so
+// shared caller code (ibValueForm::CreateControl / RemoveControl,
+// ibValueModelTableBox) doesn't need #ifdef guards.
+void ibVisualHost::CreateControl(ibValueFrame*, ibValueFrame*, bool) {}
+void ibVisualHost::UpdateControl(ibValueFrame*, ibValueFrame*)       {}
+void ibVisualHost::RemoveControl(ibValueFrame*, ibValueFrame*)       {}
+void ibVisualHost::ClearControl(ibValueFrame*, bool)                 {}
+
+#else  // !OES_USE_WEB
+// Everything below is the desktop (wxScrolledCanvas-based) implementation
+// of ibVisualHost. The web build reuses the class name but with a
+// stripped-down ibWebWindow-based declaration (see visualHost.h), so
+// none of the wx-specific implementation applies there. Rather than
+// rewrite each method as a #ifdef sandwich, the whole desktop engine
+// of the host stays here and is excluded from wfrontend.dll.
 
 #include "ctrl/control.h"
 #include "ctrl/form.h"
@@ -18,16 +327,40 @@ wxIMPLEMENT_ABSTRACT_CLASS(ibVisualHost, wxScrolledWindow)
 #define __FREEZE_CONTROL__
 #endif
 
+namespace {
+
+// RAII guard that freezes/thaws the parent background window for the
+// duration of a layout-changing operation. Replaces the half-dozen
+// copy-pasted #if __FREEZE_CONTROL__ blocks that used to wrap each
+// Create/Update/Remove/Clear call and made early-return impossible
+// without leaking a Thaw.
+class ScopedFreeze {
+public:
+	explicit ScopedFreeze(wxWindow* window) : m_window(window) {
+#if defined(__FREEZE_CONTROL__)
+		if (m_window != nullptr) m_window->Freeze();
+#endif
+	}
+	~ScopedFreeze() {
+#if defined(__FREEZE_CONTROL__)
+		if (m_window != nullptr) m_window->Thaw();
+#endif
+	}
+	ScopedFreeze(const ScopedFreeze&) = delete;
+	ScopedFreeze& operator=(const ScopedFreeze&) = delete;
+private:
+	wxWindow* m_window;
+};
+
+} // namespace
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool ibVisualHost::CreateVisualHost()
 {
 	const ibValueForm* valueForm = GetValueForm();
 
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
-	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
-#endif
+	ScopedFreeze freeze(GetParentBackgroundWindow());
 
 	if (valueForm != nullptr && IsShownHost()) {
 
@@ -68,10 +401,6 @@ bool ibVisualHost::CreateVisualHost()
 		GetParentBackgroundWindow()->Show(false);
 	}
 
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
-
 #ifdef __WXOSX__
 	GetParentBackgroundWindow()->Refresh();
 	GetParentBackgroundWindow()->Update();
@@ -84,11 +413,9 @@ bool ibVisualHost::UpdateVisualHost()
 {
 	const ibValueForm* valueForm = GetValueForm();
 
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
-	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
-#endif
-
+	
+	ScopedFreeze freeze(GetParentBackgroundWindow());
+	
 	if (valueForm != nullptr && IsShownHost()) {
 
 		// --- [1] Show form 
@@ -135,34 +462,23 @@ bool ibVisualHost::UpdateVisualHost()
 
 	UpdateVirtualSize();
 
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
-
 #ifdef __WXOSX__
 	GetParentBackgroundWindow()->Refresh();
 	GetParentBackgroundWindow()->Update();
 #endif
 
-	return true;
+		return true;
 }
 
 bool ibVisualHost::ClearVisualHost()
 {
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
-	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
-#endif
+	ScopedFreeze freeze(GetParentBackgroundWindow());
 
 	ibValueForm* valueForm = GetValueForm();
 	if (valueForm != nullptr) ClearControl(valueForm, true);
 
 	GetParentBackgroundWindow()->DestroyChildren();
 	GetParentBackgroundWindow()->SetSizer(nullptr); // *!*
-
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
 
 	return true;
 }
@@ -195,10 +511,13 @@ wxObject* ibVisualHost::GetWxObject(const ibValueFrame* baseobject) const
 	if (baseobject->GetComponentType() == COMPONENT_TYPE_FRAME)
 		return GetFrameSizer();
 
-	for (auto& pair : m_baseObjects) {
-		if (pair.first == baseobject)
-			return pair.second;
-	}
+	// The map is keyed by ibValueFrame* — use find() instead of the linear
+	// scan this used to do. O(1) per call adds up on forms with hundreds
+	// of controls since every CreateControl/UpdateControl walks the tree
+	// and looks up each parent.
+	const auto it = m_baseObjects.find(const_cast<ibValueFrame*>(baseobject));
+	if (it != m_baseObjects.end())
+		return it->second;
 
 	wxLogError(wxT("No corresponding wxObject for ibValueFrame. Name: %s"), baseobject->GetClassName().c_str());
 	return nullptr;
@@ -208,491 +527,395 @@ wxObject* ibVisualHost::GetWxObject(const ibValueFrame* baseobject) const
 
 void ibVisualHost::GenerateControl(ibValueFrame* obj, wxWindow* wxparent, wxObject* parent, bool firstCreated)
 {
-	class ibControlCreator
+	wxObject* createdObject = Create(obj, wxparent);
+	wxWindow* createdWindow = nullptr;
+
+	switch (obj->GetComponentType())
 	{
-	public:
-		static void CreateControl(ibVisualHost* visualHost, ibValueFrame* obj, wxWindow* wxparent, wxObject* parent, bool firstCreated)
-		{
-			// Create Object
-			wxObject* createdObject = visualHost->Create(obj, wxparent);
-			wxWindow* createdWindow = nullptr;
-			wxSizer* createdSizer = nullptr;
+	case COMPONENT_TYPE_WINDOW:
+		// Component-type + classname discriminators already narrowed
+		// the type at compile time — Create for a COMPONENT_TYPE_WINDOW
+		// always returns a wxWindow-derived object, and the NotebookPage
+		// class specifically returns ibPanelPage. static_cast is safe.
+		if (obj->GetClassName() == wxT("NotebookPage"))
+			createdWindow = static_cast<ibPanelPage*>(createdObject);
+		else
+			createdWindow = static_cast<wxWindow*>(createdObject);
+		break;
 
-			wxWindow* parentObj = wxparent;
-
-			switch (obj->GetComponentType())
-			{
-			case COMPONENT_TYPE_WINDOW:
-			{
-				if (obj->GetClassName() == wxT("NotebookPage")) {
-					ibPanelPage* pageWindow = wxDynamicCast(createdObject, ibPanelPage);
-					if (pageWindow) {
-						createdWindow = pageWindow;
-						createdSizer = pageWindow->GetSizer();
-
-						parentObj = pageWindow;
-					}
-				}
-				else {
-					createdWindow = wxDynamicCast(createdObject, wxWindow);
-				}
-				break;
-			}
-			case COMPONENT_TYPE_SIZER:
-			case COMPONENT_TYPE_SIZERITEM:
-			{
-				if (obj->GetClassName() == wxT("Staticboxsizer")) {
-					wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(createdObject, wxStaticBoxSizer);
-					if (staticBoxSizer) {
-						createdWindow = staticBoxSizer->GetStaticBox();
-						createdSizer = staticBoxSizer;
-					}
-				}
-				else
-				{
-					createdSizer = wxDynamicCast(createdObject, wxSizer);
-				}
-				break;
-			}
-			default: break;
-			}
-
-			// Associate the wxObject* with the ibValueFrame*
-			visualHost->AppendInnerControl(obj, createdObject);
-
-			// Access to collapsible pane
-			wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane);
-			if (collpane != nullptr) {
-				createdWindow = collpane->GetPane();
-				createdObject = createdWindow;
-			}
-
-			// New wxparent for the window's children
-			wxWindow* new_wxparent = (createdWindow ? createdWindow : wxparent);
-
-			// Recursively generate the children
-			for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
-				CreateControl(visualHost, obj->GetChild(i), new_wxparent, createdObject, firstCreated);
-			}
-
-			//if new obj then call on created 
-			visualHost->OnCreated(obj, createdObject, wxparent, firstCreated);
+	case COMPONENT_TYPE_SIZER:
+	case COMPONENT_TYPE_SIZERITEM:
+		if (obj->GetClassName() == wxT("Staticboxsizer")) {
+			wxStaticBoxSizer* s = static_cast<wxStaticBoxSizer*>(createdObject);
+			createdWindow = s->GetStaticBox();
 		}
-	};
+		break;
 
-	ibControlCreator::CreateControl(this, obj, wxparent, parent, firstCreated);
+	default: break;
+	}
+
+	AppendInnerControl(obj, createdObject);
+
+	// Collapsible panes expose their inner pane as the real parent for
+	// children; follow that redirection before recursing.
+	if (wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane)) {
+		createdWindow = collpane->GetPane();
+		createdObject = createdWindow;
+	}
+
+	wxWindow* childParent = createdWindow != nullptr ? createdWindow : wxparent;
+	for (unsigned int i = 0; i < obj->GetChildCount(); ++i)
+		GenerateControl(obj->GetChild(i), childParent, createdObject, firstCreated);
+
+	OnCreated(obj, createdObject, wxparent, firstCreated);
 }
 
 void ibVisualHost::RefreshControl(ibValueFrame* obj, wxWindow* wxparent, wxObject* parent)
 {
-	class ibControlUpdater
+	wxObject* createdObject = GetWxObject(obj);
+	wxWindow* createdWindow = nullptr;
+	wxSizer*  createdSizer  = nullptr;
+
+	switch (obj->GetComponentType())
 	{
-	public:
-		static void UpdateControl(ibVisualHost* visualHost, ibValueFrame* obj, wxWindow* wxparent, wxObject* parent)
-		{
-			// Create Object
-			wxObject* createdObject = visualHost->GetWxObject(obj);
-			wxWindow* createdWindow = nullptr;
-			wxSizer* createdSizer = nullptr;
+	case COMPONENT_TYPE_WINDOW:
+		createdWindow = static_cast<wxWindow*>(createdObject);
+		break;
 
-			wxWindow* parentWindow = wxparent;
-
-			switch (obj->GetComponentType())
-			{
-			case COMPONENT_TYPE_WINDOW:
-			{
-				createdWindow = wxDynamicCast(createdObject, wxWindow);
-				break;
-			}
-			case COMPONENT_TYPE_SIZER:
-			case COMPONENT_TYPE_SIZERITEM:
-			{
-				if (obj->GetClassName() == wxT("Staticboxsizer")) {
-					wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(createdObject, wxStaticBoxSizer);
-					if (staticBoxSizer) {
-						createdWindow = staticBoxSizer->GetStaticBox();
-						createdSizer = staticBoxSizer;
-					}
-				}
-				else {
-					createdSizer = wxDynamicCast(createdObject, wxSizer);
-				} break;
-			}
-			default: break;
-			}
-
-			visualHost->Update(obj, createdObject);
-
-			// Access to collapsible pane
-			wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane);
-			if (collpane != nullptr) {
-				createdWindow = collpane->GetPane();
-				createdObject = createdWindow;
-			}
-
-			// New wxparent for the window's children
-			wxWindow* new_wxparent = (createdWindow ? createdWindow : wxparent);
-
-			// Recursively generate the children
-			for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
-				UpdateControl(visualHost, obj->GetChild(i), new_wxparent, createdObject);
-			}
-
-			//if new obj then call on created 
-			visualHost->OnUpdated(obj, createdObject, wxparent);
-
-			// If the created object is a sizer and the parent object is a window, set the sizer to the window
-			if (
-				(createdSizer != nullptr && nullptr != wxDynamicCast(parent, wxWindow))
-				||
-				(nullptr == parent && createdSizer != nullptr)
-				)
-			{
-				parentWindow->SetSizer(createdSizer);
-
-				if (parent)
-					createdSizer->SetSizeHints(parentWindow);
-
-				parentWindow->SetAutoLayout(true);
-				parentWindow->Layout();
-			}
+	case COMPONENT_TYPE_SIZER:
+	case COMPONENT_TYPE_SIZERITEM:
+		if (obj->GetClassName() == wxT("Staticboxsizer")) {
+			wxStaticBoxSizer* s = static_cast<wxStaticBoxSizer*>(createdObject);
+			createdWindow = s->GetStaticBox();
+			createdSizer  = s;
 		}
-	};
+		else {
+			createdSizer = static_cast<wxSizer*>(createdObject);
+		}
+		break;
 
-	ibControlUpdater::UpdateControl(this, obj, wxparent, parent);
+	default: break;
+	}
+
+	Update(obj, createdObject);
+
+	if (wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane)) {
+		createdWindow = collpane->GetPane();
+		createdObject = createdWindow;
+	}
+
+	wxWindow* childParent = createdWindow != nullptr ? createdWindow : wxparent;
+	for (unsigned int i = 0; i < obj->GetChildCount(); ++i)
+		RefreshControl(obj->GetChild(i), childParent, createdObject);
+
+	OnUpdated(obj, createdObject, wxparent);
+
+	// If we just produced a sizer sitting directly under a window, attach
+	// it as that window's layout sizer and run the initial layout pass.
+	const bool parentIsWindow = wxDynamicCast(parent, wxWindow) != nullptr;
+	if (createdSizer != nullptr && (parentIsWindow || parent == nullptr)) {
+		wxparent->SetSizer(createdSizer);
+		if (parent != nullptr)
+			createdSizer->SetSizeHints(wxparent);
+		wxparent->SetAutoLayout(true);
+		wxparent->Layout();
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibVisualHost::CreateControl(ibValueFrame* obj, ibValueFrame* parent, bool firstCreated)
+namespace {
+
+// If objParent is a wxStaticBoxSizer, trigger a layout pass on it so the
+// newly inserted / updated / removed child is repositioned within the
+// box. Shared by Create/Update/RemoveControl.
+inline void RelayoutStaticBoxIfAny(ibValueFrame* objParent, wxObject* parentObj)
 {
-	ibValueFrame* objControl = obj; ibValueFrame* objParent = parent ? parent : obj->GetParent();
-	wxWindow* windowObj = nullptr; wxObject* parentObj = nullptr; wxWindow* hostWnd = GetBackgroundWindow();
+	if (objParent != nullptr && objParent->GetClassName() == wxT("Staticboxsizer")) {
+		if (wxStaticBoxSizer* s = dynamic_cast<wxStaticBoxSizer*>(parentObj))
+			s->Layout();
+	}
+}
 
-	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
-		objParent = objParent->GetParent();
+} // namespace
+
+ibVisualHost::ControlContext ibVisualHost::ResolveControlContext(
+	ibValueFrame* obj, ibValueFrame* parent, bool resolveWindow) const
+{
+	ControlContext ctx{};
+	ctx.objControl = obj;
+	ctx.objParent  = parent != nullptr ? parent : obj->GetParent();
+
+	// Unwrap a SIZERITEM wrapper so we operate on the actual parent sizer.
+	if (ctx.objParent != nullptr &&
+		ctx.objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
+	{
+		ctx.objControl = ctx.objParent;
+		ctx.parentObj  = GetWxObject(ctx.objParent->GetParent());
+		ctx.objParent  = ctx.objParent->GetParent();
 	}
 	else {
-		parentObj = GetWxObject(objParent);
+		ctx.parentObj = GetWxObject(ctx.objParent);
 	}
 
-	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer")) {
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		wxASSERT(staticBoxSizer); windowObj = staticBoxSizer->GetStaticBox();
+	if (!resolveWindow)
+		return ctx;
+
+	// A static-box sizer embeds its own static-box window as the child's
+	// wxWindow parent. Otherwise fall back to a window cast of parentObj
+	// and walk up the tree looking for the nearest COMPONENT_TYPE_WINDOW
+	// ancestor; finally use the host's background window.
+	if (ctx.objParent != nullptr &&
+		ctx.objParent->GetClassName() == wxT("Staticboxsizer"))
+	{
+		wxStaticBoxSizer* s = dynamic_cast<wxStaticBoxSizer*>(ctx.parentObj);
+		wxASSERT(s);
+		ctx.windowObj = s->GetStaticBox();
 	}
 	else {
-		windowObj = dynamic_cast<wxWindow*>(parentObj);
+		ctx.windowObj = dynamic_cast<wxWindow*>(ctx.parentObj);
 	}
 
-	ibValueFrame* nextParent = objParent;
-	while (!windowObj && nextParent) {
-		if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
-			windowObj =
-				dynamic_cast<wxWindow*>(GetWxObject(nextParent));
+	for (ibValueFrame* up = ctx.objParent; !ctx.windowObj && up != nullptr; up = up->GetParent()) {
+		if (up->GetComponentType() == COMPONENT_TYPE_WINDOW) {
+			ctx.windowObj = dynamic_cast<wxWindow*>(GetWxObject(up));
 			break;
 		}
-		nextParent = nextParent->GetParent();
 	}
 
-	if (windowObj == nullptr)
-		windowObj = hostWnd;
+	if (ctx.windowObj == nullptr)
+		ctx.windowObj = GetBackgroundWindow();
 
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Freeze();
-#endif
+	return ctx;
+}
 
-	//first create elements 
-	GenerateControl(objControl, windowObj, parentObj, firstCreated);
+void ibVisualHost::CreateControl(ibValueFrame* obj, ibValueFrame* parent, bool firstCreated)
+{
+	const ControlContext ctx = ResolveControlContext(obj, parent);
 
-	//and update it 
-	RefreshControl(objControl, windowObj, parentObj);
+	ScopedFreeze freeze(GetParentBackgroundWindow());
 
-	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer")) {
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		staticBoxSizer->Layout();
-	}
+	GenerateControl(ctx.objControl, ctx.windowObj, ctx.parentObj, firstCreated);
+	RefreshControl(ctx.objControl, ctx.windowObj, ctx.parentObj);
+	RelayoutStaticBoxIfAny(ctx.objParent, ctx.parentObj);
 
 	CalculateLabelSize(obj);
 	UpdateHostSize();
 	UpdateVirtualSize();
-
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
 }
 
 void ibVisualHost::UpdateControl(ibValueFrame* obj, ibValueFrame* parent)
 {
-	ibValueFrame* objControl = obj; ibValueFrame* objParent = parent ? parent : obj->GetParent();
-	wxWindow* windowObj = nullptr; wxObject* parentObj = nullptr; wxWindow* hostWnd = GetBackgroundWindow();
+	const ControlContext ctx = ResolveControlContext(obj, parent);
 
-	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
-	{
-		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
-		objParent = objParent->GetParent();
-	}
-	else
-	{
-		parentObj = GetWxObject(objParent);
-	}
+	ScopedFreeze freeze(GetParentBackgroundWindow());
 
-	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer"))
-	{
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		wxASSERT(staticBoxSizer); windowObj = staticBoxSizer->GetStaticBox();
-	}
-	else
-	{
-		windowObj = dynamic_cast<wxWindow*>(parentObj);
-	}
-
-	ibValueFrame* nextParent = objParent;
-	while (!windowObj && nextParent)
-	{
-		if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
-			windowObj = dynamic_cast<wxWindow*>(GetWxObject(nextParent));
-			break;
-		}
-		nextParent = nextParent->GetParent();
-	}
-
-	if (!windowObj) windowObj = hostWnd;
-
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Freeze();
-#endif
-
-	RefreshControl(objControl, windowObj, parentObj);
-
-	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer"))
-	{
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		staticBoxSizer->Layout();
-	}
+	RefreshControl(ctx.objControl, ctx.windowObj, ctx.parentObj);
+	RelayoutStaticBoxIfAny(ctx.objParent, ctx.parentObj);
 
 	CalculateLabelSize(obj);
 	UpdateHostSize();
 	UpdateVirtualSize();
-
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
 }
 
 void ibVisualHost::RemoveControl(ibValueFrame* obj, ibValueFrame* parent)
 {
-	ibValueFrame* objControl = obj; ibValueFrame* objParent = parent ? parent : obj->GetParent();
-	wxObject* parentObj = nullptr;
+	const ControlContext ctx = ResolveControlContext(obj, parent, /*resolveWindow*/false);
 
-	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
-	{
-		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
-		objParent = objParent->GetParent();
-	}
-	else
-	{
-		parentObj = GetWxObject(objParent);
-	}
+	ScopedFreeze freeze(GetParentBackgroundWindow());
 
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Freeze();
-#endif
-
-	ClearControl(objControl);
-
-	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer"))
-	{
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		staticBoxSizer->Layout();
-	}
+	ClearControl(ctx.objControl);
+	RelayoutStaticBoxIfAny(ctx.objParent, ctx.parentObj);
 
 	CalculateLabelSize(obj);
 	UpdateHostSize();
 	UpdateVirtualSize();
-
-#if defined(__FREEZE_CONTROL__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
 }
 
 #include "frontend/win/ctrls/dynamicBorder.h"
 
 void ibVisualHost::ClearControl(ibValueFrame* control, bool force)
 {
-	class ibControlCleaner {
+	// Post-order: tear children down before the parent so destroy callbacks
+	// see a consistent hierarchy.
+	for (unsigned int i = 0; i < control->GetChildCount(); ++i)
+		ClearControl(control->GetChild(i), force);
 
-		static inline void DeleteObject(ibVisualHost* visualHost, ibValueFrame* control, bool force) {
+	switch (control->GetComponentType())
+	{
+	case COMPONENT_TYPE_WINDOW:
+	{
+		// control's component type says WINDOW → the wxObject stored
+		// by Create is a wxWindow. static_cast is invariant-safe.
+		wxWindow* controlWnd = static_cast<wxWindow*>(GetWxObject(control));
+		if (controlWnd == nullptr)
+			return;
 
-			if (control->GetComponentType() == COMPONENT_TYPE_WINDOW) {
+		wxWindow* controlParent = controlWnd->GetParent();
+		Cleanup(control, controlWnd);
+		RemoveInnerControl(control);
+		controlWnd->DeletePendingEvents();
+		controlWnd->Destroy();
+		if (!force && controlParent != nullptr)
+			controlParent->Layout();
+		break;
+	}
 
-				wxWindow* controlWnd =
-					dynamic_cast<wxWindow*>(visualHost->GetWxObject(control));
+	case COMPONENT_TYPE_SIZER:
+	{
+		wxSizer* controlSizer = static_cast<wxSizer*>(GetWxObject(control));
+		if (controlSizer == nullptr)
+			return;
 
-				if (controlWnd != nullptr) {
-					wxWindow* controlParent = controlWnd->GetParent();
-					visualHost->Cleanup(control, controlWnd);
-					visualHost->RemoveInnerControl(control);
-					controlWnd->DeletePendingEvents(); /*!!!*/
-					//controlWnd->DestroyChildren();
-					controlWnd->Destroy();
-					if (!force && controlParent != nullptr) {
-						controlParent->Layout();
-					}
-				}
-			}
-			else if (control->GetComponentType() == COMPONENT_TYPE_SIZER) {
+		ibValueFrame* controlParent = control->GetParent();
+		Cleanup(control, controlSizer);
+		RemoveInnerControl(control);
 
-				wxSizer* controlSizer =
-					dynamic_cast<wxSizer*>(visualHost->GetWxObject(control));
-
-				if (controlSizer != nullptr) {
-					ibValueFrame* controlParent = control->GetParent();
-					visualHost->Cleanup(control, controlSizer);
-					visualHost->RemoveInnerControl(control);
-					if (controlParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-						controlParent = controlParent->GetParent();
-					}
-					wxSizer* controlParentSizer = nullptr;
-					if (controlParent->GetClassName() == wxT("NotebookPage")) {
-						ibPanelPage* pageWnd = dynamic_cast<ibPanelPage*>(visualHost->GetWxObject(controlParent));
-						wxASSERT(pageWnd); controlParentSizer = pageWnd->GetSizer();
-					}
-					else {
-						controlParentSizer =
-							dynamic_cast<wxSizer*>(visualHost->GetWxObject(controlParent));
-					}
-					if (controlParentSizer != nullptr) {
-						controlParentSizer->Detach(controlSizer);
-					}
-					wxDELETE(controlSizer);
-					if (!force && controlParentSizer != nullptr) {
-						controlParentSizer->Layout();
-					}
-				}
-			}
-			else if (control->GetComponentType() != COMPONENT_TYPE_FRAME) {
-				wxObject* controlObj = visualHost->GetWxObject(control);
-				if (controlObj != nullptr) {
-					visualHost->Cleanup(control, controlObj);
-					visualHost->RemoveInnerControl(control);
-					wxDELETE(controlObj);
-				}
-			}
+		// Unwrap SIZERITEM wrapper to get to the logical parent container.
+		if (controlParent != nullptr &&
+			controlParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
+		{
+			controlParent = controlParent->GetParent();
 		}
 
-	public:
-
-		static inline void ClearControl(ibVisualHost* visualHost, ibValueFrame* control, bool force) {
-
-			for (unsigned int i = 0; i < control->GetChildCount(); i++) {
-				ClearControl(visualHost,
-					control->GetChild(i), force
-				);
-			}
-
-			DeleteObject(visualHost, control, force);
+		wxSizer* controlParentSizer = nullptr;
+		if (controlParent != nullptr && controlParent->GetClassName() == wxT("NotebookPage")) {
+			ibPanelPage* pageWnd = dynamic_cast<ibPanelPage*>(GetWxObject(controlParent));
+			wxASSERT(pageWnd);
+			controlParentSizer = pageWnd->GetSizer();
 		}
-	};
+		else {
+			controlParentSizer = dynamic_cast<wxSizer*>(GetWxObject(controlParent));
+		}
 
-	ibControlCleaner::ClearControl(this, control, force);
+		if (controlParentSizer != nullptr)
+			controlParentSizer->Detach(controlSizer);
+		wxDELETE(controlSizer);
+		if (!force && controlParentSizer != nullptr)
+			controlParentSizer->Layout();
+		break;
+	}
+
+	case COMPONENT_TYPE_FRAME:
+		// Form root — nothing to delete here; children were torn down above.
+		break;
+
+	default:
+	{
+		wxObject* controlObj = GetWxObject(control);
+		if (controlObj != nullptr) {
+			Cleanup(control, controlObj);
+			RemoveInnerControl(control);
+			wxDELETE(controlObj);
+		}
+		break;
+	}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool ibVisualHost::CalculateLabelSize(ibValueFrame* control)
 {
-	static wxCoord widthTextMax, heightTextTotal;
+	// Two-pass alignment of label columns across a form's layout tree.
+	//
+	//   Pass 1 (Calculate): walk the current vertical sizer, find every
+	//   child that exposes ibControlDynamicBorder, and record the widest
+	//   natural label width among them. Horizontal sizers are treated as
+	//   a single unit — their contents do not share a vertical column.
+	//
+	//   Pass 2 (Apply): feed that width back to each contributing control
+	//   via ApplyLabelSize(). Labels in the same vertical run line up on
+	//   one grid, so their trailing controls (text fields, combos, ...)
+	//   start at the same x offset.
+	//
+	// Apply uses post-order traversal so nested vertical groups compute
+	// their own local max before the outer group aligns top-level items.
+	// A horizontal sizer resets the outer max after its label is handled,
+	// giving each vertical run its own fresh column budget.
+	struct ibLabelAligner {
 
-	class ibControlCalculateSize {
+		// Recursively collect the max label width within a vertical sizer.
+		static void Calculate(const ibValueFrame* node,
+			wxBoxSizer* parentSizer, int& maxLabelWidth)
+		{
+			if (node->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
+				node = node->GetChild(0);
+			wxASSERT(node);
 
-		static inline void Calculate(const ibValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
+			wxObject* wxObj = node->GetWxObject();
+			ibControlDynamicBorder* label =
+				dynamic_cast<ibControlDynamicBorder*>(wxObj);
 
-			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				child = child->GetChild(0);
+			if (label != nullptr && label->AllowCalc()) {
+				wxCoord w = 0, h = 0;
+				label->CalculateLabelSize(&w, &h);
+				if (w > maxLabelWidth)
+					maxLabelWidth = w;
 			}
 
-			wxASSERT(child);
-
-			wxObject* wx_object = child->GetWxObject();
-
-			wxBoxSizer* sizer = dynamic_cast<wxBoxSizer*>(wx_object);
-			ibControlDynamicBorder* childCtrl = dynamic_cast<ibControlDynamicBorder*>(wx_object);
-
-			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
-				childCtrl->CalculateLabelSize(&widthTextMax, &heightTextTotal);
-				if (widthTextMax > maxX) maxX = widthTextMax;
-			}
-
-			if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
+			// A horizontal sizer stops the column — its children sit on
+			// one row, not stacked vertically.
+			if (parentSizer->GetOrientation() == wxHORIZONTAL)
 				return;
+
+			wxBoxSizer* childSizer = dynamic_cast<wxBoxSizer*>(wxObj);
+			wxBoxSizer* nextParent = childSizer != nullptr ? childSizer : parentSizer;
+			for (unsigned int i = 0; i < node->GetChildCount(); ++i)
+				Calculate(node->GetChild(i), nextParent, maxLabelWidth);
+		}
+
+		// Recursively apply the computed width back to each label.
+		static void Apply(ibValueFrame* node,
+			wxBoxSizer* parentSizer, int& maxLabelWidth)
+		{
+			if (node->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
+				node = node->GetChild(0);
+			wxASSERT(node);
+
+			wxObject* wxObj = node->GetWxObject();
+			wxBoxSizer* childSizer = dynamic_cast<wxBoxSizer*>(wxObj);
+			ibControlDynamicBorder* label =
+				dynamic_cast<ibControlDynamicBorder*>(wxObj);
+
+			// Children see a snapshot of our current max; any adjustments
+			// they make stay local to their subtree.
+			int subtreeMax = maxLabelWidth;
+			wxBoxSizer* nextParent = childSizer != nullptr ? childSizer : parentSizer;
+			for (unsigned int i = 0; i < node->GetChildCount(); ++i)
+				Apply(node->GetChild(i), nextParent, subtreeMax);
+
+			if (label != nullptr && label->AllowCalc()) {
+				label->ApplyLabelSize(maxLabelWidth != wxNOT_FOUND
+					? wxSize(maxLabelWidth, wxNOT_FOUND)
+					: wxDefaultSize);
+
+				// After a label in a horizontal sizer we break the column
+				// so the next vertical run starts from zero.
+				if (parentSizer->GetOrientation() == wxHORIZONTAL)
+					maxLabelWidth = wxNOT_FOUND;
 			}
+		}
 
-			for (unsigned int idx = 0; idx < child->GetChildCount(); idx++) {
-				Calculate(child->GetChild(idx), sizer ? sizer : parentSizer, maxX);
-			}
-		};
+		static bool CalculateAndApply(const ibValueForm* form)
+		{
+			wxBoxSizer* rootSizer =
+				dynamic_cast<wxBoxSizer*>(form->GetWxObject());
+			if (rootSizer == nullptr)
+				return false;
 
-		static inline void Apply(ibValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
+			int maxLabelWidth = 0;
+			if (rootSizer->GetOrientation() == wxVERTICAL)
+				Calculate(form, rootSizer, maxLabelWidth);
 
-			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				child = child->GetChild(0);
-			}
-
-			wxASSERT(child);
-
-			wxObject* wx_object = child->GetWxObject();
-
-			wxBoxSizer* sizer = dynamic_cast<wxBoxSizer*>(wx_object);
-			ibControlDynamicBorder* childCtrl = dynamic_cast<ibControlDynamicBorder*>(wx_object);
-
-			int currMax = maxX;
-
-			//if (maxX != wxNOT_FOUND ||
-			//	parentSizer->GetOrientation() == wxOrientation::wxVERTICAL) {
-			//	Calculate(child, sizer ? sizer : parentSizer, maxX);
-			//}
-
-			for (unsigned int idx = 0; idx < child->GetChildCount(); idx++) {
-				Apply(child->GetChild(idx), sizer ? sizer : parentSizer, currMax);
-			}
-
-			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
-
-				if (maxX != wxNOT_FOUND) {
-					childCtrl->ApplyLabelSize(wxSize(maxX, wxNOT_FOUND));
-				}
-				else {
-					childCtrl->ApplyLabelSize(wxDefaultSize);
-				}
-
-				if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
-					maxX = wxNOT_FOUND;
-				}
-			}
-		};
-
-	public:
-
-		static inline bool CalculateAndApply(const ibValueForm* control) {
-
-			int currMaxX = 0;
-
-			wxBoxSizer* parentSizer = dynamic_cast<wxBoxSizer*>(control->GetWxObject());
-
-			if (parentSizer->GetOrientation() == wxOrientation::wxVERTICAL) {
-				Calculate(control, parentSizer, currMaxX);
-			}
-
-			for (unsigned int idx = 0; idx < control->GetChildCount(); idx++) {
-				Apply(control->GetChild(idx), parentSizer, currMaxX);
-			}
+			for (unsigned int i = 0; i < form->GetChildCount(); ++i)
+				Apply(form->GetChild(i), rootSizer, maxLabelWidth);
 
 			return true;
 		}
 	};
 
-	return ibControlCalculateSize::CalculateAndApply(GetValueForm());
+	return ibLabelAligner::CalculateAndApply(GetValueForm());
 }
 
 void ibVisualHost::UpdateVirtualSize()
@@ -733,3 +956,5 @@ ibFrontendVisualEditorNotebook* ibFrontendVisualEditorNotebook::FindEditorByForm
 
 	return nullptr;
 }
+
+#endif // !OES_USE_WEB

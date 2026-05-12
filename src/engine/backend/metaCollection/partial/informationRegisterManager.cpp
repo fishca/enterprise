@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : information register manager
 ////////////////////////////////////////////////////////////////////////////
@@ -10,8 +10,8 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectInformationRegister, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectInformationRegister::GetModuleManager() const {
-	return m_metaObject->GetModuleManager();
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectInformationRegister::GetManagerModule() const {
+	return m_metaObject->GetManagerModule();
 }
 
 enum {
@@ -106,7 +106,7 @@ bool ibValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodN
 		ibValueRecordKeyObject* keyVal = lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueRecordKeyObject>() : nullptr;
 		pvarRetValue = m_metaObject->GetRecordForm(paParams[0]->GetString(),
 			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
-			keyVal ? (keyVal->GetUniqueKey()) : nullptr);
+			keyVal ? keyVal->GetUniqueKey() : wxNullUniquePairKey);
 		return true;
 	}
 	case eGetListForm:

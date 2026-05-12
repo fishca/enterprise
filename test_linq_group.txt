@@ -1,0 +1,29 @@
+// LINQ GROUP BY smoke test — 2026-05-11 PM
+// Expected:
+//   USA: 3
+//     Alice
+//     Bob
+//     Eve
+//   UK: 2
+//     Carol
+//     Dan
+//   FR: 1
+//     Frank
+
+var people = New Array;
+people.Add(New Structure("Country, Name", "USA", "Alice"));
+people.Add(New Structure("Country, Name", "UK",  "Carol"));
+people.Add(New Structure("Country, Name", "USA", "Bob"));
+people.Add(New Structure("Country, Name", "FR",  "Frank"));
+people.Add(New Structure("Country, Name", "UK",  "Dan"));
+people.Add(New Structure("Country, Name", "USA", "Eve"));
+
+var q = from p in people
+        group p.Name by p.Country;
+
+foreach (g in q) {
+    Message(g.Key + ": " + g.Values.Count());
+    foreach (n in g.Values) {
+        Message("  " + n);
+    }
+}

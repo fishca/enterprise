@@ -25,8 +25,12 @@ ibDatatabaseParameterFirebird::ibDatatabaseParameterFirebird(ibInterfaceFirebird
 
 	m_pParameter->sqltype = SQL_TEXT | 1;
 
-	wxStrncpy((wxChar*)m_pParameter->sqldata, (wxChar*)(const char*)valueBuffer, length);
-	m_pParameter->sqllen = length;
+	// Raw bytes — wxStrncpy treated the buffer as wide chars and on Windows
+	// (wxChar = wchar_t = 2 bytes) walked twice as far as `length`. The
+	// driver hands UTF-8 to FB, so a plain memcpy of `length` bytes is the
+	// only correct copy.
+	memcpy(m_pParameter->sqldata, (const char*)valueBuffer, length);
+	m_pParameter->sqllen = (ISC_SHORT)length;
 
 	m_nNullFlag = 0;
 	m_pParameter->sqlind = &m_nNullFlag; // NULL indicator
@@ -66,20 +70,18 @@ ibDatatabaseParameterFirebird::ibDatatabaseParameterFirebird(ibInterfaceFirebird
 	else if (nType == SQL_INT64)
 	{
 		m_numValue = dblValue;
-		for (int i = 0; i < -pVar->sqlscale; i++) 
+		for (int i = 0; i < -pVar->sqlscale; i++)
 			m_numValue *= 10;
-		ttmath::Int<TTMATH_BITS(64)> int64val;
+		int64_t int64val = 0;
 		m_numValue.ToInt(int64val);
 		memcpy(m_pParameter->sqldata, &int64val, sizeof(int64val));
 	}
 	else if (nType == SQL_INT128)
 	{
 		m_numValue = dblValue;
-		for (int i = 0; i < -pVar->sqlscale; i++) 
+		for (int i = 0; i < -pVar->sqlscale; i++)
 			m_numValue *= 10;
-		ttmath::Int<TTMATH_BITS(128)> int128val;
-		m_numValue.ToInt(int128val);
-		memcpy(m_pParameter->sqldata, &int128val, sizeof(int128val));
+		m_numValue.To128Bytes(reinterpret_cast<uint8_t*>(m_pParameter->sqldata));
 	}
 	else
 	{
@@ -173,7 +175,7 @@ ibDatatabaseParameterFirebird::ibDatatabaseParameterFirebird(ibInterfaceFirebird
 {
 	m_pInterface = pInterface;
 	m_pParameter = pVar;
-	
+
 	int nType = (m_pParameter->sqltype & ~1);
 
 	if (nType == SQL_BLOB) {
@@ -183,7 +185,29 @@ ibDatatabaseParameterFirebird::ibDatatabaseParameterFirebird(ibInterfaceFirebird
 		m_nBufferLength = nDataLength;
 	}
 	else if (nType == SQL_TEXT) {
-		memcpy(m_pParameter->sqldata, pData, nDataLength);
+		// Fixed-length CHAR / BINARY column: raw bytes go straight into
+		// sqldata (allocated to sqllen + 1 in AllocateParameterSpace).
+		// Clamp to the column's declared length to avoid running past
+		// the allocation; FB compares CHAR/BINARY by full declared
+		// length so a short-bound buffer wouldn't match anyway.
+		const long cap = (long)m_pParameter->sqllen;
+		const long n   = (nDataLength > cap) ? cap : nDataLength;
+		memcpy(m_pParameter->sqldata, pData, n);
+	}
+	else if (nType == SQL_VARYING) {
+		// Variable-length VARCHAR / VARBINARY — FB describes unnamed
+		// `?` parameters bound for CHAR(N) columns as SQL_VARYING in
+		// some builds.  Layout in sqldata is [u16 length][N data bytes]
+		// (length prefix is little-endian on x86/x64). Without this
+		// branch SetParamBlob was a silent no-op against varying-typed
+		// params, leaving sqldata zero-init and breaking equality
+		// against a binary column whose stored value is non-zero.
+		const long cap = (long)m_pParameter->sqllen;
+		const long n   = (nDataLength > cap) ? cap : nDataLength;
+		// Length prefix as ISC_USHORT.
+		ISC_USHORT len = (ISC_USHORT)n;
+		memcpy(m_pParameter->sqldata, &len, sizeof(ISC_USHORT));
+		memcpy(m_pParameter->sqldata + sizeof(ISC_USHORT), pData, n);
 	}
 
 	m_nNullFlag = 0;

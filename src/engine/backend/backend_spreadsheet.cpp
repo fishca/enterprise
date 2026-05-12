@@ -147,12 +147,12 @@ ibSpreadsheetDescription ibBackendSpreadsheetObject::GetAreaByName(const wxStrin
 	return spreadsheetDesc;
 }
 
-void ibBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+void ibBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, unsigned int groupLevel)
 {
 	const int maxRowBrake = GetNumberRows();
 	const int maxColBrake = GetNumberCols();
 
-	spreadsheetNotify->PutArea(doc);
+	spreadsheetNotify->PutArea(doc, groupLevel);
 
 	for (int row = 0; row < doc->GetNumberRows(); row++) {
 		for (int col = 0; col < doc->GetNumberCols(); col++) {
@@ -191,14 +191,19 @@ void ibBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<ibBackendSpreadsh
 
 	if (maxColBrake < doc->GetNumberCols())
 		SetColBrake(maxColBrake + doc->GetNumberCols() - 1);
+
+	if (groupLevel > 0 && doc->GetNumberRows() > 0) {
+		m_spreadsheetDesc.AddRowGroup(
+			maxRowBrake, maxRowBrake + doc->GetNumberRows() - 1, groupLevel);
+	}
 }
 
-void ibBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+void ibBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, unsigned int groupLevel)
 {
 	const int maxRowBrake = GetNumberRows();
 	const int maxColBrake = GetNumberCols();
 
-	spreadsheetNotify->JoinArea(doc);
+	spreadsheetNotify->JoinArea(doc, groupLevel);
 
 	for (int col = 0; col < doc->GetNumberCols(); col++) {
 		for (int row = 0; row < doc->GetNumberRows(); row++) {
@@ -237,6 +242,50 @@ void ibBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<ibBackendSpreads
 		SetRowBrake(maxRowBrake + doc->GetNumberRows() - 1);
 
 	SetColBrake(maxColBrake + doc->GetNumberCols() - 1);
+
+	if (groupLevel > 0 && doc->GetNumberCols() > 0) {
+		m_spreadsheetDesc.AddColGroup(
+			maxColBrake, maxColBrake + doc->GetNumberCols() - 1, groupLevel);
+	}
+}
+
+// ----- block-style grouping ---------------------------------------------
+
+void ibBackendSpreadsheetObject::BeginRowGroup()
+{
+	m_rowGroupStack.push_back(GetNumberRows());
+}
+
+void ibBackendSpreadsheetObject::EndRowGroup()
+{
+	if (m_rowGroupStack.empty()) return;
+	const int start = m_rowGroupStack.back();
+	m_rowGroupStack.pop_back();
+	const int end = GetNumberRows() - 1;
+	if (end < start) return;
+	// Depth after the pop gives the outer nesting count, so the group we're
+	// closing is one level deeper — matches the "outer level 1, inner level 2"
+	// convention the user expects.
+	const unsigned int level = (unsigned int)m_rowGroupStack.size() + 1;
+	m_spreadsheetDesc.AddRowGroup((unsigned)start, (unsigned)end, level);
+	spreadsheetNotify->RowAreaAdded((unsigned)start, (unsigned)end, level);
+}
+
+void ibBackendSpreadsheetObject::BeginColGroup()
+{
+	m_colGroupStack.push_back(GetNumberCols());
+}
+
+void ibBackendSpreadsheetObject::EndColGroup()
+{
+	if (m_colGroupStack.empty()) return;
+	const int start = m_colGroupStack.back();
+	m_colGroupStack.pop_back();
+	const int end = GetNumberCols() - 1;
+	if (end < start) return;
+	const unsigned int level = (unsigned int)m_colGroupStack.size() + 1;
+	m_spreadsheetDesc.AddColGroup((unsigned)start, (unsigned)end, level);
+	spreadsheetNotify->ColAreaAdded((unsigned)start, (unsigned)end, level);
 }
 
 //size 

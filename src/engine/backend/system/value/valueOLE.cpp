@@ -281,11 +281,7 @@ bool ibValueOLE::FromVariant(const VARIANT& oleVariant, ibValue& pvarRetValue) c
 	case VT_UI8:
 	{
 		pvarRetValue.SetType(ibValueTypes::TYPE_NUMBER);
-#if !defined _M_X64 && !defined __x86_64__
-		pvarRetValue.m_fData = ttmath::ulint(oleVariant.ulVal);
-#else 
 		pvarRetValue.m_fData = uint64_t(oleVariant.ulVal);
-#endif
 		return true;
 	}
 	case VT_INT:

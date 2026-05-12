@@ -58,7 +58,7 @@ bool ibPGNumberProperty::StringToValue(wxVariant& variant, const wxString& text,
 		return true;
 	}
 
-	bool res = value.FromString(text.ToStdWstring()) == 0;
+	bool res = value.FromString(text);
 	if (res) {
 		if (numberVariant->GetNumber() != value) {
 			numberVariant->SetNumber(value);

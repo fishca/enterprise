@@ -2,7 +2,7 @@
 #define _MODULE_H__
 
 #include "frontend/docView/docView.h"
-#include "win/editor/codeEditor/codeEditor.h"
+#include "win/editor/codeEditor/codeEditorDesigner.h"
 
 #include <wx/fdrepdlg.h>
 
@@ -34,7 +34,7 @@ private:
 
 protected:
 
-	ibCodeEditor* m_codeEditor;
+	ibCodeEditorDesigner* m_codeEditor;
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_DYNAMIC_CLASS(ibModuleEditView);

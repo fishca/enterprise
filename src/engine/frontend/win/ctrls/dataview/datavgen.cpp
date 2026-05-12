@@ -13,7 +13,6 @@
 #if wxUSE_DATAVIEWCTRL
 
 #include "dataview.h"
-
 #ifndef WX_PRECOMP
 #ifdef __WXMSW__
 #include <wx/app.h>          // GetRegisteredClassName()
@@ -338,6 +337,17 @@ private:
 			return;
 		}
 
+		// Model-side veto — paged models (ibValueModel-derived) deny
+		// header-click toggle for system sorts and for columns that
+		// have no sort entry at all.  Non-paged native models default
+		// to permissive (true) so wx-style lists keep working.
+		if (auto* m = owner->GetModel();
+		    m != nullptr && !m->IsSortable(col->GetModelColumn()))
+		{
+			event.Skip();
+			return;
+		}
+
 		if (col->IsSortKey())
 		{
 			// already using this column for sorting, just change the order
@@ -354,8 +364,20 @@ private:
 		}
 
 		ibDataViewModel* const model = owner->GetModel();
-		if (model)
-			model->Resort();
+		if (model) {
+			// Sort change invalidates the paged anchor: GetTopItem()'s
+			// cursor key (e.g. uuid + sortValues) was built for the OLD
+			// ordering and steers the new SQL into the wrong half of the
+			// table — typically returning a single row.  Skip restore
+			// capture so PagedRefresh starts a fresh fetch from the top
+			// of the new ordering.
+			owner->SetPagedSkipRestoreCapture();
+			// Direct integration: paged models use this hook to update
+			// m_sortOrder and refetch; legacy non-paged models forward
+			// to Resort() through the default implementation.
+			model->OnSortColumnChanged(
+				col->GetModelColumn(), col->IsSortOrderAscending());
+		}
 
 		owner->OnColumnChange(idx);
 
@@ -481,83 +503,11 @@ wxEND_EVENT_TABLE()
 // ibDataViewMainWindow
 //-----------------------------------------------------------------------------
 
-class ibDataViewMainWindow : public wxWindow
-{
-public:
-
-	// table window variants for scrolling possibilities
-	enum ibDataViewWindowType
-	{
-		ibDataViewWindowNormal = 0,
-		ibDataViewWindowFrozenCol = 1,
-		ibDataViewWindowFrozenRow = 2,
-		ibDataViewWindowFrozenCorner = ibDataViewWindowFrozenCol | ibDataViewWindowFrozenRow
-	};
-
-	ibDataViewMainWindow(ibDataViewCtrl* owner,
-		ibDataViewWindowType type, int additionalStyle = wxWANTS_CHARS | wxCLIP_CHILDREN,
-		const wxString& name = wxT("wxdataviewctrlmainwindow"))
-		: m_owner(NULL), m_type(type)
-	{
-		// We want to use a specific class name for this window in wxMSW to make it
-		// possible to configure screen readers to handle it specifically.
-#ifdef __WXMSW__
-		CreateUsingMSWClass
-		(
-			wxApp::GetRegisteredClassName
-			(
-				wxT("ibDataView"),
-				-1, // no specific background brush
-				0, // no special styles either
-				wxApp::RegClass_OnlyNR
-			),
-			owner, wxID_ANY, wxDefaultPosition, wxDefaultSize, additionalStyle | wxBORDER_NONE, name
-		);
-#else
-		Create(owner, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS | wxBORDER_NONE, name);
-#endif
-
-		SetOwner(owner);
-
-		SetBackgroundColour(*wxWHITE);
-
-		SetBackgroundStyle(wxBG_STYLE_PAINT);
-	}
-
-	void SetOwner(ibDataViewCtrl* owner) { m_owner = owner; }
-	ibDataViewCtrl* GetOwner() { return m_owner; }
-	const ibDataViewCtrl* GetOwner() const { return m_owner; }
-
-	ibDataViewModel* GetModel() { return GetOwner()->GetModel(); }
-	const ibDataViewModel* GetModel() const { return GetOwner()->GetModel(); }
-
-	virtual wxWindow* GetMainWindowOfCompositeControl() wxOVERRIDE
-	{
-		return GetOwner();
-	}
-
-	virtual void ScrollWindow(int dx, int dy, const wxRect* rect = NULL) wxOVERRIDE;
-
-	ibDataViewWindowType GetType() const { return m_type; }
-
-protected:
-
-	void OnPaint(wxPaintEvent& event);
-	void OnCharHook(wxKeyEvent& event);
-	void OnChar(wxKeyEvent& event);
-	void OnMouse(wxMouseEvent& event);
-	void OnSetFocus(wxFocusEvent& event);
-	void OnKillFocus(wxFocusEvent& event);
-
-private:
-
-	ibDataViewCtrl* m_owner;
-
-	const ibDataViewWindowType m_type;
-
-	wxDECLARE_DYNAMIC_CLASS(ibDataViewCtrl);
-	wxDECLARE_EVENT_TABLE();
-};
+// ibDataViewMainWindow class definition moved to datavgen.paged.private.h
+// (extracted 2026-05-08) so datavgen.paged.cpp can call its methods.
+// Out-of-line wxIMPLEMENT_DYNAMIC_CLASS / event-table impls below stay
+// here.
+#include "datavgen.paged.private.h"
 
 // ---------------------------------------------------------
 // ibGenericDataViewModelNotifier
@@ -569,40 +519,65 @@ public:
 
 	ibGenericDataViewModelNotifier(ibDataViewCtrl* mainWindow)
 	{
-		m_mainWindow = mainWindow;
+		m_tableAreaWin = mainWindow;
 	}
 
-	virtual bool ItemAdded(const ibDataViewItem& parent, const ibDataViewItem& item) wxOVERRIDE
+	virtual bool ItemInserted(const ibDataViewItem& parent, const ibDataViewItem& item) wxOVERRIDE
 	{
-		return m_mainWindow->ItemAdded(parent, item);
+		return m_tableAreaWin->ItemInserted(parent, item);
+	}
+
+	virtual bool ItemAppended(const ibDataViewItem& parent, const ibDataViewItem& item) wxOVERRIDE
+	{
+		return m_tableAreaWin->ItemAppended(parent, item);
 	}
 
 	virtual bool ItemDeleted(const ibDataViewItem& parent, const ibDataViewItem& item) wxOVERRIDE
 	{
-		return m_mainWindow->ItemDeleted(parent, item);
+		return m_tableAreaWin->ItemDeleted(parent, item);
 	}
 
 	virtual bool ItemChanged(const ibDataViewItem& item) wxOVERRIDE
 	{
-		return m_mainWindow->ItemChanged(item);
+		return m_tableAreaWin->ItemChanged(item);
 	}
 
 	virtual bool ValueChanged(const ibDataViewItem& item, unsigned int col) wxOVERRIDE
 	{
-		return m_mainWindow->ValueChanged(item, col);
+		return m_tableAreaWin->ValueChanged(item, col);
 	}
 
 	virtual bool Cleared() wxOVERRIDE
 	{
-		return m_mainWindow->Cleared();
+		return m_tableAreaWin->Cleared();
+	}
+
+	// Freeze the control across the BeforeReset → AfterReset window so
+	// any intermediate paint events during the model mutation (vector
+	// clear, async refresh state setup) don't show stale or empty
+	// rows.  PagedRefresh's own inner Freeze (datavgen.paged.cpp:172)
+	// nests safely — wxFreeze is reference-counted, so the outer pair
+	// here just brackets the synchronous mutation while the inner pair
+	// extends the freeze across the async wipe → bootstrap window.
+	virtual bool BeforeReset() wxOVERRIDE
+	{
+		m_tableAreaWin->Freeze();
+		return true;
+	}
+
+	virtual bool AfterReset() wxOVERRIDE
+	{
+		const bool r = m_tableAreaWin->Cleared();
+		m_tableAreaWin->Thaw();
+		return r;
 	}
 
 #pragma region __table_notifier__h__
 
 	virtual unsigned int GetCurrentModelColumn() const
 	{
-		wxASSERT(m_mainWindow);
-		ibDataViewColumn* column = m_mainWindow->GetCurrentColumn();
+		wxASSERT(m_tableAreaWin);
+		ibDataViewColumn* column = m_tableAreaWin->GetCurrentColumn();
 		if (column != nullptr)
 			return column->GetModelColumn();
 		return 0;
@@ -613,25 +588,25 @@ public:
 		if (!item.IsOk())
 			return;
 
-		wxASSERT(m_mainWindow);
+		wxASSERT(m_tableAreaWin);
 
-		int viewColumn = m_mainWindow->GetModelColumnIndex(col);
+		int viewColumn = m_tableAreaWin->GetModelColumnIndex(col);
 		if (viewColumn != wxNOT_FOUND) {
-			m_mainWindow->EditItem(item,
-				m_mainWindow->GetColumn(viewColumn)
+			m_tableAreaWin->EditItem(item,
+				m_tableAreaWin->GetColumn(viewColumn)
 			);
 		}
 		else if (col == 0) {
 
-			ibDataViewColumn* currentColumn = m_mainWindow->GetCurrentColumn();
+			ibDataViewColumn* currentColumn = m_tableAreaWin->GetCurrentColumn();
 			if (currentColumn != nullptr) {
-				m_mainWindow->EditItem(item,
+				m_tableAreaWin->EditItem(item,
 					currentColumn
 				);
 			}
-			else if (m_mainWindow->GetColumnCount() > 0) {
-				m_mainWindow->EditItem(item,
-					m_mainWindow->GetColumnAt(0)
+			else if (m_tableAreaWin->GetColumnCount() > 0) {
+				m_tableAreaWin->EditItem(item,
+					m_tableAreaWin->GetColumnAt(0)
 				);
 			}
 		}
@@ -639,45 +614,52 @@ public:
 
 	virtual bool ShowFilter(struct ibFilterRow& filter)
 	{
-		wxASSERT(m_mainWindow);
-		return m_mainWindow->ShowFilter(filter);
+		wxASSERT(m_tableAreaWin);
+		return m_tableAreaWin->ShowFilter(filter);
 	}
 
 	virtual bool ShowViewMode()
 	{
-		wxASSERT(m_mainWindow);
-		return m_mainWindow->ShowViewMode();
+		wxASSERT(m_tableAreaWin);
+		return m_tableAreaWin->ShowViewMode();
 	}
 
 	virtual void Select(const ibDataViewItem& item) const
 	{
-		wxASSERT(m_mainWindow);
-		m_mainWindow->Select(item);
+		wxASSERT(m_tableAreaWin);
+		m_tableAreaWin->Select(item);
 	}
 
 	virtual int GetCountPerPage() const
 	{
-		return m_mainWindow->GetCountPerPage();
+		return m_tableAreaWin->GetCountPerPage();
 	}
 
 	virtual ibDataViewItem GetSelection() const
 	{
-		return m_mainWindow->GetSelection();
+		return m_tableAreaWin->GetSelection();
 	}
 
 	virtual int GetSelections(ibDataViewItemArray& sel) const
 	{
-		return m_mainWindow->GetSelections(sel);
+		return m_tableAreaWin->GetSelections(sel);
 	}
 
-#pragma endregion 
+	virtual ibDataViewItem GetDrillParent() const wxOVERRIDE
+	{
+		// Deepest crumb — the folder the user is currently inside;
+		// empty in List / Tree mode.
+		return m_tableAreaWin->GetTopParentItem();
+	}
+
+#pragma endregion
 
 	virtual void Resort() wxOVERRIDE
 	{
-		m_mainWindow->Resort();
+		m_tableAreaWin->Resort();
 	}
 
-	ibDataViewCtrl* m_mainWindow;
+	ibDataViewCtrl* m_tableAreaWin;
 };
 
 // ---------------------------------------------------------
@@ -1777,6 +1759,8 @@ namespace
 				i != nodes.end();
 				++i)
 			{
+				if ((*i)->IsHidden())
+					continue;
 				if (Walker(*i, func, flags))
 					return true;
 			}
@@ -1787,12 +1771,46 @@ namespace
 
 } // anonymous namespace
 
-bool ibDataViewCtrl::ItemAdded(const ibDataViewItem& parent, const ibDataViewItem& item)
+bool ibDataViewCtrl::ItemInserted(const ibDataViewItem& parent, const ibDataViewItem& item)
+{
+	return DoItemInserted(parent, item, wxEVT_DATAVIEW_ITEM_START_INSERTING);
+}
+
+bool ibDataViewCtrl::ItemAppended(const ibDataViewItem& parent, const ibDataViewItem& item)
+{
+	return DoItemInserted(parent, item, wxEVT_DATAVIEW_ITEM_START_ADDING);
+}
+
+bool ibDataViewCtrl::DoItemInserted(const ibDataViewItem& parent, const ibDataViewItem& item, wxEventType eventType)
 {
 	// Send event
-	ibDataViewEvent le(wxEVT_DATAVIEW_ITEM_START_INSERTING, this, GetCurrentColumn(), item);
+	ibDataViewEvent le(eventType, this, GetCurrentColumn(), item);
 	if (ProcessWindowEvent(le) || !le.IsAllowed())
 		return false;
+
+	// Paged DB-backed path: row order is governed by SQL ORDER BY,
+	// the new row's correct visual position needs a re-fetch.
+	// SchedulePagedRefresh debounces a burst of N mutations into one
+	// PagedRefresh on the next idle tick.  Newly inserted item
+	// becomes the restore anchor so the bootstrap positions around
+	// it and re-applies focus + selection.
+	//
+	// Paged RAM-backed path (TabularSection / ibValueTable / register
+	// record sets): the row is already in m_nodeValues at a known
+	// position when ItemInserted fires.  Falling through to the
+	// non-paged tree-insert path below uses GetChildren to locate
+	// the insertion index via sibling matching — works as long as
+	// the new row is adjacent to a row that's in the loaded buffer
+	// (typical copy-row / append scenarios).  Edge case: insertion
+	// past the loaded buffer end places the row at an approximate
+	// visual position; corrected on next scroll / refresh.  Trade-
+	// off: avoids a full tree wipe + bootstrap on every cell-edit
+	// derived ItemInserted (the user-visible flicker).
+	if (GetModel() != nullptr && GetModel()->IsPagedModel()
+	    && !GetModel()->GetFeatures().Has(ibDataViewModel::Features::RamFetch)) {
+		SchedulePagedRefresh(item);
+		return true;
+	}
 
 	if (IsVirtualList())
 	{
@@ -1834,7 +1852,7 @@ bool ibDataViewCtrl::ItemAdded(const ibDataViewItem& parent, const ibDataViewIte
 		parentNode->SetHasChildren(true);
 
 		ibDataViewTreeNode* itemNode = new ibDataViewTreeNode(parentNode, item);
-		itemNode->SetHasChildren(GetModel()->IsContainer(item));
+		itemNode->SetHasChildren(item.IsContainer());
 
 		if (GetSortOrder().IsNone())
 		{
@@ -1844,7 +1862,21 @@ bool ibDataViewCtrl::ItemAdded(const ibDataViewItem& parent, const ibDataViewIte
 			GetModel()->GetChildren(parent, modelSiblings);
 			const int modelSiblingsSize = modelSiblings.size();
 
-			int posInModel = modelSiblings.Index(item, /*fromEnd=*/true);
+			// Pointer-identity search: ibDataViewItemArray::Index uses
+			// operator== which after the refcount-aware refactor
+			// dispatches to ibDataViewObject::IsEqualTo — for fresh
+			// TabularSection rows with default values that equality
+			// returns true across value-similar rows, so Index would
+			// return the last value-match (often the just-inserted
+			// row's wrong neighbour) instead of the actual instance
+			// position.  We need INSTANCE identity here.
+			int posInModel = wxNOT_FOUND;
+			for (int i = modelSiblingsSize - 1; i >= 0; --i) {
+				if (modelSiblings[i].GetID() == item.GetID()) {
+					posInModel = i;
+					break;
+				}
+			}
 			wxCHECK_MSG(posInModel != wxNOT_FOUND, false, "adding non-existent item?");
 
 
@@ -1899,7 +1931,14 @@ bool ibDataViewCtrl::ItemAdded(const ibDataViewItem& parent, const ibDataViewIte
 		InvalidateCount();
 	}
 
-	m_selection.OnItemsInserted(GetRowByItem(item), 1);
+	const int newRowIdx = GetRowByItem(item);
+		m_selection.OnItemsInserted(newRowIdx, 1);
+
+	// Move focus to the just-added row — user-driven Add / Copy
+	// expects to land on the new row.  Use the public Select(item)
+	// helper which already does ExpandAncestors + single-sel
+	// UnselectAllRows + SelectRow + ChangeCurrentRow.
+	Select(item);
 
 	InvalidateColBestWidths();
 
@@ -1915,6 +1954,18 @@ bool ibDataViewCtrl::ItemDeleted(const ibDataViewItem& parent,
 	ibDataViewEvent le(wxEVT_DATAVIEW_ITEM_START_DELETING, this, GetCurrentColumn(), item);
 	if (this->ProcessWindowEvent(le) || !le.IsAllowed())
 		return false;
+
+	// DB-backed paged: re-fetch on delete because the cursor (anchor
+	// rows around the deleted one, m_pagedHasMore* flags) need
+	// resynchronisation against SQL.  RAM-backed paged: the row is
+	// already gone from m_nodeValues, falling through to the
+	// non-paged remove-from-tree path is correct and avoids the
+	// flicker.
+	if (GetModel() != nullptr && GetModel()->IsPagedModel()
+	    && !GetModel()->GetFeatures().Has(ibDataViewModel::Features::RamFetch)) {
+		SchedulePagedRefresh();
+		return true;
+	}
 
 	if (IsVirtualList())
 	{
@@ -1948,13 +1999,19 @@ bool ibDataViewCtrl::ItemDeleted(const ibDataViewItem& parent,
 		// removed from the model by the time ItemDeleted() is called, so we
 		// have to do it manually. We keep track of its position as well for
 		// later use.
+		//
+		// Pointer-identity compare: operator== dispatches to
+		// IsEqualTo (value-based) which over default / empty
+		// TabularSection rows returns true for unrelated instances —
+		// the loop would stop at the first value-match instead of
+		// the actual deleted row's tree node.
 		int itemPosInNode = 0;
 		ibDataViewTreeNode* itemNode = NULL;
 		for (ibDataViewTreeNodes::const_iterator i = parentsChildren.begin();
 			i != parentsChildren.end();
 			++i, ++itemPosInNode)
 		{
-			if ((*i)->GetItem() == item)
+			if ((*i)->GetItem().GetID() == item.GetID())
 			{
 				itemNode = *i;
 				break;
@@ -1968,7 +2025,7 @@ bool ibDataViewCtrl::ItemDeleted(const ibDataViewItem& parent,
 			// If this was the last child to be removed, it's possible the parent
 			// node became a leaf. Let's ask the model about it.
 			if (parentNode->GetChildNodes().empty())
-				parentNode->SetHasChildren(GetModel()->IsContainer(parent));
+				parentNode->SetHasChildren(parent.IsContainer());
 
 			return true;
 		}
@@ -1990,7 +2047,7 @@ bool ibDataViewCtrl::ItemDeleted(const ibDataViewItem& parent,
 		// node became a leaf. Let's ask the model about it.
 		if (parentNode->GetChildNodes().empty())
 		{
-			bool isContainer = GetModel()->IsContainer(parent);
+			bool isContainer = parent.IsContainer();
 			parentNode->SetHasChildren(isContainer);
 			if (isContainer)
 			{
@@ -2023,6 +2080,20 @@ bool ibDataViewCtrl::ItemDeleted(const ibDataViewItem& parent,
 			}
 
 			m_selection.OnItemsDeleted(itemRow, itemsDeleted);
+
+			// Move focus UP: the row above the deleted one becomes
+			// active.  If we deleted the topmost (itemRow == 0), fall
+			// back to the row that slid up into position 0.  Use the
+			// public Select(item) helper.
+			const long total = static_cast<long>(GetRowCount());
+			long newCurrent = -1;
+			if (total > 0) {
+				newCurrent = (itemRow > 0) ? (itemRow - 1) : 0;
+			}
+			if (newCurrent >= 0) {
+				const ibDataViewItem newItem = GetItemByRow(static_cast<unsigned>(newCurrent));
+				if (newItem.IsOk()) Select(newItem);
+			}
 		}
 	}
 
@@ -2039,7 +2110,26 @@ bool ibDataViewCtrl::ItemDeleted(const ibDataViewItem& parent,
 
 bool ibDataViewCtrl::DoItemChanged(const ibDataViewItem& item, int view_column)
 {
-	if (!IsVirtualList())
+	const bool paged = (GetModel() != nullptr && GetModel()->IsPagedModel());
+
+	// Paged path used to always SchedulePagedRefresh(item) — full tree
+	// wipe + re-fetch — for any ValueChanged signal. That was the safe
+	// option while GetRowByItem could mis-locate paged rows (walker
+	// stopped at a value-equal sibling instead of the actual instance,
+	// so RefreshRow(GetRowByItem(item)) painted the wrong row).  After
+	// the walker switch to pointer-identity comparison the narrow path
+	// works and the user-visible flicker on every cell edit is gone.
+	//
+	// `node->PutInSortOrder` and the `m_rowHeightCache->Remove` paths
+	// stay non-paged-only because in paged mode the row order comes
+	// from SQL ORDER BY (re-position needs a re-fetch, not a wx-tree
+	// re-insert) and the row-height cache is keyed off the same paged
+	// row index that GetRowByItem returns. Sort-column edits in paged
+	// mode therefore land at the now-stale visual position until the
+	// next reset; acceptable since most edits aren't on the sort
+	// column.  Bulk repopulate paths still call ItemsAdded / Cleared
+	// / BeforeReset which go through SchedulePagedRefresh as before.
+	if (!paged && !IsVirtualList())
 	{
 		if (m_rowHeightCache)
 			m_rowHeightCache->Remove(GetRowByItem(item));
@@ -2093,6 +2183,17 @@ bool ibDataViewCtrl::ValueChanged(const ibDataViewItem& item, unsigned int model
 
 bool ibDataViewCtrl::Cleared()
 {
+		// Paged path: routed through SchedulePagedRefresh so a series of
+	// reset signals (BeforeReset/AfterReset → Cleared, plus following
+	// ItemInserted'ов от bulk-mutation) coalesce into one PagedRefresh on
+	// the next idle.  Refcount-aware ibDataViewItem keeps row pointers
+	// the control holds alive past the model-side Clear(), so the
+	// asynchronous wipe inside PagedRefresh is safe.
+	if (GetModel() != nullptr && GetModel()->IsPagedModel()) {
+		SchedulePagedRefresh();
+		return true;
+	}
+
 	DestroyTree();
 	m_selection.Clear();
 	m_currentRow = (unsigned)-1;
@@ -2266,6 +2367,22 @@ unsigned int ibDataViewCtrl::GetFirstVisibleRow() const
 
 	CalcUnscrolledPosition(x, y, &x, &y);
 
+	// `m_tableAreaWin`'s virtual size has the frozen-row offset
+	// subtracted (RecalculateDisplay → SetVirtualSize), so its
+	// logical y=0 corresponds to the first NON-frozen row.
+	// `GetLineAt(y)` expects y in full-tree coords (row 0 = first
+	// row in m_root, frozen or not), so shift by the frozen-area
+	// offset before mapping y → row.  Mirrors what DrawTableContent
+	// does explicitly at lines ~6812-6818 by passing `gridOffset.y`
+	// into CalcDataViewWindowUnscrolledPosition.  Without this shift,
+	// scrolling inside a drilled subfolder leaves topRow stuck at
+	// row 0 (the topmost crumb) and DerivePagedThumb's dataBehind
+	// branch never fires.
+	if (m_tableAreaWin) {
+		const wxPoint offset = GetDataViewWindowOffset(m_tableAreaWin);
+		y += offset.y;
+	}
+
 	return GetLineAt(y);
 }
 
@@ -2311,6 +2428,8 @@ unsigned int ibDataViewCtrl::GetRowCount() const
 
 void ibDataViewCtrl::ChangeCurrentRow(unsigned int row)
 {
+	if (m_currentRow != row) {
+			}
 	m_currentRow = row;
 
 	// send event
@@ -2323,7 +2442,7 @@ bool ibDataViewCtrl::UnselectAllRows(unsigned int except)
 {
 	if (!m_selection.IsEmpty())
 	{
-		for (unsigned i = GetFirstVisibleRow(); i <= GetLastVisibleRow(); i++)
+				for (unsigned i = GetFirstVisibleRow(); i <= GetLastVisibleRow(); i++)
 		{
 			if (m_selection.IsSelected(i) && i != except)
 				RefreshRow(i);
@@ -2351,15 +2470,20 @@ bool ibDataViewCtrl::UnselectAllRows(unsigned int except)
 	return true;
 }
 
+void ibDataViewCtrl::ClearSelection()
+{
+		m_selection.SelectRange(0, GetRowCount() - 1, false);
+}
+
 void ibDataViewCtrl::SelectRow(unsigned int row, bool on)
 {
-	if (m_selection.SelectItem(row, on))
+		if (m_selection.SelectItem(row, on))
 		RefreshRow(row);
 }
 
 void ibDataViewCtrl::SelectRows(unsigned int from, unsigned int to)
 {
-	wxArrayInt changed;
+		wxArrayInt changed;
 	if (m_selection.SelectRange(from, to, true, &changed))
 	{
 		for (unsigned i = 0; i < changed.size(); i++)
@@ -2938,7 +3062,7 @@ ibDataViewCtrl::FindNode(const ibDataViewItem& item)
 	while (it.IsOk())
 	{
 		parentChain.push_back(it);
-		it = model->GetParent(it);
+		it = it.GetParentItem();
 	}
 
 	// Find the item along the parent-chain.
@@ -2959,12 +3083,14 @@ ibDataViewCtrl::FindNode(const ibDataViewItem& item)
 			const ibDataViewTreeNodes& nodes = node->GetChildNodes();
 			bool found = false;
 
+			// Pointer-identity walk — see the same caveat in
+			// ItemToRowJob / FindChildByItem.
 			for (unsigned i = 0; i < nodes.size(); ++i)
 			{
 				ibDataViewTreeNode* currentNode = nodes[i];
-				if (currentNode->GetItem() == parentChain[iter])
+				if (currentNode->GetItem().GetID() == parentChain[iter].GetID())
 				{
-					if (currentNode->GetItem() == item)
+					if (currentNode->GetItem().GetID() == item.GetID())
 					{
 						result.m_node = currentNode;
 						return result;
@@ -3069,22 +3195,31 @@ wxRect ibDataViewCtrl::GetItemRect(const ibDataViewItem& item,
 		indent += wxRendererNative::Get().GetExpanderSize(this).GetWidth();
 	}
 
-	wxRect itemRect(xpos + indent,
-		GetLineStart(row),
-		width - indent,
-		GetLineHeight(row));
+	const int lineStart  = GetLineStart(row);
+	const int lineHeight = GetLineHeight(row);
+	wxRect itemRect(xpos + indent, lineStart, width - indent, lineHeight);
 
 	ibDataViewMainWindow* tableWindow = CellToDataViewWindow(item, column);
-	itemRect.Offset(-GetDataViewWindowOffset(tableWindow));
+	const wxPoint winOffset = GetDataViewWindowOffset(tableWindow);
+	itemRect.Offset(-winOffset);
 
+	const wxPoint preScroll = itemRect.GetPosition();
 	// convert to scrolled coords
 	CalcDataViewWindowScrolledPosition(itemRect.x, itemRect.y,
 		&itemRect.x, &itemRect.y, tableWindow);
 
+	const char* winType =
+		tableWindow == m_tableAreaWin              ? "data" :
+		tableWindow == m_tableFrozenRowAreaWin     ? "frozenRow" :
+		tableWindow == m_tableFrozenColAreaWin     ? "frozenCol" :
+		tableWindow == m_tableFrozenCornerAreaWin  ? "corner" : "?";
+	const int clientH = GetClientSize().y;
+	const bool offscreen = (itemRect.GetBottom() < 0 || itemRect.GetTop() > clientH);
+	
 	// Check if the rectangle is completely outside of the currently visible
 	// area and, if so, return an empty rectangle to indicate that the item is
 	// not visible.
-	if (itemRect.GetBottom() < 0 || itemRect.GetTop() > GetClientSize().y)
+	if (offscreen)
 	{
 		return wxRect();
 	}
@@ -3125,13 +3260,23 @@ namespace
 		// Maybe binary search will help to speed up this process
 		virtual int operator() (ibDataViewTreeNode* node) wxOVERRIDE
 		{
-			if (node->GetItem() == m_item)
+			// Compare by pointer identity (GetID), NOT by value-equality
+			// (operator==).  After the refcount-aware ibDataViewItem
+			// refactor, operator== dispatches to ibDataViewObject::
+			// IsEqualTo, which on ibValueTableRow compares m_nodeValues.
+			// For TabularSection rows that share defaults / empty values
+			// across multiple rows that's a false positive — the walker
+			// would stop at the first row with matching values instead
+			// of the actual instance.  We need INSTANCE identity here:
+			// "find this row pointer in the tree", not "find any row
+			// that looks the same".
+			if (node->GetItem().GetID() == m_item.GetID())
 			{
 				return DoJob::DONE;
 			}
 
 			// Is this node the next (grand)parent of the item we're looking for?
-			if (node->GetItem() == *m_iter)
+			if (node->GetItem().GetID() == m_iter->GetID())
 			{
 				// Search for the next (grand)parent now and skip this item itself.
 				++m_iter;
@@ -3186,7 +3331,7 @@ ibDataViewCtrl::GetRowByItem(const ibDataViewItem& item,
 		while (it.IsOk())
 		{
 			parentChain.push_back(it);
-			it = model->GetParent(it);
+			it = it.GetParentItem();
 		}
 
 		// add an 'invalid' item to represent our 'invisible' root node
@@ -3207,14 +3352,13 @@ static void BuildHierarchicalHelper(ibDataViewCtrl* window, const ibDataViewMode
 {
 	ibDataViewItemArray children;
 
-	ibDataViewItem item =
-		model->GetParentTopItem();
+	ibDataViewItem item  = window->GetTopParentItem();
 	ibDataViewItem child = item;
 
 	while (child.IsOk())
 	{
 		children.Add(child);
-		child = model->GetParent(child);
+		child = child.GetParentItem();
 	}
 
 	ibDataViewTreeNode* parent = node;
@@ -3243,17 +3387,17 @@ static void BuildHierarchicalHelper(ibDataViewCtrl* window, const ibDataViewMode
 static void BuildTreeHelper(ibDataViewCtrl* window, const ibDataViewModel* model,
 	const ibDataViewItem& item, ibDataViewTreeNode* node)
 {
-	if (!model->IsContainer(item))
+	if (!item.IsContainer())
 		return;
 
 	ibDataViewItemArray children;
-	unsigned int num = model->GetChildren(item, children);
+	unsigned int num = model->GetFirstFetch(item, ibDataViewItem(), 0, children);
 
 	for (unsigned int index = 0; index < num; index++)
 	{
 		ibDataViewTreeNode* n = new ibDataViewTreeNode(node, children[index]);
 
-		if (model->IsContainer(children[index]))
+		if (children[index].IsContainer())
 			n->SetHasChildren(true);
 
 		node->InsertChild(window, n, index);
@@ -3267,7 +3411,7 @@ void BuildListHelper(ibDataViewCtrl* window, const ibDataViewModel* model,
 	const ibDataViewItem& item, ibDataViewTreeNode* node)
 {
 	ibDataViewItemArray children;
-	unsigned int num = model->GetChildren(item, children);
+	unsigned int num = model->GetFirstFetch(item, ibDataViewItem(), 0, children);
 
 	for (unsigned int index = 0; index < num; index++)
 	{
@@ -3316,7 +3460,8 @@ void ibDataViewCtrl::BuildTree(ibDataViewModel* model)
 
 void ibDataViewCtrl::DestroyTree()
 {
-	if (!IsVirtualList())
+	const size_t kids = (m_root != nullptr) ? m_root->GetChildNodes().size() : 0;
+		if (!IsVirtualList())
 	{
 		wxDELETE(m_root);
 		m_countRows = 0;
@@ -3652,7 +3797,119 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibDataViewCtrl, ibDataViewCtrlBase);
 wxBEGIN_EVENT_TABLE(ibDataViewCtrl, ibDataViewCtrlBase)
 EVT_SIZE(ibDataViewCtrl::OnSize)
 EVT_DPI_CHANGED(ibDataViewCtrl::OnDPIChanged)
+EVT_SCROLLWIN(ibDataViewCtrl::OnScrollEvent)
+// Idle path collapsed onto OnInternalIdle (single entry point: col-
+// widths/dirty + paged bootstrap/fill/thaw + external hook).  EVT_IDLE
+// on this control is no longer used.
 wxEND_EVENT_TABLE()
+
+#include "datavgen.paged.private.h"   // kBufferSlack + ScopedPagedFreeze
+
+// OnIdleEvent body collapsed into OnInternalIdle — single idle entry
+// point on the control.  See OnInternalIdle below.
+
+void ibDataViewCtrl::OnScrollEvent(wxScrollWinEvent& event)
+{
+	ibDataViewModel* model = GetModel();
+	if (model != nullptr && model->IsPagedModel() && m_tableAreaWin != nullptr) {
+		const int  countPerPage = GetCountPerPage();
+		const long total        = static_cast<long>(GetRowCount());
+		// GetFirstVisibleRow() works in drill mode (frozen-offset aware,
+		// no round-trip through Item lookup which fails when fetched
+		// rows have no model-side parent).
+		const long topAdj       = static_cast<long>(GetFirstVisibleRow());
+		const long topIdx       = topAdj;
+		const long marginFwd    = total - (topAdj + countPerPage);
+		const long marginBwd    = topAdj;
+
+		const wxEventType evt = event.GetEventType();
+		const short dir =
+			(evt == wxEVT_SCROLLWIN_LINEDOWN || evt == wxEVT_SCROLLWIN_PAGEDOWN ||
+			 evt == wxEVT_SCROLLWIN_BOTTOM) ? +1 :
+			(evt == wxEVT_SCROLLWIN_LINEUP   || evt == wxEVT_SCROLLWIN_PAGEUP   ||
+			 evt == wxEVT_SCROLLWIN_TOP) ? -1 : 0;
+
+		// Thumb drag in lying-scrollbar mode: wxScrollHelper would map
+		// the fake-range position to the wrong buffer pixel, so we
+		// don't event.Skip() here.  Instead, on RELEASE we compare the
+		// drop position against the thumb's rest position for the
+		// current state; a downward delta triggers a forward fetch,
+		// upward delta a backward fetch.  TRACK events during the drag
+		// are ignored (only the final position matters).  Snap the
+		// thumb back to its rest pose at the end.
+		if (IsPagedScrollbarMode() &&
+		    (evt == wxEVT_SCROLLWIN_THUMBTRACK ||
+		     evt == wxEVT_SCROLLWIN_THUMBRELEASE)) {
+			if (evt == wxEVT_SCROLLWIN_THUMBRELEASE) {
+				const int viewport2 = GetCountPerPage();
+				if (viewport2 > 0) {
+					int restPos;
+					switch (DerivePagedThumb()) {
+					case ibPagedThumb::Top:    restPos = 0;         break;
+					case ibPagedThumb::Bottom: restPos = viewport2; break;
+					case ibPagedThumb::Middle:
+					default:                   restPos = viewport2; break;
+					}
+					const int dropPos = (int)event.GetPosition();
+					const int delta = dropPos - restPos;
+										// Snap-to-start: drag landed at the very top of the
+					// bar.  Reset to bootstrap with empty anchor so the
+					// next idle-fire reloads the head of the dataset.
+					if (dropPos == 0 && m_pagedHasMoreBwd) {
+						DestroyTree();
+						m_root = ibDataViewTreeNode::CreateRootNode();
+						m_pagedNeedsBootstrap    = true;
+						m_pagedHasMoreFwd        = true;
+						m_pagedHasMoreBwd        = false;
+						m_pagedFwdAnchor         = ibDataViewItem();
+						m_pagedBwdAnchor         = ibDataViewItem();
+						m_pagedRestoreAnchor     = ibDataViewItem();
+						m_pagedRestoreSelection  = ibDataViewItem();
+						++m_pagedFetchGen;
+						m_selection.Clear();
+						m_currentRow             = (unsigned)-1;
+						ClearRowHeightCache();
+						InvalidateCount();
+						UpdateDisplay();
+											}
+					else if (delta > 0 && m_pagedHasMoreFwd)
+						PagedFetchForward(viewport2);
+					else if (delta < 0 && m_pagedHasMoreBwd)
+						PagedFetchBackward(viewport2);
+					// Snap-to-end: dragging to the bottom of the bar
+					// would require N forward fetches looped to reach
+					// the dataset end (no model API for "last batch").
+					// Deferred until async fetch lands.
+				}
+			}
+			UpdatePagedScrollbar();
+			return;
+		}
+
+		
+		// Edge breach → fetch in the direction the user is actually
+		// moving.  Cross-direction fetch (e.g. backward on a forward
+		// scroll just because behind < slack from a small initial
+		// buffer) caused content jumps when the trim shifted the
+		// visible window.  Per-direction guard: a fetch in flight on
+		// one side does not block a scroll-triggered fetch on the
+		// other side.
+		if (dir > 0 && marginFwd < kBufferSlack && m_pagedHasMoreFwd
+		    && m_pagedFetchingFwd == 0)
+			PagedFetchForward(countPerPage);
+		else if (dir < 0 && marginBwd < kBufferSlack && m_pagedHasMoreBwd
+		         && m_pagedFetchingBwd == 0)
+			PagedFetchBackward(countPerPage);
+
+		// Thumb derives from has-more flags + viewport position; topRow
+		// updates after wxScrollHelper's default handler (event.Skip()
+		// below).  CallAfter defers the refresh so DerivePagedThumb
+		// reads the post-scroll topRow.
+		CallAfter([this] { UpdatePagedScrollbar(); });
+	}
+	event.Skip();
+}
+
 
 ibDataViewCtrl::~ibDataViewCtrl()
 {
@@ -3985,7 +4242,7 @@ ibDataViewMainWindow* ibDataViewCtrl::CellToDataViewWindow(const ibDataViewItem&
 	// It may happen that we're called during grid creation, when the current
 	// cell still has invalid coordinates -- don't return (possibly null)
 	// frozen corner window in this case.
-	if (item == NULL && column == NULL)
+	if (!item.IsOk() && column == NULL)
 		return m_tableAreaWin;
 	else if (GetRowByItem(item) < wxMax(m_countFrozenRows, m_countFrozenHierarchicalRows) && GetColumnPosition(column) < m_countFrozenCols)
 		return m_tableFrozenCornerAreaWin;
@@ -4196,7 +4453,13 @@ void ibDataViewCtrl::CalcWindowSizes()
 
 void ibDataViewCtrl::OnSize(wxSizeEvent& event)
 {
-	CalcWindowSizes();
+	const wxSize sz = event.GetSize();
+	const int cpp = m_lineHeight > 0 ? sz.y / m_lineHeight : -1;
+		CalcWindowSizes();
+
+	// Top-up fill in OnInternalIdle is condition-driven (loaded < cpp +
+	// slack) — it fires whenever the buffer has room, regardless of why.
+	// No size-flag needed.
 
 	event.Skip();
 }
@@ -4390,6 +4653,7 @@ void ibDataViewCtrl::Refresh(bool eraseb, const wxRect* rect)
 
 bool ibDataViewCtrl::AssociateModel(ibDataViewModel* model)
 {
+
 	if (ibDataViewModel* const oldModel = GetModel())
 	{
 		// Remove the notifier from the model before calling the base class
@@ -4409,10 +4673,48 @@ bool ibDataViewCtrl::AssociateModel(ibDataViewModel* model)
 
 	DestroyTree();
 
-	if (model)
+	// Paged models start empty.  The control fetches the first batch
+	// itself once layout settles (OnIdle bootstrap below), so don't
+	// build a tree off whatever GetChildren returns at attach time.
+	m_pagedNeedsBootstrap = (model != nullptr && model->IsPagedModel());
+	m_pagedHasMoreFwd     = m_pagedNeedsBootstrap;
+	m_pagedHasMoreBwd     = false;
+	m_pagedFetchingFwd    = 0;
+	m_pagedFetchingBwd    = 0;
+	m_pagedFwdAnchor      = ibDataViewItem();
+	m_pagedBwdAnchor      = ibDataViewItem();
+	++m_pagedFetchGen;
+
+	// Freeze the rows area before the control's first paint hits the
+	// screen.  Without this the control mounts → wx queues a paint event
+	// against the just-created empty root → user sees one empty frame.
+	// Freeze() ONLY on m_tableAreaWin (rows) — header window stays
+	// unfrozen so the column titles paint immediately; only the row
+	// area is held back until Bootstrap on idle fills it and the
+	// matching idle-thaw releases the freeze.
+	if (m_pagedNeedsBootstrap && !m_pagedFrozenForBootstrap) {
+		if (m_tableAreaWin) m_tableAreaWin->Freeze();
+		m_pagedFrozenForBootstrap = true;
+	}
+
+	if (model && !model->IsPagedModel())
 	{
 		BuildTree(model);
 	}
+	else if (model)
+	{
+		// Make sure tree root exists so ItemInserted paths have a parent.
+		m_root = ibDataViewTreeNode::CreateRootNode();
+		InvalidateCount();
+	}
+
+	// Sync folder-first sort with current view mode — fresh model
+	// needs the matching system-sort entry before its first fetch.
+	ApplyFolderSortForViewMode();
+
+	// Reflect the model's default m_sortOrder onto header arrows so
+	// the user sees the same column / direction the SQL will use.
+	SyncColumnArrowsFromModel();
 
 	UpdateDisplay();
 
@@ -4553,7 +4855,7 @@ ibDataViewCtrl::DropItemInfo ibDataViewCtrl::GetDropItemInfo(const wxCoord x, co
 			{
 				dropItemInfo.m_indentLevel = level + 1;
 
-				if (GetModel()->IsContainer(ascendNode->GetItem()))
+				if (ascendNode->GetItem().IsContainer())
 				{
 					// Item can be inserted
 					dropItemInfo.m_item = ascendNode->GetItem();
@@ -5150,6 +5452,12 @@ void ibDataViewCtrl::OnInternalIdle()
 {
 	ibDataViewCtrlBase::OnInternalIdle();
 
+	const bool entryFrozen = IsFrozen();
+	const bool entryAreaFrozen = m_tableAreaWin ? m_tableAreaWin->IsFrozen() : false;
+	if (m_colsDirty || m_dirty || m_pagedNeedsBootstrap
+	    || m_pagedFrozenForBootstrap) {
+			}
+
 	if (m_colsDirty)
 		UpdateColWidths();
 
@@ -5158,6 +5466,90 @@ void ibDataViewCtrl::OnInternalIdle()
 		RecalculateDisplay();
 		m_dirty = false;
 	}
+
+	// External seed-chain hook FIRST — runs before PagedBootstrap so
+	// it can stamp m_pagedRestoreSelection via Select(item) /
+	// SetPagedRestoreSelection on the controller side.  Bootstrap
+	// reads the stamp to drive its IsEqualTo-based selection
+	// restoration in the freshly-fetched batch.  Reversing the order
+	// (hook after bootstrap) breaks form-open selection restore — by
+	// the time the hook fires, bootstrap already finished and the
+	// stamp lands on a settled buffer where re-fetch won't run.
+	// Hook implementations must be idempotent / cheap on the no-op
+	// path since OnInternalIdle fires every idle pass.
+	if (m_idleHook)
+		m_idleHook();
+
+	// Bootstrap path: AssociateModel cannot fetch yet because the
+	// control's height (and therefore the desired batch size) isn't
+	// known until layout settles.  We wait for the first idle after
+	// the size is real, then ask the model for the initial window.
+	if (m_pagedNeedsBootstrap && m_tableAreaWin != nullptr
+	    && GetCountPerPage() > 0) {
+		PagedBootstrap();
+	}
+
+	// Top-up fill: keep buf at target size whenever forward data is
+	// available.  Driven by the always-checked condition `loaded <
+	// cpp + slack`, NOT gated on m_pagedSizeChanged — Windows starves
+	// idle events during a resize-drag, so the flag may be consumed
+	// (or never even read) before the user releases the mouse.  If
+	// the size flag is set we clear it (legacy hint), but the actual
+	// fetch decision is condition-driven so resize→refresh-immediately
+	// flows still load the missing tail rows.
+	if (m_tableAreaWin != nullptr && !m_pagedNeedsBootstrap) {
+		const int cpp = GetCountPerPage();
+		const int loaded = (m_root != nullptr) ? GetRowCount() : 0;
+		if (cpp > 0 && loaded < cpp + (int)kBufferSlack
+		    && m_pagedHasMoreFwd && m_pagedFetchingFwd == 0
+		    && m_pagedFetchingBwd == 0) {
+			// Skip if a backward fetch is in flight: anchor-cursor
+			// Bootstrap dispatches both directions, the backward
+			// result arrives shortly and brings the buffer to target
+			// size on its own.  Firing forward here too would race
+			// the backward result, push the buffer past target, and
+			// then trigger an aggressive trim inside
+			// OnPagedFetchForwardResult that wipes the just-loaded
+			// backward rows — visually "rows disappear" near the
+			// saved top.
+			const int sy = m_tableAreaWin ?
+				CalcUnscrolledPosition(wxPoint(0, 0)).y : 0;
+						const int batch = cpp + (int)kBufferSlack - loaded;
+			PagedFetchForward(batch);
+			const int sy2 = m_tableAreaWin ?
+				CalcUnscrolledPosition(wxPoint(0, 0)).y : 0;
+					}
+	}
+
+	// Refresh-anti-flicker Thaw: PagedRefresh froze the control
+	// before destroying the tree; bootstrap above (or the size-fill
+	// branch if no bootstrap was pending) has now repopulated rows.
+	// Drop the freeze so the single composite paint shows the new
+	// state.  Guarded against the cold-bootstrap-without-prior-
+	// refresh case (frozen flag only set in PagedRefresh).
+	if (m_pagedFrozenForBootstrap && !m_pagedNeedsBootstrap) {
+		// Bootstrap and any forward/backward fetches above flipped
+		// m_dirty=true via UpdateDisplay() but did not call
+		// RecalculateDisplay synchronously — that ran in step 3 of
+		// this same pass on the EMPTY tree (just before bootstrap),
+		// so virtual size is still 0 when we reach Thaw.  Without
+		// this, wx paints the freshly-populated rows against the
+		// stale (empty) virtual size first, then the next idle pass
+		// re-runs RecalculateDisplay and triggers a second paint —
+		// visible flicker.  Fold the recalc into the same idle so
+		// Thaw releases a single composite paint with the correct
+		// virtual size.
+		if (m_dirty) {
+			RecalculateDisplay();
+			m_dirty = false;
+		}
+		m_pagedFrozenForBootstrap = false;
+		// Match the rows-area-only Freeze in PagedBootstrap /
+		// AssociateModel — outer ctrl was never frozen, no Thaw needed.
+		if (m_tableAreaWin) m_tableAreaWin->Thaw();
+		const int sy = m_tableAreaWin ?
+			CalcUnscrolledPosition(wxPoint(0, 0)).y : 0;
+			}
 }
 
 int ibDataViewCtrl::GetColumnPosition(const ibDataViewColumn* column) const
@@ -5233,7 +5625,7 @@ ibDataViewItem ibDataViewCtrl::GetTopItem() const
 	if (!IsVirtualList())
 	{
 		node = GetTreeNodeByRow(item);
-		if (node == NULL) return ibDataViewItem(0);
+		if (node == NULL) return ibDataViewItem();
 
 		dataitem = node->GetItem();
 	}
@@ -5287,7 +5679,7 @@ void ibDataViewCtrl::SetSelections(const ibDataViewItemArray& sel)
 	for (size_t i = 0; i < sel.size(); i++)
 	{
 		ibDataViewItem item = sel[i];
-		ibDataViewItem parent = GetModel()->GetParent(item);
+		ibDataViewItem parent = item.GetParentItem();
 		if (parent)
 		{
 			if (parent != last_parent)
@@ -5307,6 +5699,16 @@ void ibDataViewCtrl::SetSelections(const ibDataViewItemArray& sel)
 void ibDataViewCtrl::Select(const ibDataViewItem& item)
 {
 	ExpandAncestors(item);
+
+	// Paged path: stamp item into the bootstrap-restore channel so a
+	// pending PagedBootstrap matches the (possibly stub) item via
+	// ibDataViewObject::IsEqualTo against the freshly-fetched batch.
+	// For non-paged or already-bootstrapped paged the GetRowByItem
+	// branch below handles the wxSelectionStore + ChangeCurrentRow
+	// path; restore-selection then sits unused (cleared on next
+	// PagedRefresh).  Single Select call covers both timings.
+	if (GetModel() != nullptr && GetModel()->IsPagedModel())
+		SetPagedRestoreSelection(item);
 
 	int row = GetRowByItem(item);
 	if (row >= 0)
@@ -5409,44 +5811,138 @@ ibDataViewSelectionMode ibDataViewCtrl::GetSelectionMode() const
 	return m_selectionMode;
 }
 
+// Folder-first ordering toggle for paged hierarchical models.
+// List view keeps the user's column sort intact; Tree / Hierarchical
+// prepend a system sort entry on the model's isFolder column so the
+// next fetch returns folders ahead of items.  Models without the
+// Folders feature flag (Enum, Register, plain Catalog without
+// isFolder) silently skip.  Called both from SetViewMode (any path,
+// including no-op same-mode) and from AssociateModel so the model
+// always sees its folder-sort matching the control's current mode.
+void ibDataViewCtrl::SyncColumnArrowsFromModel()
+{
+	const ibDataViewModel* model = GetModel();
+	if (model == nullptr) return;
+	const ibSortOrder* sort = model->GetSortOrder();
+	if (sort == nullptr) return;
+
+	// Drop any current header arrows — we'll re-apply from the model.
+	ResetAllSortColumns();
+
+	// System-sort entries (folder-first, reference uuid tiebreaker)
+	// are an internal cursor concern; users don't pick them and we
+	// don't show them in the column header.  Only the user-driven
+	// (non-system) enabled sorts get an arrow.
+	//
+	// ibValueModelTableBoxColumn::OnUpdated calls SetColumnModel with
+	// the bound attribute's metaID, so col->GetModelColumn() and
+	// s.m_sortModel live in the same number space — direct compare.
+	for (const auto& s : sort->m_sorts) {
+		if (!s.m_sortEnable || s.m_sortSystem) continue;
+		for (unsigned int idx = 0; idx < GetColumnCount(); ++idx) {
+			ibDataViewColumn* col = GetColumn(idx);
+			if (col != nullptr && col->GetModelColumn() == s.m_sortModel) {
+				col->SetSortOrder(s.m_sortAscending);
+								break;
+			}
+		}
+	}
+}
+
+ibDataViewItem ibDataViewCtrl::GetEffectiveFetchParent() const
+{
+	// Drill-into-folder always wins: if the user is inside a folder,
+	// fetch its children regardless of the view mode (Hierarchical's
+	// usual case, but legal in any mode).
+	if (!m_topParentChain.IsEmpty())
+		return m_topParentChain[0];
+
+	// Flat List view of a hierarchical (folder-aware) model — pass
+	// the sentinel so the model drops its parent filter at SQL.  Mirror
+	// the same Folders-feature gate used by ApplyFolderSortForViewMode.
+	if (m_viewMode == ibDataViewViewMode::ibDataViewList) {
+		const ibDataViewModel* model = GetModel();
+		if (model != nullptr
+		    && model->GetFeatures().Has(ibDataViewModel::Features::Folders))
+			return s_constIgnoreParent;
+	}
+
+	// Tree view, or non-hierarchical model — empty parent means
+	// "top-level rows" to the model.
+	return ibDataViewItem();
+}
+
+void ibDataViewCtrl::ApplyFolderSortForViewMode()
+{
+	ibDataViewModel* model = GetModel();
+	if (model == nullptr) return;
+	const auto feat = model->GetFeatures();
+	if (!feat.Has(ibDataViewModel::Features::Folders)) return;
+	ibSortOrder* sort = model->GetSortOrder();
+	if (sort == nullptr) return;
+	const auto folderIDu = static_cast<unsigned int>(feat.folderSortID);
+	if (m_viewMode == ibDataViewViewMode::ibDataViewList)
+		sort->DisableSystemSort(folderIDu);
+	else
+		sort->EnableSystemSort(folderIDu, /*ascending=*/false);
+}
+
 void ibDataViewCtrl::SetViewMode(ibDataViewViewMode viewMode)
 {
-	if (m_viewMode != viewMode)
-	{
-		m_viewMode = viewMode;
+	// Always reapply folder-sort — initial form load can call SetViewMode
+	// with the same mode the control was constructed in (default = Tree),
+	// which previously skipped the toggle entirely and left m_sortOrder
+	// without the system isFolder entry.
+	const bool modeChanged = (m_viewMode != viewMode);
+	m_viewMode = viewMode;
 
+	ApplyFolderSortForViewMode();
+
+	if (modeChanged)
+	{
 		const ibDataViewItem& selection =
 			GetItemByRow(m_currentRow);
+
+		// Freeze across the whole switch — InitializeFrozenWindows
+		// can show/hide m_tableFrozenRowAreaWin, CalcWindowSizes
+		// re-lays out the children, Cleared() schedules an async
+		// PagedRefresh that wipes m_root and rebuilds from a fresh
+		// fetch.  Without freeze the user sees flickering empty
+		// rows + sequential repaints between each step.
+		ScopedPagedFreeze freeze(this);
 
 		if (m_viewMode == ibDataViewViewMode::ibDataViewHierarchical) {
 
 			ibDataViewModel* model = GetModel();
 
-			if (model != NULL)
-			{
-				ibDataViewItem item = model->GetParent(selection);
-
-				if (item == model->GetParentTopItem())
-				{
-					model->SetParentTopItem(
-						model->GetParent(selection));
-				}
-				else if (model->IsContainer(item))
-				{
-					model->SetParentTopItem(item);
-				}
-
-				m_countFrozenHierarchicalRows = 0;
-
-				while (item.IsOk())
-				{
-					m_countFrozenHierarchicalRows++;
-					item = model->GetParent(item);
-				}
+			// Entering Hierarchical from List/Tree with a selection
+			// inside folders: ask the model to materialise the
+			// breadcrumb chain (direct parent → topmost ancestor) so
+			// the user sees the selected row sitting under its full
+			// folder path.  m_topParentChain[0] = deepest folder
+			// (selection's direct parent); index N-1 = topmost.
+			//
+			// If selection is at the root, or the model is non-
+			// hierarchical, BuildAncestorBreadcrumb returns empty —
+			// chain stays empty and the view shows top-level rows.
+			//
+			// We don't preserve the previous Hierarchical drill state
+			// across mode switches: every entry into Hierarchical
+			// re-anchors on the current selection so the user lands
+			// where they're looking.
+			m_topParentChain.Clear();
+			if (model != NULL && selection.IsOk()) {
+				model->BuildAncestorBreadcrumb(selection, m_topParentChain);
 			}
+			m_countFrozenHierarchicalRows =
+				static_cast<int>(m_topParentChain.GetCount());
 		}
 		else
 		{
+			// Leaving Hierarchical — drop the drill chain so the next
+			// fetch goes against the top level (or against the flat-
+			// scan sentinel for List view of a hierarchical model).
+			m_topParentChain.Clear();
 			m_countFrozenHierarchicalRows = 0;
 		}
 
@@ -5457,35 +5953,43 @@ void ibDataViewCtrl::SetViewMode(ibDataViewViewMode viewMode)
 
 		CalcWindowSizes();
 
-		Cleared();
+		// View-mode switch in paged mode is async: SchedulePagedRefresh
+		// dispatches PagedRefresh through ibSession::Submit (inline on
+		// desktop), which wipes m_root and kicks PagedBootstrap to
+		// GetFirstFetch the new layout.  We pass the captured row as
+		// preferSelection — PagedRefresh stamps it into
+		// m_pagedRestoreSelection, PagedBootstrap passes it as anchor
+		// to GetFirstFetch and (post-fetch) finds the matching row by
+		// ibDataViewObject::IsEqualTo (logical equality on m_objGuid /
+		// m_nodeValues), restoring focus + selection in the new layout.
+		//
+		// We deliberately do NOT call Cleared() here.  Cleared() in
+		// paged mode is just `SchedulePagedRefresh()` with an empty
+		// preferSelection; under inline Submit the first refresh fires
+		// synchronously and clears m_currentRow, so the second
+		// SchedulePagedRefresh inside Cleared() would re-fire
+		// PagedRefresh with no selection and wipe our stamp.  For
+		// non-paged native models the path is unreachable today (every
+		// ibValueModel-derived model is paged); add an explicit branch
+		// here when that changes.
+		SchedulePagedRefresh(selection);
 
-		if (m_viewMode == ibDataViewViewMode::ibDataViewTree)
-			ExpandAncestors(selection);
-
-		int current = GetRowByItem(selection);
-
-		if (current != wxNOT_FOUND && (IsSingleSel() || !IsRowSelected(current)))
-		{
-			ChangeCurrentRow(current);
-			if (UnselectAllRows(current))
-			{
-				SelectRow(m_currentRow, true);
-				SendSelectionChangedEvent(GetItemByRow(m_currentRow));
-			}
-		}
-		else if (current != wxNOT_FOUND) // multi sel & current is highlighted & no mod keys
-		{
-			m_lineSelectSingleOnUp = current;
-			ChangeCurrentRow(current); // change focus
-		}
-
-		// Send the event to ibDataViewCtrl itself.
+		// Send the view-mode-set event to ibDataViewCtrl itself so
+		// listeners (column-header arrows, status-bar widgets) can
+		// react to the new mode.  Selection-restore is async — by the
+		// time PagedBootstrap finishes, m_currentRow / m_selection are
+		// already updated by the bootstrap's own restore logic.
 		ibDataViewEvent cache_event(wxEVT_DATAVIEW_VIEW_SET, this, selection);
 		cache_event.SetViewMode(viewMode);
 		ProcessWindowEvent(cache_event);
 
-		EnsureVisibleRowCol(m_currentRow, -1);
-	}
+		// TODO Tree-mode deep-ancestor expand: ExpandAncestors used to
+		// walk the parent chain from `selection` up and ToggleOpen each
+		// node so the focused row was reachable on initial render.  In
+		// paged mode the tree is empty at this point — ancestor expand
+		// has to happen after each lazy fetch.  Deferred until
+		// hierarchical drill positioning is solid.
+	}  // ScopedPagedFreeze auto-Thaws here
 }
 
 ibDataViewViewMode ibDataViewCtrl::GetViewMode() const
@@ -5495,27 +5999,77 @@ ibDataViewViewMode ibDataViewCtrl::GetViewMode() const
 
 void ibDataViewCtrl::SetTopParent(const ibDataViewItem& item)
 {
-	if ((!IsList()) && m_viewMode == ibDataViewViewMode::ibDataViewHierarchical)
+		if ((!IsList()) && m_viewMode == ibDataViewViewMode::ibDataViewHierarchical)
 	{
 		ibDataViewModel* model = GetModel();
 
-		if (model != NULL && item == model->GetParentTopItem())
-		{
-			model->SetParentTopItem(
-				model->GetParent(item));
-
-			ibDataViewItem item =
-				model->GetParentTopItem();
-
-			m_countFrozenHierarchicalRows = 0;
-
-			while (item.IsOk())
-			{
-				m_countFrozenHierarchicalRows++;
-				item = model->GetParent(item);
+		// Drill flow:
+		//   click on a crumb already in m_topParentChain → drill UP past
+		//     it (pop chain[0..i] so chain[i+1] becomes new top).
+		//   click on a folder NOT in chain → drill INTO that folder.
+		// Drill state lives on the control (m_topParentChain); the model
+		// is stateless and just receives the front-of-chain as parent.
+		// Locating clicked in chain detects both chain[0] (current top)
+		// and ancestor crumbs (chain[1+]); without this an ancestor
+		// crumb falls through to drill-INTO and Insert duplicates it.
+		int chainIdx = -1;
+		if (model != NULL && item.IsOk()) {
+			for (int i = 0; i < (int)m_topParentChain.GetCount(); ++i) {
+				if (m_topParentChain[i] == item) { chainIdx = i; break; }
 			}
+		}
+		if (model != NULL && chainIdx >= 0)
+		{
+			// Drill UP — pop chain[0..chainIdx] inclusive.  i=0 case
+			// (click current top) pops chain[0] only; i>0 (click ancestor
+			// crumb) pops everything down to and including the clicked
+			// crumb so its parent becomes the new top.
+			for (int i = 0; i <= chainIdx && !m_topParentChain.IsEmpty(); ++i)
+				m_topParentChain.RemoveAt(0);
+			m_countFrozenHierarchicalRows =
+				static_cast<int>(m_topParentChain.GetCount());
 
-			Cleared();
+			// Freeze paints across Cleared → bootstrap so the user
+			// sees one transition (old folder → new folder) instead
+			// of an empty table between Cleared and the deferred
+			// PagedBootstrap fire on next idle.
+			//
+			// Drill changes the parent context — flag the upcoming
+			// async PagedRefresh to NOT capture the OLD folder's top
+			// / selection as restore anchors (PagedRefresh runs after
+			// Cleared scheduled it and would otherwise overwrite any
+			// reset we did synchronously here).
+			m_pagedSkipRestoreCapture = true;
+						{
+				ScopedPagedFreeze freeze(this);
+				// PagedRefresh sync (bypassing Cleared's async
+				// SchedulePagedRefresh) — without this the bootstrap
+				// runs only on the next OnInternalIdle, AFTER this
+				// freeze block has Thawed → stale folder paints
+				// briefly.  Direct call arms m_pagedNeedsBootstrap and
+				// the sync PagedBootstrap fires inside the freeze.
+				PagedRefresh();
+				if (m_pagedNeedsBootstrap && m_tableAreaWin != nullptr
+				    && GetCountPerPage() > 0) {
+					// ScopedPagedFreeze already froze m_table; tell
+					// PagedBootstrap to skip its own inner freeze.
+					// Without this we'd end with depth 2 going into
+					// ScopedPagedFreeze.~Thaw → m_table stays frozen at
+					// depth 1 (paints stale until OnInternalIdle thaws
+					// the bootstrap-owned freeze later).
+					const bool prevFrozen = m_pagedFrozenForBootstrap;
+					m_pagedFrozenForBootstrap = true;
+					PagedBootstrap();
+					m_pagedFrozenForBootstrap = prevFrozen;
+				}
+				// PagedBootstrap rebuilds m_root but only flips
+				// m_dirty; the m_tableAreaWin virtual size still reflects
+				// the pre-drill row count, so wxScrollHelper computes a
+				// scroll range that fits one viewport and the thumb stays
+				// pinned at top.  Force the virtual-size recompute now so
+				// the scrollbar matches the freshly-built tree.
+				RecalculateDisplay();
+			}  // ScopedPagedFreeze auto-Thaws here
 
 			InitializeFrozenWindows();
 
@@ -5524,22 +6078,27 @@ void ibDataViewCtrl::SetTopParent(const ibDataViewItem& item)
 
 			CalcWindowSizes();
 		}
-		else if (model != NULL && model->IsContainer(item))
+		else if (model != NULL && item.IsContainer())
 		{
-			model->SetParentTopItem(item);
+			// Drill INTO — prepend the new folder onto the existing
+			// chain.  Fetched rows have no backend tree-parent (model
+			// is stateless), so the chain accumulates on the control.
+			m_topParentChain.Insert(item, 0);
+			m_countFrozenHierarchicalRows =
+				static_cast<int>(m_topParentChain.GetCount());
 
-			ibDataViewItem item =
-				model->GetParentTopItem();
-
-			m_countFrozenHierarchicalRows = 0;
-
-			while (item.IsOk())
-			{
-				m_countFrozenHierarchicalRows++;
-				item = model->GetParent(item);
-			}
-
-			Cleared();
+			m_pagedSkipRestoreCapture = true;
+						{
+				ScopedPagedFreeze freeze(this);
+				// Sync PagedRefresh (see drill UP branch above for
+				// rationale — async Cleared path leaves stale folder
+				// painting briefly between freeze.~Thaw and idle).
+				PagedRefresh();
+				if (m_pagedNeedsBootstrap && m_tableAreaWin != nullptr
+				    && GetCountPerPage() > 0)
+					PagedBootstrap();
+				RecalculateDisplay();
+			}  // ScopedPagedFreeze auto-Thaws here
 
 			InitializeFrozenWindows();
 
@@ -5812,6 +6371,11 @@ void ibDataViewCtrl::DrawTableContent(wxDC& dc, ibDataViewMainWindow* tableWindo
 			(int)(GetRowCount() - item_start));
 	unsigned int item_last = item_start + item_count;
 
+	// Per-paint cycle: log only the Normal area (frozen-row / col /
+	// corner are derived from the same buffer, no need to spam).
+	if (tableWindow->GetType() == ibDataViewMainWindow::ibDataViewWindowNormal) {
+			}
+
 	// Send the event to ibDataViewCtrl itself.
 	ibDataViewEvent cache_event(wxEVT_DATAVIEW_CACHE_HINT, this, NULL);
 	cache_event.SetCache(item_start, item_last - 1);
@@ -5939,6 +6503,21 @@ void ibDataViewCtrl::DrawTableContent(wxDC& dc, ibDataViewMainWindow* tableWindo
 	}
 
 	ibDataViewColumn* selectedCol = m_currentCol;
+
+	// Per-paint selection visualisation summary: log highlighted rows
+	// in the [item_start, item_last) range so we can diff what the
+	// model thinks is selected vs what gets painted.
+	if (tableWindow->GetType() == ibDataViewMainWindow::ibDataViewWindowNormal) {
+		wxString selRows;
+		int selDrawn = 0;
+		for (unsigned int item = item_start; item < item_last; item++) {
+			if (m_selection.IsSelected(item) || item == m_currentRow) {
+				if (!selRows.IsEmpty()) selRows += ",";
+				selRows += wxString::Format("%u", item);
+				++selDrawn;
+			}
+		}
+			}
 
 	// redraw the background for the items which are selected/current
 	unsigned int cur_line_start = first_line_start;
@@ -6069,6 +6648,24 @@ void ibDataViewCtrl::DrawTableContent(wxDC& dc, ibDataViewMainWindow* tableWindo
 				}
 				else if (m_selectionMode == ibDataViewSelectionMode::ibDataViewSelectCell)
 				{
+					// Faint row hint — show which row contains the
+					// focused cell without competing with the strong
+					// cell highlight below.  Blend system-highlight
+					// 15% over the background so the tint is just
+					// noticeable on light themes and barely there on
+					// dark.
+					{
+						const wxColour hl = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
+						const wxColour bg = GetBackgroundColour();
+						const wxColour faint(
+							(hl.Red()   * 15 + bg.Red()   * 85) / 100,
+							(hl.Green() * 15 + bg.Green() * 85) / 100,
+							(hl.Blue()  * 15 + bg.Blue()  * 85) / 100);
+						wxDCBrushChanger  brushSaver(dc, wxBrush(faint));
+						wxDCPenChanger    penSaver  (dc, *wxTRANSPARENT_PEN);
+						dc.DrawRectangle(rowRect);
+					}
+
 					wxRect colRect(rowRect);
 
 					for (unsigned int i = col_start; i < col_last; i++)
@@ -6083,7 +6680,8 @@ void ibDataViewCtrl::DrawTableContent(wxDC& dc, ibDataViewMainWindow* tableWindo
 
 						if (col == m_currentCol || m_currentCol == nullptr)
 						{
-							// Draw column selection rect
+							// Strong native selection rect on the
+							// focused cell only.
 							wxRendererNative::Get().DrawItemSelectionRect
 							(
 								this,
@@ -6694,16 +7292,14 @@ void ibDataViewCtrl::ProcessTableMouseEvent(wxMouseEvent& event, ibDataViewMainW
 	// Check if we clicked outside the item area.
 	if ((current >= GetRowCount()) || !col)
 	{
-		// Follow Windows convention here: clicking either left or right (but
-		// not middle) button clears the existing selection.
-		if (this && (event.LeftDown() || event.RightDown()))
-		{
-			if (!m_selection.IsEmpty())
-			{
-				UnselectAll();
-				SendSelectionChangedEvent(ibDataViewItem());
-			}
-		}
+		// wx upstream cleared selection here per Windows file-explorer
+		// convention.  OES forms use selection as the row-context for
+		// subsequent actions (Edit / Delete / drill / Add-with-parent),
+		// so a stray click into the empty area below the last row must
+		// NOT drop selection — UnselectAll cleared m_selection but
+		// m_currentRow / m_pagedRestoreFocus survived, so the next
+		// refresh restored the highlight, giving the user a confusing
+		// "selection blinked" effect.  Persistent selection wins.
 		event.Skip();
 		return;
 	}

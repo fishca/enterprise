@@ -3,12 +3,16 @@
 
 #include "backend/moduleInfo.h"
 
+#include <mutex>
+
 #include "backend/metaCollection/metaObjectMetadata.h"
 #include "backend/metaCollection/metaModuleObject.h"
 #include "backend/metaCollection/partial/commonObject.h"
 
+class ibSession;
+
 class BACKEND_API ibValueModuleManager :
-	public ibModuleDataObject, public ibValue {
+	public ibRuntimeModuleDataObject, public ibValue {
 protected:
 	enum helperAlias {
 		eProcUnit
@@ -16,7 +20,7 @@ protected:
 public:
 
 	class BACKEND_API ibValueModuleUnit :
-		public ibModuleDataObject, public ibValue {
+		public ibRuntimeModuleDataObject, public ibValue {
 		wxDECLARE_DYNAMIC_CLASS(ibValueModuleUnit);
 	protected:
 		enum helperAlias {
@@ -33,7 +37,7 @@ public:
 		bool DestroyCommonModule();
 
 		//get common module 
-		ibValueMetaObjectModuleBase* GetModuleObject() const {
+		ibValueMetaObjectModuleBase* GetObjectModule() const {
 			return m_moduleObject;
 		}
 
@@ -87,7 +91,7 @@ public:
 		{
 			ibValueModuleUnit* compareModule = dynamic_cast<ibValueModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
-				return m_moduleObject == compareModule->GetModuleObject();
+				return m_moduleObject == compareModule->GetObjectModule();
 			}
 
 			return false;
@@ -98,7 +102,7 @@ public:
 		{
 			ibValueModuleUnit* compareModule = dynamic_cast<ibValueModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
-				return m_moduleObject != compareModule->GetModuleObject();
+				return m_moduleObject != compareModule->GetObjectModule();
 			}
 
 			return false;
@@ -174,7 +178,7 @@ private:
 protected:
 
 	//metaData and external variant
-	ibValueModuleManager(ibMetaData* metaData, ibValueMetaObjectModule* metaObject);
+	ibValueModuleManager(ibMetaData* metaData, const ibValueMetaObjectModule* metaObject);
 
 public:
 
@@ -212,34 +216,17 @@ public:
 	//check is empty
 	virtual bool IsEmpty() const { return false; }
 
-	//compile modules:
-	bool AddCompileModule(const ibValueMetaObject* moduleObject, ibValue* object);
-	bool RemoveCompileModule(const ibValueMetaObject* moduleObject);
+	// common modules — runtime-side mutation API. Metadata's
+	// AddCommonModule/RenameCommonModule/RemoveCommonModule forwards
+	// here on each active runtime; mm's CreateMainModule also invokes
+	// RuntimeRegisterCommonModule for every descriptor in metadata's
+	// init-modules list. Not for direct caller use outside metadata
+	// or CreateMainModule.
+	bool RuntimeRegisterCommonModule(ibValueMetaObjectCommonModule* commonModule, bool compileNow = false);
+	bool RuntimeRenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName);
+	bool RuntimeUnregisterCommonModule(ibValueMetaObjectCommonModule* commonModule);
 
-	//templates:
-	template <class T> inline bool FindCompileModule(const ibValueMetaObject* moduleObject, T*& objValue) const {
-		auto it = m_listCommonModuleValue.find(moduleObject);
-		if (it != m_listCommonModuleValue.end()) {
-			objValue = dynamic_cast<T*>(&(*it->second));
-			return objValue != nullptr;
-		}
-		objValue = nullptr;
-		return false;
-	}
-
-	template <class T> inline bool FindParentCompileModule(const ibValueMetaObject* moduleObject, T*& objValue) const {
-		ibValueMetaObject* parentMetadata = moduleObject ? moduleObject->GetParent() : nullptr;
-		if (parentMetadata != nullptr)
-			return FindCompileModule(parentMetadata, objValue);
-		return false;
-	}
-
-	//common modules:
-	bool AddCommonModule(ibValueMetaObjectCommonModule* commonModule, bool managerModule = false, bool runModule = false);
-
-	ibValueModuleUnit* FindCommonModule(ibValueMetaObjectCommonModule* commonModule) const;
-	bool RenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName);
-	bool RemoveCommonModule(ibValueMetaObjectCommonModule* commonModule);
+	ibValueModuleUnit* FindCommonModule(const ibValueMetaObjectCommonModule* commonModule) const;
 
 	//system object:
 	ibValue* GetObjectManager() const { return m_objectManager; }
@@ -254,18 +241,33 @@ public:
 	//return external module
 	virtual ibValue* GetObjectValue() const { return nullptr; }
 
+	// Per-session runtime — create ProcUnit'ы for main + common modules
+	// under the given session's m_procUnitMap. Compile state untouched
+	// on `this`. Overridden by subclasses with additional modules
+	// (external data processor, report). Default impl handles the
+	// common-case main module + m_listCommonModuleManager fanout.
+	virtual bool AttachRuntime(class ibSession* session);
+
+	// Symmetric teardown — drop this session's ProcUnit entries.
+	virtual void DetachRuntime(class ibSession* session);
+
 protected:
 
 	bool m_initialized;
+
+	// Serializes Init/DetachRuntime across sessions — the
+	// compile/common-module state is process-shared so two concurrent
+	// Init (rapid F5) or Init-racing-Exit (pagehide beacon for old
+	// session while new one logs in) would corrupt m_listCommonModule*
+	// iteration or the ProcUnit Execute of BeforeStart running on
+	// bytecode whose parent PU ptrs are mid-reassignment.
+	std::mutex m_runtimeMutex;
 
 	//global manager
 	ibValuePtr<ibValue> m_objectManager;
 
 	// global metamanager
 	ibValuePtr<ibValueMetadataUnit> m_metaManager;
-
-	//map with compile data
-	std::map<const ibValueMetaObject*, ibValuePtr<ibValue>> m_listCommonModuleValue;
 
 	//array of common modules
 	std::vector<ibValuePtr<ibValueModuleUnit>> m_listCommonModuleManager;
@@ -282,7 +284,7 @@ protected:
 };
 
 class BACKEND_API ibValueModuleManagerConfiguration :
-	public ibValueModuleManager {
+	public ibValueModuleManager, public ibRuntimeRoot {
 	//system events:
 	bool BeforeStart();
 	void OnStart();
@@ -290,8 +292,15 @@ class BACKEND_API ibValueModuleManagerConfiguration :
 	void OnExit();
 public:
 
-	//metaData and external variant
-	ibValueModuleManagerConfiguration(ibMetaData* metaData = nullptr, ibValueMetaObjectConfiguration* metaObject = nullptr);
+	ibValueModuleManagerConfiguration(
+		ibMetaData* metaData,
+		ibValueMetaObjectConfiguration* metaObject);
+
+	// GetRoot override — we are the root, return ourselves as the
+	// ibRuntimeRoot interface pointer.
+	const ibRuntimeRoot* GetRoot() const override {
+		return this;
+	}
 
 	//Create common module
 	virtual bool CreateMainModule();
@@ -304,6 +313,7 @@ public:
 
 	//exit common module
 	virtual bool ExitMainModule(bool force = false);
+
 };
 
 #endif

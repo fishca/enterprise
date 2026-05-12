@@ -166,18 +166,33 @@ bool ibValueContainer::Property(const ibValue& varKeyValue, ibValue& cValueFound
 	return false;
 }
 
-ibValue ibValueContainer::GetIteratorEmpty()
+std::shared_ptr<ibValueIteratorState> ibValueContainer::CreateIterator()
 {
-	return ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>();
-}
-
-ibValue ibValueContainer::GetIteratorAt(unsigned int idx)
-{
-	if (m_containerValues.size() < idx)
-		return ibValue();
-	auto structurePos = m_containerValues.begin();
-	std::advance(structurePos, idx);
-	return ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>(structurePos->first, structurePos->second);
+	using MapT = std::decay_t<decltype(m_containerValues)>;
+	class State : public ibValueIteratorState {
+	public:
+		explicit State(const MapT& m) : m_map(m), m_it(m.begin()) {}
+		bool MoveNext(ibValue& current) override {
+			if (m_started) ++m_it; else m_started = true;
+			if (m_it == m_map.end()) return false;
+			ibValue valueCopy = m_it->second;
+			current = ibValue(static_cast<ibValue*>(
+				ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>(
+					m_it->first, valueCopy)));
+			return true;
+		}
+		void Reset() override { m_it = m_map.begin(); m_started = false; }
+		bool PeekSample(ibValue& current) const override {
+			current = ibValue(static_cast<ibValue*>(
+				ibValue::CreateAndPrepareValueRef<ibValueReturnContainer>()));
+			return true;
+		}
+	private:
+		const MapT& m_map;
+		MapT::const_iterator m_it;
+		bool m_started = false;
+	};
+	return std::make_shared<State>(m_containerValues);
 }
 
 bool ibValueContainer::SetAt(const ibValue& varKeyValue, const ibValue& varValue)
@@ -202,6 +217,59 @@ bool ibValueContainer::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 //**********************************************************************
 
 #define st_error_conversion _("Error conversion value. Must be string!")
+
+bool ibValueStructure::Init(ibValue** paParams, const long lSizeArray)
+{
+	// No args → empty Structure ready for Insert later.
+	if (lSizeArray == 0 || paParams == nullptr)
+		return true;
+
+	// First arg must be a string with comma-separated field names.
+	const ibValue* fieldsArg = paParams[0];
+	if (fieldsArg == nullptr || fieldsArg->GetType() != ibValueTypes::TYPE_STRING) {
+		ibBackendCoreException::Error(
+			_("Structure ctor: first argument must be a comma-separated field name string"));
+		return false;
+	}
+
+	const wxString fieldsStr = fieldsArg->GetString();
+
+	// Single-pass scan: split on ',' and trim whitespace. wxStringTokenizer
+	// would also work but the manual form keeps trimming inline + avoids
+	// the include. Empty tokens (`,,`) are skipped.
+	size_t cursor = 0;
+	long valueIdx = 1;   // index into paParams for the value of the next field
+	while (cursor <= fieldsStr.size()) {
+		size_t comma = fieldsStr.find(wxT(','), cursor);
+		if (comma == wxString::npos) comma = fieldsStr.size();
+
+		// Trim leading whitespace.
+		size_t start = cursor;
+		while (start < comma
+			&& (fieldsStr[start] == wxT(' ') || fieldsStr[start] == wxT('\t')))
+			++start;
+
+		// Trim trailing whitespace.
+		size_t end = comma;
+		while (end > start
+			&& (fieldsStr[end - 1] == wxT(' ') || fieldsStr[end - 1] == wxT('\t')))
+			--end;
+
+		if (end > start) {
+			const wxString fieldName = fieldsStr.Mid(start, end - start);
+			ibValue value;
+			if (valueIdx < lSizeArray && paParams[valueIdx] != nullptr)
+				value = *paParams[valueIdx];
+			ibValueStructure::Insert(fieldName, value);
+			++valueIdx;
+		}
+
+		if (comma >= fieldsStr.size()) break;
+		cursor = comma + 1;
+	}
+
+	return true;
+}
 
 bool ibValueStructure::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {

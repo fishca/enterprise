@@ -2,7 +2,12 @@
 #define _TOOLBAR_H__
 
 #include "window.h"
+#ifndef OES_USE_WEB
+// Pulls in <wx/aui/auibar.h> (ibAuiToolBar / wxAuiToolBarEvent) —
+// designer + desktop-runtime only. Web keeps a stub Create path and
+// doesn't need AUI machinery.
 #include "frontend/win/ctrls/toolBar.h"
+#endif
 
 class ibValueToolBarItem;
 class ibValueToolBarSeparator;
@@ -42,10 +47,10 @@ public:
 	}
 
 	//control factory 
-	virtual wxObject* Create(wxWindow* wxparent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//support icons
@@ -78,10 +83,13 @@ public:
 
 protected:
 
-	//events 
+	//events
 	void OnToolBarLeftDown(wxMouseEvent& event);
 	void OnTool(wxCommandEvent& event);
+#ifndef OES_USE_WEB
+	// wxAuiToolBarEvent lives in wx/aui/auibar.h — web doesn't include it.
 	void OnToolDropDown(wxAuiToolBarEvent& event);
+#endif
 	void OnRightDown(wxMouseEvent& event);
 
 private:
@@ -207,8 +215,10 @@ public:
 	}
 
 	//control factory
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	virtual bool CanDeleteControl() const;
@@ -218,7 +228,7 @@ public:
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
-	//load & save object in control 
+	//load & save object in control
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
@@ -261,8 +271,9 @@ public:
 	}
 
 	//control factory
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual wxObject* Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	virtual bool CanDeleteControl() const;

@@ -8,7 +8,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable, ibValueModelTableBase);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable, ibValueModelRamTableBase);
 
 //////////////////////////////////////////////////////////////////////
 ibValue::ibValueMethodHelper ibValueModelTable::m_methodHelper;
@@ -30,17 +30,12 @@ ibDataViewItem ibValueModelTable::FindRowValue(const ibValue& varValue, const wx
 	return ibDataViewItem(nullptr);
 }
 
-ibDataViewItem ibValueModelTable::FindRowValue(ibValueModelReturnLine* retLine) const
-{
-	return ibDataViewItem(nullptr);
-}
-
-ibValueModelTable::ibValueModelTable() : ibValueModelTableBase(),
+ibValueModelTable::ibValueModelTable() : ibValueModelRamTableBase(),
 m_tableColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueModelTableColumnCollection>(this))
 {
 }
 
-ibValueModelTable::ibValueModelTable(const ibValueModelTable& valueTable) : ibValueModelTableBase(),
+ibValueModelTable::ibValueModelTable(const ibValueModelTable& valueTable) : ibValueModelRamTableBase(),
 m_tableColumnCollection(valueTable.m_tableColumnCollection)
 {
 }
@@ -105,11 +100,11 @@ bool ibValueModelTable::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue,
 		if (paParams[0]->ConvertToValue(retLine)) {
 			ibValueTableRow* node = GetViewData<ibValueTableRow>(retLine->GetLineItem());
 			if (node != nullptr)
-				ibValueModelTableBase::Remove(node);
+				ibValueModelRamTableBase::Remove(node);
 		}
 		else {
 			ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(paParams[0]->GetInteger()));
-			if (node != nullptr) ibValueModelTableBase::Remove(node);
+			if (node != nullptr) ibValueModelRamTableBase::Remove(node);
 		}
 		return true;
 	}
@@ -119,7 +114,7 @@ bool ibValueModelTable::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue,
 	case enSort:
 		ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = m_tableColumnCollection->GetColumnByName(paParams[0]->GetString());
 		if (colInfo != nullptr) {
-			ibValueModelTableBase::Sort(colInfo->GetColumnID(), lSizeArray > 0 ? paParams[1]->GetBoolean() : true);
+			ibValueModelRamTableBase::Sort(colInfo->GetColumnID(), lSizeArray > 0 ? paParams[1]->GetBoolean() : true);
 			return true;
 		}
 		return false;
@@ -145,7 +140,7 @@ bool ibValueModelTable::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 //               ibValueModelTableColumnCollection                        //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableColumnCollection, ibValueModelTableBase::ibValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableColumnCollection, ibValueModelRamTableBase::ibValueModelColumnCollection);
 
 ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnCollection(ibValueModelTable* ownerTable) : ibValueModelColumnCollection(),
 m_ownerTable(ownerTable),
@@ -236,7 +231,7 @@ bool ibValueModelTable::ibValueModelTableColumnCollection::GetAt(const ibValue& 
 //               ibValueModelTableColumnInfo                              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo, ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo, ibValueModelRamTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
 ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo::ibValueModelTableColumnInfo() : ibValueModelColumnInfo() {
 }
@@ -253,7 +248,7 @@ ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInf
 //               ibValueModelTableReturnLine                              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableReturnLine, ibValueModelTableBase::ibValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableReturnLine, ibValueModelRamTableBase::ibValueModelReturnLine);
 
 ibValueModelTable::ibValueModelTableReturnLine::ibValueModelTableReturnLine(ibValueModelTable* ownerTable, const ibDataViewItem& line) :
 	ibValueModelReturnLine(line), m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable) {
@@ -306,12 +301,12 @@ long ibValueModelTable::AppendRow(unsigned int before)
 		);
 	}
 
-	return ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+	return ibValueModelRamTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 }
 
 void ibValueModelTable::EditRow()
 {
-	ibValueModelTableBase::RowValueStartEdit(GetSelection());
+	ibValueModelRamTableBase::RowValueStartEdit(GetSelection());
 }
 
 void ibValueModelTable::CopyRow()
@@ -330,10 +325,10 @@ void ibValueModelTable::CopyRow()
 	}
 	const long& currentLine = GetRow(currentItem);
 	if (currentLine != wxNOT_FOUND) {
-		ibValueModelTableBase::Insert(rowData, currentLine, !ibBackendException::IsEvalMode());
+		ibValueModelRamTableBase::Insert(rowData, currentLine, !ibBackendException::IsEvalMode());
 	}
 	else {
-		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelRamTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 	}
 }
 
@@ -346,14 +341,14 @@ void ibValueModelTable::DeleteRow()
 	if (node == nullptr)
 		return;
 	if (!ibBackendException::IsEvalMode())
-		ibValueModelTableBase::Remove(node);
+		ibValueModelRamTableBase::Remove(node);
 }
 
 void ibValueModelTable::Clear()
 {
 	if (ibBackendException::IsEvalMode())
 		return;
-	ibValueModelTableBase::Clear();
+	ibValueModelRamTableBase::Clear();
 }
 
 //**********************************************************************

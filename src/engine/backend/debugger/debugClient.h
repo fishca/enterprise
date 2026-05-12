@@ -20,6 +20,7 @@ class BACKEND_API ibDebuggerClient {
 				wxDELETE(m_debugBridge);
 			m_debugBridge = bridge;
 		}
+		ibDebuggerClientBridge* GetBridge() const { return m_debugBridge; }
 		virtual ~ibDebuggerClientAdapter() { wxDELETE(m_debugBridge); }
 
 		//commands 
@@ -160,7 +161,6 @@ public:
 
 	static ibDebuggerClient* Get() { return ms_debugClient; }
 
-	// Force the static appData instance to Init()
 	static bool Initialize();
 	static void Destroy();
 
@@ -212,6 +212,19 @@ public:
 		);
 
 		if (iterator != m_listConnection.end()) (*iterator)->AttachConnection();
+	}
+
+	// Auto-attach every verified Scanner connection. Used by the web
+	// debug path (SpawnWebServerWithManifest): wes's debug server runs
+	// with wait=false so its connection-type is Scanner, which means
+	// designer's RecvCommand does NOT auto-promote to Debugger on verify.
+	// Manual UI attach works (ibDialogDebugItem → OnAvailableItemSelected
+	// → AttachConnection), this hook does the same for the
+	// programmatic spawn-then-attach flow.
+	void AttachAllVerified() const {
+		for (auto* conn : m_listConnection) {
+			if (conn != nullptr) conn->AttachConnection();
+		}
 	}
 
 	void DetachConnection(const wxString& hostName, unsigned short port, bool kill = false) {
@@ -413,6 +426,12 @@ private:
 #endif  
 
 	bool	m_enterLoop, m_connectionSuccess;
+
+	// Session guid of the runtime currently parked at a breakpoint.
+	// Updated on each CommandId_EnterLoop receive; tagged onto every
+	// outgoing Continue/Step/Pause/Detach so the server can route the
+	// command to the right ibSession in a multi-tab wes process.
+	wxString m_currentSessionGuid;
 };
 
 #endif

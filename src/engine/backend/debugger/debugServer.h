@@ -3,10 +3,14 @@
 
 #include <map>
 #include <queue>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
 #include <wx/thread.h>
 #include <wx/socket.h>
 
 struct ibRunContext;
+class ibSession;
 
 #define debugServer           (ibDebuggerServer::Get())
 #define debugServerInit(f)    (ibDebuggerServer::Initialize(f))
@@ -27,10 +31,20 @@ class BACKEND_API ibDebuggerServer {
 				return false;
 			if (!m_socket->IsOk())
 				return false;
-			wxSocketError error =
-				m_socket->LastError();
-			return error == wxSOCKET_NOERROR ||
-				error == wxSOCKET_WOULDBLOCK;
+			// Don't include LastError() in the liveness check.
+			// wxSocketBase keeps LastError as per-socket state (NOT
+			// per-thread), so a transient WOULDBLOCK / TIMEDOUT /
+			// IOERR left by any operation on any thread (e.g. a
+			// session worker's SendCommand racing the connection
+			// thread's WaitForRead) leaks into the connection
+			// thread's next IsConnected() check and falsely declares
+			// the connection dead. Real disconnects flip IsConnected
+			// or IsOk to false above; ReadMsg / WriteMsg operations
+			// guard their own short-read / short-write cases via
+			// LastCount checks. This brittle filter caused the
+			// "designer detaches between F5s" reports under multi-tab
+			// breakpoint workloads.
+			return true;
 		}
 
 		void WaitConnection();
@@ -58,17 +72,40 @@ class BACKEND_API ibDebuggerServer {
 
 	private:
 
-		bool		m_waitConnection;
+		std::atomic<bool> m_waitConnection;
 
 		ConnectionType m_connectionType;
 
 		wxString m_strHostName;
 		unsigned short m_numHostPort;
 
-		bool m_acceptConnection;
+		// Worker thread sets true after Accept; main thread polls this
+		// in CreateServer's wait loop. Plain bool was being kept in a
+		// register on the main thread → wait loop never observed the
+		// flip and the server hung until something else flushed cache
+		// (e.g. designer closing rewrote enough memory).
+		std::atomic<bool> m_acceptConnection;
+
+		// Worker thread sets true once a wxSocketServer has successfully
+		// bound a port (the listener is now Listening). Used by
+		// CreateServer(wait=false) to make the manifest-write path
+		// deterministic — without it, the designer's SearchServer can
+		// race with wes's bind-loop and the connect refused that
+		// follows leaves the loop reaching round-budget exhaustion.
+		std::atomic<bool> m_bindReady{false};
 
 		wxSocketServer* m_socketServer;
 		wxSocketBase* m_socket;
+
+		// Serialises wire writes. SendCommand does two consecutive
+		// WriteMsg calls (length header + payload); without a mutex,
+		// concurrent senders interleave their bytes and the designer
+		// sees a corrupted frame and drops the connection. Hot path
+		// when several web sessions hit breakpoints in parallel and
+		// each emits LeaveLoop on F5 destroy. Plain mutex — a write
+		// to the socket is already syscall-bound, lock contention is
+		// dwarfed by the I/O cost.
+		std::mutex m_sendMutex;
 
 		friend class ibDebuggerServer;
 	};
@@ -94,10 +131,15 @@ public:
 	bool CreateServer(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort, bool wait = false);
 	void ShutdownServer();
 
+	// Session is read out of runContext → GetProcUnit() → GetSession()
+	// at call time — the debug server is a process-level singleton
+	// shared across concurrent sessions; they enter sequentially and
+	// each knows its session through the run context already held by
+	// the dispatch loop.
 	void EnterDebugger(ibRunContext* runContext, const struct ibByteUnit& byteCode, long& numPrevLine);
 	void SendErrorToClient(const wxString& strFileName, const wxString& strDocPath, unsigned int numLine, const wxString& strErrorMessage);
 
-	bool IsDebugLooped() const { return m_bDebugLoop; }
+	bool IsDebugLooped() const { return m_bDebugLoop.load(std::memory_order_acquire); }
 
 protected:
 
@@ -108,10 +150,22 @@ protected:
 	void ResetDebugger() {
 
 		m_runContext = nullptr;
-		m_bUseDebug = m_bDebugLoop = false;
+		m_bUseDebug = false;
+		m_bDebugLoop = false;
+		m_debugLoopCV.notify_all();
+
+		// Drain every per-session debug loop too — without this a wes
+		// process with several tabs paused at breakpoints stays parked
+		// after the designer disconnects, because each session has its
+		// own CV and m_debugLoopCV above only wakes the legacy global
+		// waiter (kept as a safety mirror).
+		WakeAllDebugSessions();
 
 		ClearCollectionBreakpoint();
 	}
+
+	void WakeAllDebugSessions();
+	void WakeDebugSession(const wxString& sessionGuid);
 
 	void ClearCollectionBreakpoint();
 
@@ -131,25 +185,30 @@ private:
 
 	static ibDebuggerServer* ms_debugServer;
 
-	bool		m_bUseDebug;
-	bool		m_bDoLoop;
-	bool		m_bDebugLoop;
-	bool		m_bDebugStopLine;
+	std::atomic<bool> m_bUseDebug;
+	std::atomic<bool> m_bDoLoop;
+	std::atomic<bool> m_bDebugLoop;
+	std::atomic<bool> m_bDebugStopLine;
 
 	unsigned int m_numCurrentNumberStopContext;
 
-	std::map<wxString, std::vector<unsigned int>> m_listBreakpoint; //list of points 
+	std::map<wxString, std::vector<unsigned int>> m_listBreakpoint; //list of points
 
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
 	std::map <unsigned long long, wxString> m_listExpression;
-#else 
+#else
 	std::map <unsigned int, wxString> m_listExpression;
-#endif 
+#endif
+
+	// CV/mutex must outlive the worker thread so its final notify_all is safe.
+	// Declared BEFORE m_socketConnectionThread so destruction order puts thread first.
+	std::mutex m_debugLoopMutex;
+	std::condition_variable m_debugLoopCV;
+
+	wxCriticalSection m_clearBreakpointsCS;
 
 	ibDebuggerServerConnection* m_socketConnectionThread;
 	ibRunContext* m_runContext;
-
-	wxCriticalSection m_clearBreakpointsCS;
 
 	friend class ibBackendException;
 };

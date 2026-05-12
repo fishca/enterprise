@@ -180,14 +180,14 @@ ibDialogFormEditor::ibDialogFormEditor(ibValueForm* valueForm) :
 	m_mainToolBar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT | wxAUI_TB_HORZ_TEXT);
 	m_mainToolBar->SetArtProvider(new wxAuiLunaToolBarArt());
 
-	m_toolUpItem = m_mainToolBar->AddTool(MENU_MOVE_UP, _("Up control"), wxArtProvider::GetBitmap(wxASCII_STR(wxART_GO_UP), wxASCII_STR(wxART_TOOLBAR)), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL);
-	m_toolDownItem = m_mainToolBar->AddTool(MENU_MOVE_DOWN, _("Down control"), wxArtProvider::GetBitmap(wxASCII_STR(wxART_GO_DOWN), wxASCII_STR(wxART_TOOLBAR)), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL);
+	m_toolUpItem = m_mainToolBar->AddTool(MENU_MOVE_UP, _("Up control"), wxArtProvider::GetBitmapBundle(wxASCII_STR(wxART_GO_UP), wxASCII_STR(wxART_TOOLBAR)), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL);
+	m_toolDownItem = m_mainToolBar->AddTool(MENU_MOVE_DOWN, _("Down control"), wxArtProvider::GetBitmapBundle(wxASCII_STR(wxART_GO_DOWN), wxASCII_STR(wxART_TOOLBAR)), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL);
 	m_mainToolBar->Realize();
 
 	commonSizer->Add(m_mainToolBar, 0, wxEXPAND);
 
 	m_treeControl = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxSIMPLE_BORDER | wxTR_NO_LINES | wxTR_TWIST_BUTTONS);
-	controlSizer->Add(m_treeControl, 1, wxALL | wxEXPAND, 5);
+	controlSizer->Add(m_treeControl, 1, wxALL | wxEXPAND, FromDIP(5));
 	m_treeControl->SetDoubleBuffered(true);
 
 	CreateTree();
@@ -197,8 +197,8 @@ ibDialogFormEditor::ibDialogFormEditor(ibValueForm* valueForm) :
 
 	m_propertyGridPage = m_propertyGridManager->AddPage(_("Default"), wxNullBitmap);
 
-	controlSizer->Add(m_propertyGridManager, 1, wxALL | wxEXPAND, 5);
-	commonSizer->Add(controlSizer, 1, wxEXPAND, 5);
+	controlSizer->Add(m_propertyGridManager, 1, wxALL | wxEXPAND, FromDIP(5));
+	commonSizer->Add(controlSizer, 1, wxEXPAND, FromDIP(5));
 
 	m_propertyGridManager->SendSizeEvent();
 
@@ -211,7 +211,7 @@ ibDialogFormEditor::ibDialogFormEditor(ibValueForm* valueForm) :
 	m_sdbSizer->AddButton(m_sdbSizerCancel);
 	m_sdbSizer->Realize();
 
-	commonSizer->Add(m_sdbSizer, 0, wxALIGN_RIGHT, 5);
+	commonSizer->Add(m_sdbSizer, 0, wxALIGN_RIGHT, FromDIP(5));
 
 	RebuildTree();
 	SetSizer(commonSizer);
@@ -510,8 +510,8 @@ wxEND_EVENT_TABLE()
 ibDialogFormEditor::ibDialogFormEditorItemPopupMenu::ibDialogFormEditorItemPopupMenu(ibDialogFormEditor* parent, ibValueFrame* obj)
 	: wxMenu(), m_handler(parent), m_object(obj)
 {
-	Append(MENU_MOVE_UP, wxT("Move Up\tAlt+Up"))->SetBitmap(wxArtProvider::GetBitmap(wxASCII_STR(wxART_GO_UP), wxASCII_STR(wxART_MENU)));
-	Append(MENU_MOVE_DOWN, wxT("Move Down\tAlt+Down"))->SetBitmap(wxArtProvider::GetBitmap(wxASCII_STR(wxART_GO_DOWN), wxASCII_STR(wxART_MENU)));
+	Append(MENU_MOVE_UP, wxT("Move Up\tAlt+Up"))->SetBitmap(wxArtProvider::GetBitmapBundle(wxASCII_STR(wxART_GO_UP), wxASCII_STR(wxART_MENU)));
+	Append(MENU_MOVE_DOWN, wxT("Move Down\tAlt+Down"))->SetBitmap(wxArtProvider::GetBitmapBundle(wxASCII_STR(wxART_GO_DOWN), wxASCII_STR(wxART_MENU)));
 }
 
 void ibDialogFormEditor::ibDialogFormEditorItemPopupMenu::OnMenuEvent(wxCommandEvent& event)

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : chart of characteristic types manager
 ////////////////////////////////////////////////////////////////////////////
@@ -10,7 +10,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectChartOfCharacteristicTypes, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectChartOfCharacteristicTypes::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectChartOfCharacteristicTypes::GetManagerModule() const { return m_metaObject->GetManagerModule(); }
 
 #include "reference/reference.h"
 

@@ -7,6 +7,7 @@
 
 #include "backend/appData.h"
 #include "backend/debugger/debugClient.h"
+#include "backend/session/sessionRegistry.h"
 
 #include "frontend/window_ptr.h"
 
@@ -52,6 +53,54 @@ void ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug(wxCommandEvent& WXU
 	}
 
 	appData->RunApplication(wxT("enterprise"), false);
+}
+
+static bool SaveIfModifiedBeforeWebDebug(wxWindow* parent)
+{
+	if (!activeMetaData->IsModified())
+		return true;
+	const int ans = wxMessageBox(
+		wxString::Format(_("Configuration '%s' has been changed.\nDo you want to save?"),
+			activeMetaData->GetConfigName()),
+		wxTheApp->GetAppDisplayName(),
+		wxYES_NO | wxCENTRE | wxICON_QUESTION, parent);
+	if (ans != wxYES)
+		return true;
+	return activeMetaData->SaveDatabase(saveConfigFlag);
+}
+
+static void LaunchWebDebug(wxWindow* parent, bool withDebug)
+{
+	// URL prefix and port are derived by wes itself (from --file/--db
+	// basename and OS-picked ephemeral port). Manifest handshake reports
+	// the real URL back and opens the browser — no guessing here.
+	// withDebug=true → wes spawns with --debug so its debugServer comes
+	// up; the designer's debugClient then attaches via the manifest's
+	// pid/host (out-of-band of the manifest itself — debug-server still
+	// listens on defaultDebuggerPort+offset).
+	if (appData->RunApplication(wxT("wenterprise-server"),
+			/*searchDebug=*/withDebug, /*useManifest=*/true) == 0) {
+		wxMessageBox(_("Failed to start wenterprise-server"),
+			wxTheApp->GetAppDisplayName(), wxOK | wxICON_ERROR, parent);
+	}
+}
+
+void ibFrontendDocMDIFrameDesigner::OnStartDebugWeb(wxCommandEvent& WXUNUSED(event))
+{
+	if (debugClient->HasConnections()) {
+		wxMessageBox(_("Debugger is already running!"));
+		return;
+	}
+	if (!SaveIfModifiedBeforeWebDebug(this))
+		return;
+	LaunchWebDebug(this, /*withDebug=*/true);
+}
+
+void ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebugWeb(wxCommandEvent& WXUNUSED(event))
+{
+	if (!SaveIfModifiedBeforeWebDebug(this))
+		return;
+	LaunchWebDebug(this, /*withDebug=*/false);
 }
 
 #include "win/dlg/debugItem/debugItem.h"
@@ -171,9 +220,9 @@ void ibFrontendDocMDIFrameDesigner::OnUpdateConfiguration(wxCommandEvent& event)
 	// stage one - save database  
 	if (canSave && !activeMetaData->SaveDatabase()) {
 
-		for (unsigned int idx = 0; idx < s_restructureInfo.GetCount(); idx++) {
-			if (s_restructureInfo.GetType(idx) == ibRestructure::restructure_error)
-				outputWindow->OutputError(s_restructureInfo.GetDescription(idx));
+		for (const auto& entry : s_restructureInfo) {
+			if (entry.type == ibRestructure::error)
+				outputWindow->OutputError(entry.descr);
 		}
 
 		wxMessageBox(_("Failed to save database!"),
@@ -237,7 +286,7 @@ void ibFrontendDocMDIFrameDesigner::OnLoadDatabase(wxCommandEvent& event)
 
 	if (appData->LoadDatabase(openFileDialog.GetPath())) {
 		wxMessageBox(_("Loading of tasks completed successful. Restart the program!"));
-		appData->ForceExit();
+		ibSessionRegistry::Instance().CloseAll(true);
 	}
 	else {
 		wxMessageBox(_("Error when trying to load database from a file!!"));

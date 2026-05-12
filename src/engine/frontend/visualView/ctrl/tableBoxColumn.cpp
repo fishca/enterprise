@@ -1,11 +1,20 @@
 #include "tableBox.h"
+#include "form.h"
+#ifndef OES_USE_WEB
+// Renderer pulls in dataview.h (wxDataView heavy). Web stubs don't
+// touch it.
 #include "tableBoxColumnRenderer.h"
+#endif
 
 //***********************************************************************************
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTableBoxColumn, ibValueControl);
+
+#ifdef OES_USE_WEB
+#include "frontend/web/webWindow.h"
+#endif
 
 //****************************************************************************
 #include "backend/metaData.h"
@@ -18,7 +27,7 @@ bool ibValueModelTableBoxColumn::GetChoiceForm(ibPropertyList* property)
 		ibValueMetaObjectRecordDataRef* metaObjectRefValue = nullptr;
 		if (!m_propertySource->IsEmptyProperty()) {
 
-			ibValueMetaObjectGenericData* metaObjectValue =
+			const ibValueMetaObjectGenericData* metaObjectValue =
 				m_formOwner->GetMetaObject();
 
 			if (metaObjectValue != nullptr) {
@@ -93,17 +102,23 @@ wxString ibValueModelTableBoxColumn::GetControlTitle() const
 	return m_propertyName->GetValueAsString();
 }
 
-wxObject* ibValueModelTableBoxColumn::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* ibValueModelTableBoxColumn::Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
+#ifdef OES_USE_WEB
+	(void)wxparent; (void)visualHost;
+	return new ibWebStubControl(wxT("tableboxcolumn"));
+#else
 	ibDataViewColumnObject* dataViewColumn = new ibDataViewColumnObject(this, wxT(""),
 		wxNOT_FOUND, wxDVC_DEFAULT_WIDTH, wxALIGN_CENTER, wxDATAVIEW_COL_REORDERABLE);
 
 	dataViewColumn->SetControl(this);
 	return dataViewColumn;
+#endif
 }
 
-void ibValueModelTableBoxColumn::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+void ibValueModelTableBoxColumn::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
 {
+#ifndef OES_USE_WEB
 	ibDataViewCtrl* dataViewCtrl = dynamic_cast<ibDataViewCtrl*>(wxparent);
 	wxASSERT(dataViewCtrl);
 	ibDataViewColumnObject* dataViewColumn = dynamic_cast<ibDataViewColumnObject*>(wxobject);
@@ -111,12 +126,14 @@ void ibValueModelTableBoxColumn::OnCreated(wxObject* wxobject, wxWindow* wxparen
 
 	dataViewCtrl->AppendColumn(dataViewColumn);
 	GetOwner()->SetCalculateColumnPos();
+#endif
 }
 
 #include "backend/appData.h"
 
-void ibValueModelTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void ibValueModelTableBoxColumn::OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	ibDataViewCtrl* dataViewCtrl = dynamic_cast<ibDataViewCtrl*>(wxparent);
 	wxASSERT(dataViewCtrl);
 	ibDataViewColumnObject* dataViewColumn = dynamic_cast<ibDataViewColumnObject*>(wxobject);
@@ -166,10 +183,12 @@ void ibValueModelTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparen
 		dataViewColumn->SetSortOrder(sort->m_sortAscending);
 
 	dataViewColumn->SetColumnModel(source_column);
+#endif
 }
 
 void ibValueModelTableBoxColumn::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	ibDataViewCtrl* dataViewCtrl = dynamic_cast<ibDataViewCtrl*>(visualHost->GetWxObject(GetOwner()));
 	wxASSERT(dataViewCtrl);
 	ibDataViewColumnObject* dataViewColumn = dynamic_cast<ibDataViewColumnObject*>(obj);
@@ -177,6 +196,7 @@ void ibValueModelTableBoxColumn::Cleanup(wxObject* obj, ibVisualHost* visualHost
 
 	dataViewCtrl->DeleteColumn(dataViewColumn);
 	GetOwner()->SetCalculateColumnPos();
+#endif
 }
 
 bool ibValueModelTableBoxColumn::CanDeleteControl() const
@@ -195,7 +215,9 @@ bool ibValueModelTableBoxColumn::FilterSource(const ibSourceExplorer& src, const
 	return id == GetOwner()->GetSource();
 }
 
+#ifndef OES_USE_WEB
 #include "frontend/win/ctrls/controlTextEditor.h"
+#endif
 
 bool ibValueModelTableBoxColumn::SetControlValue(const ibValue& varControlVal)
 {
@@ -206,6 +228,7 @@ bool ibValueModelTableBoxColumn::SetControlValue(const ibValue& varControlVal)
 		);
 	}
 
+#ifndef OES_USE_WEB
 	ibDataViewColumnObject* dataViewColumn =
 		dynamic_cast<ibDataViewColumnObject*>(GetWxObject());
 
@@ -221,6 +244,7 @@ bool ibValueModelTableBoxColumn::SetControlValue(const ibValue& varControlVal)
 			renderer->FinishSelecting();
 		}
 	}
+#endif
 
 	m_formOwner->RefreshForm();
 	return true;
@@ -323,6 +347,21 @@ bool ibValueModelTableBoxColumn::SaveData(ibWriterMemory& writer)
 	m_eventChoiceProcessing->SaveData(writer);
 	return ibValueControl::SaveData(writer);
 }
+
+#ifdef OES_USE_WEB
+// Methods declared in tableBox.h but normally implemented in the
+// auxiliary tableBoxColumn*.cpp files (Event/Property/Renderer) — those
+// aren't compiled on web, so provide no-op stubs here so the linker
+// finds them. ChoiceProcessing in particular is pure-virtual in the
+// base, the override is required even on web.
+void ibValueModelTableBoxColumn::OnPropertyCreated(ibProperty* /*property*/) {}
+void ibValueModelTableBoxColumn::OnPropertyRefresh(
+	class wxPropertyGridManager* /*pg*/, class wxPGProperty* /*pgProperty*/,
+	ibProperty* /*property*/) {}
+bool ibValueModelTableBoxColumn::OnPropertyChanging(ibProperty* /*property*/,
+	const wxVariant& /*newValue*/) { return true; }
+void ibValueModelTableBoxColumn::ChoiceProcessing(ibValue& /*vSelected*/) {}
+#endif // OES_USE_WEB
 
 //***********************************************************************
 //*                       Register in runtime                           *

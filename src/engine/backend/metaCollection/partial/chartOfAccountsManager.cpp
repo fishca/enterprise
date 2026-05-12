@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : chart of accounts manager
 ////////////////////////////////////////////////////////////////////////////
@@ -9,7 +9,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectChartOfAccounts, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectChartOfAccounts::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectChartOfAccounts::GetManagerModule() const { return m_metaObject->GetManagerModule(); }
 
 #include "reference/reference.h"
 

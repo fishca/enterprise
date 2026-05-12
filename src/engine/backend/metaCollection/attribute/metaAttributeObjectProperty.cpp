@@ -26,7 +26,7 @@ void ibValueMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wx
 		else {
 			const ibCtorMetaValueType* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
-				ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
+				const ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<const ibValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
 				if (metaObject == nullptr)
 					pg->HideProperty(pgProperty, true);
 				else if (so->GetMetaTypeCtor() != ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)

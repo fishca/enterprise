@@ -9,7 +9,7 @@ class BACKEND_API ibValueModuleManagerExternalDataProcessor : public ibValueModu
 public:
 
 	virtual ibCompileModule* GetCompileModule() const;
-	virtual ibProcUnit* GetProcUnit() const;
+	virtual std::shared_ptr<ibProcUnit> GetProcUnit() const;
 
 	virtual std::map<wxString, ibValue*>& GetContextVariables();
 
@@ -34,7 +34,7 @@ public:
 
 	// this method is automatically called to initialize attribute and method names.
 	virtual void PrepareNames() const;
-	
+
 	//method call
 	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
@@ -51,7 +51,7 @@ class BACKEND_API ibValueModuleManagerExternalReport : public ibValueModuleManag
 public:
 
 	virtual ibCompileModule* GetCompileModule() const;
-	virtual ibProcUnit* GetProcUnit() const;
+	virtual std::shared_ptr<ibProcUnit> GetProcUnit() const;
 
 	virtual std::map<wxString, ibValue*>& GetContextVariables();
 
@@ -76,7 +76,7 @@ public:
 
 	// this method is automatically called to initialize attribute and method names.
 	virtual void PrepareNames() const;
-	
+
 	//method call
 	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 

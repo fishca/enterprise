@@ -30,7 +30,7 @@ public:
 	virtual bool IsNewObject() const { return m_newObject; }
 
 	//get metaData from object 
-	virtual class ibValueMetaObjectRecordData* GetMetaObject() const = 0;
+	virtual const class ibValueMetaObjectRecordData* GetMetaObject() const = 0;
 
 	//set modify 
 	virtual void Modify(bool mod) {}

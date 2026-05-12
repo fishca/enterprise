@@ -31,24 +31,31 @@ ibValueFrame::ibValueEventContainer::~ibValueEventContainer()
 		delete m_methodHelper;
 }
 
-ibValue ibValueFrame::ibValueEventContainer::GetIteratorEmpty()
+std::shared_ptr<ibValueIteratorState> ibValueFrame::ibValueEventContainer::CreateIterator()
 {
-	return ibValue();
-}
-
-ibValue ibValueFrame::ibValueEventContainer::GetIteratorAt(unsigned int idx)
-{
-	if (m_controlEvent->GetEventCount() < idx) {
-		return ibValue();
-	}
-
-	ibEvent* event = m_controlEvent->GetEvent(idx);
-	if (event == nullptr) return ibValue();
-	//return ibValue::CreateAndPrepareValueRef<ibValueEvent>(event->GetValue());
-
-	ibValue retEvent;
-	event->GetDataValue(retEvent);
-	return retEvent;
+	class State : public ibValueIteratorState {
+	public:
+		explicit State(ibValueFrame* host) : m_host(host) {}
+		bool MoveNext(ibValue& current) override {
+			if (m_started) ++m_pos; else m_started = true;
+			if (m_pos >= m_host->GetEventCount()) return false;
+			ibEvent* ev = m_host->GetEvent(m_pos);
+			if (ev == nullptr) {
+				current = ibValue();
+				return true;
+			}
+			ibValue retEvent;
+			ev->GetDataValue(retEvent);
+			current = retEvent;
+			return true;
+		}
+		void Reset() override { m_pos = 0; m_started = false; }
+	private:
+		ibValueFrame* m_host;
+		unsigned int m_pos = 0;
+		bool m_started = false;
+	};
+	return std::make_shared<State>(m_controlEvent);
 }
 
 #include "backend/appData.h"

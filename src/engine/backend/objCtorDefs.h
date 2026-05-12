@@ -9,30 +9,33 @@ enum ibCtorObjectMetaType {
 	ibCtorObjectMetaType_Selection,
 	ibCtorObjectMetaType_TabularSection,
 	ibCtorObjectMetaType_TabularSection_String,
+	ibCtorObjectMetaType_Characteristic,
 	ibCtorObjectMetaType_RecordSet,
 	ibCtorObjectMetaType_RecordSet_String,
 	ibCtorObjectMetaType_RecordKey,
-	ibCtorObjectMetaType_RecordManager
+	ibCtorObjectMetaType_RecordManager, 
 };
 
 #define generate_class_name(prefix) GetClassName() + prefix + GetName()
 #define generate_class_table_name(prefix) metaObject->GetClassName() + prefix + metaObject->GetName() + wxT(".") + GetName()
+#define generate_class_characteristic_name(prefix) prefix + GetName()
 
 //record
-#define prefixReference		wxT("Ref.")
-#define prefixList			wxT("List.")
-#define prefixObject		wxT("Object.")
-#define prefixManager		wxT("Manager.")
-#define prefixSelection		wxT("Selection.")
+#define prefixReference			wxT("Ref.")
+#define prefixList				wxT("List.")
+#define prefixObject			wxT("Object.")
+#define prefixManager			wxT("Manager.")
+#define prefixSelection			wxT("Selection.")
 
-#define prefixTabSection	wxT("TabularSection.")
-#define prefixTabSectionStr	wxT("TabularSectionString.")
+#define prefixTabSection		wxT("TabularSection.")
+#define prefixTabSectionStr		wxT("TabularSectionString.")
+#define prefixCharacteristic	wxT("Characteristic.")
 
 //accum
-#define prefixRecordKey		wxT("RecordKey.")
-#define prefixRecordManager wxT("RecordManager.")
-#define prefixRecordSet		wxT("RecordSet.")
+#define prefixRecordKey			wxT("RecordKey.")
+#define prefixRecordManager		wxT("RecordManager.")
+#define prefixRecordSet			wxT("RecordSet.")
 
-#define prefixRecordSetStr	wxT("RecordSetString.")
+#define prefixRecordSetStr		wxT("RecordSetString.")
 
 #endif

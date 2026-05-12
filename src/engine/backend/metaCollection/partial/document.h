@@ -1,4 +1,4 @@
-#ifndef __DOCUMENT_H__
+﻿#ifndef __DOCUMENT_H__
 #define __DOCUMENT_H__
 
 #include "commonObject.h"
@@ -84,16 +84,16 @@ public:
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
-	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
+	virtual ibBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
+	virtual ibBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
+	virtual ibBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
 #pragma endregion
 	//descriptions...
 	wxString GetDataPresentation(const ibValueDataObject* objValue) const;
 
 	//get module object in compose object 
-	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual ibValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual const ibValueMetaObjectModule* GetObjectModule() const { return m_propertyObjectModule->GetMetaObject(); }
+	virtual const ibValueMetaObjectCommonModule* GetManagerModule() const { return m_propertyManagerModule->GetMetaObject(); }
 
 	//prepare menu for item
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
@@ -102,7 +102,7 @@ public:
 protected:
 
 	//predefined array 
-	virtual bool FillArrayObjectByPredefined(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
+	virtual bool FillArrayObjectByPredefinedAttribute(std::vector<ibValueMetaObjectAttributeBase*>& array) const {
 
 		array = {
 			m_propertyAttributeNumber->GetMetaObject(),
@@ -127,13 +127,13 @@ protected:
 	}
 
 	//create manager
-	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
+	virtual ibValueManagerDataObject* CreateManagerDataObjectValue() const;
 
 	//create empty object
-	virtual ibValueRecordDataObjectRef* CreateObjectRefValue(const ibGuid& objGuid = wxNullGuid);
+	virtual ibValueRecordDataObjectRef* CreateObjectRefValue(const ibGuid& objGuid = wxNullGuid) const;
 
 	//create object data with meta form
-	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
+	virtual ibSourceDataObject* CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const;
 
 	//load & save metaData from DB 
 	virtual bool LoadData(ibReaderMemory& reader);
@@ -183,8 +183,8 @@ private:
 		return true;
 	}
 
-	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModuleObject = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
-	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyModuleManager = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
+	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyObjectModule = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ObjectModule"), _("Object module"));
+	ibPropertyInnerModule<ibValueMetaObjectManagerModule>* m_propertyManagerModule = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectManagerModule>>(m_categoryContext, wxT("ManagerModule"), _("Manager module"));
 
 	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
 
@@ -195,9 +195,9 @@ private:
 	ibPropertyRecord* m_propertyRegisterRecord = ibPropertyObject::CreateProperty<ibPropertyRecord>(m_categoryData, wxT("ListRegisterRecord"), _("List register record"));
 
 	//create default attributes
-	ibPropertyInnerAttribute<>* m_propertyAttributeNumber = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryCommon, ibValueMetaObjectCompositeData::CreateString(wxT("Number"), _("Number"), wxEmptyString, 11, true));
-	ibPropertyInnerAttribute<>* m_propertyAttributeDate = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryCommon, ibValueMetaObjectCompositeData::CreateDate(wxT("Date"), _("Date"), wxEmptyString, ibDateFractions::ibDateFractions_DateTime, true));
-	ibPropertyInnerAttribute<>* m_propertyAttributePosted = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryCommon, ibValueMetaObjectCompositeData::CreateBoolean(wxT("Posted"), _("Posted"), wxEmptyString));
+	ibPropertyContainer<>* m_propertyAttributeNumber = ibPropertyObject::CreateProperty<ibPropertyContainer<>>(m_categoryCommon, ibValueMetaObjectCompositeData::CreateString(wxT("Number"), _("Number"), wxEmptyString, 11, true));
+	ibPropertyContainer<>* m_propertyAttributeDate = ibPropertyObject::CreateProperty<ibPropertyContainer<>>(m_categoryCommon, ibValueMetaObjectCompositeData::CreateDate(wxT("Date"), _("Date"), wxEmptyString, ibDateFractions::ibDateFractions_DateTime, true));
+	ibPropertyContainer<>* m_propertyAttributePosted = ibPropertyObject::CreateProperty<ibPropertyContainer<>>(m_categoryCommon, ibValueMetaObjectCompositeData::CreateBoolean(wxT("Posted"), _("Posted"), wxEmptyString));
 
 	friend class ibValueRecordDataObjectDocument;
 	friend class ibMetaData;
@@ -244,7 +244,7 @@ public:
 		ibValueMethodHelper* m_methodHelper;
 	};
 protected:
-	ibValueRecordDataObjectDocument(ibValueMetaObjectDocument* metaObject = nullptr, const ibGuid& guid = wxNullGuid);
+	ibValueRecordDataObjectDocument(const ibValueMetaObjectDocument* metaObject = nullptr, const ibGuid& guid = wxNullGuid);
 	ibValueRecordDataObjectDocument(const ibValueRecordDataObjectDocument& source);
 public:
 	virtual ~ibValueRecordDataObjectDocument();

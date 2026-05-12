@@ -39,6 +39,7 @@ ibFrontendDocMDIFrameEnterprise::~ibFrontendDocMDIFrameEnterprise()
 #include "frontend/win/dlgs/errorDialog.h"
 
 #include "backend/appData.h"
+#include "backend/session/sessionRegistry.h"
 
 void ibFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, const wxString& strDocPath, const long currLine, const wxString& strErrorMessage) const
 {
@@ -66,9 +67,13 @@ void ibFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, 
 		);
 	}
 
-	//close window
+	//close window — force-close every session the registry owns:
+	// each session's m_forceExit flag interrupts any running script,
+	// OnForceExit (overridden on ibGUISession) schedules wxTheApp::Exit
+	// once, Remove submitted for each session row. GUI ends with the
+	// app exiting through wx's normal teardown.
 	if (retCode == 3) {
-		ibApplicationData::ForceExit();
+		ibSessionRegistry::Instance().CloseAll(true);
 	}
 }
 
@@ -93,20 +98,28 @@ bool ibFrontendDocMDIFrameEnterprise::Show(bool show)
 ///////////////////////////////////////////////////////////////////////////
 
 #include "backend/metadataConfiguration.h"
+#include "backend/session/session.h"
+#include "backend/moduleManager/moduleManager.h"
 
 bool ibFrontendDocMDIFrameEnterprise::AllowRun() const
 {
-	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
-		return true;
-
+	// StartMainModule fires BeforeStart / OnStart on the session's
+	// root. BeforeStart veto returns false → frame show blocked.
+	if (ibSession* s = GetSession()) {
+		if (auto* root = s->GetManagerModule())
+			return root->StartMainModule();
+	}
 	return false;
 }
 
 bool ibFrontendDocMDIFrameEnterprise::AllowClose() const
 {
-	if (activeMetaData != nullptr && activeMetaData->ExitMainModule())
-		return true;
-
+	// ExitMainModule fires BeforeExit / OnExit. BeforeExit veto blocks
+	// close (user sees "cancelled by script" banner / modal).
+	if (ibSession* s = GetSession()) {
+		if (auto* root = s->GetManagerModule())
+			return root->ExitMainModule();
+	}
 	return false;
 }
 

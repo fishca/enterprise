@@ -118,28 +118,28 @@ bool ibDatabaseLayerSQLite::IsOpen()
 	return (m_pDatabase != nullptr);
 }
 
-void ibDatabaseLayerSQLite::BeginTransaction()
+void ibDatabaseLayerSQLite::DoBeginTransaction(const ibTxOptions& opts)
 {
+	// SQLite is single-writer, file-level locked — no per-TX wait/nowait
+	// knob to honour. Options parameter accepted for interface conformance.
+	(void)opts;
 	wxLogDebug(wxT("Beginning transaction"));
 	DoRunQuery(wxT("begin deferred transaction;"), false);
 }
 
-void ibDatabaseLayerSQLite::Commit()
+void ibDatabaseLayerSQLite::DoCommit()
 {
 	wxLogDebug(wxT("Commiting transaction"));
 	DoRunQuery(wxT("commit transaction;"), false);
 }
 
-void ibDatabaseLayerSQLite::RollBack()
+void ibDatabaseLayerSQLite::DoRollBack()
 {
 	wxLogDebug(wxT("Rolling back transaction"));
 	DoRunQuery(wxT("rollback transaction;"), false);
 }
 
-bool ibDatabaseLayerSQLite::IsActiveTransaction()
-{
-	return false;
-}
+// IsActiveTransaction inherits the base-class default (m_txDepth > 0).
 
 // query database
 int ibDatabaseLayerSQLite::DoRunQuery(const wxString& strQuery, bool bParseQuery)

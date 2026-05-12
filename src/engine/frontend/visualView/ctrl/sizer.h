@@ -16,12 +16,34 @@ public:
 	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 protected:
-	void UpdateSizer(wxSizer* sizer);
+	// Cross-platform sizer-update helper. Desktop pushes MinSize + Layout
+	// onto the live wxSizer; web is a no-op (CSS handles layout, no live
+	// server-side object to poke). Typedef makes the parameter compile
+	// against wxSizer on desktop and ibWebSizer on web so callers share
+	// one line — the per-build body handles the actual difference.
+	void UpdateSizer(ibFrontendSizer* sizer);
 
 protected:
 	ibPropertyCategory* m_categorySizer = ibPropertyObject::CreatePropertyCategory(wxT("SizerItem"), _("Sizer"));
 	ibPropertySize* m_propertyMinSize = ibPropertyObject::CreateProperty<ibPropertySize>(m_categorySizer, wxT("MinimumSize"), _("Minimum size"), _("Sets the minimum size of the window, to indicate to the sizer layout mechanism that this is the minimum required size."), wxDefaultSize);
 };
+
+// Free helper — rebind an existing child's layout params (proportion /
+// flag bitmask / border) inside its parent sizer, optionally forcing
+// a specific position (idx >= 0). Doesn't touch any ibValueSizer state,
+// so it lives in a namespace, not as a member. Hides the platform-
+// specific mechanism:
+//   * Desktop: wxSizer has no in-place SetItemProportion /
+//     SetItemBorder — the only way to change params is Detach + Add
+//     (or Detach + Insert(idx, …) if position matters).
+//   * Web: ibWebSizer stores per-child params in its own `Item`
+//     vector, so UpdateItemParams writes them directly; the vector
+//     order is already in sync with the ibValueFrame tree, so idx
+//     is ignored on this build.
+namespace ibSizerOps {
+	void FRONTEND_API SetChildParams(ibFrontendSizer* sizer, wxObject* child,
+		int proportion, int flag, int border, int idx = -1);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -71,8 +93,8 @@ public:
 
 	ibValueSizerItem();
 
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost) override;
 
 	virtual int GetComponentType() const {
 		return COMPONENT_TYPE_SIZERITEM;
@@ -91,9 +113,6 @@ public:
 	* Can delete object
 	*/
 	virtual bool CanDeleteControl() const { return true; }
-
-	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const;
 
 	/**
 	* Get type form
@@ -129,8 +148,8 @@ public:
 	ibValueBoxSizer();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
+	virtual wxObject* Create(ibFrontendWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -155,8 +174,8 @@ public:
 	ibValueWrapSizer();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
+	virtual wxObject* Create(ibFrontendWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -178,8 +197,8 @@ public:
 	virtual wxString GetControlTitle() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	//control factory
-	virtual wxObject* Create(wxWindow* parent, ibVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
+	virtual wxObject* Create(ibFrontendWindow* parent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
@@ -211,8 +230,8 @@ public:
 	ibValueGridSizer();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
+	virtual wxObject* Create(ibFrontendWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
+	virtual void OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstCreated) override;
 	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 

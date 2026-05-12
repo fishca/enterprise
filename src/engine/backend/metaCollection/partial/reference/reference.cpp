@@ -52,7 +52,7 @@ void ibValueReferenceDataObject::PrepareRef(bool createData)
 	PrepareNames();
 }
 
-ibValueReferenceDataObject::ibValueReferenceDataObject(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid) : ibValue(ibValueTypes::TYPE_VALUE, true), ibValueDataObject(objGuid, !objGuid.isValid()),
+ibValueReferenceDataObject::ibValueReferenceDataObject(const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid) : ibValue(ibValueTypes::TYPE_VALUE, true), ibValueDataObject(objGuid, !objGuid.isValid()),
 m_metaObject(metaObject), m_methodHelper(new ibValueMethodHelper()), m_initializedRef(false), m_reference_impl(nullptr), m_foundedRef(false)
 {
 	m_reference_impl = new ibReference(m_metaObject->GetMetaID(), m_objGuid);
@@ -86,7 +86,7 @@ ibValueReferenceDataObject* ibValueReferenceDataObject::Create(ibMetaData* metaD
 	return nullptr;
 }
 
-ibValueReferenceDataObject* ibValueReferenceDataObject::Create(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid)
+ibValueReferenceDataObject* ibValueReferenceDataObject::Create(const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& objGuid)
 {
 	//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, objGuid](ibValueReferenceDataObject* ref) {
 	//	return metaObject == ref->GetMetaObject() && objGuid == ref->GetGuid(); }
@@ -136,7 +136,7 @@ ibValueReferenceDataObject* ibValueReferenceDataObject::CreateFromPtr(ibMetaData
 	return nullptr;
 }
 
-ibValueReferenceDataObject* ibValueReferenceDataObject::CreateFromResultSet(ibDatabaseResultSet* rs, ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& refGuid)
+ibValueReferenceDataObject* ibValueReferenceDataObject::CreateFromResultSet(ibDatabaseResultSet* rs, const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& refGuid)
 {
 	//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, refGuid](ibValueReferenceDataObject* ref) {
 	//	return metaObject == ref->GetMetaObject() && refGuid == ref->GetGuid(); }

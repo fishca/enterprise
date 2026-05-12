@@ -2,6 +2,7 @@
 
 #include "backend/appData.h"
 #include "backend/utils/md5.hpp"
+#include "backend/utils/passwordHash.hpp"
 
 #include "backend/metadataConfiguration.h"
 
@@ -10,7 +11,7 @@ bool ibDialogUserItem::ReadUserData(const ibGuid& userGuid, bool copy)
 	if (m_userGuid.isValid())
 		return false;
 
-	const ibApplicationDataUserInfo& userInfo = appData->ReadUserData(userGuid);
+	const ibUserInfo userInfo = ibUserInfo::Read(userGuid);
 	if (userInfo.IsOk()) {
 
 		m_textName->SetValue(userInfo.m_strUserName);
@@ -81,33 +82,33 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 
 	m_staticName = new wxStaticText(m_main, wxID_ANY, _("Name:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticName->Wrap(-1);
-	sizerLabel->Add(m_staticName, 0, wxALL, 9);
+	sizerLabel->Add(m_staticName, 0, wxALL, FromDIP(9));
 
 	m_staticFullName = new wxStaticText(m_main, wxID_ANY, _("Full name:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticFullName->Wrap(-1);
-	sizerLabel->Add(m_staticFullName, 0, wxALL, 9);
+	sizerLabel->Add(m_staticFullName, 0, wxALL, FromDIP(9));
 
-	sizerUserTop->Add(sizerLabel, 0, 0, 5);
+	sizerUserTop->Add(sizerLabel, 0, 0, FromDIP(5));
 
 	wxBoxSizer* sizerText = new wxBoxSizer(wxVERTICAL);
 	m_textName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-	sizerText->Add(m_textName, 0, wxALL | wxEXPAND, 5);
+	sizerText->Add(m_textName, 0, wxALL | wxEXPAND, FromDIP(5));
 	m_textFullName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	sizerText->Add(m_textFullName, 0, wxALL | wxEXPAND, 5);
-	sizerUserTop->Add(sizerText, 1, wxEXPAND, 5);
-	sizerUser->Add(sizerUserTop, 0, wxEXPAND, 5);
+	sizerText->Add(m_textFullName, 0, wxALL | wxEXPAND, FromDIP(5));
+	sizerUserTop->Add(sizerText, 1, wxEXPAND, FromDIP(5));
+	sizerUser->Add(sizerUserTop, 0, wxEXPAND, FromDIP(5));
 
 	m_staticline = new wxStaticLine(m_main, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
-	sizerUser->Add(m_staticline, 0, wxALL | wxEXPAND, 5);
+	sizerUser->Add(m_staticline, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* sizerUserBottom = new wxBoxSizer(wxHORIZONTAL);
 	m_staticPassword = new wxStaticText(m_main, wxID_ANY, _("Password:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticPassword->Wrap(-1);
-	sizerUserBottom->Add(m_staticPassword, 0, wxALL, 10);
+	sizerUserBottom->Add(m_staticPassword, 0, wxALL, FromDIP(10));
 	m_textPassword = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD);
-	sizerUserBottom->Add(m_textPassword, 1, wxALL, 5);
+	sizerUserBottom->Add(m_textPassword, 1, wxALL, FromDIP(5));
 
-	sizerUser->Add(sizerUserBottom, 1, wxEXPAND, 5);
+	sizerUser->Add(sizerUserBottom, 1, wxEXPAND, FromDIP(5));
 
 	m_main->SetSizer(sizerUser);
 	m_main->Layout();
@@ -154,20 +155,20 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 
 	m_choiceLanguage->SetSelection(0);
 
-	sizerLabels->Add(m_staticRole, 0, wxEXPAND, 5);
-	sizerLabels->Add(m_choiceRole, 1, wxEXPAND, 5);
-	sizerOther->Add(sizerLabels, 1, wxEXPAND, 5);
+	sizerLabels->Add(m_staticRole, 0, wxEXPAND, FromDIP(5));
+	sizerLabels->Add(m_choiceRole, 1, wxEXPAND, FromDIP(5));
+	sizerOther->Add(sizerLabels, 1, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* sizerChoice = new wxBoxSizer(wxVERTICAL);
 
-	sizerChoice->Add(m_staticLanguage, 0, wxEXPAND, 5);
-	sizerChoice->Add(m_choiceLanguage, 0, wxEXPAND, 5);
+	sizerChoice->Add(m_staticLanguage, 0, wxEXPAND, FromDIP(5));
+	sizerChoice->Add(m_choiceLanguage, 0, wxEXPAND, FromDIP(5));
 
-	sizerOther->Add(sizerChoice, 0, wxEXPAND, 5);
+	sizerOther->Add(sizerChoice, 0, wxEXPAND, FromDIP(5));
 	m_other->SetSizer(sizerOther);
 
 	m_mainNotebook->AddPage(m_other, _("Other"), true, wxNullBitmap);
-	mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, 5);
+	mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, FromDIP(5));
 
 	m_bottom = new wxStdDialogButtonSizer();
 	m_bottomOK = new wxButton(this, wxID_OK);
@@ -177,7 +178,7 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 	m_bottom->Realize();
 
 	m_mainNotebook->SetSelection(0);
-	mainSizer->Add(m_bottom, 0, wxEXPAND, 5);
+	mainSizer->Add(m_bottom, 0, wxEXPAND, FromDIP(5));
 
 	wxDialog::SetSizer(mainSizer);
 	wxDialog::Layout();
@@ -203,7 +204,9 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 			if (m_bInitialized) {
 				const wxString& strUserPassword = m_textPassword->GetValue();
 				if (!strUserPassword.IsEmpty()) {
-					m_strUserPassword = ibMD5::ComputeMd5(strUserPassword);
+					// PBKDF2-SHA256 with a per-user salt; legacy MD5 is still accepted
+					// on login and upgraded lazily in AuthenticateUser (NeedsRehash).
+					m_strUserPassword = ibPasswordHash::Hash(strUserPassword);
 				}
 				else {
 					m_strUserPassword.Clear();
@@ -225,7 +228,7 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 			if (!m_userGuid.isValid())
 				m_userGuid = wxNewUniqueGuid;
 
-			ibApplicationDataUserInfo userInfo;
+			ibUserInfo userInfo;
 
 			userInfo.m_strUserGuid = m_userGuid.str();
 			userInfo.m_strUserName = m_textName->GetValue();
@@ -262,11 +265,11 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 			}
 
 			if (!access_right) {
-				for (const auto userInfo : appData->GetAllowedUser()) {
-					const ibGuid& userGuid = userInfo.m_strUserGuid;
+				for (const auto& userInfo : ibUserInfo::ListAll()) {
+					const ibGuid userGuid(userInfo.m_strUserGuid);
 					if (userGuid == m_userGuid)
 						continue;
-					const ibApplicationDataUserInfo& userEntry = appData->ReadUserData(userGuid);
+					const ibUserInfo userEntry = ibUserInfo::Read(userGuid);
 					for (const auto role : userEntry.m_roleArray) {
 						access_right = commonObject->AccessRight_Administration(role.m_miRoleId) &&
 							commonObject->AccessRight_DataAdministration(role.m_miRoleId);
@@ -280,7 +283,7 @@ ibDialogUserItem::ibDialogUserItem(wxWindow* parent, wxWindowID id, const wxStri
 				return;
 			}
 
-			if (!appData->SaveUserData(userInfo))
+			if (!ibUserInfo::Save(userInfo))
 				return;
 
 			event.Skip();

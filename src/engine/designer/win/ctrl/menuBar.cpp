@@ -40,7 +40,7 @@ void ibPanelMenuBar::AppendMenu(wxMenu* menu, const wxString& name)
 {
 	wxStaticText* st = new wxStaticText(this, wxID_ANY, name);
 	st->PushEventHandler(new ibMenuEvtHandler(st, menu));
-	m_sizer->Add(st, 0, wxALIGN_LEFT | wxRIGHT | wxLEFT, 5);
+	m_sizer->Add(st, 0, wxALIGN_LEFT | wxRIGHT | wxLEFT, FromDIP(5));
 	Layout();
 	m_menus.push_back(menu);
 }

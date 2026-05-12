@@ -34,8 +34,12 @@ enum { //instruction types
 	OPER_TRY,
 	OPER_RAISE,
 	OPER_RAISE_T,
-	OPER_FUNC,//29
-	OPER_ENDFUNC,
+	OPER_FUNC,//29 — function/procedure entry (also serves as FUNC_BEGIN tape marker)
+	OPER_ENDFUNC,         // FUNC_END
+	OPER_FUNC_PARAM,      // tape declarator: parameter slot in current function frame
+	OPER_FUNC_LOCAL,      // tape declarator: named local in current function frame
+	OPER_CTX_BEGIN,       // tape declarator: enter block scope ({ ... })
+	OPER_CTX_END,         // tape declarator: exit block scope
 	OPER_CALL,//function call
 	OPER_SET, // setting the parameter as a variable
 	OPER_SETREF,//setting the parameter as a variable by reference
@@ -54,7 +58,28 @@ enum { //instruction types
 	OPER_SET_A,
 	OPER_GET_A,
 	OPER_ENTER_A,
-	OPER_CALL_M,
+	OPER_CALL_METHOD,
+	OPER_CALL_CLOSURE,    // function call where target has m_needsHeapFrame:
+	                      // allocate the callee frame on the heap (shared_ptr-
+	                      // managed ibRunContext) so that inner lambdas
+	                      // materialised during the call can capture the
+	                      // frame via weak_from_this(). Operand layout is
+	                      // identical to OPER_CALL; the split avoids a
+	                      // per-OPER_CALL FindFunctionByEntry probe + flag
+	                      // check on the hot non-closure path.
+	OPER_CALL_LINQ,       // universal pipeline method on an iterable receiver
+	                      // (Where / Select / OrderBy / GroupBy / Join /
+	                      // Skip / Take / Aggregate / ...). Compile detects
+	                      // LINQ method names at emit time and chooses this
+	                      // opcode instead of OPER_CALL_METHOD; runtime
+	                      // dispatches via the virtual DispatchLinqMethod
+	                      // on the receiver, reading the enum id directly
+	                      // from m_param3.m_numIndex (no FindMethod string
+	                      // resolution / const-pool lookup needed). Operand
+	                      // layout mirrors OPER_CALL_METHOD with one diff:
+	                      //   m_param3.m_numIndex = ibLinqMethod enum value
+	                      //                        (NOT a const-string index)
+	                      //   m_param3.m_numArray = caller arg count
 	OPER_GET_ARRAY,
 	OPER_SET_ARRAY,
 	OPER_CHECK_ARRAY,
@@ -62,6 +87,43 @@ enum { //instruction types
 	OPER_ENDTRY,
 	OPER_SET_TYPE,
 	OPER_NEW,
+	// Anonymous functions / function-as-value:
+	//
+	// OPER_LFUNC is the active materialiser for a lambda definition.
+	// Operand layout:
+	//   m_param1                 — dest slot for the resulting ibValueFunction
+	//   m_param2.m_numIndex      — end IP (OPER_ENDLFUNC position; patched
+	//                              at compile time after the body is emitted)
+	//   m_param3.m_numIndex      — lazy cache of derived ibByteCode*
+	//                              (reinterpret-cast through intptr_t).
+	//                              0 = not yet built. AOT skips this on
+	//                              write so loaded blobs rebuild on first use.
+	// On bDelta=false (regular execution): if cache is empty, scan the
+	// range [LFUNC+1 .. ENDLFUNC-1] in the parent bytecode, copy body +
+	// referenced const-pool entries into a fresh self-contained
+	// ibByteCode (m_parent = current bc — bc parent walk reaches root
+	// Context bindings: Catalogs / Documents / CommonModules / system
+	// functions), stash it in m_param3 and in parent's m_lambdaBcs. Then
+	// materialise an ibValueFunction wrapper into the dest slot and jump
+	// IP to m_param2.m_numIndex (past OPER_ENDLFUNC). On bDelta=true
+	// (module-init skip): walk forward to matching OPER_ENDLFUNC.
+	//
+	// OPER_ENDLFUNC marks the end of the lambda body in the parent bc.
+	// Never reached in normal flow — OPER_LFUNC always jumps past it
+	// after materialisation. NOP at runtime; kept as a structural fence
+	// for the compile-time scan and for the AOT-resilient first-fire
+	// extraction.
+	//
+	// OPER_CALL_LAMBDA is the dynamic counterpart of OPER_CALL: the call
+	// target is an ibValue (must wrap an ibValueFunction) read from a
+	// slot in m_param4 instead of a static index in m_param2. Frame push
+	// + param bind + jump-to-entry are the same machinery as OPER_CALL,
+	// but dispatch goes through fn->m_runtime (the root mm captured at
+	// materialise time) on fn->m_byteCode (the derived self-contained
+	// lambda bc).
+	OPER_LFUNC,
+	OPER_ENDLFUNC,
+	OPER_CALL_LAMBDA,
 	OPER_END,
 };
 
@@ -123,6 +185,29 @@ enum { // numbers of keywords (in strict sequence as the values ​​themselves
 	KEY_ENDIFDEF,
 	KEY_REGION,
 	KEY_ENDREGION,
+	// === LINQ keywords ===
+	// Recognised by the compiler in CompileLinqExpression and (for
+	// FROM only) at expression-start in GetExpression / statement-start
+	// in CompileBlock. KEY_IN reuses the existing keyword above
+	// (already used by `For Each o In X`). All registered up-front so
+	// IsNextKeyWord(KEY_*) works without identifier-text fallback,
+	// and so the code editor's keyword highlighter picks them up the
+	// moment translateCode.cpp's s_listKeyWord is updated in lock-step.
+	KEY_FROM,           // `from <id> in <expr>`            — block entry
+	KEY_WHERE,          // `where <expr>`                    — filter
+	KEY_SELECT,         // `select <expr>`                   — projection
+	KEY_ORDERBY,        // `orderby <expr> [ascending|descending]`
+	KEY_ASCENDING,      // sort modifier (default)
+	KEY_DESCENDING,     // sort modifier
+	KEY_TAKE,           // `take <n>`                        — limit
+	KEY_SKIP,           // `skip <n>`                        — offset
+	KEY_DISTINCT,       // `distinct`                        — dedup
+	KEY_JOIN,           // `join <id> in <expr> on ...`      — inner join
+	KEY_ON,             // `... on <left> equals <right>`    — join key
+	KEY_EQUALS,         // join-key matcher (typed-vs '==' alt)
+	KEY_GROUP,          // `group <expr> by <key> [into <id>]`
+	KEY_BY,             // group-by / orderby key separator
+	KEY_INTO,           // `group ... into <id>`             — group binding
 	LastKeyWord
 };
 

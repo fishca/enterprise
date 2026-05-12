@@ -1,5 +1,10 @@
 ﻿#include "widgets.h"
+
+#ifdef OES_USE_WEB
+#include "frontend/web/webWindow.h"
+#else
 #include "frontend/win/ctrls/controlTextEditor.h"
+#endif
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueTextCtrl, ibValueWindow)
 
@@ -120,27 +125,31 @@ wxString ibValueTextCtrl::GetControlTitle() const
 	return wxEmptyString;
 }
 
-wxObject* ibValueTextCtrl::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* ibValueTextCtrl::Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
-	ibControlTextEditor* textEditor = new ibControlNavigationTextEditor(wxparent, wxID_ANY,
-		wxEmptyString,
-		wxDefaultPosition,
-		wxDefaultSize);
+	(void)visualHost;
+	// Allocation ifdef; rest shared.
+#ifdef OES_USE_WEB
+	(void)wxparent;
+	auto* textEditor = new ibWebTextCtrl(GetControlID());
+	textEditor->Bind(wxEVT_TEXT, &ibValueTextCtrl::OnWebTextChanged, this);
+#else
+	auto* textEditor = new ibControlNavigationTextEditor(
+		wxparent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize);
+#endif
 
 	if (!m_propertySource->IsEmptyProperty()) {
 		ibSourceDataObject* srcObject = m_formOwner->GetSourceObject();
-		if (srcObject != nullptr) {
+		if (srcObject != nullptr)
 			srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
-		}
-	}
-	else {
+	} else {
 		m_selValue = ibTypeControlFactory::AdjustValue(m_selValue);
 	}
 
 	return textEditor;
 }
 
-void ibValueTextCtrl::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+void ibValueTextCtrl::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
 {
 }
 
@@ -148,48 +157,64 @@ void ibValueTextCtrl::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisual
 
 void ibValueTextCtrl::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	ibControlTextEditor* textEditor = dynamic_cast<ibControlTextEditor*>(wxobject);
+	(void)visualHost;
+	// Only the cast differs between builds — ibWebTextCtrl mirrors the
+	// subset of ibControlTextEditor's API that the runtime path needs
+	// (SetValue / SetLabel / SetPasswordMode / SetMultilineMode /
+	// SetTextEditMode / Show{Select,Open,Clear}Button + the six text
+	// events). From here on the body is a single pass.
+#ifdef OES_USE_WEB
+	auto* textEditor = static_cast<ibWebTextCtrl*>(wxobject);
+#else
+	auto* textEditor = static_cast<ibControlTextEditor*>(wxobject);
+#endif
+	if (textEditor == nullptr) {
+		UpdateWindow(textEditor);
+		return;
+	}
 
-	if (textEditor != nullptr) {
+	// Source-backed value refresh — if the textctrl is bound to an
+	// attribute, pull the current source value; otherwise the control
+	// carries its own m_selValue across Update passes.
+	if (!m_propertySource->IsEmptyProperty() && m_formOwner != nullptr) {
+		ibSourceDataObject* srcObject = m_formOwner->GetSourceObject();
+		if (srcObject != nullptr)
+			srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
+	}
+	else {
+		m_selValue = ibTypeControlFactory::AdjustValue(m_selValue);
+	}
 
-		if (!m_propertySource->IsEmptyProperty()) {
-			ibSourceDataObject* srcObject = m_formOwner->GetSourceObject();
-			if (srcObject != nullptr) {
-				srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
-			}
-		}
+	// Property push — identical setter surface on both builds.
+	// Desktop's "if (!DesignerMode()) SetValue" guard is pointless on web
+	// (wfrontend is never in designer mode); the no-op check is cheap.
+	textEditor->SetLabel(GetControlTitle());
+	if (!appData->DesignerMode())
+		textEditor->SetValue(m_selValue.GetString());
+	textEditor->SetPasswordMode(m_propertyPasswordMode->GetValueAsBoolean());
+	textEditor->SetMultilineMode(m_propertyMultilineMode->GetValueAsBoolean());
+	textEditor->SetTextEditMode(m_propertyTexteditMode->GetValueAsBoolean());
+	textEditor->ShowSelectButton(m_propertySelectButton->GetValueAsBoolean());
+	textEditor->ShowOpenButton(m_propertyOpenButton->GetValueAsBoolean());
+	textEditor->ShowClearButton(m_propertyClearButton->GetValueAsBoolean());
 
-		textEditor->SetLabel(GetControlTitle());
-
-		if (!appData->DesignerMode()) {
-			textEditor->SetValue(m_selValue.GetString());
-		}
-
-		textEditor->SetPasswordMode(m_propertyPasswordMode->GetValueAsBoolean());
-		textEditor->SetMultilineMode(m_propertyMultilineMode->GetValueAsBoolean());
-		textEditor->SetTextEditMode(m_propertyTexteditMode->GetValueAsBoolean());
-
-		if (!appData->DesignerMode()) {
-
-			textEditor->ShowSelectButton(m_propertySelectButton->GetValueAsBoolean());
-			textEditor->ShowOpenButton(m_propertyOpenButton->GetValueAsBoolean());
-			textEditor->ShowClearButton(m_propertyClearButton->GetValueAsBoolean());
-
-			textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &ibValueTextCtrl::OnSelectButtonPressed, this);
-			textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &ibValueTextCtrl::OnOpenButtonPressed, this);
-			textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &ibValueTextCtrl::OnClearButtonPressed, this);
-
-			textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &ibValueTextCtrl::OnTextEnter, this);
-			textEditor->Bind(wxEVT_CONTROL_TEXT_INPUT, &ibValueTextCtrl::OnTextUpdated, this);
-			textEditor->Bind(wxEVT_CONTROL_TEXT_CLEAR, &ibValueTextCtrl::OnTextUpdated, this);
-
-			textEditor->Bind(wxEVT_KILL_FOCUS, &ibValueTextCtrl::OnKillFocus, this);
-		}
-		else {
-			textEditor->ShowSelectButton(m_propertySelectButton->GetValueAsBoolean());
-			textEditor->ShowOpenButton(m_propertyOpenButton->GetValueAsBoolean());
-			textEditor->ShowClearButton(m_propertyClearButton->GetValueAsBoolean());
-		}
+	// Button binds — unified, handlers (OnSelect/Open/ClearButtonPressed)
+	// are pure metadata work, identical on both builds.
+	if (!appData->DesignerMode()) {
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &ibValueTextCtrl::OnSelectButtonPressed, this);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN,   &ibValueTextCtrl::OnOpenButtonPressed,   this);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR,  &ibValueTextCtrl::OnClearButtonPressed,  this);
+#ifndef OES_USE_WEB
+		// Text-edit events are wxTextCtrl-internal on desktop; their
+		// handlers (OnTextEnter / OnKillFocus) wxDynamicCast the event
+		// object to wxTextCtrl and GetValue() it — not valid against
+		// ibWebTextCtrl. Web gets its own commit path via OnWebTextChanged
+		// bound in Create() (wxEVT_TEXT, fired by /change).
+		textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER,    &ibValueTextCtrl::OnTextEnter,           this);
+		textEditor->Bind(wxEVT_CONTROL_TEXT_INPUT,    &ibValueTextCtrl::OnTextUpdated,         this);
+		textEditor->Bind(wxEVT_CONTROL_TEXT_CLEAR,    &ibValueTextCtrl::OnTextUpdated,         this);
+		textEditor->Bind(wxEVT_KILL_FOCUS,            &ibValueTextCtrl::OnKillFocus,           this);
+#endif
 	}
 
 	UpdateWindow(textEditor);
@@ -197,7 +222,11 @@ void ibValueTextCtrl::Update(wxObject* wxobject, ibVisualHost* visualHost)
 
 void ibValueTextCtrl::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	ibControlTextEditor* textEditor = dynamic_cast<ibControlTextEditor*>(wxobject);
+#ifdef OES_USE_WEB
+	(void)wxobject;
+	(void)visualHost;
+#else
+	ibControlTextEditor* textEditor = static_cast<ibControlTextEditor*>(wxobject);
 
 	if (textEditor != nullptr) {
 		if (!appData->DesignerMode()) {
@@ -214,6 +243,7 @@ void ibValueTextCtrl::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 
 		}
 	}
+#endif
 }
 
 //*******************************************************************
@@ -246,15 +276,30 @@ bool ibValueTextCtrl::SetControlValue(const ibValue& varControlVal)
 
 	m_formOwner->RefreshForm();
 
-	ibControlTextEditor* textEditor = dynamic_cast<ibControlTextEditor*>(GetWxObject());
-	if (textEditor != nullptr) {
-
+	// Push m_selValue into the live editor. GetWxObject() is unified —
+	// both builds return the web/wx node the walker stashed in the host's
+	// m_baseObjects. Desktop additionally repositions the insertion
+	// point; web handles cursor placement client-side (see webClient.cpp
+	// TextCtrl renderer, which does setSelectionRange(0,0) on Clear).
+#ifdef OES_USE_WEB
+	// dynamic_cast (not static_cast) — paranoid: if the walker ever
+	// stores a different wxObject subtype in m_baseObjects for this
+	// frame (e.g., a stub), static_cast's UB would write wxString at
+	// the wrong offset and corrupt the heap (seen 2026-04-19 in a
+	// dump from /change path). dynamic_cast returns nullptr on a type
+	// mismatch instead.
+	auto* textEditor = dynamic_cast<ibWebTextCtrl*>(GetWxObject());
+	if (textEditor != nullptr)
 		textEditor->SetValue(m_selValue.GetString());
-
+#else
+	ibControlTextEditor* textEditor = static_cast<ibControlTextEditor*>(GetWxObject());
+	if (textEditor != nullptr) {
+		textEditor->SetValue(m_selValue.GetString());
 		if (m_selValue.IsEmpty())
 			textEditor->SetInsertionPoint(wxNOT_FOUND);
 		else textEditor->SetInsertionPointEnd();
 	}
+#endif
 
 	return true;
 }

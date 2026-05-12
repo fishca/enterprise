@@ -145,15 +145,18 @@ public:
 		return dynamic_cast<ibMetaDocument*>(m_viewDocument);
 	}
 
-	bool ShowFrame(bool show = true) {
+	// Body out-of-line so the web branch can call ibWebWindow::Show
+	// without pulling webWindow.h into every shared consumer.
+	bool ShowFrame(bool show = true);
 
-		if (m_viewFrame != nullptr &&
-			m_viewFrame->Show(show)) {
-			return true;
-		}
-
-		return false;
-	}
+#ifdef OES_USE_WEB
+	// Web-side twin of wxView::m_viewFrame — points at the
+	// ibWebDocChildFrame that hosts this view. Set from
+	// ibWebFrame::CreateChildFrame right after the tab is
+	// constructed, so ShowFrame (above) can reach it.
+	void         SetWebFrame(class ibWebWindow* f) { m_webFrame = f; }
+	class ibWebWindow* GetWebFrame() const { return m_webFrame; }
+#endif
 
 #if wxUSE_MENUS	
 	virtual wxMenuBar* CreateMenuBar() const { return nullptr; }
@@ -173,6 +176,11 @@ public:
 	// A view's window can call this to notify the view it is (in)active.
 	// The function then notifies the document manager.
 	virtual void Activate(bool activate) override;
+
+#ifdef OES_USE_WEB
+private:
+	class ibWebWindow* m_webFrame = nullptr;
+#endif
 };
 
 #endif

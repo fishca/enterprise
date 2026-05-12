@@ -91,19 +91,16 @@ bool ibMetaDataConfigurationBase::SaveConfigToFile(const wxString& strFileName)
 //**************************************************************************************************
 
 ibMetaDataConfigurationFile::ibMetaDataConfigurationFile() : ibMetaDataConfigurationBase(),
-m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
+m_commonObject(nullptr), m_configOpened(false)
 {
 	//create main metaObject
 	m_commonObject = new ibValueMetaObjectConfiguration();
 	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
-		m_moduleManager = new ibValueModuleManagerConfiguration(this, m_commonObject);
-		m_moduleManager->IncrRef();
 		if (!m_commonObject->OnLoadMetaObject(this)) {
 			wxASSERT_MSG(false, "m_commonObject->OnLoadMetaObject() == false");
 		}
-		m_moduleManager->PrepareNames();
 	}
 
 	m_commonObject->PrepareNames();
@@ -128,16 +125,11 @@ m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 
 		m_commonObject->SetLanguage(commonLanguage->GetMetaID());
 	}
-
-	wxASSERT(m_moduleManager);
 }
 
 ibMetaDataConfigurationFile::~ibMetaDataConfigurationFile()
 {
-	//delete module manager
-	wxDELETE(m_moduleManager);
-
-	//clear data 
+	//clear data
 	if (!ClearDatabase()) {
 		wxASSERT_MSG(false, "ClearDatabase() == false");
 	}
@@ -145,6 +137,8 @@ ibMetaDataConfigurationFile::~ibMetaDataConfigurationFile()
 	//delete common metaObject
 	wxDELETE(m_commonObject);
 }
+
+
 
 ////////////////////////////////////////////////////////////////////
 
@@ -204,35 +198,33 @@ bool ibMetaDataConfigurationFile::RunDatabase(int flags)
 			return false;
 	}
 
-	if (m_moduleManager->CreateMainModule()) {
+	// CreateMainModule (compile) is no longer fired from RunDatabase —
+	// orchestration moved to the caller (appData::LoadMetadata) so
+	// metadata stays a pure skeleton/factory and runtime ops sit on the
+	// session-mm side.
 
-		if (!m_commonObject->OnAfterRunMetaObject(flags)) {
-			wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
-			return false;
-		}
-
-		for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
-
-			auto child = m_commonObject->GetChild(idx);
-			if (!m_commonObject->FilterChild(child->GetClassType()))
-				continue;
-
-			if (child->IsDeleted())
-				continue;
-
-			if (!child->OnAfterRunMetaObject(flags))
-				return false;
-
-			if (!RunChildMetadata(child, flags, false))
-				return false;
-		}
-		//if (!StartMainModule())
-		//	return false;
-		m_configOpened = true;
-		return true;
+	if (!m_commonObject->OnAfterRunMetaObject(flags)) {
+		wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
+		return false;
 	}
 
-	return false;
+	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
+
+		auto child = m_commonObject->GetChild(idx);
+		if (!m_commonObject->FilterChild(child->GetClassType()))
+			continue;
+
+		if (child->IsDeleted())
+			continue;
+
+		if (!child->OnAfterRunMetaObject(flags))
+			return false;
+
+		if (!RunChildMetadata(child, flags, false))
+			return false;
+	}
+	m_configOpened = true;
+	return true;
 }
 
 bool ibMetaDataConfigurationFile::RunChildMetadata(ibValueMetaObject* object, int flags, bool before)
@@ -287,9 +279,9 @@ bool ibMetaDataConfigurationFile::CloseDatabase(int flags)
 		return false;
 	}
 
-	if (!m_moduleManager->DestroyMainModule()) {
-		return false;
-	}
+	// DestroyMainModule moved to the caller (appData::Disconnect /
+	// UnloadMetadata) — symmetric with CreateMainModule that was hoisted
+	// out of RunDatabase.
 
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
 
@@ -592,24 +584,33 @@ bool ibMetaDataConfiguration::OnInitialize(const int flags)
 	if (!ibMetaDataConfigurationStorage::TableAlreadyCreated())
 		return false;
 
+	// One debug server per process, bound to the singleton metadata
+	// configuration. Per-session debug context (ibSession::Debug) layers
+	// on top — handshake is process-level, EnterLoop / step routing is
+	// per-session via sessionGuid.
 	debugServerInit(flags);
 
 	if (!LoadDatabase())
 		return false;
 
-#pragma region language  
-	// Check current language
-	const ibValueMetaObject* foundedLanguage =
-		ibMetaData::FindAnyObjectByFilter(appData->GetUserLanguageGuid(), g_metaLanguageCLSID);
-	// Initialize localization engine  
-	ibBackendLocalization::SetUserLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
-#pragma endregion 
+	// Localization: pin the process-wide default to the configuration's
+	// main language code (metadata short-code form ru/en/uk). Pre-auth
+	// callers without a session bound — launcher / login screen — read
+	// through this default. Per-session active language is assigned
+	// later by SetUserInfo on authentication and stays cached on the
+	// session for its whole life.
+	ibBackendLocalization::SetUserLanguage(GetLangCode());
 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
-
-	if ((flags & _app_start_create_debug_server_flag) != 0)
-		debugServer->CreateServer(defaultHost, defaultDebuggerPort, true);
+	if ((flags & _app_start_create_debug_server_flag) != 0) {
+		// wait=true blocks bootstrap until the designer's debugClient
+		// connects (OnStart must not run before breakpoints arrive).
+		// For wes that's a deadlock — wes needs to bind HTTP and start
+		// serving immediately; the designer attaches later through the
+		// per-process search. Per-tab WebClient sessions stop at their
+		// own OnStart only after the listener exists.
+		const bool waitForClient = !appData->WebEnterpriseMode();
+		debugServer->CreateServer(defaultHost, defaultDebuggerPort, waitForClient);
+	}
 
 	return true;
 }
@@ -617,7 +618,6 @@ bool ibMetaDataConfiguration::OnInitialize(const int flags)
 bool ibMetaDataConfiguration::OnDestroy()
 {
 	debugServerDestroy();
-	if (backend_mainFrame != nullptr) backend_mainFrame->OnDestroyConfiguration(GetConfigType());
 	return true;
 }
 
@@ -662,15 +662,10 @@ bool ibMetaDataConfigurationStorage::OnInitialize(const int flags)
 	}
 #pragma endregion
 
-#pragma region language  
-
-	// Initialize localization engine 
+	// Localization: pin the process-wide default to the configuration's
+	// main language code — designer always works with the editorial
+	// baseline of the configuration regardless of OS locale.
 	ibBackendLocalization::SetUserLanguage(GetLangCode());
-
-#pragma endregion 
-
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
 
 	return true;
 }
@@ -679,9 +674,6 @@ bool ibMetaDataConfigurationStorage::OnDestroy()
 {
 	debugClientDestroy();
 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnDestroyConfiguration(GetConfigType());
-
 	return true;
 }
 
@@ -689,6 +681,11 @@ bool ibMetaDataConfigurationStorage::OnDestroy()
 
 ibMetaDataConfigurationStorage::ibMetaDataConfigurationStorage() :
 	ibMetaDataConfiguration(), m_configMetadata(new ibMetaDataConfiguration()) {
+	// Designer-edit configuration → allocate compile-value cache so
+	// metadata-collection callsites (Add/Find/RemoveCompileModule) gate
+	// on `if (auto* cc = metaData->GetCompileCache())` instead of the
+	// runtime-mode appData->DesignerMode() check.
+	m_compileCache = std::make_unique<ibCompileValueCache>();
 }
 
 ibMetaDataConfigurationStorage::~ibMetaDataConfigurationStorage() {

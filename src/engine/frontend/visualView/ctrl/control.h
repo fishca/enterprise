@@ -59,9 +59,6 @@ public:
 		return true;
 	}
 
-	//runtime 
-	virtual ibProcUnit* GetFormProcUnit() const;
-
 	/**
 	* Get type form
 	*/

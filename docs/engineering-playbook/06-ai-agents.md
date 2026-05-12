@@ -362,3 +362,20 @@ claude
 4. Если AI ушёл не туда — остановите и переформулируйте задачу
 5. Сохраняйте удачные промпты в `docs/ai-prompts/` для повторного использования
 6. При работе с незнакомым API (wxWidgets, Firebird IBPP) — всегда указывайте AI проверять актуальную документацию
+
+### Запуск сборки — только по команде
+
+The AI MUST NOT run a build (`msbuild`, `cmake --build`, any compile command) on its own to verify edits. This includes:
+
+- "Just one more rebuild" after a failed build — fix the code and stop.
+- "Quick compile-check" after refactoring — leave the code, summarise the change, wait.
+- Pre-emptive builds before showing results — finish edits, summarise, hand the user a one-line build command, stop.
+
+Only run a build after an explicit user command — `build`, `запускай`, `собирай`, `пересобери`, or equivalent.
+
+**Why:**
+- A running `enterprise.exe` / `wenterprise-server.exe` / `designer.exe` holds `backend.dll` open → `LNK1168` and the rebuild fails at the link step. The AI cannot tell from outside whether the user has the binaries free.
+- Each unprompted build burns 30–60 seconds of the user's attention (kills processes, watches output, replies to errors). Chained "fix → unprompted rebuild → fix → unprompted rebuild" loops drain the session faster than the actual code changes are worth.
+- The user pipelines edits in the IDE while the AI works; an unprompted build interrupts that flow.
+
+**How a "stop after edits" turn looks:** finish the change → one or two sentences describing what changed → optionally a single command line the user can paste → end the turn.

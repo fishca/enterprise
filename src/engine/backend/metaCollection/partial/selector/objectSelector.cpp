@@ -1,4 +1,4 @@
-#include "objectSelector.h"
+﻿#include "objectSelector.h"
 #include "backend/metaCollection/partial/reference/reference.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
@@ -41,7 +41,7 @@ wxString ibValueSelectorDataObject::GetString() const
 
 /////////////////////////////////////////////////////////////////////////
 
-ibValueSelectorRecordDataObject::ibValueSelectorRecordDataObject(ibValueMetaObjectRecordDataMutableRef* metaObject) :
+ibValueSelectorRecordDataObject::ibValueSelectorRecordDataObject(const ibValueMetaObjectRecordDataMutableRef* metaObject) :
 	ibValueSelectorDataObject(),
 	ibValueDataObject(ibGuid(), false),
 	m_metaObject(metaObject)
@@ -92,7 +92,7 @@ ibValueRecordDataObjectRef* ibValueSelectorRecordDataObject::GetObject(const ibG
 
 //////////////////////////////////////////////////////////////////////////
 
-ibValueSelectorRegisterDataObject::ibValueSelectorRegisterDataObject(ibValueMetaObjectRegisterData* metaObject) :
+ibValueSelectorRegisterDataObject::ibValueSelectorRegisterDataObject(const ibValueMetaObjectRegisterData* metaObject) :
 	ibValueSelectorDataObject(),
 	m_metaObject(metaObject)
 {
@@ -138,7 +138,7 @@ ibValueRecordManagerObject* ibValueSelectorRegisterDataObject::GetRecordManager(
 	}
 
 	return m_metaObject->CreateRecordManagerObjectValue(
-		ibUniqueKeyPair(m_metaObject, keyValues)
+		m_metaObject->CreateUniqueKeyPair(keyValues)
 	);
 }
 

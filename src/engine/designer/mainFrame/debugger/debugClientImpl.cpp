@@ -123,8 +123,10 @@ void ibDebuggerClientBridgeDesigner::OnLeaveLoop(wxSocketClient* sock, const ibD
 		}
 	}
 
-	if (localWindow != nullptr) localWindow->ClearAndCreate();
-	if (stackWindow != nullptr) stackWindow->ClearAndCreate();
+	// Do not clear the locals/stack windows here. The next OnEnterLoop
+	// will deliver fresh data via SetStack/SetLocalVariable, which update
+	// the tables incrementally. Clearing here caused a visible blank-out
+	// of the tables between every debugger step.
 
 	if (mainFrame != nullptr) mainFrame->Debugger_OnLeaveLoop();
 }

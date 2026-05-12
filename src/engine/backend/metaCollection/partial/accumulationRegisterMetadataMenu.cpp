@@ -10,9 +10,9 @@ bool ibValueMetaObjectAccumulationRegister::PrepareContextMenu(wxMenu* defaultMe
 {
 	wxMenuItem* menuItem = nullptr;
 	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open record set module"));
-	menuItem->SetBitmap((*m_propertyModuleObject)->GetIcon());
+	menuItem->SetBitmap((*m_propertyObjectModule)->GetIcon());
 	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MANAGER, _("Open manager module"));
-	menuItem->SetBitmap((*m_propertyModuleManager)->GetIcon());
+	menuItem->SetBitmap((*m_propertyManagerModule)->GetIcon());
 	defaultMenu->AppendSeparator();
 	return false;
 }
@@ -23,7 +23,7 @@ void ibValueMetaObjectAccumulationRegister::ProcessCommand(unsigned int id)
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_MODULE)
-		metaTree->OpenFormMDI(m_propertyModuleObject->GetMetaObject());
+		metaTree->OpenFormMDI(m_propertyObjectModule->GetMetaObject());
 	else if (id == ID_METATREE_OPEN_MANAGER)
-		metaTree->OpenFormMDI(m_propertyModuleManager->GetMetaObject());
+		metaTree->OpenFormMDI(m_propertyManagerModule->GetMetaObject());
 }

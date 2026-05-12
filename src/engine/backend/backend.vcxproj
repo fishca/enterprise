@@ -24,42 +24,42 @@
     <ClInclude Include="backend.h" />
     <ClInclude Include="backend_spreadsheet.h" />
     <ClInclude Include="backend_exception.h" />
+    <ClInclude Include="session\designerExclusivePolicy.h" />
+    <ClInclude Include="session\session.h" />
+    <ClInclude Include="session\sessionPolicy.h" />
+    <ClInclude Include="session\sessionRegistry.h" />
+    <ClInclude Include="session\sessionSnapshot.h" />
+    <ClInclude Include="session\workerPool.h" />
+    <ClInclude Include="session\workerPoolHeadless.h" />
     <ClInclude Include="backend_core.h" />
     <ClInclude Include="backend_mainFrame.h" />
     <ClInclude Include="backend_picture.h" />
     <ClInclude Include="backend_type.h" />
+    <ClInclude Include="characteristicCtor.h" />
     <ClInclude Include="constantCtor.h" />
     <ClInclude Include="moduleManager\globalContextManager.h" />
     <ClInclude Include="restructureInfo.h" />
     <ClInclude Include="spreadsheetDescription.h" />
     <ClInclude Include="clsid.h" />
+    <ClInclude Include="compiler\cache\byteCodeCache.h" />
     <ClInclude Include="compiler\byteCode.h" />
     <ClInclude Include="compiler\codeDef.h" />
     <ClInclude Include="compiler\compileCode.h" />
     <ClInclude Include="compiler\compileContext.h" />
+    <ClInclude Include="compiler\compileContextLinqData.h" />
     <ClInclude Include="compiler\compileModule.h" />
     <ClInclude Include="compiler\enumFactory.h" />
     <ClInclude Include="compiler\enumUnit.h" />
     <ClInclude Include="compiler\procContext.h" />
     <ClInclude Include="compiler\procUnit.h" />
+    <ClInclude Include="compiler\procUnitValues.h" />
     <ClInclude Include="compiler\translateCode.h" />
-    <ClInclude Include="compiler\ttmath\ttmath.h" />
-    <ClInclude Include="compiler\ttmath\ttmathbig.h" />
-    <ClInclude Include="compiler\ttmath\ttmathdec.h" />
-    <ClInclude Include="compiler\ttmath\ttmathint.h" />
-    <ClInclude Include="compiler\ttmath\ttmathmisc.h" />
-    <ClInclude Include="compiler\ttmath\ttmathobjects.h" />
-    <ClInclude Include="compiler\ttmath\ttmathparser.h" />
-    <ClInclude Include="compiler\ttmath\ttmaththreads.h" />
-    <ClInclude Include="compiler\ttmath\ttmathtypes.h" />
-    <ClInclude Include="compiler\ttmath\ttmathuint.h" />
-    <ClInclude Include="compiler\ttmath\ttmathuint_noasm.h" />
-    <ClInclude Include="compiler\ttmath\ttmathuint_x86.h" />
-    <ClInclude Include="compiler\ttmath\ttmathuint_x86_64.h" />
     <ClInclude Include="compiler\typeCtor.h" />
     <ClInclude Include="compiler\value.h" />
     <ClInclude Include="databaseLayer\databaseErrorCodes.h" />
     <ClInclude Include="databaseLayer\databaseErrorReporter.h" />
+    <ClInclude Include="databaseLayer\connectionPool.h" />
+    <ClInclude Include="databaseLayer\connectionScope.h" />
     <ClInclude Include="databaseLayer\databaseLayer.h" />
     <ClInclude Include="databaseLayer\databaseLayerDef.h" />
     <ClInclude Include="databaseLayer\databaseLayerException.h" />
@@ -156,6 +156,7 @@
     <ClInclude Include="metaCollection\partial\catalog.h" />
     <ClInclude Include="metaCollection\partial\catalogManager.h" />
     <ClInclude Include="metaCollection\partial\chartOfAccounts.h" />
+    <ClInclude Include="metaCollection\partial\chartOfAccountsSubcontoTable.h" />
     <ClInclude Include="metaCollection\partial\chartOfAccountsEnum.h" />
     <ClInclude Include="metaCollection\partial\chartOfAccountsManager.h" />
     <ClInclude Include="metaCollection\partial\chartOfCharacteristicTypes.h" />
@@ -174,6 +175,8 @@
     <ClInclude Include="metaCollection\partial\informationRegister.h" />
     <ClInclude Include="metaCollection\partial\informationRegisterEnum.h" />
     <ClInclude Include="metaCollection\partial\informationRegisterManager.h" />
+    <ClInclude Include="metaCollection\partial\list\listSqlBuilder.h" />
+    <ClInclude Include="metaCollection\partial\list\registerSqlBuilder.h" />
     <ClInclude Include="metaCollection\partial\list\objectList.h" />
     <ClInclude Include="metaCollection\partial\commonObject.h" />
     <ClInclude Include="metaCollection\partial\reference\reference.h" />
@@ -208,6 +211,8 @@
     <ClInclude Include="propertyManager\property\propertyNumber.h" />
     <ClInclude Include="propertyManager\property\propertyList.h" />
     <ClInclude Include="propertyManager\property\propertyOwner.h" />
+    <ClInclude Include="propertyManager\property\propertyChartOfCharacteristicTypes.h" />
+    <ClInclude Include="propertyManager\property\propertyChartOfAccounts.h" />
     <ClInclude Include="propertyManager\property\propertyPicture.h" />
     <ClInclude Include="propertyManager\property\propertyPoint.h" />
     <ClInclude Include="propertyManager\property\propertyRecord.h" />
@@ -256,7 +261,11 @@
     <ClInclude Include="typeconv.h" />
     <ClInclude Include="typeDescription.h" />
     <ClInclude Include="uniqueKey.h" />
+    <ClInclude Include="plugin\pluginApi.h" />
+    <ClInclude Include="plugin\pluginManager.h" />
     <ClInclude Include="utils\md5.hpp" />
+    <ClInclude Include="utils\sha256.hpp" />
+    <ClInclude Include="utils\passwordHash.hpp" />
     <ClInclude Include="valueInfo.h" />
     <ClInclude Include="value_cast.h" />
     <ClInclude Include="value_ptr.h" />
@@ -264,15 +273,25 @@
   <ItemGroup>
     <ClCompile Include="appData.cpp" />
     <ClCompile Include="appDataQuery.cpp" />
+    <ClCompile Include="userInfo.cpp" />
     <ClCompile Include="backend.cpp" />
     <ClCompile Include="backend_spreadsheet.cpp" />
     <ClCompile Include="backend_exception.cpp" />
+    <ClCompile Include="session\designerExclusivePolicy.cpp" />
+    <ClCompile Include="session\session.cpp" />
+    <ClCompile Include="session\sessionRegistry.cpp" />
+    <ClCompile Include="session\sessionSnapshot.cpp" />
+    <ClCompile Include="session\workerPoolHeadless.cpp" />
     <ClCompile Include="backend_core.cpp" />
     <ClCompile Include="backend_mainFrame.cpp" />
     <ClCompile Include="backend_picture.cpp" />
     <ClCompile Include="backend_localization.cpp" />
+    <ClCompile Include="characteristicCtor.cpp" />
+    <ClCompile Include="compiler\cache\byteCodeCache.cpp" />
+    <ClCompile Include="compiler\byteCodeAOT.cpp" />
     <ClCompile Include="compiler\valueSerialization.cpp" />
     <ClCompile Include="constantCtor.cpp" />
+    <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataQuery.cpp" />
     <ClCompile Include="metadataSerialization.cpp" />
     <ClCompile Include="moduleManager\globalContextManager.cpp" />
     <ClCompile Include="spreadsheetDescription.cpp" />
@@ -292,10 +311,13 @@
     <ClCompile Include="compiler\enumFactory.cpp" />
     <ClCompile Include="compiler\procContext.cpp" />
     <ClCompile Include="compiler\procUnit.cpp" />
+    <ClCompile Include="compiler\procUnitLinq.cpp" />
     <ClCompile Include="compiler\translateCode.cpp" />
     <ClCompile Include="compiler\value.cpp" />
     <ClCompile Include="compiler\valueFactory.cpp" />
     <ClCompile Include="compiler\value_res.cpp" />
+    <ClCompile Include="databaseLayer\connectionPool.cpp" />
+    <ClCompile Include="databaseLayer\connectionScope.cpp" />
     <ClCompile Include="databaseLayer\databaseErrorReporter.cpp" />
     <ClCompile Include="databaseLayer\databaseLayer.cpp" />
     <ClCompile Include="databaseLayer\databaseQueryParser.cpp" />
@@ -412,6 +434,7 @@
     <ClCompile Include="metaCollection\partial\chartOfAccountsManager.cpp" />
     <ClCompile Include="metaCollection\partial\chartOfAccountsManager_impl.cpp" />
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadata.cpp" />
+    <ClCompile Include="metaCollection\partial\chartOfAccountsSubcontoTable.cpp" />
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataMenu.cpp" />
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadataProperty.cpp" />
     <ClCompile Include="metaCollection\partial\chartOfAccountsMetadata_res.cpp" />
@@ -467,6 +490,8 @@
     <ClCompile Include="metaCollection\partial\informationRegisterMetadata_res.cpp" />
     <ClCompile Include="metaCollection\partial\informationRegisterObject.cpp" />
     <ClCompile Include="metaCollection\partial\informationRegisterQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\list\listSqlBuilder.cpp" />
+    <ClCompile Include="metaCollection\partial\list\registerSqlBuilder.cpp" />
     <ClCompile Include="metaCollection\partial\list\objectList.cpp" />
     <ClCompile Include="metaCollection\partial\list\objectListAction.cpp" />
     <ClCompile Include="metaCollection\partial\list\objectListModel.cpp" />
@@ -474,7 +499,10 @@
     <ClCompile Include="metaCollection\partial\commonObject.cpp" />
     <ClCompile Include="metaCollection\partial\commonObjectModel.cpp" />
     <ClCompile Include="metaCollection\partial\commonObjectProperty.cpp" />
-    <ClCompile Include="metaCollection\partial\commonObjectQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\commonObjectMetaQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\commonObjectRefQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\commonObjectManagerQuery.cpp" />
+    <ClCompile Include="metaCollection\partial\commonObjectRecordSetQuery.cpp" />
     <ClCompile Include="metaCollection\partial\reference\reference.cpp" />
     <ClCompile Include="metaCollection\partial\reference\referenceQuery.cpp" />
     <ClCompile Include="metaCollection\partial\selector\objectSelector.cpp" />
@@ -496,6 +524,7 @@
     <ClCompile Include="metadataReport.cpp" />
     <ClCompile Include="metadataReportFactory.cpp" />
     <ClCompile Include="moduleInfo.cpp" />
+    <ClCompile Include="number.cpp" />
     <ClCompile Include="moduleManager\moduleManager.cpp" />
     <ClCompile Include="moduleManager\moduleManagerEvent.cpp" />
     <ClCompile Include="moduleManager\moduleManagerExt.cpp" />
@@ -517,6 +546,8 @@
     <ClCompile Include="propertyManager\property\propertyNumber.cpp" />
     <ClCompile Include="propertyManager\property\propertyList.cpp" />
     <ClCompile Include="propertyManager\property\propertyOwner.cpp" />
+    <ClCompile Include="propertyManager\property\propertyChartOfCharacteristicTypes.cpp" />
+    <ClCompile Include="propertyManager\property\propertyChartOfAccounts.cpp" />
     <ClCompile Include="propertyManager\property\propertyPicture.cpp" />
     <ClCompile Include="propertyManager\property\propertyPictureExt.cpp" />
     <ClCompile Include="propertyManager\property\propertyPoint.cpp" />
@@ -567,15 +598,13 @@
     <ClCompile Include="tableView.cpp" />
     <ClCompile Include="typeDescription.cpp" />
     <ClCompile Include="uniqueKey.cpp" />
+    <ClCompile Include="plugin\pluginManager.cpp" />
     <ClCompile Include="utils\md5.cpp" />
+    <ClCompile Include="utils\sha256.cpp" />
+    <ClCompile Include="utils\passwordHash.cpp" />
     <ClCompile Include="value_cast.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="compiler\ttmath\ttmathuint_x86_64_msvc.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <FileType>Document</FileType>
-    </MASM>
     <CopyFileToFolders Include="databaseLayer\postgres\engine\dll\libcrypto-3-x64.dll">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
@@ -879,14 +908,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;WXUSINGDLL;_CONSOLE;%(PreprocessorDefinitions);BACKEND_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;WXUSINGDLL;_CONSOLE;%(PreprocessorDefinitions);BACKEND_EXPORTS</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(oes3rdParty)wxWidgets\lib\vc_dll\mswud;$(oes3rdParty)wxWidgets\include;$(oesEngine);$(oesSrcDir)include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -906,7 +935,7 @@
       <AdditionalIncludeDirectories>$(oes3rdParty)wxWidgets\lib\vc_dll\mswud;$(oes3rdParty)wxWidgets\include;$(oesEngine);.;$(oesEngine)/core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -932,7 +961,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -960,7 +989,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

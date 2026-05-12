@@ -206,55 +206,61 @@ ibFrameLauncher::ibFrameLauncher(wxWindow* parent, wxWindowID id, const wxString
 	m_staticDBName = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
 	m_staticDBName->SetFont(wxFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 	m_staticDBName->Wrap(-1);
-	sizerLeft->Add(m_staticDBName, 0, wxALL | wxEXPAND, 5);
+	sizerLeft->Add(m_staticDBName, 0, wxALL | wxEXPAND, FromDIP(5));
 
-	mainSizer->Add(sizerLeft, 1, wxEXPAND, 5);
+	mainSizer->Add(sizerLeft, 1, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* sizerRight = new wxBoxSizer(wxVERTICAL);
 
 	m_buttonEnterprise = new wxButton(this, wxID_ANY, _("Enterprise"), wxDefaultPosition, wxDefaultSize, 0);
-	m_buttonEnterprise->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_BUTTON));
+	m_buttonEnterprise->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_GO_FORWARD, wxART_BUTTON));
 	m_buttonEnterprise->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonEnterprise, this);
 
-	sizerRight->Add(m_buttonEnterprise, 0, wxALL | wxEXPAND, 5);
+	sizerRight->Add(m_buttonEnterprise, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_buttonDesigner = new wxButton(this, wxID_ANY, _("Designer"), wxDefaultPosition, wxDefaultSize, 0);
-	m_buttonDesigner->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_BUTTON));
+	m_buttonDesigner->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_GO_FORWARD, wxART_BUTTON));
 	m_buttonDesigner->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonDesigner, this);
 
-	sizerRight->Add(m_buttonDesigner, 0, wxALL | wxEXPAND, 5);
-	sizerRight->Add(0, 0, 1, wxEXPAND, 5);
+	sizerRight->Add(m_buttonDesigner, 0, wxALL | wxEXPAND, FromDIP(5));
+
+	m_buttonWeb = new wxButton(this, wxID_ANY, _("Web"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonWeb->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_HELP_BOOK, wxART_BUTTON));
+	m_buttonWeb->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonWeb, this);
+
+	sizerRight->Add(m_buttonWeb, 0, wxALL | wxEXPAND, FromDIP(5));
+	sizerRight->Add(0, 0, 1, wxEXPAND, FromDIP(5));
 
 	m_buttonAdd = new wxButton(this, wxID_ANY, _("Add"), wxDefaultPosition, wxDefaultSize, 0);
-	m_buttonAdd->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW, wxART_BUTTON));
-	sizerRight->Add(m_buttonAdd, 0, wxALL | wxEXPAND, 5);
+	m_buttonAdd->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_NEW, wxART_BUTTON));
+	sizerRight->Add(m_buttonAdd, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_buttonAdd->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonAdd, this);
 
 	m_buttonEdit = new wxButton(this, wxID_ANY, _("Edit"), wxDefaultPosition, wxDefaultSize, 0);
 
-	m_buttonEdit->SetBitmap(wxArtProvider::GetBitmap(wxART_PASTE, wxART_BUTTON));
-	sizerRight->Add(m_buttonEdit, 0, wxALL | wxEXPAND, 5);
+	m_buttonEdit->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_PASTE, wxART_BUTTON));
+	sizerRight->Add(m_buttonEdit, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_buttonEdit->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonEdit, this);
 
 	m_buttonDelete = new wxButton(this, wxID_ANY, _("Delete"), wxDefaultPosition, wxDefaultSize, 0);
 
-	m_buttonDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_BUTTON));
-	sizerRight->Add(m_buttonDelete, 0, wxALL | wxEXPAND, 5);
+	m_buttonDelete->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_DELETE, wxART_BUTTON));
+	sizerRight->Add(m_buttonDelete, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_buttonDelete->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonDelete, this);
 
-	sizerRight->Add(0, 0, 1, wxEXPAND, 5);
+	sizerRight->Add(0, 0, 1, wxEXPAND, FromDIP(5));
 
 	m_buttonExit = new wxButton(this, wxID_EXIT, _("Exit"), wxDefaultPosition, wxDefaultSize, 0);
 
-	m_buttonExit->SetBitmap(wxArtProvider::GetBitmap(wxART_QUIT, wxART_BUTTON));
-	sizerRight->Add(m_buttonExit, 0, wxALL | wxEXPAND, 5);
+	m_buttonExit->SetBitmap(wxArtProvider::GetBitmapBundle(wxART_QUIT, wxART_BUTTON));
+	sizerRight->Add(m_buttonExit, 0, wxALL | wxEXPAND, FromDIP(5));
 
 	m_buttonExit->Bind(wxEVT_BUTTON, &ibFrameLauncher::OnButtonClose, this);
 
-	mainSizer->Add(sizerRight, 0, wxEXPAND, 5);
+	mainSizer->Add(sizerRight, 0, wxEXPAND, FromDIP(5));
 
 	this->SetSizer(mainSizer);
 	this->Layout();
@@ -307,6 +313,60 @@ void ibFrameLauncher::OnButtonDesigner(wxCommandEvent& event) {
 	auto itSelection = m_listInfoBase.begin() + selection;
 	wxString executeCmd = BuildLaunchCommand("designer", itSelection->second);
 	wxExecute(executeCmd);
+	Close(true);
+}
+
+void ibFrameLauncher::OnButtonWeb(wxCommandEvent& event) {
+	int selection = m_listIBwnd->GetSelection();
+	if (selection == wxNOT_FOUND) return;
+	auto itSelection = m_listInfoBase.begin() + selection;
+	const CListInfo& info = itSelection->second;
+
+	// wenterprise-server uses `--name=value` double-dashed flags.
+	// URL prefix is derived by wes itself from --file basename (or --db),
+	// so CLI launch and designer-spawned launch produce the same URL.
+	// Port defaults to 0 (OS-picked); the actual bound port is read back
+	// from a manifest file the server writes after bind+init.
+	wxString exePath = FindSiblingExecutable(wxT("wenterprise-server"));
+	wxString cmd = wxT("\"") + exePath + wxT("\"");
+
+	if (info.m_bFileMode) {
+		if (!info.m_strFilePath.IsEmpty())
+			cmd += wxT(" --file=\"") + info.m_strFilePath + wxT("\"");
+	}
+	else {
+		if (!info.m_strServer.IsEmpty())
+			cmd += wxT(" --server=") + info.m_strServer;
+		if (!info.m_strPort.IsEmpty())
+			cmd += wxT(" --dbport=") + info.m_strPort;
+		if (!info.m_strDatabase.IsEmpty())
+			cmd += wxT(" --db=") + info.m_strDatabase;
+		if (!info.m_strUser.IsEmpty())
+			cmd += wxT(" --user=") + info.m_strUser;
+		if (!info.m_strPassword.IsEmpty())
+			cmd += wxT(" --password=") + info.m_strPassword;
+	}
+
+	// IB-side auth: reuse the launcher entry's user/password. Most
+	// embedded-Firebird configs don't need distinct DB vs IB creds.
+	if (!info.m_strUser.IsEmpty())
+		cmd += wxT(" --ibuser=") + info.m_strUser;
+	if (!info.m_strPassword.IsEmpty())
+		cmd += wxT(" --ibpwd=") + info.m_strPassword;
+	if (appData != nullptr) {
+		wxString locale = appData->GetLocale();
+		if (!locale.IsEmpty())
+			cmd += wxT(" --locale=") + locale;
+	}
+
+	// Shared helper adds --port=0 --manifest=<tempfile>, spawns wes,
+	// polls the manifest and opens the browser at the reported URL.
+	// Any change to the spawn/handshake protocol lives in one place.
+	const long pid = ibApplicationData::SpawnWebServerWithManifest(cmd);
+	if (pid == 0) {
+		wxLogError(_("Failed to start wenterprise-server: %s"), cmd);
+		return;
+	}
 	Close(true);
 }
 

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : chart of accounts metaData
 ////////////////////////////////////////////////////////////////////////////
@@ -12,13 +12,13 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectChartOfAccounts, ibValueMetaObjectRec
 
 ibValueMetaObjectChartOfAccounts::ibValueMetaObjectChartOfAccounts() : ibValueMetaObjectRecordDataHierarchyMutableRef()
 {
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeDelete"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnDelete"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("Filling"), ibContentHelper::eProcedureHelper, { wxT("Source"), wxT("StandartProcessing") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnCopy"), ibContentHelper::eProcedureHelper, { wxT("Source") });
-	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("SetNewCode"), ibContentHelper::eProcedureHelper, { wxT("Prefix"), wxT("StandartProcessing") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("BeforeWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("OnWrite"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("BeforeDelete"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("OnDelete"), ibContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("Filling"), ibContentHelper::eProcedureHelper, { wxT("Source"), wxT("StandartProcessing") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("OnCopy"), ibContentHelper::eProcedureHelper, { wxT("Source") });
+	(*m_propertyObjectModule)->SetDefaultProcedure(wxT("SetNewCode"), ibContentHelper::eProcedureHelper, { wxT("Prefix"), wxT("StandartProcessing") });
 }
 
 ibValueMetaObjectChartOfAccounts::~ibValueMetaObjectChartOfAccounts()
@@ -37,20 +37,18 @@ ibValueMetaObjectFormBase* ibValueMetaObjectChartOfAccounts::GetDefaultFormByID(
 
 #include "chartOfAccountsManager.h"
 
-ibValueManagerDataObject* ibValueMetaObjectChartOfAccounts::CreateManagerDataObjectValue()
+ibValueManagerDataObject* ibValueMetaObjectChartOfAccounts::CreateManagerDataObjectValue() const
 {
 	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectChartOfAccounts>(this);
 }
 
 #include "backend/appData.h"
 
-ibValueRecordDataObjectHierarchyRef* ibValueMetaObjectChartOfAccounts::CreateObjectRefValue(ibObjectMode mode, const ibGuid& guid)
+ibValueRecordDataObjectHierarchyRef* ibValueMetaObjectChartOfAccounts::CreateObjectRefValue(ibObjectMode mode, const ibGuid& guid) const
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
 	ibValueRecordDataObjectChartOfAccounts* pDataRef = nullptr;
-	if (appData->DesignerMode()) {
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
+	if (auto* cc = m_metaData->GetCompileCache()) {
+		if (!cc->FindCompileModule(m_propertyObjectModule->GetMetaObject(), pDataRef))
 			return ibValue::CreateAndPrepareValueRef<ibValueRecordDataObjectChartOfAccounts>(this, guid, mode);
 	}
 	else {
@@ -59,7 +57,7 @@ ibValueRecordDataObjectHierarchyRef* ibValueMetaObjectChartOfAccounts::CreateObj
 	return pDataRef;
 }
 
-ibSourceDataObject* ibValueMetaObjectChartOfAccounts::CreateSourceObject(ibValueMetaObjectFormBase* metaObject)
+ibSourceDataObject* ibValueMetaObjectChartOfAccounts::CreateSourceObject(const ibValueMetaObjectFormBase* metaObject) const
 {
 	switch (metaObject->GetTypeForm())
 	{
@@ -73,32 +71,32 @@ ibSourceDataObject* ibValueMetaObjectChartOfAccounts::CreateSourceObject(ibValue
 }
 
 #pragma region _form_builder_h_
-ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetObjectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetObjectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return CreateAndBuildForm(strFormName, eFormObject, ownerControl, CreateObjectValue(ibObjectMode::OBJECT_ITEM), formGuid);
 }
 
-ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetFolderForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetFolderForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return CreateAndBuildForm(strFormName, eFormFolder, ownerControl, CreateObjectValue(ibObjectMode::OBJECT_FOLDER), formGuid);
 }
 
-ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetListForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return CreateAndBuildForm(strFormName, eFormList, ownerControl,
 		ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(this, eFormList, ibValueModelTreeDataObjectFolderRef::LIST_ITEM_FOLDER), formGuid);
 }
 
-ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return CreateAndBuildForm(strFormName, eFormSelect, ownerControl,
 		ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(this, eFormSelect, ibValueModelTreeDataObjectFolderRef::LIST_ITEM, true), formGuid);
 }
 
-ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetFolderSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
+ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetFolderSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid) const
 {
 	return CreateAndBuildForm(strFormName, eFormFolderSelect, ownerControl,
-		ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(this, eFormSelect, ibValueModelTreeDataObjectFolderRef::LIST_FOLDER, true), formGuid);
+		ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(this, eFormFolderSelect, ibValueModelTreeDataObjectFolderRef::LIST_FOLDER, true), formGuid);
 }
 #pragma endregion
 
@@ -112,12 +110,22 @@ wxString ibValueMetaObjectChartOfAccounts::GetDataPresentation(const ibValueData
 
 bool ibValueMetaObjectChartOfAccounts::LoadData(ibReaderMemory& dataReader)
 {
-	(*m_propertyModuleObject)->LoadMeta(dataReader);
-	(*m_propertyModuleManager)->LoadMeta(dataReader);
+	(*m_propertyObjectModule)->LoadMeta(dataReader);
+	(*m_propertyManagerModule)->LoadMeta(dataReader);
 	m_propertyDefFormObject->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormFolder->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormList->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormSelect->SetValue(GetIdByGuid(dataReader.r_stringZ()));
+	m_propertyDefFormFolderSelect->SetValue(GetIdByGuid(dataReader.r_stringZ()));
+
+	//load default attributes:
+	(*m_propertyAttributeAccountType)->LoadMeta(dataReader);
+	(*m_propertyAttributeOffBalance)->LoadMeta(dataReader);
+	(*m_propertyAttributeQuantitative)->LoadMeta(dataReader);
+	(*m_propertyAttributeCurrency)->LoadMeta(dataReader);
+	(*m_propertyAttributeMaxSubcontoCount)->LoadMeta(dataReader);
+
+	(*m_propertySubcontoKindsTable)->LoadMeta(dataReader);
 
 	if (!m_propertyChartOfCharacteristicTypes->LoadData(dataReader))
 		return false;
@@ -127,12 +135,22 @@ bool ibValueMetaObjectChartOfAccounts::LoadData(ibReaderMemory& dataReader)
 
 bool ibValueMetaObjectChartOfAccounts::SaveData(ibWriterMemory& dataWritter)
 {
-	(*m_propertyModuleObject)->SaveMeta(dataWritter);
-	(*m_propertyModuleManager)->SaveMeta(dataWritter);
+	(*m_propertyObjectModule)->SaveMeta(dataWritter);
+	(*m_propertyManagerModule)->SaveMeta(dataWritter);
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormObject->GetValueAsInteger()));
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormFolder->GetValueAsInteger()));
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormList->GetValueAsInteger()));
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormSelect->GetValueAsInteger()));
+	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormFolderSelect->GetValueAsInteger()));
+
+	//save default attributes:
+	(*m_propertyAttributeAccountType)->SaveMeta(dataWritter);
+	(*m_propertyAttributeOffBalance)->SaveMeta(dataWritter);
+	(*m_propertyAttributeQuantitative)->SaveMeta(dataWritter);
+	(*m_propertyAttributeCurrency)->SaveMeta(dataWritter);
+	(*m_propertyAttributeMaxSubcontoCount)->SaveMeta(dataWritter);
+
+	(*m_propertySubcontoKindsTable)->SaveMeta(dataWritter);
 
 	if (!m_propertyChartOfCharacteristicTypes->SaveData(dataWritter))
 		return false;
@@ -140,92 +158,64 @@ bool ibValueMetaObjectChartOfAccounts::SaveData(ibWriterMemory& dataWritter)
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::SaveData(dataWritter);
 }
 
-ibValueMetaObjectTableData* ibValueMetaObjectChartOfAccounts::FindSubcontoKindsTable() const
-{
-	for (auto table : GetTableArrayObject()) {
-		if (table->GetName() == wxT("SubcontoKinds"))
-			return table;
-	}
-	return nullptr;
-}
-
-#include "backend/metaCollection/table/metaTableObject.h"
-
-void ibValueMetaObjectChartOfAccounts::CreateSubcontoKindsTable(ibMetaData* metaData, int flags)
-{
-	// Create predefined tabular section "SubcontoKinds"
-	m_subcontoKindsTable = CreateMetaObjectAndSetParent<ibValueMetaObjectTableData>();
-	m_subcontoKindsTable->SetName(wxT("SubcontoKinds"));
-	m_subcontoKindsTable->SetSynonym(_("Subconto kinds"));
-	m_subcontoKindsTable->OnCreateMetaObject(metaData, flags);
-
-	// Add column: SubcontoKind (empty type - polymorphic reference, type set from ПВХ at runtime)
-	ibValueMetaObjectAttributePredefined* attrKind =
-		m_subcontoKindsTable->CreateMetaObjectAndSetParent<ibValueMetaObjectAttributePredefined>(
-			wxT("SubcontoKind"), _("Subconto kind"), wxEmptyString,
-			false, ibItemMode::ibItemMode_Item, ibSelectMode::ibSelectMode_Items);
-	attrKind->OnCreateMetaObject(metaData, flags);
-
-	// Add column: Order (number, 3 digits)
-	ibValueMetaObjectAttributePredefined* attrOrder =
-		m_subcontoKindsTable->CreateMetaObjectAndSetParent<ibValueMetaObjectAttributePredefined>(
-			wxT("Order"), _("Order"), wxEmptyString,
-			ibQualifierNumber(3, 0), false, ibValue(ibNumber(0.0)),
-			ibItemMode::ibItemMode_Item, ibSelectMode::ibSelectMode_Items);
-	attrOrder->OnCreateMetaObject(metaData, flags);
-
-	// Add column: SummaryOnly (boolean - only turnovers, no balances for this subconto)
-	ibValueMetaObjectAttributePredefined* attrSummary =
-		m_subcontoKindsTable->CreateMetaObjectAndSetParent<ibValueMetaObjectAttributePredefined>(
-			wxT("SummaryOnly"), _("Summary only"), wxEmptyString,
-			false, ibValue(false),
-			ibItemMode::ibItemMode_Item, ibSelectMode::ibSelectMode_Items);
-	attrSummary->OnCreateMetaObject(metaData, flags);
-}
-
 bool ibValueMetaObjectChartOfAccounts::OnCreateMetaObject(ibMetaData* metaData, int flags)
 {
 	if (!ibValueMetaObjectRecordDataHierarchyMutableRef::OnCreateMetaObject(metaData, flags)) return false;
 
-	// Create predefined SubcontoKinds tabular section
-	CreateSubcontoKindsTable(metaData, flags);
-
-	return (*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags) &&
-		(*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyAttributeAccountType)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeOffBalance)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeQuantitative)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeCurrency)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeMaxSubcontoCount)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertySubcontoKindsTable)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyObjectModule)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyManagerModule)->OnCreateMetaObject(metaData, flags);
 }
 
 bool ibValueMetaObjectChartOfAccounts::OnLoadMetaObject(ibMetaData* metaData)
 {
-	if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData)) return false;
-	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData)) return false;
-
-	// Find existing SubcontoKinds table (loaded from saved config)
-	m_subcontoKindsTable = FindSubcontoKindsTable();
-
+	if (!(*m_propertyAttributeAccountType)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertyAttributeOffBalance)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertyAttributeQuantitative)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertyAttributeCurrency)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertyAttributeMaxSubcontoCount)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertySubcontoKindsTable)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertyObjectModule)->OnLoadMetaObject(metaData)) return false;
+	if (!(*m_propertyManagerModule)->OnLoadMetaObject(metaData)) return false;
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(metaData);
 }
 
 bool ibValueMetaObjectChartOfAccounts::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags)) return false;
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeAccountType)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeOffBalance)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeQuantitative)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeCurrency)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeMaxSubcontoCount)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertySubcontoKindsTable)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyObjectModule)->OnSaveMetaObject(flags)) return false;
+	if (!(*m_propertyManagerModule)->OnSaveMetaObject(flags)) return false;
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(flags);
 }
 
 bool ibValueMetaObjectChartOfAccounts::OnDeleteMetaObject()
 {
-	if (!(*m_propertyModuleObject)->OnDeleteMetaObject()) return false;
-	if (!(*m_propertyModuleManager)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyAttributeAccountType)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyAttributeOffBalance)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyAttributeQuantitative)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyAttributeCurrency)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyAttributeMaxSubcontoCount)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertySubcontoKindsTable)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyObjectModule)->OnDeleteMetaObject()) return false;
+	if (!(*m_propertyManagerModule)->OnDeleteMetaObject()) return false;
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject();
 }
 
 bool ibValueMetaObjectChartOfAccounts::OnReloadMetaObject()
 {
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		ibValueRecordDataObjectChartOfAccounts* pDataRef = nullptr;
-		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) return true;
+		if (!cc->FindCompileModule(m_propertyObjectModule->GetMetaObject(), pDataRef)) return true;
 		return pDataRef->InitializeObject();
 	}
 	return true;
@@ -235,8 +225,14 @@ bool ibValueMetaObjectChartOfAccounts::OnReloadMetaObject()
 
 bool ibValueMetaObjectChartOfAccounts::OnBeforeRunMetaObject(int flags)
 {
-	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags)) return false;
-	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeAccountType)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeOffBalance)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeQuantitative)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeCurrency)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeMaxSubcontoCount)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertySubcontoKindsTable)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyObjectModule)->OnBeforeRunMetaObject(flags)) return false;
+	if (!(*m_propertyManagerModule)->OnBeforeRunMetaObject(flags)) return false;
 	registerSelection();
 	if (!ibValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeRunMetaObject(flags)) return false;
 	const ibCtorMetaValueType* typeCtor = m_metaData->GetTypeCtor(this, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
@@ -247,13 +243,40 @@ bool ibValueMetaObjectChartOfAccounts::OnBeforeRunMetaObject(int flags)
 
 bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 {
-	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags)) return false;
-	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) return false;
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (!(*m_propertyAttributeAccountType)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeOffBalance)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeQuantitative)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeCurrency)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertyAttributeMaxSubcontoCount)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertySubcontoKindsTable)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertyObjectModule)->OnAfterRunMetaObject(flags)) return false;
+	if (!(*m_propertyManagerModule)->OnAfterRunMetaObject(flags)) return false;
+
+
+	// Set SubcontoKind column type from РџР’РҐ binding
+	const ibMetaDescription& metaDesc = m_propertyChartOfCharacteristicTypes->GetValueAsMetaDesc();
+	if (m_propertySubcontoKindsTable->GetMetaObject() != nullptr && metaDesc.GetTypeCount() > 0) {
+		ibTypeDescription typeDesc;
+		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+			const ibValueMetaObject* chartOfCharTypes = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
+			if (chartOfCharTypes != nullptr) {
+				const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(chartOfCharTypes, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
+				wxASSERT(so);
+				typeDesc.AppendMetaType(so->GetClassType());
+			}
+		}
+		// Update SubcontoKind column type in predefined table
+		ibValueMetaObjectAttributeBase* kindAttr = (*m_propertySubcontoKindsTable)->GetSubcontoKind();
+		if (kindAttr != nullptr) {
+			kindAttr->GetTypeDesc().SetDefaultMetaType(typeDesc);
+		}
+		// Prevent deletion of predefined tabular section
+		(*m_propertySubcontoKindsTable)->SetFlag(metaDisableFlag);
+	}
+
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags))
-			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue(ibObjectMode::OBJECT_ITEM));
+			return cc->AddCompileModule(m_propertyObjectModule->GetMetaObject(), CreateObjectValue(ibObjectMode::OBJECT_ITEM));
 		return false;
 	}
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags);
@@ -261,13 +284,17 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 
 bool ibValueMetaObjectChartOfAccounts::OnBeforeCloseMetaObject()
 {
-	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject()) return false;
-	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject()) return false;
-	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (appData->DesignerMode()) {
+	if (!(*m_propertyAttributeAccountType)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeOffBalance)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeQuantitative)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeCurrency)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeMaxSubcontoCount)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertySubcontoKindsTable)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertyObjectModule)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertyManagerModule)->OnBeforeCloseMetaObject()) return false;
+	if (auto* cc = m_metaData->GetCompileCache()) {
 		if (ibValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject())
-			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
+			return cc->RemoveCompileModule(m_propertyObjectModule->GetMetaObject());
 		return false;
 	}
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject();
@@ -275,8 +302,14 @@ bool ibValueMetaObjectChartOfAccounts::OnBeforeCloseMetaObject()
 
 bool ibValueMetaObjectChartOfAccounts::OnAfterCloseMetaObject()
 {
-	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject()) return false;
-	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeAccountType)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeOffBalance)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeQuantitative)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeCurrency)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyAttributeMaxSubcontoCount)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertySubcontoKindsTable)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyObjectModule)->OnAfterCloseMetaObject()) return false;
+	if (!(*m_propertyManagerModule)->OnAfterCloseMetaObject()) return false;
 	unregisterSelection();
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnAfterCloseMetaObject();
 }
@@ -292,11 +325,11 @@ void ibValueMetaObjectChartOfAccounts::OnCreateFormObject(ibValueMetaObjectFormB
 
 void ibValueMetaObjectChartOfAccounts::OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm)
 {
-	if (metaForm->GetTypeForm() == eFormObject && m_propertyDefFormObject->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
-	else if (metaForm->GetTypeForm() == eFormFolder && m_propertyDefFormFolder->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormFolder->SetValue(metaForm->GetMetaID());
-	else if (metaForm->GetTypeForm() == eFormList && m_propertyDefFormList->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormList->SetValue(metaForm->GetMetaID());
-	else if (metaForm->GetTypeForm() == eFormSelect && m_propertyDefFormSelect->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
-	else if (metaForm->GetTypeForm() == eFormFolderSelect && m_propertyDefFormFolderSelect->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormFolderSelect->SetValue(metaForm->GetMetaID());
+	if (metaForm->GetTypeForm() == eFormObject && m_propertyDefFormObject->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormObject->SetValue(wxNOT_FOUND);
+	else if (metaForm->GetTypeForm() == eFormFolder && m_propertyDefFormFolder->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormFolder->SetValue(wxNOT_FOUND);
+	else if (metaForm->GetTypeForm() == eFormList && m_propertyDefFormList->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormList->SetValue(wxNOT_FOUND);
+	else if (metaForm->GetTypeForm() == eFormSelect && m_propertyDefFormSelect->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormSelect->SetValue(wxNOT_FOUND);
+	else if (metaForm->GetTypeForm() == eFormFolderSelect && m_propertyDefFormFolderSelect->GetValueAsInteger() == metaForm->GetMetaID()) m_propertyDefFormFolderSelect->SetValue(wxNOT_FOUND);
 }
 
 METADATA_TYPE_REGISTER(ibValueMetaObjectChartOfAccounts, "ChartOfAccounts", g_metaChartOfAccountsCLSID);

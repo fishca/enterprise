@@ -13,6 +13,14 @@ m_ownerMeta(nullptr),
 m_configOpened(false),
 m_version(version_oes_last)
 {
+	// Designer-only: cache backs code-editor / form-preview / metadata-property
+	// lookups via m_metaData->GetCompileCache() (codeEditorInterpreter,
+	// metaFormObject etc.). At runtime cache must stay null — StartMainModule's
+	// "show default form" branch is gated by !cc and would skip ShowForm if the
+	// cache held the deferred entry.
+	if (appData->DesignerMode())
+		m_compileCache = std::make_unique<ibCompileValueCache>();
+
 	//create main metaObject
 	m_commonObject = new ibValueMetaObjectExternalDataProcessor;
 	m_commonObject->SetName(

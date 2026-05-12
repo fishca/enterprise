@@ -28,7 +28,7 @@ ibDialogEnterpriseOption::ibDialogEnterpriseOption(wxWindow* parent, wxWindowID 
 	m_mainNotebook->AddPage(m_generalPanel, _("General"), false, wxNullBitmap);
 	m_systemPanel = new wxPanel(m_mainNotebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
 	m_mainNotebook->AddPage(m_systemPanel, _("System"), true, wxNullBitmap);
-	mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, 5);
+	mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, FromDIP(5));
 	m_enableDebugger = new wxCheckBox(m_systemPanel, wxID_ANY, _("Debugging in the current session"), wxDefaultPosition, wxDefaultSize, 0);
 	m_enableDebugger->Bind(wxEVT_CHECKBOX, &ibDialogEnterpriseOption::OnEnableDebugger, this);
 

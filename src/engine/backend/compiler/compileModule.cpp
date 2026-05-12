@@ -47,12 +47,12 @@ bool ibCompileModule::Compile()
 
 		Load(m_moduleObject->GetModuleText());
 
-		return m_parent != nullptr ?
-			m_parent->Compile() : true;
+		return m_parentModule != nullptr ?
+			m_parentModule->Compile() : true;
 	}
 
 	//recursively compile modules in case of any changes
-	if (m_parent != nullptr && appData->DesignerMode()) {
+	if (m_parentModule != nullptr && appData->DesignerMode()) {
 
 		std::stack<ibCompileModule*> compileModule; bool callRecompile = false;
 
@@ -75,9 +75,9 @@ bool ibCompileModule::Compile()
 
 		m_cByteCode.m_strModuleName = m_moduleObject->GetFullName();
 
-		if (m_parent != nullptr) {
-			m_cByteCode.m_parent = &m_parent->m_cByteCode;
-			m_rootContext->m_parentContext = m_parent->m_rootContext;
+		if (m_parentModule != nullptr) {
+			m_cByteCode.m_parent = &m_parentModule->m_cByteCode;
+			m_rootContext->m_parentContext = m_parentModule->m_rootContext;
 		}
 
 		m_strModuleName = m_moduleObject->GetFullName();
@@ -87,7 +87,7 @@ bool ibCompileModule::Compile()
 		Load(m_moduleObject->GetModuleText());
 	}
 
-	//prepare lexem 
+	//prepare lexem
 	if (!PrepareLexem()) {
 		return false;
 	}
@@ -95,7 +95,7 @@ bool ibCompileModule::Compile()
 	//prepare context variables
 	PrepareModuleData();
 
-	// compilation 
+	// compilation
 	if (CompileModule()) {
 		m_changedCode = false;
 		return true;
@@ -117,7 +117,7 @@ bool ibCompileModule::Recompile()
 	//clear functions & variables 
 	Reset();
 
-	if (m_parent != nullptr) {
+	if (m_parentModule != nullptr) {
 
 		if (m_moduleObject != nullptr &&
 			m_moduleObject->IsGlobalModule()) {
@@ -130,8 +130,8 @@ bool ibCompileModule::Recompile()
 
 			Load(m_moduleObject->GetModuleText());
 
-			return m_parent != nullptr ?
-				m_parent->Compile() : true;
+			return m_parentModule != nullptr ?
+				m_parentModule->Compile() : true;
 		}
 	}
 
@@ -139,9 +139,9 @@ bool ibCompileModule::Recompile()
 
 		m_cByteCode.m_strModuleName = m_moduleObject->GetFullName();
 
-		if (m_parent) {
-			m_cByteCode.m_parent = &m_parent->m_cByteCode;
-			m_rootContext->m_parentContext = m_parent->m_rootContext;
+		if (m_parentModule) {
+			m_cByteCode.m_parent = &m_parentModule->m_cByteCode;
+			m_rootContext->m_parentContext = m_parentModule->m_rootContext;
 		}
 
 		m_strModuleName = m_moduleObject->GetFullName();

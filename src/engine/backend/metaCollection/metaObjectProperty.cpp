@@ -26,11 +26,18 @@ bool ibValueMetaObject::OnPropertyChanging(ibProperty* property, const wxVariant
 }
 
 #include "backend/backend_mainFrame.h"
+#include "backend/appData.h"
+#include "backend/session/session.h"
 
 void ibValueMetaObject::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_propertyName == property) m_propertySynonym->SetValue(stringUtils::GenerateSynonym(newValue));
 	wxASSERT(m_metaData);
 	const ibBackendMetadataTree* metadataTree = m_metaData->GetMetaTree();
-	if (backend_mainFrame && metadataTree != nullptr) backend_mainFrame->RefreshFrame();
+	// Metaobject property edit — designer UI repaint. Reach frame via
+	// the main session (designer has a single session per process).
+	if (metadataTree != nullptr) {
+		if (auto* frame = ibSession::CurrentFrame())
+			frame->RefreshFrame();
+	}
 }

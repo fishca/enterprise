@@ -97,6 +97,15 @@ protected:
 		wxWindow* wnd = m_tabs.GetWindowFromIdx(n);
 		if (wnd == nullptr)
 			return m_curPage;
+
+		// Freeze the managed (top-level) frame for the whole collapse/expand
+		// dance. Each Show/Update intermediate step used to repaint the
+		// entire AUI layout and produced a visible full-window flash when
+		// the user toggled a tab off; with the frame frozen the transition
+		// happens off-screen and only the final state hits the display.
+		wxWindow* const hostFrame = m_frameManager->GetManagedWindow();
+		if (hostFrame) hostFrame->Freeze();
+
 		bool isShown = true; size_t sel_pane = n;
 		if ((int)n == m_curPage) {
 			wxAuiTabCtrl* ctrl;
@@ -127,6 +136,11 @@ protected:
 				paneInfo.BestSize(GetBestSize());
 			}
 			else {
+				// AUI keeps the pane at its current height unless we cycle
+				// Show() around an Update(); the cycle resets the pane's
+				// geometry to wxDefaultSize so it collapses down to the
+				// tab strip only. Freeze above hides the flicker this used
+				// to produce on the managed frame.
 				paneInfo.BestSize(wxDefaultSize);
 				paneInfo.Show(false);
 				m_frameManager->Update();
@@ -135,7 +149,19 @@ protected:
 		}
 
 		m_frameManager->Update();
-		return wxAuiNotebook::DoModifySelection(sel_pane, events);
+
+		const int result = wxAuiNotebook::DoModifySelection(sel_pane, events);
+
+		if (hostFrame) {
+			hostFrame->Thaw();
+			// Force a clean repaint of the frame. Without this, the thin
+			// paint ops that AUI makes during the transition (sash lines,
+			// focus rectangles on the tab bar) can leave dotted residue
+			// along the pane borders once the frame unfreezes.
+			hostFrame->Refresh(false);
+			hostFrame->Update();
+		}
+		return result;
 	}
 
 	virtual wxSize DoGetBestSize() const {

@@ -11,16 +11,14 @@ class ibInterfaceFirebird;
 
 class BACKEND_API ibDatabaseLayerFirebird : public ibDatabaseLayer
 {
-	const int16_t m_pageSize = 8192;
-
-	typedef struct fb_tr_list {
-#if defined(_LP64) || defined(__LP64__) || defined(__arch64__) || defined(_WIN64)
-		unsigned int m_pTransaction;
-#else
-		void *m_pTransaction;
-#endif
-		struct fb_tr_list *prev;
-	} fb_tr_list_t;
+	// FB 5 supports 4096 / 8192 / 16384 / 32768. 16384 is the FB 5
+	// recommendation for OLTP — bigger pages mean fewer splits on
+	// document/register tables (typical OES row footprint), and the
+	// max-row limit (~ page/3) headroom stops the wider rows from
+	// failing CREATE TABLE. Embedded cache footprint at 16K × 2048
+	// pages = 32 MB is fine. int32_t holds 32768 cleanly even though
+	// the DPB field is encoded as a 2-byte big-endian value.
+	const int32_t m_pageSize = 16384;
 
 public:
 	// ctor()
@@ -52,12 +50,9 @@ public:
 	/// clone database  
 	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerFirebird(*this); }
 
-	// transaction support
-	virtual void BeginTransaction();
-	virtual void Commit();
-	virtual void RollBack();
-	
-	virtual bool IsActiveTransaction();
+	// IsActiveTransaction inherits the base-class default (m_txDepth > 0).
+	// Driver transaction primitives (DoBeginTransaction / DoCommit /
+	// DoRollBack) are protected — see below.
 
 	static int TranslateErrorCode(int nCode);
 	//static wxString TranslateErrorCodeToString(ibInterfaceFirebird* pInterface, int nCode, ISC_STATUS_ARRAY status);
@@ -81,6 +76,19 @@ public:
 		return DATABASELAYER_FIREBIRD;
 	}
 
+	// Row-level pessimistic locks. FB implementation: the "hold" path uses
+	// the regular wait-mode TX and SELECT ... WITH LOCK on the given rows;
+	// the probe opens a separate nowait TX so contention surfaces as a lock
+	// conflict exception instead of blocking. See base declarations for the
+	// contract.
+	virtual bool HoldRowLocks(const wxString& tableName,
+	                          const wxString& pkColumn,
+	                          const std::vector<wxString>& pkValues);
+	virtual void ReleaseRowLocks();
+	virtual bool TryProbeRowLock(const wxString& tableName,
+	                             const wxString& pkColumn,
+	                             const wxString& pkValue);
+
 protected:
 
 	// query database
@@ -89,6 +97,15 @@ protected:
 
 	// ibPreparedStatement support
 	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+
+	// Driver-level transaction primitives. The base-class nesting
+	// counter (m_txDepth) guarantees these fire only on outermost
+	// 0↔1 transitions, so we hold a single isc_tr_handle — no stack
+	// of transactions is required. (FB's native API does support
+	// concurrent TXs per connection, but nothing in OES needs that.)
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
 private:
 
@@ -104,10 +121,18 @@ private:
 	wxString m_strPassword;
 	wxString m_strRole;
 
-	fb_tr_list_t *m_fbNode;
+	// Single active transaction handle (0 when no TX is open). The
+	// base class collapses nested Begin/Commit calls onto this slot,
+	// so there's no need for a stack.
+	isc_tr_handle m_pTransaction = 0;
 
 	isc_db_handle m_pDatabase;
 	void *m_pStatus;
+
+	// True after a successful HoldRowLocks; tells ReleaseRowLocks whether
+	// there's a TX to commit and whether a re-Hold must commit the prior
+	// one first. Reset on Release / error.
+	bool m_rowLocksHeld = false;
 };
 
 #endif // __FIREBIRD_DATABASE_LAYER_H__

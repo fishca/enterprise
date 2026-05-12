@@ -150,7 +150,7 @@ long long ibDatabaseResultSetFirebird::GetResultLong(int nField)
 {
 	ResetErrorCodes();
 
-	long long nReturn = 0L;
+	long long nReturn = 0;
 
 	XSQLVAR* pVar = &(m_pFields->sqlvar[nField - 1]);
 	if (IsNull(pVar))
@@ -163,23 +163,33 @@ long long ibDatabaseResultSetFirebird::GetResultLong(int nField)
 		short nType = pVar->sqltype & ~1;
 		if (nType == SQL_SHORT)
 		{
-			nReturn = *((short*)pVar->sqldata);
+			short v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			nReturn = v;
 		}
 		else if (nType == SQL_LONG)
 		{
-			nReturn = *((long*)pVar->sqldata);
+			// FB SQL_LONG is exactly 32 bits — read int32_t. `long` is
+			// 32 bits on Windows but 64 bits on LP64 Linux, so the
+			// platform-default `long*` cast would over-read on Linux.
+			int32_t v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			nReturn = v;
 		}
 		else if (nType == SQL_INT64)
 		{
-			ttmath::Int<TTMATH_BITS(64)> int64val;
-			memcpy(&int64val, pVar->sqldata, sizeof(int64val));
-			int64val.ToInt(nReturn);
+			int64_t v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			nReturn = v;
 		}
 		else if (nType == SQL_INT128)
 		{
-			ttmath::Int<TTMATH_BITS(128)> int128val;
-			memcpy(&int128val, pVar->sqldata, sizeof(int128val));
-			int128val.ToInt(nReturn);
+			// Caller asked for `long long`; we expose the low 64 bits and
+			// silently truncate the high half. Anything that needs the
+			// full 128-bit value goes through GetResultNumber instead.
+			int64_t lo = 0;
+			memcpy(&lo, pVar->sqldata, sizeof(lo));
+			nReturn = lo;
 		}
 		else
 		{
@@ -193,19 +203,20 @@ long long ibDatabaseResultSetFirebird::GetResultLong(int nField)
 			ThrowDatabaseException();
 		}
 
-		// Apply the scale to the value
+		// Apply the scale to the value. sqlscale is the exponent to
+		// multiply by 10^scale; the previous formula (abs(scale)*10) was
+		// only right for |scale|==1 and silently corrupted everything
+		// else. Negative scale means stored value = real * 10^|scale|.
 		if (nReturn != 0)
 		{
 			short nScale = pVar->sqlscale;
-			if (nScale > 0) // Multiply by 10
+			if (nScale > 0)
 			{
-				int nMultiplier = nScale * 10;
-				nReturn *= nMultiplier;
+				for (short i = 0; i < nScale; ++i) nReturn *= 10;
 			}
-			else if (nScale < 0)  // Divide by 10
+			else if (nScale < 0)
 			{
-				int nMultiplier = abs(nScale) * 10;
-				nReturn /= nMultiplier;
+				for (short i = 0; i < -nScale; ++i) nReturn /= 10;
 			}
 		}
 	}
@@ -290,25 +301,35 @@ double ibDatabaseResultSetFirebird::GetResultDouble(int nField)
 		short nType = pVar->sqltype & ~1;
 		if (nType == SQL_FLOAT)
 		{
-			dblReturn = *(float*)(pVar->sqldata);
+			float v = 0.0f;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = v;
 		}
 		else if (nType == SQL_DOUBLE)
 		{
-			dblReturn = *(double*)(pVar->sqldata);
+			double v = 0.0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = v;
 		}
 		else if (nType == SQL_LONG)
 		{
-			dblReturn = static_cast<int>(*(long*)(pVar->sqldata));
+			int32_t v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = v;
 			for (int i = 0; i < -pVar->sqlscale; dblReturn /= 10, i++);
 		}
 		else if (nType == SQL_INT64)
 		{
-			dblReturn = *(ISC_INT64*)(pVar->sqldata);
+			int64_t v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = static_cast<double>(v);
 			for (int i = 0; i < -pVar->sqlscale; dblReturn /= 10, i++);
 		}
 		else if (nType == SQL_SHORT)
 		{
-			dblReturn = *(short*)(pVar->sqldata);
+			short v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = v;
 			for (int i = 0; i < -pVar->sqlscale; dblReturn /= 10, i++);
 		}
 		else
@@ -342,36 +363,42 @@ ibNumber ibDatabaseResultSetFirebird::GetResultNumber(int nField)
 		short nType = pVar->sqltype & ~1;
 		if (nType == SQL_FLOAT)
 		{
-			dblReturn = *(float*)(pVar->sqldata);
+			float v = 0.0f;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = v;
 		}
 		else if (nType == SQL_DOUBLE)
 		{
-			dblReturn = *(double*)(pVar->sqldata);
+			double v = 0.0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = v;
 		}
 		else if (nType == SQL_LONG)
 		{
-			dblReturn = static_cast<int>(*(long*)(pVar->sqldata));
+			int32_t v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = v;
 			for (int i = 0; i < -pVar->sqlscale; i++) dblReturn /= 10;
 		}
 		else if (nType == SQL_INT64)
 		{
-			ttmath::Int<TTMATH_BITS(64)> int64val;
+			int64_t int64val = 0;
 			memcpy(&int64val, pVar->sqldata, sizeof(int64val));
-			dblReturn.FromInt(int64val);
+			dblReturn = ibNumber(int64val);
 			for (int i = 0; i < -pVar->sqlscale; i++)
 				dblReturn /= 10;
 		}
 		else if (nType == SQL_INT128)
 		{
-			ttmath::Int<TTMATH_BITS(128)> int128val;
-			memcpy(&int128val, pVar->sqldata, sizeof(int128val));
-			dblReturn.FromInt(int128val);
+			dblReturn.From128Bytes(reinterpret_cast<const uint8_t*>(pVar->sqldata));
 			for (int i = 0; i < -pVar->sqlscale; i++)
 				dblReturn /= 10;
 		}
 		else if (nType == SQL_SHORT)
 		{
-			dblReturn = *(short*)(pVar->sqldata);
+			short v = 0;
+			memcpy(&v, pVar->sqldata, sizeof(v));
+			dblReturn = v;
 			for (int i = 0; i < -pVar->sqlscale; i++) dblReturn /= 10;
 		}
 		else
@@ -481,23 +508,28 @@ void ibDatabaseResultSetFirebird::AllocateFieldSpace()
 	for (int i = 0; i < m_pFields->sqld; i++)
 	{
 		XSQLVAR* pVar = &(m_pFields->sqlvar[i]);
+		// Uniform array-of-char allocation per slot — FB only cares about
+		// `sqldata` pointing to a memory region of the right size; the
+		// engine writes typed bytes through it.  Storing as `new char[n]`
+		// (instead of `(char*)new ISC_X` etc.) lets FreeFieldSpace use a
+		// single wxDELETEA without typed-vs-char* delete UB.
 		switch (pVar->sqltype & ~1)
 		{
 		case SQL_ARRAY:
 		case SQL_BLOB:
-			pVar->sqldata = (char*)new ISC_QUAD;
+			pVar->sqldata = new char[sizeof(ISC_QUAD)];
 			memset(pVar->sqldata, 0, sizeof(ISC_QUAD));
 			break;
 		case SQL_TIMESTAMP:
-			pVar->sqldata = (char*)new ISC_TIMESTAMP;
+			pVar->sqldata = new char[sizeof(ISC_TIMESTAMP)];
 			memset(pVar->sqldata, 0, sizeof(ISC_TIMESTAMP));
 			break;
 		case SQL_TYPE_TIME:
-			pVar->sqldata = (char*)new ISC_TIME;
+			pVar->sqldata = new char[sizeof(ISC_TIME)];
 			memset(pVar->sqldata, 0, sizeof(ISC_TIME));
 			break;
 		case SQL_TYPE_DATE:
-			pVar->sqldata = (char*)new ISC_DATE;
+			pVar->sqldata = new char[sizeof(ISC_DATE)];
 			memset(pVar->sqldata, 0, sizeof(ISC_DATE));
 			break;
 		case SQL_TEXT:
@@ -512,23 +544,31 @@ void ibDatabaseResultSetFirebird::AllocateFieldSpace()
 			pVar->sqldata[pVar->sqllen + 2] = '\0';
 			break;
 		case SQL_SHORT:
-			pVar->sqldata = (char*)new short(0);
+			pVar->sqldata = new char[sizeof(short)];
+			memset(pVar->sqldata, 0, sizeof(short));
 			break;
 		case SQL_LONG:
-			pVar->sqldata = (char*)new long(0);
+			// FB SQL_LONG is exactly 32 bits — allocate by int32_t size.
+			// `long` is 64 bits on LP64 (Linux x86_64); using sizeof(long)
+			// would over-allocate on Linux and confuse the engine.
+			pVar->sqldata = new char[sizeof(int32_t)];
+			memset(pVar->sqldata, 0, sizeof(int32_t));
 			break;
 		case SQL_INT64:
-			pVar->sqldata = (char*)new ISC_INT64(0);
+			pVar->sqldata = new char[sizeof(ISC_INT64)];
+			memset(pVar->sqldata, 0, sizeof(ISC_INT64));
 			break;
 		case SQL_INT128:
-			pVar->sqldata = (char*)new FB_I128;
+			pVar->sqldata = new char[sizeof(FB_I128)];
 			memset(pVar->sqldata, 0, sizeof(FB_I128));
 			break;
 		case SQL_FLOAT:
-			pVar->sqldata = (char*)new float(0.0);
+			pVar->sqldata = new char[sizeof(float)];
+			memset(pVar->sqldata, 0, sizeof(float));
 			break;
 		case SQL_DOUBLE:
-			pVar->sqldata = (char*)new double(0.0);
+			pVar->sqldata = new char[sizeof(double)];
+			memset(pVar->sqldata, 0, sizeof(double));
 			break;
 		default:
 			break;
@@ -543,59 +583,27 @@ void ibDatabaseResultSetFirebird::FreeFieldSpace()
 	if (m_pFields == NULL)
 		return;
 
-	for (int i = 0; i < m_pFields->sqln; i++)
+	// Iterate sqld (described columns), not sqln (allocated capacity) —
+	// AllocateFieldSpace only touches [0, sqld); slots in [sqld, sqln) hold
+	// uninitialised bytes from malloc and `pVar->sqldata != 0` would be
+	// reading garbage.  Symmetric to AllocateFieldSpace.
+	for (int i = 0; i < m_pFields->sqld; i++)
 	{
 		XSQLVAR* pVar = &(m_pFields->sqlvar[i]);
+		// All sqldata slots are now `new char[size]` array allocations —
+		// uniform array delete is correct and previous typed scalar delete
+		// (e.g. `delete (char*)new ISC_TIME`) was UB.
 		if (pVar->sqldata != 0)
-		{
-			switch (pVar->sqltype & ~1)
-			{
-			case SQL_ARRAY:
-			case SQL_BLOB:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_TIMESTAMP:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_TYPE_TIME:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_TYPE_DATE:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_TEXT:
-			case SQL_VARYING:
-				wxDELETEA(pVar->sqldata);
-				break;
-			case SQL_SHORT:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_LONG:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_INT64:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_INT128:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_FLOAT:
-				wxDELETE(pVar->sqldata);
-				break;
-			case SQL_DOUBLE:
-				wxDELETE(pVar->sqldata);
-				break;
-			default:
-				break;
-			}
-		}
+			wxDELETEA(pVar->sqldata);
 		if ((pVar->sqltype & 1) && (pVar->sqlind != 0))
-			delete pVar->sqlind;
+			wxDELETE(pVar->sqlind);
 	}
 
-	//delete [] (char*)m_pFields;
-	//m_pFields = NULL;
-	wxDELETEA(m_pFields);
+	// XSQLDA itself is allocated with malloc() (see firebirdDatabaseLayer
+	// DoRunQueryWithResults / firebirdPreparedStatementWrapper); the
+	// matching free() lives in Close(). Don't null m_pFields here — that
+	// would leave Close()'s free() looking at NULL and leak the outer
+	// struct.
 }
 
 void ibDatabaseResultSetFirebird::PopulateFieldLookupMap()

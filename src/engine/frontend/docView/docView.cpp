@@ -6,9 +6,17 @@
 #include "docView.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "backend/metaCollection/metaObject.h"
 
+#ifdef OES_USE_WEB
+#include "frontend/web/webFrame.h"
+#include "frontend/web/webChildFrame.h"
+#include "frontend/web/webWindow.h"
+#include "frontend/visualView/visualHostClient.h"
+#else
 #include "frontend/mainFrame/mainFrame.h"
+#endif
 
 wxIMPLEMENT_CLASS(ibMetaDocument, wxDocument);
 
@@ -16,6 +24,23 @@ wxIMPLEMENT_CLASS(ibMetaDataDocument, ibMetaDocument);
 wxIMPLEMENT_CLASS(ibValueModulibDocument, ibMetaDocument);
 
 wxIMPLEMENT_CLASS(ibMetaView, wxView);
+
+bool ibMetaView::ShowFrame(bool show)
+{
+#ifdef OES_USE_WEB
+	// Web: flip the owning ibWebDocChildFrame's shown flag via the
+	// m_webFrame back-pointer set by ibWebFrame::CreateChildFrame.
+	// Mirrors desktop's "reveal the wxDocChildFrame" semantics — the
+	// single "make it visible now" trigger.
+	if (m_webFrame != nullptr) {
+		m_webFrame->Show(show);
+		return true;
+	}
+#endif
+	if (m_viewFrame != nullptr && m_viewFrame->Show(show))
+		return true;
+	return false;
+}
 
 //******************************************************************************
 //*                            Document implementation                         *
@@ -57,13 +82,24 @@ ibMetaDocument::~ibMetaDocument()
 
 bool ibMetaDocument::OnCreate(const wxString& path, long flags)
 {
-	if (ibApplicationData::IsForceExit())
+	if (ibSession::IsCurrentForceExit())
 		return false;
 
 	wxScopedPtr<ibMetaView> view(DoCreateView());
 	if (!view)
 		return false;
 
+	view->SetDocument(this);
+
+	// Shared doc/view pipeline: spawn the child-frame for this view.
+	// Desktop hits ibFrontendDocMDIFrame (CAuiDocChildFrame inside an
+	// AUI MDI parent); web hits ibWebFrame (ibWebDocChildFrame parked
+	// in the session's m_tabs). Both sides have matching static factory
+	// signatures so only the class-qualifier differs.
+#ifdef OES_USE_WEB
+	ibFrontendWindow* childFrame =
+		ibWebFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, 0);
+#else
 	bool createModal = false;
 	for (wxWindow* window : wxTopLevelWindows) {
 		if (window->IsKindOf(CLASSINFO(wxDialog))) {
@@ -76,20 +112,38 @@ bool ibMetaDocument::OnCreate(const wxString& path, long flags)
 	long style = wxDEFAULT_FRAME_STYLE;
 	if (createModal) style = style | wxCREATE_SDI_FRAME;
 
-	view->SetDocument(this);
-
 	ibFrontendDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, style);
+#endif
 
 	if (!view->OnCreate(this, flags))
 		return false;
 
+#ifdef OES_USE_WEB
+	// Web: view's OnCreate built the ibVisualHostClient; wire it into
+	// the tab's ibWebWindow subtree so JSON serialization finds it.
+	// Host ownership stays with the view (m_visualHost, deleted by
+	// its dtor); this is a non-owning parent edge. ~ibWebDocChildFrame
+	// detaches the host before the view dies to avoid a dangling
+	// m_children walk in the base ~ibWebWindow.
+	if (auto* editView = dynamic_cast<ibFormVisualEditView*>(view.get())) {
+		if (auto* host = editView->GetVisualHost()) {
+			if (auto* tab = dynamic_cast<ibWebDocChildFrame*>(childFrame)) {
+				host->SetParent(tab);
+			}
+		}
+	}
+#endif
+	// Unified ShowFrame — the explicit "make it visible" trigger.
+	// Desktop: reveals the CAuiDocChildFrame. Web: base is a no-op
+	// (m_viewFrame is null), subclasses may override to activate
+	// the owning tab.
 	view->ShowFrame();
 	return view.release() != nullptr;
 }
 
 bool ibMetaDocument::OnSaveModified()
 {
-	if (ibApplicationData::IsForceExit())
+	if (ibSession::IsCurrentForceExit())
 		return true;
 
 	if (m_metaObject != nullptr)
@@ -100,7 +154,7 @@ bool ibMetaDocument::OnSaveModified()
 
 bool ibMetaDocument::OnSaveDocument(const wxString& filename)
 {
-	if (ibApplicationData::IsForceExit())
+	if (ibSession::IsCurrentForceExit())
 		return false;
 
 	if (m_metaObject != nullptr)
@@ -114,17 +168,30 @@ bool ibMetaDocument::OnSaveDocument(const wxString& filename)
 
 bool ibMetaDocument::OnCloseDocument()
 {
+#ifndef OES_USE_WEB
+	// docManager is the desktop-wide ibMetaDocManager singleton; on web
+	// there's no such global (wfrontend.dll doesn't construct one —
+	// see docManager.cpp guards), and the session's tab list owns the
+	// docs directly, so RemoveDocument has no counterpart here.
 	if (m_documentParent != nullptr) {
 		docManager->RemoveDocument(this);
 	}
+#endif
 
 	ibBackendMetadataTree* metaTree =
 		m_metaObject != nullptr ? m_metaObject->GetMetaDataTree() : nullptr;
 
+#ifndef OES_USE_WEB
+	// objectInspector is the designer's property panel (not in wfrontend.dll)
+	// and Activate() would bring its tree-ctrl into focus. Neither is
+	// meaningful on web, so the selection/activation side-effect is skipped.
 	if (metaTree == nullptr)
 		objectInspector->SelectObject(nullptr);
 	else
 		metaTree->Activate();
+#else
+	(void)metaTree;
+#endif
 
 	// Tell all views that we're about to close
 	NotifyClosing();
@@ -141,7 +208,7 @@ bool ibMetaDocument::IsModified() const
 
 void ibMetaDocument::Modify(bool modify)
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!ibSession::IsCurrentForceExit()) {
 		
 		if (m_metaObject != nullptr) {
 			ibMetaData* metaData = m_metaObject->GetMetaData();
@@ -162,7 +229,7 @@ void ibMetaDocument::Modify(bool modify)
 
 bool ibMetaDocument::Save()
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!ibSession::IsCurrentForceExit()) {
 
 		if (AlreadySaved())
 			return true;
@@ -189,7 +256,7 @@ bool ibMetaDocument::Save()
 
 bool ibMetaDocument::SaveAs()
 {
-	if (!ibApplicationData::IsForceExit()) {
+	if (!ibSession::IsCurrentForceExit()) {
 	
 		if (m_metaObject != nullptr)
 			return true;

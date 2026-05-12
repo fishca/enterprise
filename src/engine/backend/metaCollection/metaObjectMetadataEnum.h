@@ -21,7 +21,11 @@ public:
 	ibValueEnumSyntax() : ibValueEnumeration<ibProgramSyntax>() {}
 
 	virtual void CreateEnumeration() {
-		this->AddEnumeration(syntax_vbs, wxT("vbs"), _("vbs"));
+		// Wire string stays "vbs" for back-compat with existing serialised
+		// configs; the user-visible label is "ves" — Visual Basic-style
+		// ES + 1С/BSL mix. Renaming the wire token would force migration
+		// of every stored module's syntax property.
+		this->AddEnumeration(syntax_ves, wxT("vbs"), _("ves"));
 		this->AddEnumeration(syntax_ces, wxT("ces"), _("ces"));
 	};
 };

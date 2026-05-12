@@ -432,7 +432,7 @@ ibDesignerWindow::ibDesignerWindow(wxWindow* parent, int id, const wxPoint& pos,
 	: ibInnerFrame(parent, id, pos, size, style)
 {
 	ShowTitleBar(false);
-	SetGrid(10, 10);
+	SetGrid(10, FromDIP(10));
 
 	m_selSizer = nullptr;
 	m_selItem = nullptr;

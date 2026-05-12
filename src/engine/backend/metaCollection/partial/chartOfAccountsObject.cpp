@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : chart of accounts object
 ////////////////////////////////////////////////////////////////////////////
@@ -6,12 +6,13 @@
 #include "chartOfAccounts.h"
 #include "backend/metaData.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "reference/reference.h"
-#include "backend/databaseLayer/databaseLayer.h"
+#include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
 #include "backend/fileSystem/fs.h"
 
-ibValueRecordDataObjectChartOfAccounts::ibValueRecordDataObjectChartOfAccounts(ibValueMetaObjectChartOfAccounts* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
+ibValueRecordDataObjectChartOfAccounts::ibValueRecordDataObjectChartOfAccounts(const ibValueMetaObjectChartOfAccounts* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
 	ibValueRecordDataObjectHierarchyRef(metaObject, objGuid, objMode) {}
 
 ibValueRecordDataObjectChartOfAccounts::ibValueRecordDataObjectChartOfAccounts(const ibValueRecordDataObjectChartOfAccounts& source) :
@@ -21,11 +22,14 @@ ibSourceExplorer ibValueRecordDataObjectChartOfAccounts::GetSourceExplorer() con
 {
 	ibSourceExplorer srcHelper(m_metaObject, GetClassType(), false);
 	ibValueMetaObjectChartOfAccounts* metaRef = nullptr;
+	
 	if (m_metaObject->ConvertToValue(metaRef)) {
 		srcHelper.AppendSource(metaRef->GetDataCode(), false);
 		srcHelper.AppendSource(metaRef->GetDataDescription());
 		srcHelper.AppendSource(metaRef->GetDataParent());
+		srcHelper.AppendSource(metaRef->GetSubcontoKindsTable());
 	}
+	
 	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
 		ibItemMode attrUse = object->GetItemMode();
 		if (m_objMode == ibObjectMode::OBJECT_ITEM) {
@@ -38,6 +42,7 @@ ibSourceExplorer ibValueRecordDataObjectChartOfAccounts::GetSourceExplorer() con
 			}
 		}
 	}
+
 	for (const auto object : m_metaObject->GetTableArrayObject()) {
 		ibItemMode tableUse = object->GetTableUse();
 		if (m_objMode == ibObjectMode::OBJECT_ITEM) {
@@ -46,6 +51,7 @@ ibSourceExplorer ibValueRecordDataObjectChartOfAccounts::GetSourceExplorer() con
 			if (tableUse == ibItemMode::ibItemMode_Folder || tableUse == ibItemMode::ibItemMode_Folder_Item) srcHelper.AppendSource(object);
 		}
 	}
+	
 	return srcHelper;
 }
 
@@ -72,37 +78,34 @@ ibBackendValueForm* ibValueRecordDataObjectChartOfAccounts::GetFormValue(const w
 }
 #pragma endregion
 
-#include "backend/backend_mainFrame.h"
-
 bool ibValueRecordDataObjectChartOfAccounts::WriteObject()
 {
 	if (!appData->DesignerMode()) {
-		if (db_query != nullptr && !db_query->IsOpen()) ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr) ibBackendCoreException::Error(_("Database is not open!"));
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+		if (!scope || !scope->IsOpen()) ibBackendCoreException::Error(_("Database is not open!"));
 		if (!ibBackendException::IsEvalMode()) {
 			if (!m_metaObject->AccessRight_Write()) { ibBackendAccessException::Error(); return false; }
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 				{
-					db_query_active_transaction.BeginTransaction();
-					{ ibValue cancel = false; m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
-						if (cancel.GetBoolean()) { db_query_active_transaction.RollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false; } }
+					scope.SafeBeginTransaction();
+					{ ibValue cancel = false; ExecAsProc(wxT("BeforeWrite"), cancel);
+						if (cancel.GetBoolean()) { scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false; } }
 					bool newObject = IsNewObject();
 					bool generateUniqueIdentifier = false;
 					if (!IsSetUniqueIdentifier()) {
 						ibValue prefix = "", standartProcessing = true;
-						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
+						ExecAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) generateUniqueIdentifier = GenerateUniqueIdentifier(prefix.GetString());
 					}
 					if (!SaveData()) {
 						if (generateUniqueIdentifier) ResetUniqueIdentifier();
-						db_query_active_transaction.RollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
+						scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false;
 					}
-					{ ibValue cancel = false; m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					{ ibValue cancel = false; ExecAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) { if (generateUniqueIdentifier) ResetUniqueIdentifier();
-							db_query_active_transaction.RollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false; } }
-					db_query_active_transaction.CommitTransaction();
+							scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to write object in db!")); return false; } }
+					scope.SafeCommitTransaction();
 					if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
 					else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
 				}
@@ -116,8 +119,8 @@ bool ibValueRecordDataObjectChartOfAccounts::WriteObject()
 bool ibValueRecordDataObjectChartOfAccounts::DeleteObject()
 {
 	if (!appData->DesignerMode()) {
-		if (db_query != nullptr && !db_query->IsOpen()) ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr) ibBackendCoreException::Error(_("Database is not open!"));
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+		if (!scope || !scope->IsOpen()) ibBackendCoreException::Error(_("Database is not open!"));
 		if (!ibBackendException::IsEvalMode()) {
 			if (!m_metaObject->AccessRight_Delete()) { ibBackendAccessException::Error(); return false; }
 			const ibValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
@@ -125,17 +128,16 @@ bool ibValueRecordDataObjectChartOfAccounts::DeleteObject()
 			const ibGuid& objGuid = GetGuid();
 			const auto predefinedValue = valueMetaObject->FindPredefinedValue(objGuid);
 			if (predefinedValue != nullptr) { ibBackendCoreException::Error(_("Attempting to delete a predefined element!")); return false; }
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 				{
-					db_query_active_transaction.BeginTransaction();
-					{ ibValue cancel = false; m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
-						if (cancel.GetBoolean()) { db_query_active_transaction.RollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; } }
-					if (!DeleteData()) { db_query_active_transaction.RollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; }
-					{ ibValue cancel = false; m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
-						if (cancel.GetBoolean()) { db_query_active_transaction.RollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; } }
-					db_query_active_transaction.CommitTransaction();
+					scope.SafeBeginTransaction();
+					{ ibValue cancel = false; ExecAsProc(wxT("BeforeDelete"), cancel);
+						if (cancel.GetBoolean()) { scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; } }
+					if (!DeleteData()) { scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; }
+					{ ibValue cancel = false; ExecAsProc(wxT("OnDelete"), cancel);
+						if (cancel.GetBoolean()) { scope.SafeRollBackTransaction(); ibBackendCoreException::Error(_("Failed to delete object in db!")); return false; } }
+					scope.SafeCommitTransaction();
 					if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
 				}
 			}
@@ -158,27 +160,19 @@ void ibValueRecordDataObjectChartOfAccounts::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("GetFormObject"), 3, wxT("GetFormObject(name : string, owner : any , id : guid)"));
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
-	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, eThisObject, eSystem);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, true, eThisObject, eSystem);
 	wxString objectName;
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		if (object->IsDeleted()) continue;
 		if (!object->GetObjectNameAsString(objectName)) continue;
 		m_methodHelper->AppendProp(objectName, true, !m_metaObject->IsDataReference(object->GetMetaID()), object->GetMetaID(), eProperty);
 	}
-	for (const auto object : m_metaObject->GetTableArrayObject()) {
+	for (const auto object : m_metaObject->GetGenericTableArrayObject()) {
 		if (object->IsDeleted()) continue;
 		if (!object->GetObjectNameAsString(objectName)) continue;
 		m_methodHelper->AppendProp(objectName, true, false, object->GetMetaID(), eTable);
 	}
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc)
-				m_methodHelper->AppendMethod(exportFunction.first, byteCode->GetNParams(exportFunction.second), byteCode->HasRetVal(exportFunction.second), exportFunction.second, eProcUnit);
-			for (auto exportVariable : byteCode->m_listExportVar)
-				m_methodHelper->AppendProp(exportVariable.first, exportVariable.second, eProcUnit);
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
 bool ibValueRecordDataObjectChartOfAccounts::SetPropVal(const long lPropNum, const ibValue& varPropVal)
@@ -215,5 +209,5 @@ bool ibValueRecordDataObjectChartOfAccounts::CallAsFunc(const long lMethodNum, i
 	case Func::enGetTemplate: pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString()); return true;
 	case Func::enGetMetadata: pvarRetValue = m_metaObject; return true;
 	}
-	return ibModuleDataObject::ExecuteFunc(GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray);
+	return ibRuntimeModuleDataObject::ExecAsFunc(GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray);
 }

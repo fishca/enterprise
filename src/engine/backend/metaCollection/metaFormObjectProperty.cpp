@@ -21,21 +21,16 @@ void ibValueMetaObjectForm::OnPropertySelected(ibProperty* property)
 void ibValueMetaObjectForm::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (property == m_properyFormType) {
-		if (appData->DesignerMode()) {
-			ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-			wxASSERT(moduleManager);
+		if (auto* cc = m_metaData->GetCompileCache()) {
 			ibValueMetaObjectGenericData* metaObjectValue = wxDynamicCast(m_parent, ibValueMetaObjectGenericData);
 			wxASSERT(metaObjectValue);
-			ibBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
-			if (metaTree != nullptr) {
+			if (auto* metaTree = m_metaData->GetMetaTree())
 				metaTree->CloseMetaObject(this);
+			if (cc->RemoveCompileModule(this)) {
+				cc->AddCompileModule(this, formWrapper::inl::cast_value(metaObjectValue->CreateObjectForm(this)));
 			}
-			if (moduleManager->RemoveCompileModule(this)) {
-				moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(metaObjectValue->CreateObjectForm(this)));
-			}
-			if (metaTree != nullptr) {
+			if (auto* metaTree = m_metaData->GetMetaTree())
 				metaTree->UpdateChoiceSelection();
-			}
 		}
 	}
 

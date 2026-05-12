@@ -20,49 +20,46 @@ ibValueWindow::ibValueWindow() : ibValueControl()
 //*                                  Update                                       *
 //***********************************************************************************
 
-void ibValueWindow::UpdateWindow(wxWindow* window)
+void ibValueWindow::UpdateWindow(ibFrontendWindow* window)
 {
-	// All of the properties of the wxWindow object are applied in this function
 	if (window == nullptr)
 		return;
 
-	// Minimum size
+	// Detached controls — /demo synthetic trees and other
+	// programmatically-built hierarchies that never got a form owner —
+	// used to crash here on the wxASSERT(ownerForm). For those, treat
+	// the form as "enabled" by default; the control's own property
+	// still gets applied. Form-owned controls keep the combined check.
+	ibValueForm* ownerForm = GetOwnerForm();
+	const bool formEnabled = (ownerForm == nullptr) ? true : ownerForm->IsFormEnabled();
+
+	// Unified setter sequence — desktop's wxWindow and web's ibWebWindow
+	// share the same SetMinSize / SetMaxSize / SetFont /
+	// SetForegroundColour / SetBackgroundColour / Enable / Show /
+	// SetToolTip API, so one body covers both. Only window->Layout()
+	// at the end is wx-specific — web uses flex layout on the client,
+	// no re-layout call needed.
 	if (m_propertyMinSize->GetValueAsSize() != wxDefaultSize)
 		window->SetMinSize(m_propertyMinSize->GetValueAsSize());
-
-	// Maximum size
 	if (m_propertyMaxSize->GetValueAsSize() != wxDefaultSize)
 		window->SetMaxSize(m_propertyMaxSize->GetValueAsSize());
-
-	// Font
 	if (m_propertyFont->IsOk())
 		window->SetFont(m_propertyFont->GetValueAsFont());
-
-	// Foreground
 	if (m_propertyFG->IsOk())
 		window->SetForegroundColour(m_propertyFG->GetValueAsColour());
-
-	// Background
 	if (m_propertyBG->IsOk())
 		window->SetBackgroundColour(m_propertyBG->GetValueAsColour());
-
-	ibValueForm* ownerForm = GetOwnerForm();
-	wxASSERT(ownerForm);
-
-	// Enabled
-	window->Enable(m_propertyEnabled->GetValueAsBoolean() && ownerForm->IsFormEnabled());
-
-	// Hidden
+	window->Enable(m_propertyEnabled->GetValueAsBoolean() && formEnabled);
 	window->Show(m_propertyVisible->GetValueAsBoolean());
-
-	// Tooltip
 	window->SetToolTip(m_propertyTooltip->GetValueAsTranslateString());
 
-	//after lay out 
+#ifndef OES_USE_WEB
+	// Size changes may require a re-layout; flex handles that on web.
 	if (m_propertyMinSize->GetValueAsSize() != wxDefaultSize ||
 		m_propertyMaxSize->GetValueAsSize() != wxDefaultSize) {
 		window->Layout();
 	}
+#endif
 }
 
 //**********************************************************************************

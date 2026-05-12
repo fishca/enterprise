@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : accounting register manager
 ////////////////////////////////////////////////////////////////////////////
@@ -9,9 +9,9 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectAccountingRegister, ibValue);
 
-ibValueMetaObjectCommonModule* ibValueManagerDataObjectAccountingRegister::GetModuleManager() const
+const ibValueMetaObjectCommonModule* ibValueManagerDataObjectAccountingRegister::GetManagerModule() const
 {
-	return m_metaObject->GetModuleManager();
+	return m_metaObject->GetManagerModule();
 }
 
 enum Func {

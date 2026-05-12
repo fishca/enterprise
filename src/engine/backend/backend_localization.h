@@ -14,9 +14,26 @@ class BACKEND_API ibBackendLocalization {
 	ibBackendLocalization() = delete;
 public:
 
+	// Process-wide configuration-language default. Pinned by metadata
+	// OnInitialize to the configuration's main language code (the
+	// metadata short-code form ru/en/uk that localization arrays are
+	// keyed on); set once at boot from the platform locale before
+	// metadata loads.
 	static void SetUserLanguage(const wxString& strUserLanguage);
-	static wxString GetUserLanguage();
-	
+
+	// Active configuration-language for the calling thread — session's
+	// GetLanguageCode() if a session is bound and it has a code,
+	// otherwise the process-wide default above. Every internal lookup
+	// (synonym translate, raw-loc encode/decode) and the designer's
+	// advprop string editor route through here.
+	//
+	// HOT PATH. A single report line / form synonym lookup hits this
+	// once per translatable field, multiplied by row count — easily
+	// millions of calls on a 10k-row report. The implementation must
+	// stay at (const wxString&) return + cached session-side value +
+	// no logic per call.
+	static const wxString& GetUserLanguage();
+
 	static bool CreateLocalizationArray(const wxString& strRawTranslate,
 		ibBackendLocalizationEntryArray& array);
 

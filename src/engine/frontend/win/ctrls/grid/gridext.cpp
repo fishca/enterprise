@@ -2586,6 +2586,95 @@ EVT_MOUSE_EVENTS(ibGridCornerLabelWindow::OnMouseEvent)
 EVT_PAINT(ibGridCornerLabelWindow::OnPaint)
 wxEND_EVENT_TABLE()
 
+//////////////////////////////////////////////////////////////////////
+// Outline subwindow impls (row + col). Share the same shape as area windows
+// so scrolling / zoom / frozen-aware origin is consistent.
+
+wxBEGIN_EVENT_TABLE(ibGridRowOutlineWindow, ibGridSubwindow)
+EVT_PAINT(ibGridRowOutlineWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridRowOutlineWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridRowOutlineWindow::OnMouseEvent)
+wxEND_EVENT_TABLE()
+
+void ibGridRowOutlineWindow::OnPaint(wxPaintEvent&)
+{
+	wxPaintDC dc(this);
+	// match the scroll offset convention used by RowAreaWindow::OnPaint
+	int x, y;
+	ibGridWindow* gridWindow = m_owner->m_gridWin;
+	m_owner->GetGridWindowOffset(gridWindow, x, y);
+	m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, gridWindow);
+	wxPoint pt = dc.GetDeviceOrigin();
+	dc.SetDeviceOrigin(pt.x, pt.y - y);
+	m_owner->DrawRowOutline(dc);
+}
+
+void ibGridRowOutlineWindow::OnMouseEvent(wxMouseEvent& event)
+{
+	if (event.LeftDown()) {
+		// unscrolled position inside outline pane — y needs un-scrolling
+		int x, y;
+		m_owner->GetGridWindowOffset(m_owner->m_gridWin, x, y);
+		m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, m_owner->m_gridWin);
+		const wxPoint pt(event.GetX(), event.GetY() + y);
+		const int gi = m_owner->HitTestRowOutlineButton(pt);
+		if (gi >= 0) {
+			m_owner->ToggleRowGroup(gi);
+			Refresh();
+			m_owner->CalcDimensions();
+			return;
+		}
+	}
+	event.Skip();
+}
+
+void ibGridRowOutlineWindow::OnMouseWheel(wxMouseEvent& event)
+{
+	if (!m_owner->ProcessWindowEvent(event)) event.Skip();
+}
+
+wxBEGIN_EVENT_TABLE(ibGridColOutlineWindow, ibGridSubwindow)
+EVT_PAINT(ibGridColOutlineWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridColOutlineWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridColOutlineWindow::OnMouseEvent)
+wxEND_EVENT_TABLE()
+
+void ibGridColOutlineWindow::OnPaint(wxPaintEvent&)
+{
+	wxPaintDC dc(this);
+	if (m_owner->GetNumberCols() == 0) return;
+	int x, y;
+	ibGridWindow* gridWindow = m_owner->m_gridWin;
+	m_owner->GetGridWindowOffset(gridWindow, x, y);
+	m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, gridWindow);
+	wxPoint pt = dc.GetDeviceOrigin();
+	dc.SetDeviceOrigin(pt.x - x, pt.y);
+	m_owner->DrawColOutline(dc);
+}
+
+void ibGridColOutlineWindow::OnMouseEvent(wxMouseEvent& event)
+{
+	if (event.LeftDown()) {
+		int x, y;
+		m_owner->GetGridWindowOffset(m_owner->m_gridWin, x, y);
+		m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, m_owner->m_gridWin);
+		const wxPoint pt(event.GetX() + x, event.GetY());
+		const int gi = m_owner->HitTestColOutlineButton(pt);
+		if (gi >= 0) {
+			m_owner->ToggleColGroup(gi);
+			Refresh();
+			m_owner->CalcDimensions();
+			return;
+		}
+	}
+	event.Skip();
+}
+
+void ibGridColOutlineWindow::OnMouseWheel(wxMouseEvent& event)
+{
+	if (!m_owner->ProcessWindowEvent(event)) event.Skip();
+}
+
 void ibGridCornerLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
@@ -2955,6 +3044,9 @@ void ibGrid::ScrollWindow(int dx, int dy, const wxRect* rect)
 	m_rowLabelWin->ScrollWindow(0, dy, rect);
 	m_colAreaWin->ScrollWindow(dx, 0, rect);
 	m_colLabelWin->ScrollWindow(dx, 0, rect);
+
+	if (m_rowOutlineWin) m_rowOutlineWin->ScrollWindow(0, dy, rect);
+	if (m_colOutlineWin) m_colOutlineWin->ScrollWindow(dx, 0, rect);
 }
 
 void ibGridWindow::OnMouseEvent(wxMouseEvent& event)
@@ -3149,7 +3241,9 @@ void ibGrid::Create()
 	// subwindow components that make up the ibGrid
 #pragma region area
 	m_rowAreaWin = new ibGridRowAreaWindow(this);
-#pragma endregion 
+#pragma endregion
+	m_rowOutlineWin = new ibGridRowOutlineWindow(this);
+	m_colOutlineWin = new ibGridColOutlineWindow(this);
 	m_rowLabelWin = new ibGridRowLabelWindow(this);
 
 	CreateColumnWindow();
@@ -3358,10 +3452,12 @@ void ibGrid::Init()
 	m_rowFrozenAreaWin = NULL;
 	m_rowLabelWin = NULL;
 	m_rowFrozenLabelWin = NULL;
+	m_rowOutlineWin = NULL;
 	m_colAreaWin = NULL;
 	m_colFrozenAreaWin = NULL;
 	m_colLabelWin = NULL;
 	m_colFrozenLabelWin = NULL;
+	m_colOutlineWin = NULL;
 	m_gridWin = NULL;
 	m_frozenColGridWin = NULL;
 	m_frozenRowGridWin = NULL;
@@ -3634,8 +3730,12 @@ wxSize ibGrid::GetSizeAvailableForScrollTarget(const wxSize& size)
 {
 	wxPoint offset = GetGridWindowOffset(m_gridWin);
 	wxSize sizeGridWin(size);
-	sizeGridWin.x -= (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + offset.x;
-	sizeGridWin.y -= (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom()) + offset.y;
+	sizeGridWin.x -= (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0)
+		+ GetRowOutlineSize()
+		+ ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + offset.x;
+	sizeGridWin.y -= (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0)
+		+ GetColOutlineSize()
+		+ ibCalcGridScale(m_colLabelHeight, GetGridZoom()) + offset.y;
 
 	return sizeGridWin;
 }
@@ -3664,10 +3764,23 @@ void ibGrid::CalcWindowSizes()
 	const int colAreaHeight =
 		(GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0);
 
+	// Outline pane sizes — independent of the row/col area visibility.
+	// Sit between [rowArea] and [rowLabel] (resp. [colArea] and [colLabel]).
+	const int rowOutlineW = GetRowOutlineSize();
+	const int colOutlineH = GetColOutlineSize();
+
+	const int rowLabelW = ibCalcGridScale(m_rowLabelWidth, GetGridZoom());
+	const int colLabelH = ibCalcGridScale(m_colLabelHeight, GetGridZoom());
+
+	// Outline sits LEFT of area (matching Excel/1C convention). Order left-to-right
+	// for rows: [outline][area][label][frozen][grid]; for cols analogously top-down.
+	const int xAfterChrome = rowOutlineW + rowAreaWidth + rowLabelW;
+	const int yAfterChrome = colOutlineH + colAreaHeight + colLabelH;
+
 	// the grid may be too small to have enough space for the labels yet, don't
 	// size the windows to negative sizes in this case
-	int gw = cw - ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) - fgw;
-	int gh = ch - ibCalcGridScale(m_colLabelHeight, GetGridZoom()) - fgh;
+	int gw = cw - rowLabelW - rowOutlineW - fgw;
+	int gh = ch - colLabelH - colOutlineH - fgh;
 
 	if (gw < 0)
 		gw = 0;
@@ -3675,43 +3788,59 @@ void ibGrid::CalcWindowSizes()
 		gh = 0;
 
 	if (m_frozenCornerGridWin && m_frozenCornerGridWin->IsShown())
-		m_frozenCornerGridWin->SetSize(rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom()), fgw, fgh);
+		m_frozenCornerGridWin->SetSize(xAfterChrome, yAfterChrome, fgw, fgh);
 
 	if (m_cornerLabelWin && m_cornerLabelWin->IsShown())
-		m_cornerLabelWin->SetSize(rowAreaWidth, colAreaHeight, ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), ibCalcGridScale(m_colLabelHeight, GetGridZoom()));
+		m_cornerLabelWin->SetSize(rowOutlineW + rowAreaWidth, colOutlineH + colAreaHeight, rowLabelW, colLabelH);
 
 	if (m_colAreaWin && m_colAreaWin->IsShown())
-		m_colAreaWin->SetSize(rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, 0, gw, colAreaHeight);
+		m_colAreaWin->SetSize(xAfterChrome + fgw, colOutlineH, gw, colAreaHeight);
 
 	if (m_colFrozenAreaWin && m_colFrozenAreaWin->IsShown())
-		m_colFrozenAreaWin->SetSize(rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), 0, rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight);
+		m_colFrozenAreaWin->SetSize(xAfterChrome, colOutlineH, fgw, colAreaHeight);
+
+	// Column outline pane: strip sitting at the very top of the column chrome.
+	if (m_colOutlineWin) {
+		const bool show = GridColOutlineEnabled();
+		m_colOutlineWin->Show(show);
+		if (show)
+			m_colOutlineWin->SetSize(xAfterChrome + fgw, 0, gw, colOutlineH);
+	}
 
 	if (m_colFrozenLabelWin && m_colFrozenLabelWin->IsShown())
-		m_colFrozenLabelWin->SetSize(rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight, fgw, ibCalcGridScale(m_colLabelHeight, GetGridZoom()));
+		m_colFrozenLabelWin->SetSize(xAfterChrome, colOutlineH + colAreaHeight, fgw, colLabelH);
 
 	if (m_frozenColGridWin && m_frozenColGridWin->IsShown())
-		m_frozenColGridWin->SetSize(rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, fgw, gh);
+		m_frozenColGridWin->SetSize(xAfterChrome, yAfterChrome + fgh, fgw, gh);
 
 	if (m_colLabelWin && m_colLabelWin->IsShown())
-		m_colLabelWin->SetSize(rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight, gw, ibCalcGridScale(m_colLabelHeight, GetGridZoom()));
+		m_colLabelWin->SetSize(xAfterChrome + fgw, colOutlineH + colAreaHeight, gw, colLabelH);
 
 	if (m_rowAreaWin && m_rowAreaWin->IsShown())
-		m_rowAreaWin->SetSize(0, colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, rowAreaWidth, gh);
+		m_rowAreaWin->SetSize(rowOutlineW, yAfterChrome + fgh, rowAreaWidth, gh);
 
 	if (m_rowFrozenAreaWin && m_rowFrozenAreaWin->IsShown())
-		m_rowFrozenAreaWin->SetSize(0, colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom()), rowAreaWidth, fgh);
+		m_rowFrozenAreaWin->SetSize(rowOutlineW, yAfterChrome, rowAreaWidth, fgh);
+
+	// Row outline pane: strip at the very left of the row chrome.
+	if (m_rowOutlineWin) {
+		const bool show = GridRowOutlineEnabled();
+		m_rowOutlineWin->Show(show);
+		if (show)
+			m_rowOutlineWin->SetSize(0, yAfterChrome + fgh, rowOutlineW, gh);
+	}
 
 	if (m_rowFrozenLabelWin && m_rowFrozenLabelWin->IsShown())
-		m_rowFrozenLabelWin->SetSize(rowAreaWidth, colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom()), ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), fgh);
+		m_rowFrozenLabelWin->SetSize(rowOutlineW + rowAreaWidth, yAfterChrome, rowLabelW, fgh);
 
 	if (m_rowLabelWin && m_rowLabelWin->IsShown())
-		m_rowLabelWin->SetSize(rowAreaWidth, colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), gh);
+		m_rowLabelWin->SetSize(rowOutlineW + rowAreaWidth, yAfterChrome + fgh, rowLabelW, gh);
 
 	if (m_frozenRowGridWin && m_frozenRowGridWin->IsShown())
-		m_frozenRowGridWin->SetSize(rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom()), gw, fgh);
+		m_frozenRowGridWin->SetSize(xAfterChrome + fgw, yAfterChrome, gw, fgh);
 
 	if (m_gridWin && m_gridWin->IsShown())
-		m_gridWin->SetSize(rowAreaWidth + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, gw, gh);
+		m_gridWin->SetSize(xAfterChrome + fgw, yAfterChrome + fgh, gw, gh);
 }
 
 // this is called when the grid table sends a message
@@ -10709,6 +10838,200 @@ void ibGrid::DeleteColArea(size_t index)
 	m_colAreaAt.Detach(index);
 
 	CalcDimensions();
+}
+
+// ----- outline groups (separate from areas) -------------------------------
+
+int ibGrid::AddRowGroup(int first, int last, int level, bool collapsed)
+{
+	ibGridCellGroup g; g.m_start = first; g.m_end = last;
+	g.m_level = wxMax(1, level); g.m_collapsed = collapsed;
+	m_rowGroupAt.push_back(g);
+	if (collapsed) for (int r = first; r <= last; ++r) HideRow(r);
+	return (int)m_rowGroupAt.size() - 1;
+}
+
+int ibGrid::AddColGroup(int first, int last, int level, bool collapsed)
+{
+	ibGridCellGroup g; g.m_start = first; g.m_end = last;
+	g.m_level = wxMax(1, level); g.m_collapsed = collapsed;
+	m_colGroupAt.push_back(g);
+	if (collapsed) for (int c = first; c <= last; ++c) HideCol(c);
+	return (int)m_colGroupAt.size() - 1;
+}
+
+void ibGrid::DeleteRowGroup(int idx)
+{
+	if (idx < 0 || (size_t)idx >= m_rowGroupAt.size()) return;
+	const ibGridCellGroup g = m_rowGroupAt[idx];
+	if (g.m_collapsed) for (int r = g.m_start; r <= g.m_end; ++r) ShowRow(r);
+	m_rowGroupAt.erase(m_rowGroupAt.begin() + idx);
+}
+
+void ibGrid::DeleteColGroup(int idx)
+{
+	if (idx < 0 || (size_t)idx >= m_colGroupAt.size()) return;
+	const ibGridCellGroup g = m_colGroupAt[idx];
+	if (g.m_collapsed) for (int c = g.m_start; c <= g.m_end; ++c) ShowCol(c);
+	m_colGroupAt.erase(m_colGroupAt.begin() + idx);
+}
+
+void ibGrid::SetRowGroupCollapsed(int idx, bool collapsed)
+{
+	if (idx < 0 || (size_t)idx >= m_rowGroupAt.size()) return;
+	ibGridCellGroup& g = m_rowGroupAt[idx];
+	if (g.m_collapsed == collapsed) return;
+	g.m_collapsed = collapsed;
+	for (int r = g.m_start; r <= g.m_end; ++r) {
+		if (collapsed) HideRow(r); else ShowRow(r);
+	}
+	if (m_rowOutlineWin) m_rowOutlineWin->Refresh();
+}
+
+void ibGrid::SetColGroupCollapsed(int idx, bool collapsed)
+{
+	if (idx < 0 || (size_t)idx >= m_colGroupAt.size()) return;
+	ibGridCellGroup& g = m_colGroupAt[idx];
+	if (g.m_collapsed == collapsed) return;
+	g.m_collapsed = collapsed;
+	for (int c = g.m_start; c <= g.m_end; ++c) {
+		if (collapsed) HideCol(c); else ShowCol(c);
+	}
+	if (m_colOutlineWin) m_colOutlineWin->Refresh();
+}
+
+bool ibGrid::ToggleRowGroup(int idx)
+{
+	if (idx < 0 || (size_t)idx >= m_rowGroupAt.size()) return false;
+	SetRowGroupCollapsed(idx, !m_rowGroupAt[idx].m_collapsed);
+	return m_rowGroupAt[idx].m_collapsed;
+}
+
+bool ibGrid::ToggleColGroup(int idx)
+{
+	if (idx < 0 || (size_t)idx >= m_colGroupAt.size()) return false;
+	SetColGroupCollapsed(idx, !m_colGroupAt[idx].m_collapsed);
+	return m_colGroupAt[idx].m_collapsed;
+}
+
+int ibGrid::GetMaxRowGroupLevel() const {
+	int mx = 0; for (const auto& g : m_rowGroupAt) mx = wxMax(mx, g.m_level); return mx;
+}
+int ibGrid::GetMaxColGroupLevel() const {
+	int mx = 0; for (const auto& g : m_colGroupAt) mx = wxMax(mx, g.m_level); return mx;
+}
+
+// Size of the outline button in pixels (square).
+static const int kOutlineBtnSize = 14;
+// Space taken per nesting level along the outline axis.
+static const int kOutlineLevelStep = 18;
+
+int ibGrid::GetRowOutlineSize() const {
+	const int mx = GetMaxRowGroupLevel();
+	return mx > 0 ? (mx * kOutlineLevelStep + 4) : 0;
+}
+int ibGrid::GetColOutlineSize() const {
+	const int mx = GetMaxColGroupLevel();
+	return mx > 0 ? (mx * kOutlineLevelStep + 4) : 0;
+}
+
+// Button rectangles are expressed in outline-pane local coords. Level 1 is
+// drawn furthest from the cells; deeper levels closer to the cells.
+wxRect ibGrid::GetRowGroupButtonRect(int idx) const
+{
+	if (idx < 0 || (size_t)idx >= m_rowGroupAt.size()) return wxRect();
+	const ibGridCellGroup& g = m_rowGroupAt[idx];
+	ibGrid* self = const_cast<ibGrid*>(this);
+	const int x = (g.m_level - 1) * kOutlineLevelStep + 2;
+	const int y = self->GetRowTop(g.m_start, self->GetGridZoom()) + 2;
+	return wxRect(x, y, kOutlineBtnSize, kOutlineBtnSize);
+}
+
+wxRect ibGrid::GetColGroupButtonRect(int idx) const
+{
+	if (idx < 0 || (size_t)idx >= m_colGroupAt.size()) return wxRect();
+	const ibGridCellGroup& g = m_colGroupAt[idx];
+	ibGrid* self = const_cast<ibGrid*>(this);
+	const int y = (g.m_level - 1) * kOutlineLevelStep + 2;
+	const int x = self->GetColLeft(g.m_start, self->GetGridZoom()) + 2;
+	return wxRect(x, y, kOutlineBtnSize, kOutlineBtnSize);
+}
+
+int ibGrid::HitTestRowOutlineButton(const wxPoint& pt) const
+{
+	for (size_t i = 0; i < m_rowGroupAt.size(); ++i) {
+		const wxRect r = GetRowGroupButtonRect((int)i);
+		if (!r.IsEmpty() && r.Contains(pt)) return (int)i;
+	}
+	return -1;
+}
+
+int ibGrid::HitTestColOutlineButton(const wxPoint& pt) const
+{
+	for (size_t i = 0; i < m_colGroupAt.size(); ++i) {
+		const wxRect r = GetColGroupButtonRect((int)i);
+		if (!r.IsEmpty() && r.Contains(pt)) return (int)i;
+	}
+	return -1;
+}
+
+static void DrawOutlineButton(wxDC& dc, const wxRect& btn, bool collapsed)
+{
+	// Flat, neat 10x10 button: thin 3D-shadow border, light background,
+	// centred minus bar (always) plus a vertical bar when collapsed — same
+	// visual language as Excel's outline buttons, no decorative brackets.
+	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW)));
+	dc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE)));
+	dc.DrawRectangle(btn);
+
+	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT)));
+	const int cy = btn.y + btn.height / 2;
+	const int cx = btn.x + btn.width / 2;
+	dc.DrawLine(btn.x + 2, cy, btn.GetRight() - 1, cy);
+	if (collapsed)
+		dc.DrawLine(cx, btn.y + 2, cx, btn.GetBottom() - 1);
+}
+
+void ibGrid::DrawRowOutline(wxDC& dc)
+{
+	const wxColour railColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
+	dc.SetPen(wxPen(railColour));
+	for (size_t i = 0; i < m_rowGroupAt.size(); ++i) {
+		const ibGridCellGroup& g = m_rowGroupAt[i];
+		if (g.m_collapsed) continue;
+		const wxRect btn = GetRowGroupButtonRect((int)i);
+		if (btn.IsEmpty()) continue;
+		const int railX = btn.x + btn.width / 2;
+		const int railTop = btn.GetBottom() + 1;
+		const int rowBottom = GetRowTop(g.m_end, GetGridZoom())
+			+ GetRowHeight(g.m_end, GetGridZoom()) - 1;
+		if (rowBottom > railTop) dc.DrawLine(railX, railTop, railX, rowBottom);
+	}
+	for (size_t i = 0; i < m_rowGroupAt.size(); ++i) {
+		const wxRect btn = GetRowGroupButtonRect((int)i);
+		if (!btn.IsEmpty()) DrawOutlineButton(dc, btn, m_rowGroupAt[i].m_collapsed);
+	}
+}
+
+void ibGrid::DrawColOutline(wxDC& dc)
+{
+	const wxColour railColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
+	dc.SetPen(wxPen(railColour));
+	for (size_t i = 0; i < m_colGroupAt.size(); ++i) {
+		const ibGridCellGroup& g = m_colGroupAt[i];
+		if (g.m_collapsed) continue;
+		const wxRect btn = GetColGroupButtonRect((int)i);
+		if (btn.IsEmpty()) continue;
+		const int railY = btn.y + btn.height / 2;
+		const int railLeft = btn.GetRight() + 1;
+		const int colRight = GetColLeft(g.m_end, GetGridZoom())
+			+ GetColWidth(g.m_end, GetGridZoom()) - 1;
+		if (colRight > railLeft) dc.DrawLine(railLeft, railY, colRight, railY);
+	}
+	for (size_t i = 0; i < m_colGroupAt.size(); ++i) {
+		const wxRect btn = GetColGroupButtonRect((int)i);
+		if (!btn.IsEmpty()) DrawOutlineButton(dc, btn, m_colGroupAt[i].m_collapsed);
+	}
 }
 
 void ibGrid::DeleteArea()

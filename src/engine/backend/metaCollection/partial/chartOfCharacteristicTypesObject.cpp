@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Tetracode Dev
 //	Description : chart of characteristic types object
 ////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,9 @@
 #include "backend/metaData.h"
 
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "reference/reference.h"
-#include "backend/databaseLayer/databaseLayer.h"
+#include "backend/databaseLayer/connectionPool.h"
 #include "backend/system/systemManager.h"
 
 #include "backend/fileSystem/fs.h"
@@ -16,7 +17,7 @@
 //*                          ObjectChartOfCharacteristicTypesValue                             *
 //*********************************************************************************************
 
-ibValueRecordDataObjectChartOfCharacteristicTypes::ibValueRecordDataObjectChartOfCharacteristicTypes(ibValueMetaObjectChartOfCharacteristicTypes* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
+ibValueRecordDataObjectChartOfCharacteristicTypes::ibValueRecordDataObjectChartOfCharacteristicTypes(const ibValueMetaObjectChartOfCharacteristicTypes* metaObject, const ibGuid& objGuid, ibObjectMode objMode) :
 	ibValueRecordDataObjectHierarchyRef(metaObject, objGuid, objMode)
 {
 }
@@ -39,6 +40,7 @@ ibSourceExplorer ibValueRecordDataObjectChartOfCharacteristicTypes::GetSourceExp
 		srcHelper.AppendSource(metaRef->GetDataCode(), false);
 		srcHelper.AppendSource(metaRef->GetDataDescription());
 		srcHelper.AppendSource(metaRef->GetDataParent());
+		srcHelper.AppendSource(metaRef->GetDataType(), false);
 	}
 
 	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
@@ -127,15 +129,13 @@ ibBackendValueForm* ibValueRecordDataObjectChartOfCharacteristicTypes::GetFormVa
 //*                        ChartOfCharacteristicTypes events                                    *
 //***********************************************************************************************
 
-#include "backend/backend_mainFrame.h"
-
 bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -145,18 +145,17 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 				{
-					db_query_active_transaction.BeginTransaction();
+					scope.SafeBeginTransaction();
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+						ExecAsProc(wxT("BeforeWrite"), cancel);
 
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
@@ -167,7 +166,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 
 					if (!IsSetUniqueIdentifier()) {
 						ibValue prefix = "", standartProcessing = true;
-						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
+						ExecAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
 							generateUniqueIdentifier =
 								ibValueRecordDataObjectChartOfCharacteristicTypes::GenerateUniqueIdentifier(prefix.GetString());
@@ -177,24 +176,24 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::WriteObject()
 					if (!SaveData()) {
 						if (generateUniqueIdentifier)
 							ibValueRecordDataObjectChartOfCharacteristicTypes::ResetUniqueIdentifier();
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+						ExecAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
 								ibValueRecordDataObjectChartOfCharacteristicTypes::ResetUniqueIdentifier();
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
 						}
 					}
 
-					db_query_active_transaction.CommitTransaction();
+					scope.SafeCommitTransaction();
 
 					if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
 					else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
@@ -211,9 +210,9 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::DeleteObject()
 {
 	if (!appData->DesignerMode())
 	{
-		if (db_query != nullptr && !db_query->IsOpen())
-			ibBackendCoreException::Error(_("Database is not open!"));
-		else if (db_query == nullptr)
+		ibConnectionScope scope = ibSession::Current()->OpenConnectionScope();
+
+		if (!scope || !scope->IsOpen())
 			ibBackendCoreException::Error(_("Database is not open!"));
 
 		if (!ibBackendException::IsEvalMode())
@@ -235,39 +234,38 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::DeleteObject()
 				return false;
 			}
 
-			ibTransactionGuard db_query_active_transaction = db_query;
 			{
 				ibBackendValueForm* const valueForm = GetForm();
 				{
-					db_query_active_transaction.BeginTransaction();
+					scope.SafeBeginTransaction();
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+						ExecAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
 					if (!DeleteData()) {
-						db_query_active_transaction.RollBackTransaction();
+						scope.SafeRollBackTransaction();
 						ibBackendCoreException::Error(_("Failed to delete object in db!"));
 						return false;
 					}
 
 					{
 						ibValue cancel = false;
-						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
+						ExecAsProc(wxT("OnDelete"), cancel);
 						if (cancel.GetBoolean()) {
-							db_query_active_transaction.RollBackTransaction();
+							scope.SafeRollBackTransaction();
 							ibBackendCoreException::Error(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
-					db_query_active_transaction.CommitTransaction();
+					scope.SafeCommitTransaction();
 
 					if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
 				}
@@ -308,7 +306,7 @@ void ibValueRecordDataObjectChartOfCharacteristicTypes::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
-	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, eThisObject, eSystem);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, true, eThisObject, eSystem);
 
 	wxString objectName;
 
@@ -326,7 +324,7 @@ void ibValueRecordDataObjectChartOfCharacteristicTypes::PrepareNames() const
 		);
 	}
 
-	for (const auto object : m_metaObject->GetTableArrayObject()) {
+	for (const auto object : m_metaObject->GetGenericTableArrayObject()) {
 		if (object->IsDeleted())
 			continue;
 		if (!object->GetObjectNameAsString(objectName))
@@ -339,27 +337,7 @@ void ibValueRecordDataObjectChartOfCharacteristicTypes::PrepareNames() const
 			eTable
 		);
 	}
-	if (m_procUnit != nullptr) {
-		ibByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-			for (auto exportVariable : byteCode->m_listExportVar) {
-				m_methodHelper->AppendProp(
-					exportVariable.first,
-					exportVariable.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
 bool ibValueRecordDataObjectChartOfCharacteristicTypes::SetPropVal(const long lPropNum, const ibValue& varPropVal)
@@ -447,7 +425,7 @@ bool ibValueRecordDataObjectChartOfCharacteristicTypes::CallAsFunc(const long lM
 		return true;
 	}
 
-	return ibModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

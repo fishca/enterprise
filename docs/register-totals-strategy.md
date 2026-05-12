@@ -3,32 +3,33 @@
 Architecture proposal for OES register storage that moves the
 "totals" maintenance burden from C++ application code into the
 database via triggers, while preserving the same read latency
-profile as the classic 1C-style explicit totals table. Status:
-**design discussed 2026-04-30, not yet implemented.** Expected first
-target: PostgreSQL production, with FB embedded sharing the same
-pattern at smaller scale.
+profile as the classic denormalized totals table pattern (used by
+OES today, and by similar enterprise platforms such as 1C:Enterprise,
+ERPNext, Sage). Status: **design discussed 2026-04-30, not yet
+implemented.** Expected first target: PostgreSQL production, with FB
+embedded sharing the same pattern at smaller scale.
 
 > **TL;DR** — keep the totals table; let SQL triggers maintain it
 > instead of OES C++. Read path goes through views, runtime is
 > totals-agnostic. No periodic recalculation. No drift. Same read
-> performance as 1C-style. Slight write overhead (~5–15% per
-> movement). Cross-DB via per-driver trigger templates.
+> performance as the explicit-totals pattern. Slight write overhead
+> (~5–15% per movement). Cross-DB via per-driver trigger templates.
 
 ---
 
 ## Why move maintenance into the database
 
-In a 1C-style implementation OES C++ writes to `mov_X` (the register
-movements table) and then explicitly updates `totals_X` rows. Two
-problems compound:
+Today OES (like other platforms with explicit `mov + totals` tables)
+writes to `mov_X` (the register movements table) and then explicitly
+updates `totals_X` rows from C++. Two problems compound:
 
 1. **Drift.** If the process crashes between the `mov` insert and the
    `totals` update, or if a code path forgets to update `totals`, or
    if a backdated movement is inserted without recalculating
-   subsequent periods, totals diverges from movements. The 1C system
-   compensates with a "пересчёт итогов" command — periodic full
-   rebuild from movements. Operationally heavy, prone to
-   inconsistency windows.
+   subsequent periods, totals diverges from movements. The traditional
+   compensation is a "totals recalculation" command (1C:Enterprise's
+   `пересчёт итогов`, ERPNext's `repost`) — periodic full rebuild from
+   movements. Operationally heavy, prone to inconsistency windows.
 2. **Maintenance code in C++.** Logic for "this kind of register's
    totals update for this kind of dimension/resource" lives in
    `*Query.cpp` files, hand-written per type. Schema changes
@@ -41,7 +42,7 @@ A trigger-maintained totals removes both:
 - Code lives in the database. OES generates the trigger SQL at
   Apply, then forgets about it.
 
-The 1C "пересчёт итогов" command becomes physically unnecessary —
+The periodic "totals recalculation" command becomes physically unnecessary —
 nothing can drift.
 
 ---
@@ -149,7 +150,7 @@ instead of `INSERT ... ON CONFLICT`.
 
 ### Read path (balance / turnover / slice-last queries)
 
-Identical to 1C-style explicit totals — `SELECT * FROM totals_X
+Identical to the existing explicit-totals path — `SELECT * FROM totals_X
 WHERE period <= ? AND dim1 = ?` is an index lookup, O(log N).
 Fitness for ~10 K concurrent readers asking for current balance:
 
@@ -162,7 +163,7 @@ Fitness for ~10 K concurrent readers asking for current balance:
 
 ### Write path (movement INSERT triggering totals UPDATE)
 
-For 100 active writers (1C-style document posting):
+For 100 active writers (document-posting workload, comparable to 1C:Enterprise / ERPNext throughput profiles):
 
 - ~5–10 movements per posted document, ~1 doc/min per writer →
   500–1000 mov-writes/min → ~10–20 trigger fires/sec.
@@ -181,7 +182,7 @@ INSERT with old period → trigger updates the totals row for that
 period. For running-balance registers the trigger also bumps
 `qty` on subsequent periods; that's O(K) where K = number of
 later periods affected (typically tens, not millions). Same cost
-as 1C app-side rebuild for the same scenario.
+as an app-side rebuild for the same scenario.
 
 ### Bulk import
 
@@ -223,7 +224,7 @@ covers all five engines uniformly.
 
 - ✅ `mov_X` ↔ `totals_X` cannot drift; `RebuildTotals` command goes
   away.
-- ✅ Periodic "пересчёт итогов" is unnecessary by construction.
+- ✅ Periodic "totals recalculation" is unnecessary by construction.
 - ✅ Backup / restore: `mov_X` is the source of truth. `totals_X` is
   cache, regenerable with one SQL statement.
 - ✅ OES C++ register-maintenance code shrinks substantially —
@@ -338,4 +339,4 @@ performance numbers above:
 - **Cross-register transactions** that touch multiple registers in
   one document posting work as today (one TX, multiple
   triggers fire, all atomic). No new concurrency surprises beyond
-  what 1C-style already had.
+  the existing explicit-totals approach already had.

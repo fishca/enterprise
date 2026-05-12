@@ -1,26 +1,26 @@
 # Session registry refactor — full picture
 
-Полный reference по session-registry'му рефактору 2026-04-20. Ниже — архитектура, что landed по шагам, все найденные нюансы и gotchas, что осталось.
+Full reference for the session-registry refactor (2026-04-20). Covers the architecture, what landed in which step, every gotcha discovered, and what remains.
 
-## Цель
+## Goal
 
-Заменить старый `ibApplicationDataSessionUpdater` (heartbeat thread на singleton `ibApplicationData` с 1Hz UPDATE своей строки в `sys_session`) на:
+Replace the old `ibApplicationDataSessionUpdater` (heartbeat thread on singleton `ibApplicationData` with 1Hz UPDATE of its own row in `sys_session`) with:
 
-- **Per-process session registry** (`ibSessionRegistry`) с единым consumer-thread'ом и priority queue.
-- **Per-session объект** (`ibSession`) с state-machine (lifecycle + auth) и cv для producer'ов.
+- **Per-process session registry** (`ibSessionRegistry`) with a single consumer thread and priority queue.
+- **Per-session object** (`ibSession`) with a state machine (lifecycle + auth) and a cv for producers.
 - **Ticket RAII** (`ibSessionTicket`) — owner handle, dtor submits Remove@Urgent.
-- **Unified `Connect(req)` entry** для desktop / designer / web-server / web-cookie.
-- **Policy chain** (`ibSessionPolicy`) вместо scattered veto hooks.
-- **Session-aware user accessors** на `ibApplicationData` — закрывает web multi-tab "last login wins" bug.
+- **Unified `Connect(req)` entry** for desktop / designer / web-server / web-cookie.
+- **Policy chain** (`ibSessionPolicy`) instead of scattered veto hooks.
+- **Session-aware user accessors** on `ibApplicationData` — closes the web multi-tab "last login wins" bug.
 
-## Основные компоненты
+## Main components
 
-| Файл | Роль |
+| File | Role |
 |---|---|
 | `backend/session/session.{h,cpp}` | `ibSession` + state enums + `SessionScope` (legacy thread-local). |
 | `backend/session/sessionRegistry.{h,cpp}` | Registry class: thread + priority queue + tick loop + DB ops. |
 | `backend/session/sessionTicket.{h,cpp}` | RAII ticket — move-only owner. |
-| `backend/session/sessionPolicy.h` | Pure interface для `CanAdd`-veto. |
+| `backend/session/sessionPolicy.h` | Pure interface for `CanAdd`-veto. |
 | `backend/session/designerExclusivePolicy.{h,cpp}` | Ports `VerifySessionUpdater`. |
 
 ## Lifecycle (desktop)
@@ -116,7 +116,7 @@ POST /login { user, password }
   - `m_probeConn` — `TryProbeRowLock` NOWAIT probe.
   - (Historical `m_lockConn` retired together with the pessimistic-lock
     liveness model; the third pool slot is now free for productive use.)
-- `m_snapshot` под RW mutex — публично через `GetClusterSnapshot()`.
+- `m_snapshot` under RW mutex — exposed via `GetClusterSnapshot()`.
 - Priority queue bins (Urgent / Normal / Low / Background).
 - `m_workerPool : unique_ptr<ibWorkerPool>` — per-session task dispatcher.
   Allocated by the ctor when `maxWorkers > 0` (server modes); GUI hosts
@@ -127,66 +127,66 @@ POST /login { user, password }
 | Interval | Job |
 |---|---|
 | 1s | `JobHeartbeatOwn` (UPDATE own lastActive), `JobRefreshSnapshot` (SELECT * → snapshot). |
-| 3s | `JobSweepStale` (delete zombies via probe-lock ИЛИ lastActive cutoff). |
+| 3s | `JobSweepStale` (delete zombies via probe-lock OR lastActive cutoff). |
 | On-demand | drain queue (Add/Attach/Detach/Remove/SetActivity) — strict descending priority. |
 | Eager on Start | one initial sweep + refresh so UI has data immediately. |
 
-**Fatal invariant:** если ThreadBody вылетит с exception — `Die()` → `std::terminate`. Registry-thread must-be-alive; в противном случае sys_session больше не reflects правду, других процессов ClearLost'ят наши row'ы.
+**Fatal invariant:** if ThreadBody throws — `Die()` → `std::terminate`. Registry-thread must-be-alive; otherwise sys_session no longer reflects reality and other processes will ClearLost our rows.
 
-## Gotchas & нюансы (всё что вскрылось)
+## Gotchas (everything that surfaced)
 
 ### 1. Start/Connect race
 
-**Симптом:** после `reg.Start()` немедленный `reg.Connect()` возвращает `RegistryDown`.
+**Symptom:** an immediate `reg.Connect()` after `reg.Start()` returns `RegistryDown`.
 
-**Причина:** `Start()` возвращался СРАЗУ после `m_thread = std::thread(...)`, до того как ThreadBody выставит `m_threadAlive = true`. Connect's top check видел `!m_threadAlive` → `RegistryDown`.
+**Cause:** `Start()` returned immediately after `m_thread = std::thread(...)`, before ThreadBody set `m_threadAlive = true`. Connect's top check saw `!m_threadAlive` → `RegistryDown`.
 
-**Фикс:** `Start()` делает короткий spin (≤2s) пока thread не поднимет alive-флаг.
+**Fix:** `Start()` does a short spin (≤2s) until the thread raises the alive flag.
 
 ### 2. Attach-empty-creds deadlock
 
-**Симптом:** вызов `ticket.Attach("", "")` (CLI без creds) виснет на timeout → `ibAttachResult::Timeout`.
+**Symptom:** calling `ticket.Attach("", "")` (CLI with no creds) hangs on timeout → `ibAttachResult::Timeout`.
 
-**Причина:** `Attach` делал `TransitionAuth(Anonymous)` reset → Submit Attach → `WaitForAuth(from=Anonymous, ...)`. В ProcessAttach early-return'овая ветка для empty creds делала ещё один `TransitionAuth(Anonymous)` — state не менялся, predicate `state != Anonymous` never flipped, 20s waiting.
+**Cause:** `Attach` did `TransitionAuth(Anonymous)` reset → Submit Attach → `WaitForAuth(from=Anonymous, ...)`. The empty-creds early-return branch in ProcessAttach did another `TransitionAuth(Anonymous)` — state didn't change, predicate `state != Anonymous` never flipped, 20s waiting.
 
-**Фикс:** убрал early-return в ProcessAttach. Всегда идёт через `AuthenticateUser` — на open-access (sys_user пустой, creds пустые) transitions на `Authenticated` с empty info.
+**Fix:** removed the early-return in ProcessAttach. Always routes through `AuthenticateUser` — on open-access (empty sys_user, empty creds) it transitions to `Authenticated` with empty info.
 
-### 3. Launcher/designer stuck в tasklist после close
+### 3. Launcher/designer stuck in tasklist after close
 
-**Симптом:** после закрытия окна enterprise.exe / designer.exe остаются в tasklist, держат backend.dll.
+**Symptom:** after closing enterprise.exe / designer.exe the process stays in tasklist, holding backend.dll.
 
-**Причина:** `ibApplicationData::Disconnect()` вызывал `registry.Stop()` только если `m_created_metadata` + все промежуточные проверки прошли. Ранний `return false` (например `CloseDatabase` failed) пропускал Stop → thread live → process alive.
+**Cause:** `ibApplicationData::Disconnect()` called `registry.Stop()` only if `m_created_metadata` + all intermediate checks passed. An early `return false` (e.g. failed `CloseDatabase`) skipped Stop → thread alive → process alive.
 
-**Фикс:** Stop() вызывается безусловно в конце Disconnect. Success flag собирается но не влияет на вызов Stop.
+**Fix:** Stop() is now called unconditionally at the end of Disconnect. Success flag is accumulated but doesn't gate the Stop call.
 
-### 4. HoldRowLocks self-deadlock (КРИТИЧНО)
+### 4. HoldRowLocks self-deadlock (CRITICAL)
 
-**Симптом:** HTTP запросы виснут на бесконечный timeout, Active Users empty, registry thread как будто мёртв.
+**Symptom:** HTTP requests hang on infinite timeout, Active Users empty, registry thread appears dead.
 
-**Причина:** схема "row-lock = liveness" пыталась держать `SELECT ... WITH LOCK` long-TX на наших своих row'ах через `m_lockConn`. Одновременно `JobHeartbeatOwn` пытался `UPDATE lastActive` на тех же row'ах через `m_writeConn`. FB видит две независимые TX, из которых первая держит update-intent lock → вторая ждёт. Вторая — на registry thread'е. Thread зависает → ничего не обновляется.
+**Cause:** the "row-lock = liveness" scheme tried to hold `SELECT ... WITH LOCK` long-TX on our own rows through `m_lockConn`. Simultaneously `JobHeartbeatOwn` tried `UPDATE lastActive` on the same rows through `m_writeConn`. FB sees two independent TXs — the first holds an update-intent lock → the second waits. The second runs on the registry thread. Thread hangs → nothing updates.
 
-**Фикс:** схема переведена на **heartbeat-based liveness**.
-- `HoldRowLocks` больше не вызывается (`RebuildLockHold` удалён из ProcessAdd/Remove).
-- `JobHeartbeatOwn` UPDATE'ит lastActive каждую секунду на своих inserted row'ах.
-- `JobSweepStale` использует hybrid: `TryProbeRowLock` как fast path (clean exits), `lastActive < now - 60s` как fallback (force-kill'ed processes, orphan TX в FB не rollback'нут).
+**Fix:** switched to **heartbeat-based liveness**.
+- `HoldRowLocks` is no longer called (`RebuildLockHold` removed from ProcessAdd/Remove).
+- `JobHeartbeatOwn` UPDATEs lastActive every second on its own inserted rows.
+- `JobSweepStale` uses a hybrid: `TryProbeRowLock` as fast path (clean exits), `lastActive < now - 60s` as fallback (force-killed processes whose orphan TXs FB hasn't rolled back).
 
-### 5. Force-kill'ed процессы → persistent zombies
+### 5. Force-killed processes → persistent zombies
 
-**Симптом:** после kill -9 enterprise.exe в sys_session остаётся его row, designer'ова Active Users показывает "мёртвого" пользователя.
+**Symptom:** after `kill -9 enterprise.exe` its row stays in sys_session; designer's Active Users shows a "dead" user.
 
-**Причина:** FB embedded не делает orphan-rollback при каждой операции. TX убитого процесса может остаться в "active" state до следующего full DB reopen / gfix. Наш probe-lock пробует WITH LOCK NOWAIT на занятой row'е → conflict → думаем что owner alive.
+**Cause:** FB embedded doesn't orphan-rollback on every operation. A killed process's TX may stay "active" until the next full DB reopen / gfix. Our probe-lock tries WITH LOCK NOWAIT on the held row → conflict → we think the owner is alive.
 
-**Фикс:** `JobSweepStale` использует lastActive-cutoff 60s как fallback. После 60s без heartbeat'а row считается zombie регардлесс. Eager sweep сразу на Start() убирает zombies от прошлых запусков.
+**Fix:** `JobSweepStale` uses a 60s lastActive cutoff as fallback. After 60s without heartbeat a row is zombie regardless. Eager sweep on Start() clears zombies from previous runs.
 
-### 6. Schema migration для existing DBs
+### 6. Schema migration for existing DBs
 
-**Симптом (предполагаемый):** на production DB (Configuration на PG) Active Users пуст после cutover. Новые колонки pid/address/currentActivity не существуют в legacy schema. `InsertSessionRow` с 9 колонок падает → row не пишется.
+**Symptom (expected):** on a production DB (Configuration on PG) Active Users is empty after cutover. The new pid / address / currentActivity columns don't exist in the legacy schema; a 9-column `InsertSessionRow` fails → no row written.
 
-**Фикс:** `InsertSessionRow` делает 6-колоночный INSERT (core columns всегда присутствуют), затем отдельный `UPDATE SET pid=?, address=? WHERE session=?` — если schema legacy, UPDATE тихо провалится, INSERT остаётся валидным. `MigrateTableSession` вызывается на CreateFile/ServerAppDataEnv, пробует `ALTER TABLE ADD COLUMN` per missing column; каждый ALTER в try/catch — если driver не поддерживает (редко), просто не добавляется.
+**Fix:** `InsertSessionRow` does a 6-column INSERT (core columns are always present), then a separate `UPDATE SET pid=?, address=? WHERE session=?` — if the schema is legacy the UPDATE silently fails, the INSERT remains valid. `MigrateTableSession` is called from CreateFile/ServerAppDataEnv and tries `ALTER TABLE ADD COLUMN` for each missing column; each ALTER is wrapped in try/catch — drivers that don't support it (rare) simply skip.
 
 ### 7. Session-aware user accessors
 
-**Суть:** web HTTP worker thread работает под `SessionScope(cookieSession)`. Singleton `appData->GetUserName()` раньше читал `m_userInfo` — last-login-wins на multi-tab. Теперь:
+**Idea:** the web HTTP worker thread runs under `SessionScope(cookieSession)`. The singleton `appData->GetUserName()` used to read `m_userInfo` — last-login-wins on multi-tab. Now:
 
 ```cpp
 const wxString& ibApplicationData::GetUserName() const {
@@ -199,56 +199,56 @@ const ibApplicationDataUserInfo& ibApplicationData::GetUserInfo() const {
 }
 ```
 
-25+ call-site'ов подхватили поведение автоматически. Singleton поля остались как fallback — не удалены (это cleanup на потом).
+25+ call-sites picked up the behaviour automatically. Singleton fields stayed as fallback — not deleted (a follow-up cleanup).
 
 ### 8. Per-driver NoWait plumbing
 
-`ibTxOptions::noWait = true` в `BeginTransaction` теперь honoured во всех 4 драйверах:
-- **FB**: `isc_tpb_nowait` в TPB.
-- **PG**: `SET LOCAL lock_timeout = 0` после BEGIN.
+`ibTxOptions::noWait = true` in `BeginTransaction` is now honoured in all 4 drivers:
+- **FB**: `isc_tpb_nowait` in TPB.
+- **PG**: `SET LOCAL lock_timeout = 0` after BEGIN.
 - **MySQL/InnoDB**: `SET SESSION innodb_lock_wait_timeout = 1`.
 - **ODBC/MSSQL**: `SET LOCK_TIMEOUT 0`.
 - **SQLite**: no-op (single-process).
 
-Concrete `HoldRowLocks` / `TryProbeRowLock` реализации — пока только FB. На других драйверах base class возвращает false → registry работает на heartbeat-cutoff схеме без probe-lock fast path.
+Concrete `HoldRowLocks` / `TryProbeRowLock` impls — FB only so far. On other drivers the base class returns false → registry runs on the heartbeat-cutoff scheme without the probe-lock fast path.
 
 ### 9. Cookie / session guid unification
 
-**Note:** web cookie value на данный момент отдельный 32-hex random из `wfrontend.cpp::newSessionId()`, не равен ibSession's guid. Легаси поведение. В будущем стоит выдавать ibGuid прямо в cookie — единый id везде.
+**Note:** the web cookie value is currently a separate 32-hex random from `wfrontend.cpp::newSessionId()`, not equal to the ibSession guid. Legacy behaviour. Future: hand out the ibGuid directly in the cookie — single id across all layers.
 
-## Что сделано (список commit'ов)
+## What landed (commit list)
 
 1. **Skeleton rename** — `ibSessionContext → ibSession`, `SessionManager → ibSessionRegistry` (18 files).
-2. **DB row-lock API** — `HoldRowLocks / TryProbeRowLock / ReleaseRowLocks` на `ibDatabaseLayer`; `BeginTransaction(const ibTxOptions&)`; FB concrete impl.
+2. **DB row-lock API** — `HoldRowLocks / TryProbeRowLock / ReleaseRowLocks` on `ibDatabaseLayer`; `BeginTransaction(const ibTxOptions&)`; FB concrete impl.
 3. **Registry thread + priority queue** — Submit/DrainAll strict descending, fatal invariant, `IsThreadAlive/IsFatal`.
 4. **Ticket + Connect + state machine** — `ibSession::Transition/WaitForState`, `ibSessionTicket`, `ibConnectRequest/Result`, unified entry.
 5. **Auth split** — `AuthenticateUser` pure + `InstallUser` side-effect; `ProcessAttach` routes through them.
-6. **DB ops в handlers (gated)** — INSERT/UPDATE/DELETE через `m_writeConn`; `m_ownsSysSession` flag.
-7. **Cutover (desktop)** — StartSession через registry; `ibApplicationDataSessionUpdater` deleted (~370 lines); `GetSessionArray` → `GetClusterSnapshot`.
+6. **DB ops in handlers (gated)** — INSERT/UPDATE/DELETE through `m_writeConn`; `m_ownsSysSession` flag.
+7. **Cutover (desktop)** — StartSession through registry; `ibApplicationDataSessionUpdater` deleted (~370 lines); `GetSessionArray` → `GetClusterSnapshot`.
 8. **Bugfixes** — Start/Connect race (#1), Attach-empty-creds deadlock (#2).
-9. **Web wiring** — `ibWebSession::Login` через ticket; smoke test end-to-end (GET /, POST /login, GET /session).
-10. **DesignerExclusivePolicy** — probe-lock based replacement для `VerifySessionUpdater`.
+9. **Web wiring** — `ibWebSession::Login` through ticket; smoke test end-to-end (GET /, POST /login, GET /session).
+10. **DesignerExclusivePolicy** — probe-lock based replacement for `VerifySessionUpdater`.
 11. **Session-aware accessors** — `GetUserInfo / GetUserName / GetUserPassword / GetUserRoleArray / GetUserLanguageGuid / GetUserLanguageCode / ComputeMd5` out-of-line, Current()-first.
 12. **Schema extension** — pid / address / currentActivity columns + `MigrateTableSession` + `ProcessSetActivity` real UPDATE + `ibSessionTicket::SetActivity`.
-13. **Per-driver NoWait** — PG / MySQL / ODBC плюс FB.
+13. **Per-driver NoWait** — PG / MySQL / ODBC plus FB.
 14. **wfrontend server address plumbing** — `wfrontendSetServerAddress/ServerAddress` exports; `ibWebSession::Login` stamps `sys_session.address`.
-15. **Disconnect force-Stop** — Stop() вызывается безусловно, force-kill процесса больше не оставляет зомби-thread.
+15. **Disconnect force-Stop** — Stop() is called unconditionally; a force-kill of the process no longer leaves a zombie thread.
 16. **HoldRowLocks removed** (#4 fix) — liveness = heartbeat + 60s cutoff + probe as fast path. Hybrid sweep (JobSweepStale).
-17. **Split timers** — 1s refresh (UI отклик), 3s sweep (cluster cleanup).
-18. **Eager initial sweep + refresh** — Active Users не пуст на старте.
+17. **Split timers** — 1s refresh (UI responsiveness), 3s sweep (cluster cleanup).
+18. **Eager initial sweep + refresh** — Active Users isn't empty at startup.
 19. **INSERT split (6-col + ext-UPDATE)** — legacy-schema tolerant.
 
-## Что осталось (приоритет ↓)
+## What remains (priority ↓)
 
-- Concrete `HoldRowLocks / TryProbeRowLock` для PG / MySQL / MSSQL.
-- `signal` column в sys_session + admin kick/reload dispatcher + `/admin/sessions` endpoint.
-- Snapshot SELECT читает новые колонки в `ibApplicationDataSessionArray` (pid/address/currentActivity accessors).
-- Cookie / ibGuid unification на web (сейчас cookie отдельно).
-- Full removal singleton `m_userInfo/m_sessionGuid/m_sessionRawPassword` полей (сейчас dual-write+fallback).
-- Remove `SessionScope::Current()` legacy thread-local (после migration `AppUser()`-style built-ins на `ibProcUnit::GetSession()`).
-- Real auth в web login — сейчас принимает любой user/pwd на open-access DB; для populated sys_user логика уже через `AuthenticateUser`.
-- Interactive verification: designer-exclusive policy под двумя designer.exe одновременно.
-- Designer Active-Users UI: колонка «Тип» по `ibSessionKind` (WebServer / WebClient / Enterprise / Designer / Service). Данные уже в snapshot через `GetSessionKind(idx)`.
+- Concrete `HoldRowLocks / TryProbeRowLock` for PG / MySQL / MSSQL.
+- `signal` column in sys_session + admin kick/reload dispatcher + `/admin/sessions` endpoint.
+- Snapshot SELECT reads the new columns into `ibApplicationDataSessionArray` (pid/address/currentActivity accessors).
+- Cookie / ibGuid unification on web (currently the cookie is separate).
+- Full removal of singleton `m_userInfo/m_sessionGuid/m_sessionRawPassword` fields (currently dual-write + fallback).
+- Remove `SessionScope::Current()` legacy thread-local (after migrating `AppUser()`-style built-ins onto `ibProcUnit::GetSession()`).
+- Real auth in web login — currently accepts any user/pwd on an open-access DB; for a populated sys_user the path already goes through `AuthenticateUser`.
+- Interactive verification: designer-exclusive policy under two simultaneous designer.exe processes.
+- Designer Active-Users UI: a "Kind" column from `ibSessionKind` (WebServer / WebClient / Enterprise / Designer / Service). Data is already in the snapshot via `GetSessionKind(idx)`.
 
 ## ibSessionKind (landed 2026-04-20)
 
@@ -505,7 +505,7 @@ needed only in `.cpp` for `static_cast`.
 
 ## Testing
 
-**Smoke test на embedded FB (fb_test251):**
+**Smoke test on embedded FB (fb_test251):**
 
 ```bash
 cd bin/Win32/Debug
@@ -518,12 +518,12 @@ curl -s -b /tmp/ck -X POST http://127.0.0.1:8080/w/fb_test251/login \
 curl -s -b /tmp/ck http://127.0.0.1:8080/w/fb_test251/session                # 200, authenticated=true tabCount=2
 ```
 
-**Smoke test на server-mode PG (Configuration):** same pattern, замени `--file=` на `--server=... --db=Configuration`.
+**Smoke test on server-mode PG (Configuration):** same pattern, swap `--file=` for `--server=... --db=Configuration`.
 
-## Связанные memory-заметки
+## Related memory notes
 
-- `project_session_registry_refactor.md` — история дизайна + полный список commit'ов.
-- `project_web_session_bug.md` — старый bug (multi-tab last-login-wins), закрытый commit'ом 11.
-- `feedback_no_passwords_in_db.md` — policy: хэш только, plain-text in-memory only.
+- `project_session_registry_refactor.md` — design history + full commit list.
+- `project_web_session_bug.md` — old bug (multi-tab last-login-wins), closed by commit 11.
+- `feedback_no_passwords_in_db.md` — policy: hash only, plain-text in-memory only.
 - `reference_session_raw_password.md` — why we still need `m_sessionRawPassword`.
-- `reference_empty_username_meanings.md` — 3 кейса пустого userName в sys_session.
+- `reference_empty_username_meanings.md` — 3 cases of empty userName in sys_session.

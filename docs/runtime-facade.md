@@ -65,7 +65,7 @@ follow-up. This document records the architectural decisions of the
 >
 > Remaining:
 > - **12** — `ibMetadataRef{guid}` encoding for cross-bc metadata refs
->   (`Catalogs.Товары` etc) so AOT blobs survive descriptor renames.
+>   (`Catalogs.Products` etc) so AOT blobs survive descriptor renames.
 > - locale `.po` / `.pot` cleanup for `_("AttachRuntime main: %s")` —
 >   regenerate via xgettext + msgmerge in a follow-up.
 
@@ -561,7 +561,7 @@ Brief summary:
 | 9 | Object-value decoupling from mm (External DP/Report `m_objectValue` as a separate shared_ptr, not a field of mm) | medium |
 | 10 | Designer = compile + intellisense only. `HasRuntime() == false` for Designer sessions. `activeMetaData->GetModuleManager(designerSession) == nullptr` | low |
 | 11 | Context vars late-binding through `ibExternBinder` factory. Remove `compileModule.AddContextVariable` from compile-time. Pre-Execute gates (required slot not bound → `ibBackendCoreException`) | high |
-| 12 | Stable metadata refs — `Catalogs.Товары` in bytecode encoded as `ibMetadataRef{guid}`, resolved on load | medium |
+| 12 | Stable metadata refs — `Catalogs.Products` in bytecode encoded as `ibMetadataRef{guid}`, resolved on load | medium |
 | 13 | `ibByteCode::SaveToBinary / LoadFromBinary` (chunk-based through `ibWriterMemory`) | medium |
 | 14 | `sys_bytecode_cache` table + `MigrateTableBytecode` per driver. Unified `ibPreparedStatement::SetParamBlob/GetBlob` API | low |
 | 15 | Attach flow: batch-read cache → validate (format_version / compiler_version / source_hash / metadata_version / context_contract_hash) → HIT deserialize / MISS compile+persist | medium |

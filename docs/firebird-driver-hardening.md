@@ -9,7 +9,7 @@ Headers and plugin layout (`engine13`, `icu63`) are correct for FB 5.0
 5.x.
 
 > **Status:** landed in working tree, uncommitted. Build pending. No
-> known regressions; existing 1C-style metadata Apply paths exercise
+> known regressions; existing metadata-driven Apply paths exercise
 > the changed code on the desktop / wenterprise-server smoke runs.
 
 ---

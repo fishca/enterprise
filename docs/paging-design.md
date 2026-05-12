@@ -19,7 +19,7 @@ expansion, and must remain coherent when filter / sort / view-mode change.
   owns `m_filterRow`, `m_sortOrder`, dispatches `ExecuteAction`.
 * `ibValueModelTableBase` / `ibValueModelTreeBase` — row/tree storage with
   `m_nodeValues` (vector) / `m_root` (tree).
-* `ibValueListDataObject` — "Динамический список" base. Concrete subclasses:
+* `ibValueListDataObject` — "Dynamic list" base. Concrete subclasses:
   * `ibValueListDataObjectEnumRef` — enum list (read-only).
   * `ibValueListDataObjectRef` — mutable catalog list.
   * `ibValueListRegisterObject` — register list.
@@ -554,13 +554,13 @@ clean fixes:
 
 Pick one before turning paged Fetch on for real workloads.
 
-### 8.4 View modes (Список / Древо / Иерархия)
+### 8.4 View modes (List / Tree / Hierarchy)
 
-| mode | сematics | model fetch pattern |
-|------|----------|----|
-| **Список** | flat list of all rows under invisible root | `GetFirstFetch(parent={}, count=N)` then incremental Next |
-| **Древо** | nested expand/collapse, invisible root | `GetFirstFetch(parent={})` initial; `GetFirstFetch(parent=expandedNode)` on user expand |
-| **Иерархия** | breadcrumb of ancestors + children of current top | `GetAncestorChain(topItem)` for breadcrumb; `GetFirstFetch(parent=topItem)` for content |
+| mode | semantics | model fetch pattern |
+|------|-----------|---------------------|
+| **List** | flat list of all rows under invisible root | `GetFirstFetch(parent={}, count=N)` then incremental Next |
+| **Tree** | nested expand/collapse, invisible root | `GetFirstFetch(parent={})` initial; `GetFirstFetch(parent=expandedNode)` on user expand |
+| **Hierarchy** | breadcrumb of ancestors + children of current top | `GetAncestorChain(topItem)` for breadcrumb; `GetFirstFetch(parent=topItem)` for content |
 
 The model exposes the same three methods; only the GUI-side
 orchestration differs per mode. Sort by isFolder DESC at SQL level so

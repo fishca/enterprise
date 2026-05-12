@@ -25,6 +25,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "enterprise", "src\engine\en
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "codeRunner", "src\engine\codeRunner\codeRunner.vcxproj.vcxproj", "{F4F765A7-427F-4C5E-AE19-9D290BB40A78}"
 	ProjectSection(ProjectDependencies) = postProject
+		{0AE93EF4-6124-4C25-9D11-C5421385E80B} = {0AE93EF4-6124-4C25-9D11-C5421385E80B}
 		{35245A06-A72D-40B9-92FE-8EF2CCCC9D00} = {35245A06-A72D-40B9-92FE-8EF2CCCC9D00}
 	EndProjectSection
 EndProject
@@ -38,6 +39,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "backend", "src\engine\backend\backend.vcxproj", "{35245A06-A72D-40B9-92FE-8EF2CCCC9D00}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "classChecker", "src\engine\classChecker\classChecker.vcxproj.vcxproj", "{075993A5-770A-40D1-BA65-3A3D2C120E20}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0AE93EF4-6124-4C25-9D11-C5421385E80B} = {0AE93EF4-6124-4C25-9D11-C5421385E80B}
+		{35245A06-A72D-40B9-92FE-8EF2CCCC9D00} = {35245A06-A72D-40B9-92FE-8EF2CCCC9D00}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugins", "plugins", "{95B54CB1-6B46-46C3-9DC6-059D6E7DD4CB}"
 EndProject

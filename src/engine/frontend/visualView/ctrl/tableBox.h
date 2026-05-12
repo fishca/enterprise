@@ -2,11 +2,40 @@
 #define __TABLE_BOX_H__
 
 #include "backend/tableInfo.h"
+// ibValueEnumeration template + AddEnumeration come from here; on
+// desktop they were pulled in transitively through tableView.h. Web
+// build skips tableView.h, so add the direct include.
+#include "backend/compiler/enumUnit.h"
 
 #include "frontend/visualView/ctrl/window.h"
 #include "frontend/visualView/ctrl/typeControl.h"
 
+#ifndef OES_USE_WEB
+// Desktop pulls in the full wxDataView-based viewer. Web build keeps
+// only the structural surface BuildForm calls (SetControlName /
+// SetSource / SetVisibleColumn / Create-as-stub) and ifdefs out every
+// wxDataView-touching method declaration — the real Create / event
+// handlers / model wiring are desktop-only.
 #include "frontend/win/ctrls/tableView.h"
+#else
+// Web build: mirror the dataview-enum literals tableBox.h's enum classes
+// reference. These match dataview.h verbatim; keeping them in one place
+// avoids dragging the full wxDataView headers into the web compile.
+enum ibDataViewSelectionMode {
+	ibDataViewSelectCell = 0,
+	ibDataViewSelectRow  = 1,
+};
+enum ibDataViewViewMode {
+	ibDataViewTree,
+	ibDataViewHierarchical,
+	ibDataViewList,
+};
+// wxDVC_DEFAULT_WIDTH constant from dataview.h used by ibPropertyUInteger
+// default in tableBoxColumn. Same value as wx core uses (80).
+#ifndef wxDVC_DEFAULT_WIDTH
+#define wxDVC_DEFAULT_WIDTH 80
+#endif
+#endif
 
 //********************************************************************************************
 //*                                 define commom clsid									     *
@@ -164,7 +193,9 @@ public:
 
 	//other
 	void AddColumn();
+#ifndef OES_USE_WEB
 	void CreateColumnCollection(ibDataViewCtrl* tableCtrl = nullptr);
+#endif
 
 	void CreateTable(bool recreateModel = false);
 
@@ -200,7 +231,8 @@ protected:
 
 	void CalculateColumnPos();
 
-	//events 
+#ifndef OES_USE_WEB
+	//events — wxDataView-bound, desktop only
 	void OnColumnClick(ibDataViewEvent& event);
 	void OnColumnReordered(ibDataViewEvent& event);
 
@@ -233,6 +265,7 @@ protected:
 
 	void OnCommandMenu(wxCommandEvent& event);
 	void OnContextMenu(ibDataViewEvent& event);
+#endif // !OES_USE_WEB
 
 private:
 

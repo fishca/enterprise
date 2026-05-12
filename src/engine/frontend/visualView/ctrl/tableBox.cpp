@@ -1,5 +1,9 @@
 #include "tableBox.h"
+#ifndef OES_USE_WEB
+// Renderer pulls in dataview.h (wxDataView heavy). Web stubs don't
+// touch the renderer at all.
 #include "tableBoxColumnRenderer.h"
+#endif
 
 #include "form.h"
 
@@ -15,6 +19,10 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTableBox, ibValueWindow);
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumTableBoxSelectionMode, ibValue);
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueEnumTableBoxViewMode, ibValue);
+
+#ifdef OES_USE_WEB
+#include "frontend/web/webWindow.h"
+#endif
 
 //***********************************************************************************
 //*                                 Special tablebox func                           *
@@ -51,6 +59,7 @@ bool ibValueModelTableBox::SetControlValue(const ibValue& varControlVal)
 
 void ibValueModelTableBox::AddColumn()
 {
+#ifndef OES_USE_WEB
 	wxASSERT(m_formOwner);
 
 	ibValueModelTableBoxColumn* columnTable = wxDynamicCast(m_formOwner->NewObject(g_controlTableBoxColumnCLSID, this), ibValueModelTableBoxColumn);
@@ -68,8 +77,10 @@ void ibValueModelTableBox::AddColumn()
 	}
 
 	g_visualHostContext->RefreshEditor();
+#endif
 }
 
+#ifndef OES_USE_WEB
 void ibValueModelTableBox::CreateColumnCollection(ibDataViewCtrl* dataViewCtrl)
 {
 	if (appData->DesignerMode())
@@ -138,13 +149,14 @@ void ibValueModelTableBox::CreateColumnCollection(ibDataViewCtrl* dataViewCtrl)
 			visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 
 		wxASSERT(visualView);
-		//fix size in parent window 
+		//fix size in parent window
 		wxWindow* wndParent = visualView->GetParent();
 		if (wndParent != nullptr) {
 			wndParent->Layout();
 		}
 	}
 }
+#endif // !OES_USE_WEB
 
 void ibValueModelTableBox::CreateTable(bool recreateModel) {
 
@@ -204,6 +216,7 @@ void ibValueModelTableBox::ApplyCurrentLine(
 {
 	m_tableCurrentLine = line;
 
+#ifndef OES_USE_WEB
 	auto* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
 		if (line == nullptr) {
@@ -227,6 +240,9 @@ void ibValueModelTableBox::ApplyCurrentLine(
 			}
 		}
 	}
+#else
+	(void)focus;
+#endif
 
 	// Selection script event is intentionally NOT fired here — the line
 	// passed in for programmatic restore is often a stub from
@@ -280,18 +296,22 @@ m_need_calculate_pos(false)
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+#ifndef OES_USE_WEB
 // Resolve a row identity (reference / column value) to the model's
 // per-row return line wrapper, returning nullptr on miss so the caller
-// can fall through to the next candidate value.
+// can fall through to the next candidate value. Used only by
+// OnUpdated's wxDataView-bound restore logic — web build doesn't link.
 static ibValueModel::ibValueModelReturnLine*
 ResolveLineByValue(ibValueModel* model, const ibValue& value)
 {
 	const ibDataViewItem& item = model->FindRowValue(value);
 	return item.IsOk() ? model->GetRowAt(item) : nullptr;
 }
+#endif
 
 void ibValueModelTableBox::CalculateColumnPos()
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
 
@@ -350,12 +370,17 @@ void ibValueModelTableBox::CalculateColumnPos()
 			}
 		}
 	}
+#endif // !OES_USE_WEB
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-wxObject* ibValueModelTableBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
+wxObject* ibValueModelTableBox::Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
+#ifdef OES_USE_WEB
+	(void)wxparent; (void)visualHost;
+	return new ibWebStubControl(wxT("tablebox"));
+#else
 	ibTableViewCtrl* dataViewCtrl = new ibTableViewCtrl(wxparent, wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
@@ -411,10 +436,12 @@ wxObject* ibValueModelTableBox::Create(wxWindow* wxparent, ibVisualHost* visualH
 	}
 
 	return dataViewCtrl;
+#endif // OES_USE_WEB
 }
 
-void ibValueModelTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
+void ibValueModelTableBox::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) ibValueModelTableBox::CreateModel();
@@ -423,25 +450,31 @@ void ibValueModelTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibV
 		&& firstСreated) {
 		ibValueModelTableBox::AddColumn();
 	}
+#endif
 }
 
+#ifndef OES_USE_WEB
 #include <wx/itemattr.h>
+#endif
 
 void ibValueModelTableBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl =
 		dynamic_cast<ibTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) {
 		UpdateWindow(dataViewCtrl);
 	}
+#endif
 }
 
-void ibValueModelTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
+void ibValueModelTableBox::OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(wxobject);
 
-	
+
 
 	if (dataViewCtrl != nullptr) {
 
@@ -575,15 +608,16 @@ void ibValueModelTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibV
 			m_need_calculate_pos = false;
 		}
 	}
-
-	
+#endif // !OES_USE_WEB
 }
 
 void ibValueModelTableBox::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	ibTableViewCtrl* dataViewCtrl = dynamic_cast<ibTableViewCtrl*>(obj);
 	m_dataViewCreated = false;
 	if (dataViewCtrl != nullptr) dataViewCtrl->AssociateModel(nullptr);
+#endif
 }
 
 //***********************************************************************************
@@ -687,9 +721,11 @@ bool ibValueModelTableBox::SetPropVal(const long lPropNum, const ibValue& varPro
 
 	bool result = ibValueFrame::SetPropVal(lPropNum, varPropVal);
 
+#ifndef OES_USE_WEB
 	if (refreshColumn && m_tableModel != nullptr && m_tableModel->AutoCreateColumn()) {
 		ibValueModelTableBox::CreateColumnCollection();
 	}
+#endif
 
 	return result;
 }
@@ -710,6 +746,25 @@ bool ibValueModelTableBox::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 	}
 	return ibValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
+
+#ifdef OES_USE_WEB
+// Methods declared in tableBox.h but normally implemented in the
+// auxiliary tableBox*.cpp files (Event/Property/Action/Menu) — those
+// aren't compiled on web, so provide no-op stubs here so the linker
+// finds them.
+void ibValueModelTableBox::OnPropertyCreated(ibProperty* /*property*/) {}
+bool ibValueModelTableBox::OnPropertyChanging(ibProperty* /*property*/, const wxVariant& /*newValue*/) { return true; }
+void ibValueModelTableBox::OnPropertyChanged(ibProperty* /*property*/, const wxVariant& /*oldValue*/, const wxVariant& /*newValue*/) {}
+
+ibValueModelTableBox::ibActionCollection ibValueModelTableBox::GetActionCollection(const ibFormID& /*formType*/)
+{
+	return ibActionCollection();
+}
+void ibValueModelTableBox::ExecuteAction(const ibActionID& /*lNumAction*/, ibBackendValueForm* /*srcForm*/) {}
+
+void ibValueModelTableBox::PrepareDefaultMenu(wxMenu* /*m_menu*/) {}
+void ibValueModelTableBox::ExecuteMenu(ibVisualHost* /*visualHost*/, int /*id*/) {}
+#endif // OES_USE_WEB
 
 //***********************************************************************
 //*                       Register in runtime                           *

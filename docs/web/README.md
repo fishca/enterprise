@@ -24,6 +24,10 @@ debugging tools wired into the web build. Update as the prototype moves.
   reusing real wx event types (`wxEVT_BUTTON`, `wxEVT_TIMER`, ...);
   `ibWebApplication` as the session-level dispatcher, individual
   controls as per-control dispatchers.
+- [`label-alignment.md`](label-alignment.md) — web counterpart of
+  desktop's `CalculateAndApply`: post-render `requestAnimationFrame`
+  pass measures labels client-side and sets `min-width` so columns
+  line up. Mirrors the horizontal-sizer column-break rule.
 
 ## Quick reference — launch
 

@@ -1,6 +1,9 @@
 #include "webFrame.h"
 
+#include <atomic>
+#include <chrono>
 #include <iostream>
+#include <sstream>
 
 #include "backend/backend_form.h"
 #include "backend/session/session.h"
@@ -40,11 +43,142 @@ ibWebFrame::~ibWebFrame()
 	m_pendingCloses.clear();
 	m_activeForm = nullptr;
 	m_tabs.clear();
+	// Release any worker threads parked on ShowModalMessage promises —
+	// setting value=0 unblocks them with a "cancelled" return so the
+	// script can finish unwinding instead of deadlocking on a future
+	// that will never be set after we go away.
+	std::vector<PendingModal> drained;
+	{
+		std::lock_guard<std::mutex> g(m_modalMutex);
+		drained.swap(m_pendingModals);
+	}
+	for (auto& m : drained) {
+		try { m.reply->set_value(0); } catch (...) { /* already set */ }
+	}
 }
 
 void ibWebFrame::SetStatusText(const wxString& strStatus, int /*number*/)
 {
 	m_status = strStatus;
+}
+
+void ibWebFrame::Message(const wxString& strMessage, ibStatusMessage status)
+{
+	// ibStatusMessage_{Information,Warning,Error} ∈ {1,2,3} — passed
+	// through unchanged for the client's level styling.
+	std::lock_guard<std::mutex> g(m_msgMutex);
+	m_pendingMessages.push_back({ static_cast<int>(status), strMessage });
+}
+
+void ibWebFrame::ClearMessage()
+{
+	// Drop any unread lines AND tell the client to wipe its panel on
+	// the next poll. The flag is one-shot; consumed by TakeClearPending.
+	std::lock_guard<std::mutex> g(m_msgMutex);
+	m_pendingMessages.clear();
+	m_clearPending = true;
+}
+
+void ibWebFrame::BackendError(const wxString& /*strFileName*/,
+	const wxString& /*strDocPath*/, const long /*line*/,
+	const wxString& strErrorMessage) const
+{
+	// Backend error → output panel as an error-level line. File / doc
+	// path / line are dropped for now; future surface could format
+	// them inline (e.g. "ERR <file>:<line>: <msg>").
+	std::lock_guard<std::mutex> g(m_msgMutex);
+	m_pendingMessages.push_back({
+		static_cast<int>(ibStatusMessage_Error), strErrorMessage });
+}
+
+std::vector<ibWebFrame::PendingMessage> ibWebFrame::DrainPendingMessages() const
+{
+	std::lock_guard<std::mutex> g(m_msgMutex);
+	std::vector<PendingMessage> out;
+	out.swap(m_pendingMessages);
+	return out;
+}
+
+bool ibWebFrame::TakeClearPending() const
+{
+	std::lock_guard<std::mutex> g(m_msgMutex);
+	const bool was = m_clearPending;
+	m_clearPending = false;
+	return was;
+}
+
+namespace {
+// Process-wide monotonic counter for modal ids. Cheap, sufficient since
+// the id only needs to be unique among in-flight modals.
+std::atomic<std::uint64_t> s_modalIdCounter{ 0 };
+
+std::string MakeModalId()
+{
+	std::ostringstream os;
+	os << "m" << s_modalIdCounter.fetch_add(1, std::memory_order_relaxed);
+	return os.str();
+}
+} // namespace
+
+int ibWebFrame::ShowModalMessage(const wxString& message,
+	const wxString& caption, int style)
+{
+	// Queue an entry, park the calling (script worker) thread on the
+	// entry's promise. The client picks up the modal via /session,
+	// renders a dialog, posts /modal-reply with the chosen wx button
+	// code; the HTTP handler calls ResolveModal which sets the value
+	// and we unblock here returning that code.
+	auto reply = std::make_shared<std::promise<int>>();
+	auto fut   = reply->get_future();
+	PendingModal m{ MakeModalId(), message, caption, style, reply };
+	{
+		std::lock_guard<std::mutex> g(m_modalMutex);
+		m_pendingModals.push_back(m);
+	}
+	// future.get() throws if the promise is destroyed without
+	// set_value/set_exception. The dtor below sets a fallback value, but
+	// guard anyway — a thrown exception here would propagate back into
+	// the script and look like a runtime error.
+	try {
+		return fut.get();
+	} catch (...) {
+		return 0;   // 0 == no button; caller treats as cancelled
+	}
+}
+
+bool ibWebFrame::HasPendingModal() const
+{
+	std::lock_guard<std::mutex> g(m_modalMutex);
+	return !m_pendingModals.empty();
+}
+
+ibWebFrame::PendingModal ibWebFrame::PeekPendingModal() const
+{
+	std::lock_guard<std::mutex> g(m_modalMutex);
+	return m_pendingModals.front();   // caller checked HasPendingModal()
+}
+
+bool ibWebFrame::ResolveModal(const std::string& id, int result)
+{
+	std::shared_ptr<std::promise<int>> p;
+	{
+		std::lock_guard<std::mutex> g(m_modalMutex);
+		for (auto it = m_pendingModals.begin(); it != m_pendingModals.end(); ++it) {
+			if (it->id == id) {
+				p = it->reply;
+				m_pendingModals.erase(it);
+				break;
+			}
+		}
+	}
+	if (!p) return false;
+	try {
+		p->set_value(result);
+	} catch (...) {
+		// promise already satisfied (duplicate reply) — treat as
+		// success since the worker has unblocked anyway.
+	}
+	return true;
 }
 
 ibBackendValueForm* ibWebFrame::CreateNewForm(
@@ -147,15 +281,16 @@ ibFrontendWindow* ibWebFrame::CreateChildFrame(
 	if (auto* visualDoc = dynamic_cast<ibFormVisualDocument*>(doc))
 		form = visualDoc->GetValueForm();
 
-	// Pull the tab icon from the form the same way wxAuiMDIChildFrame
-	// would on desktop. ibValueForm::GetIcon falls back to a built-in
-	// XPM when the metaForm has no custom image, so the tab always has
-	// something to show if the client supports icons.
-	if (form != nullptr) {
-		const wxIcon icon = form->GetIcon();
-		if (icon.IsOk())
-			raw->SetIcon(icon);
-	}
+	// Tab icon: prefer the document's icon (set in
+	// ibFormVisualDocument::OnCreate from the source meta-object —
+	// Catalog gets the catalog icon, Document gets the document icon,
+	// etc.). Fall back to ibValueForm::GetIcon (built-in XPM) only
+	// when the doc didn't set one. Without this preference order every
+	// tab showed the generic form icon regardless of source type.
+	wxIcon tabIcon;
+	if (doc != nullptr) tabIcon = doc->GetIcon();
+	if (!tabIcon.IsOk() && form != nullptr) tabIcon = form->GetIcon();
+	if (tabIcon.IsOk()) raw->SetIcon(tabIcon);
 
 	webFrame->AdoptTab(std::move(childFrame), form);
 	return raw;

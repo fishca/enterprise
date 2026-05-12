@@ -128,23 +128,6 @@ public:
 	// pushed to a parallel array alongside the projected value.
 	void SortByKeys(const ibValueArray& keys, bool descending = false) {
 		const size_t n = m_listValue.size();
-
-		// Diagnostic — append to linq.log so we can see what arrived.
-		FILE* fp = nullptr;
-		if (fopen_s(&fp, "linq.log", "ab") == 0 && fp) {
-			fprintf(fp, "[runtime] [sortByKeys] n=%zu keys.size=%zu descending=%d\n",
-				n, keys.m_listValue.size(), descending ? 1 : 0);
-			for (size_t i = 0; i < n && i < 20; ++i) {
-				const wxString ks = keys.m_listValue[i].GetString();
-				const wxString vs = m_listValue[i].GetString();
-				fprintf(fp, "[runtime] [sortByKeys]   [%zu] key=%s value=%s\n",
-					i,
-					(const char*)ks.utf8_str().data(),
-					(const char*)vs.utf8_str().data());
-			}
-			fclose(fp);
-		}
-
 		if (keys.m_listValue.size() != n)
 			return;   // caller bug — silently skip to avoid breaking LINQ pipeline
 		std::vector<size_t> idx(n);

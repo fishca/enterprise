@@ -34,22 +34,6 @@ void ibCodeEditor::AddKeywordFromObject(const ibValue& vObject)
 				);
 			}
 		}
-		// LINQ chain-method surface — always offer after `.`. LINQ ops
-		// dispatch through OPER_CALL_LINQ + virtual DispatchLinqMethod,
-		// not the per-class m_methodHelper that GetNMethods walks, so
-		// without this loop the user never sees Where / Select / Count /
-		// etc. as suggestions. They apply to any iterable receiver; at
-		// IntelliSense time we don't know yet whether vObject yields a
-		// non-null CreateIterator (would require a runtime probe with
-		// allocation), so the cheap path is to always offer them. The
-		// user filters by typing.
-		for (const auto& info : ibValue::GetLinqMethodTable()) {
-			m_ac.Append(
-				ibContentType::eFunction,
-				info.name,
-				info.helper
-			);
-		}
 		for (long i = 0; i < vObject.GetNProps(); i++) {
 			// Scope-local props (ThisObject / ThisForm) must not
 			// surface in autocomplete after a chain walk reaches a

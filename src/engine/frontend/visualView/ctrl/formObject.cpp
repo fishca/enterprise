@@ -22,10 +22,12 @@
 //*                                    System attribute                                           *
 //*************************************************************************************************
 
-#ifndef OES_USE_WEB
+// BuildForm now runs on both builds — both control families are needed.
+// tableBox.h compiles cleanly under OES_USE_WEB (wx-heavy includes are
+// already ifdef'd inside it).
 #include "toolBar.h"
 #include "tableBox.h"
-#else
+#ifdef OES_USE_WEB
 #include "frontend/web/webApplication.h"
 #include "frontend/web/webFrame.h"
 #include "backend/backend_mainFrame.h"
@@ -33,13 +35,11 @@
 
 void ibValueForm::BuildForm(const ibFormID& formType)
 {
-#ifdef OES_USE_WEB
-	// Desktop only: default form generation (auto-toolbar + tablebox
-	// with source columns) pulls in ibValueModelTableBox which cascades
-	// into the wxDataView subsystem. Web renders forms only when the
-	// user provides explicit metadata; there's no default auto-build.
-	m_formType = formType;
-#else
+	// Auto-build runs on both desktop and web. Desktop renders the full
+	// wxDataView tablebox; web emits a placeholder via ibWebStubControl
+	// (tableBox.cpp web stub block). Toolbar + Tool + ToolSeparator +
+	// Checkbox + Textctrl all have real web renderers — only the
+	// tablebox/column visuals are pending.
 	m_formType = formType;
 
 	if (m_sourceObject != nullptr) {
@@ -241,7 +241,6 @@ void ibValueForm::BuildForm(const ibFormID& formType)
 			}
 		}
 	}
-#endif // !OES_USE_WEB
 }
 
 void ibValueForm::InitializeForm(const ibValueMetaObjectFormBase* creator,

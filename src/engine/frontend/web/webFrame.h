@@ -12,7 +12,10 @@
 // holds the form it's freed automatically (RAII, no manual delete).
 
 #include <cstddef>
+#include <future>
 #include <memory>
+#include <mutex>
+#include <string>
 #include <vector>
 
 #include <wx/icon.h>
@@ -68,6 +71,57 @@ public:
 
 	virtual void SetTitle(const wxString& strTitle) override { m_title = strTitle; }
 	virtual void SetStatusText(const wxString& strStatus, int number = 0) override;
+
+	// Backend → client notification primitives. Each pushes into an
+	// in-memory queue drained by the next /session HTTP poll; client
+	// applies title / status text / output lines on receipt. Mirrors
+	// desktop's wxFrame::SetStatusText / wxLogMessage / wxMessageBox
+	// destinations.
+	virtual void Message(const wxString& strMessage, ibStatusMessage status) override;
+	virtual void ClearMessage() override;
+	virtual void BackendError(const wxString& strFileName,
+		const wxString& strDocPath, const long line,
+		const wxString& strErrorMessage) const override;
+	// Blocking modal message box. Mirrors desktop wxMessageBox via
+	// frame->ShowModalMessage(message, caption, style). The worker
+	// thread that ran the script parks on a future; the next /session
+	// poll surfaces the modal to the client, the client renders a
+	// dialog with buttons derived from `style` (wxOK / wxYES_NO /
+	// wxCANCEL), POSTs the chosen wx button code to /modal-reply/<id>,
+	// the HTTP handler resolves the future, and the worker unblocks
+	// returning the selected button code.
+	virtual int ShowModalMessage(const wxString& message,
+		const wxString& caption, int style) override;
+
+	// Modal queue accessors. Used by:
+	//   • SessionInfoFromSession — TakePendingModalForClient() returns
+	//     the topmost queued modal's metadata (id/message/caption/style)
+	//     without removing it; it stays in the queue until the client
+	//     POSTs /modal-reply with the chosen code.
+	//   • wfrontendModalReply — ResolveModal() looks up by id, sets the
+	//     promise's value (waking the parked worker), removes from
+	//     queue.
+	struct PendingModal {
+		std::string id;
+		wxString    message;
+		wxString    caption;
+		int         style;
+		std::shared_ptr<std::promise<int>> reply;
+	};
+	bool        HasPendingModal() const;
+	PendingModal PeekPendingModal() const;   // copy of top modal; safe if HasPendingModal()
+	bool        ResolveModal(const std::string& id, int result);
+
+	// Notification queue accessors. Used by wfrontend.cpp when emitting
+	// the /session JSON payload — drain returns the accumulated lines
+	// and clears the queue so subsequent polls don't re-deliver. The
+	// clear-pending flag is set by ClearMessage and consumed once.
+	struct PendingMessage {
+		int      level;     // 1=info, 2=warn, 3=error
+		wxString text;
+	};
+	std::vector<PendingMessage> DrainPendingMessages() const;
+	bool                        TakeClearPending() const;
 
 	// Repaint/raise are desktop concepts (native window redraw, bring
 	// to front). No-op here — the HTTP response itself is the "refresh".
@@ -170,6 +224,23 @@ private:
 	// Forms pending tab removal. Populated by MarkTabForCloseByForm;
 	// drained after the event handler chain unwinds.
 	std::vector<const class ibValueForm*>            m_pendingCloses;
+
+	// Backend-driven notifications waiting for the next /session poll.
+	// Mutable because BackendError() on the base interface is `const`
+	// (called from logging paths that promise not to mutate the frame's
+	// "structural" state); appending a pending line is a benign mutation
+	// to internal queues, guarded by m_msgMutex for thread safety.
+	mutable std::mutex                  m_msgMutex;
+	mutable std::vector<PendingMessage> m_pendingMessages;
+	mutable bool                        m_clearPending = false;
+
+	// Modal-message queue. ShowModalMessage pushes here and blocks on
+	// the entry's promise; /modal-reply HTTP handler resolves the promise
+	// and removes the entry. mutex shared with pending-messages would
+	// cross-lock unnecessarily — modals are rarer, separate lock is
+	// cheaper than coupling.
+	mutable std::mutex                  m_modalMutex;
+	mutable std::vector<PendingModal>   m_pendingModals;
 };
 
 #endif

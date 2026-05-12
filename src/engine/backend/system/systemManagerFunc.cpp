@@ -487,9 +487,11 @@ void ibValueSystemFunction::Message(const wxString& strMessage, ibStatusMessage 
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
+	// Frame is responsible for thread safety. Web's ibWebFrame::Message
+	// queues under a mutex; desktop's eventual override (if it ever
+	// touches wx UI) must marshal to the main thread itself. The old
+	// `wxIsMainThread() return` guard blocked legitimate calls from the
+	// per-session worker thread on web.
 	if (auto* frame = ibSession::CurrentFrame())
 		frame->Message(strMessage, status);
 }
@@ -499,11 +501,10 @@ void ibValueSystemFunction::Alert(const wxString& strMessage) //Alert
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
 	// Frontend-owned: frame knows whether to pop a wx-modal (desktop)
-	// or emit a toast/HTTP notification (web).
+	// or emit a toast/HTTP notification (web). ShowModalMessage on web
+	// parks the worker on a future until the client replies — safe to
+	// call from any thread that owns the script's execution context.
 	if (auto* frame = ibSession::CurrentFrame())
 		frame->ShowModalMessage(strMessage, _("Warning"), wxICON_WARNING | wxOK);
 }
@@ -561,9 +562,9 @@ void ibValueSystemFunction::SetStatus(const wxString& sStatus)
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
+	// Frame override owns thread safety; web's SetStatusText just stores
+	// a wxString under no lock (single owner). See Message() above for
+	// the reasoning behind dropping the wxIsMainThread() guard.
 	if (auto* frame = ibSession::CurrentFrame())
 		frame->SetStatusText(sStatus);
 }
@@ -571,9 +572,6 @@ void ibValueSystemFunction::SetStatus(const wxString& sStatus)
 void ibValueSystemFunction::ClearMessage()
 {
 	if (ibBackendException::IsEvalMode())
-		return;
-
-	if (!wxIsMainThread())
 		return;
 
 	if (auto* frame = ibSession::CurrentFrame())
@@ -585,18 +583,12 @@ void ibValueSystemFunction::SetError(const wxString& strError)
 	if (ibBackendException::IsEvalMode())
 		return;
 
-	if (!wxIsMainThread())
-		return;
-
 	ibBackendCoreException::Error(strError);
 }
 
 void ibValueSystemFunction::Raise(const wxString& strError)
 {
 	if (ibBackendException::IsEvalMode())
-		return;
-
-	if (!wxIsMainThread())
 		return;
 
 	if (auto* puState = ibSession::GetPUState())

@@ -238,6 +238,38 @@ WFRONTEND_API std::string wfrontendFireTextChange(const std::string& sessionId,
 WFRONTEND_API std::string wfrontendFireToggle(const std::string& sessionId,
 	int controlID, bool checked);
 
+// Resolve a backend-side ShowModalMessage with the user's chosen button
+// code. `modalId` is the id surfaced in /session JSON; `result` is the
+// raw wx code (wxOK / wxYES / wxNO / wxCANCEL). Wakes the worker
+// thread that was parked on the modal's promise; returns false if the
+// modal id is no longer in the queue (already resolved / session gone).
+WFRONTEND_API bool wfrontendModalReply(const std::string& sessionId,
+	const std::string& modalId, int result);
+
+// "All functions" tree — flat list of metadata objects grouped by kind
+// (Constants / Catalogs / Documents / ...). Mirrors desktop's
+// ibDialogFunctionAll content. Gated by AccessRight_ModeAllFunction
+// — returns {"allowed":false} when the user lacks the role, otherwise
+// {"allowed":true, "groups":[{clsid,name,items:[{id,name,synonym}]},…]}.
+WFRONTEND_API std::string wfrontendAllFunctionsJSON();
+
+// Open the form for a metadata object by its metaID. `cmdType` is the
+// raw ibInterfaceCommandType integer (100=Default, 150=Create,
+// 151=List, 152=Select) — passed through to ShowFormByCommandType so
+// Create-section clicks land in the new-record flow, List in the list
+// flow, etc. Returns the updated active host JSON; "{}" on access
+// denied / unknown id / failure.
+WFRONTEND_API std::string wfrontendOpenMetaObject(const std::string& sessionId,
+	int metaID, int cmdType = 100);
+
+// List metadata Interfaces (subsystems) the current user can use. Each
+// interface carries: id, name, synonym, icon (base64 PNG data URI) and
+// items[] — the meta objects assigned to it via the interface command
+// section. Returns {"allowed":false} when configuration has no
+// interfaces / role denies use, otherwise {"interfaces":[…]}.
+// Mirrors desktop's ibSubSystemWindow content (enterprise's sidebar).
+WFRONTEND_API std::string wfrontendInterfacesJSON();
+
 // Read-only snapshot of the active tab's visual host tree. Unlike
 // POST /tab/<i> (which activates + rebuilds), this just serialises
 // the current tree — no side effects. Used by the browser's poll

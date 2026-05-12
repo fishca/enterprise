@@ -254,9 +254,10 @@ carries the `ibLinqMethod` enum id directly in `m_param3.m_numIndex`
 
 `ibValue::ibLinqMethod` (declared in `value.h`) is the strongly-typed
 enum. `ibValue::GetLinqMethodTable()` is the single source of truth
-for metadata: each entry carries `{ enum id, name, helper }` — same
-table services `FindLinqMethodByName` (compile-side resolver) and the
-codeEditor autocomplete loader (IntelliSense). The old `kLinqMethodMask`
+for metadata: each entry carries `{ enum id, name, helper }`. The
+table services `FindLinqMethodByName` (compile-side resolver); it is
+NOT an IntelliSense source — chain methods are hidden from
+autocomplete (see "Editor integration" §). The old `kLinqMethodMask`
 fallback inside `OPER_CALL_METHOD` was retired once compile-side emit
 became the single authoritative source — AOT v10 forces a recompile,
 so no legacy blobs reach the runtime with a LINQ name on
@@ -341,18 +342,18 @@ Limitations:
 ### IntelliSense / autocomplete
 
 After `.` on any object, the codeEditor's `AddKeywordFromObject`
-appends the full LINQ surface alongside class-native methods (read
-from `vObject.GetNMethods()`):
-
-```c
-arr.    // dropdown: Add, Insert, Contains, ... (Array native)
-        //        + Where, Select, Count, ToArray, ... (LINQ surface — 32 ops)
-```
-
-Source: `ibValue::GetLinqMethodTable()` — same table that drives
-`FindLinqMethodByName` at compile-side. Each entry carries
-`{ enum id, name, helper }`; the helper string surfaces as the
-IntelliSense tooltip for that method.
+appends only the receiver's class-native methods (read from
+`vObject.GetNMethods()`). The LINQ chain surface is intentionally
+**hidden** from per-object autocomplete — users drive queries
+through block syntax (`from / where / group / join / select`), so
+sprinkling `Where / Select / SingleOrDefault / Any / ...` on every
+non-iterable receiver (scalars, forms, documents, buttons) was pure
+noise. Chain methods remain reachable in the language — anyone who
+types `arr.Where(...)` manually still compiles, `OPER_CALL_LINQ`
+dispatches, runtime throws on non-iterable. `GetLinqMethodTable()`
+stays as the single source of truth for compile-side
+`FindLinqMethodByName`; it just isn't an autocomplete source
+anymore.
 
 LINQ block-syntax keywords (`from / where / let / skip / take /
 select / distinct / orderby / group / join / by / equals / into /
@@ -370,7 +371,7 @@ block discipline mirrors `CompileForeach`: bindings survive only
 when the caret landed inside the query's lex range, otherwise
 they're dropped post-walk. **Element type is not inferred** —
 bindings carry empty type, so `o.` inside `from o in arr` shows
-generic LINQ + global keyword suggestions but no `o`-element-
+class-native methods and global keywords only, no `o`-element-
 specific properties yet. Type inference is a future iteration
 (would walk the source expression's `m_paramType`, peek the iterator
 sample like `CompileForeach` does).
@@ -631,7 +632,7 @@ Quick reference for LINQ contexts:
 | `src/engine/backend/compiler/byteCodeAOT.cpp` | `kAOTFormatVersion = 10` (opcode-shift after `OPER_CALL_LINQ` insertion) |
 | `src/engine/backend/backend.vcxproj` + `.filters` | New files registered (compileContextLinqData.h, procUnitLinq.cpp, procUnitValues.h) |
 | `src/engine/frontend/win/editor/codeEditor/codeEditor.h` | `FoldLinq` kind in `ibFoldLevelParser`; `KEY_FROM` opens, `KEY_SELECT` / `KEY_GROUP` close |
-| `src/engine/frontend/win/editor/codeEditor/codeEditorLoader.cpp` | `AddKeywordFromObject` appends `GetLinqMethodTable()` entries after class-native methods |
+| `src/engine/frontend/win/editor/codeEditor/codeEditorLoader.cpp` | `AddKeywordFromObject` lists class-native methods only — LINQ chain surface intentionally hidden from `.`-dropdown (block syntax is the front door for users) |
 | `src/engine/frontend/win/editor/codeEditor/codeEditorInterpreter.{h,cpp}` | `ibPrecompileCode::CompileLinqExpression` — minimal block-syntax walker. `KEY_FROM` hook in `GetExpression` + statement-level `CompileBlock` switch. Registers from/let/join/group-into bindings in `m_activeContext`, drops them post-walk when caret outside the query (mirrors `CompileForeach` discipline) |
 
 Build clean Debug/Win32 as of 2026-05-12. Working copy uncommitted —
@@ -645,9 +646,10 @@ risk #2 (lazy block-syntax) deferred per session decision.
 
 **Unifications applied this session:**
 - `GetLinqMethodTable()` — single source of truth for `{ enum id,
-  name, helper }`. Drives compile-side `FindLinqMethodByName` AND
-  codeEditor autocomplete. Replaces the previous 32-line
-  `IB_LINQ_TRY(...)` macro chain.
+  name, helper }`. Drives compile-side `FindLinqMethodByName`.
+  Replaces the previous 32-line `IB_LINQ_TRY(...)` macro chain.
+  (Was also wired into codeEditor autocomplete briefly — reverted:
+  chain methods hidden from `.`-dropdown, see "IntelliSense" §.)
 - `CallLambdaWithArgs(fn, argPtrs, argCount, retVal)` — unified
   arity-N lambda invocation. `CallLambdaWithArg` and
   `CallLambdaWith2Args` are now ~5-line inline shims over it. Saves
@@ -658,8 +660,10 @@ risk #2 (lazy block-syntax) deferred per session decision.
 - Editor fold support for block-syntax LINQ (`FoldLinq` kind,
   `KEY_FROM` opens, `KEY_SELECT` closes; `group` closes only when
   no `into` follows — peek-ahead in `CalcFoldLevel`).
-- Editor autocomplete shows LINQ methods after `.` (always-on; user
-  filters by typing).
+- Editor autocomplete intentionally **does not** show chain LINQ
+  methods after `.` — they polluted dropdowns on every non-iterable
+  receiver. Users drive queries through block keywords; chain remains
+  a valid hand-written surface in the language.
 - `ibPrecompileCode::CompileLinqExpression` — minimal precompile
   walker. Bindings (from/let/join/group-into) visible in autocomplete
   inside the query's lex range; dropped when caret outside.
@@ -687,17 +691,18 @@ verbatim as history.)
 **Remaining gaps — IntelliSense:**
 - Block-syntax bindings are registered without type inference. `o`
   appears in autocomplete inside `from o in arr ...`, but `o.`
-  shows only LINQ chain methods (always-on) — no element-type-
-  specific properties/methods. Fix: walk source expression's
-  `m_paramType`, peek the iterator sample (mirror of
-  `CompileForeach` at codeEditorInterpreter.cpp:1449-1453).
+  shows global keywords only — no element-type-specific
+  properties/methods. Fix: walk source expression's `m_paramType`,
+  peek the iterator sample (mirror of `CompileForeach` at
+  codeEditorInterpreter.cpp:1449-1453).
 - Contextual keyword filtering (after `from x in expr ` only
   suggest `where / let / select / orderby / group / join / skip /
   take`) unimplemented. Currently all global keywords appear.
 - Type-hint chain — `var q = arr.Where(λ).Select(λ);` Ctrl+Space on
-  `q.` doesn't propagate "iterable-returning-iterable" through the
-  chain, so the LINQ method surface still shows up (always-on)
-  but class-native methods drop.
+  `q.` doesn't propagate iterable-returning-iterable through the
+  chain, so class-native methods of the result drop. Chain methods
+  are hidden anyway, so the only loss is the receiver's own
+  per-class surface.
 
 **Remaining gaps — feature:**
 - ~~`group X by K into g <continuation>` (non-terminal group)~~ —

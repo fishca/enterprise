@@ -31,6 +31,9 @@
 #include "backend/metaCollection/metaObject.h"
 #include "backend/metaCollection/metaObjectMetadata.h"
 #include "backend/metaCollection/metaFormObject.h"
+#include "backend/metaCollection/metaInterfaceObject.h"
+#include "backend/interfaceHelper.h"
+#include "backend/backend_picture.h"
 
 #include <iostream>
 
@@ -239,6 +242,7 @@ public:
 	std::string FireKind(const std::string& id, int controlID, const std::string& kind);
 	std::string FireTextChange(const std::string& id, int controlID, const std::string& newValue);
 	std::string FireToggle(const std::string& id, int controlID, bool checked);
+	bool        ModalReply(const std::string& id, const std::string& modalId, int result);
 	std::string ActiveHostJSON(const std::string& id);
 
 	// Borrow the session's ibWebApplication for the duration of a
@@ -271,7 +275,10 @@ private:
 		// so browser cookie, X-OES-Session header, SessionManager map
 		// key, and the registry's session guid all read as the same
 		// string (no extra parse step when one crosses layers).
-		return ibGuid::newGuid().str();
+		// Explicit wxString→std::string conversion: without ToStdString()
+		// MSVC chains two user-defined conversions (wxString → const char*
+		// → std::string) and warns C4927.
+		return ibGuid::newGuid().str().ToStdString();
 	}
 
 	// Idle-session sweep + metadata-change watch. Wakes every sweep
@@ -1252,6 +1259,198 @@ WFRONTEND_API std::string wfrontendFireToggle(const std::string& sessionId,
 	return Sessions().FireToggle(sessionId, controlID, checked);
 }
 
+WFRONTEND_API bool wfrontendModalReply(const std::string& sessionId,
+	const std::string& modalId, int result)
+{
+	Sessions().Touch(sessionId);
+	return Sessions().ModalReply(sessionId, modalId, result);
+}
+
+// "All functions" tree — flat list of metadata objects grouped by kind
+// (Catalogs / Documents / Constants / etc.), matching desktop's
+// ibDialogFunctionAll content. Gated by AccessRight_ModeAllFunction
+// at the menu-visibility layer; this endpoint refuses on the same
+// check so a hostile client can't enumerate metadata bypassing the
+// guard. Returns {"allowed":false} when access denied.
+WFRONTEND_API std::string wfrontendAllFunctionsJSON()
+{
+	if (!g_initialized.load() || activeMetaData == nullptr) {
+		nlohmann::json j;
+		j["allowed"] = false;
+		return j.dump();
+	}
+	if (!activeMetaData->AccessRight_ModeAllFunction()) {
+		nlohmann::json j;
+		j["allowed"] = false;
+		return j.dump();
+	}
+	nlohmann::json j;
+	j["allowed"] = true;
+	// Helper: convert wxIcon → base64 PNG data URI; empty string when icon
+	// is invalid. Same encode path that toolbar / button images use, so
+	// the client just sets the data URI on <img src=…>.
+	auto iconToDataUri = [](const wxIcon& icon) -> std::string {
+		if (!icon.IsOk()) return std::string();
+		const wxBitmap bmp(icon);
+		if (!bmp.IsOk()) return std::string();
+		const wxString b64 = ibBackendPicture::CreateBase64Image(bmp.ConvertToImage());
+		if (b64.IsEmpty()) return std::string();
+		return std::string("data:image/png;base64,") + std::string(b64.utf8_str());
+	};
+	nlohmann::json groups = nlohmann::json::array();
+	struct GroupSpec { ibClassID clsid; const char* name; };
+	const GroupSpec specs[] = {
+		{ g_metaConstantCLSID,                    "Constants" },
+		{ g_metaCatalogCLSID,                     "Catalogs" },
+		{ g_metaDocumentCLSID,                    "Documents" },
+		{ g_metaDataProcessorCLSID,               "Data processors" },
+		{ g_metaReportCLSID,                      "Reports" },
+		{ g_metaInformationRegisterCLSID,         "Information registers" },
+		{ g_metaAccumulationRegisterCLSID,        "Accumulation registers" },
+		{ g_metaChartOfCharacteristicTypesCLSID,  "Charts of characteristic types" },
+		{ g_metaChartOfAccountsCLSID,             "Charts of accounts" },
+		{ g_metaAccountingRegisterCLSID,          "Accounting registers" },
+	};
+	for (const auto& s : specs) {
+		nlohmann::json g;
+		g["clsid"] = s.clsid;
+		g["name"]  = s.name;
+		// Group icon: ibValue's registered ctor for the meta CLSID owns
+		// the class-level bitmap (same one desktop's
+		// ibDialogFunctionAll::AppendGroupItem renders next to the
+		// category name).
+		if (const auto* typeCtor = ibValue::GetAvailableCtor(s.clsid)) {
+			const std::string uri = iconToDataUri(typeCtor->GetClassIcon());
+			if (!uri.empty()) g["icon"] = uri;
+		}
+		nlohmann::json items = nlohmann::json::array();
+		for (auto obj : activeMetaData->GetAnyArrayObject(s.clsid)) {
+			if (obj == nullptr || obj->IsDeleted()) continue;
+			nlohmann::json it;
+			it["id"]      = (int)obj->GetMetaID();
+			it["name"]    = std::string(obj->GetName().utf8_str());
+			it["synonym"] = std::string(obj->GetSynonym().utf8_str());
+			const std::string uri = iconToDataUri(obj->GetIcon());
+			if (!uri.empty()) it["icon"] = uri;
+			items.push_back(std::move(it));
+		}
+		g["items"] = std::move(items);
+		groups.push_back(std::move(g));
+	}
+	j["groups"] = std::move(groups);
+	return j.dump();
+}
+
+// Open the default form for a metadata object identified by metaID.
+// List metadata Interfaces (subsystems) for the sidebar. Each interface
+// carries id / name / synonym / icon (base64 PNG) + items[] (the meta
+// objects assigned to it via the Default command section). Used by web
+// sidebar to surface section navigation parallel to desktop's
+// ibSubSystemWindow.
+WFRONTEND_API std::string wfrontendInterfacesJSON()
+{
+	if (!g_initialized.load() || activeMetaData == nullptr) {
+		nlohmann::json j;
+		j["interfaces"] = nlohmann::json::array();
+		return j.dump();
+	}
+	auto iconToDataUri = [](const wxBitmap& bmp) -> std::string {
+		if (!bmp.IsOk()) return std::string();
+		const wxString b64 = ibBackendPicture::CreateBase64Image(bmp.ConvertToImage());
+		if (b64.IsEmpty()) return std::string();
+		return std::string("data:image/png;base64,") + std::string(b64.utf8_str());
+	};
+	auto iconFromIcon = [&](const wxIcon& icon) -> std::string {
+		if (!icon.IsOk()) return std::string();
+		return iconToDataUri(wxBitmap(icon));
+	};
+	// Command sections per interface — desktop's subsystem popup groups
+	// items by these. Listing them all so the web popup can mirror the
+	// structure.
+	struct SectionSpec { ibInterfaceCommandSection section; const char* name; };
+	const SectionSpec sectionSpecs[] = {
+		{ ibInterfaceCommandSection::ibInterfaceCommandSection_Default,  "Default"  },
+		{ ibInterfaceCommandSection::ibInterfaceCommandSection_Create,   "Create"   },
+		{ ibInterfaceCommandSection::ibInterfaceCommandSection_Combined, "Combined" },
+		{ ibInterfaceCommandSection::ibInterfaceCommandSection_Report,   "Reports"  },
+		{ ibInterfaceCommandSection::ibInterfaceCommandSection_Service,  "Service"  },
+	};
+	nlohmann::json arr = nlohmann::json::array();
+	for (auto* obj0 : activeMetaData->GetAnyArrayObject(g_metaInterfaceCLSID)) {
+		auto* iface = wxDynamicCast(obj0, ibValueMetaObjectInterface);
+		if (iface == nullptr || iface->IsDeleted()) continue;
+		if (!iface->AccessRight_Use()) continue;
+		nlohmann::json o;
+		o["id"]      = (int)iface->GetMetaID();
+		o["name"]    = std::string(iface->GetName().utf8_str());
+		o["synonym"] = std::string(iface->GetSynonym().utf8_str());
+		const std::string uri = iconToDataUri(iface->GetPictureAsBitmap());
+		if (!uri.empty()) o["icon"] = uri;
+		nlohmann::json sections = nlohmann::json::array();
+		for (const auto& spec : sectionSpecs) {
+			nlohmann::json items = nlohmann::json::array();
+			std::vector<ibValueMetaObject*> objs;
+			if (iface->GetInterfaceItemArrayObject(spec.section, objs)) {
+				for (auto* obj : objs) {
+					if (obj == nullptr || obj->IsDeleted()) continue;
+					nlohmann::json it;
+					it["id"]      = (int)obj->GetMetaID();
+					it["name"]    = std::string(obj->GetName().utf8_str());
+					it["synonym"] = std::string(obj->GetSynonym().utf8_str());
+					const std::string iconUri = iconFromIcon(obj->GetIcon());
+					if (!iconUri.empty()) it["icon"] = iconUri;
+					items.push_back(std::move(it));
+				}
+			}
+			if (items.empty()) continue;
+			nlohmann::json sec;
+			sec["section"] = (int)spec.section;
+			sec["name"]    = spec.name;
+			sec["items"]   = std::move(items);
+			sections.push_back(std::move(sec));
+		}
+		o["sections"] = std::move(sections);
+		arr.push_back(std::move(o));
+	}
+	nlohmann::json j;
+	j["interfaces"] = std::move(arr);
+	return j.dump();
+}
+
+// Mirrors desktop's ibDialogFunctionAll double-click handler which
+// calls metaObject->ShowFormByCommandType(). Returns updated active
+// host JSON after the form is opened (so the client refreshes its
+// tab strip + content in one round-trip).
+WFRONTEND_API std::string wfrontendOpenMetaObject(const std::string& sessionId,
+	int metaID, int cmdType)
+{
+	Sessions().Touch(sessionId);
+	if (!g_initialized.load() || activeMetaData == nullptr) return "{}";
+	// Access-right gate: "All functions" use ModeAllFunction. Interfaces
+	// have per-interface AccessRight_Use already checked by
+	// wfrontendInterfacesJSON, so opening via subsystem is allowed even
+	// without the ModeAllFunction role. Keep the broader check loose
+	// (skip when ModeAllFunction denies — interface listing already
+	// pre-filtered, and the meta-object's own form rights gate further).
+	ibWebApplication* app = Sessions().FindApp(sessionId);
+	if (app == nullptr) return "{}";
+	return app->RunOnWorker([app, metaID, cmdType]() -> std::string {
+		auto* metaObject = activeMetaData->FindAnyObjectByFilter<ibValueMetaObject, ibMetaID>(metaID);
+		if (metaObject == nullptr) return "{}";
+		auto* cmdItem = dynamic_cast<ibBackendCommandItem*>(metaObject);
+		if (cmdItem == nullptr) return "{}";
+		const auto type = static_cast<ibInterfaceCommandType>(cmdType);
+		if (!cmdItem->ShowFormByCommandType(type))
+			return "{}";
+		ibVisualHostClient* host = app->GetActiveHost();
+		try {
+			return host != nullptr ? host->ToJSON().dump(2) : std::string("{}");
+		} catch (...) {
+			return std::string("{}");
+		}
+	}).get();
+}
+
 ibWebApplication* SessionManager::FindApp(const std::string& id)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
@@ -1259,6 +1458,28 @@ ibWebApplication* SessionManager::FindApp(const std::string& id)
 	if (it == m_sessions.end() || it->second == nullptr) return nullptr;
 	if (!it->second->IsAuthenticated()) return nullptr;
 	return it->second->App();
+}
+
+bool SessionManager::ModalReply(const std::string& id,
+	const std::string& modalId, int result)
+{
+	// Resolve the modal via the session's frame — no worker hop needed
+	// (ResolveModal just sets a promise's value under a small mutex;
+	// safe to call from the HTTP thread). The parked script worker
+	// wakes inside ShowModalMessage and returns this result.
+	std::shared_ptr<ibWebSession> keeper;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		auto it = m_sessions.find(id);
+		if (it == m_sessions.end()) return false;
+		keeper = it->second;
+	}
+	if (keeper == nullptr || !keeper->IsAuthenticated()) return false;
+	ibWebApplication* app = keeper->App();
+	if (app == nullptr) return false;
+	ibWebFrame* frame = app->GetFrame();
+	if (frame == nullptr) return false;
+	return frame->ResolveModal(modalId, result);
 }
 
 std::string SessionManager::ActiveHostJSON(const std::string& id)
@@ -1344,6 +1565,49 @@ std::string SessionInfoFromSession(ibWebSession* s)
 
 	j["tabCount"]  = (std::size_t)frame->TabCount();
 	j["activeTab"] = (std::size_t)frame->ActiveTab();
+	// Access flags for menu visibility. "All functions" gates by the
+	// metadata role ModeAllFunctions (mirrors desktop menu showing the
+	// item only when activeMetaData->AccessRight_ModeAllFunction()).
+	j["accessAllFunctions"] = activeMetaData != nullptr
+		&& activeMetaData->AccessRight_ModeAllFunction();
+	// Window chrome: title + status text are the latest values pushed
+	// by the backend (SetTitle / SetStatusText). Both are passed by
+	// value, so the client applies them every poll without coordinating
+	// a "dirty" flag — cheap, idempotent.
+	j["title"]      = std::string(frame->GetTitle().utf8_str());
+	j["statusText"] = std::string(frame->GetStatusText().utf8_str());
+	// Notifications drained from the backend's pending queue. Each
+	// entry: {level, text}; level 1=info, 2=warn, 3=error. clearMessages
+	// is a one-shot flag from ClearMessage() — when true the client
+	// wipes its output panel before appending new lines.
+	if (frame->TakeClearPending())
+		j["clearMessages"] = true;
+	const auto pending = frame->DrainPendingMessages();
+	if (!pending.empty()) {
+		nlohmann::json arr = nlohmann::json::array();
+		for (const auto& m : pending) {
+			arr.push_back({
+				{"level", m.level},
+				{"text",  std::string(m.text.utf8_str())}
+			});
+		}
+		j["messages"] = std::move(arr);
+	}
+	// Pending modal — backend's ShowModalMessage parked a worker on a
+	// promise; surface the topmost modal here so the client can render
+	// a dialog with appropriate buttons. style is raw wx bitmask
+	// (wxOK / wxYES_NO / wxCANCEL / wxICON_*); the client decides
+	// button set + iconography from it. The modal stays in the queue
+	// (peek, not drain) until the client POSTs /modal-reply/<id>.
+	if (frame->HasPendingModal()) {
+		const auto m = frame->PeekPendingModal();
+		j["modal"] = {
+			{"id",      m.id},
+			{"message", std::string(m.message.utf8_str())},
+			{"caption", std::string(m.caption.utf8_str())},
+			{"style",   m.style}
+		};
+	}
 	for (std::size_t i = 0; i < frame->TabCount(); ++i) {
 		ibWebDocChildFrame* tab = frame->Tab(i);
 		nlohmann::json t;

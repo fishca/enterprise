@@ -201,6 +201,17 @@
     <ClCompile Include="visualView\ctrl\toolBarMenu.cpp" />
     <ClCompile Include="visualView\ctrl\toolBarAction.cpp" />
     <ClCompile Include="visualView\ctrl\toolBarItemAction.cpp" />
+    <!-- TableBox + TableBoxColumn — structural registration, BuildForm
+         dispatches via these. Real wx-side data view rendering is
+         ifdef'd to desktop only; web compiles stub bodies that return
+         ibWebStubControl. The auxiliary Event / Property / Action /
+         Menu / Renderer files stay desktop-only — their declarations
+         are also ifdef'd in tableBox.h so the web build doesn't reach
+         them. -->
+    <ClCompile Include="visualView\ctrl\tableBox.cpp" />
+    <ClCompile Include="visualView\ctrl\tableBox_res.cpp" />
+    <ClCompile Include="visualView\ctrl\tableBoxColumn.cpp" />
+    <ClCompile Include="visualView\ctrl\tableBoxColumn_res.cpp" />
     <ClCompile Include="visualView\ctrl\wrapsizer.cpp" />
     <ClCompile Include="visualView\ctrl\staticboxsizer.cpp" />
     <ClCompile Include="visualView\ctrl\gridsizer.cpp" />

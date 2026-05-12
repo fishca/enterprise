@@ -551,6 +551,61 @@ int main(int argc, char** argv)
 			"application/json; charset=utf-8");
 	});
 
+	// POST /modal-reply/<modalID> result=<int> — resolve a backend-side
+	// ShowModalMessage with the chosen wx button code. modalID is the
+	// id surfaced in /session JSON; result is wxOK / wxYES / wxNO /
+	// wxCANCEL (or 0 for "no choice / Esc"). Replies with "1" on
+	// success, "0" if the modal id is no longer queued.
+	svr.Post(prefix + R"(/modal-reply/([\w-]+))",
+		[](const httplib::Request& req, httplib::Response& res) {
+		std::string id;
+		if (!RequireSessionId(req, res, id)) return;
+		const std::string modalId = req.matches[1].str();
+		const int result = std::atoi(req.get_param_value("result").c_str());
+		const bool ok = wfrontendModalReply(id, modalId, result);
+		res.set_content(ok ? "1" : "0", "text/plain");
+	});
+
+	// GET /functions — returns the "All functions" tree (groups of
+	// metadata objects). Mirrors desktop's ibDialogFunctionAll content.
+	// Process-wide, no session needed (metadata is shared) — but the
+	// access check inside uses activeMetaData->AccessRight_ModeAllFunction
+	// which routes through the current user's roles. Requires session
+	// for the role context.
+	svr.Get(prefix + "/functions", [](const httplib::Request& req, httplib::Response& res) {
+		std::string id;
+		if (!RequireSessionId(req, res, id)) return;
+		res.set_content(wfrontendAllFunctionsJSON(),
+			"application/json; charset=utf-8");
+	});
+
+	// GET /interfaces — sidebar navigation: top-level metadata Interfaces
+	// (subsystems) plus their default-section items. Web sidebar shows
+	// these as collapsible sections; empty list means the configuration
+	// has no interfaces (sidebar stays with the plain FORMS list).
+	svr.Get(prefix + "/interfaces", [](const httplib::Request& req, httplib::Response& res) {
+		std::string id;
+		if (!RequireSessionId(req, res, id)) return;
+		res.set_content(wfrontendInterfacesJSON(),
+			"application/json; charset=utf-8");
+	});
+
+	// POST /open-meta/<metaID> [cmd=<ibInterfaceCommandType>] — open the
+	// form for a metadata object by its id. cmd defaults to 100 (Default,
+	// list/browse). Pass 150 from a Create-section item to land in the
+	// new-record flow, 151 for List, 152 for Select. Returns active host
+	// JSON so the client refreshes in one round-trip.
+	svr.Post(prefix + R"(/open-meta/(\d+))",
+		[](const httplib::Request& req, httplib::Response& res) {
+		std::string id;
+		if (!RequireSessionId(req, res, id)) return;
+		const int metaID = std::atoi(req.matches[1].str().c_str());
+		const std::string cmdStr = req.get_param_value("cmd");
+		const int cmdType = cmdStr.empty() ? 100 : std::atoi(cmdStr.c_str());
+		res.set_content(wfrontendOpenMetaObject(id, metaID, cmdType),
+			"application/json; charset=utf-8");
+	});
+
 	// GET /active: read-only snapshot of the current active tab's
 	// visual host. The browser poll loop uses this to pick up
 	// timer-driven state changes between user actions — no rebuild,

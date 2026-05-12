@@ -5,10 +5,9 @@ Procedure expressions, assignable to slots and event handlers, callable
 through a variable. Default-arg values for primitive literals,
 runtime-validated arg count, full debugger / eval visibility.
 
-> **Status**: landed 2026-05-10 in working tree on top of the paging
-> arc + Phase A/B experiments. Build clean Debug/x86, smoke-tested
-> through codeRunner.exe and live runtime (real OES configuration with
-> debugger attached).
+> **Status**: landed 2026-05-10; closure capture added 2026-05-11..12
+> (`docs/closure-capture.md`). Build clean Debug/x86. Working copy
+> uncommitted (experimental arc per project convention).
 
 ---
 
@@ -192,21 +191,17 @@ declarations in rootCtx (codeRunner sandbox case where module-level
 declarations land directly in root) stay invisible. Phase B isolation
 preserved.
 
-### Closure capture and default-arg expressions — rejected
+### Closure capture — landed 2026-05-11..12
 
-Both rejected during 2026-05-09 design review:
+Initially rejected (2026-05-09 design review) for simplicity, then
+landed across Phase A/B/C/D/F via per-frame heap-promotion. See
+`docs/closure-capture.md` for the mechanism. Default-arg expressions
+remain rejected — defaults stay literal primitives only (cross-runtime
+invocation safety + simplicity). Lambda body can now reach outer
+function locals through chained `shared_ptr<ibRunContext>` frames
+wired into `m_pppArrayList[1..N]` at invoke time.
 
-- Lambda invocable from any session / runtime — invocation context
-  unpredictable. Default-arg expression captures would snapshot
-  creation-time refs to objects that may not exist at invocation
-  time, opening cross-tenant / UAF surface.
-- Closure capture requires upvalue + heap-promotion machinery for
-  cross-frame mutation semantics — substantial complexity for a
-  pattern users can write explicitly through args.
-- "Pure callable" model maps cleanly onto OES's existing named-
-  function dispatch.
-
-Capture pattern users write explicitly:
+Explicit-arg capture (still supported, sometimes cleaner than closure):
 
 ```vbs
 Procedure Init()
@@ -348,19 +343,17 @@ A few independent fixes landed alongside option A:
 
 ## Out of scope
 
-- **Closure capture** — outer-frame capture via upvalues / heap-
-  promotion / shared environment. Patterns that need shared state
-  use explicit shared object passed as arg at each invocation.
 - **Default-arg expressions** — defaults stay literal primitives only.
   Cross-runtime invocation safety + simplicity.
 - **Module-level var visibility from lambda body** — caller passes
-  everything via args; root-level Context bindings are the only
-  "global" surface visible.
+  everything via args. (Closure capture, landed 2026-05-12, makes
+  outer-FUNCTION locals visible — module-level vars are a different
+  axis.)
 - **Lambda value serialisation** — `ibValueFunction` is runtime-only,
   not persistable across sessions / processes. The bytecode template
   IS AOT-cacheable through the standard pipeline; only the dynamic
   value isn't.
-- **Lifetime safety beyond Phase A** — raw `const ibByteCode*` on
+- **Lifetime safety beyond session** — raw `const ibByteCode*` on
   lambda value. Parent's bytecode death = session crash; lambda death
   is part of that crash.
 - **Arrow syntax** `(x) => expr` — pure parser sugar over

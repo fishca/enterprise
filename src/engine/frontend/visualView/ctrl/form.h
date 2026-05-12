@@ -10,29 +10,29 @@
 //*                                     Defines                                              *
 //********************************************************************************************
 
-class BACKEND_API CValueType;
-class BACKEND_API CUniqueKey;
+class BACKEND_API ibValueType;
+class BACKEND_API ibUniqueKey;
 
-class FRONTEND_API CFormVisualEditView;
+class FRONTEND_API ibFormVisualEditView;
 
-class BACKEND_API IValueMetaObjectForm;
-class BACKEND_API IValueMetaObjectGenericData;
+class BACKEND_API ibValueMetaObjectFormBase;
+class BACKEND_API ibValueMetaObjectGenericData;
 
 //********************************************************************************************
 //*                                 define commom clsid									     *
 //********************************************************************************************
 
 //COMMON FORM
-const class_identifier_t g_controlFormCLSID = string_to_clsid("CT_FRME");
+const ibClassID g_controlFormCLSID = string_to_clsid("CT_FRME");
 
 //********************************************************************************************
 //*                                      Value Frame                                         *
 //********************************************************************************************
 
-class FRONTEND_API CValueForm : 
-	public IBackendValueForm, public IValueFrame, public IModuleDataObject 
+class FRONTEND_API ibValueForm :
+	public ibBackendValueForm, public ibValueFrame, public ibRuntimeModuleDataObject
 {
-	wxDECLARE_DYNAMIC_CLASS(CValueForm);
+	wxDECLARE_DYNAMIC_CLASS(ibValueForm);
 
 private:
 
@@ -44,8 +44,8 @@ private:
 
 public:
 
-	const CUniqueKey& GetFormKey() const { return m_formKey; }
-	bool CompareFormKey(const CUniqueKey& formKey) const { return m_formKey == formKey; }
+	const ibUniqueKey& GetFormKey() const { return m_formKey; }
+	bool CompareFormKey(const ibUniqueKey& formKey) const { return m_formKey == formKey; }
 
 public:
 
@@ -59,12 +59,12 @@ public:
 
 	wxOrientation GetOrient() const { return m_propertyOrient->GetValueAsEnum(); }
 
-	IValueFrame* NewObject(const class_identifier_t& clsid, IValueFrame* parentControl = nullptr, const CValue& generateId = true);
-	IValueFrame* NewObject(const wxString& classControl, IValueFrame* controlParent, const CValue& generateId = true) {
-		const class_identifier_t& clsid = CValue::GetIDObjectFromString(classControl);
+	ibValueFrame* NewObject(const ibClassID& clsid, ibValueFrame* parentControl = nullptr, const ibValue& generateId = true);
+	ibValueFrame* NewObject(const wxString& classControl, ibValueFrame* controlParent, const ibValue& generateId = true) {
+		const ibClassID& clsid = ibValue::GetIDObjectFromString(classControl);
 		if (clsid > 0) {
 			return NewObject(
-				CValue::GetIDObjectFromString(classControl),
+				ibValue::GetIDObjectFromString(classControl),
 				controlParent,
 				generateId
 			);
@@ -73,13 +73,13 @@ public:
 	}
 
 	template <typename retType>
-	inline retType* NewObject(const class_identifier_t& clsid, IValueFrame* parentControl = nullptr, const CValue& generateId = true) {
+	inline retType* NewObject(const ibClassID& clsid, ibValueFrame* parentControl = nullptr, const ibValue& generateId = true) {
 		return wxDynamicCast(
 			NewObject(clsid, parentControl, generateId), retType);
 	}
 
 	template <typename retType>
-	inline retType* NewObject(const wxString& className, IValueFrame* parentControl = nullptr, const CValue& generateId = true) {
+	inline retType* NewObject(const wxString& className, ibValueFrame* parentControl = nullptr, const ibValue& generateId = true) {
 		return wxDynamicCast(
 			NewObject(className, parentControl, generateId), retType);
 	}
@@ -89,33 +89,33 @@ public:
 	* @note el objeto a comprobar debe estar insertado en proyecto, por tanto
 	*       no es válida para arboles "flotantes".
 	*/
-	void ResolveNameConflict(IValueFrame* control);
+	void ResolveNameConflict(ibValueFrame* control);
 
 	/**
 	* Fabrica de objetos.
 	* A partir del nombre de la clase se crea una nueva instancia de un objeto.
 	*/
-	IValueFrame* CreateObject(const wxString& className, IValueFrame* parentControl = nullptr);
+	ibValueFrame* CreateObject(const wxString& className, ibValueFrame* parentControl = nullptr);
 
 	/**
 	* Crea un objeto como copia de otro.
 	*/
-	static bool CopyObject(IValueFrame* srcControl, bool copyOnPaste = true);
-	static IValueFrame* PasteObject(CValueForm* dstForm, IValueFrame* dstParent);
+	static bool CopyObject(ibValueFrame* srcControl, bool copyOnPaste = true);
+	static ibValueFrame* PasteObject(ibValueForm* dstForm, ibValueFrame* dstParent);
 
 public:
 
-	CValueForm(const IValueMetaObjectForm* creator = nullptr, IControlFrame* ownerControl = nullptr,
-		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
+	ibValueForm(const ibValueMetaObjectFormBase* creator = nullptr, ibControlFrame* ownerControl = nullptr,
+		ibSourceDataObject* srcObject = nullptr, const ibUniqueKey& formGuid = wxNullUniqueKey);
 
-	virtual ~CValueForm();
+	virtual ~ibValueForm();
 
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
 
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 
 	//****************************************************************************
 	//*                              Support methods                             *
@@ -123,51 +123,70 @@ public:
 
 	virtual void PrepareNames() const;
 
-	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
 	//****************************************************************************
 	//*                              Support form context                        *
 	//****************************************************************************
 
-	virtual void BuildForm(const form_identifier_t& formType);
-	virtual void InitializeForm(const IValueMetaObjectForm* creator, IControlFrame* ownerControl,
-		ISourceDataObject* srcObject, const CUniqueKey& formGuid);
+	virtual void BuildForm(const ibFormID& formType);
+	virtual void InitializeForm(const ibValueMetaObjectFormBase* creator, ibControlFrame* ownerControl,
+		ibSourceDataObject* srcObject, const ibUniqueKey& formGuid);
 
 	virtual bool InitializeFormModule();
 
-	//get metaData
-	virtual IMetaData* GetMetaData() const;
+	// Form's meta-object drives lazy compile-module creation inside
+	// ibRuntimeModuleDataObject::BindContextVariable. Form has m_metaFormObject
+	// set at InitializeForm time, long before m_compileModule exists.
+	virtual const class ibValueMetaObjectModuleBase* GetMetaForCompile() const override;
 
-	//runtime 
-	virtual CProcUnit* GetFormProcUnit() const { return m_procUnit; }
-	virtual CValueForm* GetImplValueRef() const override {
-		return const_cast<CValueForm*>(this);
+	//get metaData
+	virtual ibMetaData* GetMetaData() const;
+
+	virtual ibValueForm* GetImplValueRef() const override {
+		return const_cast<ibValueForm*>(this);
 	}
 
-	virtual ISourceDataObject* GetSourceObject() const { return m_sourceObject; }
-	virtual const IValueMetaObjectForm* GetFormMetaObject() const { return m_metaFormObject; }
+	virtual ibSourceDataObject* GetSourceObject() const { return m_sourceObject; }
+	virtual const ibValueMetaObjectFormBase* GetFormMetaObject() const { return m_metaFormObject; }
 
-	IValueMetaObjectGenericData* GetMetaObject() const;
+	const ibValueMetaObjectGenericData* GetMetaObject() const;
 
 	// get control caption
 	virtual wxString GetControlTitle() const;
 
-	CValue GetCreatedValue() const { return m_createdValue; }
-	CValue GetChangedValue() const { return m_changedValue; }
+	ibValue GetCreatedValue() const { return m_createdValue; }
+	ibValue GetChangedValue() const { return m_changedValue; }
 
-	virtual CValueForm* GetOwnerForm() const {
-		return const_cast<CValueForm*>(this);
+	// One-shot consume — read and reset.  NotifyCreate/NotifyChange set
+	// these to drive position-to-new on the next UpdateForm.  Without
+	// clearing, every subsequent UpdateForm (manual Refresh, sort, idle
+	// reset) sees the same value and re-positions, bouncing the user's
+	// later selection back to the create / change row.
+	ibValue ConsumeCreatedValue() {
+		ibValue v = m_createdValue;
+		m_createdValue = wxEmptyValue;
+		return v;
+	}
+	ibValue ConsumeChangedValue() {
+		ibValue v = m_changedValue;
+		m_changedValue = wxEmptyValue;
+		return v;
 	}
 
-	IValueFrame* GetOwnerControl() const {
-		return dynamic_cast<IValueFrame*>(m_controlOwner);
+	virtual ibValueForm* GetOwnerForm() const {
+		return const_cast<ibValueForm*>(this);
+	}
+
+	ibValueFrame* GetOwnerControl() const {
+		return dynamic_cast<ibValueFrame*>(m_controlOwner);
 	}
 
 	/**
 	* Get type form
 	*/
-	virtual form_identifier_t GetTypeForm() const;
+	virtual ibFormID GetTypeForm() const;
 
 	/**
 	* Can delete object
@@ -181,62 +200,59 @@ public:
 
 public:
 
-	class CValueFormCollectionControl : public CValue {
-		wxDECLARE_DYNAMIC_CLASS(CValueFormCollectionControl);
+	class ibValueFormCollectionControl : public ibValue {
+		wxDECLARE_DYNAMIC_CLASS(ibValueFormCollectionControl);
 	public:
-		CValueFormCollectionControl();
-		CValueFormCollectionControl(CValueForm* ownerFrame);
-		virtual ~CValueFormCollectionControl();
+		ibValueFormCollectionControl();
+		ibValueFormCollectionControl(ibValueForm* ownerFrame);
+		virtual ~ibValueFormCollectionControl();
 
-		virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
+		virtual ibValueMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
 
 		virtual void PrepareNames() const;
 
-		virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
-		virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+		virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray);
+		virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
-		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
-		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
+		virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal); //attribute value
+		virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
 
 		//Расширенные методы:
-		bool Property(const CValue& varKeyValue, CValue& cValueFound);
+		bool Property(const ibValue& varKeyValue, ibValue& cValueFound);
 		unsigned int Count() const { return m_formOwner->m_listControl.size(); }
 
 		//Работа с итераторами:
-		virtual bool HasIterator() const { return true; }
-		virtual CValue GetIteratorEmpty();
-		virtual CValue GetIteratorAt(unsigned int idx);
-		virtual unsigned int GetIteratorCount() const { return Count(); }
+		virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override;
 	private:
-		CValueForm* m_formOwner;
-		CMethodHelper* m_methodHelper;
+		ibValueForm* m_formOwner;
+		ibValueMethodHelper* m_methodHelper;
 	};
 
 public:
 
-	IValueFrame* CreateControl(const wxString& classControl, IValueFrame* control = nullptr);
-	void RemoveControl(IValueFrame* control);
+	ibValueFrame* CreateControl(const wxString& classControl, ibValueFrame* control = nullptr);
+	void RemoveControl(ibValueFrame* control);
 
 public:
 
 	virtual bool LoadForm(const wxMemoryBuffer& formData);
-	bool LoadChildForm(CMemoryReader& readerData, IValueFrame* controlParent);
+	bool LoadChildForm(ibReaderMemory& readerData, ibValueFrame* controlParent);
 	virtual wxMemoryBuffer SaveForm();
-	bool SaveChildForm(CMemoryWriter& writerData, IValueFrame* controlParent);
+	bool SaveChildForm(ibWriterMemory& writerData, ibValueFrame* controlParent);
 
 	//notify
-	virtual void NotifyCreate(const CValue& vCreated);
-	virtual void NotifyChange(const CValue& vChanged);
-	virtual void NotifyDelete(const CValue& vChanged);
+	virtual void NotifyCreate(const ibValue& vCreated);
+	virtual void NotifyChange(const ibValue& vChanged);
+	virtual void NotifyDelete(const ibValue& vChanged);
 
-	virtual void NotifyChoice(CValue& vSelected);
+	virtual void NotifyChoice(ibValue& vSelected);
 
-	CValue CreateControl(const CValueType* classControl, const CValue& vControl);
-	CValue FindControl(const CValue& vControl);
-	void RemoveControl(const CValue& vControl);
+	ibValue CreateControl(const ibValueType* classControl, const ibValue& vControl);
+	ibValue FindControl(const ibValue& vControl);
+	void RemoveControl(const ibValue& vControl);
 
 public:
 
@@ -247,8 +263,8 @@ public:
 	virtual void HelpForm();
 	virtual void ChangeForm();
 
-	virtual bool GenerateForm(IValueRecordDataObjectRef* obj) const;
-	virtual void ShowForm(IBackendMetaDocument* docParent = nullptr, bool createContext = true) override;
+	virtual bool GenerateForm(ibValueRecordDataObjectRef* obj) const;
+	virtual void ShowForm(ibBackendMetaDocument* docParent = nullptr, bool createContext = true) override;
 
 	//set & get modify 
 	virtual void Modify(bool modify = true);
@@ -269,51 +285,43 @@ public:
 	void DetachIdleHandler(const wxString& procedureName);
 
 	//get visual document
-	virtual CFormVisualDocument* GetVisualDocument() const;
+	virtual ibFormVisualDocument* GetVisualDocument() const;
 
 	//special proc
-	virtual void Update(wxObject* wxobject, IVisualHost* visualHost);
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost);
+	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost);
+	virtual void OnUpdated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost);
 
 	//actionData
-	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);
-	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm);
+	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
+	virtual void ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 	virtual int GetComponentType() const { return COMPONENT_TYPE_FRAME; }
-	
+
 private:
 
-	void ClearRecursive(IValueFrame* control);
+	void ClearRecursive(ibValueFrame* control);
 
 	//doc event
-	bool CreateDocForm(CMetaDocument* docParent, bool createContext = true);
+	bool CreateDocForm(ibMetaDocument* docParent, bool createContext = true);
 	void ActivateDocForm();
-	void ChoiceDocForm(CValue& vSelected);
+	void ChoiceDocForm(ibValue& vSelected);
 	void RefreshDocForm();
 	bool CloseDocForm();
 
-	void OnIdleHandler(wxTimerEvent& event) {
+	// Body in formObject.cpp — needs ibWebTimer complete type on web
+	// for the wxObject* upcast (frontendTypes.h only forward-declares
+	// ibWebTimer). Inline in the header dragged web-specific includes
+	// into every desktop TU.
+	void OnIdleHandler(wxTimerEvent& event);
 
-		if (m_procUnit != nullptr) {
-
-			auto iterator = std::find_if(m_idleHandlerArray.begin(), m_idleHandlerArray.end(),
-				[event](const auto pair) { return pair.second == event.GetEventObject(); }
-			);
-
-			if (iterator != m_idleHandlerArray.end())
-				CallAsEvent(iterator->first);
-		}
-
-		event.Skip();
-	}
 
 	enum
 	{
@@ -321,40 +329,47 @@ private:
 		eChildBlock = 0x3570
 	};
 
-	CValue					m_createdValue;
-	CValue					m_changedValue;
+	ibValue					m_createdValue;
+	ibValue					m_changedValue;
 
-	form_identifier_t		m_formType;
-	CUniqueKey				m_formKey;
+	ibFormID		m_formType;
+	ibUniqueKey				m_formKey;
 
 	bool					m_formModified;
 
 	bool					m_closeOnChoice;
 	bool					m_closeOnOwnerClose;
 
-	const IValueMetaObjectForm* m_metaFormObject; // ref to metaData
+	const ibValueMetaObjectFormBase* m_metaFormObject; // ref to metaData
 
-	IControlFrame* m_controlOwner;
-	ISourceDataObject* m_sourceObject;
+	ibControlFrame* m_controlOwner;
+	ibSourceDataObject* m_sourceObject;
 
-	std::set<IValueControl*> m_listControl;
-	std::map<wxString, wxTimer*> m_idleHandlerArray;
+	std::set<ibValueControl*> m_listControl;
+	// ibFrontendTimer = wxTimer on desktop, ibWebTimer on web. Both
+	// inherit wxEvtHandler + produce wxTimerEvent where GetEventObject()
+	// returns the timer instance — so OnIdleHandler's lookup matches
+	// uniformly across builds. shared_ptr removes the manual delete on
+	// teardown paths (form dtor, DetachIdleHandler, exception unwinds) —
+	// same ownership flavour as m_valueForm's ibValuePtr but here we
+	// don't need intrusive refcount, std is enough.
+	std::map<wxString, std::shared_ptr<ibFrontendTimer>> m_idleHandlerArray;
 
-	CValuePtr<CValueFormCollectionControl> m_formCollectionControl;
+	ibValuePtr<ibValueFormCollectionControl> m_formCollectionControl;
 
-	CPropertyCategory* m_categoryFrame = IPropertyObject::CreatePropertyCategory(wxT("Frame"), _("Frame"));
-	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryFrame, wxT("Title"), _("Title"), wxT(""));
-	CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryFrame, wxT("ForegroundColour"), _("Foreground"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
-	CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryFrame, wxT("BackgroundColour"), _("Background"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
-	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryFrame, wxT("Enabled"), _("Enabled"), _("Enable or disable the window for user input.Note that when a parent window is disabled, all of its children are disabled as well and they are reenabled again when the parent is."), true);
-	CPropertyCategory* m_categorySizer = IPropertyObject::CreatePropertyCategory(wxT("Sizer"), _("Sizer"));
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxVERTICAL);
+	ibPropertyCategory* m_categoryFrame = ibPropertyObject::CreatePropertyCategory(wxT("Frame"), _("Frame"));
+	ibPropertyTString* m_propertyTitle = ibPropertyObject::CreateProperty<ibPropertyTString>(m_categoryFrame, wxT("Title"), _("Title"), wxT(""));
+	ibPropertyColour* m_propertyFG = ibPropertyObject::CreateProperty<ibPropertyColour>(m_categoryFrame, wxT("ForegroundColour"), _("Foreground"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
+	ibPropertyColour* m_propertyBG = ibPropertyObject::CreateProperty<ibPropertyColour>(m_categoryFrame, wxT("BackgroundColour"), _("Background"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
+	ibPropertyBoolean* m_propertyEnabled = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryFrame, wxT("Enabled"), _("Enabled"), _("Enable or disable the window for user input.Note that when a parent window is disabled, all of its children are disabled as well and they are reenabled again when the parent is."), true);
+	ibPropertyCategory* m_categorySizer = ibPropertyObject::CreatePropertyCategory(wxT("Sizer"), _("Sizer"));
+	ibPropertyEnum<ibValueEnumOrient>* m_propertyOrient = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxVERTICAL);
 
-	friend class IValueControl;
-	friend class CValueFormCollectionControl;
+	friend class ibValueControl;
+	friend class ibValueFormCollectionControl;
 
-	friend class CFormVisualDocument;
-	friend class CFormVisualEditView;
+	friend class ibFormVisualDocument;
+	friend class ibFormVisualEditView;
 };
 
 #endif 

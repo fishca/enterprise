@@ -55,12 +55,12 @@ static char* s_text_xpm[] = {
 	"                "
 };
 
-wxIcon CValueTextBox::GetIcon() const
+wxIcon ibValueTextBox::GetIcon() const
 {
 	return wxIcon(s_text_xpm);
 }
 
-wxIcon CValueTextBox::GetIconGroup()
+wxIcon ibValueTextBox::GetIconGroup()
 {
 	return wxIcon(s_text_xpm);
 }

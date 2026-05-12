@@ -4,16 +4,16 @@
 #include "backend/backend_core.h"
 #include "backend/actionInfo.h"
 
-class BACKEND_API wxVariantDataAction : public wxVariantData {
+class BACKEND_API ibVariantDataAction : public wxVariantData {
 	wxString MakeString() const;
 public:
 
-	CActionDescription& GetValueAsActionDesc() { return m_actionData; }
+	ibActionDescription& GetValueAsActionDesc() { return m_actionData; }
 
-	wxVariantDataAction(const CActionDescription& act) : wxVariantData(), m_actionData(act) {}
+	ibVariantDataAction(const ibActionDescription& act) : wxVariantData(), m_actionData(act) {}
 
 	virtual bool Eq(wxVariantData& data) const { 
-		wxVariantDataAction* srcData = dynamic_cast<wxVariantDataAction*>(&data);
+		ibVariantDataAction* srcData = dynamic_cast<ibVariantDataAction*>(&data);
 		if (srcData != nullptr) return m_actionData == srcData->GetValueAsActionDesc();
 		return false; 
 	}
@@ -30,10 +30,10 @@ public:
 		return true;
 	}
 
-	virtual wxString GetType() const { return wxT("wxVariantDataAction"); }
+	virtual wxString GetType() const { return wxT("ibVariantDataAction"); }
 
 private:
-	CActionDescription m_actionData;
+	ibActionDescription m_actionData;
 };
 
 #endif

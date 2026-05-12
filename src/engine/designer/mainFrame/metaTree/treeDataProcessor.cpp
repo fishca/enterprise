@@ -10,12 +10,12 @@
 
 #include "docManager/templates/docViewDataProcessorFile.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorTree, wxPanel);
+wxIMPLEMENT_DYNAMIC_CLASS(ibDataProcessorTree, wxPanel);
 
 #define ICON_SIZE 16
 
-CDataProcessorTree::CDataProcessorTree(CMetaDocument* docParent, wxWindow* parent, wxWindowID id)
-	: IMetaDataTree(docParent, parent, id), m_metaData(nullptr), m_initialized(false)
+ibDataProcessorTree::ibDataProcessorTree(ibMetaDocument* docParent, wxWindow* parent, wxWindowID id)
+	: ibMetaDataTree(docParent, parent, id), m_metaData(nullptr), m_initialized(false)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -27,91 +27,91 @@ CDataProcessorTree::CDataProcessorTree(CMetaDocument* docParent, wxWindow* paren
 	m_nameCaption = new wxStaticText(this, wxID_ANY, _("Name"), wxDefaultPosition, wxDefaultSize, 0);
 	m_nameCaption->Wrap(-1);
 
-	bSizerCaption->Add(m_nameCaption, 0, wxALL, 5);
+	bSizerCaption->Add(m_nameCaption, 0, wxALL, FromDIP(5));
 
 	m_synonymCaption = new wxStaticText(this, wxID_ANY, _("Synonym"), wxDefaultPosition, wxDefaultSize, 0);
 	m_synonymCaption->Wrap(-1);
 
-	bSizerCaption->Add(m_synonymCaption, 0, wxALL, 5);
+	bSizerCaption->Add(m_synonymCaption, 0, wxALL, FromDIP(5));
 
 	m_commentCaption = new wxStaticText(this, wxID_ANY, _("Comment"), wxDefaultPosition, wxDefaultSize, 0);
 	m_commentCaption->Wrap(-1);
 
-	bSizerCaption->Add(m_commentCaption, 0, wxALL, 5);
+	bSizerCaption->Add(m_commentCaption, 0, wxALL, FromDIP(5));
 
 	m_defaultForm = new wxStaticText(this, wxID_ANY, _("Default form:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_defaultForm->Wrap(-1);
 
-	bSizerCaption->Add(m_defaultForm, 0, wxALL, 5);
-	bSizerHeader->Add(bSizerCaption, 0, wxEXPAND, 5);
+	bSizerCaption->Add(m_defaultForm, 0, wxALL, FromDIP(5));
+	bSizerHeader->Add(bSizerCaption, 0, wxEXPAND, FromDIP(5));
 
 	wxBoxSizer* bSizerValue = new wxBoxSizer(wxVERTICAL);
 
 	m_nameValue = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
 	bSizerValue->Add(m_nameValue, 1, wxALL | wxEXPAND, 1);
-	m_nameValue->Connect(wxEVT_TEXT, wxCommandEventHandler(CDataProcessorTree::OnEditCaptionName), nullptr, this);
+	m_nameValue->Connect(wxEVT_TEXT, wxCommandEventHandler(ibDataProcessorTree::OnEditCaptionName), nullptr, this);
 
 	m_synonymValue = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
 	bSizerValue->Add(m_synonymValue, 1, wxALL | wxEXPAND, 1);
-	m_synonymValue->Connect(wxEVT_TEXT, wxCommandEventHandler(CDataProcessorTree::OnEditCaptionSynonym), nullptr, this);
+	m_synonymValue->Connect(wxEVT_TEXT, wxCommandEventHandler(ibDataProcessorTree::OnEditCaptionSynonym), nullptr, this);
 
 	m_commentValue = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
 	bSizerValue->Add(m_commentValue, 1, wxALL | wxEXPAND, 1);
-	m_commentValue->Connect(wxEVT_TEXT, wxCommandEventHandler(CDataProcessorTree::OnEditCaptionComment), nullptr, this);
+	m_commentValue->Connect(wxEVT_TEXT, wxCommandEventHandler(ibDataProcessorTree::OnEditCaptionComment), nullptr, this);
 
 	m_defaultFormValue = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, NULL, 0);
 	m_defaultFormValue->AppendString(_("<not selected>"));
 	m_defaultFormValue->SetSelection(0);
 
-	m_defaultFormValue->Connect(wxEVT_CHOICE, wxCommandEventHandler(CDataProcessorTree::OnChoiceDefForm), nullptr, this);
+	m_defaultFormValue->Connect(wxEVT_CHOICE, wxCommandEventHandler(ibDataProcessorTree::OnChoiceDefForm), nullptr, this);
 
 	bSizerValue->Add(m_defaultFormValue, 1, wxALL | wxEXPAND, 1);
-	bSizerHeader->Add(bSizerValue, 1, 0, 5);
-	bSizerMain->Add(bSizerHeader, 0, wxEXPAND, 5);
+	bSizerHeader->Add(bSizerValue, 1, 0, FromDIP(5));
+	bSizerMain->Add(bSizerHeader, 0, wxEXPAND, FromDIP(5));
 
 	wxStaticBoxSizer* sbSizerTree = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, wxT("")), wxVERTICAL);
 
 	m_metaTreeToolbar = new wxAuiToolBar(sbSizerTree->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)), _("New item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)), _("Edit item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_DELETE, _("Delete"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)), _("Delete item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmapBundle(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)), _("New item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmapBundle(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)), _("Edit item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DELETE, _("Delete"), wxArtProvider::GetBitmapBundle(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)), _("Delete item"));
 	m_metaTreeToolbar->AddSeparator();
-	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmap(wxART_UP, wxART_FRONTEND, wxSize(16, 16)), _("Up item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmap(wxART_DOWN, wxART_FRONTEND, wxSize(16, 16)), _("Down item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmapBundle(wxART_UP, wxART_FRONTEND, wxSize(16, 16)), _("Up item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmapBundle(wxART_DOWN, wxART_FRONTEND, wxSize(16, 16)), _("Down item"));
 	m_metaTreeToolbar->AddSeparator();
-	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmap(wxART_SORT, wxART_FRONTEND, wxSize(16, 16)), _("Sort item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmapBundle(wxART_SORT, wxART_FRONTEND, wxSize(16, 16)), _("Sort item"));
 	m_metaTreeToolbar->Realize();
 
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
 
 	sbSizerTree->Add(m_metaTreeToolbar, 0, wxALL | wxEXPAND, 0);
 
-	m_metaTreeCtrl = new CDataProcessorTreeCtrl(sbSizerTree->GetStaticBox(), this);
-	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
+	m_metaTreeCtrl = new ibDataProcessorTreeCtrl(sbSizerTree->GetStaticBox(), this);
+	m_metaTreeCtrl->SetBackgroundColour(wxColour(250, 250, 250));
 
 	//set image list
 	m_metaTreeCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
 	sbSizerTree->Add(m_metaTreeCtrl, 1, wxALL | wxEXPAND, 0);
 
-	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, 5);
+	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, FromDIP(5));
 
-	CMetaDataDataProcessor* metaData = ((CDataProcessorFileDocument*)docParent)->GetMetaData();
-	CValueMetaObjectDataProcessor* commonMeta = metaData->GetDataProcessor();
-	CValueMetaObjectModule *moduleMeta = commonMeta->GetModuleObject();
+	ibMetaDataDataProcessor* metaData = ((ibDataProcessorFilibDocument*)docParent)->GetMetaData();
+	ibValueMetaObjectDataProcessor* commonMeta = metaData->GetDataProcessor();
+	const ibValueMetaObjectModule *moduleMeta = commonMeta->GetObjectModule();
 
 	m_buttonModule = new wxButton(this, wxID_ANY, _("Open module"));
-	m_buttonModule->Connect(wxEVT_BUTTON, wxCommandEventHandler(CDataProcessorTree::OnButtonModuleClicked), nullptr, this);
+	m_buttonModule->Connect(wxEVT_BUTTON, wxCommandEventHandler(ibDataProcessorTree::OnButtonModuleClicked), nullptr, this);
 	m_buttonModule->SetBitmap(moduleMeta->GetIcon());
 
 	bSizerMain->Add(m_buttonModule, 0, wxALL);
@@ -125,24 +125,24 @@ CDataProcessorTree::CDataProcessorTree(CMetaDocument* docParent, wxWindow* paren
 	InitTree();
 }
 
-CDataProcessorTree::~CDataProcessorTree()
+ibDataProcessorTree::~ibDataProcessorTree()
 {
-	m_nameValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataProcessorTree::OnEditCaptionName), nullptr, this);
-	m_synonymValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataProcessorTree::OnEditCaptionSynonym), nullptr, this);
-	m_commentValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataProcessorTree::OnEditCaptionComment), nullptr, this);
+	m_nameValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(ibDataProcessorTree::OnEditCaptionName), nullptr, this);
+	m_synonymValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(ibDataProcessorTree::OnEditCaptionSynonym), nullptr, this);
+	m_commentValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(ibDataProcessorTree::OnEditCaptionComment), nullptr, this);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
-	m_buttonModule->Disconnect(wxEVT_BUTTON, wxCommandEventHandler(CDataProcessorTree::OnButtonModuleClicked), nullptr, this);
+	m_buttonModule->Disconnect(wxEVT_BUTTON, wxCommandEventHandler(ibDataProcessorTree::OnButtonModuleClicked), nullptr, this);
 }
 
-void CDataProcessorTree::OnEditCaptionName(wxCommandEvent& event)
+void ibDataProcessorTree::OnEditCaptionName(wxCommandEvent& event)
 {
 	wxString systemName = m_nameValue->GetValue();
 
@@ -158,7 +158,7 @@ void CDataProcessorTree::OnEditCaptionName(wxCommandEvent& event)
 	m_docParent->SetFilename(systemName);
 	m_docParent->SetTitle(systemName);
 
-	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	ibValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 	dataProcessor->SetName(systemName);
 	dataProcessor->SetSynonym(synonym);
@@ -172,9 +172,9 @@ void CDataProcessorTree::OnEditCaptionName(wxCommandEvent& event)
 	}
 }
 
-void CDataProcessorTree::OnEditCaptionSynonym(wxCommandEvent& event)
+void ibDataProcessorTree::OnEditCaptionSynonym(wxCommandEvent& event)
 {
-	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	ibValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 	dataProcessor->SetSynonym(m_synonymValue->GetValue());
 
@@ -183,9 +183,9 @@ void CDataProcessorTree::OnEditCaptionSynonym(wxCommandEvent& event)
 	}
 }
 
-void CDataProcessorTree::OnEditCaptionComment(wxCommandEvent& event)
+void ibDataProcessorTree::OnEditCaptionComment(wxCommandEvent& event)
 {
-	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	ibValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 	dataProcessor->SetComment(m_commentValue->GetValue());
 
@@ -194,12 +194,12 @@ void CDataProcessorTree::OnEditCaptionComment(wxCommandEvent& event)
 	}
 }
 
-void CDataProcessorTree::OnChoiceDefForm(wxCommandEvent& event)
+void ibDataProcessorTree::OnChoiceDefForm(wxCommandEvent& event)
 {
-	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	ibValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 
-	const meta_identifier_t id = reinterpret_cast<meta_identifier_t>(event.GetClientData());
+	const ibMetaID id = static_cast<ibMetaID>(reinterpret_cast<intptr_t>(event.GetClientData()));
 	if (id > 0) {
 		dataProcessor->SetDefFormObject(id);
 	}
@@ -212,59 +212,59 @@ void CDataProcessorTree::OnChoiceDefForm(wxCommandEvent& event)
 	}
 }
 
-void CDataProcessorTree::OnButtonModuleClicked(wxCommandEvent& event)
+void ibDataProcessorTree::OnButtonModuleClicked(wxCommandEvent& event)
 {
-	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	ibValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
-	OpenFormMDI(dataProcessor->GetModuleObject());
+	dataProcessor->ProcessCommand(ibValueMetaObjectDataProcessor::ID_METATREE_OPEN_MODULE);
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorTree::CDataProcessorTreeCtrl, wxTreeCtrl);
+wxIMPLEMENT_DYNAMIC_CLASS(ibDataProcessorTree::ibDataProcessorTreeCtrl, wxTreeCtrl);
 
 //**********************************************************************************
 //*                                  metaTree window						       *
 //**********************************************************************************
 
-wxBEGIN_EVENT_TABLE(CDataProcessorTree::CDataProcessorTreeCtrl, wxTreeCtrl)
+wxBEGIN_EVENT_TABLE(ibDataProcessorTree::ibDataProcessorTreeCtrl, wxTreeCtrl)
 
-EVT_LEFT_UP(CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftUp)
-EVT_LEFT_DOWN(CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftDown)
-EVT_LEFT_DCLICK(CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftDClick)
-EVT_RIGHT_UP(CDataProcessorTree::CDataProcessorTreeCtrl::OnRightUp)
-EVT_RIGHT_DOWN(CDataProcessorTree::CDataProcessorTreeCtrl::OnRightDown)
-EVT_RIGHT_DCLICK(CDataProcessorTree::CDataProcessorTreeCtrl::OnRightDClick)
-EVT_MOTION(CDataProcessorTree::CDataProcessorTreeCtrl::OnMouseMove)
-EVT_KEY_UP(CDataProcessorTree::CDataProcessorTreeCtrl::OnKeyUp)
-EVT_KEY_DOWN(CDataProcessorTree::CDataProcessorTreeCtrl::OnKeyDown)
+EVT_LEFT_UP(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnLeftUp)
+EVT_LEFT_DOWN(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnLeftDown)
+EVT_LEFT_DCLICK(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnLeftDClick)
+EVT_RIGHT_UP(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightUp)
+EVT_RIGHT_DOWN(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightDown)
+EVT_RIGHT_DCLICK(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRightDClick)
+EVT_MOTION(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnMouseMove)
+EVT_KEY_UP(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnKeyUp)
+EVT_KEY_DOWN(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnKeyDown)
 
-EVT_TREE_SEL_CHANGING(wxID_ANY, CDataProcessorTree::CDataProcessorTreeCtrl::OnSelecting)
-EVT_TREE_SEL_CHANGED(wxID_ANY, CDataProcessorTree::CDataProcessorTreeCtrl::OnSelected)
+EVT_TREE_SEL_CHANGING(wxID_ANY, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSelecting)
+EVT_TREE_SEL_CHANGED(wxID_ANY, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSelected)
 
-EVT_TREE_ITEM_COLLAPSING(wxID_ANY, CDataProcessorTree::CDataProcessorTreeCtrl::OnCollapsing)
-EVT_TREE_ITEM_EXPANDING(wxID_ANY, CDataProcessorTree::CDataProcessorTreeCtrl::OnExpanding)
+EVT_TREE_ITEM_COLLAPSING(wxID_ANY, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCollapsing)
+EVT_TREE_ITEM_EXPANDING(wxID_ANY, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnExpanding)
 
-EVT_MENU(ID_METATREE_NEW, CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem)
-EVT_MENU(ID_METATREE_EDIT, CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem)
-EVT_MENU(ID_METATREE_DELETE, CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem)
-EVT_MENU(ID_METATREE_PROPERTY, CDataProcessorTree::CDataProcessorTreeCtrl::OnPropertyItem)
+EVT_MENU(ID_METATREE_NEW, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCreateItem)
+EVT_MENU(ID_METATREE_EDIT, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnEditItem)
+EVT_MENU(ID_METATREE_DELETE, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnRemoveItem)
+EVT_MENU(ID_METATREE_PROPERTY, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnPropertyItem)
 
-EVT_SET_FOCUS(CDataProcessorTree::CDataProcessorTreeCtrl::OnSetFocus)
-EVT_KILL_FOCUS(CDataProcessorTree::CDataProcessorTreeCtrl::OnSetFocus)
+EVT_SET_FOCUS(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSetFocus)
+EVT_KILL_FOCUS(ibDataProcessorTree::ibDataProcessorTreeCtrl::OnSetFocus)
 
-EVT_MENU(wxID_COPY, CDataProcessorTree::CDataProcessorTreeCtrl::OnCopyItem)
-EVT_MENU(wxID_PASTE, CDataProcessorTree::CDataProcessorTreeCtrl::OnPasteItem)
+EVT_MENU(wxID_COPY, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnCopyItem)
+EVT_MENU(wxID_PASTE, ibDataProcessorTree::ibDataProcessorTreeCtrl::OnPasteItem)
 
 wxEND_EVENT_TABLE()
 
-CDataProcessorTree::CDataProcessorTreeCtrl::CDataProcessorTreeCtrl()
-	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new CMetaView)
+ibDataProcessorTree::ibDataProcessorTreeCtrl::ibDataProcessorTreeCtrl()
+	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new ibMetaView)
 {
 	//set double buffered
 	SetDoubleBuffered(true);
 }
 
-CDataProcessorTree::CDataProcessorTreeCtrl::CDataProcessorTreeCtrl(wxWindow* parentWnd, CDataProcessorTree* ownerWnd)
-	: wxTreeCtrl(parentWnd, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_HIDE_ROOT | wxTR_NO_LINES | wxTR_TWIST_BUTTONS), m_ownerTree(ownerWnd), m_metaView(new CMetaView)
+ibDataProcessorTree::ibDataProcessorTreeCtrl::ibDataProcessorTreeCtrl(wxWindow* parentWnd, ibDataProcessorTree* ownerWnd)
+	: wxTreeCtrl(parentWnd, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_HIDE_ROOT | wxTR_NO_LINES | wxTR_TWIST_BUTTONS), m_ownerTree(ownerWnd), m_metaView(new ibMetaView)
 {
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
@@ -279,7 +279,7 @@ CDataProcessorTree::CDataProcessorTreeCtrl::CDataProcessorTreeCtrl(wxWindow* par
 
 #include "frontend/docView/docManager.h"
 
-CDataProcessorTree::CDataProcessorTreeCtrl::~CDataProcessorTreeCtrl()
+ibDataProcessorTree::ibDataProcessorTreeCtrl::~ibDataProcessorTreeCtrl()
 {
 	if (docManager != nullptr &&
 		m_metaView == docManager->GetAnyUsableView()) {

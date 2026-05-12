@@ -1,30 +1,17 @@
 #include "backend_mainFrame.h"
 
-IBackendDocMDIFrame* IBackendDocMDIFrame::ms_mainFrame = nullptr;
+// ibBackendDocFrame no longer owns any process-level / thread-local
+// state — the frame is a member of the ibSession that created it.
+// ms_mainFrame / t_mainFrame / GetDocMDIFrame / InstallOnThread and the
+// transitional ibCurrentFrame() helper are all gone. Callers reach
+// their frame through the session pointer that's already in scope.
+// Default ctor/dtor live in the header.
 
-///////////////////////////////////////////////////////////////////////////
-
-IBackendDocMDIFrame::IBackendDocMDIFrame()
+int ibBackendDocFrame::ShowModalMessage(const wxString& /*message*/,
+                                           const wxString& /*caption*/,
+                                           int /*style*/)
 {
-	wxASSERT(ms_mainFrame == nullptr);
-
-	if (ms_mainFrame == nullptr) {
-		ms_mainFrame = this;
-	}
-}
-
-IBackendDocMDIFrame* IBackendDocMDIFrame::GetDocMDIFrame()
-{
-	return ms_mainFrame;
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-IBackendDocMDIFrame::~IBackendDocMDIFrame() {
-
-	wxASSERT(ms_mainFrame != nullptr);
-
-	if (ms_mainFrame != nullptr) {
-		ms_mainFrame = nullptr;
-	}
+	// Default base body — no UI, so nothing to show. Returns 0 which
+	// maps to wxCANCEL/"aborted" in Question-style callers.
+	return 0;
 }

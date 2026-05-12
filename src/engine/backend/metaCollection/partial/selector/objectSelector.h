@@ -1,13 +1,13 @@
-#ifndef _SELECTOR_H__
+﻿#ifndef _SELECTOR_H__
 #define _SELECTOR_H__
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-class BACKEND_API IValueSelectorDataObject : public CValue {
+class BACKEND_API ibValueSelectorDataObject : public ibValue {
 public:
 
-	IValueSelectorDataObject();
-	virtual ~IValueSelectorDataObject();
+	ibValueSelectorDataObject();
+	virtual ~ibValueSelectorDataObject();
 
 	virtual bool Next() = 0;
 
@@ -17,10 +17,10 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IValueMetaObjectGenericData* GetMetaObject() const = 0;
+	virtual const ibValueMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//Get ref class 
-	virtual class_identifier_t GetClassType() const;
+	virtual ibClassID GetClassType() const;
 
 	//types 
 	virtual wxString GetClassName() const;
@@ -32,33 +32,33 @@ protected:
 	virtual bool Read() = 0;
 
 protected:
-	CMethodHelper* m_methodHelper;
+	ibValueMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API CValueSelectorRecordDataObject : public IValueSelectorDataObject,
-	public IValueDataObject {
+class BACKEND_API ibValueSelectorRecordDataObject : public ibValueSelectorDataObject,
+	public ibValueDataObject {
 public:
 
-	CValueSelectorRecordDataObject(IValueMetaObjectRecordDataMutableRef* metaObject);
+	ibValueSelectorRecordDataObject(const ibValueMetaObjectRecordDataMutableRef* metaObject);
 
 	virtual bool Next();
-	virtual IValueRecordDataObjectRef* GetObject(const CGuid& guid) const;
+	virtual ibValueRecordDataObjectRef* GetObject(const ibGuid& guid) const;
 
 	//get metaData from object 
-	virtual IValueMetaObjectRecordData* GetMetaObject() const {
+	virtual const ibValueMetaObjectRecordData* GetMetaObject() const {
 		return m_metaObject;
 	}
 
-	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
 
 	//attribute
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 
 protected:
 
@@ -67,35 +67,35 @@ protected:
 
 protected:
 
-	IValueMetaObjectRecordDataMutableRef* m_metaObject;
-	std::vector<CGuid> m_currentValues;
+	const ibValueMetaObjectRecordDataMutableRef* m_metaObject;
+	std::vector<ibGuid> m_currentValues;
 };
 
 /////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API CValueSelectorRegisterDataObject :
-	public IValueSelectorDataObject {
+class BACKEND_API ibValueSelectorRegisterDataObject :
+	public ibValueSelectorDataObject {
 public:
-	CValueSelectorRegisterDataObject(IValueMetaObjectRegisterData* metaObject);
+	ibValueSelectorRegisterDataObject(const ibValueMetaObjectRegisterData* metaObject);
 
 	virtual bool Next();
-	virtual IValueRecordManagerObject* GetRecordManager(const valueArray_t& keyValues) const;
+	virtual ibValueRecordManagerObject* GetRecordManager(const ibMetaValueArray& keyValues) const;
 
 	//get metaData from object 
-	virtual IValueMetaObjectRegisterData* GetMetaObject() const {
+	virtual const ibValueMetaObjectRegisterData* GetMetaObject() const {
 		return m_metaObject;
 	}
 
-	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
 
 	//attribute
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 
 protected:
 
@@ -104,14 +104,14 @@ protected:
 
 protected:
 
-	IValueMetaObjectRegisterData* m_metaObject;
+	const ibValueMetaObjectRegisterData* m_metaObject;
 
-	valueArray_t m_keyValues;
+	ibMetaValueArray m_keyValues;
 
-	std::vector <valueArray_t> m_currentValues;
+	std::vector <ibMetaValueArray> m_currentValues;
 	std::map<
-		valueArray_t,
-		valueArray_t
+		ibMetaValueArray,
+		ibMetaValueArray
 	> m_listObjectValue;
 };
 

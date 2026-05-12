@@ -3,8 +3,8 @@
 
 #include "metaObject.h"
 
-class BACKEND_API CValueMetaObjectRole : public IValueMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectRole);
+class BACKEND_API ibValueMetaObjectRole : public ibValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectRole);
 protected:
 	enum
 	{
@@ -12,14 +12,14 @@ protected:
 	};
 public:
 
-	CValueMetaObjectRole(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	ibValueMetaObjectRole(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//events:
-	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
+	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
 
 	//module manager is started or exit 
 	virtual bool OnBeforeRunMetaObject(int flags);

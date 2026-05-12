@@ -14,7 +14,7 @@
 
 //////////////////////////////////////////////////////////////
 
-void CValueForm::Modify(bool modify) 
+void ibValueForm::Modify(bool modify) 
 {
 	if (IsShown()) {
 		GetVisualDocument()->Modify(modify);
@@ -22,12 +22,12 @@ void CValueForm::Modify(bool modify)
 	m_formModified = modify;
 }
 
-CFormVisualDocument* CValueForm::GetVisualDocument() const
+ibFormVisualDocument* ibValueForm::GetVisualDocument() const
 {
-	return CFormVisualDocument::FindDocByUniqueKey(m_formKey);
+	return ibFormVisualDocument::FindDocByUniqueKey(m_formKey);
 }
 
-IValueMetaObjectGenericData* CValueForm::GetMetaObject() const
+const ibValueMetaObjectGenericData* ibValueForm::GetMetaObject() const
 {
 	return m_sourceObject != nullptr ?
 		m_sourceObject->GetSourceMetaObject() : nullptr;
@@ -35,14 +35,14 @@ IValueMetaObjectGenericData* CValueForm::GetMetaObject() const
 
 //////////////////////////////////////////////////////////////
 
-wxString CValueForm::GetControlTitle() const
+wxString ibValueForm::GetControlTitle() const
 {
 	if (m_propertyTitle->IsEmptyProperty()) {
 
-		const IValueMetaObjectGenericData* metaSource = GetMetaObject();
+		const ibValueMetaObjectGenericData* metaSource = GetMetaObject();
 		if (metaSource != nullptr) return metaSource->GetSynonym();
 
-		const IValueMetaObjectForm* metaForm = GetFormMetaObject();
+		const ibValueMetaObjectFormBase* metaForm = GetFormMetaObject();
 		if (metaForm != nullptr) return metaForm->GetSynonym();
 	}
 
@@ -53,27 +53,27 @@ wxString CValueForm::GetControlTitle() const
 
 #include "frontend/docView/docManager.h"
 
-bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)
+bool ibValueForm::CreateDocForm(ibMetaDocument* docParent, bool createContext)
 {
-	CFormVisualDocument* const visualFoundedDoc = GetVisualDocument();
+	ibFormVisualDocument* const visualFoundedDoc = GetVisualDocument();
 	if (visualFoundedDoc != nullptr) {
 		ActivateForm();
 		return true;
 	}
 
 	if (createContext) {
-		ISourceDataObject* srcData = GetSourceObject();
+		ibSourceDataObject* srcData = GetSourceObject();
 		if (srcData != nullptr && !srcData->IsNewObject()) {
-			CFormVisualDocument* foundedVisualDocument =
-				CFormVisualDocument::FindDocByUniqueKey(m_formKey);
+			ibFormVisualDocument* foundedVisualDocument =
+				ibFormVisualDocument::FindDocByUniqueKey(m_formKey);
 			if (foundedVisualDocument != nullptr) {
 				foundedVisualDocument->Activate();
 				return true;
 			}
 		}
 		else if (srcData == nullptr) {
-			CFormVisualDocument* foundedVisualDocument =
-				CFormVisualDocument::FindDocByUniqueKey(m_formKey);
+			ibFormVisualDocument* foundedVisualDocument =
+				ibFormVisualDocument::FindDocByUniqueKey(m_formKey);
 			if (foundedVisualDocument != nullptr) {
 				foundedVisualDocument->Activate();
 				return true;
@@ -83,21 +83,21 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)
 
 #pragma region __value_ref_guard_h__
 
-	class CValueFormControlGuard {
+	class ibValueFormControlGuard {
 	public:
-		CValueFormControlGuard(CValueForm* valueForm) : m_valueForm(valueForm) { valueForm->IncrRef(); }
-		~CValueFormControlGuard() { m_valueForm->DecrRef(); }
+		ibValueFormControlGuard(ibValueForm* valueForm) : m_valueForm(valueForm) { valueForm->IncrRef(); }
+		~ibValueFormControlGuard() { m_valueForm->DecrRef(); }
 	private:
-		CValueForm* m_valueForm;
+		ibValueForm* m_valueForm;
 	};
 
-	CValueFormControlGuard enter(this);
+	ibValueFormControlGuard enter(this);
 
 #pragma endregion
 
 	if (createContext) {
 
-		CValue bCancel = false;
+		ibValue bCancel = false;
 
 		if (!CallAsEvent(wxT("beforeOpen"), bCancel))
 			return false;
@@ -109,17 +109,23 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)
 			return false;
 	}
 
-	CFormVisualDocument* visualCreatedDoc = createContext ?
-		new CFormVisualDocument(this) :
-		new CFormVisualDemoDocument(this);
+	ibFormVisualDocument* visualCreatedDoc = createContext ?
+		new ibFormVisualDocument(this) :
+		new ibFormVisualDocumentDemo(this);
 
 	//if doc has parent - special delete!
 	if (docParent != nullptr) {
 		visualCreatedDoc->SetDocParent(docParent);
 	}
+#ifndef OES_USE_WEB
 	else if (docParent == nullptr) {
+		// docManager is the desktop-wide ibMetaDocManager singleton;
+		// wfrontend.dll doesn't construct one. Web sessions keep the
+		// document alive through ibWebFrame::m_tabs ownership, not
+		// through a manager's document list.
 		docManager->AddDocument(visualCreatedDoc);
 	}
+#endif
 
 	if (visualCreatedDoc->OnCreate(m_formKey, createContext ? runFlag : demoFlag)) {
 
@@ -141,19 +147,19 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)
 	return false;
 }
 
-void CValueForm::ActivateDocForm()
+void ibValueForm::ActivateDocForm()
 {
-	CFormVisualDocument* const ownerDocForm = GetVisualDocument();
+	ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 	if (ownerDocForm != nullptr) {
 		CallAsEvent(wxT("onReOpen"));
 		ownerDocForm->Activate();
 	}
 }
 
-void CValueForm::ChoiceDocForm(CValue& vSelected)
+void ibValueForm::ChoiceDocForm(ibValue& vSelected)
 {
 	if (m_controlOwner != nullptr) {
-		CValueForm* ownerForm = m_controlOwner->GetOwnerForm();
+		ibValueForm* ownerForm = m_controlOwner->GetOwnerForm();
 		if (ownerForm != nullptr)
 			ownerForm->CallAsEvent(wxT("choiceProcessing"), vSelected, GetValue());
 		m_controlOwner->ChoiceProcessing(vSelected);
@@ -162,23 +168,23 @@ void CValueForm::ChoiceDocForm(CValue& vSelected)
 	}
 }
 
-void CValueForm::RefreshDocForm()
+void ibValueForm::RefreshDocForm()
 {
 	if (!appData->DesignerMode()) {
 		CallAsEvent(wxT("refreshDisplay"));
 	}
 }
 
-bool CValueForm::CloseDocForm()
+bool ibValueForm::CloseDocForm()
 {
-	CFormVisualDocument* const visualDoc = GetVisualDocument();
+	ibFormVisualDocument* const visualDoc = GetVisualDocument();
 
 	if (visualDoc == nullptr)
 		return false;
 
 	if (!appData->DesignerMode() && !visualDoc->IsVisualDemonstrationDoc()) {
 
-		CValue bCancel = false;
+		ibValue bCancel = false;
 		CallAsEvent(wxT("beforeClose"), bCancel);
 
 		if (bCancel.GetBoolean())

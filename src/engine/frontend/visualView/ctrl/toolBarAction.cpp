@@ -1,19 +1,26 @@
 #include "toolbar.h"
 #include "form.h"
 
-bool CValueToolbar::GetActionSource(CPropertyList* property)
+// Populates the designer's property-grid drop-down with candidate
+// action sources (the owner form plus any Tablebox under it). Only
+// exercised from the designer's property editor; web doesn't render
+// a property grid, so the web build collapses this to a false-return
+// stub (keeps the virtual on the vtable without pulling the
+// designer-only ibPropertyList code path).
+bool ibValueToolbar::GetActionSource(ibPropertyList* property)
 {
+#ifndef OES_USE_WEB
 	property->AppendItem(
 		wxT("form"),
 		_("Form"),
 		FORM_ACTION,
 		m_formOwner->GetIcon(),
-		(IValueFrame*)m_formOwner
+		(ibValueFrame*)m_formOwner
 	);
 
-	class CValueToolbarActionParser {
+	class ibValueToolbarActionParser {
 	public:
-		static inline void FillActionSource(IValueFrame* element, CPropertyList* property) {
+		static inline void FillActionSource(ibValueFrame* element, ibPropertyList* property) {
 			if (element->GetClassName() == wxT("Tablebox")) {
 				property->AppendItem(
 					element->GetControlName(),
@@ -29,6 +36,10 @@ bool CValueToolbar::GetActionSource(CPropertyList* property)
 		}
 	};
 
-	CValueToolbarActionParser::FillActionSource(m_formOwner, property);
+	ibValueToolbarActionParser::FillActionSource(m_formOwner, property);
 	return true;
+#else
+	(void)property;
+	return false;
+#endif
 }

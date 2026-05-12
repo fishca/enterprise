@@ -5,7 +5,7 @@
 
 #include "gridPrintout.h"
 
-CGridEditorPrintout::CGridEditorPrintout(const wxString& title) : wxPrintout(title)
+ibGridEditorPrintout::ibGridEditorPrintout(const wxString& title) : wxPrintout(title)
 {
 	SetStyle(wxGP_SHOW_NONE);
 
@@ -21,7 +21,7 @@ CGridEditorPrintout::CGridEditorPrintout(const wxString& title) : wxPrintout(tit
 	m_rightMargin = 50;
 }
 
-CGridEditorPrintout::CGridEditorPrintout(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, int style, const wxString& title) : wxPrintout(title)
+ibGridEditorPrintout::ibGridEditorPrintout(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, int style, const wxString& title) : wxPrintout(title)
 {
 	m_doc = doc;
 	SetStyle(style);
@@ -38,7 +38,7 @@ CGridEditorPrintout::CGridEditorPrintout(const wxObjectDataPtr<CBackendSpreadshe
 	m_rightMargin = 50;
 }
 
-void CGridEditorPrintout::SetStyle(int style)
+void ibGridEditorPrintout::SetStyle(int style)
 {
 	m_style = style;
 
@@ -65,12 +65,12 @@ void CGridEditorPrintout::SetStyle(int style)
 		m_showRlAlways = true;
 }
 
-int CGridEditorPrintout::GetStyle() const
+int ibGridEditorPrintout::GetStyle() const
 {
 	return m_style;
 }
 
-bool CGridEditorPrintout::OnPrintPage(int page)
+bool ibGridEditorPrintout::OnPrintPage(int page)
 {
 	wxDC* dc = GetDC();
 
@@ -87,12 +87,12 @@ bool CGridEditorPrintout::OnPrintPage(int page)
 	return DrawPage(dc, page);
 }
 
-bool CGridEditorPrintout::HasPage(int page)
+bool ibGridEditorPrintout::HasPage(int page)
 {
 	return true;
 }
 
-void CGridEditorPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFrom, int* selPageTo)
+void ibGridEditorPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFrom, int* selPageTo)
 {
 	*minPage = m_minPage;
 	*maxPage = m_maxPage;
@@ -100,7 +100,7 @@ void CGridEditorPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFr
 	*selPageTo = m_selPageTo;
 }
 
-bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
+bool ibGridEditorPrintout::DrawPage(wxDC* dc, int page)
 {
 	int columnPages = m_colsPerPage.Count();
 	int rowPages = m_rowsPerPage.Count();
@@ -175,7 +175,7 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 		for (int col = m_colsPerPage.Item(colIndex); col < toCol; col++) {
 			
 			int cell_rows, cell_cols;
-			if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_Main) {
+			if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == ibGrid::CellSpan_Main) {
 			
 				int colSize = 0, rowSize = 0;
 				
@@ -195,8 +195,8 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 				m_doc->GetCellAlignment(row, col, &horz, &vert);
 
 				wxString result;
-				if (m_doc->GetCellFillType(row, col) != enSpreadsheetFillType::enSpreadsheetFillType_StrParameter){
-					CBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
+				if (m_doc->GetCellFillType(row, col) != ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter){
+					ibBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
 						m_doc->GetCellValue(row, col), result);
 				}
 				else {
@@ -211,7 +211,7 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 					m_doc->GetCellTextOrient(row, col)
 				);
 			}
-			else if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_None) {
+			else if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == ibGrid::CellSpan_None) {
 				
 				wxRect rect(countWidth, countHeight, m_doc->GetColSize(col), m_doc->GetRowSize(row));
 				
@@ -223,8 +223,8 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 				m_doc->GetCellAlignment(row, col, &horz, &vert);
 
 				wxString result;
-				if (m_doc->GetCellFillType(row, col) != enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
-					CBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
+				if (m_doc->GetCellFillType(row, col) != ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
+					ibBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
 						m_doc->GetCellValue(row, col), result);
 				}
 				else {
@@ -256,7 +256,7 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 		for (int col = m_colsPerPage.Item(colIndex); col < toCol; col++) {
 
 			int cell_rows, cell_cols;
-			if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_Main) {
+			if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == ibGrid::CellSpan_Main) {
 
 				int colSize = 0, rowSize = 0;
 
@@ -268,53 +268,53 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 
 				wxRect rect(countWidth, countHeight, colSize, rowSize);
 
-				CSpreadsheetBorderDescription borderLeft = m_doc->GetCellBorderLeft(row, col);
+				ibSpreadsheetBorderDescription borderLeft = m_doc->GetCellBorderLeft(row, col);
 				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
 					dc->DrawLine(rect.GetLeft() + 1, rect.GetTop(), rect.GetLeft() + 1, rect.GetBottom() + 1);
 				}
 
-				CSpreadsheetBorderDescription borderRight = m_doc->GetCellBorderRight(row, col);
+				ibSpreadsheetBorderDescription borderRight = m_doc->GetCellBorderRight(row, col);
 				if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
 					dc->DrawLine(rect.GetRight() + 2, rect.GetTop(), rect.GetRight() + 2, rect.GetBottom() + 1);
 				}
 
-				CSpreadsheetBorderDescription borderTop = m_doc->GetCellBorderTop(row, col);
+				ibSpreadsheetBorderDescription borderTop = m_doc->GetCellBorderTop(row, col);
 				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
 					dc->DrawLine(rect.GetLeft() + 1 , rect.GetTop(), rect.GetRight() + 2, rect.GetTop());
 				}
 
-				CSpreadsheetBorderDescription borderBottom = m_doc->GetCellBorderBottom(row, col);
+				ibSpreadsheetBorderDescription borderBottom = m_doc->GetCellBorderBottom(row, col);
 				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
 					dc->DrawLine(rect.GetLeft() + 1, rect.GetBottom() + 1, rect.GetRight() + 2, rect.GetBottom() + 1);
 				}
 			}
-			else if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_None) {
+			else if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == ibGrid::CellSpan_None) {
 
 				wxRect rect(countWidth, countHeight, m_doc->GetColSize(col), m_doc->GetRowSize(row));
 
-				CSpreadsheetBorderDescription borderLeft = m_doc->GetCellBorderLeft(row, col);
+				ibSpreadsheetBorderDescription borderLeft = m_doc->GetCellBorderLeft(row, col);
 				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
 					dc->DrawLine(rect.GetLeft() + 1, rect.GetTop(), rect.GetLeft() + 1, rect.GetBottom() + 1);
 				}
 
-				CSpreadsheetBorderDescription borderRight = m_doc->GetCellBorderRight(row, col);
+				ibSpreadsheetBorderDescription borderRight = m_doc->GetCellBorderRight(row, col);
 				if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
 					dc->DrawLine(rect.GetRight() + 2, rect.GetTop(), rect.GetRight() + 2, rect.GetBottom() + 1);
 				}
 
-				CSpreadsheetBorderDescription borderTop = m_doc->GetCellBorderTop(row, col);
+				ibSpreadsheetBorderDescription borderTop = m_doc->GetCellBorderTop(row, col);
 				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
 					dc->DrawLine(rect.GetLeft() + 1, rect.GetTop(), rect.GetRight() + 2, rect.GetTop());
 				}
 
-				CSpreadsheetBorderDescription borderBottom = m_doc->GetCellBorderBottom(row, col);
+				ibSpreadsheetBorderDescription borderBottom = m_doc->GetCellBorderBottom(row, col);
 				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
 					dc->DrawLine(rect.GetLeft() + 1, rect.GetBottom() + 1, rect.GetRight() + 2, rect.GetBottom() + 1);
@@ -336,7 +336,7 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 	return true;
 }
 
-void CGridEditorPrintout::OnPreparePrinting()
+void ibGridEditorPrintout::OnPreparePrinting()
 {
 	wxDC* dc = GetDC();
 	CalculateScale(dc);
@@ -348,7 +348,7 @@ void CGridEditorPrintout::OnPreparePrinting()
 	m_maxWidth /= m_overallScale;
 	m_maxHeight /= m_overallScale;
 
-	const CSpreadsheetDescription& spreadsheetDesc = m_doc->GetSpreadsheetDesc();
+	const ibSpreadsheetDescription& spreadsheetDesc = m_doc->GetSpreadsheetDesc();
 
 	m_maxWidth -= 100;
 	m_maxHeight -= 100;
@@ -398,7 +398,7 @@ void CGridEditorPrintout::OnPreparePrinting()
 	m_maxPage = m_rowsPerPage.GetCount() * m_colsPerPage.GetCount();
 }
 
-void CGridEditorPrintout::CalculateScale(wxDC* dc)
+void ibGridEditorPrintout::CalculateScale(wxDC* dc)
 {
 	// You might use THIS code to set the printer DC to roughly
 	// reflect the screen text size. This page also draws lines of
@@ -429,17 +429,17 @@ void CGridEditorPrintout::CalculateScale(wxDC* dc)
 	m_screenScale = screenScale;
 }
 
-void CGridEditorPrintout::SetUserScale(float scale)
+void ibGridEditorPrintout::SetUserScale(float scale)
 {
 	m_userScale = scale;
 	m_overallScale = m_screenScale * m_userScale;
 }
 
-void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue, wxRect& rect, const wxFont& font, const wxColour& fontClr,
+void ibGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue, wxRect& rect, const wxFont& font, const wxColour& fontClr,
 	int horizAlign, int vertAlign, int textOrientation)
 {
 	wxArrayString lines, naturalLines;
-	CGridEditor::ParseLines(strValue, naturalLines);
+	ibGridEditor::ParseLines(strValue, naturalLines);
 
 	rect.x += 2;
 	rect.width -= 2;
@@ -456,11 +456,11 @@ void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue
 
 	dc.SetFont(font);
 
-	CGridEditor::DrawTextRectangle(dc,
+	ibGridEditor::DrawTextRectangle(dc,
 		lines, rect, horizAlign, vertAlign, textOrientation);
 }
 
-wxArrayString CGridEditorPrintout::GetTextLines(wxDC& dc, const wxString& data, const wxFont& font, const wxRect& rect)
+wxArrayString ibGridEditorPrintout::GetTextLines(wxDC& dc, const wxString& data, const wxFont& font, const wxRect& rect)
 {
 	wxArrayString lines;
 

@@ -7,10 +7,10 @@
 #include "backend/appData.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-IMetaDataConfiguration* IMetaDataConfiguration::ms_instance = nullptr;
+ibMetaDataConfigurationBase* ibMetaDataConfigurationBase::ms_instance = nullptr;
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IMetaDataConfiguration::Initialize(eRunMode mode, const int flags)
+bool ibMetaDataConfigurationBase::Initialize(ibRunMode mode, const int flags)
 {
 	if (ms_instance == nullptr) {
 
@@ -18,10 +18,10 @@ bool IMetaDataConfiguration::Initialize(eRunMode mode, const int flags)
 		{
 		case eLAUNCHER_MODE: break;
 		case eDESIGNER_MODE:
-			ms_instance = new CMetaDataConfigurationStorage();
+			ms_instance = new ibMetaDataConfigurationStorage();
 			break;
 		default:
-			ms_instance = new CMetaDataConfiguration();
+			ms_instance = new ibMetaDataConfiguration();
 			break;
 		}
 
@@ -32,7 +32,7 @@ bool IMetaDataConfiguration::Initialize(eRunMode mode, const int flags)
 	return false;
 }
 
-bool IMetaDataConfiguration::Destroy()
+bool ibMetaDataConfigurationBase::Destroy()
 {
 	if (ms_instance != nullptr) {
 		ms_instance->OnDestroy();
@@ -43,9 +43,9 @@ bool IMetaDataConfiguration::Destroy()
 
 #include <fstream>
 
-bool IMetaDataConfiguration::LoadConfigFromFile(const wxString& strFileName)
+bool ibMetaDataConfigurationBase::LoadConfigFromFile(const wxString& strFileName)
 {
-	std::ifstream in(strFileName.ToStdWstring(), std::ios::in | std::ios::binary);
+	std::ifstream in(strFileName.ToStdString(), std::ios::in | std::ios::binary);
 
 	if (!in.is_open())
 		return false;
@@ -62,12 +62,13 @@ bool IMetaDataConfiguration::LoadConfigFromFile(const wxString& strFileName)
 	wxMemoryBuffer buffer(fsize);
 
 	in.read((char*)buffer.GetWriteBuf(fsize), fsize);
+	buffer.UngetWriteBuf(fsize);
 	in.close();
 
 	return LoadConfigFromBuffer(buffer);
 }
 
-bool IMetaDataConfiguration::SaveConfigToFile(const wxString& strFileName)
+bool ibMetaDataConfigurationBase::SaveConfigToFile(const wxString& strFileName)
 {
 	//common data
 	wxMemoryBuffer buffer;
@@ -89,29 +90,26 @@ bool IMetaDataConfiguration::SaveConfigToFile(const wxString& strFileName)
 //*                                          ConfigMetadata										   *
 //**************************************************************************************************
 
-CMetaDataConfigurationFile::CMetaDataConfigurationFile() : IMetaDataConfiguration(),
-m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
+ibMetaDataConfigurationFile::ibMetaDataConfigurationFile() : ibMetaDataConfigurationBase(),
+m_commonObject(nullptr), m_configOpened(false)
 {
 	//create main metaObject
-	m_commonObject = new CValueMetaObjectConfiguration();
+	m_commonObject = new ibValueMetaObjectConfiguration();
 	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
-		m_moduleManager = new CValueModuleManagerConfiguration(this, m_commonObject);
-		m_moduleManager->IncrRef();
 		if (!m_commonObject->OnLoadMetaObject(this)) {
 			wxASSERT_MSG(false, "m_commonObject->OnLoadMetaObject() == false");
 		}
-		m_moduleManager->PrepareNames();
 	}
 
 	m_commonObject->PrepareNames();
 	m_commonObject->IncrRef();
 
 	{
-		CValue* ppParams[] = { m_commonObject };
-		CValueMetaObjectLanguage* commonLanguage =
-			CValue::CreateAndConvertObjectRef<CValueMetaObjectLanguage>(g_metaLanguageCLSID, ppParams, 1);
+		ibValue* ppParams[] = { m_commonObject };
+		ibValueMetaObjectLanguage* commonLanguage =
+			ibValue::CreateAndConvertObjectRef<ibValueMetaObjectLanguage>(g_metaLanguageCLSID, ppParams, 1);
 
 		if (commonLanguage->OnCreateMetaObject(this, newObjectFlag)) {
 
@@ -127,16 +125,11 @@ m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 
 		m_commonObject->SetLanguage(commonLanguage->GetMetaID());
 	}
-
-	wxASSERT(m_moduleManager);
 }
 
-CMetaDataConfigurationFile::~CMetaDataConfigurationFile()
+ibMetaDataConfigurationFile::~ibMetaDataConfigurationFile()
 {
-	//delete module manager
-	wxDELETE(m_moduleManager);
-
-	//clear data 
+	//clear data
 	if (!ClearDatabase()) {
 		wxASSERT_MSG(false, "ClearDatabase() == false");
 	}
@@ -145,9 +138,11 @@ CMetaDataConfigurationFile::~CMetaDataConfigurationFile()
 	wxDELETE(m_commonObject);
 }
 
+
+
 ////////////////////////////////////////////////////////////////////
 
-wxString CMetaDataConfigurationFile::GetLangCode() const
+wxString ibMetaDataConfigurationFile::GetLangCode() const
 {
 	if (m_commonObject != nullptr)
 		return m_commonObject->GetLangCode();
@@ -155,7 +150,7 @@ wxString CMetaDataConfigurationFile::GetLangCode() const
 	return wxT("");
 }
 
-bool CMetaDataConfigurationFile::IsFullAccess() const
+bool ibMetaDataConfigurationFile::IsFullAccess() const
 {
 	bool access_right = true;
 
@@ -175,9 +170,12 @@ bool CMetaDataConfigurationFile::IsFullAccess() const
 
 ////////////////////////////////////////////////////////////////////
 
-bool CMetaDataConfigurationFile::RunDatabase(int flags)
+bool ibMetaDataConfigurationFile::RunDatabase(int flags)
 {
 	wxASSERT(!m_configOpened);
+
+	if ((flags & loadConfigFlag) == 0)
+		ibCompileCode::SetCodeStyle(m_commonObject->GetCompileSyntax());
 
 	if (!m_commonObject->OnBeforeRunMetaObject(flags)) {
 		wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
@@ -200,38 +198,36 @@ bool CMetaDataConfigurationFile::RunDatabase(int flags)
 			return false;
 	}
 
-	if (m_moduleManager->CreateMainModule()) {
+	// CreateMainModule (compile) is no longer fired from RunDatabase —
+	// orchestration moved to the caller (appData::LoadMetadata) so
+	// metadata stays a pure skeleton/factory and runtime ops sit on the
+	// session-mm side.
 
-		if (!m_commonObject->OnAfterRunMetaObject(flags)) {
-			wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
-			return false;
-		}
-
-		for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
-
-			auto child = m_commonObject->GetChild(idx);
-			if (!m_commonObject->FilterChild(child->GetClassType()))
-				continue;
-
-			if (child->IsDeleted())
-				continue;
-
-			if (!child->OnAfterRunMetaObject(flags))
-				return false;
-
-			if (!RunChildMetadata(child, flags, false))
-				return false;
-		}
-		//if (!StartMainModule())
-		//	return false;
-		m_configOpened = true;
-		return true;
+	if (!m_commonObject->OnAfterRunMetaObject(flags)) {
+		wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
+		return false;
 	}
 
-	return false;
+	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
+
+		auto child = m_commonObject->GetChild(idx);
+		if (!m_commonObject->FilterChild(child->GetClassType()))
+			continue;
+
+		if (child->IsDeleted())
+			continue;
+
+		if (!child->OnAfterRunMetaObject(flags))
+			return false;
+
+		if (!RunChildMetadata(child, flags, false))
+			return false;
+	}
+	m_configOpened = true;
+	return true;
 }
 
-bool CMetaDataConfigurationFile::RunChildMetadata(IValueMetaObject* object, int flags, bool before)
+bool ibMetaDataConfigurationFile::RunChildMetadata(ibValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -255,7 +251,7 @@ bool CMetaDataConfigurationFile::RunChildMetadata(IValueMetaObject* object, int 
 	return true;
 }
 
-bool CMetaDataConfigurationFile::CloseDatabase(int flags)
+bool ibMetaDataConfigurationFile::CloseDatabase(int flags)
 {
 	wxASSERT(m_configOpened);
 
@@ -283,9 +279,9 @@ bool CMetaDataConfigurationFile::CloseDatabase(int flags)
 		return false;
 	}
 
-	if (!m_moduleManager->DestroyMainModule()) {
-		return false;
-	}
+	// DestroyMainModule moved to the caller (appData::Disconnect /
+	// UnloadMetadata) — symmetric with CreateMainModule that was hoisted
+	// out of RunDatabase.
 
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
 
@@ -312,7 +308,7 @@ bool CMetaDataConfigurationFile::CloseDatabase(int flags)
 	return true;
 }
 
-bool CMetaDataConfigurationFile::CloseChildMetadata(IValueMetaObject* object, int flags, bool before)
+bool ibMetaDataConfigurationFile::CloseChildMetadata(ibValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -336,7 +332,7 @@ bool CMetaDataConfigurationFile::CloseChildMetadata(IValueMetaObject* object, in
 	return true;
 }
 
-bool CMetaDataConfigurationFile::ClearDatabase()
+bool ibMetaDataConfigurationFile::ClearDatabase()
 {
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
 
@@ -362,7 +358,7 @@ bool CMetaDataConfigurationFile::ClearDatabase()
 	return true;
 }
 
-bool CMetaDataConfigurationFile::ClearChildMetadata(IValueMetaObject* object)
+bool ibMetaDataConfigurationFile::ClearChildMetadata(ibValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -384,7 +380,7 @@ bool CMetaDataConfigurationFile::ClearChildMetadata(IValueMetaObject* object)
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadConfigFromBuffer(const wxMemoryBuffer& buffer)
+bool ibMetaDataConfigurationFile::LoadConfigFromBuffer(const wxMemoryBuffer& buffer)
 {
 	//close data 
 	if (IsConfigOpen()) {
@@ -401,7 +397,7 @@ bool CMetaDataConfigurationFile::LoadConfigFromBuffer(const wxMemoryBuffer& buff
 		return false;
 	}
 
-	CMemoryReader readerData(buffer.GetData(), buffer.GetBufSize());
+	ibReaderMemory readerData(buffer.GetData(), buffer.GetBufSize());
 
 	if (readerData.eof())
 		return false;
@@ -422,9 +418,9 @@ bool CMetaDataConfigurationFile::LoadConfigFromBuffer(const wxMemoryBuffer& buff
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadHeader(CMemoryReader& readerData)
+bool ibMetaDataConfigurationFile::LoadHeader(ibReaderMemory& readerData)
 {
-	std::shared_ptr<CMemoryReader> readerMemory(readerData.open_chunk(eHeaderBlock));
+	std::shared_ptr<ibReaderMemory> readerMemory(readerData.open_chunk(eHeaderBlock));
 
 	if (!readerMemory)
 		return false;
@@ -440,27 +436,27 @@ bool CMetaDataConfigurationFile::LoadHeader(CMemoryReader& readerData)
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData)
+bool ibMetaDataConfigurationFile::LoadCommonMetadata(const ibClassID& clsid, ibReaderMemory& readerData)
 {
-	std::shared_ptr<CMemoryReader> readerMemory(readerData.open_chunk(clsid));
+	std::shared_ptr<ibReaderMemory> readerMemory(readerData.open_chunk(clsid));
 
 	if (!readerMemory)
 		return false;
 
 	u64 meta_id = 0;
-	std::shared_ptr <CMemoryReader> readerMetaMemory(readerMemory->open_chunk_iterator(meta_id));
+	std::shared_ptr <ibReaderMemory> readerMetaMemory(readerMemory->open_chunk_iterator(meta_id));
 
 	if (!readerMetaMemory)
 		return true;
 
-	std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
+	std::shared_ptr <ibReaderMemory>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 
 	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (!m_commonObject->LoadMetaObject(this, *readerDataMemory))
 		return false;
 
-	std::shared_ptr <CMemoryReader> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
+	std::shared_ptr <ibReaderMemory> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
 
 	if (readerChildMemory) {
 		if (!LoadDatabase(clsid, *readerChildMemory, m_commonObject))
@@ -470,47 +466,47 @@ bool CMetaDataConfigurationFile::LoadCommonMetadata(const class_identifier_t& cl
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemoryReader& readerData, IValueMetaObject* object)
+bool ibMetaDataConfigurationFile::LoadDatabase(const ibClassID&, ibReaderMemory& readerData, ibValueMetaObject* object)
 {
-	class_identifier_t clsid = 0;
-	CMemoryReader* prevReaderMemory = nullptr;
+	ibClassID clsid = 0;
+	ibReaderMemory* prevReaderMemory = nullptr;
 
 	while (!readerData.eof())
 	{
-		CMemoryReader* readerMemory = readerData.open_chunk_iterator(clsid, &*prevReaderMemory);
+		ibReaderMemory* readerMemory = readerData.open_chunk_iterator(clsid, &*prevReaderMemory);
 
 		if (!readerMemory)
 			break;
 
 		u64 meta_id = 0;
-		CMemoryReader* prevReaderMetaMemory = nullptr;
+		ibReaderMemory* prevReaderMetaMemory = nullptr;
 
 		while (!readerMemory->eof())
 		{
-			CMemoryReader* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id, &*prevReaderMetaMemory);
+			ibReaderMemory* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id, &*prevReaderMetaMemory);
 
 			if (!readerMetaMemory)
 				break;
 
 			wxASSERT(clsid != 0);
 
-			IValueMetaObject* newMetaObject = nullptr;
-			CValue* ppParams[] = { object };
+			ibValueMetaObject* newMetaObject = nullptr;
+			ibValue* ppParams[] = { object };
 			try {
-				newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
+				newMetaObject = ibValue::CreateAndConvertObjectRef<ibValueMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
 			}
 			catch (...) {
 				return false;
 			}
 
-			std::shared_ptr <CMemoryReader> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
+			std::shared_ptr <ibReaderMemory> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
 			if (readerChildMemory) {
 				if (!LoadChildMetadata(clsid, *readerChildMemory, newMetaObject))
 					return false;
 			}
 
-			std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
+			std::shared_ptr <ibReaderMemory>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 
 			if (!newMetaObject->LoadMetaObject(this, *readerDataMemory))
 				return false;
@@ -524,47 +520,47 @@ bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemory
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IValueMetaObject* object)
+bool ibMetaDataConfigurationFile::LoadChildMetadata(const ibClassID&, ibReaderMemory& readerData, ibValueMetaObject* object)
 {
-	class_identifier_t clsid = 0;
-	CMemoryReader* prevReaderMemory = nullptr;
+	ibClassID clsid = 0;
+	ibReaderMemory* prevReaderMemory = nullptr;
 
 	while (!readerData.eof())
 	{
-		CMemoryReader* readerMemory = readerData.open_chunk_iterator(clsid, &*prevReaderMemory);
+		ibReaderMemory* readerMemory = readerData.open_chunk_iterator(clsid, &*prevReaderMemory);
 
 		if (!readerMemory)
 			break;
 
 		u64 meta_id = 0;
-		CMemoryReader* prevReaderMetaMemory = nullptr;
+		ibReaderMemory* prevReaderMetaMemory = nullptr;
 
 		while (!readerMemory->eof())
 		{
-			CMemoryReader* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id, &*prevReaderMetaMemory);
+			ibReaderMemory* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id, &*prevReaderMetaMemory);
 
 			if (!readerMetaMemory)
 				break;
 
 			wxASSERT(clsid != 0);
 
-			IValueMetaObject* newMetaObject = nullptr;
-			CValue* ppParams[] = { object };
+			ibValueMetaObject* newMetaObject = nullptr;
+			ibValue* ppParams[] = { object };
 			try {
-				newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
+				newMetaObject = ibValue::CreateAndConvertObjectRef<ibValueMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
 			}
 			catch (...) {
 				return false;
 			}
 
-			std::shared_ptr <CMemoryReader> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
+			std::shared_ptr <ibReaderMemory> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
 			if (readerChildMemory) {
 				if (!LoadChildMetadata(clsid, *readerChildMemory, newMetaObject))
 					return false;
 			}
 
-			std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
+			std::shared_ptr <ibReaderMemory>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 			if (!newMetaObject->LoadMetaObject(this, *readerDataMemory))
 				return false;
 
@@ -581,46 +577,54 @@ bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CM
 //*                                          ConfigMetadata                                        *
 //**************************************************************************************************
 
-bool CMetaDataConfiguration::OnInitialize(const int flags)
+bool ibMetaDataConfiguration::OnInitialize(const int flags)
 {
-	m_metaGuid = CGuid::newGuid();
+	m_metaGuid = ibGuid::newGuid();
 
-	if (!CMetaDataConfigurationStorage::TableAlreadyCreated())
+	if (!ibMetaDataConfigurationStorage::TableAlreadyCreated())
 		return false;
 
+	// One debug server per process, bound to the singleton metadata
+	// configuration. Per-session debug context (ibSession::Debug) layers
+	// on top — handshake is process-level, EnterLoop / step routing is
+	// per-session via sessionGuid.
 	debugServerInit(flags);
 
 	if (!LoadDatabase())
 		return false;
 
-#pragma region language  
-	// Check current language
-	const IValueMetaObject* foundedLanguage =
-		IMetaData::FindAnyObjectByFilter(appData->GetUserLanguageGuid(), g_metaLanguageCLSID);
-	// Initialize localization engine  
-	CBackendLocalization::SetUserLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
-#pragma endregion 
+	// Localization: pin the process-wide default to the configuration's
+	// main language code (metadata short-code form ru/en/uk). Pre-auth
+	// callers without a session bound — launcher / login screen — read
+	// through this default. Per-session active language is assigned
+	// later by SetUserInfo on authentication and stays cached on the
+	// session for its whole life.
+	ibBackendLocalization::SetUserLanguage(GetLangCode());
 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
-
-	if ((flags & _app_start_create_debug_server_flag) != 0)
-		debugServer->CreateServer(defaultHost, defaultDebuggerPort, true);
+	if ((flags & _app_start_create_debug_server_flag) != 0) {
+		// wait=true blocks bootstrap until the designer's debugClient
+		// connects (OnStart must not run before breakpoints arrive).
+		// For wes that's a deadlock — wes needs to bind HTTP and start
+		// serving immediately; the designer attaches later through the
+		// per-process search. Per-tab WebClient sessions stop at their
+		// own OnStart only after the listener exists.
+		const bool waitForClient = !appData->WebEnterpriseMode();
+		debugServer->CreateServer(defaultHost, defaultDebuggerPort, waitForClient);
+	}
 
 	return true;
 }
 
-bool CMetaDataConfiguration::OnDestroy()
+bool ibMetaDataConfiguration::OnDestroy()
 {
 	debugServerDestroy();
-	if (backend_mainFrame != nullptr) backend_mainFrame->OnDestroyConfiguration(GetConfigType());
 	return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CMetaDataConfiguration::CMetaDataConfiguration() :
-	CMetaDataConfigurationFile(), m_configNew(true)
+ibMetaDataConfiguration::ibMetaDataConfiguration() :
+	ibMetaDataConfigurationFile(), m_configNew(true)
 {
 }
 
@@ -628,14 +632,14 @@ CMetaDataConfiguration::CMetaDataConfiguration() :
 //*                                          ConfigSaveMetadata                                    *
 //**************************************************************************************************
 
-bool CMetaDataConfigurationStorage::OnInitialize(const int flags)
+bool ibMetaDataConfigurationStorage::OnInitialize(const int flags)
 {
-	m_metaGuid = CGuid::newGuid();
+	m_metaGuid = ibGuid::newGuid();
 
-	if (!CMetaDataConfigurationStorage::TableAlreadyCreated()) {
-		CMetaDataConfigurationStorage::CreateConfigTable();
-		CMetaDataConfigurationStorage::CreateConfigSaveTable();
-		CMetaDataConfigurationStorage::CreateConfigSequence();
+	if (!ibMetaDataConfigurationStorage::TableAlreadyCreated()) {
+		ibMetaDataConfigurationStorage::CreateConfigTable();
+		ibMetaDataConfigurationStorage::CreateConfigSaveTable();
+		ibMetaDataConfigurationStorage::CreateConfigSequence();
 	}
 
 	// Initialize debugger
@@ -649,7 +653,7 @@ bool CMetaDataConfigurationStorage::OnInitialize(const int flags)
 	if (!AccessRight_Administration()) {
 
 		try {
-			CBackendCoreException::Error(_("Not enough access rights for this user!"));
+			ibBackendCoreException::Error(_("Not enough access rights for this user!"));
 		}
 		catch (...) {
 		}
@@ -658,52 +662,49 @@ bool CMetaDataConfigurationStorage::OnInitialize(const int flags)
 	}
 #pragma endregion
 
-#pragma region language  
-
-	// Initialize localization engine 
-	CBackendLocalization::SetUserLanguage(GetLangCode());
-
-#pragma endregion 
-
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
+	// Localization: pin the process-wide default to the configuration's
+	// main language code — designer always works with the editorial
+	// baseline of the configuration regardless of OS locale.
+	ibBackendLocalization::SetUserLanguage(GetLangCode());
 
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::OnDestroy()
+bool ibMetaDataConfigurationStorage::OnDestroy()
 {
 	debugClientDestroy();
-
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->OnDestroyConfiguration(GetConfigType());
 
 	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CMetaDataConfigurationStorage::CMetaDataConfigurationStorage() :
-	CMetaDataConfiguration(), m_configMetadata(new CMetaDataConfiguration()) {
+ibMetaDataConfigurationStorage::ibMetaDataConfigurationStorage() :
+	ibMetaDataConfiguration(), m_configMetadata(new ibMetaDataConfiguration()) {
+	// Designer-edit configuration → allocate compile-value cache so
+	// metadata-collection callsites (Add/Find/RemoveCompileModule) gate
+	// on `if (auto* cc = metaData->GetCompileCache())` instead of the
+	// runtime-mode appData->DesignerMode() check.
+	m_compileCache = std::make_unique<ibCompileValueCache>();
 }
 
-CMetaDataConfigurationStorage::~CMetaDataConfigurationStorage() {
+ibMetaDataConfigurationStorage::~ibMetaDataConfigurationStorage() {
 	wxDELETE(m_configMetadata);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CMetaDataConfigurationStorage::LoadDatabase(int flags)
+bool ibMetaDataConfigurationStorage::LoadDatabase(int flags)
 {
 	if (m_configMetadata->LoadDatabase(onlyLoadFlag)) {
 
 		//close if opened
-		if (CMetaDataConfiguration::IsConfigOpen()
+		if (ibMetaDataConfiguration::IsConfigOpen()
 			&& !CloseDatabase(forceCloseFlag)) {
 			return false;
 		}
 
-		if (CMetaDataConfiguration::LoadDatabase()) {
+		if (ibMetaDataConfiguration::LoadDatabase()) {
 			Modify(!CompareMetadata(m_configMetadata));
 			if (m_configNew)
 				SaveDatabase(saveConfigFlag);
@@ -715,30 +716,30 @@ bool CMetaDataConfigurationStorage::LoadDatabase(int flags)
 	return false;
 }
 
-bool CMetaDataConfigurationStorage::LoadDataFromBuffer(const wxMemoryBuffer& buffer)
+bool ibMetaDataConfigurationStorage::LoadDataFromBuffer(const wxMemoryBuffer& buffer)
 {
-	CMemoryReader reader(buffer);
+	ibReaderMemory reader(buffer);
 
 	//common data
 	wxMemoryBuffer bufferData;
 
 	if (reader.r_chunk(1, bufferData)) {
 
-		IValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+		ibValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 		wxASSERT(commonObject);
 
-		CMemoryReader* prevReaderMemory = nullptr;
-		CMemoryReader readerData(bufferData);
+		ibReaderMemory* prevReaderMemory = nullptr;
+		ibReaderMemory readerData(bufferData);
 
 		while (!readerData.eof()) {
 
 			u64 id = 0;
 
-			CMemoryReader* readerMemory = readerData.open_chunk_iterator(id, prevReaderMemory);
+			ibReaderMemory* readerMemory = readerData.open_chunk_iterator(id, prevReaderMemory);
 			if (!readerMemory)
 				break;
 
-			IValueMetaObject* metaValue = commonObject->FindAnyObjectByFilter<IValueMetaObject, meta_identifier_t>(id);
+			ibValueMetaObject* metaValue = commonObject->FindAnyObjectByFilter<ibValueMetaObject, ibMetaID>(id);
 			if (metaValue != nullptr && !metaValue->LoadTableData(*readerMemory))
 				return false;
 
@@ -750,17 +751,17 @@ bool CMetaDataConfigurationStorage::LoadDataFromBuffer(const wxMemoryBuffer& buf
 	wxMemoryBuffer bufferSequence;
 
 	if (reader.r_chunk(2, bufferSequence)) {
-		CMemoryReader readerSequence(bufferSequence);
+		ibReaderMemory readerSequence(bufferSequence);
 		LoadSequenceFromBuffer(readerSequence);
 	}
 
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveConfigToBuffer(wxMemoryBuffer& buffer)
+bool ibMetaDataConfigurationStorage::SaveConfigToBuffer(wxMemoryBuffer& buffer)
 {
 	//common data
-	CMemoryWriter writer;
+	ibWriterMemory writer;
 
 	//Save header info 
 	if (!SaveHeader(writer))
@@ -774,14 +775,14 @@ bool CMetaDataConfigurationStorage::SaveConfigToBuffer(wxMemoryBuffer& buffer)
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveDataToBuffer(wxMemoryBuffer& buffer)
+bool ibMetaDataConfigurationStorage::SaveDataToBuffer(wxMemoryBuffer& buffer)
 {
-	CMemoryWriter writer;
+	ibWriterMemory writer;
 
 	//common data
-	CMemoryWriter writerData;
+	ibWriterMemory writerData;
 
-	IValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+	ibValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	for (unsigned int idx = 0; idx < commonObject->GetChildCount(); idx++) {
@@ -790,7 +791,7 @@ bool CMetaDataConfigurationStorage::SaveDataToBuffer(wxMemoryBuffer& buffer)
 		if (!commonObject->FilterChild(child->GetClassType()))
 			continue;
 
-		CMemoryWriter childWriter;
+		ibWriterMemory childWriter;
 		if (!child->SaveTableData(childWriter))
 			return false;
 		writerData.w_chunk(child->GetMetaID(), childWriter.buffer());
@@ -799,7 +800,7 @@ bool CMetaDataConfigurationStorage::SaveDataToBuffer(wxMemoryBuffer& buffer)
 	writer.w_chunk(1, writerData.buffer());
 
 	//sequence 
-	CMemoryWriter writerSequence;
+	ibWriterMemory writerSequence;
 	if (SaveSequenceToBuffer(writerSequence))
 		writer.w_chunk(2, writerSequence.buffer());
 
@@ -807,9 +808,9 @@ bool CMetaDataConfigurationStorage::SaveDataToBuffer(wxMemoryBuffer& buffer)
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveHeader(CMemoryWriter& writerData)
+bool ibMetaDataConfigurationStorage::SaveHeader(ibWriterMemory& writerData)
 {
-	CMemoryWriter writerMemory;
+	ibWriterMemory writerMemory;
 	writerMemory.w_u64(sign_metadata); //sign 
 	writerMemory.w_stringZ(m_commonObject->GetDocPath()); //guid conf 
 
@@ -817,13 +818,13 @@ bool CMetaDataConfigurationStorage::SaveHeader(CMemoryWriter& writerData)
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags)
+bool ibMetaDataConfigurationStorage::SaveCommonMetadata(const ibClassID& clsid, ibWriterMemory& writerData, int flags)
 {
 	//Save common object
-	CMemoryWriter writerMemory;
+	ibWriterMemory writerMemory;
 
-	CMemoryWriter writerMetaMemory;
-	CMemoryWriter writerDataMemory;
+	ibWriterMemory writerMetaMemory;
+	ibWriterMemory writerDataMemory;
 
 	if (!m_commonObject->SaveMetaObject(this, writerDataMemory, flags)) {
 		return false;
@@ -831,7 +832,7 @@ bool CMetaDataConfigurationStorage::SaveCommonMetadata(const class_identifier_t&
 
 	writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
 
-	CMemoryWriter writerChildMemory;
+	ibWriterMemory writerChildMemory;
 
 	if (!SaveDatabase(clsid, writerChildMemory, flags))
 		return false;
@@ -843,7 +844,7 @@ bool CMetaDataConfigurationStorage::SaveCommonMetadata(const class_identifier_t&
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveDatabase(const class_identifier_t&, CMemoryWriter& writerData, int flags)
+bool ibMetaDataConfigurationStorage::SaveDatabase(const ibClassID&, ibWriterMemory& writerData, int flags)
 {
 	bool saveToFile = (flags & saveToFileFlag) != 0;
 
@@ -854,14 +855,14 @@ bool CMetaDataConfigurationStorage::SaveDatabase(const class_identifier_t&, CMem
 			continue;
 		if (child->IsDeleted())
 			continue;
-		CMemoryWriter writerMemory;
-		CMemoryWriter writerMetaMemory;
-		CMemoryWriter writerDataMemory;
+		ibWriterMemory writerMemory;
+		ibWriterMemory writerMetaMemory;
+		ibWriterMemory writerDataMemory;
 		if (!child->SaveMetaObject(this, writerDataMemory, flags)) {
 			return false;
 		}
 		writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
-		CMemoryWriter writerChildMemory;
+		ibWriterMemory writerChildMemory;
 		if (!SaveChildMetadata(child->GetClassType(), writerChildMemory, child, flags)) {
 			return false;
 		}
@@ -873,7 +874,7 @@ bool CMetaDataConfigurationStorage::SaveDatabase(const class_identifier_t&, CMem
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writerData, IValueMetaObject* object, int flags)
+bool ibMetaDataConfigurationStorage::SaveChildMetadata(const ibClassID&, ibWriterMemory& writerData, ibValueMetaObject* object, int flags)
 {
 	bool saveToFile = (flags & saveToFileFlag) != 0;
 
@@ -884,14 +885,14 @@ bool CMetaDataConfigurationStorage::SaveChildMetadata(const class_identifier_t&,
 			continue;
 		if (child->IsDeleted())
 			continue;
-		CMemoryWriter writerMemory;
-		CMemoryWriter writerMetaMemory;
-		CMemoryWriter writerDataMemory;
+		ibWriterMemory writerMemory;
+		ibWriterMemory writerMetaMemory;
+		ibWriterMemory writerDataMemory;
 		if (!child->SaveMetaObject(this, writerDataMemory, flags)) {
 			return false;
 		}
 		writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
-		CMemoryWriter writerChildMemory;
+		ibWriterMemory writerChildMemory;
 		if (!SaveChildMetadata(child->GetClassType(), writerChildMemory, child, flags)) {
 			return false;
 		}
@@ -903,12 +904,12 @@ bool CMetaDataConfigurationStorage::SaveChildMetadata(const class_identifier_t&,
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::DeleteCommonMetadata(const class_identifier_t& clsid)
+bool ibMetaDataConfigurationStorage::DeleteCommonMetadata(const ibClassID& clsid)
 {
 	return DeleteMetadata(clsid);
 }
 
-bool CMetaDataConfigurationStorage::DeleteMetadata(const class_identifier_t& clsid)
+bool ibMetaDataConfigurationStorage::DeleteMetadata(const ibClassID& clsid)
 {
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
 
@@ -933,7 +934,7 @@ bool CMetaDataConfigurationStorage::DeleteMetadata(const class_identifier_t& cls
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object)
+bool ibMetaDataConfigurationStorage::DeleteChildMetadata(const ibClassID& clsid, ibValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 

@@ -1,57 +1,59 @@
 #ifndef __SRC_EXPLORER_H__
 #define __SRC_EXPLORER_H__
 
-class BACKEND_API CSourceExplorer {
+class BACKEND_API ibSourceExplorer {
 
-	struct CSourceInfo {
+	struct ibSourceInfo {
 
 		wxString m_srcName;
 		wxString m_srcSynonym;
 
-		meta_identifier_t m_mid;
+		ibMetaID m_mid;
 
 		bool m_enabled = true;
 		bool m_visible = true;
 		bool m_tableSection = false;
 		bool m_select = true;
 
-		CTypeDescription m_typeDesc;
+		ibTypeDescription m_typeDesc;
 
-		const IValueMetaObject* m_metaObject = nullptr;
+		const ibValueMetaObject* m_metaObject = nullptr;
 	};
 
 private:
 
-	CSourceExplorer() {}
+	ibSourceExplorer() {}
 
-	CSourceExplorer(const IValueMetaObjectCompositeData* object, const class_identifier_t& cid) {
+	ibSourceExplorer(const ibValueMetaObjectCompositeData* object, const ibClassID& cid) {
 
 		m_sourceInfo = {
 			wxT("ref"), _("Ref"), object->GetMetaID(), true, false, false, true, { cid }, object
 		};
 
-		for (const auto child : object->GetGenericAttributeArrayObject()) CSourceExplorer::AppendSource(child);
+		std::vector<ibValueMetaObjectAttributeBase*> genArray1;
+		for (const auto child : object->GetGenericAttributeArrayObject(genArray1)) ibSourceExplorer::AppendSource(child);
 	}
 
-	CSourceExplorer(const IValueMetaObjectAttribute* object, bool enabled = true, bool visible = true) {
+	ibSourceExplorer(const ibValueMetaObjectAttributeBase* object, bool enabled = true, bool visible = true) {
 
 		m_sourceInfo = {
 			object->GetName(), object->GetSynonym(), object->GetMetaID(), enabled, visible, false, true, object->GetTypeDesc(), object
 		};
 	}
 
-	CSourceExplorer(const CValueMetaObjectTableData* object) {
+	ibSourceExplorer(const ibValueMetaObjectTableData* object) {
 
 		m_sourceInfo = {
 			object->GetName(), object->GetSynonym(), object->GetMetaID(), true, true, true, true,  object->GetTypeDesc(), object
 		};
 
-		for (const auto child : object->GetGenericAttributeArrayObject()) CSourceExplorer::AppendSource(child);
+		std::vector<ibValueMetaObjectAttributeBase*> genArray2;
+		for (const auto child : object->GetGenericAttributeArrayObject(genArray2)) ibSourceExplorer::AppendSource(child);
 	}
 
 public:
 
-	CSourceExplorer(const IValueMetaObject* object, const class_identifier_t& cid, bool tableSection, bool select = false) {
+	ibSourceExplorer(const ibValueMetaObject* object, const ibClassID& cid, bool tableSection, bool select = false) {
 
 		m_sourceInfo = {
 			wxT("ref"), _("Ref"), object->GetMetaID(), true, true, tableSection, select, cid, object
@@ -59,7 +61,7 @@ public:
 	}
 
 	// this object 
-	CSourceExplorer(const IValueMetaObjectGenericData* object, const class_identifier_t& cid, bool tableSection, bool select = false) {
+	ibSourceExplorer(const ibValueMetaObjectGenericData* object, const ibClassID& cid, bool tableSection, bool select = false) {
 
 		if (object->IsDeleted())
 			return;
@@ -72,7 +74,7 @@ public:
 	wxString GetSourceName() const { return m_sourceInfo.m_srcName; }
 	wxString GetSourceSynonym() const { return m_sourceInfo.m_srcSynonym; }
 
-	meta_identifier_t GetSourceId() const { return m_sourceInfo.m_mid; }
+	ibMetaID GetSourceId() const { return m_sourceInfo.m_mid; }
 
 	bool IsEnabled() const { return m_sourceInfo.m_enabled; }
 	bool IsVisible() const { return m_sourceInfo.m_visible; }
@@ -80,36 +82,36 @@ public:
 	bool IsSelect() const { return m_sourceInfo.m_select && IsAllowed(); }
 	bool IsAllowed() const { return GetMetaObject()->IsAllowed(); }
 
-	const IValueMetaObject* GetMetaObject() const { return m_sourceInfo.m_metaObject; }
-	const std::vector<class_identifier_t>& GetClsidList() const { return m_sourceInfo.m_typeDesc.GetClsidList(); }
+	const ibValueMetaObject* GetMetaObject() const { return m_sourceInfo.m_metaObject; }
+	const std::vector<ibClassID>& GetClsidList() const { return m_sourceInfo.m_typeDesc.GetClsidList(); }
 
-	bool ContainType(const eValueTypes& valType) const { return m_sourceInfo.m_typeDesc.ContainType(valType); }
-	bool ContainType(const class_identifier_t& cid) const { return m_sourceInfo.m_typeDesc.ContainType(cid); }
+	bool ContainType(const ibValueTypes& valType) const { return m_sourceInfo.m_typeDesc.ContainType(valType); }
+	bool ContainType(const ibClassID& cid) const { return m_sourceInfo.m_typeDesc.ContainType(cid); }
 
-	void AppendSource(IValueMetaObjectGenericData* refData, const class_identifier_t& cid) {
+	void AppendSource(const ibValueMetaObjectGenericData* refData, const ibClassID& cid) {
 		if (refData->IsDeleted())
 			return;
-		m_arraySource.emplace_back(CSourceExplorer{ refData, cid });
+		m_arraySource.emplace_back(ibSourceExplorer{ refData, cid });
 	}
 
-	void AppendSource(IValueMetaObjectAttribute* attribute, bool enabled = true, bool visible = true) {
+	void AppendSource(const ibValueMetaObjectAttributeBase* attribute, bool enabled = true, bool visible = true) {
 		if (attribute->IsDeleted())
 			return;
-		m_arraySource.emplace_back(CSourceExplorer{ attribute, enabled , visible });
+		m_arraySource.emplace_back(ibSourceExplorer{ attribute, enabled , visible });
 	}
 
-	void AppendSource(CValueMetaObjectTableData* tableSection) {
-		
+	void AppendSource(const ibValueMetaObjectTableData* tableSection) {
+
 		if (tableSection->IsDeleted())
 			return;
-		
-		m_arraySource.emplace_back(CSourceExplorer{ tableSection });
+
+		m_arraySource.emplace_back(ibSourceExplorer{ tableSection });
 	}
 
-	CSourceExplorer GetHelper(unsigned int idx) const {
+	ibSourceExplorer GetHelper(unsigned int idx) const {
 		
 		if (m_arraySource.size() < idx)
-			return CSourceExplorer();
+			return ibSourceExplorer();
 		
 		return m_arraySource[idx];
 	}
@@ -118,9 +120,9 @@ public:
 
 protected:
 
-	CSourceInfo m_sourceInfo;
+	ibSourceInfo m_sourceInfo;
 
-	std::vector<CSourceExplorer> m_arraySource;
+	std::vector<ibSourceExplorer> m_arraySource;
 };
 
 #include "backend/srcObject.h"

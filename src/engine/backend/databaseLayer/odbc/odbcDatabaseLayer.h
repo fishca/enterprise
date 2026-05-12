@@ -1,4 +1,4 @@
-#ifndef __ODBC_DATABASE_LAYER_H__
+#ifndef __ODBC_DATABASE_LAYER_H__ibDatabaseLayerODBC
 #define __ODBC_DATABASE_LAYER_H__
 
 // For compilers that support precompilation, includes "wx.h".
@@ -17,20 +17,20 @@
 #include "backend/databaseLayer/databaseLayerDef.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-class COdbcInterface;
+class ibInterfaceODBC;
 
 #define ERR_BUFFER_LEN 1024
 #define ERR_STATE_LEN 10
 
-class BACKEND_API COdbcDatabaseLayer : public IDatabaseLayer
+class BACKEND_API ibDatabaseLayerODBC : public ibDatabaseLayer
 {
 public:
 	// ctor()
-	COdbcDatabaseLayer();
-	COdbcDatabaseLayer(const COdbcDatabaseLayer& src);
+	ibDatabaseLayerODBC();
+	ibDatabaseLayerODBC(const ibDatabaseLayerODBC& src);
 
 	// dtor()
-	virtual ~COdbcDatabaseLayer();
+	virtual ~ibDatabaseLayerODBC();
 
 	// open database
 	virtual bool Open();
@@ -47,14 +47,19 @@ public:
 	virtual bool IsOpen();
 
 	/// clone database  
-	virtual IDatabaseLayer* Clone() { return new COdbcDatabaseLayer(*this); }
+	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerODBC(*this); }
 
-	// transaction support
-	virtual void BeginTransaction();
-	virtual void Commit();
-	virtual void RollBack();
+	// IsActiveTransaction inherits the base-class default
+	// (m_txDepth > 0). Driver transaction primitives
+	// (DoBeginTransaction / DoCommit / DoRollBack) are protected —
+	// see below.
 
-	virtual bool IsActiveTransaction();
+	// Row-lock probe for ibSessionRegistry. MSSQL behind ODBC honours
+	// `SET LOCK_TIMEOUT 0` + `SELECT ... WITH (UPDLOCK, ROWLOCK)`;
+	// other ODBC backends usually ignore the timeout hint and just
+	// block — the registry avoids calling this on those.
+	virtual bool TryProbeRowLock(const wxString& tableName,
+		const wxString& pkColumn, const wxString& pkValue) override;
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool TableExists(const wxString& table);
@@ -73,14 +78,20 @@ protected:
 
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
-	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
+	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
 
-	// IPreparedStatement support
-	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+	// ibPreparedStatement support
+	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
 private:
 
-	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bParseQuery);
+	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bParseQuery);
 
 	//SQLHENV m_sqlEnvHandle;
 	void* m_sqlEnvHandle;
@@ -99,7 +110,7 @@ private:
 #endif
 
 	bool m_bIsConnected;
-	COdbcInterface* m_pInterface;
+	ibInterfaceODBC* m_pInterface;
 
 public:
 

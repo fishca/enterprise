@@ -3,6 +3,8 @@
 
 #include <wx/wx.h>
 
+#include <map>
+
 #include "backend.h"
 
 extern BACKEND_API unsigned int GetBuildId();
@@ -27,24 +29,23 @@ extern BACKEND_API unsigned int GetBuildId();
 
 #define emptyDate -62135604000000ll
 
-typedef int role_identifier_t;
-typedef int meta_identifier_t;
-typedef int form_identifier_t;
-typedef int action_identifier_t;
+typedef int ibRoleID;
+typedef int ibMetaID;
+typedef int ibFormID;
+typedef int ibActionID;
 
-typedef unsigned wxLongLong_t picture_identifier_t;
-typedef unsigned int version_identifier_t;
+typedef unsigned wxLongLong_t ibPictureID;
+typedef unsigned int ibVersionID;
 
 typedef std::map<
-	meta_identifier_t, class BACKEND_API CValue
-> valueArray_t;
-
+	ibMetaID, class BACKEND_API ibValue
+> ibMetaValueArray;
 
 //*******************************************************************************************
 //*                                 Special enumeration                                     *
 //*******************************************************************************************
 
-enum eValueTypes {
+enum ibValueTypes {
 
 	TYPE_EMPTY = 0,
 	TYPE_BOOLEAN = 1,
@@ -58,6 +59,8 @@ enum eValueTypes {
 	TYPE_VALUE = 200, // value
 	TYPE_ENUM = 201, // enumeration
 	TYPE_OLE = 202, // ole object
+	TYPE_FUNCTION = 203, // anonymous-function / lambda value (ibValueFunction)
+	TYPE_ITERATOR = 204, // iterator wrapper (ibValueIterator)
 
 	TYPE_LAST,
 };
@@ -68,7 +71,7 @@ enum eValueTypes {
 
 #define _USE_CONTROL_VALUECAST 1 
 //firebird doesn't support multiple transaction 
-#define _USE_SAVE_METADATA_IN_TRANSACTION 1 
+#define _USE_SAVE_METADATA_IN_TRANSACTION 1
 // full parser is very slowly ...
 #define _USE_OLD_TEXT_PARSER_IN_CODE_EDITOR 0
 //debugger
@@ -102,10 +105,15 @@ enum eValueTypes {
 #define version_generate(major, minor, release) \
 		( (major * 1000) + (minor * 100) + release )
 
-enum eProgramVersion {
+enum ibProgramVersion {
 	version_oes_1_0_0 = version_generate(1, 0, 0),
 	version_oes_1_0_1 = version_generate(1, 0, 1),
 	version_oes_last  = version_oes_1_0_1
+};
+
+enum ibProgramSyntax {
+	syntax_ves,    // Visual Basic-style ES + 1С/BSL mix — keyword-fenced (Then/Do/EndIf/...).
+	syntax_ces,    // C-style ES — paren conditions, brace bodies, `;` terminators (default).
 };
 
 //*******************************************************************************************

@@ -4,101 +4,101 @@
 #include "backend/backend.h"
 #include "backend/compiler/value.h"
 
-//--Константы:
+//--РљРѕРЅСЃС‚Р°РЅС‚С‹:
 #define PageBreak wxT("\n\n")
 #define LineBreak wxT("\n")
 #define TabSymbol wxT("\t")
 
 #include "backend/system/systemEnum.h"
 
-class BACKEND_API CSystemFunction : public CValue {
+class BACKEND_API ibValueSystemFunction : public ibValue {
 	static wxDateTime ms_workDate;
 public:
 
-	//--- Базовые:
-	static bool Boolean(const CValue& cValue);
-	static number_t Number(const CValue& cValue);
-	static wxLongLong_t Date(const CValue& cValue);
-	static wxString String(const CValue& cValue);
+	//--- Р‘Р°Р·РѕРІС‹Рµ:
+	static bool Boolean(const ibValue& cValue);
+	static ibNumber Number(const ibValue& cValue);
+	static wxLongLong_t Date(const ibValue& cValue);
+	static wxString String(const ibValue& cValue);
 
-	//--- Математические:
-	static number_t Round(const CValue& cValue, int precision = 0, eRoundMode mode = eRoundMode::eRoundMode_Round15as20);
-	static CValue Int(const CValue& cNumber);
-	static number_t Log10(const CValue& cValue);
-	static number_t Ln(const CValue& cValue);
-	static CValue Max(CValue** paParams, const long lSizeArray);
-	static CValue Min(CValue** paParams, const long lSizeArray);
-	static CValue Sqrt(const CValue& cValue);
+	//--- РњР°С‚РµРјР°С‚РёРєР°:
+	static ibNumber Round(const ibValue& cValue, int precision = 0, ibRoundMode mode = ibRoundMode::ibRoundMode_Round15as20);
+	static ibValue Int(const ibValue& cNumber);
+	static ibNumber Log10(const ibValue& cValue);
+	static ibNumber Ln(const ibValue& cValue);
+	static ibValue Max(ibValue** paParams, const long lSizeArray);
+	static ibValue Min(ibValue** paParams, const long lSizeArray);
+	static ibValue Sqrt(const ibValue& cValue);
 
-	//--- Строковые:
-	static int StrLen(const CValue& cValue);
-	static bool IsBlankString(const CValue& cValue);
-	static wxString TrimL(const CValue& cValue);
-	static wxString TrimR(const CValue& cValue);
-	static wxString TrimAll(const CValue& cValue);
-	static wxString Left(const CValue& cValue, unsigned int nCount);
-	static wxString Right(const CValue& cValue, unsigned int nCount);
-	static wxString Mid(const CValue& cValue, unsigned int nFirst, unsigned int nCount);
-	static unsigned int Find(const CValue& cValue, const CValue& cValue2, unsigned int nStart);
-	static wxString StrReplace(const CValue& cSource, const CValue& cValue1, const CValue& cValue2);
-	static int StrCountOccur(const CValue& cSource, const CValue& cValue1);
-	static int StrLineCount(const CValue& cSource);
-	static wxString StrGetLine(const CValue& cValue, unsigned int nLine);
-	static wxString Upper(const CValue& cSource);
-	static wxString Lower(const CValue& cSource);
+	//--- РЎС‚СЂРѕРєРё:
+	static int StrLen(const ibValue& cValue);
+	static bool IsBlankString(const ibValue& cValue);
+	static wxString TrimL(const ibValue& cValue);
+	static wxString TrimR(const ibValue& cValue);
+	static wxString TrimAll(const ibValue& cValue);
+	static wxString Left(const ibValue& cValue, unsigned int nCount);
+	static wxString Right(const ibValue& cValue, unsigned int nCount);
+	static wxString Mid(const ibValue& cValue, unsigned int nFirst, unsigned int nCount);
+	static unsigned int Find(const ibValue& cValue, const ibValue& cValue2, unsigned int nStart);
+	static wxString StrReplace(const ibValue& cSource, const ibValue& cValue1, const ibValue& cValue2);
+	static int StrCountOccur(const ibValue& cSource, const ibValue& cValue1);
+	static int StrLineCount(const ibValue& cSource);
+	static wxString StrGetLine(const ibValue& cValue, unsigned int nLine);
+	static wxString Upper(const ibValue& cSource);
+	static wxString Lower(const ibValue& cSource);
 	static wxString Chr(short nCode);
-	static short Asc(const CValue& cSource);
-	static wxString TStr(const CValue& cSource, const CValue& cLanguage);
+	static short Asc(const ibValue& cSource);
+	static wxString TStr(const ibValue& cSource, const ibValue& cLanguage);
 
-	//--- Работа с датой и временем:
-	static CValue CurrentDate();
-	static CValue WorkingDate();
-	static CValue AddMonth(const CValue& cData, int nMonthAdd = 1);
-	static CValue BegOfMonth(const CValue& cData);
-	static CValue EndOfMonth(const CValue& cData);
-	static CValue BegOfQuart(const CValue& cData);
-	static CValue EndOfQuart(const CValue& cData);
-	static CValue BegOfYear(const CValue& cData);
-	static CValue EndOfYear(const CValue& cData);
-	static CValue BegOfWeek(const CValue& cData);
-	static CValue EndOfWeek(const CValue& cData);
-	static CValue BegOfDay(const CValue& cData);
-	static CValue EndOfDay(const CValue& cData);
-	static int GetYear(const CValue& cData);
-	static int GetMonth(const CValue& cData);
-	static int GetDay(const CValue& cData);
-	static int GetHour(const CValue& cData);
-	static int GetMinute(const CValue& cData);
-	static int GetSecond(const CValue& cData);
-	static int GetWeekOfYear(const CValue& cData);
-	static int GetDayOfYear(const CValue& cData);
-	static int GetDayOfWeek(const CValue& cData);
-	static int GetQuartOfYear(const CValue& cData);
+	//--- Р”Р°С‚Р° Рё РІСЂРµРјСЏ:
+	static ibValue CurrentDate();
+	static ibValue WorkingDate();
+	static ibValue AddMonth(const ibValue& cData, int nMonthAdd = 1);
+	static ibValue BegOfMonth(const ibValue& cData);
+	static ibValue EndOfMonth(const ibValue& cData);
+	static ibValue BegOfQuart(const ibValue& cData);
+	static ibValue EndOfQuart(const ibValue& cData);
+	static ibValue BegOfYear(const ibValue& cData);
+	static ibValue EndOfYear(const ibValue& cData);
+	static ibValue BegOfWeek(const ibValue& cData);
+	static ibValue EndOfWeek(const ibValue& cData);
+	static ibValue BegOfDay(const ibValue& cData);
+	static ibValue EndOfDay(const ibValue& cData);
+	static int GetYear(const ibValue& cData);
+	static int GetMonth(const ibValue& cData);
+	static int GetDay(const ibValue& cData);
+	static int GetHour(const ibValue& cData);
+	static int GetMinute(const ibValue& cData);
+	static int GetSecond(const ibValue& cData);
+	static int GetWeekOfYear(const ibValue& cData);
+	static int GetDayOfYear(const ibValue& cData);
+	static int GetDayOfWeek(const ibValue& cData);
+	static int GetQuartOfYear(const ibValue& cData);
 
-	//--- Работа с файлами: 
+	//--- Р Р°Р±РѕС‚Р° СЃ С„Р°Р№Р»Р°РјРё:
 	static bool CopyFile(const wxString& src, const wxString& dst);
 	static bool DeleteFile(const wxString& file);
 	static wxString GetTempDir();
 	static wxString GetTempFileName();
 
-	//--- Работа с окнами: 
-	static class IBackendValueForm* ActiveWindow();
+	//--- Р Р°Р±РѕС‚Р° СЃ РѕРєРЅР°РјРё:
+	static class ibBackendValueForm* ActiveWindow();
 
-	//--- Специальные:
-	static void Message(const wxString& strMessage, eStatusMessage status = eStatusMessage::eStatusMessage_Information);
+	//--- РЈРІРµРґРѕРјР»РµРЅРёСЏ:
+	static void Message(const wxString& strMessage, ibStatusMessage status = ibStatusMessage::ibStatusMessage_Information);
 	static void Alert(const wxString& strMessage);
-	static CValue Question(const wxString& strMessage, eQuestionMode mode = eQuestionMode::eQuestionMode_OK);
+	static ibValue Question(const wxString& strMessage, ibQuestionMode mode = ibQuestionMode::ibQuestionMode_OK);
 	static void SetStatus(const wxString& sStatus);
 	static void ClearMessage();
 	static void SetError(const wxString& strError);
 	static void Raise(const wxString& strError);
 	static wxString ErrorDescription();
-	static bool IsEmptyValue(const CValue& cData);
-	static CValue Evaluate(const wxString& expression);
+	static bool IsEmptyValue(const ibValue& cData);
+	static ibValue Evaluate(const wxString& expression);
 	static void Execute(const wxString& sCode);
-	static wxString Format(CValue& cData, const wxString& fmt = wxEmptyString);
-	static CValue Type(const CValue& cTypeName);
-	static CValue TypeOf(const CValue& cData);
+	static wxString Format(ibValue& cData, const wxString& fmt = wxEmptyString);
+	static ibValue Type(const ibValue& cTypeName);
+	static ibValue TypeOf(const ibValue& cData);
 	static int Rand();
 	static int ArgCount();
 	static wxString ArgValue(int n);
@@ -109,18 +109,19 @@ public:
 	static wxString UserName();
 	static wxString UserPassword();
 	static bool ExclusiveMode();
+	static void SetExclusive(bool on);
 	static wxString GeneralLanguage();
 	static void EndJob(bool force = false);
 
 	static void UserInterruptProcessing();
-	
-	static bool AccessRight(const wxString& strRoleName, const CValue& cData);
-	static bool IsInRole(const CValue& cData);
 
-	static CValue GetCommonForm(const wxString& strFormName, class IBackendControlFrame* owner, class CValueGuid* unique);
-	static void ShowCommonForm(const wxString& strFormName, class IBackendControlFrame* owner, class CValueGuid* unique);
+	static bool AccessRight(const wxString& strRoleName, const ibValue& cData);
+	static bool IsInRole(const ibValue& cData);
 
-	static CValue GetCommonTemplate(const wxString& strTemplateName);
+	static ibValue GetCommonForm(const wxString& strFormName, class ibBackendControlFrame* owner, class ibValueGuid* unique);
+	static void ShowCommonForm(const wxString& strFormName, class ibBackendControlFrame* owner, class ibValueGuid* unique);
+
+	static ibValue GetCommonTemplate(const wxString& strTemplateName);
 
 	static void BeginTransaction();
 	static void CommitTransaction();
@@ -128,11 +129,11 @@ public:
 
 public:
 
-	CSystemFunction::CSystemFunction() :
-		CValue(eValueTypes::TYPE_VALUE, true), m_methodHelper(new CMethodHelper) {
+	ibValueSystemFunction() :
+		ibValue(ibValueTypes::TYPE_VALUE, true), m_methodHelper(new ibValueMethodHelper) {
 	}
 
-	virtual ~CSystemFunction() {
+	virtual ~ibValueSystemFunction() {
 		wxDELETE(m_methodHelper);
 	}
 
@@ -140,15 +141,15 @@ public:
 	//*                              Support methods                             *
 	//****************************************************************************
 
-	virtual CMethodHelper* GetPMethods() const {
+	virtual ibValueMethodHelper* GetPMethods() const {
 		//PrepareNames();
 		return m_methodHelper;
 	}
 
 	virtual void PrepareNames() const;
 
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
-	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray);
 
 	//check is empty
 	virtual bool IsEmpty() const {
@@ -157,7 +158,7 @@ public:
 
 protected:
 
-	CMethodHelper* m_methodHelper;
+	ibValueMethodHelper* m_methodHelper;
 };
 
-#endif 
+#endif

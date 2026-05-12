@@ -7,21 +7,21 @@
 #include "xmlutility.h"
 #include "stlutility.h"
 
-CKeyBinder::CKeyBinder()
+ibKeyBinder::ibKeyBinder()
 {
 }
 
-CKeyBinder::~CKeyBinder()
+ibKeyBinder::~ibKeyBinder()
 {
     ClearCommands();   
 }
 
-void CKeyBinder::ClearCommands()
+void ibKeyBinder::ClearCommands()
 {
     ClearVector(m_commands);
 }
 
-void CKeyBinder::AddCommand(const Command& command)
+void ibKeyBinder::AddCommand(const Command& command)
 {
     if (GetCommandForId(command.id) == nullptr)
     {
@@ -29,7 +29,7 @@ void CKeyBinder::AddCommand(const Command& command)
     }
 }
 
-void CKeyBinder::AddCommand(int id, const wxString& group, const wxString& name, const wxString& help)
+void ibKeyBinder::AddCommand(int id, const wxString& group, const wxString& name, const wxString& help)
 {
     if (GetCommandForId(id) == nullptr)
     {
@@ -48,15 +48,15 @@ void CKeyBinder::AddCommand(int id, const wxString& group, const wxString& name,
     }
 }
 
-void CKeyBinder::AddCommand(const wxString& group, wxMenuItem* menuItem)
+void ibKeyBinder::AddCommand(const wxString& group, wxMenuItem* menuItem)
 {
     if (menuItem->GetKind() != wxITEM_SEPARATOR)
     {
-        AddCommand(menuItem->GetId(), group, menuItem->GetName(), menuItem->GetHelp());
+        AddCommand(menuItem->GetId(), group, menuItem->GetItemLabelText(), menuItem->GetHelp());
     }
 }
 
-void CKeyBinder::AddCommandsFromMenuBar(wxMenuBar* menuBar)
+void ibKeyBinder::AddCommandsFromMenuBar(wxMenuBar* menuBar)
 {
 
     int numMenus = menuBar->GetMenuCount();
@@ -68,20 +68,31 @@ void CKeyBinder::AddCommandsFromMenuBar(wxMenuBar* menuBar)
 
 }
 
-void CKeyBinder::AddCommandsFromMenu(const wxString& group, wxMenu* menu)
+void ibKeyBinder::AddCommandsFromMenu(const wxString& group, wxMenu* menu)
 {
-    
     const wxMenuItemList& list = menu->GetMenuItems();
 
-    for (wxMenuItemList::Node* node = list.GetFirst(); node != nullptr; node = node->GetNext())
+    for (auto node = list.GetFirst(); node != nullptr; node = node->GetNext())
     {
         wxMenuItem* item = node->GetData();
+
+        // Recurse into submenus so their items show up in the keybinder
+        // dialog. Without this only top-level menu items appear and
+        // anything nested (e.g. File → Recent → ...) is silently skipped.
+        // Sub-group label = parent + " / " + submenu's own label, so the
+        // dialog's tree groups them under their own folder.
+        if (item->IsSubMenu() && item->GetSubMenu() != nullptr) {
+            AddCommandsFromMenu(
+                group + wxT(" / ") + item->GetItemLabelText(),
+                item->GetSubMenu());
+            continue;
+        }
+
         AddCommand(group, item);
     }
-    
 }
 
-void CKeyBinder::RemoveCommand(int id)
+void ibKeyBinder::RemoveCommand(int id)
 {
 
     for (unsigned int i = 0; i < m_commands.size(); ++i)
@@ -96,7 +107,7 @@ void CKeyBinder::RemoveCommand(int id)
 
 }
 
-void CKeyBinder::UpdateWindow(wxWindow* window)
+void ibKeyBinder::UpdateWindow(wxWindow* window)
 {
     // Build an updated accelerator table for the commands.
     std::vector<wxAcceleratorEntry> entries;
@@ -122,7 +133,7 @@ void CKeyBinder::UpdateWindow(wxWindow* window)
     window->SetAcceleratorTable(m_accel);
 }
 
-void CKeyBinder::UpdateMenuBar(wxMenuBar* menuBar)
+void ibKeyBinder::UpdateMenuBar(wxMenuBar* menuBar)
 {
     int numMenus = menuBar->GetMenuCount();
 
@@ -133,7 +144,7 @@ void CKeyBinder::UpdateMenuBar(wxMenuBar* menuBar)
 
 }
 
-bool CKeyBinder::GetMenuItemText(wxMenuItem* item, wxString& label) const
+bool ibKeyBinder::GetMenuItemText(wxMenuItem* item, wxString& label) const
 {
     if (item->GetKind() != wxITEM_SEPARATOR)
     {  
@@ -159,24 +170,31 @@ bool CKeyBinder::GetMenuItemText(wxMenuItem* item, wxString& label) const
     return false;
 }
 
-void CKeyBinder::UpdateMenu(wxMenu* menu)
+void ibKeyBinder::UpdateMenu(wxMenu* menu)
 {
     const wxMenuItemList& list = menu->GetMenuItems();
 
-    for (wxMenuItemList::Node* node = list.GetFirst(); node != nullptr; node = node->GetNext())
+    for (auto node = list.GetFirst(); node != nullptr; node = node->GetNext())
     {
         wxMenuItem* item = node->GetData();
-        wxString label;
 
-        if (GetMenuItemText(item, label))
-        {
+        // Recurse into submenus — symmetric with AddCommandsFromMenu.
+        // Without this, hotkeys assigned to submenu commands in the
+        // settings dialog never appear in the actual menu (label-with-
+        // accelerator path bypasses the nested items).
+        if (item->IsSubMenu() && item->GetSubMenu() != nullptr) {
+            UpdateMenu(item->GetSubMenu());
+            continue;
+        }
+
+        wxString label;
+        if (GetMenuItemText(item, label)) {
             item->SetItemLabel(label);
         }
-        
     }
 }
 
-CKeyBinder::Command* CKeyBinder::GetCommandForId(int id) const
+ibKeyBinder::Command* ibKeyBinder::GetCommandForId(int id) const
 {
 
     for (unsigned int i = 0; i < m_commands.size(); ++i)
@@ -191,7 +209,7 @@ CKeyBinder::Command* CKeyBinder::GetCommandForId(int id) const
 
 }
 
-void CKeyBinder::SetShortcut(int id, int flags, int code)
+void ibKeyBinder::SetShortcut(int id, int flags, int code)
 {
 
     Command* command = GetCommandForId(id);
@@ -210,13 +228,13 @@ void CKeyBinder::SetShortcut(int id, int flags, int code)
 
 }
 
-void CKeyBinder::SetShortcut(int id, const wxString& text)
+void ibKeyBinder::SetShortcut(int id, const wxString& text)
 {
     Key key = GetTextAsKeyBinding(text);
     SetShortcut(id, key.flags, key.code);
 }
 
-CKeyBinder::Key CKeyBinder::GetTextAsKeyBinding(const wxString& text)
+ibKeyBinder::Key ibKeyBinder::GetTextAsKeyBinding(const wxString& text)
 {
     Key key;
     key.flags = 0;
@@ -243,7 +261,7 @@ CKeyBinder::Key CKeyBinder::GetTextAsKeyBinding(const wxString& text)
 
 }
 
-int CKeyBinder::StringToKeyCode(const wxString &keyName)
+int ibKeyBinder::StringToKeyCode(const wxString &keyName)
 {
     // a function key ?
     if (keyName.StartsWith(wxT("F")) && keyName.Len() > 1) {
@@ -266,7 +284,7 @@ int CKeyBinder::StringToKeyCode(const wxString &keyName)
     return (int)keyName.GetChar(0);
 }
 
-wxString CKeyBinder::GetKeyBindingAsText(const Key& key)
+wxString ibKeyBinder::GetKeyBindingAsText(const Key& key)
 {
 
     wxString res;
@@ -472,7 +490,7 @@ wxString CKeyBinder::GetKeyBindingAsText(const Key& key)
     return res;
 }
 
-wxXmlNode* CKeyBinder::Save(const wxString& tag) const
+wxXmlNode* ibKeyBinder::Save(const wxString& tag) const
 {
 
     wxXmlNode* root = new wxXmlNode(wxXML_ELEMENT_NODE, tag);    
@@ -500,7 +518,7 @@ wxXmlNode* CKeyBinder::Save(const wxString& tag) const
 
 }
 
-void CKeyBinder::Load(wxXmlNode* root)
+void ibKeyBinder::Load(wxXmlNode* root)
 {
 
     // Erase all of the existing key bindings.
@@ -525,7 +543,7 @@ void CKeyBinder::Load(wxXmlNode* root)
 
 }
 
-void CKeyBinder::LoadCommand(wxXmlNode* root)
+void ibKeyBinder::LoadCommand(wxXmlNode* root)
 {
 
     unsigned int        id = 0;
@@ -560,12 +578,12 @@ void CKeyBinder::LoadCommand(wxXmlNode* root)
 
 }
 
-unsigned int CKeyBinder::GetNumCommands() const
+unsigned int ibKeyBinder::GetNumCommands() const
 {
     return m_commands.size();
 }
 
-const CKeyBinder::Command& CKeyBinder::GetCommand(unsigned int i) const
+const ibKeyBinder::Command& ibKeyBinder::GetCommand(unsigned int i) const
 {
     return *m_commands[i];
 }

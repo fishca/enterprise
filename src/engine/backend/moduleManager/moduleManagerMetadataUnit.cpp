@@ -8,15 +8,15 @@
 
 #include "backend/system/value/valueMap.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueModuleManager::CValueMetadataUnit, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModuleManager::ibValueMetadataUnit, ibValue);
 
-IValueModuleManager::CValueMetadataUnit::CValueMetadataUnit(IMetaData* metaData) :
-	CValue(eValueTypes::TYPE_VALUE, true),
-	m_methodHelper(new CMethodHelper()), m_metaData(metaData)
+ibValueModuleManager::ibValueMetadataUnit::ibValueMetadataUnit(ibMetaData* metaData) :
+	ibValue(ibValueTypes::TYPE_VALUE, true),
+	m_methodHelper(new ibValueMethodHelper()), m_metaData(metaData)
 {
 }
 
-IValueModuleManager::CValueMetadataUnit::~CValueMetadataUnit()
+ibValueModuleManager::ibValueMetadataUnit::~ibValueMetadataUnit()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -34,9 +34,12 @@ enum
 	enReports,
 	enInformationRegisters,
 	enAccumulationRegisters,
+	enChartsOfCharacteristicTypes,
+	enChartsOfAccounts,
+	enAccountingRegisters,
 };
 
-void IValueModuleManager::CValueMetadataUnit::PrepareNames() const
+void ibValueModuleManager::ibValueMetadataUnit::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendProp("CommonModules", true, false, g_metaCommonModuleCLSID);
@@ -50,20 +53,23 @@ void IValueModuleManager::CValueMetadataUnit::PrepareNames() const
 	m_methodHelper->AppendProp("Reports", true, false, g_metaReportCLSID);
 	m_methodHelper->AppendProp("InformationRegisters", true, false, g_metaInformationRegisterCLSID);
 	m_methodHelper->AppendProp("AccumulationRegisters", true, false, g_metaAccumulationRegisterCLSID);
+	m_methodHelper->AppendProp("ChartsOfCharacteristicTypes", true, false, g_metaChartOfCharacteristicTypesCLSID);
+	m_methodHelper->AppendProp("ChartsOfAccounts", true, false, g_metaChartOfAccountsCLSID);
+	m_methodHelper->AppendProp("AccountingRegisters", true, false, g_metaAccountingRegisterCLSID);
 }
 
 //****************************************************************************
 //*                              Override attribute                          *
 //****************************************************************************
 
-bool IValueModuleManager::CValueMetadataUnit::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueModuleManager::ibValueMetadataUnit::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool IValueModuleManager::CValueMetadataUnit::GetPropVal(const long lPropNum, CValue& pvarPropVal)//attribute value
+bool ibValueModuleManager::ibValueMetadataUnit::GetPropVal(const long lPropNum, ibValue& pvarPropVal)//attribute value
 {
-	CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
+	ibValueStructure* valStruct = ibValue::CreateAndPrepareValueRef<ibValueStructure>();
 	switch (lPropNum)
 	{
 	case enCommonModules: {
@@ -118,6 +124,24 @@ bool IValueModuleManager::CValueMetadataUnit::GetPropVal(const long lPropNum, CV
 	} break;
 	case enAccumulationRegisters: {
 		for (const auto object : m_metaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
+			valStruct->Insert(object->GetName(), object);
+		}
+		break;
+	}
+	case enChartsOfCharacteristicTypes: {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaChartOfCharacteristicTypesCLSID)) {
+			valStruct->Insert(object->GetName(), object);
+		}
+		break;
+	}
+	case enChartsOfAccounts: {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaChartOfAccountsCLSID)) {
+			valStruct->Insert(object->GetName(), object);
+		}
+		break;
+	}
+	case enAccountingRegisters: {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaAccountingRegisterCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 		break;

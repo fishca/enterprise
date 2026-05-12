@@ -1,0 +1,26 @@
+// Phase B — live-link semantics test.
+//
+// Verifies:
+//   * Lambda WRITES into outer fn's captured slot (`i = i + 1`).
+//   * Outer fn returns — its heap frame survives via lambda's
+//     m_capturedFrames shared_ptr.
+//   * Subsequent invokes see updated state (i = 1, 2, 3 ...).
+//   * Two independent counter instances don't share state
+//     (each counter() call creates its own heap frame).
+
+function counter()
+    var i = 0
+    return Function()
+        i = i + 1
+        return i
+    EndFunction
+EndFunction
+
+var c1 = counter()
+Message(c1())   // expect 1
+Message(c1())   // expect 2
+Message(c1())   // expect 3
+
+var c2 = counter()
+Message(c2())   // expect 1 (independent state)
+Message(c1())   // expect 4 (c1's state unaffected)

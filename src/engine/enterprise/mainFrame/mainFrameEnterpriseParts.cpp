@@ -8,20 +8,20 @@
 
 #include "frontend/artProvider/artProvider.h"
 
-void CFrontendDocMDIFrameEnterprise::CreateWideGui()
+void ibFrontendDocMDIFrameEnterprise::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
 	m_mainFrameToolbar->SetToolBitmapSize(wxSize(16, 16));
 
-	m_mainFrameToolbar->AddTool(wxID_NEW, _("New"), wxArtProvider::GetBitmap(wxART_NEW, wxART_FRAME_ICON, wxSize(16, 16)), "New", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_OPEN, _("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_FRAME_ICON, wxSize(16, 16)), "Open", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_SAVE, _("Save"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_FRAME_ICON, wxSize(16, 16)), "Save", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_SAVEAS, _("Save as"), wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS, wxART_FRAME_ICON, wxSize(16, 16)), "Save as", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_NEW, _("New"), wxArtProvider::GetBitmapBundle(wxART_NEW, wxART_FRAME_ICON, wxSize(16, 16)), "New", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_OPEN, _("Open"), wxArtProvider::GetBitmapBundle(wxART_FILE_OPEN, wxART_FRAME_ICON, wxSize(16, 16)), "Open", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_SAVE, _("Save"), wxArtProvider::GetBitmapBundle(wxART_FILE_SAVE, wxART_FRAME_ICON, wxSize(16, 16)), "Save", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_SAVEAS, _("Save as"), wxArtProvider::GetBitmapBundle(wxART_FILE_SAVE_AS, wxART_FRAME_ICON, wxSize(16, 16)), "Save as", wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_FIND, _("Find"), wxArtProvider::GetBitmap(wxART_FIND, wxART_FRAME_ICON, wxSize(16, 16)), "Find", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_FIND, _("Find"), wxArtProvider::GetBitmapBundle(wxART_FIND, wxART_FRAME_ICON, wxSize(16, 16)), "Find", wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmap(wxART_REDO, wxART_FRAME_ICON, wxSize(16, 16)), "Redo", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmap(wxART_UNDO, wxART_FRAME_ICON, wxSize(16, 16)), "Undo", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmapBundle(wxART_REDO, wxART_FRAME_ICON, wxSize(16, 16)), "Redo", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmapBundle(wxART_UNDO, wxART_FRAME_ICON, wxSize(16, 16)), "Undo", wxItemKind::wxITEM_NORMAL);
 
 	m_mainFrameToolbar->Realize();
 
@@ -59,20 +59,32 @@ void CFrontendDocMDIFrameEnterprise::CreateWideGui()
 
 	InitializeDefaultMenu();
 
-	SetStatusBar(new CDocBottomStatusBar(this));
+	SetStatusBar(new ibDocBottomStatusBar(this));
 	SetStatusText(_("Ready"));
 	GetNotebook()->GetAuiManager().GetArtProvider()->SetColour(wxAUI_DOCKART_BACKGROUND_COLOUR, wxAUI_DEFAULT_COLOUR);
+
+	// Ensure the client window has proper background (dark blue theme)
+	wxAuiMDIClientWindow* clientWnd = GetClientWindow();
+	if (clientWnd != nullptr) {
+		clientWnd->SetBackgroundColour(wxColour(68, 88, 123));
+	}
 
 	SetMinSize(wxSize(400, 380));
 
 	// tell the manager to "commit" all the changes just made
 	m_mgr.Update();
+
+#ifdef __WXOSX__
+	// Force a full refresh on macOS to avoid black background artifacts
+	Refresh();
+	Update();
+#endif
 }
 
 #include "frontend/win/ctrls/floatingNotebook.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-void CFrontendDocMDIFrameEnterprise::CreateBottomPane()
+void ibFrontendDocMDIFrameEnterprise::CreateBottomPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_BOTTOM).IsOk())
 		return;
@@ -86,7 +98,7 @@ void CFrontendDocMDIFrameEnterprise::CreateBottomPane()
 	paneInfo.Movable(false);
 	paneInfo.MinSize(-1, 30);
 
-	wxFloatingNotebook* auiNotebook = new wxFloatingNotebook(&m_mgr, paneInfo.name,
+	ibFloatingNotebook* auiNotebook = new ibFloatingNotebook(&m_mgr, paneInfo.name,
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
@@ -95,7 +107,7 @@ void CFrontendDocMDIFrameEnterprise::CreateBottomPane()
 	auiNotebook->SetArtProvider(new wxAuiLunaTabArt());
 	auiNotebook->Freeze();
 
-	auiNotebook->AddPage(m_outputWindow, _("Messages"), false, wxArtProvider::GetBitmap(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16)));
+	auiNotebook->AddPage(m_outputWindow, _("Messages"), false, wxArtProvider::GetBitmapBundle(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16)));
 
 	auiNotebook->SetNullSelection();
 	auiNotebook->Thaw();

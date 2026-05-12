@@ -3,22 +3,22 @@
 
 #include "backend/compiler/value.h"
 
-class BACKEND_API CValueGuid : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CValueGuid);
+class BACKEND_API ibValueGuid : public ibValue {
+	wxDECLARE_DYNAMIC_CLASS(ibValueGuid);
 public:
 
-	operator CGuid() const {
+	operator ibGuid() const {
 		return m_guid;
 	}
 
-	CValueGuid();
-	CValueGuid(const CGuid &guid);
+	ibValueGuid();
+	ibValueGuid(const ibGuid &guid);
 
 	virtual bool Init();
-	virtual bool Init(CValue **paParams, const long lSizeArray);
+	virtual bool Init(ibValue **paParams, const long lSizeArray);
 
-	virtual wxString GetString() const { 
-		return m_guid; 
+	virtual wxString GetString() const {
+		return m_guid;
 	}
 
 	//check is empty
@@ -27,17 +27,17 @@ public:
 	}
 
 	//operator '=='
-	virtual bool CompareValueEQ(const CValue &cParam) const {
-		return m_guid == cParam.GetString(); 
+	virtual bool CompareValueEQ(const ibValue &cParam) const {
+		return m_guid == ibGuid(cParam.GetString());
 	}
-	
+
 	//operator '!='
-	virtual bool CompareValueNE(const CValue &cParam) const { 
-		return m_guid != cParam.GetString(); 
+	virtual bool CompareValueNE(const ibValue &cParam) const {
+		return m_guid != ibGuid(cParam.GetString());
 	}
 
 private:
-	CGuid m_guid;
+	ibGuid m_guid;
 };
 
 #endif // !_VALUEUUID_H__

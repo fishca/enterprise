@@ -4,8 +4,8 @@
 #include "backend/databaseLayer/databaseLayerException.h"
 #include "firebirdResultSet.h"
 
-CFirebirdPreparedStatementWrapper::CFirebirdPreparedStatementWrapper(CFirebirdInterface* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, const wxString& strSQL)
-	: CDatabaseErrorReporter(), m_strSQL(strSQL)
+ibPreparedStatementFirebirdWrapper::ibPreparedStatementFirebirdWrapper(ibInterfaceFirebird* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, const wxString& strSQL)
+	: ibDatabaseErrorReporter(), m_strSQL(strSQL)
 {
 	m_pInterface = pInterface;
 	m_pDatabase = pDatabase;
@@ -20,7 +20,7 @@ CFirebirdPreparedStatementWrapper::CFirebirdPreparedStatementWrapper(CFirebirdIn
 	if (GetErrorCode() != DATABASE_LAYER_OK) ThrowDatabaseException();
 }
 
-CFirebirdPreparedStatementWrapper::~CFirebirdPreparedStatementWrapper()
+ibPreparedStatementFirebirdWrapper::~ibPreparedStatementFirebirdWrapper()
 {
 	ResetErrorCodes();
 
@@ -38,13 +38,13 @@ CFirebirdPreparedStatementWrapper::~CFirebirdPreparedStatementWrapper()
 	}
 }
 
-bool CFirebirdPreparedStatementWrapper::Prepare(const wxString& strSQL)
+bool ibPreparedStatementFirebirdWrapper::Prepare(const wxString& strSQL)
 {
 	m_strSQL = strSQL;
 	return Prepare();
 }
 
-bool CFirebirdPreparedStatementWrapper::Prepare()
+bool ibPreparedStatementFirebirdWrapper::Prepare()
 {
 	ResetErrorCodes();
 
@@ -102,54 +102,54 @@ bool CFirebirdPreparedStatementWrapper::Prepare()
 		}
 	}
 
-	m_pParameterCollection = new CFirebirdParameterCollection(m_pInterface, m_pParameters);
+	m_pParameterCollection = new ibDatatabaseParameterFirebirdCollection(m_pInterface, m_pParameters);
 	m_pParameterCollection->SetEncoding(GetEncoding());
 
 	return true;
 }
 
 // set field
-void CFirebirdPreparedStatementWrapper::SetParam(int nPosition, int nValue)
+void ibPreparedStatementFirebirdWrapper::SetParam(int nPosition, int nValue)
 {
 	m_pParameterCollection->SetParam(nPosition, nValue);
 }
 
-void CFirebirdPreparedStatementWrapper::SetParam(int nPosition, double dblValue)
+void ibPreparedStatementFirebirdWrapper::SetParam(int nPosition, double dblValue)
 {
 	m_pParameterCollection->SetParam(nPosition, dblValue);
 }
 
-void CFirebirdPreparedStatementWrapper::SetParam(int nPosition, const number_t& dblValue)
+void ibPreparedStatementFirebirdWrapper::SetParam(int nPosition, const ibNumber& dblValue)
 {
 	m_pParameterCollection->SetParam(nPosition, dblValue);
 }
 
-void CFirebirdPreparedStatementWrapper::SetParam(int nPosition, const wxString& strValue)
+void ibPreparedStatementFirebirdWrapper::SetParam(int nPosition, const wxString& strValue)
 {
 	m_pParameterCollection->SetParam(nPosition, strValue);
 }
 
-void CFirebirdPreparedStatementWrapper::SetParam(int nPosition)
+void ibPreparedStatementFirebirdWrapper::SetParam(int nPosition)
 {
 	m_pParameterCollection->SetParam(nPosition);
 }
 
-void CFirebirdPreparedStatementWrapper::SetParam(int nPosition, const void* pData, long nDataLength)
+void ibPreparedStatementFirebirdWrapper::SetParam(int nPosition, const void* pData, long nDataLength)
 {
 	m_pParameterCollection->SetParam(nPosition, pData, nDataLength);
 }
 
-void CFirebirdPreparedStatementWrapper::SetParam(int nPosition, const wxDateTime& dateValue)
+void ibPreparedStatementFirebirdWrapper::SetParam(int nPosition, const wxDateTime& dateValue)
 {
 	m_pParameterCollection->SetParam(nPosition, dateValue);
 }
 
-void CFirebirdPreparedStatementWrapper::SetParam(int nPosition, bool bValue)
+void ibPreparedStatementFirebirdWrapper::SetParam(int nPosition, bool bValue)
 {
 	m_pParameterCollection->SetParam(nPosition, bValue);
 }
 
-int CFirebirdPreparedStatementWrapper::GetParameterCount()
+int ibPreparedStatementFirebirdWrapper::GetParameterCount()
 {
 	if (m_pParameters == NULL)
 		return 0;
@@ -157,7 +157,7 @@ int CFirebirdPreparedStatementWrapper::GetParameterCount()
 		return m_pParameters->sqld;
 }
 
-int CFirebirdPreparedStatementWrapper::DoRunQuery()
+int ibPreparedStatementFirebirdWrapper::DoRunQuery()
 {
 	ResetErrorCodes();
 
@@ -176,6 +176,13 @@ int CFirebirdPreparedStatementWrapper::DoRunQuery()
 		ThrowDatabaseException();
 		return DATABASE_LAYER_QUERY_RESULT_ERROR;
 	}
+
+	// isc_info_sql_records is a separate round-trip after Execute; on a
+	// SELECT it returns nothing useful (insert/update/delete counts are
+	// all 0) — skip the call entirely. Saves a network/IPC hop on every
+	// query for the most common path.
+	if (IsSelectQuery())
+		return 0;
 
 	long nRows = 0;
 	static char requestedInfoTypes[] = { isc_info_sql_records, isc_info_end };
@@ -203,7 +210,7 @@ int CFirebirdPreparedStatementWrapper::DoRunQuery()
 	return (int)nRows;
 }
 
-IDatabaseResultSet* CFirebirdPreparedStatementWrapper::DoRunQueryWithResults()
+ibDatabaseResultSet* ibPreparedStatementFirebirdWrapper::DoRunQueryWithResults()
 {
 	ResetErrorCodes();
 
@@ -238,7 +245,7 @@ IDatabaseResultSet* CFirebirdPreparedStatementWrapper::DoRunQueryWithResults()
 	}
 
 	// Create the result set object
-	CFirebirdResultSet* pResultSet = new CFirebirdResultSet(m_pInterface, m_pDatabase, m_pTransaction, m_pStatement, pOutputSqlda);
+	ibDatabaseResultSetFirebird* pResultSet = new ibDatabaseResultSetFirebird(m_pInterface, m_pDatabase, m_pTransaction, m_pStatement, pOutputSqlda);
 	if (pResultSet)
 		pResultSet->SetEncoding(GetEncoding());
 	if (pResultSet->GetErrorCode() != DATABASE_LAYER_OK)
@@ -255,7 +262,7 @@ IDatabaseResultSet* CFirebirdPreparedStatementWrapper::DoRunQueryWithResults()
 			delete pResultSet;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		}
-		catch (DatabaseLayerException& e)
+		catch (ibDatabaseLayerException& e)
 		{
 		}
 #endif
@@ -287,7 +294,7 @@ IDatabaseResultSet* CFirebirdPreparedStatementWrapper::DoRunQueryWithResults()
 			delete pResultSet;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		}
-		catch (DatabaseLayerException& e)
+		catch (ibDatabaseLayerException& e)
 		{
 		}
 #endif
@@ -301,7 +308,7 @@ IDatabaseResultSet* CFirebirdPreparedStatementWrapper::DoRunQueryWithResults()
 	return pResultSet;
 }
 
-bool CFirebirdPreparedStatementWrapper::IsSelectQuery()
+bool ibPreparedStatementFirebirdWrapper::IsSelectQuery()
 {
 	wxString strLocalCopy = m_strSQL;
 	strLocalCopy.Trim(false);
@@ -309,12 +316,12 @@ bool CFirebirdPreparedStatementWrapper::IsSelectQuery()
 	return strLocalCopy.StartsWith(wxT("SELECT "));
 }
 
-void CFirebirdPreparedStatementWrapper::InterpretErrorCodes()
+void ibPreparedStatementFirebirdWrapper::InterpretErrorCodes()
 {
 	wxLogDebug(wxT("FirebirdPreparesStatementWrapper::InterpretErrorCodes()\n"));
 
 	long nSqlCode = m_pInterface->GetIscSqlcode()(m_Status);
-	SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(nSqlCode));
-	SetErrorMessage(CFirebirdDatabaseLayer::TranslateErrorCodeToString(m_pInterface, nSqlCode, m_Status));
+	SetErrorCode(ibDatabaseLayerFirebird::TranslateErrorCode(nSqlCode));
+	SetErrorMessage(ibDatabaseLayerFirebird::TranslateErrorCodeToString(m_pInterface, nSqlCode, m_Status));
 }
 

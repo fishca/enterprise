@@ -2,17 +2,17 @@
 #include "widgets.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueListBox, IValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListBox, ibValueWindow)
 
 //****************************************************************************
 //*                             Listbox                                      *
 //****************************************************************************
 
-CValueListBox::CValueListBox() : IValueWindow()
+ibValueListBox::ibValueListBox() : ibValueWindow()
 {
 }
 
-wxObject* CValueListBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
+wxObject* ibValueListBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
 	wxListBox* m_listbox = new wxListBox(wxparent, wxID_ANY,
 		wxDefaultPosition,
@@ -23,11 +23,11 @@ wxObject* CValueListBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 	return m_listbox;
 }
 
-void CValueListBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
+void ibValueListBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first–°reated)
 {
 }
 
-void CValueListBox::Update(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueListBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
 	wxListBox* listbox = dynamic_cast<wxListBox*>(wxobject);
 
@@ -37,7 +37,7 @@ void CValueListBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 	UpdateWindow(listbox);
 }
 
-void CValueListBox::Cleanup(wxObject* obj, IVisualHost* visualHost)
+void ibValueListBox::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
 }
 
@@ -45,12 +45,12 @@ void CValueListBox::Cleanup(wxObject* obj, IVisualHost* visualHost)
 //*								Data	                            *
 //*******************************************************************
 
-bool CValueListBox::LoadData(CMemoryReader& reader)
+bool ibValueListBox::LoadData(ibReaderMemory& reader)
 {
-	return IValueWindow::LoadData(reader);
+	return ibValueWindow::LoadData(reader);
 }
 
-bool CValueListBox::SaveData(CMemoryWriter& writer)
+bool ibValueListBox::SaveData(ibWriterMemory& writer)
 {
-	return IValueWindow::SaveData(writer);
+	return ibValueWindow::SaveData(writer);
 }

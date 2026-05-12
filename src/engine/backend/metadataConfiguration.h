@@ -1,22 +1,25 @@
 #ifndef _CONFIG_METADATA_H__
 #define _CONFIG_METADATA_H__
 
+#include <vector>
+
 #include "backend/metadata.h"
+#include "backend/appData.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-#define activeMetaData		(IMetaDataConfiguration::Get())
+#define activeMetaData		(ibMetaDataConfiguration::Get())
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-#define metaDataCreate(mode, f) (IMetaDataConfiguration::Initialize(mode, f))
-#define metaDataDestroy()		(IMetaDataConfiguration::Destroy())
+#define metaDataCreate(mode, f) (ibMetaDataConfiguration::Initialize(mode, f))
+#define metaDataDestroy()		(ibMetaDataConfiguration::Destroy())
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum eConfigType {
-	eConfigType_File,
-	eConfigType_Load,
-	eConfigType_Load_And_Save,
+enum ibConfigType {
+	ibConfigType_File,
+	ibConfigType_Load,
+	ibConfigType_Load_And_Save,
 };
 
-class BACKEND_API IMetaDataConfiguration : public IMetaData {
+class BACKEND_API ibMetaDataConfigurationBase : public ibMetaData {
 public:
 
 #pragma region access
@@ -28,12 +31,12 @@ public:
 	virtual bool AccessRight_ModeAllFunction() const { return true; }
 #pragma endregion
 
-	IMetaDataConfiguration() : IMetaData() {}
+	ibMetaDataConfigurationBase() : ibMetaData() {}
 
 	virtual wxString GetConfigMD5() const = 0;
 	virtual wxString GetConfigName() const = 0;
 
-	virtual CGuid GetConfigGuid() const = 0;
+	virtual ibGuid GetConfigGuid() const = 0;
 
 	// if storage save in db 
 	virtual bool IsConfigOpen() const { return false; }
@@ -53,19 +56,14 @@ public:
 	virtual bool LoadDataFromBuffer(const wxMemoryBuffer& buffer) { return true; }
 	virtual bool SaveDataToBuffer(wxMemoryBuffer& buffer) { return true; }
 
-	//get common module 
-	virtual CValueModuleManagerConfiguration* GetModuleManager() const = 0;
-	virtual CValueMetaObjectConfiguration* GetCommonMetaObject() const = 0;
+	//get common metadata
+	virtual ibValueMetaObjectConfiguration* GetCommonMetaObject() const = 0;
 
-	//start/exit module 
-	virtual bool StartMainModule(bool force = false) = 0;
-	virtual bool ExitMainModule(bool force = false) = 0;
-
-	// get config metadata in storage 
-	virtual IMetaDataConfiguration* GetConfiguration() const { return nullptr; }
+	// get config metadata in storage
+	virtual ibMetaDataConfigurationBase* GetConfiguration() const { return nullptr; }
 
 	//get config type 
-	virtual eConfigType GetConfigType() const = 0;
+	virtual ibConfigType GetConfigType() const = 0;
 
 	//special delete and create 
 	virtual bool ReCreateDatabase() { return false; }
@@ -86,15 +84,15 @@ protected:
 
 public:
 
-	static IMetaDataConfiguration* Get() { return ms_instance; }
-	static bool Initialize(enum eRunMode mode, const int flag);
+	static ibMetaDataConfigurationBase* Get() { return ms_instance; }
+	static bool Initialize(enum ibRunMode mode, const int flag);
 	static bool Destroy();
 
 private:
-	static IMetaDataConfiguration* ms_instance;
+	static ibMetaDataConfigurationBase* ms_instance;
 };
 
-class BACKEND_API CMetaDataConfigurationFile : public IMetaDataConfiguration {
+class BACKEND_API ibMetaDataConfigurationFile : public ibMetaDataConfigurationBase {
 public:
 
 #pragma region access
@@ -108,19 +106,19 @@ public:
 
 	virtual bool IsConfigOpen() const { return m_configOpened; }
 
-	CMetaDataConfigurationFile();
-	virtual ~CMetaDataConfigurationFile();
+	ibMetaDataConfigurationFile();
+	virtual ~ibMetaDataConfigurationFile();
 
 	virtual wxString GetConfigMD5() const { return m_md5Hash; }
 	virtual wxString GetConfigName() const { return m_commonObject->GetName(); }
 
-	virtual CGuid GetConfigGuid() const { return m_commonObject->GetDocPath(); }
+	virtual ibGuid GetConfigGuid() const { return m_commonObject->GetDocPath(); }
 
-	virtual void SetVersion(const version_identifier_t& version) { m_commonObject->SetVersion(version); }
-	virtual version_identifier_t GetVersion() const { return m_commonObject->GetVersion(); }
+	virtual void SetVersion(const ibVersionID& version) { m_commonObject->SetVersion(version); }
+	virtual ibVersionID GetVersion() const { return m_commonObject->GetVersion(); }
 
 	//compare metaData
-	virtual bool CompareMetadata(CMetaDataConfigurationFile* dst) const {
+	virtual bool CompareMetadata(ibMetaDataConfigurationFile* dst) const {
 		return m_md5Hash == dst->m_md5Hash;
 	}
 
@@ -139,54 +137,41 @@ public:
 	//load/save form file
 	virtual bool LoadConfigFromBuffer(const wxMemoryBuffer& buffer);
 
-	virtual CValueModuleManagerConfiguration* GetModuleManager() const { return m_moduleManager; }
-	virtual CValueMetaObjectConfiguration* GetCommonMetaObject() const { return m_commonObject; }
+	virtual ibValueMetaObjectConfiguration* GetCommonMetaObject() const { return m_commonObject; }
 
-	//start/exit module 
-	virtual bool StartMainModule(bool force = false) {
-		return m_moduleManager != nullptr ?
-			m_moduleManager->StartMainModule() : false;
-	}
-
-	virtual bool ExitMainModule(bool force = false) {
-		return m_moduleManager != nullptr ?
-			m_moduleManager->ExitMainModule(force) : false;
-	}
-
-	//get config type 
-	virtual eConfigType GetConfigType() const { return eConfigType::eConfigType_File; };
+	//get config type
+	virtual ibConfigType GetConfigType() const { return ibConfigType::ibConfigType_File; };
 
 protected:
 
 	//header loader/saver 
-	bool LoadHeader(CMemoryReader& readerData);
+	bool LoadHeader(ibReaderMemory& readerData);
 
 	//loader/saver/deleter: 
-	bool LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData);
-	bool LoadDatabase(const class_identifier_t& clsid, CMemoryReader& readerData, IValueMetaObject* object);
-	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IValueMetaObject* object);
+	bool LoadCommonMetadata(const ibClassID& clsid, ibReaderMemory& readerData);
+	bool LoadDatabase(const ibClassID& clsid, ibReaderMemory& readerData, ibValueMetaObject* object);
+	bool LoadChildMetadata(const ibClassID& clsid, ibReaderMemory& readerData, ibValueMetaObject* object);
 
 	//run/close recursively:
-	bool RunChildMetadata(IValueMetaObject* object, int flags, bool before);
-	bool CloseChildMetadata(IValueMetaObject* object, int flags, bool before);
+	bool RunChildMetadata(ibValueMetaObject* object, int flags, bool before);
+	bool CloseChildMetadata(ibValueMetaObject* object, int flags, bool before);
 
 	//clear recursively:
-	bool ClearChildMetadata(IValueMetaObject* object);
+	bool ClearChildMetadata(ibValueMetaObject* object);
 
 protected:
 
 	bool m_configOpened;
 	wxString m_md5Hash;
 	//common meta object
-	CValueMetaObjectConfiguration* m_commonObject;
-	CValueModuleManagerConfiguration* m_moduleManager;
+	ibValueMetaObjectConfiguration* m_commonObject;
 };
 
-class BACKEND_API CMetaDataConfiguration : public CMetaDataConfigurationFile {
+class BACKEND_API ibMetaDataConfiguration : public ibMetaDataConfigurationFile {
 public:
-	CMetaDataConfiguration();
+	ibMetaDataConfiguration();
 	virtual bool LoadConfigFromFile(const wxString& strFileName) {
-		if (CMetaDataConfigurationFile::LoadConfigFromFile(strFileName)) {
+		if (ibMetaDataConfigurationFile::LoadConfigFromFile(strFileName)) {
 			Modify(true); //set modify for check metaData
 			return RunDatabase();
 		}
@@ -194,13 +179,13 @@ public:
 	}
 
 	virtual wxString GetConfigName() const { return m_commonObject->GetName(); }
-	virtual CGuid GetConfigGuid() const { return m_metaGuid; }
+	virtual ibGuid GetConfigGuid() const { return m_metaGuid; }
 
 	//metaData 
 	virtual bool LoadDatabase(int flags = defaultFlag);
 
 	//get config type 
-	virtual eConfigType GetConfigType() const { return eConfigType::eConfigType_Load; };
+	virtual ibConfigType GetConfigType() const { return ibConfigType::ibConfigType_Load; };
 
 protected:
 
@@ -209,11 +194,11 @@ protected:
 
 protected:
 
-	CGuid m_metaGuid;
+	ibGuid m_metaGuid;
 	bool m_configNew;
 };
 
-class BACKEND_API CMetaDataConfigurationStorage : public CMetaDataConfiguration {
+class BACKEND_API ibMetaDataConfigurationStorage : public ibMetaDataConfiguration {
 
 	struct CSequenceData {
 		int m_interval;
@@ -224,8 +209,8 @@ class BACKEND_API CMetaDataConfigurationStorage : public CMetaDataConfiguration 
 
 public:
 
-	CMetaDataConfigurationStorage();
-	virtual ~CMetaDataConfigurationStorage();
+	ibMetaDataConfigurationStorage();
+	virtual ~ibMetaDataConfigurationStorage();
 
 	//is config save
 	virtual bool IsConfigSave() const {
@@ -238,13 +223,15 @@ public:
 
 	//run/close 
 	virtual bool RunDatabase(int flags = defaultFlag) {
-		if (!CMetaDataConfiguration::RunDatabase(flags))
+		
+		if (!ibMetaDataConfiguration::RunDatabase(flags))
 			return false;
+		
 		return m_configMetadata->RunDatabase(flags | loadConfigFlag);
 	}
 
 	virtual bool CloseDatabase(int flags = defaultFlag) {
-		if (!CMetaDataConfiguration::CloseDatabase(flags))
+		if (!ibMetaDataConfiguration::CloseDatabase(flags))
 			return false;
 		return m_configMetadata->CloseDatabase(flags);
 	}
@@ -263,10 +250,10 @@ public:
 	virtual bool SaveDataToBuffer(wxMemoryBuffer& buffer);
 
 	// get config metaData 
-	virtual IMetaDataConfiguration* GetConfiguration() const { return m_configMetadata; }
+	virtual ibMetaDataConfiguration* GetConfiguration() const { return m_configMetadata; }
 
 	//get config type 
-	virtual eConfigType GetConfigType() const { return eConfigType::eConfigType_Load_And_Save; };
+	virtual ibConfigType GetConfigType() const { return ibConfigType::ibConfigType_Load_And_Save; };
 
 	////////////////////////////////////////////////////////////////
 
@@ -295,23 +282,23 @@ protected:
 	virtual bool OnDestroy();
 
 	//header saver 
-	bool SaveHeader(CMemoryWriter& writerData);
+	bool SaveHeader(ibWriterMemory& writerData);
 
 	//loader/saver/deleter: 
-	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags = defaultFlag);
-	bool SaveDatabase(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags = defaultFlag);
-	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, IValueMetaObject* object, int flags = defaultFlag);
-	bool DeleteCommonMetadata(const class_identifier_t& clsid);
-	bool DeleteMetadata(const class_identifier_t& clsid);
-	bool DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object);
+	bool SaveCommonMetadata(const ibClassID& clsid, ibWriterMemory& writerData, int flags = defaultFlag);
+	bool SaveDatabase(const ibClassID& clsid, ibWriterMemory& writerData, int flags = defaultFlag);
+	bool SaveChildMetadata(const ibClassID& clsid, ibWriterMemory& writerData, ibValueMetaObject* object, int flags = defaultFlag);
+	bool DeleteCommonMetadata(const ibClassID& clsid);
+	bool DeleteMetadata(const ibClassID& clsid);
+	bool DeleteChildMetadata(const ibClassID& clsid, ibValueMetaObject* object);
 
 private:
 
 	//load/save sequence form buffer
-	bool LoadSequenceFromBuffer(const CMemoryReader& reader);
-	bool SaveSequenceToBuffer(CMemoryWriter& writer);
+	bool LoadSequenceFromBuffer(const ibReaderMemory& reader);
+	bool SaveSequenceToBuffer(ibWriterMemory& writer);
 
-	CMetaDataConfiguration* m_configMetadata;
+	ibMetaDataConfiguration* m_configMetadata;
 };
 
 #define sign_metadata 0x1236F362122FE

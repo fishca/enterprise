@@ -1,0 +1,37 @@
+// LINQ `group ... into g` smoke test — 2026-05-12
+// Non-terminal group: continuation clauses operate on the per-group
+// Structure{Key, Values}. After `into g`:
+//   - `where g.Values.Count() > 1` filters groups by size
+//   - `orderby g.Values.Count() descending` sorts groups
+//   - `select Structure(...)` projects each group
+//
+// Expected (after where+orderby+select):
+//   USA: 3 names
+//     Alice
+//     Bob
+//     Eve
+//   UK: 2 names
+//     Carol
+//     Dan
+//   (FR group dropped — Count = 1, fails `Count > 1`.)
+
+var people = New Array;
+people.Add(New Structure("Country, Name", "USA", "Alice"));
+people.Add(New Structure("Country, Name", "UK",  "Carol"));
+people.Add(New Structure("Country, Name", "USA", "Bob"));
+people.Add(New Structure("Country, Name", "FR",  "Frank"));
+people.Add(New Structure("Country, Name", "UK",  "Dan"));
+people.Add(New Structure("Country, Name", "USA", "Eve"));
+
+var q = from p in people
+        group p.Name by p.Country into g
+        where g.Values.Count() > 1
+        orderby g.Values.Count() descending
+        select New Structure("Country, Names", g.Key, g.Values);
+
+foreach (row in q) {
+    Message(row.Country + ": " + row.Names.Count() + " name(s)");
+    foreach (n in row.Names) {
+        Message("  " + n);
+    }
+}

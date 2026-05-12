@@ -26,12 +26,12 @@
 #include "frontend/win/ctrls/checktree.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-class CDialogUserItem : public wxDialog {
+class ibDialogUserItem : public wxDialog {
 
 	struct CDataUserRole {
 		wxString m_strRoleGuid;
 		wxString m_strRoleName;
-		role_identifier_t m_miRoleId;
+		ibRoleID m_miRoleId;
 	};
 
 	struct CDataUserLanguageItem {
@@ -42,9 +42,9 @@ class CDialogUserItem : public wxDialog {
 
 public:
 
-	bool ReadUserData(const CGuid& userGuid, bool copy = false);
+	bool ReadUserData(const ibGuid& userGuid, bool copy = false);
 
-	CDialogUserItem(wxWindow* parent, wxWindowID id = wxID_ANY,
+	ibDialogUserItem(wxWindow* parent, wxWindowID id = wxID_ANY,
 		const wxString& title = _("User"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(400, 264), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
 
 private:
@@ -72,10 +72,10 @@ private:
 
 	wxStaticText* m_staticRole;
 	wxStaticText* m_staticLanguage;
-	wxCheckTree* m_choiceRole;
+	ibCheckTree* m_choiceRole;
 	wxChoice* m_choiceLanguage;
 
-	CGuid m_userGuid;
+	ibGuid m_userGuid;
 };
 
 #endif 

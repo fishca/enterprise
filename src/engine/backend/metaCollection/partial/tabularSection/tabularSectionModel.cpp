@@ -4,52 +4,69 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "tabularSection.h"
-
 //***********************************************************************************
 //*                                  Model                                          *
 //***********************************************************************************
 
-void IValueTabularSectionDataObject::GetValueByRow(wxVariant& variant,
-	const wxDataViewExtItem& row, unsigned int col) const
+void ibValueTabularSectionDataObjectBase::GetValueByRow(wxVariant& variant,
+	const ibDataViewItem& row, unsigned int col) const
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr) return;
 
-	if (m_metaTable->IsNumberLine(col))
-		variant = new wxVariantDataValueNumberLine(GetRow(row) + 1);
+	if (m_metaTable->IsNumberLine(col)) {
+		// Sequential display number = position in the filter+sort
+		// view, not raw m_nodeValues index — so user-visible
+		// numbering stays 1..N regardless of insertion order or
+		// filter state.  GetRow() returns the raw index (consumed
+		// by save / iteration); we re-resolve through the view
+		// here for rendering only.
+		auto view = BuildVisibleView();
+		auto it = std::find(view.begin(), view.end(), node);
+		long pos = (it != view.end())
+			? std::distance(view.begin(), it) : 0;
+		variant = new ibVariantDataValueNumberLine(pos + 1);
+	}
 	else if (node->HasColumnValue(col))
 		node->GetValue(col, variant);
 }
 
 #include "backend/metaData.h"
 
-bool IValueTabularSectionDataObject::SetValueByRow(const wxVariant& variant,
-	const wxDataViewExtItem& row, unsigned int col)
+bool ibValueTabularSectionDataObjectBase::SetValueByRow(const wxVariant& variant,
+	const ibDataViewItem& row, unsigned int col)
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
+	
 	if (node == nullptr) return false;
 
 	if (!m_metaTable->IsNumberLine(col)) {
-		IMetaData* metaData = m_metaTable->GetMetaData();
+		ibMetaData* metaData = m_metaTable->GetMetaData();
 		wxASSERT(metaData);
-		if (node->HasColumnValue(col)) {
+		const bool hasCol = node->HasColumnValue(col);
+		
+		if (hasCol) {
 
 			const wxString& strData = variant.GetString();
 
-			const CValue& selValue = node->GetTableValue(col);
-			const CValue& newValue = metaData->CreateObject(selValue.GetClassType());
+			const ibValue& selValue = node->GetTableValue(col);
+			const ibValue& newValue = metaData->CreateObject(selValue.GetClassType());
 
 			if (strData.Length() > 0) {
-				std::vector<CValue> listValue;
-				if (newValue.FindValue(strData, listValue)) {
-					SetValueByMetaID(row, col, listValue.at(0));
+				std::vector<ibValue> listValue;
+				const bool found = newValue.FindValue(strData, listValue);
+				
+				if (found) {
+					const bool ok = SetValueByMetaID(row, col, listValue.at(0));
+					
 				}
 				else {
 					return false;
 				}
 			}
 			else {
-				SetValueByMetaID(row, col, newValue);
+				const bool ok = SetValueByMetaID(row, col, newValue);
+				
 			}
 		}
 		else {
@@ -57,50 +74,57 @@ bool IValueTabularSectionDataObject::SetValueByRow(const wxVariant& variant,
 		}
 	};
 
-	RefreshTabularSection();
+	// Append/Insert/Remove fire ItemInserted / ItemDeleted; SetValue path
+	// fires ValueChanged.  Narrow notifies update the view in place
+	// via the control's narrow ItemInserted / ValueChanged paths
+	// (RAM-backed gate).  No NotifyReset on every mutation — the
+	// heavy hammer caused user-visible flicker on copy / edit.
 	return true;
 }
 
-void IValueTabularSectionDataObject::AddValue(unsigned int before)
+void ibValueTabularSectionDataObjectBase::AddValue(unsigned int before)
 {
-	long row = GetRow(GetSelection());
-	if (row > 0) AppendRow(row);
-	else AppendRow();
-
-	RefreshTabularSection();
+	// Insert AFTER the active row when there is one (so user on
+	// row 3 + Add → new row at position 4, focus moves there via
+	// the ItemInserted handler's Select(item)).  No active row →
+	// append at the bottom.
+	const long row = GetRow(GetSelection());
+	if (row >= 0) AppendRow(row + 1);
+	else          AppendRow();
 }
 
-void IValueTabularSectionDataObject::CopyValue()
+void ibValueTabularSectionDataObjectBase::CopyValue()
 {
-	const wxDataViewExtItem& currentItem = GetSelection();
+	const ibDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
-	wxValueTableRow* rowData = new wxValueTableRow();
+	ibValueTableRow* rowData = new ibValueTableRow();
 	for (const auto object : m_metaTable->GetAttributeArrayObject()) {
 		if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
 			rowData->AppendTableValue(object->GetMetaID(), node->GetTableValue(object->GetMetaID()));
 		}
 		else {
-			rowData->AppendTableValue(object->GetMetaID(), CValue());
+			rowData->AppendTableValue(object->GetMetaID(), ibValue());
 		}
 	}
+	// Copy goes AFTER the source row so the original keeps its
+	// position; the new row lands at currentLine+1 and ItemInserted
+	// pushes focus onto it via Select.
 	long currentLine = GetRow(currentItem);
 	if (currentLine != wxNOT_FOUND) {
-		IValueTable::Insert(rowData, currentLine, !CBackendException::IsEvalMode());
+		ibValueModelRamTableBase::Insert(rowData, currentLine + 1, !ibBackendException::IsEvalMode());
 	}
 	else {
-		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
+		ibValueModelRamTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 	}
-
-	RefreshTabularSection();
 }
 
-void IValueTabularSectionDataObject::EditValue()
+void ibValueTabularSectionDataObjectBase::EditValue()
 {
-	const wxDataViewExtItem& currentItem = GetSelection();
+	const ibDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
 
@@ -109,53 +133,47 @@ void IValueTabularSectionDataObject::EditValue()
 		if (m_metaTable->IsNumberLine(m_modelProvider->GetCurrentModelColumn()))
 			return;
 
-		IValueTable::RowValueStartEdit(currentItem, m_modelProvider->GetCurrentModelColumn());
+		ibValueModelRamTableBase::RowValueStartEdit(currentItem, m_modelProvider->GetCurrentModelColumn());
 	}
 	else {
-		IValueTable::RowValueStartEdit(currentItem);
+		ibValueModelRamTableBase::RowValueStartEdit(currentItem);
 	}
-
-	RefreshTabularSection();
 }
 
-void IValueTabularSectionDataObject::DeleteValue()
+void ibValueTabularSectionDataObjectBase::DeleteValue()
 {
-	const wxDataViewExtItem& currentItem = GetSelection();
+	const ibDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
 
-	RefreshTabularSection();
-
-	if (!CBackendException::IsEvalMode()) {
-		IValueTable::Remove(node);
+	if (!ibBackendException::IsEvalMode()) {
+		ibValueModelRamTableBase::Remove(node);
 	}
 }
 
-void CValueTabularSectionDataObjectRef::CopyValue()
+void ibValueTabularSectionDataObjectRef::CopyValue()
 {
-	IValueTabularSectionDataObject::CopyValue();
+	ibValueTabularSectionDataObjectBase::CopyValue();
 
-	if (!CBackendException::IsEvalMode()) {
-		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(
+	if (!ibBackendException::IsEvalMode()) {
+		ibBackendValueForm* const foundedForm = ibBackendValueForm::FindFormByUniqueKey(
 			m_objectValue->GetGuid()
 		);
 		if (foundedForm != nullptr) {
 			foundedForm->Modify(true);
 		}
 	}
-
-	RefreshTabularSection();
 }
 
-void CValueTabularSectionDataObjectRef::DeleteValue()
+void ibValueTabularSectionDataObjectRef::DeleteValue()
 {
-	IValueTabularSectionDataObject::DeleteValue();
+	ibValueTabularSectionDataObjectBase::DeleteValue();
 
-	if (!CBackendException::IsEvalMode()) {
-		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(m_objectValue->GetGuid());
+	if (!ibBackendException::IsEvalMode()) {
+		ibBackendValueForm* const foundedForm = ibBackendValueForm::FindFormByUniqueKey(m_objectValue->GetGuid());
 		if (foundedForm != nullptr) foundedForm->Modify(true);
 	}
 }

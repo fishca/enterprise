@@ -11,18 +11,18 @@
 #include <wx/fdrepdlg.h>
 
 // The view using a standard wxTextCtrl to show its contents
-class FRONTEND_API CTextEditView : public CMetaView {
+class FRONTEND_API ibTextEditView : public ibMetaView {
 public:
 	
-	CTextEditView() : CMetaView(), m_textEditor(nullptr) {}
+	ibTextEditView() : ibMetaView(), m_textEditor(nullptr) {}
 
-	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
 	virtual wxPrintout* OnCreatePrintout() override;
 
-	CTextEditor* GetText() const { return m_textEditor; }
+	ibTextEditor* GetText() const { return m_textEditor; }
 
 private:
 
@@ -32,10 +32,10 @@ private:
 
 	void OnFind(wxFindDialogEvent& event);
 
-	CTextEditor* m_textEditor;
+	ibTextEditor* m_textEditor;
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(CTextEditView);
+	wxDECLARE_DYNAMIC_CLASS(ibTextEditView);
 };
 
 // ----------------------------------------------------------------------------
@@ -44,18 +44,18 @@ private:
 
 #include "backend/metaCollection/metaModuleObject.h"
 
-class FRONTEND_API ITextDocument : public CMetaDocument
+class FRONTEND_API ITextDocument : public ibMetaDocument
 {
 public:
 
 	virtual wxIcon GetIcon() const {
-		return CBackendPicture::GetPictureAsIcon(g_metaCommonModuleCLSID);
+		return ibBackendPicture::GetPictureAsIcon(g_metaCommonModuleCLSID);
 	}
 
-	ITextDocument() : CMetaDocument() { m_childDoc = false; }
+	ITextDocument() : ibMetaDocument() { m_childDoc = false; }
 
 	virtual wxCommandProcessor* OnCreateCommandProcessor() override;
-	virtual CTextEditor* GetTextCtrl() const;
+	virtual ibTextEditor* GetTextCtrl() const;
 
 protected:
 	wxDECLARE_NO_COPY_CLASS(ITextDocument);
@@ -66,11 +66,11 @@ protected:
 // A very simple text document class
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API CTextFileDocument : public ITextDocument
+class FRONTEND_API ibTextFilibDocument : public ITextDocument
 {
 public:
 	
-	CTextFileDocument() : ITextDocument(), m_loadFromFile(false) {}
+	ibTextFilibDocument() : ITextDocument(), m_loadFromFile(false) {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnNewDocument() override {
@@ -100,8 +100,8 @@ protected:
 
 	bool m_loadFromFile;
 
-	wxDECLARE_NO_COPY_CLASS(CTextFileDocument);
-	wxDECLARE_DYNAMIC_CLASS(CTextFileDocument);
+	wxDECLARE_NO_COPY_CLASS(ibTextFilibDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibTextFilibDocument);
 };
 
 #endif

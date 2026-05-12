@@ -17,19 +17,19 @@
 #include "backend/databaseLayer/databaseLayerDef.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-class IPreparedStatement;
+class ibPreparedStatement;
 
-class BACKEND_API CSqliteDatabaseLayer : public IDatabaseLayer
+class BACKEND_API ibDatabaseLayerSQLite : public ibDatabaseLayer
 {
 public:
 	// ctor()
-	CSqliteDatabaseLayer();
-	CSqliteDatabaseLayer(const wxString& strDatabase, bool mustExist = false);
-	CSqliteDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
-	CSqliteDatabaseLayer(const CSqliteDatabaseLayer& src);
+	ibDatabaseLayerSQLite();
+	ibDatabaseLayerSQLite(const wxString& strDatabase, bool mustExist = false);
+	ibDatabaseLayerSQLite(void* pDatabase) { m_pDatabase = pDatabase; }
+	ibDatabaseLayerSQLite(const ibDatabaseLayerSQLite& src);
 
 	// dtor()
-	virtual ~CSqliteDatabaseLayer();
+	virtual ~ibDatabaseLayerSQLite();
 
 	// open database
 	virtual bool Open(const wxString& strDatabase);
@@ -42,14 +42,12 @@ public:
 	virtual bool IsOpen();
 
 	/// clone database  
-	virtual IDatabaseLayer* Clone() { return new CSqliteDatabaseLayer(*this); }
+	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerSQLite(*this); }
 
-	// transaction support
-	virtual void BeginTransaction();
-	virtual void Commit();
-	virtual void RollBack();
-
-	virtual bool IsActiveTransaction();
+	// IsActiveTransaction inherits the base-class default
+	// (m_txDepth > 0). Driver transaction primitives
+	// (DoBeginTransaction / DoCommit / DoRollBack) are protected —
+	// see below.
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool TableExists(const wxString& table);
@@ -68,16 +66,23 @@ protected:
 
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
-	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
+	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
 
-	// IPreparedStatement support
-	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
-	IPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bLogForCleanup);
+	// ibPreparedStatement support
+	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+	ibPreparedStatement* DoPrepareStatement(const wxString& strQuery, bool bLogForCleanup);
+
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
 private:
 
 	//sqlite3* m_pDatabase;
 	void* m_pDatabase;
+	wxString m_strDatabasePath;
 };
 
 #endif // __SQLITE_DATABASE_LAYER_H__

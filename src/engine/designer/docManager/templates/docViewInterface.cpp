@@ -1,37 +1,37 @@
 #include "docViewInterface.h"
 
 // ----------------------------------------------------------------------------
-// CInterfaceEditView implementation
+// ibInterfaceEditView implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CInterfaceEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(ibInterfaceEditView, ibMetaView);
 
-wxBEGIN_EVENT_TABLE(CInterfaceEditView, CMetaView)
+wxBEGIN_EVENT_TABLE(ibInterfaceEditView, ibMetaView)
 wxEND_EVENT_TABLE()
 
 #include "win/editor/interfaceEditor/interfaceEditor.h"
 
-bool CInterfaceEditView::OnCreate(CMetaDocument* doc, long flags)
+bool ibInterfaceEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	m_interfaceEditor = new CInterfaceEditor(m_viewFrame, wxID_ANY, doc->GetMetaObject());
+	m_interfaceEditor = new ibInterfaceEditor(m_viewFrame, wxID_ANY, doc->GetMetaObject());
 	m_interfaceEditor->SetReadOnly(flags == wxDOC_READONLY);
 
 	m_interfaceEditor->RefreshInterface();
-	return CMetaView::OnCreate(doc, flags);
+	return ibMetaView::OnCreate(doc, flags);
 }
 
-void CInterfaceEditView::OnUpdate(wxView* sender, wxObject* hint)
+void ibInterfaceEditView::OnUpdate(wxView* sender, wxObject* hint)
 {
 	if (m_interfaceEditor != nullptr) 
 		m_interfaceEditor->RefreshInterface();	
 }
 
-void CInterfaceEditView::OnDraw(wxDC* WXUNUSED(dc))
+void ibInterfaceEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxGrid draws itself
 }
 
-bool CInterfaceEditView::OnClose(bool deleteWindow)
+bool ibInterfaceEditView::OnClose(bool deleteWindow)
 {
 	Activate(false);
 
@@ -40,7 +40,7 @@ bool CInterfaceEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (CMetaView::OnClose(deleteWindow)) {
+	if (ibMetaView::OnClose(deleteWindow)) {
 		
 		m_interfaceEditor->Freeze();
 		
@@ -54,14 +54,14 @@ bool CInterfaceEditView::OnClose(bool deleteWindow)
 }
 
 // ----------------------------------------------------------------------------
-// CInterfaceDocument: wxDocument and wxGrid married
+// ibInterfacibDocument: wxDocument and wxGrid married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_CLASS(CInterfaceDocument, CMetaDocument);
+wxIMPLEMENT_CLASS(ibInterfacibDocument, ibMetaDocument);
 
-bool CInterfaceDocument::OnCreate(const wxString& path, long flags)
+bool ibInterfacibDocument::OnCreate(const wxString& path, long flags)
 {
-	if (!CMetaDocument::OnCreate(path, flags))
+	if (!ibMetaDocument::OnCreate(path, flags))
 		return false;
 
 	return true;
@@ -69,28 +69,28 @@ bool CInterfaceDocument::OnCreate(const wxString& path, long flags)
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CInterfaceDocument::DoSaveDocument(const wxString& filename)
+bool ibInterfacibDocument::DoSaveDocument(const wxString& filename)
 {
 	return true;
 }
 
-bool CInterfaceDocument::DoOpenDocument(const wxString& filename)
+bool ibInterfacibDocument::DoOpenDocument(const wxString& filename)
 {
 	return true;
 }
 
-bool CInterfaceDocument::IsModified() const
+bool ibInterfacibDocument::IsModified() const
 {
-	return CMetaDocument::IsModified();
+	return ibMetaDocument::IsModified();
 }
 
-void CInterfaceDocument::Modify(bool modified)
+void ibInterfacibDocument::Modify(bool modified)
 {
-	CMetaDocument::Modify(modified);
+	ibMetaDocument::Modify(modified);
 }
 
 // ----------------------------------------------------------------------------
-// CInterfaceEditDocument implementation
+// ibInterfaceEditDocument implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CInterfaceEditDocument, CMetaDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibInterfaceEditDocument, ibMetaDocument);

@@ -9,30 +9,30 @@
 //*                                  Model                                          *
 //***********************************************************************************
 
-void CValueTableMemory::GetValueByRow(wxVariant& variant,
-	const wxDataViewExtItem& row, unsigned int col) const
+void ibValueModelTable::GetValueByRow(wxVariant& variant,
+	const ibDataViewItem& row, unsigned int col) const
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return;
 	node->GetValue(col, variant);
 }
 
-bool CValueTableMemory::SetValueByRow(const wxVariant& variant,
-	const wxDataViewExtItem& row, unsigned int col)
+bool ibValueModelTable::SetValueByRow(const wxVariant& variant,
+	const ibDataViewItem& row, unsigned int col)
 {
 	const wxString& strData = variant.GetString();
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return false;
-	const CTypeDescription& typeDescription =
+	const ibTypeDescription& typeDescription =
 		m_tableColumnCollection->GetColumnType(col);
-	CValue cValue; node->GetValue(col, cValue);
+	ibValue cValue; node->GetValue(col, cValue);
 	if (strData.Length() > 0) {
-		std::vector<CValue> listValue;
+		std::vector<ibValue> listValue;
 		if (cValue.FindValue(strData, listValue)) {
 			node->SetValue(
-				col, CValueTypeDescription::AdjustValue(typeDescription, listValue.at(0))
+				col, ibValueTypeDescription::AdjustValue(typeDescription, listValue.at(0))
 			);
 		}
 		else {
@@ -41,7 +41,7 @@ bool CValueTableMemory::SetValueByRow(const wxVariant& variant,
 	}
 	else {
 		node->SetValue(
-			col, CValueTypeDescription::AdjustValue(typeDescription)
+			col, ibValueTypeDescription::AdjustValue(typeDescription)
 		);
 	}
 

@@ -15,15 +15,15 @@
 #include <wx/statbox.h>
 #include <wx/frame.h>
 
-class CFrameClassChecker : public wxFrame {
+class ibFrameClassChecker : public wxFrame {
 	wxStaticText* m_staticText_clsid;
 	wxTextCtrl* m_textCtrlCode;
 	wxStaticText* m_staticText_output;
 	wxTextCtrl* m_textCtrlResult;
 public:
 
-	CFrameClassChecker(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Class identifier checker"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500, 130), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
-	virtual~CFrameClassChecker();
+	ibFrameClassChecker(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Class identifier checker"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500, 130), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
+	virtual~ibFrameClassChecker();
 
 protected:
 

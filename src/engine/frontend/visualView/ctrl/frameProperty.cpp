@@ -1,23 +1,34 @@
 #include "frame.h"
 
-bool IValueFrame::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool ibValueFrame::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
 {
 	return true;
 }
 
-void IValueFrame::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueFrame::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
+#ifndef OES_USE_WEB
+	// g_visualHostContext = designer's editor notebook; web has no
+	// designer context, so property changes just update the backing
+	// ibProperty model without notifying a live editor.
 	if (g_visualHostContext != nullptr)
 		g_visualHostContext->ModifyProperty(property, oldValue, newValue);
+#else
+	(void)property; (void)oldValue; (void)newValue;
+#endif
 }
 
-bool IValueFrame::OnEventChanging(IEvent* event, const wxString& newValue)
+bool ibValueFrame::OnEventChanging(ibEvent* event, const wxString& newValue)
 {
 	return true;
 }
 
-void IValueFrame::OnEventChanged(IEvent* event, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueFrame::OnEventChanged(ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	if (g_visualHostContext != nullptr) 
+#ifndef OES_USE_WEB
+	if (g_visualHostContext != nullptr)
 		g_visualHostContext->ModifyEvent(event, oldValue, newValue);
+#else
+	(void)event; (void)oldValue; (void)newValue;
+#endif
 }

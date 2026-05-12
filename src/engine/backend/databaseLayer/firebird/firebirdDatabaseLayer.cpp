@@ -18,19 +18,15 @@
 #include <wx/regex.h>
 
 // ctor()
-CFirebirdDatabaseLayer::CFirebirdDatabaseLayer()
-	: IDatabaseLayer()
+ibDatabaseLayerFirebird::ibDatabaseLayerFirebird()
+	: ibDatabaseLayer()
 {
-	m_pDatabase = NULL;
-
-	m_fbNode = new fb_tr_list_t;
-	m_fbNode->prev = NULL;
-
-	m_fbNode->m_pTransaction = 0L;
+	m_pDatabase = 0;
+	m_pTransaction = 0;
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new CFirebirdInterface();
+	m_pInterface = new ibInterfaceFirebird();
 	
 	if (!m_pInterface->Init())
 	{
@@ -49,19 +45,15 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer()
 	m_strRole = wxEmptyString;
 }
 
-CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase)
-	: IDatabaseLayer()
+ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strDatabase)
+	: ibDatabaseLayer()
 {
-	m_pDatabase = NULL;
-
-	m_fbNode = new fb_tr_list_t;
-	m_fbNode->prev = NULL;
-
-	m_fbNode->m_pTransaction = 0L;
+	m_pDatabase = 0;
+	m_pTransaction = 0;
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new CFirebirdInterface();
+	m_pInterface = new ibInterfaceFirebird();
 	
 	if (!m_pInterface->Init())
 	{
@@ -81,19 +73,15 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase)
 	Open(strDatabase);
 }
 
-CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: IDatabaseLayer()
+ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: ibDatabaseLayer()
 {
-	m_pDatabase = NULL;
-
-	m_fbNode = new fb_tr_list_t;
-	m_fbNode->prev = NULL;
-
-	m_fbNode->m_pTransaction = 0L;
+	m_pDatabase = 0;
+	m_pTransaction = 0;
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new CFirebirdInterface();
+	m_pInterface = new ibInterfaceFirebird();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -111,19 +99,15 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase, cons
 	Open(strDatabase);
 }
 
-CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: IDatabaseLayer()
+ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+	: ibDatabaseLayer()
 {
-	m_pDatabase = NULL;
-
-	m_fbNode = new fb_tr_list_t;
-	m_fbNode->prev = NULL;
-
-	m_fbNode->m_pTransaction = 0L;
+	m_pDatabase = 0;
+	m_pTransaction = 0;
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new CFirebirdInterface();
+	m_pInterface = new ibInterfaceFirebird();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -141,19 +125,15 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const 
 	Open(strDatabase);
 }
 
-CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword, const wxString& strRole)
-	: IDatabaseLayer()
+ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword, const wxString& strRole)
+	: ibDatabaseLayer()
 {
-	m_pDatabase = NULL;
-
-	m_fbNode = new fb_tr_list_t;
-	m_fbNode->prev = NULL;
-
-	m_fbNode->m_pTransaction = 0L;
+	m_pDatabase = 0;
+	m_pTransaction = 0;
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new CFirebirdInterface();
+	m_pInterface = new ibInterfaceFirebird();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -171,18 +151,14 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const 
 	Open(strDatabase);
 }
 
-CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const CFirebirdDatabaseLayer& src) 
+ibDatabaseLayerFirebird::ibDatabaseLayerFirebird(const ibDatabaseLayerFirebird& src) 
 {
-	m_pDatabase = NULL;
-
-	m_fbNode = new fb_tr_list_t;
-	m_fbNode->prev = NULL;
-
-	m_fbNode->m_pTransaction = 0L;
+	m_pDatabase = 0;
+	m_pTransaction = 0;
 
 	m_pStatus = new ISC_STATUS_ARRAY();
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	m_pInterface = new CFirebirdInterface();
+	m_pInterface = new ibInterfaceFirebird();
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
@@ -201,7 +177,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const CFirebirdDatabaseLayer& src
 }
 
 // dtor()
-CFirebirdDatabaseLayer::~CFirebirdDatabaseLayer()
+ibDatabaseLayerFirebird::~ibDatabaseLayerFirebird()
 {
 	Close();
 	ISC_STATUS_ARRAY* pStatus = (ISC_STATUS_ARRAY*)m_pStatus;
@@ -209,18 +185,16 @@ CFirebirdDatabaseLayer::~CFirebirdDatabaseLayer()
 	m_pStatus = NULL;
 	wxDELETE(m_pInterface);
 	m_pInterface = NULL;
-	wxDELETE(m_fbNode);
-	m_fbNode = NULL;
 }
 
 // open database
-bool CFirebirdDatabaseLayer::Open(const wxString& strDatabase)
+bool ibDatabaseLayerFirebird::Open(const wxString& strDatabase)
 {
 	m_strDatabase = strDatabase;
 	return Open();
 }
 
-bool CFirebirdDatabaseLayer::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool ibDatabaseLayerFirebird::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_strUser = strUser;
 	m_strPassword = strPassword;
@@ -228,7 +202,7 @@ bool CFirebirdDatabaseLayer::Open(const wxString& strDatabase, const wxString& s
 	return Open(strDatabase);
 }
 
-bool CFirebirdDatabaseLayer::Open(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+bool ibDatabaseLayerFirebird::Open(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_strServer = strServer;
 	m_strUser = strUser;
@@ -237,7 +211,7 @@ bool CFirebirdDatabaseLayer::Open(const wxString& strServer, const wxString& str
 	return Open(strDatabase);
 }
 
-bool CFirebirdDatabaseLayer::Open()
+bool ibDatabaseLayerFirebird::Open()
 {
 	ResetErrorCodes();
 
@@ -267,17 +241,56 @@ bool CFirebirdDatabaseLayer::Open()
 		dpbBuffer.push_back(1); // 1 byte long
 		dpbBuffer.push_back(SQL_DIALECT_CURRENT);
 
-		//set page size equals '8192'
+		// page_size DPB: only honoured by isc_create_database (ignored on
+		// attach). Encoded as big-endian 2 bytes per legacy DPB. FB 5
+		// supports up to 32768; widen via uint32 before shifting so
+		// 32768 doesn't sign-overflow.
+		const uint32_t pageSize = (uint32_t)m_pageSize;
 		dpbBuffer.push_back(isc_dpb_page_size);
-		dpbBuffer.push_back(2); //2 byte long
-		dpbBuffer.push_back(m_pageSize >> 8 & 0xFF); // 1 char byte 
-		dpbBuffer.push_back(m_pageSize & 0xFF); // 1 char byte
+		dpbBuffer.push_back(2);
+		dpbBuffer.push_back((char)((pageSize >> 8) & 0xFF));
+		dpbBuffer.push_back((char)(pageSize & 0xFF));
 
-		// set UTF8 as default character set
+		// UTF8 character set:
+		//   isc_dpb_set_db_charset — only honoured on CREATE DATABASE; sets
+		//     the database default charset stored in the header page.
+		//   isc_dpb_lc_ctype       — sets the *connection* charset; honoured
+		//     on every attach. Without it FB falls back to NONE and returns
+		//     raw bytes, which corrupts non-ASCII (Cyrillic, etc.) on read.
+		// Both are pushed so a freshly-created DB has UTF8 as default and
+		// every attach (create or existing) talks UTF8 to the engine.
 		const char sCharset[] = "UTF8";
 		dpbBuffer.push_back(isc_dpb_set_db_charset);
 		dpbBuffer.push_back(sizeof(sCharset) - 1);
 		dpbBuffer.append(sCharset);
+
+		dpbBuffer.push_back(isc_dpb_lc_ctype);
+		dpbBuffer.push_back(sizeof(sCharset) - 1);
+		dpbBuffer.append(sCharset);
+
+		// force_write = 0 — async writes. FB defaults a freshly CREATE'd
+		// embedded DB to forced/synchronous writes (FlushFileBuffers per
+		// dirty page); on Windows NTFS that's ~5–10× slower than async.
+		// Async still uses careful-writes ordering, so a process crash
+		// loses at most ~1s of pending writes — acceptable for OES
+		// embedded dev/test. Existing DBs ignore this DPB on attach
+		// (FB stores the flag in the header); flip with `gfix -w async`
+		// or `ALTER DATABASE SET WRITE = ASYNC` when you want it on
+		// pre-existing files.
+		dpbBuffer.push_back(isc_dpb_force_write);
+		dpbBuffer.push_back(1);
+		dpbBuffer.push_back(0);
+
+		// Session time zone = UTC. FB 4+ supports TIMESTAMP WITH TIME ZONE;
+		// pinning the session to UTC means timestamps stored/returned over
+		// this connection are always normalized to UTC regardless of the
+		// client OS time zone. Plain TIMESTAMP columns are unaffected.
+		// Avoids "the same row reads different times on different
+		// machines" surprises.
+		const char sTimeZone[] = "UTC";
+		dpbBuffer.push_back((char)isc_dpb_session_time_zone);
+		dpbBuffer.push_back(sizeof(sTimeZone) - 1);
+		dpbBuffer.append(sTimeZone);
 
 		dpbBuffer.push_back(isc_dpb_utf8_filename);
 		dpbBuffer.push_back(urlLength);
@@ -308,29 +321,42 @@ bool CFirebirdDatabaseLayer::Open()
 		}
 	}
 
-	m_pDatabase = NULL;
+	// If the layer was previously opened, detach the old handle before
+	// creating a new one — otherwise the existing isc_db_handle leaks
+	// and the second isc_attach_database silently allocates a fresh
+	// handle that callers won't see.
+	if (m_pDatabase) {
+		try { Close(); } catch (...) { /* best-effort — fall through */ }
+	}
+	m_pDatabase = 0;
 
-	isc_db_handle pDatabase = (isc_db_handle)m_pDatabase;
+	isc_db_handle pDatabase = m_pDatabase;
 
 	int nReturn = 0;
 
 	if (m_strServer.IsEmpty())
 	{
 		if (!wxFile::Exists(strDatabaseUrl)){
-			
+
 			wxFileName fileDatabase(m_strDatabase);
-			wxMkDir(fileDatabase.GetPath(), 0777);
-			
-			nReturn = m_pInterface->GetIscCreateDatabase()(*(ISC_STATUS_ARRAY*)m_pStatus, urlLength, (char*)(const char*)urlBuffer,
+			// Mkdir(..., wxPATH_MKDIR_FULL) is the recursive variant —
+			// wxMkDir on a multi-level path silently fails, leaving FB
+			// to error out with "I/O error during open" when the
+			// containing directory doesn't exist yet.
+			wxFileName::Mkdir(fileDatabase.GetPath(), 0777, wxPATH_MKDIR_FULL);
+
+			nReturn = m_pInterface->GetIscCreateDatabase()(*(ISC_STATUS_ARRAY*)m_pStatus,
+				(unsigned short)urlLength, (const char*)urlBuffer,
 				&pDatabase,
-				dpbBuffer.length(), dpbBuffer.c_str(),
-				NULL);
+				(unsigned short)dpbBuffer.length(), dpbBuffer.c_str(),
+				(unsigned short)0);
 		}
 		else
 		{
-			nReturn = m_pInterface->GetIscAttachDatabase()(*(ISC_STATUS_ARRAY*)m_pStatus, urlLength, (char*)(const char*)urlBuffer,
+			nReturn = m_pInterface->GetIscAttachDatabase()(*(ISC_STATUS_ARRAY*)m_pStatus,
+				(unsigned short)urlLength, (const char*)urlBuffer,
 				&pDatabase,
-				dpbBuffer.length(), dpbBuffer.c_str());
+				(unsigned short)dpbBuffer.length(), dpbBuffer.c_str());
 		}
 	}
 	else
@@ -354,34 +380,27 @@ bool CFirebirdDatabaseLayer::Open()
 }
 
 // close database  
-bool CFirebirdDatabaseLayer::Close()
+bool ibDatabaseLayerFirebird::Close()
 {
 	CloseResultSets();
 	CloseStatements();
 
 	if (m_pDatabase)
 	{
-		while (m_fbNode != NULL)
+		// Roll back any TX still open on this handle so isc_detach_database
+		// doesn't reject the disconnect with "active transactions". Errors
+		// are intentionally ignored here — we're tearing down the
+		// connection and the rollback is best-effort.
+		if (m_pTransaction)
 		{
-			if (m_fbNode->m_pTransaction)
-			{
-				isc_tr_handle pTransaction = (isc_tr_handle)m_fbNode->m_pTransaction;
-				m_pInterface->GetIscRollbackTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction);
-				m_fbNode->m_pTransaction = NULL;
-			}
-
-			fb_tr_list *tr_link = m_fbNode->prev;
-
-			if (m_fbNode->prev == NULL)
-				break;
-
-			wxDELETE(m_fbNode);
-			m_fbNode = tr_link;
+			isc_tr_handle pTransaction = m_pTransaction;
+			m_pInterface->GetIscRollbackTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction);
+			m_pTransaction = 0;
 		}
 
-		isc_db_handle pDatabase = (isc_db_handle)m_pDatabase;
+		isc_db_handle pDatabase = m_pDatabase;
 		int nReturn = m_pInterface->GetIscDetachDatabase()(*(ISC_STATUS_ARRAY*)m_pStatus, &pDatabase);
-		m_pDatabase = NULL;
+		m_pDatabase = 0;
 		if (nReturn != 0)
 		{
 			InterpretErrorCodes();
@@ -393,113 +412,262 @@ bool CFirebirdDatabaseLayer::Close()
 	return true;
 }
 
-bool CFirebirdDatabaseLayer::IsOpen()
+bool ibDatabaseLayerFirebird::IsOpen()
 {
-	return (m_pDatabase != NULL);
+	return (m_pDatabase != 0);
 }
 
 // transaction support
-void CFirebirdDatabaseLayer::BeginTransaction()
+void ibDatabaseLayerFirebird::DoBeginTransaction(const ibTxOptions& opts)
 {
 	ResetErrorCodes();
 
-	//wxLogDebug(wxT("Beginning transaction"));
-	if (m_pDatabase)
+	if (!m_pDatabase)
+		return;
+
+	// TPB layouts (read-committed / no-rec-version, the OES default).
+	// Wait vs nowait drives whether SELECT ... WITH LOCK contention
+	// blocks or surfaces immediately as a lock-conflict exception —
+	// TryProbeRowLock uses the latter.
+	//
+	//   ISOLATION_READ_UNCOMMITTED         = version3, write, wait,   read_committed, rec_version
+	//   ISOLATION_READ_COMMITTED           = version3, write, wait,   read_committed, no_rec_version
+	//   ISOLATION_REPEATABLE_READ          = version3, write, wait,   concurrency
+	//   ISOLATION_SERIALIZABLE             = version3, write, wait,   consistency
+	//   ISOLATION_READ_COMMITTED_READ_ONLY = version3, read,  wait,   read_committed, no_rec_version
+	//
+	// wait-mode TPB also pins a 30-second lock timeout: without it the
+	// caller blocks indefinitely on contention (UI hangs, daemons stall).
+	// 30 s is long enough that legitimate brief contention resolves and
+	// short enough that a stuck peer surfaces as an exception. nowait
+	// mode skips the timeout knob — the engine fails immediately anyway.
+	// Encoding per FB legacy TPB: tag, length=4, little-endian int32 secs.
+	static const std::string isc_tpb_waitMode = {
+		isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version,
+		(char)isc_tpb_lock_timeout, 4, 30, 0, 0, 0
+	};
+	static const std::string isc_tpb_nowaitMode = {
+		isc_tpb_version3, isc_tpb_write, isc_tpb_nowait, isc_tpb_read_committed, isc_tpb_no_rec_version
+	};
+	// Read-only mode: read + read_committed + read_consistency (FB 4+).
+	// read_consistency makes every statement in this TX see a stable
+	// snapshot of committed data without holding the snapshot for the
+	// entire TX (vs isc_tpb_concurrency which does). No write-intent
+	// locks are acquired, so SELECT-heavy paths don't conflict with
+	// concurrent writers. Lock timeout is irrelevant for a read-only TX
+	// but kept for symmetry — engine ignores it when no locks taken.
+	static const std::string isc_tpb_readOnlyMode = {
+		isc_tpb_version3, isc_tpb_read, isc_tpb_wait, isc_tpb_read_committed, (char)isc_tpb_read_consistency,
+		(char)isc_tpb_lock_timeout, 4, 30, 0, 0, 0
+	};
+	const std::string& isc_tpb =
+		opts.noWait   ? isc_tpb_nowaitMode :
+		opts.readOnly ? isc_tpb_readOnlyMode :
+		                isc_tpb_waitMode;
+
+	isc_db_handle pDatabase = m_pDatabase;
+	isc_tr_handle pTransaction = 0;
+
+	int nReturn = m_pInterface->GetIscStartTransaction()(
+		*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction, 1, &pDatabase,
+		isc_tpb.size(), isc_tpb.c_str());
+
+	m_pDatabase = pDatabase;
+
+	if (nReturn != 0)
 	{
-		fb_tr_list *fbNextNode = new fb_tr_list;
-		fbNextNode->prev = m_fbNode;
-		fbNextNode->m_pTransaction = 0L;
-
-		//ISOLATION_READ_UNCOMMITTED = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_rec_version],
-		//ISOLATION_READ_COMMITED = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version],
-		//ISOLATION_REPEATABLE_READ = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_concurrency],
-		//ISOLATION_SERIALIZABLE = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_consistency],
-		//ISOLATION_READ_COMMITED_READ_ONLY = [isc_tpb_version3, isc_tpb_read, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version];
-
-		static std::string isc_tpb = { isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version };
-
-		isc_db_handle pDatabase = (isc_db_handle)m_pDatabase;
-		isc_tr_handle pTransaction = (isc_tr_handle)fbNextNode->m_pTransaction;
-
-		int nReturn = m_pInterface->GetIscStartTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction, 1, &pDatabase, isc_tpb.size(), isc_tpb.c_str());
-
-		m_pDatabase = pDatabase;
-		fbNextNode->m_pTransaction = pTransaction;
-
-		if (nReturn != 0)
-		{
-			InterpretErrorCodes();
-			ThrowDatabaseException();
-		}
-
-		m_fbNode = fbNextNode;
+		InterpretErrorCodes();
+		ThrowDatabaseException();
+		return;
 	}
+
+	m_pTransaction = pTransaction;
 }
 
-void CFirebirdDatabaseLayer::Commit()
+void ibDatabaseLayerFirebird::DoCommit()
 {
 	ResetErrorCodes();
 
-	//wxLogDebug(wxT("Committing transaction"));
-	if (m_pDatabase && m_fbNode->m_pTransaction)
-	{
-		isc_tr_handle pTransaction = (isc_tr_handle)m_fbNode->m_pTransaction;
-		int nReturn = m_pInterface->GetIscCommitTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction);
-		m_fbNode->m_pTransaction = pTransaction;
-		if (nReturn != 0)
-		{
-			InterpretErrorCodes();
-			ThrowDatabaseException();
-		}
-		else
-		{
-			// We're done with the transaction, so set it to NULL so that we know that a new transaction must be started if we run any queries
-			m_fbNode->m_pTransaction = 0L;
+	if (!m_pDatabase || !m_pTransaction)
+		return;
 
-			fb_tr_list *tr_link = m_fbNode->prev;
-			wxDELETE(m_fbNode);
-			m_fbNode = tr_link;
-		}
+	isc_tr_handle pTransaction = m_pTransaction;
+	int nReturn = m_pInterface->GetIscCommitTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction);
+	// Whether the commit succeeded or not, FB invalidates the handle —
+	// drop our copy so a stray DoRollBack / DoCommit can't double-free.
+	m_pTransaction = 0;
+	if (nReturn != 0)
+	{
+		InterpretErrorCodes();
+		ThrowDatabaseException();
 	}
 }
 
-void CFirebirdDatabaseLayer::RollBack()
+void ibDatabaseLayerFirebird::DoRollBack()
 {
 	ResetErrorCodes();
 
-	//wxLogDebug(wxT("Rolling back transaction"));
-	if (m_pDatabase && m_fbNode->m_pTransaction)
-	{
-		isc_tr_handle pTransaction = (isc_tr_handle)m_fbNode->m_pTransaction;
-		int nReturn = m_pInterface->GetIscRollbackTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction);
-		m_fbNode->m_pTransaction = pTransaction;
-		if (nReturn != 0)
-		{
-			InterpretErrorCodes();
-			ThrowDatabaseException();
-		}
-		else
-		{
-			// We're done with the transaction, so set it to NULL so that we know that a new transaction must be started if we run any queries
-			m_fbNode->m_pTransaction = NULL;
+	if (!m_pDatabase || !m_pTransaction)
+		return;
 
-			fb_tr_list *tr_link = m_fbNode->prev;
-			wxDELETE(m_fbNode);
-			m_fbNode = tr_link;
-		}
+	isc_tr_handle pTransaction = m_pTransaction;
+	int nReturn = m_pInterface->GetIscRollbackTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction);
+	m_pTransaction = 0;
+	if (nReturn != 0)
+	{
+		InterpretErrorCodes();
+		ThrowDatabaseException();
 	}
 }
 
-bool CFirebirdDatabaseLayer::IsActiveTransaction()
+// IsActiveTransaction inherits the base-class default (m_txDepth > 0) —
+// the counter on the base is the source of truth and matches the
+// drivers that don't have a native handle to probe.
+
+// --- Row-level pessimistic locks -----------------------------------------
+
+bool ibDatabaseLayerFirebird::HoldRowLocks(const wxString& tableName,
+                                          const wxString& pkColumn,
+                                          const std::vector<wxString>& pkValues)
 {
-	return m_pDatabase && m_fbNode->m_pTransaction;
+	// Outer TX would hijack the row-lock semantics: BeginTransaction
+	// below only bumps the depth counter, the SELECT WITH LOCK then
+	// runs inside the caller's TX and the locks live until *that* TX
+	// commits — not until ReleaseRowLocks(). Refuse rather than silently
+	// produce wrong cluster-coordination behaviour.
+	if (IsActiveTransaction() && !m_rowLocksHeld)
+		return false;
+
+	// A previous hold must be committed before we stack a fresh one —
+	// otherwise two TXs would both target sys_session and their commits
+	// would interleave in unhelpful ways.
+	if (m_rowLocksHeld) {
+		try { Commit(); } catch (...) {
+			try { RollBack(); } catch (...) {}
+		}
+		m_rowLocksHeld = false;
+	}
+
+	if (pkValues.empty()) return true;
+
+	try {
+		BeginTransaction();
+	}
+	catch (...) {
+		return false;
+	}
+
+	// Build the IN-list with placeholders so driver escapes values (guids
+	// are trusted, but use the same code path as the rest of sys_session).
+	wxString sql = wxT("SELECT ") + pkColumn + wxT(" FROM ") + tableName + wxT(" WHERE ") + pkColumn + wxT(" IN (");
+	for (std::size_t i = 0; i < pkValues.size(); ++i) {
+		if (i) sql += wxT(",");
+		sql += wxT("?");
+	}
+	sql += wxT(") WITH LOCK");
+
+	ibPreparedStatement* stmt = DoPrepareStatement(sql);
+	if (!stmt) {
+		try { RollBack(); } catch (...) {}
+		return false;
+	}
+
+	for (std::size_t i = 0; i < pkValues.size(); ++i)
+		stmt->SetParamString(int(i + 1), pkValues[i]);
+
+	int lockedCount = 0;
+	bool sqlOk = false;
+	try {
+		ibDatabaseResultSet* rs = stmt->RunQueryWithResults();
+		if (rs) {
+			while (rs->Next()) ++lockedCount;
+			rs->Close();
+			CloseResultSet(rs);
+		}
+		sqlOk = true;
+	}
+	catch (...) {
+		sqlOk = false;
+	}
+	CloseStatement(stmt);
+
+	if (!sqlOk || lockedCount != int(pkValues.size())) {
+		try { RollBack(); } catch (...) {}
+		return false;
+	}
+
+	m_rowLocksHeld = true;
+	return true;
+}
+
+void ibDatabaseLayerFirebird::ReleaseRowLocks()
+{
+	if (!m_rowLocksHeld) return;
+	try {
+		Commit();
+	}
+	catch (...) {
+		// Commit failed — TX may still be open and holding locks.
+		// Try a rollback so the cluster coordination row isn't left
+		// pinned by a dead-but-uncommitted TX of ours.
+		try { RollBack(); } catch (...) {}
+	}
+	m_rowLocksHeld = false;
+}
+
+bool ibDatabaseLayerFirebird::TryProbeRowLock(const wxString& tableName,
+                                              const wxString& pkColumn,
+                                              const wxString& pkValue)
+{
+	// Probing inside an outer TX is meaningless: the inner Begin only
+	// bumps the depth counter, the SELECT WITH LOCK then runs in the
+	// caller's wait-mode TX and would block instead of failing fast.
+	// Caller would also poison its own TX on conflict. Refuse.
+	if (IsActiveTransaction())
+		return false;
+
+	// NOWAIT transaction so contention surfaces as an exception on
+	// RunQueryWithResults — no sit-and-wait.
+	try {
+		BeginTransaction({ /*.noWait=*/true });
+	}
+	catch (...) {
+		return false;
+	}
+
+	wxString sql = wxT("SELECT ") + pkColumn + wxT(" FROM ") + tableName + wxT(" WHERE ") + pkColumn + wxT(" = ? WITH LOCK");
+	ibPreparedStatement* stmt = DoPrepareStatement(sql);
+	bool gotLock = false;
+	if (stmt) {
+		stmt->SetParamString(1, pkValue);
+		try {
+			ibDatabaseResultSet* rs = stmt->RunQueryWithResults();
+			if (rs) {
+				// Row exists AND we successfully took its lock → no other
+				// connection holds it (NOWAIT would have thrown otherwise).
+				if (rs->Next()) gotLock = true;
+				rs->Close();
+				CloseResultSet(rs);
+			}
+		}
+		catch (...) {
+			// Lock conflict (owner still alive on another connection) or
+			// transient DB error — either way, don't touch the row.
+			gotLock = false;
+		}
+		CloseStatement(stmt);
+	}
+
+	// Always release — probe must never keep a lock outliving the call.
+	try { RollBack(); } catch (...) {}
+	return gotLock;
 }
 
 // query database
-int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
+int ibDatabaseLayerFirebird::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 {
 	ResetErrorCodes();
-	if (m_pDatabase != NULL)
+	if (m_pDatabase != 0)
 	{
 		wxCharBuffer sqlDebugBuffer = ConvertToUnicodeStream(strQuery);
 #ifdef DEBUG
@@ -519,7 +687,7 @@ int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuer
 		{
 			bool bQuickieTransaction = false;
 
-			if (m_fbNode->m_pTransaction == NULL)
+			if (m_pTransaction == 0)
 			{
 				// If there's no transaction is progress, run this as a quick one-timer transaction
 				bQuickieTransaction = true;
@@ -539,20 +707,31 @@ int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuer
 			while (start != stop)
 			{
 				wxCharBuffer sqlBuffer = ConvertToUnicodeStream(*start);
-				isc_db_handle pDatabase = (isc_db_handle)m_pDatabase;
-				isc_tr_handle pTransaction = (isc_tr_handle)m_fbNode->m_pTransaction;
-				//int nReturn = m_pInterface->GetIscDsqlExecuteImmediate()(*(ISC_STATUS_ARRAY*)m_pStatus, &pDatabase, &pTransaction, 0, (char*)(const char*)sqlBuffer, SQL_DIALECT_CURRENT, NULL);
+				isc_db_handle pDatabase = m_pDatabase;
+				isc_tr_handle pTransaction = m_pTransaction;
 				int nReturn = m_pInterface->GetIscDsqlExecuteImmediate()(*(ISC_STATUS_ARRAY*)m_pStatus, &pDatabase, &pTransaction, GetEncodedStreamLength(*start), (char*)(const char*)sqlBuffer, SQL_DIALECT_CURRENT, NULL);
 				m_pDatabase = pDatabase;
-				m_fbNode->m_pTransaction = pTransaction;
+				m_pTransaction = pTransaction;
 				if (nReturn != 0)
 				{
 					InterpretErrorCodes();
-					// Manually try to rollback the transaction rather than calling the member RollBack function
-					//  so that we can ignore the error messages
-					isc_tr_handle pTransaction = (isc_tr_handle)m_fbNode->m_pTransaction;
-					m_pInterface->GetIscRollbackTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction);
-					m_fbNode->m_pTransaction = NULL;
+					// Roll back the in-progress TX. When we own it
+					// (bQuickieTransaction), go through the public
+					// RollBack so the base class's m_txDepth counter
+					// drops to 0 and the pool's TX-pin clears — without
+					// this, a failed DDL leaves IsActiveTransaction()
+					// true forever and trips checks like
+					// OnBeforeSaveDatabase. When the caller owns the
+					// TX (bQuickieTransaction == false), driver-level
+					// rollback only — caller's own depth is theirs to
+					// resolve.
+					if (bQuickieTransaction) {
+						RollBack();
+					} else {
+						isc_tr_handle pTr = m_pTransaction;
+						m_pInterface->GetIscRollbackTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTr);
+						m_pTransaction = 0;
+					}
 
 					ThrowDatabaseException();
 					return DATABASE_LAYER_QUERY_RESULT_ERROR;
@@ -580,10 +759,10 @@ int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuer
 	}
 }
 
-IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString& strQuery)
+ibDatabaseResultSet* ibDatabaseLayerFirebird::DoRunQueryWithResults(const wxString& strQuery)
 {
 	ResetErrorCodes();
-	if (m_pDatabase != NULL)
+	if (m_pDatabase != 0)
 	{
 		wxCharBuffer sqlDebugBuffer = ConvertToUnicodeStream(strQuery);
 #if DEBUG 
@@ -595,7 +774,7 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 		{
 			bool bQuickieTransaction = false;
 
-			if (m_fbNode->m_pTransaction == NULL)
+			if (m_pTransaction == 0)
 			{
 				// If there's no transaction is progress, run this as a quick one-timer transaction
 				bQuickieTransaction = true;
@@ -620,6 +799,13 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 					DoRunQuery(QueryArray[i], false);
 					if (GetErrorCode() != DATABASE_LAYER_OK)
 					{
+						// Inner DoRunQuery failure — when we own the
+						// outer TX (bQuickieTransaction), drop the
+						// depth counter via public RollBack so a
+						// subsequent caller doesn't see a phantom
+						// active transaction. Symmetric to the fix in
+						// DoRunQuery's per-statement error path.
+						if (bQuickieTransaction) RollBack();
 						ThrowDatabaseException();
 						return NULL;
 					}
@@ -649,7 +835,7 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 					//tpbBuffer.push_back(60);
 				}
 
-				isc_db_handle pDatabase = (isc_db_handle)m_pDatabase;
+				isc_db_handle pDatabase = m_pDatabase;
 				int nReturn = m_pInterface->GetIscStartTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pQueryTransaction, 1, &pDatabase, tpbBuffer.size(), tpbBuffer.data());
 				m_pDatabase = pDatabase;
 				if (nReturn != 0)
@@ -660,11 +846,11 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 			}
 			else
 			{
-				pQueryTransaction = m_fbNode->m_pTransaction;
+				pQueryTransaction = m_pTransaction;
 			}
 
 			isc_stmt_handle pStatement = NULL;
-			isc_db_handle pDatabase = (isc_db_handle)m_pDatabase;
+			isc_db_handle pDatabase = m_pDatabase;
 			int nReturn = m_pInterface->GetIscDsqlAllocateStatement()(*(ISC_STATUS_ARRAY*)m_pStatus, &pDatabase, &pStatement);
 			m_pDatabase = pDatabase;
 			if (nReturn != 0)
@@ -737,7 +923,7 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 			}
 
 			// Create the result set object
-			CFirebirdResultSet* pResultSet = new CFirebirdResultSet(m_pInterface, m_pDatabase, pQueryTransaction, pStatement, pOutputSqlda, true, bManageTransaction);
+			ibDatabaseResultSetFirebird* pResultSet = new ibDatabaseResultSetFirebird(m_pInterface, m_pDatabase, pQueryTransaction, pStatement, pOutputSqlda, true, bManageTransaction);
 			pResultSet->SetEncoding(GetEncoding());
 			if (pResultSet->GetErrorCode() != DATABASE_LAYER_OK)
 			{
@@ -757,7 +943,7 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 					delete pResultSet;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 				}
-				catch (DatabaseLayerException& e)
+				catch (ibDatabaseLayerException& e)
 				{
 				}
 #endif
@@ -784,7 +970,7 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 					delete pResultSet;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 				}
-				catch (DatabaseLayerException& e)
+				catch (ibDatabaseLayerException& e)
 				{
 				}
 #endif
@@ -808,11 +994,11 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 	}
 }
 
-IPreparedStatement* CFirebirdDatabaseLayer::DoPrepareStatement(const wxString& strQuery)
+ibPreparedStatement* ibDatabaseLayerFirebird::DoPrepareStatement(const wxString& strQuery)
 {
 	ResetErrorCodes();
 
-	CFirebirdPreparedStatement* pStatement = CFirebirdPreparedStatement::CreateStatement(m_pInterface, m_pDatabase, m_fbNode->m_pTransaction, strQuery, GetEncoding());
+	ibPreparedStatementFirebird* pStatement = ibPreparedStatementFirebird::CreateStatement(m_pInterface, m_pDatabase, m_pTransaction, strQuery, GetEncoding());
 	if (pStatement && (pStatement->GetErrorCode() != DATABASE_LAYER_OK))
 	{
 		SetErrorCode(pStatement->GetErrorCode());
@@ -827,14 +1013,14 @@ IPreparedStatement* CFirebirdDatabaseLayer::DoPrepareStatement(const wxString& s
 	return pStatement;
 }
 
-bool CFirebirdDatabaseLayer::TableExists(const wxString& table)
+bool ibDatabaseLayerFirebird::TableExists(const wxString& table)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	IPreparedStatement* pStatement = NULL;
-	IDatabaseResultSet* pResult = NULL;
+	ibPreparedStatement* pStatement = NULL;
+	ibDatabaseResultSet* pResult = NULL;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -860,7 +1046,7 @@ bool CFirebirdDatabaseLayer::TableExists(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -893,14 +1079,14 @@ bool CFirebirdDatabaseLayer::TableExists(const wxString& table)
 	return bReturn;
 	}
 
-bool CFirebirdDatabaseLayer::ViewExists(const wxString& view)
+bool ibDatabaseLayerFirebird::ViewExists(const wxString& view)
 {
 	// Initialize variables
 	bool bReturn = false;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	IPreparedStatement* pStatement = NULL;
-	IDatabaseResultSet* pResult = NULL;
+	ibPreparedStatement* pStatement = NULL;
+	ibDatabaseResultSet* pResult = NULL;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -926,7 +1112,7 @@ bool CFirebirdDatabaseLayer::ViewExists(const wxString& view)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -959,11 +1145,11 @@ bool CFirebirdDatabaseLayer::ViewExists(const wxString& view)
 	return bReturn;
 	}
 
-wxArrayString CFirebirdDatabaseLayer::GetTables()
+wxArrayString ibDatabaseLayerFirebird::GetTables()
 {
 	wxArrayString returnArray;
 
-	IDatabaseResultSet* pResult = NULL;
+	ibDatabaseResultSet* pResult = NULL;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -977,7 +1163,7 @@ wxArrayString CFirebirdDatabaseLayer::GetTables()
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -998,11 +1184,11 @@ wxArrayString CFirebirdDatabaseLayer::GetTables()
 	return returnArray;
 	}
 
-wxArrayString CFirebirdDatabaseLayer::GetViews()
+wxArrayString ibDatabaseLayerFirebird::GetViews()
 {
 	wxArrayString returnArray;
 
-	IDatabaseResultSet* pResult = NULL;
+	ibDatabaseResultSet* pResult = NULL;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -1016,7 +1202,7 @@ wxArrayString CFirebirdDatabaseLayer::GetViews()
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -1037,14 +1223,14 @@ wxArrayString CFirebirdDatabaseLayer::GetViews()
 	return returnArray;
 	}
 
-wxArrayString CFirebirdDatabaseLayer::GetColumns(const wxString& table)
+wxArrayString ibDatabaseLayerFirebird::GetColumns(const wxString& table)
 {
 	// Initialize variables
 	wxArrayString returnArray;
 	// Keep these variables outside of scope so that we can clean them up
 	//  in case of an error
-	IPreparedStatement* pStatement = NULL;
-	IDatabaseResultSet* pResult = NULL;
+	ibPreparedStatement* pStatement = NULL;
+	ibDatabaseResultSet* pResult = NULL;
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
@@ -1067,7 +1253,7 @@ wxArrayString CFirebirdDatabaseLayer::GetColumns(const wxString& table)
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != NULL)
 		{
@@ -1100,15 +1286,15 @@ wxArrayString CFirebirdDatabaseLayer::GetColumns(const wxString& table)
 	return returnArray;
 	}
 
-int CFirebirdDatabaseLayer::TranslateErrorCode(int nCode)
+int ibDatabaseLayerFirebird::TranslateErrorCode(int nCode)
 {
-	// Ultimately, this will probably be a map of Firebird database error code values to IDatabaseLayer values
+	// Ultimately, this will probably be a map of Firebird database error code values to ibDatabaseLayer values
 	// For now though, we'll just return the original error code
 	return nCode;
 }
 
-//wxString CFirebirdDatabaseLayer::TranslateErrorCodeToString(CFirebirdInterface* pInterface, int nCode, ISC_STATUS_ARRAY status)
-wxString CFirebirdDatabaseLayer::TranslateErrorCodeToString(CFirebirdInterface* pInterface, int nCode, void* status)
+//wxString ibDatabaseLayerFirebird::TranslateErrorCodeToString(ibInterfaceFirebird* pInterface, int nCode, ISC_STATUS_ARRAY status)
+wxString ibDatabaseLayerFirebird::TranslateErrorCodeToString(ibInterfaceFirebird* pInterface, int nCode, void* status)
 {
 	char szError[512];
 	wxString strReturn;
@@ -1130,33 +1316,33 @@ wxString CFirebirdDatabaseLayer::TranslateErrorCodeToString(CFirebirdInterface* 
 	else
 	{
 		pInterface->GetIscSqlInterprete()(nCode, szError, sizeof(szError));
-		wxCharBuffer systemEncoding = wxLocale::GetSystemEncodingName().mb_str(*wxConvCurrent);
-		strReturn = CDatabaseStringConverter::ConvertFromUnicodeStream(szError, (const char*)systemEncoding);
+		wxCharBuffer systemEncoding = wxLocale::GetSystemEncodingName().mb_str();
+		strReturn = ibDatabaseStringConverter::ConvertFromUnicodeStream(szError, (const char*)systemEncoding);
 	}
 
 	return strReturn;
 }
 
-void CFirebirdDatabaseLayer::InterpretErrorCodes()
+void ibDatabaseLayerFirebird::InterpretErrorCodes()
 {
-	//wxLogDebug(wxT("CFirebirdDatabaseLayer::InterpretErrorCodes()"));
+	//wxLogDebug(wxT("ibDatabaseLayerFirebird::InterpretErrorCodes()"));
 
 	long nSqlCode = m_pInterface->GetIscSqlcode()(*(ISC_STATUS_ARRAY*)m_pStatus);
-	SetErrorMessage(CFirebirdDatabaseLayer::TranslateErrorCodeToString(m_pInterface, nSqlCode, *(ISC_STATUS_ARRAY*)m_pStatus));
+	SetErrorMessage(ibDatabaseLayerFirebird::TranslateErrorCodeToString(m_pInterface, nSqlCode, *(ISC_STATUS_ARRAY*)m_pStatus));
 	if (nSqlCode < -900)  // Error codes less than -900 indicate that it wasn't a SQL error but an ibase system error
 	{
-		SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(*((ISC_STATUS_ARRAY*)m_pStatus)[1]));
+		SetErrorCode(ibDatabaseLayerFirebird::TranslateErrorCode(*((ISC_STATUS_ARRAY*)m_pStatus)[1]));
 	}
 	else
 	{
-		SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(nSqlCode));
+		SetErrorCode(ibDatabaseLayerFirebird::TranslateErrorCode(nSqlCode));
 	}
 }
 
-bool CFirebirdDatabaseLayer::IsAvailable()
+bool ibDatabaseLayerFirebird::IsAvailable()
 {
 	bool bAvailable = false;
-	CFirebirdInterface* pInterface = new CFirebirdInterface();
+	ibInterfaceFirebird* pInterface = new ibInterfaceFirebird();
 	bAvailable = pInterface && pInterface->Init();
 	wxDELETE(pInterface);
 	return bAvailable;

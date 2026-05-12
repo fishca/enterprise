@@ -6,11 +6,12 @@
 #include "valueDatabase.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
 //////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(CValueDatabaseLayer, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueDatabaseLayer, ibValue);
 
-CValue::CMethodHelper CValueDatabaseLayer::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueDatabaseLayer::m_methodHelper;
 
 enum
 {
@@ -19,16 +20,16 @@ enum
 	eRunQueryWithResults,
 };
 
-CValueDatabaseLayer::CValueDatabaseLayer() :
-	CValue(eValueTypes::TYPE_VALUE)
+ibValueDatabaseLayer::ibValueDatabaseLayer() :
+	ibValue(ibValueTypes::TYPE_VALUE)
 {
 }
 
-CValueDatabaseLayer::~CValueDatabaseLayer()
+ibValueDatabaseLayer::~ibValueDatabaseLayer()
 {
 }
 
-void CValueDatabaseLayer::PrepareNames() const
+void ibValueDatabaseLayer::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
@@ -39,51 +40,51 @@ void CValueDatabaseLayer::PrepareNames() const
 
 #include "backend/backend_exception.h"
 
-bool CValueDatabaseLayer::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray) //function call
+bool ibValueDatabaseLayer::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray) //function call
 {
 	if (lMethodNum == ePrepareStatement)
 	{
 		if (!appData->DesignerMode())
 		{
-			IPreparedStatement* preparedStatement = db_query->PrepareStatement(paParams[0]->GetString());
+			ibPreparedStatement* preparedStatement = ses_query->PrepareStatement(paParams[0]->GetString());
 			if (preparedStatement == nullptr) {
-				CBackendCoreException::Error(CBackendCoreException::GetLastError());
+				ibBackendCoreException::Error(ibBackendCoreException::GetLastError());
 				return false;
 			}
-			pvarRetValue = CValue::CreateAndPrepareValueRef<CValuePreparedStatement>(preparedStatement);
+			pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValuePreparedStatement>(preparedStatement);
 			return true;
 		}
 
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CValuePreparedStatement>();
+		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValuePreparedStatement>();
 		return true;
 	}
 	else if (lMethodNum == eRunQuery)
 	{
 		if (!appData->DesignerMode())
-			pvarRetValue = db_query->RunQuery(paParams[0]->GetString());
+			pvarRetValue = ses_query->RunQuery(paParams[0]->GetString());
 		return true;
 	}
 	else if (lMethodNum == eRunQueryWithResults)
 	{
 		if (!appData->DesignerMode())
 		{
-			IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(paParams[0]->GetString());
+			ibDatabaseResultSet* resultSet = ses_query->RunQueryWithResults(paParams[0]->GetString());
 			if (resultSet == nullptr) {
-				CBackendCoreException::Error(db_query->GetErrorMessage());
+				ibBackendCoreException::Error(ses_query->GetErrorMessage());
 				return false;
 			}
-			pvarRetValue = CValue::CreateAndPrepareValueRef<CValueResultSet>(resultSet);
+			pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueResultSet>(resultSet);
 			return true;
 		}
 
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueResultSet>();
+		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueResultSet>();
 		return true;
 	}
 
 	return false;
 }
 
-bool CValueDatabaseLayer::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray) //procudre call
+bool ibValueDatabaseLayer::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray) //procudre call
 {
 	return false;
 }
@@ -92,4 +93,4 @@ bool CValueDatabaseLayer::CallAsProc(const long lMethodNum, CValue** paParams, c
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueDatabaseLayer, "DatabaseLayer", string_to_clsid("VL_DBLY"));
+VALUE_TYPE_REGISTER(ibValueDatabaseLayer, "DatabaseLayer", string_to_clsid("VL_DBLY"));

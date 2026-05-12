@@ -1,6 +1,6 @@
 #include "metaLanguageObject.h"
 
-bool CValueMetaObjectLanguage::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool ibValueMetaObjectLanguage::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
 {
 	//if (m_propertyCode == property && m_propertyCode->IsEmptyProperty())
 	//	return false;
@@ -8,5 +8,5 @@ bool CValueMetaObjectLanguage::OnPropertyChanging(IProperty* property, const wxV
 	if (m_propertyCode == property && !IsValidCode(newValue.GetString()))
 		return false;
 
-	return IValueMetaObject::OnPropertyChanging(property, newValue);
+	return ibValueMetaObject::OnPropertyChanging(property, newValue);
 }

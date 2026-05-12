@@ -6,77 +6,127 @@
 //*                              Events                                            *
 //**********************************************************************************
 
-void CValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
+void ibValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 {
-	CAuiToolBar* toolBar = wxDynamicCast(
-		GetWxObject(), CAuiToolBar
+#ifndef OES_USE_WEB
+	// Designer-only: clicking empty space on the toolbar (not on a
+	// tool) selects the toolbar control itself in the visual editor's
+	// selection model. Web has no designer context — the body
+	// collapses to a plain event.Skip.
+	ibAuiToolBar* toolBar = wxDynamicCast(
+		GetWxObject(), ibAuiToolBar
 	);
 	wxASSERT(toolBar);
 	if (g_visualHostContext != nullptr) {
-		const CFormVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
+		const ibFormVisualDocument* visualDoc = ibValueToolbar::GetVisualDocument();
 		if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
 			wxAuiToolBarItem* foundedItem = toolBar->FindToolByPosition(event.GetX(), event.GetY());
 			if (foundedItem == nullptr) g_visualHostContext->SelectControl(this);
 		}
 	}
+#endif
 
 	event.Skip();
 }
 
 #include "backend/system/systemManager.h"
 
-void CValueToolbar::OnTool(wxCommandEvent& event)
+void ibValueToolbar::OnTool(wxCommandEvent& event)
 {
-	const CFormVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
-	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
+#ifndef OES_USE_WEB
+	// Designer preview mode (VisualDemonstrationDoc) swallows tool
+	// clicks — the designer is previewing the form, not running it.
+	// Web has no designer context; the guard collapses to "always run".
+	const ibFormVisualDocument* visualDoc = ibValueToolbar::GetVisualDocument();
+	if (visualDoc != nullptr && visualDoc->IsVisualDemonstrationDoc()) {
+		event.Skip();
+		return;
+	}
+#endif
 
-		IValueFrame* parentToolControl = FindControlByID(event.GetId());
-		if (parentToolControl != nullptr) {
+	ibValueFrame* parentToolControl = FindControlByID(event.GetId());
+	if (parentToolControl == nullptr) {
+		event.Skip();
+		return;
+	}
 
-			CAuiToolBar* toolBar = wxDynamicCast(GetWxObject(), CAuiToolBar);
-			wxASSERT(toolBar);
+#ifndef OES_USE_WEB
+	// Desktop-only focus nudge — mouse click on a tool occasionally
+	// leaves the toolbar itself unfocused on MSW, blocking subsequent
+	// keyboard accel routing.
+	if (auto* toolBar = wxDynamicCast(GetWxObject(), ibAuiToolBar))
+		toolBar->SetFocus();
+#endif
 
-			if (toolBar != nullptr)
-				toolBar->SetFocus();
+	ibValueToolBarItem* foundedToolControl =
+		dynamic_cast<ibValueToolBarItem*>(parentToolControl);
+	if (foundedToolControl == nullptr) {
+		event.Skip();
+		return;
+	}
 
-			CValueToolBarItem* foundedToolControl = dynamic_cast<CValueToolBarItem*>(parentToolControl);
-			if (foundedToolControl != nullptr) {
+#ifndef OES_USE_WEB
+	// Snapshot the visual-editor pointer BEFORE the action. Both
+	// ExecuteAction (eDefActionAndClose → CloseForm) and CallAsEvent
+	// (arbitrary user script) can close the owner form, which destroys
+	// every child control including this toolbar — `this` becomes
+	// dangling. The old post-action `g_visualHostContext` check
+	// dereferenced `this` via FindVisualEditor() and crashed.
+	ibFrontendVisualEditorNotebook* const visualEditor = g_visualHostContext;
+#endif
 
-				const CActionDescription& actionDesc = foundedToolControl->GetAction();
-				const wxString& strAction = actionDesc.GetCustomAction();
+	const ibActionDescription& actionDesc = foundedToolControl->GetAction();
+	const wxString& strAction = actionDesc.GetCustomAction();
 
-				IValueFrame* sourceElement = GetActionSrc() != wxNOT_FOUND ? FindControlByID(GetActionSrc()) : nullptr;
-				if (sourceElement != nullptr && actionDesc.GetSystemAction() != wxNOT_FOUND) {
-					try {
-						sourceElement->ExecuteAction(
-							actionDesc.GetSystemAction(),
-							GetOwnerForm()
-						);
-					}
-					catch (const CBackendAccessException* err) {
-						CSystemFunction::Alert(err->GetErrorDescription());
-					}
-					catch (const CBackendException*) {
-					}
-				}
-				else if (strAction.Length() > 0) {
-					CallAsEvent(strAction, parentToolControl->GetValue());
-				}
-			}
+	// Source resolution: explicit m_actSource wins; otherwise fall back
+	// to the owner form, matching how ibValueToolbar::Update picks a
+	// source. Desktop's historical `nullptr` fallback meant system
+	// actions without an explicit source silently no-op'd — unified
+	// with web's behaviour so both platforms dispatch identically.
+	ibValueFrame* sourceElement = GetActionSrc() != wxNOT_FOUND
+		? FindControlByID(GetActionSrc())
+		: GetOwnerForm();
 
-			if (g_visualHostContext != nullptr) {
-				g_visualHostContext->SelectControl(parentToolControl);
-			}
+	if (sourceElement != nullptr && actionDesc.GetSystemAction() != wxNOT_FOUND) {
+		try {
+			sourceElement->ExecuteAction(
+				actionDesc.GetSystemAction(),
+				GetOwnerForm()
+			);
+		}
+		catch (const ibBackendAccessException& err) {
+#ifndef OES_USE_WEB
+			// Desktop surfaces access-denied as a modal Alert; web has
+			// no modal channel yet, so it silently swallows.
+			ibValueSystemFunction::Alert(err.GetErrorDescription());
+#else
+			(void)err;
+#endif
+		}
+		catch (const ibBackendException&) {
 		}
 	}
+	else if (strAction.Length() > 0) {
+		CallAsEvent(strAction, parentToolControl->GetValue());
+	}
+
+#ifndef OES_USE_WEB
+	// Use only the snapshot — never touch `this` after the action above.
+	if (visualEditor != nullptr)
+		visualEditor->SelectControl(parentToolControl);
+#endif
 
 	event.Skip();
 }
 
-void CValueToolbar::OnToolDropDown(wxAuiToolBarEvent& event)
+#ifndef OES_USE_WEB
+// Desktop-only: dropdown on wxAuiToolBar tool + right-click on the
+// toolbar. Web's ibValueToolbar header excludes these methods (no
+// wxAuiToolBarEvent in the web build), so the whole body is guarded.
+void ibValueToolbar::OnToolDropDown(wxAuiToolBarEvent& event)
 {
-	CAuiToolBar* toolBar = wxDynamicCast(
-		GetWxObject(), CAuiToolBar
+	ibAuiToolBar* toolBar = wxDynamicCast(
+		GetWxObject(), ibAuiToolBar
 	);
 
 	if (event.IsDropDownClicked()) {
@@ -109,7 +159,8 @@ void CValueToolbar::OnToolDropDown(wxAuiToolBarEvent& event)
 	}
 }
 
-void CValueToolbar::OnRightDown(wxMouseEvent& event)
+void ibValueToolbar::OnRightDown(wxMouseEvent& event)
 {
 	event.Skip();
 }
+#endif

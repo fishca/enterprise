@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Name:        src/generic/headerctrlg.cpp
-// Purpose:     generic wxHeaderGenericCtrl implementation
+// Purpose:     generic ibHeaderGenericCtrl implementation
 // Author:      Vadim Zeitlin
 // Created:     2008-12-03
 // Copyright:   (c) 2008 Vadim Zeitlin <vadim@wxwidgets.org>
@@ -39,7 +39,7 @@ namespace
 } // anonymous namespace
 
 // ============================================================================
-// wxHeaderGenericCtrl implementation
+// ibHeaderGenericCtrl implementation
 // ============================================================================
 
 void DrawHeaderButton(wxWindow* win,
@@ -243,10 +243,10 @@ void DrawHeaderButton(wxWindow* win,
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl creation
+// ibHeaderGenericCtrl creation
 // ----------------------------------------------------------------------------
 
-void wxHeaderGenericCtrl::Init()
+void ibHeaderGenericCtrl::Init()
 {
 	m_numColumns = 0;
 	m_hover =
@@ -254,19 +254,18 @@ void wxHeaderGenericCtrl::Init()
 		m_colBeingReordered = COL_NONE;
 	m_dragOffset = 0;
 	m_scrollOffset = 0;
-	m_xPhysical = -1;
 	m_numHeight = 1;
 	m_wasSeparatorDClick = false;
 }
 
-bool wxHeaderGenericCtrl::Create(wxWindow* parent,
+bool ibHeaderGenericCtrl::Create(wxWindow* parent,
 	wxWindowID id,
 	const wxPoint& pos,
 	const wxSize& size,
 	long style,
 	const wxString& name)
 {
-	if (!wxHeaderGenericCtrlBase::Create(parent, id, pos, size,
+	if (!ibHeaderGenericCtrlBase::Create(parent, id, pos, size,
 		style, wxDefaultValidator, name))
 		return false;
 
@@ -277,15 +276,15 @@ bool wxHeaderGenericCtrl::Create(wxWindow* parent,
 	return true;
 }
 
-wxHeaderGenericCtrl::~wxHeaderGenericCtrl()
+ibHeaderGenericCtrl::~ibHeaderGenericCtrl()
 {
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl columns manipulation
+// ibHeaderGenericCtrl columns manipulation
 // ----------------------------------------------------------------------------
 
-void wxHeaderGenericCtrl::DoSetCount(unsigned int count)
+void ibHeaderGenericCtrl::DoSetCount(unsigned int count)
 {
 	// update the column indices order array before changing m_numColumns
 	DoResizeColumnIndices(m_colIndices, count);
@@ -301,12 +300,12 @@ void wxHeaderGenericCtrl::DoSetCount(unsigned int count)
 	Refresh();
 }
 
-unsigned int wxHeaderGenericCtrl::DoGetCount() const
+unsigned int ibHeaderGenericCtrl::DoGetCount() const
 {
 	return m_numColumns;
 }
 
-void wxHeaderGenericCtrl::DoUpdate(unsigned int idx)
+void ibHeaderGenericCtrl::DoUpdate(unsigned int idx)
 {
 	InvalidateBestSize();
 
@@ -317,10 +316,10 @@ void wxHeaderGenericCtrl::DoUpdate(unsigned int idx)
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl scrolling
+// ibHeaderGenericCtrl scrolling
 // ----------------------------------------------------------------------------
 
-void wxHeaderGenericCtrl::DoScrollHorz(int dx)
+void ibHeaderGenericCtrl::DoScrollHorz(int dx)
 {
 	m_scrollOffset += dx;
 
@@ -329,22 +328,22 @@ void wxHeaderGenericCtrl::DoScrollHorz(int dx)
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl geometry
+// ibHeaderGenericCtrl geometry
 // ----------------------------------------------------------------------------
 
-wxSize wxHeaderGenericCtrl::DoGetBestSize() const
+wxSize ibHeaderGenericCtrl::DoGetBestSize() const
 {
 	wxWindow* win = GetParent();
 	int height = wxRendererNative::Get().GetHeaderButtonHeight(win) * wxMax(m_numHeight, 1);
 
 	// the vertical size is rather arbitrary but it looks better if we leave
 	// some space around the text
-	return wxSize(IsEmpty() ? wxHeaderGenericCtrlBase::DoGetBestSize().x
+	return wxSize(IsEmpty() ? ibHeaderGenericCtrlBase::DoGetBestSize().x
 		: GetColEnd(GetColumnCount() - 1),
 		height); // (7*GetCharHeight())/4);
 }
 
-int wxHeaderGenericCtrl::GetColStart(unsigned int idx) const
+int ibHeaderGenericCtrl::GetColStart(unsigned int idx) const
 {
 	int pos = m_scrollOffset;
 	for (unsigned n = 0; ; n++)
@@ -361,14 +360,14 @@ int wxHeaderGenericCtrl::GetColStart(unsigned int idx) const
 	return pos;
 }
 
-int wxHeaderGenericCtrl::GetColEnd(unsigned int idx) const
+int ibHeaderGenericCtrl::GetColEnd(unsigned int idx) const
 {
 	int x = GetColStart(idx);
 
 	return x + GetColumn(idx).GetWidth();
 }
 
-unsigned int wxHeaderGenericCtrl::FindColumnAtPoint(int xPhysical, bool* onSeparator) const
+unsigned int ibHeaderGenericCtrl::FindColumnAtPoint(int xPhysical, bool* onSeparator) const
 {
 	int pos = 0;
 	int xLogical = xPhysical - m_scrollOffset;
@@ -423,7 +422,7 @@ unsigned int wxHeaderGenericCtrl::FindColumnAtPoint(int xPhysical, bool* onSepar
 	return COL_NONE;
 }
 
-unsigned int wxHeaderGenericCtrl::FindColumnClosestToPoint(int xPhysical) const
+unsigned int ibHeaderGenericCtrl::FindColumnClosestToPoint(int xPhysical) const
 {
 	const unsigned int colIndexAtPoint = FindColumnAtPoint(xPhysical);
 
@@ -441,10 +440,10 @@ unsigned int wxHeaderGenericCtrl::FindColumnClosestToPoint(int xPhysical) const
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl repainting
+// ibHeaderGenericCtrl repainting
 // ----------------------------------------------------------------------------
 
-void wxHeaderGenericCtrl::RefreshCol(unsigned int idx)
+void ibHeaderGenericCtrl::RefreshCol(unsigned int idx)
 {
 	wxRect rect = GetClientRect();
 	rect.x += GetColStart(idx);
@@ -453,13 +452,13 @@ void wxHeaderGenericCtrl::RefreshCol(unsigned int idx)
 	RefreshRect(rect);
 }
 
-void wxHeaderGenericCtrl::RefreshColIfNotNone(unsigned int idx)
+void ibHeaderGenericCtrl::RefreshColIfNotNone(unsigned int idx)
 {
 	if (idx != COL_NONE)
 		RefreshCol(idx);
 }
 
-void wxHeaderGenericCtrl::RefreshColsAfter(unsigned int idx)
+void ibHeaderGenericCtrl::RefreshColsAfter(unsigned int idx)
 {
 	wxRect rect = GetClientRect();
 	const int ofs = GetColStart(idx);
@@ -472,20 +471,20 @@ void wxHeaderGenericCtrl::RefreshColsAfter(unsigned int idx)
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl dragging/resizing/reordering
+// ibHeaderGenericCtrl dragging/resizing/reordering
 // ----------------------------------------------------------------------------
 
-bool wxHeaderGenericCtrl::IsResizing() const
+bool ibHeaderGenericCtrl::IsResizing() const
 {
 	return m_colBeingResized != COL_NONE;
 }
 
-bool wxHeaderGenericCtrl::IsReordering() const
+bool ibHeaderGenericCtrl::IsReordering() const
 {
 	return m_colBeingReordered != COL_NONE;
 }
 
-void wxHeaderGenericCtrl::ClearMarkers()
+void ibHeaderGenericCtrl::ClearMarkers()
 {
 	wxClientDC dc(this);
 
@@ -493,7 +492,7 @@ void wxHeaderGenericCtrl::ClearMarkers()
 	dcover.Clear();
 }
 
-void wxHeaderGenericCtrl::EndDragging()
+void ibHeaderGenericCtrl::EndDragging()
 {
 	// We currently only use markers for reordering, not for resizing
 	if (IsReordering())
@@ -506,7 +505,7 @@ void wxHeaderGenericCtrl::EndDragging()
 	SetCursor(wxNullCursor);
 }
 
-void wxHeaderGenericCtrl::CancelDragging()
+void ibHeaderGenericCtrl::CancelDragging()
 {
 	wxASSERT_MSG(IsDragging(),
 		"shouldn't be called if we're not dragging anything");
@@ -515,7 +514,7 @@ void wxHeaderGenericCtrl::CancelDragging()
 
 	unsigned int& col = IsResizing() ? m_colBeingResized : m_colBeingReordered;
 
-	wxHeaderGenericCtrlEvent event(wxEVT_HEADER_DRAGGING_CANCELLED, GetId());
+	ibHeaderGenericCtrlEvent event(wxEVT_HEADER_DRAGGING_CANCELLED, GetId());
 	event.SetEventObject(this);
 	event.SetColumn(col);
 
@@ -524,7 +523,7 @@ void wxHeaderGenericCtrl::CancelDragging()
 	col = COL_NONE;
 }
 
-int wxHeaderGenericCtrl::ConstrainByMinWidth(unsigned int col, int& xPhysical)
+int ibHeaderGenericCtrl::ConstrainByMinWidth(unsigned int col, int& xPhysical)
 {
 	const int xStart = GetColStart(col);
 
@@ -538,9 +537,9 @@ int wxHeaderGenericCtrl::ConstrainByMinWidth(unsigned int col, int& xPhysical)
 	return xPhysical - xStart;
 }
 
-void wxHeaderGenericCtrl::StartOrContinueResizing(unsigned int col, int xPhysical)
+void ibHeaderGenericCtrl::StartOrContinueResizing(unsigned int col, int xPhysical)
 {
-	wxHeaderGenericCtrlEvent event(IsResizing() ? wxEVT_HEADER_RESIZING
+	ibHeaderGenericCtrlEvent event(IsResizing() ? wxEVT_HEADER_RESIZING
 		: wxEVT_HEADER_BEGIN_RESIZE,
 		GetId());
 	event.SetEventObject(this);
@@ -570,7 +569,7 @@ void wxHeaderGenericCtrl::StartOrContinueResizing(unsigned int col, int xPhysica
 	}
 }
 
-void wxHeaderGenericCtrl::EndResizing(int xPhysical)
+void ibHeaderGenericCtrl::EndResizing(int xPhysical)
 {
 	wxASSERT_MSG(IsResizing(), "shouldn't be called if we're not resizing");
 
@@ -578,7 +577,7 @@ void wxHeaderGenericCtrl::EndResizing(int xPhysical)
 
 	ReleaseMouse();
 
-	wxHeaderGenericCtrlEvent event(wxEVT_HEADER_END_RESIZE, GetId());
+	ibHeaderGenericCtrlEvent event(wxEVT_HEADER_END_RESIZE, GetId());
 	event.SetEventObject(this);
 	event.SetColumn(m_colBeingResized);
 	event.SetWidth(ConstrainByMinWidth(m_colBeingResized, xPhysical));
@@ -588,40 +587,38 @@ void wxHeaderGenericCtrl::EndResizing(int xPhysical)
 	m_colBeingResized = COL_NONE;
 }
 
-void wxHeaderGenericCtrl::UpdateReorderingMarker(int xPhysical)
+void ibHeaderGenericCtrl::UpdateReorderingMarker(int xPhysical)
 {
 	wxClientDC dc(this);
 
 	wxDCOverlay dcover(m_overlay, &dc);
 	dcover.Clear();
 
-	//dc.SetPen(*wxBLUE);
-	//dc.SetBrush(*wxTRANSPARENT_BRUSH);
+	dc.SetPen(colour_selection);
+	dc.SetBrush(*wxTRANSPARENT_BRUSH);
 
-	//// draw the phantom position of the column being dragged
-	//int x = xPhysical - m_dragOffset;
-	//int y = GetClientSize().y;
-	//dc.DrawRectangle(x, 0,
-	//	GetColumn(m_colBeingReordered).GetWidth(), y);
+	// draw the phantom position of the column being dragged
+	int x = xPhysical - m_dragOffset;
+	int y = GetClientSize().y;
+	dc.DrawRectangle(x, 0,
+		GetColumn(m_colBeingReordered).GetWidth(), y);
 
-	//// and also a hint indicating where it is going to be inserted if it's
-	//// dropped now
-	//unsigned int col = FindColumnClosestToPoint(xPhysical);
-	//if (col != COL_NONE)
-	//{
-	//	static const int DROP_MARKER_WIDTH = 4;
+	// and also a hint indicating where it is going to be inserted if it's
+	// dropped now
+	unsigned int col = FindColumnClosestToPoint(xPhysical);
+	if (col != COL_NONE)
+	{
+		static const int DROP_MARKER_WIDTH = 4;
 
-	//	dc.SetBrush(*wxBLUE);
-	//	dc.DrawRectangle(GetColEnd(col) - DROP_MARKER_WIDTH / 2, 0,
-	//		DROP_MARKER_WIDTH, y);
-	//}
-
-	m_xPhysical = xPhysical;
+		dc.SetBrush(brush_reorder);
+		dc.DrawRectangle(GetColEnd(col) - DROP_MARKER_WIDTH / 2, 0,
+			DROP_MARKER_WIDTH, y);
+	}
 }
 
-void wxHeaderGenericCtrl::StartReordering(unsigned int col, int xPhysical)
+void ibHeaderGenericCtrl::StartReordering(unsigned int col, int xPhysical)
 {
-	wxHeaderGenericCtrlEvent event(wxEVT_HEADER_BEGIN_REORDER, GetId());
+	ibHeaderGenericCtrlEvent event(wxEVT_HEADER_BEGIN_REORDER, GetId());
 	event.SetEventObject(this);
 	event.SetColumn(col);
 
@@ -640,11 +637,9 @@ void wxHeaderGenericCtrl::StartReordering(unsigned int col, int xPhysical)
 	// do not call UpdateReorderingMarker() here: we don't want to give
 	// feedback for reordering until the user starts to really move the mouse
 	// as he might want to just click on the column and not move it at all
-
-	m_xPhysical = xPhysical;
 }
 
-bool wxHeaderGenericCtrl::EndReordering(int xPhysical)
+bool ibHeaderGenericCtrl::EndReordering(int xPhysical)
 {
 	wxASSERT_MSG(IsReordering(), "shouldn't be called if we're not reordering");
 
@@ -671,7 +666,7 @@ bool wxHeaderGenericCtrl::EndReordering(int xPhysical)
 
 	if (static_cast<int>(colNew) != colOld)
 	{
-		wxHeaderGenericCtrlEvent event(wxEVT_HEADER_END_REORDER, GetId());
+		ibHeaderGenericCtrlEvent event(wxEVT_HEADER_END_REORDER, GetId());
 		event.SetEventObject(this);
 		event.SetColumn(colOld);
 
@@ -685,29 +680,27 @@ bool wxHeaderGenericCtrl::EndReordering(int xPhysical)
 		}
 	}
 
-	m_xPhysical = -1;
-
 	// whether we moved the column or not, the user did move the mouse and so
 	// did try to do it so return true
 	return true;
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl column reordering
+// ibHeaderGenericCtrl column reordering
 // ----------------------------------------------------------------------------
 
-void wxHeaderGenericCtrl::DoSetColumnsOrder(const wxArrayInt& order)
+void ibHeaderGenericCtrl::DoSetColumnsOrder(const wxArrayInt& order)
 {
 	m_colIndices = order;
 	Refresh();
 }
 
-wxArrayInt wxHeaderGenericCtrl::DoGetColumnsOrder() const
+wxArrayInt ibHeaderGenericCtrl::DoGetColumnsOrder() const
 {
 	return m_colIndices;
 }
 
-void wxHeaderGenericCtrl::DoMoveCol(unsigned int idx, unsigned int pos)
+void ibHeaderGenericCtrl::DoMoveCol(unsigned int idx, unsigned int pos)
 {
 	MoveColumnInOrderArray(m_colIndices, idx, pos);
 
@@ -715,17 +708,17 @@ void wxHeaderGenericCtrl::DoMoveCol(unsigned int idx, unsigned int pos)
 }
 
 // ----------------------------------------------------------------------------
-// wxHeaderGenericCtrl event handlers
+// ibHeaderGenericCtrl event handlers
 // ----------------------------------------------------------------------------
 
-wxBEGIN_EVENT_TABLE(wxHeaderGenericCtrl, wxHeaderGenericCtrlBase)
-EVT_PAINT(wxHeaderGenericCtrl::OnPaint)
-EVT_MOUSE_EVENTS(wxHeaderGenericCtrl::OnMouse)
-EVT_MOUSE_CAPTURE_LOST(wxHeaderGenericCtrl::OnCaptureLost)
-EVT_KEY_DOWN(wxHeaderGenericCtrl::OnKeyDown)
+wxBEGIN_EVENT_TABLE(ibHeaderGenericCtrl, ibHeaderGenericCtrlBase)
+EVT_PAINT(ibHeaderGenericCtrl::OnPaint)
+EVT_MOUSE_EVENTS(ibHeaderGenericCtrl::OnMouse)
+EVT_MOUSE_CAPTURE_LOST(ibHeaderGenericCtrl::OnCaptureLost)
+EVT_KEY_DOWN(ibHeaderGenericCtrl::OnKeyDown)
 wxEND_EVENT_TABLE()
 
-void wxHeaderGenericCtrl::OnPaint(wxPaintEvent& WXUNUSED(event))
+void ibHeaderGenericCtrl::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	int w, h;
 	GetClientSize(&w, &h);
@@ -792,22 +785,6 @@ void wxHeaderGenericCtrl::OnPaint(wxPaintEvent& WXUNUSED(event))
 		}
 	}
 
-	if (IsReordering())
-	{
-		// a hint indicating where it is going to be inserted if it's
-		// dropped now
-
-		unsigned int col = FindColumnClosestToPoint(m_xPhysical);
-		if (col != COL_NONE)
-		{
-			static const int DROP_MARKER_WIDTH = 4;
-
-			dc.SetBrush(brush_reorder);
-			dc.DrawRectangle(GetColEnd(col) - DROP_MARKER_WIDTH / 2, 0,
-				DROP_MARKER_WIDTH, GetClientSize().y);
-		}
-	}
-
 	if (xpos < w)
 	{
 		int state = wxCONTROL_NONE;
@@ -818,13 +795,13 @@ void wxHeaderGenericCtrl::OnPaint(wxPaintEvent& WXUNUSED(event))
 	}
 }
 
-void wxHeaderGenericCtrl::OnCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event))
+void ibHeaderGenericCtrl::OnCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event))
 {
 	if (IsDragging())
 		CancelDragging();
 }
 
-void wxHeaderGenericCtrl::OnKeyDown(wxKeyEvent& event)
+void ibHeaderGenericCtrl::OnKeyDown(wxKeyEvent& event)
 {
 	if (event.GetKeyCode() == WXK_ESCAPE)
 	{
@@ -840,7 +817,7 @@ void wxHeaderGenericCtrl::OnKeyDown(wxKeyEvent& event)
 	event.Skip();
 }
 
-void wxHeaderGenericCtrl::OnMouse(wxMouseEvent& mevent)
+void ibHeaderGenericCtrl::OnMouse(wxMouseEvent& mevent)
 {
 	const bool wasSeparatorDClick = m_wasSeparatorDClick;
 	m_wasSeparatorDClick = false;
@@ -974,7 +951,7 @@ void wxHeaderGenericCtrl::OnMouse(wxMouseEvent& mevent)
 	if (evtType == wxEVT_NULL)
 		return;
 
-	wxHeaderGenericCtrlEvent event(evtType, GetId());
+	ibHeaderGenericCtrlEvent event(evtType, GetId());
 	event.SetEventObject(this);
 	event.SetColumn(col);
 

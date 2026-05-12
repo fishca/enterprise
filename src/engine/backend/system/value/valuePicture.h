@@ -5,22 +5,22 @@
 #include "backend/backend_picture.h"
 
 //picture support
-class BACKEND_API CValuePicture : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CValuePicture);
+class BACKEND_API ibValuePicture : public ibValue {
+	wxDECLARE_DYNAMIC_CLASS(ibValuePicture);
 public:
 
-	CValuePicture(const CPictureDescription& pictureDesc = CPictureDescription(0));
-	virtual bool Init(CValue** paParams, const long lSizeArray);
+	ibValuePicture(const ibPictureDescription& pictureDesc = ibPictureDescription(0));
+	virtual bool Init(ibValue** paParams, const long lSizeArray);
 
 	virtual bool IsEmpty() const {
 		return m_pictureDesc.IsEmptyPicture();
 	}
 
-	const CPictureDescription& GetPictureDesc() const { return m_pictureDesc; }
+	const ibPictureDescription& GetPictureDesc() const { return m_pictureDesc; }
 
 protected:
 
-	CPictureDescription m_pictureDesc;
+	ibPictureDescription m_pictureDesc;
 };
 
 #endif

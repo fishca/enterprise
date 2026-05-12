@@ -9,47 +9,107 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API wxControlCheckbox :
+class FRONTEND_API ibControlCheckbox :
 
 	public wxCompositeWindow<wxWindow>,
-	public wxControlDynamicBorder {
+	public ibControlDynamicBorder {
 
-	class wxControlStaticText : public wxDynamicStaticText {
+	// Inner checkbox that forwards Tab to the outer composite's siblings.
+	// The same workaround as in ibControlTextEditor is needed because
+	// wxWidgets' default Tab handling doesn't unwind past our
+	// wxCompositeWindow on wxMSW.
+	class ibInnerCheckBox : public wxCheckBox {
 	public:
-
-		wxControlStaticText(wxWindow* parent,
-			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr)) :
-			wxDynamicStaticText(parent, id, label, pos, size, style, name)
+		ibInnerCheckBox(ibControlCheckbox* editor, long style)
+			: m_editor(editor)
 		{
-			// Ensure that our best size is recomputed using our overridden
-			// DoGetBestSize().
-			InvalidateBestSize();
+			Create(editor, wxID_ANY, wxEmptyString,
+				wxDefaultPosition, wxDefaultSize, style);
 		}
+
+	protected:
+		void OnKeyDown(wxKeyEvent& e) {
+			if (e.GetKeyCode() != WXK_TAB || e.ControlDown() || e.AltDown()) {
+				e.Skip();
+				return;
+			}
+			wxWindow* outer = m_editor != nullptr ? static_cast<wxWindow*>(m_editor) : this;
+			wxWindow* parent = outer->GetParent();
+			if (parent == nullptr) { e.Skip(); return; }
+
+			const wxWindowList& siblings = parent->GetChildren();
+			auto self = siblings.Find(outer);
+			if (self == nullptr) { e.Skip(); return; }
+
+			const bool forward = !e.ShiftDown();
+			auto node = self;
+			for (;;) {
+				node = forward ? node->GetNext() : node->GetPrevious();
+				if (node == nullptr)
+					node = forward ? siblings.GetFirst() : siblings.GetLast();
+				if (node == self) break;
+				wxWindow* cand = node->GetData();
+				if (cand != nullptr && cand->CanAcceptFocusFromKeyboard()) {
+					cand->SetFocusFromKbd();
+					return;
+				}
+			}
+			e.Skip();
+		}
+
+	private:
+		ibControlCheckbox* m_editor;
+		wxDECLARE_EVENT_TABLE();
 	};
 
-	wxControlStaticText* m_label;
-	wxCheckBox* m_checkBox;
-	wxAlignment m_align;
+private:
+
+	ibInnerCheckBox* m_checkBox = nullptr;
+
+	// Drawn label state (replaces the old ibControlStaticText child window).
+	wxString       m_labelText;
+	mutable wxSize m_labelMinSize = wxDefaultSize;
+	wxRect         m_labelRect;
+
+	// Perf cache — invalidated on SetLabel/SetFont/DPI change.
+	mutable wxSize m_cachedLabelSize = wxSize(-1, -1);
+
+	// Guards wxCompositeWindow teardown from following a dangling m_checkBox.
+	bool           m_destroying = false;
+
+	// Logical enabled state; OnPaint uses it to grey out the label without
+	// relying on the HWND state (HWND may stay enabled in designer mode).
+	bool           m_enabledIntent = true;
+
+	// Tracks whether the native wxCheckBox currently has keyboard focus so
+	// OnPaint can draw a dotted focus rectangle spanning label + box.
+	bool           m_hasFocus = false;
+
+	wxAlignment    m_align = wxAlignment::wxALIGN_LEFT;
 
 public:
 
-	wxControlCheckbox() :
-		m_label(nullptr), m_checkBox(nullptr), m_align(wxAlignment::wxALIGN_LEFT)
-	{
-	}
+	ibControlCheckbox() {}
 
-	wxControlCheckbox(wxWindow* parent,
+	ibControlCheckbox(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
-		const wxSize& size = wxDefaultSize, long style = wxBORDER_NONE) :
-		m_label(nullptr), m_checkBox(nullptr)
+		const wxSize& size = wxDefaultSize, long style = wxBORDER_NONE)
 	{
 		Create(parent, id, pos, size, style);
 	}
 
-	virtual ~wxControlCheckbox() {
-		delete m_label;
-		delete m_checkBox;
+	virtual ~ibControlCheckbox() {
+		// Same teardown pattern as ibControlTextEditor: set the flag so any
+		// callback routed through GetCompositeWindowParts() during the base
+		// destructors sees an empty parts list, then delete the child
+		// synchronously so wxWindow's own loop has nothing to do.
+		m_destroying = true;
+		if (m_checkBox != nullptr) {
+			ibInnerCheckBox* c = m_checkBox;
+			m_checkBox = nullptr;
+			delete c;
+		}
 	}
 
 	bool Create(wxWindow* parent = nullptr,
@@ -60,14 +120,22 @@ public:
 		if (!wxCompositeWindow::Create(parent, id, pos, size, style))
 			return false;
 
-		m_label = new wxControlStaticText(this, wxID_ANY, wxEmptyString);
-		m_checkBox = new wxCheckBox(this,
-			wxID_ANY,
-			wxEmptyString,
-			wxDefaultPosition,
-			wxDefaultSize,
-			style
-		);
+		SetBackgroundStyle(wxBG_STYLE_PAINT);
+
+		m_checkBox = new ibInnerCheckBox(this, style);
+
+		// Follow the native checkbox focus so we can draw a dotted rect
+		// around label + box.
+		m_checkBox->Bind(wxEVT_SET_FOCUS, [this](wxFocusEvent& e) {
+			m_hasFocus = true;
+			Refresh();
+			e.Skip();
+		});
+		m_checkBox->Bind(wxEVT_KILL_FOCUS, [this](wxFocusEvent& e) {
+			m_hasFocus = false;
+			Refresh();
+			e.Skip();
+		});
 
 		return true;
 	}
@@ -84,79 +152,65 @@ public:
 		wxWindow::SetWindowStyleFlag(style);
 	}
 
-	virtual void SetLabel(const wxString& label) { m_label->SetLabel(label); }
-	virtual wxString GetLabel() const { return m_label->GetLabel(); }
-	virtual void SetValue(bool value) { m_checkBox->SetValue(value); }
-	virtual bool GetValue() const { return m_checkBox->GetValue(); }
-
-	void LayoutControls() {
-
-		if (!m_checkBox)
-			return;
-
-		const wxSize sizeTotal = GetBestSize();
-		int width = sizeTotal.x,
-			height = sizeTotal.y;
-
-		wxSize sizeLabel = m_label->GetBestSize();
-		wxSize sizeCheckBox = m_checkBox->GetBestSize();
-
-		if (m_align == wxAlignment::wxALIGN_LEFT) {
-			m_label->SetSize(0, (height - sizeLabel.y) / 2, sizeLabel.x, height);
-			m_checkBox->SetSize(sizeLabel.x + 1, 0, width - sizeLabel.x - 1, height);
-		}
-		else {
-			m_label->SetSize(sizeCheckBox.x, (height - sizeLabel.y) / 2, sizeLabel.x, height);
-			m_checkBox->SetSize(0, 0, sizeCheckBox.x, height);
-		}
+	virtual void SetLabel(const wxString& label) {
+		if (m_labelText == label) return;
+		m_labelText = label;
+		InvalidateMetrics();
+		InvalidateBestSize();
+		LayoutControls();
+		Refresh();
 	}
+
+	virtual wxString GetLabel() const { return m_labelText; }
+
+	virtual void SetValue(bool value) { if (m_checkBox) m_checkBox->SetValue(value); }
+	virtual bool GetValue() const { return m_checkBox != nullptr && m_checkBox->GetValue(); }
+
+	void LayoutControls();
 
 	// overridden base class virtuals
 	virtual bool SetBackgroundColour(const wxColour& colour) {
-
-		if (m_label != nullptr && m_parent != nullptr)
-			m_label->SetBackgroundColour(m_parent->GetBackgroundColour());
-		else if (m_label != nullptr)
-			m_label->SetBackgroundColour(colour);
-
-		if (m_parent != nullptr)
-			m_checkBox->SetBackgroundColour(m_parent->GetBackgroundColour());
-		else
-			m_checkBox->SetBackgroundColour(colour);
-
+		if (m_checkBox != nullptr) {
+			m_checkBox->SetBackgroundColour(m_parent != nullptr
+				? m_parent->GetBackgroundColour()
+				: colour);
+		}
 		if (m_parent != nullptr)
 			return wxCompositeWindow::SetBackgroundColour(m_parent->GetBackgroundColour());
 		return wxCompositeWindow::SetBackgroundColour(colour);
 	}
 
 	virtual bool SetForegroundColour(const wxColour& colour) {
-		if (m_label != nullptr) 
-			m_label->SetForegroundColour(colour);
-		if (m_checkBox != nullptr)
-			m_checkBox->SetForegroundColour(colour);
+		if (m_checkBox != nullptr) m_checkBox->SetForegroundColour(colour);
+		Refresh();
 		return wxCompositeWindow::SetForegroundColour(colour);
 	}
 
 	virtual bool SetFont(const wxFont& font) {
-		if (m_label != nullptr)
-			m_label->SetFont(font);
-		if (m_checkBox != nullptr)
-			m_checkBox->SetFont(font);
+		if (m_checkBox != nullptr) m_checkBox->SetFont(font);
+		InvalidateMetrics();
+		InvalidateBestSize();
+		Refresh();
 		return wxCompositeWindow::SetFont(font);
 	}
 
 	virtual bool Enable(bool enable = true) {
-		return m_checkBox->Enable(enable);
+		m_enabledIntent = enable;
+		if (m_checkBox != nullptr) m_checkBox->Enable(enable);
+		Refresh();
+		return true;
 	}
 
 	virtual bool AllowCalc() const {
 		return m_align == wxAlignment::wxALIGN_LEFT;
-	};
+	}
 
-	//dynamic border 
-	virtual wxDynamicStaticText* GetStaticText() const { return m_label; }
+	//dynamic border
+	virtual ibDynamicStaticText* GetStaticText() const { return nullptr; }
 	virtual wxWindow* GetControl() const { return m_checkBox; }
-	virtual wxSize GetControlSize() const { return m_checkBox->GetSize(); }
+	virtual wxSize GetControlSize() const {
+		return m_checkBox != nullptr ? m_checkBox->GetSize() : wxSize(0, 0);
+	}
 
 	virtual void CalculateLabelSize(wxCoord* w, wxCoord* h) const;
 	virtual void ApplyLabelSize(const wxSize& s);
@@ -165,34 +219,46 @@ protected:
 
 #if wxUSE_TOOLTIPS
 	virtual void DoSetToolTipText(const wxString& tip) override {
-		m_label->SetToolTip(tip);
-		m_checkBox->SetToolTip(tip);
+		// SetToolTip(const wxString&) creates a fresh wxToolTip per call;
+		// giving each window its own avoids the double-free that happens
+		// when the same wxToolTip pointer is handed to both.
+		if (m_checkBox != nullptr) m_checkBox->SetToolTip(tip);
+		wxWindow::DoSetToolTipText(tip);
 	}
 
 	virtual void DoSetToolTip(wxToolTip* tip) override {
-		m_label->SetToolTip(tip);
-		m_checkBox->SetToolTip(tip);
+		if (m_checkBox != nullptr) {
+			if (tip != nullptr)
+				m_checkBox->SetToolTip(tip->GetTip());
+			else
+				m_checkBox->UnsetToolTip();
+		}
+		wxWindow::DoSetToolTip(tip);
 	}
 #endif // wxUSE_TOOLTIPS
 
-	// override the base class virtuals involved into geometry calculations
 	virtual wxSize DoGetBestClientSize() const override;
 
+	void OnPaint(wxPaintEvent& event);
+	void OnEraseBackground(wxEraseEvent&) {}
 	void OnSize(wxSizeEvent& event) { LayoutControls(); event.Skip(); }
-	void OnDPIChanged(wxDPIChangedEvent& event) { LayoutControls(); event.Skip(); }
+	void OnDPIChanged(wxDPIChangedEvent& event) { InvalidateMetrics(); LayoutControls(); event.Skip(); }
 
 private:
+
+	wxSize ComputeLabelBestSize() const;
+	void   InvalidateMetrics() const { m_cachedLabelSize = wxSize(-1, -1); }
 
 	// Implement pure virtual function inherited from wxCompositeWindow.
 	virtual wxWindowList GetCompositeWindowParts() const override;
 
-	wxDECLARE_DYNAMIC_CLASS(wxControlCheckbox);
-	wxDECLARE_NO_COPY_CLASS(wxControlCheckbox);
+	wxDECLARE_DYNAMIC_CLASS(ibControlCheckbox);
+	wxDECLARE_NO_COPY_CLASS(ibControlCheckbox);
 	wxDECLARE_EVENT_TABLE();
 };
 
 class FRONTEND_API wxControlNavigationCheckbox :
-	public wxNavigationEnabled<wxControlCheckbox> {
+	public wxNavigationEnabled<ibControlCheckbox> {
 public:
 
 	wxControlNavigationCheckbox() {}
@@ -205,4 +271,4 @@ public:
 	}
 };
 
-#endif 
+#endif

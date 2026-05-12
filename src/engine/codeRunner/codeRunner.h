@@ -1,65 +1,64 @@
 #pragma once
 
-#include <wx/artprov.h>
-#include <wx/xrc/xmlres.h>
 #include <wx/intl.h>
-#include <wx/stc/stc.h>
-#include <wx/gdicmn.h>
-#include <wx/font.h>
-#include <wx/colour.h>
-#include <wx/settings.h>
 #include <wx/string.h>
 #include <wx/button.h>
-#include <wx/bitmap.h>
-#include <wx/image.h>
-#include <wx/icon.h>
+#include <wx/choice.h>
 #include <wx/sizer.h>
 #include <wx/statusbr.h>
 #include <wx/frame.h>
+#include <wx/stc/stc.h>
+#include <wx/toolbar.h>
+#include <wx/menu.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
 #include "backend/backend_mainFrame.h"
+#include "frontend/win/editor/codeEditor/codeEditor.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Class CFrameCodeRunner
+/// Class ibFrameCodeRunner
 ///////////////////////////////////////////////////////////////////////////////
 
-class CFrameCodeRunner : public IBackendDocMDIFrame, public wxFrame {
-	void PrepareTABs();
-	void HighlightSyntaxAndCalculateFoldLevel(
-		const int fromLine, const int toLine,
-		const int fromPos, const int toPos,
-		const wxString& strCode
-	);
-	void SetFontColorSettings();
+// Sessionless / metadata-less script runner — uses frontend's
+// ibCodeEditor for syntax-highlight + fold + auto-indent + format/indent
+// commands without any document or debug client. Only the Run /
+// SyntaxCheck / Clear buttons live here; everything editor-related is
+// inherited.
+class ibFrameCodeRunner : public ibBackendDocFrame, public wxFrame {
 protected:
 
-	class CCompileCode* m_compileCode;
-	class CProcUnit* m_procUnit;
+	class ibCompileCode* m_compileCode;
+	class ibProcUnit* m_procUnit;
 
-	wxStyledTextCtrl* m_codeEditor;
-	wxButton* m_buttonSyntaxCheck;
-	wxButton* m_buttonRunCode;
-	wxButton* m_buttonClearOutput;
+	ibCodeEditor*     m_codeEditor;
+	wxChoice*         m_syntaxChoice;
+	wxButton*         m_buttonSyntaxCheck;
+	wxButton*         m_buttonRunCode;
+	wxButton*         m_buttonClearOutput;
 	wxStyledTextCtrl* m_output;
-	wxStatusBar* m_statusBar;
+	wxStatusBar*      m_statusBar;
 
-	// Virtual event handlers, override them in your derived class
 	void SyntaxCheckOnButtonClick(wxCommandEvent& event);
 	void RunCodeOnButtonClick(wxCommandEvent& event);
 	void ClearOutputOnButtonClick(wxCommandEvent& event);
-	void OnKeyDown(wxKeyEvent& event);
+	void SyntaxChoiceOnChange(wxCommandEvent& event);
 
-	void OnStyleNeeded(wxStyledTextEvent& event);
-	void OnMarginClick(wxStyledTextEvent& event);
-	void OnChagedText(wxStyledTextEvent& event);
-	void OnNeedShow(wxStyledTextEvent& event);
+	void OnToolbarCommand(wxCommandEvent& event);
+
+	void OnMenuOpen(wxCommandEvent& event);
+	void OnMenuSave(wxCommandEvent& event);
+	void OnMenuSaveAs(wxCommandEvent& event);
+	void OnMenuExit(wxCommandEvent& event);
+	void OnMenuAbout(wxCommandEvent& event);
+	void OnMenuEdit(wxCommandEvent& event);
+
+	wxString m_currentFile;
 
 public:
 
-	virtual wxFrame* GetFrameHandler() const { return const_cast<CFrameCodeRunner*>(this); }
-	virtual class IMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
+	virtual wxFrame* GetFrameHandler() const { return const_cast<ibFrameCodeRunner*>(this); }
+	virtual class ibMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
 
 	virtual void SetTitle(const wxString& title) {
 		wxFrame::SetTitle(title);
@@ -69,7 +68,7 @@ public:
 		wxFrame::SetStatusText(text, number);
 	};
 
-	virtual void Message(const wxString& strMessage, eStatusMessage status) {
+	virtual void Message(const wxString& strMessage, ibStatusMessage status) {
 		AppendOutput(strMessage);
 	};
 
@@ -88,7 +87,10 @@ public:
 		m_output->SetReadOnly(true);
 	}
 
-	CFrameCodeRunner(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Code runner"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(638, 338), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
-	virtual ~CFrameCodeRunner();
+	ibFrameCodeRunner(wxWindow* parent, wxWindowID id = wxID_ANY,
+		const wxString& title = _("Code runner"),
+		const wxPoint& pos = wxDefaultPosition,
+		const wxSize& size = wxSize(1100, 750),
+		long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
+	virtual ~ibFrameCodeRunner();
 };
-

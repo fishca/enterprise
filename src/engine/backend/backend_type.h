@@ -5,107 +5,107 @@
 
 //////////////////////////////////////////////////////////////
 
-class BACKEND_API IBackendTypeFactory {
+class BACKEND_API ibBackendTypeFactory {
 public:
 
 #pragma region clsid 
 
-	void SetDefaultMetaType(const eValueTypes& valType = eValueTypes::TYPE_EMPTY) { GetTypeDesc().SetDefaultMetaType(valType); }
+	void SetDefaultMetaType(const ibValueTypes& valType = ibValueTypes::TYPE_EMPTY) { GetTypeDesc().SetDefaultMetaType(valType); }
 
-	void SetDefaultMetaType(const class_identifier_t& clsid) { GetTypeDesc().SetDefaultMetaType(clsid); }
-	void SetDefaultMetaType(const class_identifier_t& clsid, const CTypeDescription::CTypeData& descr) { GetTypeDesc().SetDefaultMetaType(clsid); }
+	void SetDefaultMetaType(const ibClassID& clsid) { GetTypeDesc().SetDefaultMetaType(clsid); }
+	void SetDefaultMetaType(const ibClassID& clsid, const ibTypeDescription::ibTypeData& descr) { GetTypeDesc().SetDefaultMetaType(clsid); }
 
-	void SetDefaultMetaType(const std::vector<class_identifier_t>& array) { GetTypeDesc().SetDefaultMetaType(array); }
-	void SetDefaultMetaType(const std::vector<class_identifier_t>& array, const CTypeDescription::CTypeData& descr) { GetTypeDesc().SetDefaultMetaType(array, descr); }
-	void SetDefaultMetaType(const std::vector<class_identifier_t>& array, const CQualifierNumber& qNumber, const CQualifierDate& qDate, CQualifierString& qString) { GetTypeDesc().SetDefaultMetaType(array, qNumber, qDate, qString); }
+	void SetDefaultMetaType(const std::vector<ibClassID>& array) { GetTypeDesc().SetDefaultMetaType(array); }
+	void SetDefaultMetaType(const std::vector<ibClassID>& array, const ibTypeDescription::ibTypeData& descr) { GetTypeDesc().SetDefaultMetaType(array, descr); }
+	void SetDefaultMetaType(const std::vector<ibClassID>& array, const ibQualifierNumber& qNumber, const ibQualifierDate& qDate, ibQualifierString& qString) { GetTypeDesc().SetDefaultMetaType(array, qNumber, qDate, qString); }
 
-	void SetDefaultMetaType(const CTypeDescription& typeDesc) { GetTypeDesc().SetDefaultMetaType(typeDesc); }
+	void SetDefaultMetaType(const ibTypeDescription& typeDesc) { GetTypeDesc().SetDefaultMetaType(typeDesc); }
 
 	void ClearMetaType() { GetTypeDesc().ClearMetaType(); }
 
-	class_identifier_t GetFirstClsid() const { return GetTypeDesc().GetFirstClsid(); }
-	class_identifier_t GetByIdx(unsigned int idx) const { return GetTypeDesc().GetByIdx(idx); }
+	ibClassID GetFirstClsid() const { return GetTypeDesc().GetFirstClsid(); }
+	ibClassID GetByIdx(unsigned int idx) const { return GetTypeDesc().GetByIdx(idx); }
 
 	unsigned int GetClsidCount() const { return GetTypeDesc().GetClsidCount(); }
 
 #pragma endregion
 
 	//Create value by selected type
-	virtual CValue CreateValue() const;
-	virtual CValue* CreateValueRef() const;
+	virtual ibValue CreateValue() const;
+	virtual ibValue* CreateValueRef() const;
 
 	//convert value
-	template<class retType = CValue>
+	template<class retType = ibValue>
 	retType* CreateAndConvertValueRef() {
-		CValue* retVal = CreateValueRef();
+		ibValue* retVal = CreateValueRef();
 		if (retVal != nullptr)
 			return CastValue<retType>(retVal);
 		return (retType*)nullptr;
 	}
 
 	//Adjust value
-	virtual CValue AdjustValue() const;
-	virtual CValue AdjustValue(const CValue& varValue) const;
+	virtual ibValue AdjustValue() const;
+	virtual ibValue AdjustValue(const ibValue& varValue) const;
 
 	//get type description 
-	virtual CTypeDescription& GetTypeDesc() const = 0;
+	virtual ibTypeDescription& GetTypeDesc() const = 0;
 };
 
 //////////////////////////////////////////////////////////////
 
-enum eSelectorDataType {
-	eSelectorDataType_any,
-	eSelectorDataType_boolean,
-	eSelectorDataType_reference,
-	eSelectorDataType_table,
-	eSelectorDataType_resource,
+enum ibSelectorDataType {
+	ibSelectorDataType_any,
+	ibSelectorDataType_boolean,
+	ibSelectorDataType_reference,
+	ibSelectorDataType_table,
+	ibSelectorDataType_resource,
 };
 
 //////////////////////////////////////////////////////////////
 
-class BACKEND_API IBackendTypeConfigFactory :
-	public IBackendTypeFactory {
+class BACKEND_API ibBackendTypeConfigFactory :
+	public ibBackendTypeFactory {
 public:
 
-	virtual eSelectorDataType GetFilterDataType() const {
-		return eSelectorDataType::eSelectorDataType_reference;
+	virtual ibSelectorDataType GetFilterDataType() const {
+		return ibSelectorDataType::ibSelectorDataType_reference;
 	}
 
 	//Create value by selected type
-	virtual CValue CreateValue() const;
-	virtual CValue* CreateValueRef() const;
+	virtual ibValue CreateValue() const;
+	virtual ibValue* CreateValueRef() const;
 
 	//Adjust value
-	virtual CValue AdjustValue() const;
-	virtual CValue AdjustValue(const CValue& varValue) const;
+	virtual ibValue AdjustValue() const;
+	virtual ibValue AdjustValue(const ibValue& varValue) const;
 
-	//get metadata 
-	virtual class IMetaData* GetMetaData() const = 0;
+	//get metadata
+	virtual class ibMetaData* GetMetaData() const = 0;
 };
 
 //////////////////////////////////////////////////////////////
 
-enum eSourceDataType {
-	eSourceDataVariant_table,
-	eSourceDataVariant_tableColumn,
-	eSourceDataVariant_attribute,
+enum ibSourceDataType {
+	ibSourceDataType_table,
+	ibSourceDataType_tableColumn,
+	ibSourceDataType_attribute,
 };
 
 //////////////////////////////////////////////////////////////
 
-class BACKEND_API IBackendTypeSourceFactory :
-	public IBackendTypeConfigFactory {
+class BACKEND_API ibBackendTypeSourceFactory :
+	public ibBackendTypeConfigFactory {
 public:
 
-	virtual eSourceDataType GetFilterSourceDataType() const {
-		return eSourceDataType::eSourceDataVariant_attribute;
+	virtual ibSourceDataType GetFilterSourceDataType() const {
+		return ibSourceDataType::ibSourceDataType_attribute;
 	}
 
 	//Get source object 
-	virtual class ISourceObject* GetSourceObject() const = 0;
+	virtual class ibSourceObject* GetSourceObject() const = 0;
 
 	// filter data 
-	virtual bool FilterSource(const class CSourceExplorer& src, const meta_identifier_t& id) const;
+	virtual bool FilterSource(const class ibSourceExplorer& src, const ibMetaID& id) const;
 };
 
 #endif

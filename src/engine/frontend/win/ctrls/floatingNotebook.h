@@ -3,15 +3,17 @@
 
 #include <wx/aui/auibook.h>
 
-class wxFloatingNotebook : public wxAuiNotebook {
-	wxAuiManager* m_frameManager;
-	wxString m_paneName;
+class ibFloatingNotebook :
+	public wxAuiNotebook {
+
 public:
 
 	void SetNullSelection() {
+
 		size_t n = GetSelection();
 		if (n == wxNOT_FOUND)
 			return;
+
 		wxWindow* wnd = m_tabs.GetWindowFromIdx(n);
 		wxAuiTabCtrl* ctrl;
 		int ctrl_idx;
@@ -21,15 +23,18 @@ public:
 			else
 				ctrl->SetNoneActive();
 		}
+
 		wnd->Show(!wnd->IsShown());
 	}
 
-	wxFloatingNotebook(wxAuiManager* frameManager, const wxString& paneName,
+	ibFloatingNotebook(wxAuiManager* frameManager, const wxString& strPaneName,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxAUI_NB_DEFAULT_STYLE) :
-		wxAuiNotebook(frameManager->GetManagedWindow(), id, pos, size, style), m_paneName(paneName), m_frameManager(frameManager) {
+		wxAuiNotebook(frameManager->GetManagedWindow(), id, pos, size, style), m_strPaneName(strPaneName), m_frameManager(frameManager)
+	{
+		GetMainTabCtrl()->Bind(wxEVT_LEFT_DOWN, &ibFloatingNotebook::OnLeftDown, this);
 	}
 
 	template <class retWindow>
@@ -63,6 +68,7 @@ public:
 		m_tabs.InsertPage(page, info, page_idx);
 
 		wxAuiTabCtrl* active_tabctrl = GetActiveTabCtrl();
+
 		if (page_idx >= active_tabctrl->GetPageCount())
 			active_tabctrl->AddPage(page, info);
 		else
@@ -79,9 +85,8 @@ public:
 		if (m_curPage >= (int)page_idx)
 			m_curPage++;
 
-		if (select) {
+		if (select)
 			SetSelectionToWindow(page);
-		}
 
 		return true;
 	}
@@ -92,7 +97,16 @@ protected:
 		wxWindow* wnd = m_tabs.GetWindowFromIdx(n);
 		if (wnd == nullptr)
 			return m_curPage;
-		bool isShown = true; size_t sel_pane = n; 
+
+		// Freeze the managed (top-level) frame for the whole collapse/expand
+		// dance. Each Show/Update intermediate step used to repaint the
+		// entire AUI layout and produced a visible full-window flash when
+		// the user toggled a tab off; with the frame frozen the transition
+		// happens off-screen and only the final state hits the display.
+		wxWindow* const hostFrame = m_frameManager->GetManagedWindow();
+		if (hostFrame) hostFrame->Freeze();
+
+		bool isShown = true; size_t sel_pane = n;
 		if ((int)n == m_curPage) {
 			wxAuiTabCtrl* ctrl;
 			int ctrl_idx;
@@ -109,12 +123,12 @@ protected:
 			if (FindTab(wnd, &ctrl, &ctrl_idx)) {
 				m_curPage = sel_pane;
 				ctrl->SetActivePage(n);
-				isShown = true;			
+				isShown = true;
 			}
 			wnd->Show(true);
 		}
 
-		wxAuiPaneInfo& paneInfo = m_frameManager->GetPane(m_paneName);
+		wxAuiPaneInfo& paneInfo = m_frameManager->GetPane(m_strPaneName);
 		if (paneInfo.IsOk()) {
 			paneInfo.Resizable(isShown);
 			paneInfo.Layer(1);
@@ -122,6 +136,11 @@ protected:
 				paneInfo.BestSize(GetBestSize());
 			}
 			else {
+				// AUI keeps the pane at its current height unless we cycle
+				// Show() around an Update(); the cycle resets the pane's
+				// geometry to wxDefaultSize so it collapses down to the
+				// tab strip only. Freeze above hides the flicker this used
+				// to produce on the managed frame.
 				paneInfo.BestSize(wxDefaultSize);
 				paneInfo.Show(false);
 				m_frameManager->Update();
@@ -130,8 +149,49 @@ protected:
 		}
 
 		m_frameManager->Update();
-		return wxAuiNotebook::DoModifySelection(sel_pane, events);
+
+		const int result = wxAuiNotebook::DoModifySelection(sel_pane, events);
+
+		if (hostFrame) {
+			hostFrame->Thaw();
+			// Force a clean repaint of the frame. Without this, the thin
+			// paint ops that AUI makes during the transition (sash lines,
+			// focus rectangles on the tab bar) can leave dotted residue
+			// along the pane borders once the frame unfreezes.
+			hostFrame->Refresh(false);
+			hostFrame->Update();
+		}
+		return result;
 	}
+
+	virtual wxSize DoGetBestSize() const {
+		size_t n = GetSelection();
+		if (n == wxNOT_FOUND)
+			return wxSize(0, 0);
+		return wxAuiNotebook::DoGetBestSize();
+	}
+
+private:
+
+	void OnLeftDown(wxMouseEvent& event)
+	{
+		wxAuiTabCtrl* active_tabctrl = GetMainTabCtrl();
+
+		auto const tabInfo =
+			active_tabctrl->TabHitTest(event.GetPosition());
+
+		int new_selection = tabInfo.pos;
+
+		if (new_selection != wxNOT_FOUND && new_selection == active_tabctrl->GetActivePage()) {
+			SetSelection(new_selection);
+			return;
+		}
+
+		event.Skip();
+	}
+
+	wxString m_strPaneName;
+	wxAuiManager* m_frameManager;
 };
 
 #endif

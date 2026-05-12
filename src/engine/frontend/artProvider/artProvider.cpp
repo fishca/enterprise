@@ -24,6 +24,7 @@
 #include "artProvider/codeEditor/syntaxControl.xpm"
 #include "artProvider/codeEditor/gotoLine.xpm"
 #include "artProvider/codeEditor/proceduresFunctions.xpm"
+#include "artProvider/codeEditor/formatCode.xpm"
 
 #include "artProvider/designer/designerPage.xpm"
 #include "artProvider/designer/codePage.xpm"
@@ -91,6 +92,7 @@ protected:
 			{ wxART_DOC_MODULE, wxART_SYNTAX_CONTROL, s_syntaxControl_xpm },
 			{ wxART_DOC_MODULE, wxART_GOTO_LINE, s_gotoLine_xpm },
 			{ wxART_DOC_MODULE, wxART_PROC_AND_FUNC, s_proceduresFunctions_xpm },
+			{ wxART_DOC_MODULE, wxART_FORMAT_CODE, s_formatCode_xpm },
 
 			// ******* wxART_DOC_FORM *******
 			{ wxART_DOC_FORM, wxART_DESIGNER_PAGE, s_designerPage_xpm },
@@ -130,23 +132,23 @@ protected:
 		if (client == wxART_FRONTEND) {
 
 			if (id == wxART_DATABASE)
-				return CBackendPicture::GetImageFromBase64(s_db_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_db_32_png, size);
 			else if (id == wxART_DATABASE_ROOLBACK)
-				return CBackendPicture::GetImageFromBase64(s_db_rollback_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_db_rollback_32_png, size);
 			else if (id == wxART_DATABASE_APPLY)
-				return CBackendPicture::GetImageFromBase64(s_db_apply_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_db_apply_32_png, size);
 			else if (id == wxART_ADD)
-				return CBackendPicture::GetImageFromBase64(s_add_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_add_32_png, size);
 			else if (id == wxART_EDIT)
-				return CBackendPicture::GetImageFromBase64(s_edit_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_edit_32_png, size);
 			else if (id == wxART_DELETE)
-				return CBackendPicture::GetImageFromBase64(s_delete_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_delete_32_png, size);
 			else if (id == wxART_UP)
-				return CBackendPicture::GetImageFromBase64(s_up_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_up_32_png, size);
 			else if (id == wxART_DOWN)
-				return CBackendPicture::GetImageFromBase64(s_down_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_down_32_png, size);
 			else if (id == wxART_SORT)
-				return CBackendPicture::GetImageFromBase64(s_sort_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_sort_32_png, size);
 
 			return wxNullBitmap;
 		}

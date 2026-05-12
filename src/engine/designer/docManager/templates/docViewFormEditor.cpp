@@ -1,7 +1,7 @@
 ﻿#include "docViewFormEditor.h"
 #include "frontend/mainFrame/mainFrame.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CFormEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(ibFormEditView, ibMetaView);
 
 enum {
 	wxID_ADD_COMMENTS = wxID_HIGHEST + 10000,
@@ -9,41 +9,47 @@ enum {
 	wxID_SYNTAX_CONTROL,
 	wxID_GOTOLINE,
 	wxID_PROCEDURES_FUNCTIONS,
+	wxID_FORMAT_CODE,
+	wxID_INCREASE_INDENT,
+	wxID_DECREASE_INDENT,
 
 	wxID_TEST_FORM = 15001
 };
 
 // ----------------------------------------------------------------------------
-// CTextEditView implementation
+// ibTextEditView implementation
 // ----------------------------------------------------------------------------
 
-wxBEGIN_EVENT_TABLE(CFormEditView, CMetaView)
+wxBEGIN_EVENT_TABLE(ibFormEditView, ibMetaView)
 
-EVT_MENU(wxID_COPY, CFormEditView::OnCopy)
-EVT_MENU(wxID_PASTE, CFormEditView::OnPaste)
-EVT_MENU(wxID_SELECTALL, CFormEditView::OnSelectAll)
-EVT_FIND(wxID_ANY, CFormEditView::OnFind)
-EVT_FIND_NEXT(wxID_ANY, CFormEditView::OnFind)
+EVT_MENU(wxID_COPY, ibFormEditView::OnCopy)
+EVT_MENU(wxID_PASTE, ibFormEditView::OnPaste)
+EVT_MENU(wxID_SELECTALL, ibFormEditView::OnSelectAll)
+EVT_FIND(wxID_ANY, ibFormEditView::OnFind)
+EVT_FIND_NEXT(wxID_ANY, ibFormEditView::OnFind)
 
-EVT_MENU(wxID_ADD_COMMENTS, CFormEditView::OnMenuEvent)
-EVT_MENU(wxID_REMOVE_COMMENTS, CFormEditView::OnMenuEvent)
-EVT_MENU(wxID_SYNTAX_CONTROL, CFormEditView::OnMenuEvent)
-EVT_MENU(wxID_GOTOLINE, CFormEditView::OnMenuEvent)
-EVT_MENU(wxID_PROCEDURES_FUNCTIONS, CFormEditView::OnMenuEvent)
-EVT_MENU(wxID_TEST_FORM, CFormEditView::OnMenuEvent)
+EVT_MENU(wxID_ADD_COMMENTS, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_REMOVE_COMMENTS, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_SYNTAX_CONTROL, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_GOTOLINE, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_PROCEDURES_FUNCTIONS, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_FORMAT_CODE, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_INCREASE_INDENT, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_DECREASE_INDENT, ibFormEditView::OnMenuEvent)
+EVT_MENU(wxID_TEST_FORM, ibFormEditView::OnMenuEvent)
 
 wxEND_EVENT_TABLE()
 
 static wxWindowID control_id = wxID_HIGHEST + 3000;
 
-bool CFormEditView::OnCreate(CMetaDocument* doc, long flags)
+bool ibFormEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	m_visualNotebook = new CVisualEditorNotebook(doc, m_viewFrame, wxID_ANY, flags);
+	m_visualNotebook = new ibVisualEditorNotebook(doc, m_viewFrame, wxID_ANY, flags);
 
 	wxWindowID id = control_id;
 
-	for (auto controlClass : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
-		const IControlTypeCtor* objectSingle = dynamic_cast<const IControlTypeCtor*>(controlClass);
+	for (auto controlClass : ibValue::GetListCtorsByType(ibCtorObjectType::ibCtorObjectType_object_control)) {
+		const ibCtorControlTypeBase* objectSingle = dynamic_cast<const ibCtorControlTypeBase*>(controlClass);
 		wxASSERT(objectSingle);
 		if (!objectSingle->IsControlSystem()) {
 			wxBitmap controlImage = objectSingle->GetClassIcon();
@@ -53,17 +59,17 @@ bool CFormEditView::OnCreate(CMetaDocument* doc, long flags)
 		}
 	}
 
-	Bind(wxEVT_MENU, &CFormEditView::OnMenuEvent, this, control_id, id);
+	Bind(wxEVT_MENU, &ibFormEditView::OnMenuEvent, this, control_id, id);
 
 	if (!m_visualNotebook->LoadForm())
 		return false;
 
 	m_visualNotebook->RefreshEditor();
-	return CMetaView::OnCreate(doc, flags);
+	return ibMetaView::OnCreate(doc, flags);
 }
 
 #if wxUSE_MENUS	
-wxMenuBar* CFormEditView::CreateMenuBar() const
+wxMenuBar* ibFormEditView::CreateMenuBar() const
 {
 	if (m_visualNotebook != nullptr && m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
 
@@ -93,23 +99,23 @@ wxMenuBar* CFormEditView::CreateMenuBar() const
 }
 #endif 
 
-void CFormEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+void ibFormEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
 	if (activate) m_visualNotebook->ActivateEditor();
 }
 
-void CFormEditView::OnUpdate(wxView* sender, wxObject* hint)
+void ibFormEditView::OnUpdate(wxView* sender, wxObject* hint)
 {
 	if (m_visualNotebook != nullptr)
 		m_visualNotebook->RefreshEditor();
 }
 
-void CFormEditView::OnDraw(wxDC* WXUNUSED(dc))
+void ibFormEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-bool CFormEditView::OnClose(bool deleteWindow)
+bool ibFormEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
 
@@ -118,7 +124,7 @@ bool CFormEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (CMetaView::OnClose(deleteWindow)) {
+	if (ibMetaView::OnClose(deleteWindow)) {
 
 		m_visualNotebook->Freeze();
 
@@ -133,30 +139,37 @@ bool CFormEditView::OnClose(bool deleteWindow)
 
 #include "frontend/artProvider/artProvider.h"
 
-#include "win/editor/codeEditor/codeEditorPrintOut.h"
+#include "frontend/win/editor/codeEditor/codeEditorPrintOut.h"
 #include "win/editor/visualEditor/printout/formPrintOut.h"
 
-wxPrintout* CFormEditView::OnCreatePrintout()
+wxPrintout* ibFormEditView::OnCreatePrintout()
 {
 	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR)
-		return new CCodeEditorPrintout(m_visualNotebook->GetCodeEditor(), m_viewDocument->GetTitle());
-	return new CFormPrintout(m_visualNotebook->GetVisualHost(), m_viewDocument->GetTitle());
+		return new ibCodeEditorPrintout(m_visualNotebook->GetCodeEditor(), m_viewDocument->GetTitle());
+	return new ibFormPrintout(m_visualNotebook->GetVisualHost(), m_viewDocument->GetTitle());
 }
 
-void CFormEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
+void ibFormEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 {
 	if (m_visualNotebook != nullptr && m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) {
 		if (!toolbar->GetToolCount()) {
-			toolbar->AddTool(wxID_ADD_COMMENTS, _("Add comments"), wxArtProvider::GetBitmap(wxART_ADD_COMMENT, wxART_DOC_MODULE), _("Add"), wxItemKind::wxITEM_NORMAL);
+			toolbar->AddTool(wxID_ADD_COMMENTS, _("Add comments"), wxArtProvider::GetBitmapBundle(wxART_ADD_COMMENT, wxART_DOC_MODULE), _("Add"), wxItemKind::wxITEM_NORMAL);
 			toolbar->EnableTool(wxID_ADD_COMMENTS, m_visualNotebook->IsEditable());
-			toolbar->AddTool(wxID_REMOVE_COMMENTS, _("Remove comments"), wxArtProvider::GetBitmap(wxART_REMOVE_COMMENT, wxART_DOC_MODULE), _("Remove"), wxItemKind::wxITEM_NORMAL);
+			toolbar->AddTool(wxID_REMOVE_COMMENTS, _("Remove comments"), wxArtProvider::GetBitmapBundle(wxART_REMOVE_COMMENT, wxART_DOC_MODULE), _("Remove"), wxItemKind::wxITEM_NORMAL);
 			toolbar->EnableTool(wxID_REMOVE_COMMENTS, m_visualNotebook->IsEditable());
 			toolbar->AddSeparator();
-			toolbar->AddTool(wxID_SYNTAX_CONTROL, _("Syntax control"), wxArtProvider::GetBitmap(wxART_SYNTAX_CONTROL, wxART_DOC_MODULE), _("Syntax"), wxItemKind::wxITEM_NORMAL);
+			toolbar->AddTool(wxID_SYNTAX_CONTROL, _("Syntax control"), wxArtProvider::GetBitmapBundle(wxART_SYNTAX_CONTROL, wxART_DOC_MODULE), _("Syntax"), wxItemKind::wxITEM_NORMAL);
 			toolbar->EnableTool(wxID_SYNTAX_CONTROL, m_visualNotebook->IsEditable());
 			toolbar->AddSeparator();
-			toolbar->AddTool(wxID_GOTOLINE, _("Goto line"), wxArtProvider::GetBitmap(wxART_GOTO_LINE, wxART_DOC_MODULE), _("Goto"), wxItemKind::wxITEM_NORMAL);
-			toolbar->AddTool(wxID_PROCEDURES_FUNCTIONS, _("Procedures and functions"), wxArtProvider::GetBitmap(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"), wxItemKind::wxITEM_NORMAL);
+			toolbar->AddTool(wxID_GOTOLINE, _("Goto line"), wxArtProvider::GetBitmapBundle(wxART_GOTO_LINE, wxART_DOC_MODULE), _("Goto"), wxItemKind::wxITEM_NORMAL);
+			toolbar->AddTool(wxID_PROCEDURES_FUNCTIONS, _("Procedures and functions"), wxArtProvider::GetBitmapBundle(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"), wxItemKind::wxITEM_NORMAL);
+			toolbar->AddSeparator();
+			toolbar->AddTool(wxID_FORMAT_CODE, _("Format selection"), wxArtProvider::GetBitmapBundle(wxART_FORMAT_CODE, wxART_DOC_MODULE), _("Format"), wxItemKind::wxITEM_NORMAL);
+			toolbar->EnableTool(wxID_FORMAT_CODE, m_visualNotebook->IsEditable());
+			toolbar->AddTool(wxID_INCREASE_INDENT, _("Increase indent"), wxArtProvider::GetBitmapBundle(wxART_GO_FORWARD, wxART_TOOLBAR), _("Indent"), wxItemKind::wxITEM_NORMAL);
+			toolbar->EnableTool(wxID_INCREASE_INDENT, m_visualNotebook->IsEditable());
+			toolbar->AddTool(wxID_DECREASE_INDENT, _("Decrease indent"), wxArtProvider::GetBitmapBundle(wxART_GO_BACK, wxART_TOOLBAR), _("Unindent"), wxItemKind::wxITEM_NORMAL);
+			toolbar->EnableTool(wxID_DECREASE_INDENT, m_visualNotebook->IsEditable());
 		}
 	}
 	else if (m_visualNotebook != nullptr) {
@@ -167,12 +180,12 @@ void CFormEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 	}
 }
 
-void CFormEditView::OnMenuEvent(wxCommandEvent& event)
+void ibFormEditView::OnMenuEvent(wxCommandEvent& event)
 {
 	wxWindowID id = event.GetId();
 
 	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) {
-		CCodeEditor* codeEditor = m_visualNotebook->GetCodeEditor();
+		ibCodeEditor* codeEditor = m_visualNotebook->GetCodeEditor();
 		if (id == wxID_ADD_COMMENTS) {
 			int nStartLine, nEndLine;
 			codeEditor->GetSelection(&nStartLine, &nEndLine);
@@ -203,6 +216,15 @@ void CFormEditView::OnMenuEvent(wxCommandEvent& event)
 		else if (id == wxID_PROCEDURES_FUNCTIONS) {
 			m_visualNotebook->ShowMethods();
 		}
+		else if (id == wxID_FORMAT_CODE) {
+			codeEditor->FormatSelection();
+		}
+		else if (id == wxID_INCREASE_INDENT) {
+			codeEditor->IncreaseIndent();
+		}
+		else if (id == wxID_DECREASE_INDENT) {
+			codeEditor->DecreaseIndent();
+		}
 	}
 	else if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
 
@@ -211,89 +233,89 @@ void CFormEditView::OnMenuEvent(wxCommandEvent& event)
 		}
 		else {
 			auto it = std::find_if(
-				m_controlDataArray.begin(), m_controlDataArray.end(), [id](CControlData& ctrl) { return id == ctrl.m_id; });
+				m_controlDataArray.begin(), m_controlDataArray.end(), [id](ibControlData& ctrl) { return id == ctrl.m_id; });
 			if (it != m_controlDataArray.end()) m_visualNotebook->CreateControl(it->m_name);
 		}
 	}
 }
 
 // ----------------------------------------------------------------------------
-// CModuleDocument: wxDocument and wxTextCtrl married
+// ibModulibDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_CLASS(CFormDocument, CMetaDocument);
+wxIMPLEMENT_CLASS(ibFormDocument, ibMetaDocument);
 
-bool CFormDocument::OnCreate(const wxString& path, long flags)
+bool ibFormDocument::OnCreate(const wxString& path, long flags)
 {
-	if (!CMetaDocument::OnCreate(path, flags))
+	if (!ibMetaDocument::OnCreate(path, flags))
 		return false;
 
 	return true;
 }
 
-bool CFormDocument::OnOpenDocument(const wxString& filename)
+bool ibFormDocument::OnOpenDocument(const wxString& filename)
 {
-	return CMetaDocument::OnOpenDocument(filename);
+	return ibMetaDocument::OnOpenDocument(filename);
 }
 
-bool CFormDocument::OnSaveDocument(const wxString& filename)
+bool ibFormDocument::OnSaveDocument(const wxString& filename)
 {
 	return GetVisualNotebook()->SaveForm();
 }
 
-bool CFormDocument::OnSaveModified()
+bool ibFormDocument::OnSaveModified()
 {
-	return CMetaDocument::OnSaveModified();
+	return ibMetaDocument::OnSaveModified();
 }
 
-bool CFormDocument::OnCloseDocument()
+bool ibFormDocument::OnCloseDocument()
 {
-	CVisualEditorNotebook* visualNotebook = GetVisualNotebook();
+	ibVisualEditorNotebook* visualNotebook = GetVisualNotebook();
 	if (visualNotebook != nullptr && visualNotebook->IsEditable()) {
 		if (!visualNotebook->SyntaxControl(false))
 			return false;
 	}
 
-	return CMetaDocument::OnCloseDocument();
+	return ibMetaDocument::OnCloseDocument();
 }
 
-wxCommandProcessor* CFormDocument::OnCreateCommandProcessor()
+wxCommandProcessor* ibFormDocument::OnCreateCommandProcessor()
 {
-	CVisualDesignerCommandProcessor* commandProcessor = new CVisualDesignerCommandProcessor(GetVisualNotebook());
+	ibVisualDesignerCommandProcessor* commandProcessor = new ibVisualDesignerCommandProcessor(GetVisualNotebook());
 	commandProcessor->SetEditMenu(mainFrame->GetDefaultMenu(wxID_EDIT));
 	commandProcessor->Initialize();
 	return commandProcessor;
 }
 
-bool CFormDocument::IsModified() const
+bool ibFormDocument::IsModified() const
 {
 	//wxStyledTextCtrl* wnd = GetCodeEditor();
-	return CMetaDocument::IsModified();// || (wnd && wnd->IsModified());
+	return ibMetaDocument::IsModified();// || (wnd && wnd->IsModified());
 }
 
-void CFormDocument::Modify(bool modified)
+void ibFormDocument::Modify(bool modified)
 {
-	CMetaDocument::Modify(modified);
+	ibMetaDocument::Modify(modified);
 }
 
-bool CFormDocument::Save()
+bool ibFormDocument::Save()
 {
-	CVisualEditorNotebook* visualNotebook = GetVisualNotebook();
+	ibVisualEditorNotebook* visualNotebook = GetVisualNotebook();
 	if (visualNotebook != nullptr && visualNotebook->IsEditable()) {
 		if (!visualNotebook->SyntaxControl(false))
 			return false;
 	}
-	return CMetaDocument::Save();
+	return ibMetaDocument::Save();
 }
 
 // ----------------------------------------------------------------------------
-// CTextFileDocument implementation
+// ibTextFilibDocument implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CFormEditDocument, CFormDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibFormEditDocument, ibFormDocument);
 
-CVisualEditorNotebook* CFormEditDocument::GetVisualNotebook() const
+ibVisualEditorNotebook* ibFormEditDocument::GetVisualNotebook() const
 {
 	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, CFormEditView)->GetVisualNotebook() : nullptr;
+	return view ? wxDynamicCast(view, ibFormEditView)->GetVisualNotebook() : nullptr;
 }

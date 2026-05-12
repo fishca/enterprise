@@ -1,12 +1,12 @@
 #include "variantRecord.h"
 
-wxString wxVariantDataRecord::MakeString() const
+wxString ibVariantDataRecord::MakeString() const
 {
-	const IMetaData* metaData = m_ownerProperty->GetMetaData();
+	const ibMetaData* metaData = m_ownerProperty->GetMetaData();
 	if (metaData == nullptr) return wxEmptyString;
 	wxString strDescr;
 	for (unsigned int idx = 0; idx < m_metaDesc.GetTypeCount(); idx++) {
-		const IValueMetaObject* record = metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx));
+		const ibValueMetaObject* record = metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx));
 		if (record == nullptr || !record->IsAllowed())
 			continue;
 		if (strDescr.IsEmpty()) {
@@ -23,10 +23,10 @@ wxString wxVariantDataRecord::MakeString() const
 
 #include "backend/system/value/valueArray.h"
 
-CValue wxVariantDataRecord::GetDataValue() const
+ibValue ibVariantDataRecord::GetDataValue() const
 {
-	CValueArray* valueArr = CValue::CreateAndPrepareValueRef<CValueArray>();
-	const IMetaData* metaData = m_ownerProperty->GetMetaData();
+	ibValueArray* valueArr = ibValue::CreateAndPrepareValueRef<ibValueArray>();
+	const ibMetaData* metaData = m_ownerProperty->GetMetaData();
 	if (metaData != nullptr) {
 		for (unsigned int idx = 0; idx < m_metaDesc.GetTypeCount(); idx++) { 
 			valueArr->Add(metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx))); 

@@ -19,12 +19,12 @@
 #include "backend/databaseLayer/preparedStatement.h"
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-class CMysqlInterface;
+class ibInterfaceMySQL;
 #endif
 
 WX_DECLARE_VOIDPTR_HASH_MAP(void*, PointerLookupMap);
 
-class BACKEND_API CMysqlDatabaseLayer : public IDatabaseLayer
+class BACKEND_API ibDatabaseLayerMySQL : public ibDatabaseLayer
 {
 public:
 	// Information that can be specified for a MySQL database
@@ -34,16 +34,16 @@ public:
 	//  user
 	//  password
 	// ctor
-	CMysqlDatabaseLayer();
-	CMysqlDatabaseLayer(const wxString& strDatabase);
-	CMysqlDatabaseLayer(const wxString& strServer, const wxString& strDatabase);
-	CMysqlDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CMysqlDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CMysqlDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
-	CMysqlDatabaseLayer(const CMysqlDatabaseLayer& src);
+	ibDatabaseLayerMySQL();
+	ibDatabaseLayerMySQL(const wxString& strDatabase);
+	ibDatabaseLayerMySQL(const wxString& strServer, const wxString& strDatabase);
+	ibDatabaseLayerMySQL(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerMySQL(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerMySQL(void* pDatabase) { m_pDatabase = pDatabase; }
+	ibDatabaseLayerMySQL(const ibDatabaseLayerMySQL& src);
 
 	// dtor
-	virtual ~CMysqlDatabaseLayer();
+	virtual ~ibDatabaseLayerMySQL();
 
 	// open database
 	virtual bool Open(const wxString& strDatabase);
@@ -58,14 +58,17 @@ public:
 	virtual bool IsOpen();
 
 	/// clone database  
-	virtual IDatabaseLayer* Clone() { return new CMysqlDatabaseLayer(*this); }
+	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerMySQL(*this); }
 
-	// transaction support
-	virtual void BeginTransaction();
-	virtual void Commit();
-	virtual void RollBack();
+	// IsActiveTransaction uses the base-class default (m_txDepth > 0).
+	// Driver transaction primitives (DoBeginTransaction / DoCommit /
+	// DoRollBack) are protected — see below.
 
-	virtual bool IsActiveTransaction();
+	// Row-lock probe — SESSION innodb_lock_wait_timeout=1 inside
+	// BeginTransaction(noWait) + SELECT ... FOR UPDATE. Surfaces a held
+	// row as an exception within ~1s instead of blocking the sweep.
+	virtual bool TryProbeRowLock(const wxString& tableName,
+		const wxString& pkColumn, const wxString& pkValue) override;
 
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool TableExists(const wxString& table);
@@ -85,17 +88,23 @@ protected:
 
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
-	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
+	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
 
-	// IPreparedStatement support
-	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+	// ibPreparedStatement support
+	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+
+	// transaction support — driver-level operations; the nesting
+	// counter lives on ibDatabaseLayer, see databaseLayer.h.
+	virtual void DoBeginTransaction(const ibTxOptions& opts) override;
+	virtual void DoCommit() override;
+	virtual void DoRollBack() override;
 
 private:
 	void InitDatabase();
 	void ParseServerAndPort(const wxString& strServer);
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	CMysqlInterface* m_pInterface;
+	ibInterfaceMySQL* m_pInterface;
 #endif
 	wxString m_strServer;
 	wxString m_strDatabase;

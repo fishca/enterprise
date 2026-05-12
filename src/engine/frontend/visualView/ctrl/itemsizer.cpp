@@ -1,176 +1,144 @@
 #include "sizer.h"
-#include "frontend/visualView/pageWindow.h"
 #include "form.h"
+#ifndef OES_USE_WEB
+#include "frontend/visualView/pageWindow.h"
+#endif
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueSizerItem, IValueSizer)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueSizerItem, ibValueSizer)
 
-//************************************************************************************
-//*                            Support item                                          *
-//************************************************************************************
+#ifdef OES_USE_WEB
+#include "frontend/web/webSizer.h"
+#include "frontend/web/webWindow.h"
+#endif
 
-inline wxObject* GetParentFormVisualEditor(IVisualHost* visualEdit, IValueFrame* object)
+namespace {
+
+// Resolve the sizer that actually owns this SizerItem's child. On
+// desktop the NotebookPage wrapper hides its inner wxSizer, so we
+// unwrap it here. On web the mapping is direct: parent's wxObject
+// (ibWebSizer subclass) IS the container.
+ibFrontendSizer* ResolveParentSizer(ibVisualHost* visualHost, ibValueFrame* object)
 {
-	IValueFrame* parent = object->GetParent();
-	wxASSERT(parent);
-
-	wxObject* wxparent_object = visualEdit->GetWxObject(parent);
+	ibValueFrame* parent = object->GetParent();
+	if (parent == nullptr) return nullptr;
+	wxObject* parentWx = visualHost->GetWxObject(parent);
+#ifndef OES_USE_WEB
 	if (parent->GetClassName() == wxT("NotebookPage")) {
-		CPanelPage* objPage =
-			dynamic_cast<CPanelPage*>(wxparent_object);
-		return objPage != nullptr ? objPage->GetSizer() : nullptr;
+		ibPanelPage* page = dynamic_cast<ibPanelPage*>(parentWx);
+		return page != nullptr ? page->GetSizer() : nullptr;
 	}
-
-	return wxparent_object;
+	return wxDynamicCast(parentWx, wxSizer);
+#else
+	// dynamic_cast through the typedef upsets MSVC in some contexts;
+	// spell out the concrete target here.
+	return dynamic_cast<ibWebSizer*>(parentWx);
+#endif
 }
 
-inline wxObject* GetChildFormVisualEditor(IVisualHost* visualEdit, wxObject* wxobject, unsigned int childIndex)
+wxObject* GetSizerItemChildWx(ibVisualHost* visualHost, ibValueFrame* object)
 {
-	IValueFrame* obj = visualEdit->GetObjectBase(wxobject);
-	if (childIndex >= obj->GetChildCount())
-		return nullptr;
-	return visualEdit->GetWxObject(obj->GetChild(childIndex));
+	if (object == nullptr || object->GetChildCount() == 0) return nullptr;
+	return visualHost->GetWxObject(object->GetChild(0));
 }
 
-//************************************************************************************
-//*                            ValueSizerItem                                        *
-//************************************************************************************
+} // namespace
 
-CValueSizerItem::CValueSizerItem() : IValueFrame()
+ibValueSizerItem::ibValueSizerItem() : ibValueFrame()
 {
 }
 
-void CValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first�reated)
+void ibValueSizerItem::OnCreated(wxObject* wxobject, ibFrontendWindow* /*wxparent*/, ibVisualHost* visualHost, bool /*firstCreated*/)
 {
-	IValueFrame* object = visualHost->GetObjectBase(wxobject);
+	// Single body for both builds. Desktop's Detach + Add hack (wxSizer
+	// has no in-place SetItemProportion) lives inside
+	// ibValueSizer::SetChildSizerParams; web just forwards to
+	// ibWebSizer::UpdateItemParams.
+	if (wxobject == nullptr || visualHost == nullptr) return;
+	ibValueFrame* object = visualHost->GetObjectBase(wxobject);
+	if (object == nullptr) return;
 
-	// Get parent sizer
-	wxSizer* sizer = wxDynamicCast(GetParentFormVisualEditor(visualHost, object), wxSizer);
-
-	// Get child window
-	wxObject* child = GetChildFormVisualEditor(visualHost, wxobject, 0);
-	if (nullptr == child) {
-		wxLogError(wxT("The SizerItem component has no child - this should not be possible!"));
+	ibFrontendSizer* sizer = ResolveParentSizer(visualHost, object);
+	wxObject*        child = GetSizerItemChildWx(visualHost, object);
+	if (sizer == nullptr || child == nullptr) {
+		if (child == nullptr)
+			wxLogError(wxT("The SizerItem component has no child - this should not be possible!"));
 		return;
 	}
 
-	// Get IObject for property access
-	CValueSizerItem* obj = wxDynamicCast(object, CValueSizerItem);
+	ibValueSizerItem* obj = wxDynamicCast(object, ibValueSizerItem);
+	if (obj == nullptr) return;
 
-	// Add the child ( window or sizer ) to the sizer
-	wxWindow* windowChild = wxDynamicCast(child, wxWindow);
-	wxSizer* sizerChild = wxDynamicCast(child, wxSizer);
-
-	if (windowChild != nullptr) {
-		sizer->Detach(windowChild);
-		sizer->Add(windowChild,
-			obj->GetProportion(),
-			obj->GetFlagBorder() | obj->GetFlagState(),
-			obj->GetBorder());
-
-		windowChild->Layout();
-	}
-	else if (sizerChild != nullptr) {
-		sizer->Detach(sizerChild);
-		sizer->Add(sizerChild,
-			obj->GetProportion(),
-			obj->GetFlagBorder() | obj->GetFlagState(),
-			obj->GetBorder());
-
-		sizerChild->Layout();
-	}
+	ibSizerOps::SetChildParams(sizer, child,
+		obj->GetProportion(),
+		obj->GetFlagBorder() | obj->GetFlagState(),
+		obj->GetBorder());
 }
 
-void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
+void ibValueSizerItem::OnUpdated(wxObject* wxobject, ibFrontendWindow* /*wxparent*/, ibVisualHost* visualHost)
 {
-	IValueFrame* object = visualHost->GetObjectBase(wxobject);
+	// Single body. Desktop additionally preserves child order via
+	// Insert(idx, …) — idx comes from the ibValueFrame tree position.
+	// Web ignores idx (ibWebSizer's m_items stays in walker order).
+	if (wxobject == nullptr || visualHost == nullptr) return;
+	ibValueFrame* object = visualHost->GetObjectBase(wxobject);
+	if (object == nullptr) return;
 
-	// Get parent sizer
-	wxSizer* sizer = wxDynamicCast(GetParentFormVisualEditor(visualHost, object), wxSizer);
-
-	// Get child window
-	wxObject* child = GetChildFormVisualEditor(visualHost, wxobject, 0);
-	if (nullptr == child) {
-		wxLogError(wxT("The SizerItem component has no child - this should not be possible!"));
+	ibFrontendSizer* sizer = ResolveParentSizer(visualHost, object);
+	wxObject*        child = GetSizerItemChildWx(visualHost, object);
+	if (sizer == nullptr || child == nullptr) {
+		if (child == nullptr)
+			wxLogError(wxT("The SizerItem component has no child - this should not be possible!"));
 		return;
 	}
 
-	// Get IObject for property access
-	CValueSizerItem* obj = wxDynamicCast(object, CValueSizerItem);
+	ibValueSizerItem* obj = wxDynamicCast(object, ibValueSizerItem);
+	if (obj == nullptr) return;
 
-	// Add the child ( window or sizer ) to the sizer
-	wxWindow* windowChild = wxDynamicCast(child, wxWindow);
-	wxSizer* sizerChild = wxDynamicCast(child, wxSizer);
-
-	IValueFrame* parentControl = GetParent(); int idx = wxNOT_FOUND;
-
-	for (unsigned int i = 0; i < parentControl->GetChildCount(); i++) {
-		IValueFrame* child = parentControl->GetChild(i);
-		if (m_controlId == child->GetControlID()) {
-			idx = i;
-			break;
+	// Find the item's position in the parent's child list. wxNOT_FOUND
+	// → append. SetChildSizerParams handles both (idx >= 0 → Insert
+	// on desktop, ignored on web).
+	int idx = -1;
+	if (ibValueFrame* parentControl = GetParent()) {
+		for (unsigned int i = 0; i < parentControl->GetChildCount(); i++) {
+			if (m_controlId == parentControl->GetChild(i)->GetControlID()) {
+				idx = static_cast<int>(i);
+				break;
+			}
 		}
 	}
 
-	if (windowChild != nullptr) {
+	ibSizerOps::SetChildParams(sizer, child,
+		obj->GetProportion(),
+		obj->GetFlagBorder() | obj->GetFlagState(),
+		obj->GetBorder(),
+		idx);
 
-		if (idx == wxNOT_FOUND) {
-			sizer->Detach(windowChild);
-			sizer->Add(windowChild,
-				obj->GetProportion(),
-				obj->GetFlagBorder() | obj->GetFlagState(),
-				obj->GetBorder());
-		}
-		else {
-			sizer->Detach(windowChild);
-			sizer->Insert(idx, windowChild,
-				obj->GetProportion(),
-				obj->GetFlagBorder() | obj->GetFlagState(),
-				obj->GetBorder());
-		}
-
+#ifndef OES_USE_WEB
+	// NotebookPage layout fixup — after sizer mutation the notebook-
+	// page child window needs a manual Layout to settle; no web analog.
+	ibValueFrame* parent = object->GetParent();
+	if (parent != nullptr && parent->GetClassName() == wxT("NotebookPage")) {
+		if (auto* page = dynamic_cast<ibPanelPage*>(visualHost->GetWxObject(parent)))
+			page->Layout();
 	}
-	else if (sizerChild != nullptr) {
-
-		if (idx == wxNOT_FOUND) {
-			sizer->Detach(sizerChild);
-			sizer->Add(sizerChild,
-				obj->GetProportion(),
-				obj->GetFlagBorder() | obj->GetFlagState(),
-				obj->GetBorder());
-		}
-		else {
-			sizer->Detach(sizerChild);
-			sizer->Insert(idx, sizerChild,
-				obj->GetProportion(),
-				obj->GetFlagBorder() | obj->GetFlagState(),
-				obj->GetBorder());
-		}
-	}
-
-	const IValueFrame* parent = object->GetParent();
-	if (parent->GetClassName() == wxT("NotebookPage")) {
-		wxObject* wxparent_object = visualHost->GetWxObject(parent);
-		CPanelPage* objPage =
-			dynamic_cast<CPanelPage*>(wxparent_object);
-		objPage->Layout();
-	}
+#endif
 }
 
 #include "backend/metaData.h"
 
-IMetaData* CValueSizerItem::GetMetaData() const
+ibMetaData* ibValueSizerItem::GetMetaData() const
 {
-	const IValueMetaObjectForm* metaFormObject = m_formOwner ?
+	const ibValueMetaObjectFormBase* metaFormObject = m_formOwner ?
 		m_formOwner->GetFormMetaObject() :
 		nullptr;
 
 	//for form buider
 	if (metaFormObject == nullptr) {
-		ISourceDataObject* srcValue = m_formOwner ?
+		ibSourceDataObject* srcValue = m_formOwner ?
 			m_formOwner->GetSourceObject() :
 			nullptr;
 		if (srcValue != nullptr) {
-			IValueMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
+			const ibValueMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
 			wxASSERT(metaValue);
 			return metaValue->GetMetaData();
 		}
@@ -183,35 +151,25 @@ IMetaData* CValueSizerItem::GetMetaData() const
 
 #include "backend/metaCollection/metaFormObject.h"
 
-form_identifier_t CValueSizerItem::GetTypeForm() const
+ibFormID ibValueSizerItem::GetTypeForm() const
 {
 	if (!m_formOwner) {
 		wxASSERT(m_formOwner);
 		return 0;
 	}
 
-	const IValueMetaObjectForm* metaFormObj =
+	const ibValueMetaObjectFormBase* metaFormObj =
 		m_formOwner->GetFormMetaObject();
 	wxASSERT(metaFormObj);
 
 	return metaFormObj->GetTypeForm();
 }
 
-CProcUnit* CValueSizerItem::GetFormProcUnit() const
-{
-	if (!m_formOwner) {
-		wxASSERT(m_formOwner);
-		return nullptr;
-	}
-
-	return m_formOwner->GetProcUnit();
-}
-
 //**********************************************************************************
 //*                                    Data										   *
 //**********************************************************************************
 
-bool CValueSizerItem::LoadData(CMemoryReader& reader)
+bool ibValueSizerItem::LoadData(ibReaderMemory& reader)
 {
 	//m_propertyProportion->SetValue(reader.r_s32());
 	//m_propertyFlagBorder->SetValue(reader.r_s64());
@@ -229,10 +187,10 @@ bool CValueSizerItem::LoadData(CMemoryReader& reader)
 	m_propertyFlagState->LoadData(reader);
 	m_propertyBorder->LoadData(reader);
 
-	return IValueFrame::LoadData(reader);
+	return ibValueFrame::LoadData(reader);
 }
 
-bool CValueSizerItem::SaveData(CMemoryWriter& writer)
+bool ibValueSizerItem::SaveData(ibWriterMemory& writer)
 {
 	//writer.w_s32(m_propertyProportion->GetValueAsInteger());
 	//writer.w_s64(m_propertyFlagBorder->GetValueAsInteger());
@@ -250,11 +208,11 @@ bool CValueSizerItem::SaveData(CMemoryWriter& writer)
 	m_propertyFlagState->SaveData(writer);
 	m_propertyBorder->SaveData(writer);
 
-	return IValueFrame::SaveData(writer);
+	return ibValueFrame::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueSizerItem, "SizerItem", "Sizer", string_to_clsid("CT_SIZR"));
+S_CONTROL_TYPE_REGISTER(ibValueSizerItem, "SizerItem", "Sizer", string_to_clsid("CT_SIZR"));

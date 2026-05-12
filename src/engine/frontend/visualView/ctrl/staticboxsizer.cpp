@@ -1,69 +1,93 @@
 
 #include "sizer.h"
+#ifdef OES_USE_WEB
+#include "frontend/web/webSizer.h"
+#endif
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueStaticBoxSizer, IValueSizer)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueStaticBoxSizer, ibValueSizer)
 
 //****************************************************************************
 //*                             StaticBoxSizer                               *
 //****************************************************************************
 
-CValueStaticBoxSizer::CValueStaticBoxSizer() : IValueSizer()
+ibValueStaticBoxSizer::ibValueStaticBoxSizer() : ibValueSizer()
 {
 }
 
-wxObject* CValueStaticBoxSizer::Create(wxWindow* wxparent, IVisualHost* visualHost)
+wxObject* ibValueStaticBoxSizer::Create(ibFrontendWindow* wxparent, ibVisualHost* visualHost)
 {
+#ifdef OES_USE_WEB
+	(void)wxparent;
+	(void)visualHost;
+	return new ibWebStaticBoxSizer(
+		m_propertyOrient->GetValueAsInteger(),
+		m_propertyTitle->GetValueAsTranslateString());
+#else
 	wxStaticBox* staticBox = new wxStaticBox(wxparent, wxID_ANY, m_propertyTitle->GetValueAsTranslateString());
 	return new wxStaticBoxSizer(staticBox, m_propertyOrient->GetValueAsInteger());
+#endif
 }
 
-void CValueStaticBoxSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first�reated)
+void ibValueStaticBoxSizer::OnCreated(wxObject* wxobject, ibFrontendWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
 {
+#ifndef OES_USE_WEB
 	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
 	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
 	wxASSERT(staticBox);
-	
+
 	if (visualHost->IsDesignerHost()) {
 		staticBox->PushEventHandler(g_visualHostContext->GetHighlightPaintHandler(staticBox));
 	}
+#endif
 }
 
-void CValueStaticBoxSizer::Update(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueStaticBoxSizer::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
-	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
-	wxASSERT(staticBox);
-	if (staticboxsizer != nullptr) {
-		staticBox->SetLabel(m_propertyTitle->GetValueAsTranslateString());
-		staticBox->SetMinSize(m_propertyMinSize->GetValueAsSize());
+	if (wxobject == nullptr) return;
 
-		staticBox->SetFont(m_propertyFont->GetValueAsFont());
-		staticBox->SetForegroundColour(m_propertyFG->GetValueAsColour());
-		staticBox->SetBackgroundColour(m_propertyBG->GetValueAsColour());
-		staticBox->Enable(m_propertyEnabled->GetValueAsBoolean());
-		staticBox->Show(m_propertyVisible->GetValueAsBoolean());
-		staticBox->SetToolTip(m_propertyTooltip->GetValueAsString());
+	// Only the cast + `target` resolution differs per build; the
+	// property-push body below is identical thanks to ibWebStaticBoxSizer
+	// mirroring wxStaticBox's setter names (SetLabel / SetFont /
+	// Enable / Show / SetToolTip / …). Desktop's "target" is the child
+	// wxStaticBox that draws the caption; web's "target" is the sizer
+	// itself (composite sizer+window), same object as staticboxsizer.
+#ifdef OES_USE_WEB
+	ibWebStaticBoxSizer* staticboxsizer = static_cast<ibWebStaticBoxSizer*>(wxobject);
+	ibWebStaticBoxSizer* target         = staticboxsizer;
+#else
+	wxStaticBoxSizer* staticboxsizer = static_cast<wxStaticBoxSizer*>(wxobject);
+	wxStaticBox*      target         = staticboxsizer->GetStaticBox();
+	wxASSERT(target);
+#endif
 
-		staticboxsizer->SetOrientation(m_propertyOrient->GetValueAsInteger());
-		staticboxsizer->SetMinSize(m_propertyMinSize->GetValueAsSize());
+	staticboxsizer->SetOrientation(m_propertyOrient->GetValueAsInteger());
+	staticboxsizer->SetMinSize(m_propertyMinSize->GetValueAsSize());
 
-		//after lay out 
-		if (m_propertyMinSize->GetValueAsSize() != wxDefaultSize) {
-			staticBox->Layout();
-		}
-	}
+	target->SetLabel(m_propertyTitle->GetValueAsTranslateString());
+	target->SetMinSize(m_propertyMinSize->GetValueAsSize());
+	target->SetFont(m_propertyFont->GetValueAsFont());
+	target->SetForegroundColour(m_propertyFG->GetValueAsColour());
+	target->SetBackgroundColour(m_propertyBG->GetValueAsColour());
+	target->Enable(m_propertyEnabled->GetValueAsBoolean());
+	target->Show(m_propertyVisible->GetValueAsBoolean());
+	target->SetToolTip(m_propertyTooltip->GetValueAsString());
+
+	if (m_propertyMinSize->GetValueAsSize() != wxDefaultSize)
+		target->Layout();
 
 	UpdateSizer(staticboxsizer);
 }
 
-void CValueStaticBoxSizer::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueStaticBoxSizer::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 {
+#ifndef OES_USE_WEB
 	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
 	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
 	wxASSERT(staticBox);
 	if (visualHost->IsDesignerHost()) {
 		staticBox->PopEventHandler(true);
 	}
+#endif
 }
 
 //**********************************************************************************
@@ -72,7 +96,7 @@ void CValueStaticBoxSizer::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 
 
 
-bool CValueStaticBoxSizer::LoadData(CMemoryReader& reader)
+bool ibValueStaticBoxSizer::LoadData(ibReaderMemory& reader)
 {
 	m_propertyOrient->SetValue(reader.r_u16());	
 	wxString propValue = wxEmptyString;
@@ -94,10 +118,10 @@ bool CValueStaticBoxSizer::LoadData(CMemoryReader& reader)
 	m_propertyEnabled->SetValue(reader.r_u8());
 	m_propertyVisible->SetValue(reader.r_u8());
 
-	return IValueSizer::LoadData(reader);
+	return ibValueSizer::LoadData(reader);
 }
 
-bool CValueStaticBoxSizer::SaveData(CMemoryWriter& writer)
+bool ibValueStaticBoxSizer::SaveData(ibWriterMemory& writer)
 {
 	writer.w_u16(m_propertyOrient->GetValueAsInteger());
 	writer.w_stringZ(m_propertyTitle->GetValueAsString());
@@ -110,11 +134,11 @@ bool CValueStaticBoxSizer::SaveData(CMemoryWriter& writer)
 	writer.w_u8(m_propertyEnabled->GetValueAsBoolean());
 	writer.w_u8(m_propertyVisible->GetValueAsBoolean());
 
-	return IValueSizer::SaveData(writer);
+	return ibValueSizer::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueStaticBoxSizer, "Staticboxsizer", "Sizer", string_to_clsid("CT_SSZER"));
+CONTROL_TYPE_REGISTER(ibValueStaticBoxSizer, "Staticboxsizer", "Sizer", string_to_clsid("CT_SSZER"));

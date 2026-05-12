@@ -77,12 +77,12 @@ static char* s_form_xpm[] = {
 	"                "
 };
 
-wxIcon CValueForm::GetIcon() const
+wxIcon ibValueForm::GetIcon() const
 {
 	return wxIcon(s_form_xpm);
 }
 
-wxIcon CValueForm::GetIconGroup()
+wxIcon ibValueForm::GetIconGroup()
 {
 	return wxIcon(s_form_xpm);
 }

@@ -1,30 +1,32 @@
 #ifndef __PROC_CONTEXT__H__
 #define __PROC_CONTEXT__H__
 
+#include <memory>
+
 #include "byteCode.h"
 #include "compileContext.h"
 
 //*******************************************************************************
 
-class BACKEND_API CProcUnit;
-class BACKEND_API CProcUnitEvaluate;
+class BACKEND_API ibProcUnit;
+class BACKEND_API ibProcUnitEvaluate;
 
 //*******************************************************************************
 
-struct CRunContextSmall {
+struct ibRunContextSmall {
 
-	CRunContextSmall(int varCount = wxNOT_FOUND) :
-		m_lVarCount(0), m_lParamCount(0) {
+	ibRunContextSmall(int varCount = wxNOT_FOUND) :
+		m_lParamCount(0), m_lVarCount(0) {
 		if (varCount >= 0) SetLocalCount(varCount);
 	}
 
-	~CRunContextSmall();
+	~ibRunContextSmall();
 
 	void SetLocalCount(const long varCount) {
 		m_lVarCount = varCount;
 		if (m_lVarCount > MAX_STATIC_VAR) {
-			m_pLocVars = new CValue[m_lVarCount];
-			m_pRefLocVars = new CValue * [m_lVarCount];
+			m_pLocVars = new ibValue[m_lVarCount];
+			m_pRefLocVars = new ibValue * [m_lVarCount];
 		}
 		else {
 			m_pLocVars = m_cLocVars;
@@ -39,31 +41,39 @@ struct CRunContextSmall {
 
 	long m_lStart, m_lParamCount;
 
-	CValue m_cLocVars[MAX_STATIC_VAR] = {};
-	CValue* m_pLocVars = nullptr;
+	ibValue m_cLocVars[MAX_STATIC_VAR] = {};
+	ibValue* m_pLocVars = nullptr;
 
-	CValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
-	CValue** m_pRefLocVars = nullptr;
+	ibValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
+	ibValue** m_pRefLocVars = nullptr;
 
 	long m_lVarCount;
 };
 
-struct CRunContext {
+// Inherits enable_shared_from_this so heap-promoted instances (created
+// via std::make_shared by OPER_CALL / OPER_CALL_LAMBDA when the called
+// function has ibByteFunction::m_needsHeapFrame=true) can hand out
+// shared_ptr<ibRunContext> copies at OPER_LFUNC capture time. Stack-
+// allocated instances (the common case — function has no inner
+// lambda) return an expired weak_ptr from weak_from_this() — used as
+// the runtime discriminator: "heap-promoted iff weak_from_this().lock()
+// is non-null". No separate kind flag needed.
+struct ibRunContext : std::enable_shared_from_this<ibRunContext> {
 
-	CRunContext(int varCount = wxNOT_FOUND) :
-		m_lVarCount(0), m_lParamCount(0), m_lStart(0), m_lCurLine(0) {
+	ibRunContext(int varCount = wxNOT_FOUND) :
+		m_lStart(0), m_lCurLine(0), m_lVarCount(0), m_lParamCount(0) {
 		if (varCount >= 0) SetLocalCount(varCount);
 	}
 
-	~CRunContext();
+	~ibRunContext();
 
 	void SetLocalCount(const long varCount) {
 
 		m_lVarCount = varCount;
 
 		if (m_lVarCount > MAX_STATIC_VAR) {
-			m_pLocVars = new CValue[m_lVarCount];
-			m_pRefLocVars = new CValue * [m_lVarCount];
+			m_pLocVars = new ibValue[m_lVarCount];
+			m_pRefLocVars = new ibValue * [m_lVarCount];
 		}
 		else {
 			m_pLocVars = m_cLocVars;
@@ -71,27 +81,71 @@ struct CRunContext {
 		}
 
 		for (long i = 0; i < m_lVarCount; i++) m_pRefLocVars[i] = &m_pLocVars[i];
+
+		// Reset block-scope nesting depth — frame starts at depth 0
+		// (fn-frame / module-body). OPER_CTX_BEGIN bumps, OPER_CTX_END
+		// drops. SendLocalVariables filters by entry.m_scopeDepth <=
+		// m_currentScopeDepth so block-locals are hidden before / after
+		// their owning `{ }`.
+		m_currentScopeDepth = 0;
 	}
 
 	long GetLocalCount() const { return m_lVarCount; }
-	CByteCode* GetByteCode() const;
+	const ibByteCode* GetByteCode() const;
 
-	void SetProcUnit(CProcUnit* procUnit) { m_procUnit = procUnit; }
-	CProcUnit* GetProcUnit() const { return m_procUnit; }
+	void SetProcUnit(ibProcUnit* procUnit) { m_procUnit = procUnit; }
+	ibProcUnit* GetProcUnit() const { return m_procUnit; }
 
-	CProcUnit* m_procUnit = nullptr;
-	CCompileContext* m_compileContext = nullptr;
+	// Bytecode-driven derived getters. Each frame's metadata is
+	// reconstructable from m_currentFunction (when inside a function)
+	// or from GetByteCode()->m_bExpressionOnly (eval block) — runtime
+	// carries no compile-context pointer at all.
+	bool IsModuleBody() const { return m_currentFunction == nullptr; }
+	bool IsReturningFunction() const {
+		return m_currentFunction != nullptr && m_currentFunction->m_bCodeRet;
+	}
+	bool IsExpressionOnly() const {
+		const ibByteCode* bc = GetByteCode();
+		return bc != nullptr && bc->m_bExpressionOnly;
+	}
+
+	ibProcUnit* m_procUnit = nullptr;
+
+	// Call-stack parent — set in OPER_CALL / OPER_CALL_METHOD / OPER_CALL_LAMBDA
+	// handlers when constructing the callee's frame. Raw pointer: the
+	// caller's frame is always alive for the duration of the call
+	// (either C-stack or a shared_ptr held by some outer ibRunContext
+	// or value). Walked at OPER_LFUNC materialise to identify
+	// heap-promoted ancestors that the new lambda value captures.
+	// nullptr for module-body entry (the Execute(bDelta=true) path).
+	ibRunContext* m_parentRunContext = nullptr;
+
+	// Bytecode-side function descriptor for the function this frame
+	// is executing. nullptr → frame is module-body (top-level
+	// descriptor body, not inside any function). Set at function
+	// entry by Execute via FindFunctionByEntry; eval/debugger read
+	// it instead of reaching to a compile-context. AOT-friendly:
+	// bytecode-side pointer (const — never mutated through this slot).
+	const ibByteCode::ibByteFunction* m_currentFunction = nullptr;
 
 	long m_lStart, m_lCurLine; //current executing bytecode line
+
 	long m_lVarCount, m_lParamCount;
 
-	CValue m_cLocVars[MAX_STATIC_VAR] = {};
-	CValue* m_pLocVars = nullptr;
+	ibValue m_cLocVars[MAX_STATIC_VAR] = {};
+	ibValue* m_pLocVars = nullptr;
 
-	CValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
-	CValue** m_pRefLocVars = nullptr;
+	ibValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
+	ibValue** m_pRefLocVars = nullptr;
 
-	std::map<wxString, std::shared_ptr<CProcUnitEvaluate>> m_listEval;
+	// Current block-scope nesting depth. Push (++) on OPER_CTX_BEGIN,
+	// pop (--) on OPER_CTX_END. SendLocalVariables filter:
+	//   entry.m_scopeDepth <= m_currentScopeDepth → visible.
+	// 0 at frame entry → only entries stamped 0 (fn-frame / module-body
+	// level) show until execution enters a `{ }` block.
+	int m_currentScopeDepth = 0;
+
+	std::map<wxString, std::shared_ptr<ibProcUnitEvaluate>> m_listEval;
 };
 
 #endif // ! _PROC_CONTEXT__H__

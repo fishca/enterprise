@@ -2,46 +2,76 @@
 #include "compileCode.h"
 
 ////////////////////////////////////////////////////////////////////////
-// CCompileContext CCompileContext CCompileContext CCompileContext//
+// ibCompileContext ibCompileContext ibCompileContext ibCompileContext//
 ////////////////////////////////////////////////////////////////////////
 
 /**
 * Create a new variable identifier
 */
 
-CParamUnit CCompileContext::CreateVariable(const wxString strPrefix)
+ibParamUnit ibCompileContext::CreateVariable(const wxString& strPrefix)
 {
-	const wxString& strTempName = wxString::Format(strPrefix + wxT("%d"), ++m_numTempVar); //@temp_ - to ensure the uniqueness of the name
+	if (m_numReturn == RETURN_BLOCK) {
+		return m_parentContext->CreateVariable(strPrefix);
+	}
 
-	CParamUnit variable = GetVariable(strTempName, false, false, false, true); //we look for a temporary variable only in the local context
+	const wxString& strTempName =
+		wxString::Format(strPrefix + wxT("%d"), ++m_numTempVar); //@temp_ - to ensure the uniqueness of the name
+
+	ibParamUnit variable =
+		GetVariable(strTempName, false, false, false, true); //we look for a temporary variable only in the local context
 	variable.m_numArray = DEF_VAR_TEMP; //flag of a temporary local variable
+
 	return variable;
 }
 
 /**
 * Adds a new variable to the list
-* Returns the added variable as a CParamUnit
+* Returns the added variable as a ibParamUnit
 */
 
-CParamUnit CCompileContext::AddVariable(const wxString& strVarName,
+ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
 	const wxString& typeVar, bool exportVar, bool contextVar, bool tempVar)
 {
-	std::shared_ptr<CVariable> foundedVariable = nullptr;
-	if (FindVariable(strVarName, foundedVariable)) { //there was a declaration + repeated declaration = error
+
+	// Dup-check is OWN-scope only — direct find_if on m_listVariable.
+	// Going through FindVariable would also hit bytecode-fallback
+	// (parent module entries), which is wrong: declaring `Var X` here
+	// is allowed even if a parent module exports an X.
+	auto existing = std::find_if(m_listVariable.begin(), m_listVariable.end(),
+		[&strVarName](const auto& pair) { return stringUtils::CompareString(strVarName, pair.first); });
+	if (existing != m_listVariable.end()) {
 		m_compileModule->SetError(ERROR_IDENTIFIER_DUPLICATE, strVarName);
-		return CParamUnit();
+		return ibParamUnit();
+	}
+
+	if (m_numReturn == RETURN_BLOCK) {
+		// Symmetric to CreateVariable's RETURN_BLOCK branch: delegate to
+		// the enclosing fn/module ctx. Block-scope and parent share the
+		// runtime frame at execute time anyway (CTX_BEGIN/END are NOPs
+		// — slots stay in host frame), so semantically there's nothing
+		// to keep separate at compile time either. Both explicit
+		// `var x` and implicit `x = expr` end up as plain function /
+		// module locals, visible to debugger Locals + eval at any IP.
+		// Loses C-style block-scope shadowing — same simplification as
+		// VES (no block scope at all). The previous side-channel
+		// (m_blockScopeLocals + per-IP m_scopeId / m_blockScopes filter)
+		// becomes degenerate / dead but stays in tree for AOT v6
+		// stability; subsequent cleanup pass can strip it.
+		return m_parentContext->AddVariable(strVarName, typeVar, exportVar, contextVar, tempVar);
 	}
 
 	unsigned int numVariable = m_listVariable.size();
-	PushVariable(strVarName, wxEmptyString, numVariable,
+	PushVariable(strVarName, wxT(""), numVariable,
 		typeVar, exportVar, contextVar, tempVar);
 
-	CParamUnit variable;
+	ibParamUnit variable;
 
 	//determine the number and type of the variable
 	variable.m_numArray = 0;
 	variable.m_strType = typeVar;
 	variable.m_numIndex = numVariable;
+
 
 	return variable;
 }
@@ -52,72 +82,231 @@ CParamUnit CCompileContext::AddVariable(const wxString& strVarName,
 * If the required variable does not exist, then a new variable definition is created
 */
 
-CParamUnit CCompileContext::GetVariable(const wxString& strVarName, bool bFindInParent, bool bCheckError, bool contextVar, bool tempVar)
+ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFindInParent, bool bCheckError, bool contextVar, bool tempVar)
 {
 	int numCanUseLocalInParent = m_numFindLocalInParent;
 
-	std::shared_ptr <CVariable> currentVariable = nullptr;
+	std::shared_ptr <ibVariable> currentVariable = nullptr;
 	if (!FindVariable(strVarName, currentVariable)) {
+
+		int numParent = 0, numContext = 0;
+		if (m_numReturn == RETURN_BLOCK)
+			numContext++;
+
+		// Bail out on pathological depth — same threshold for every
+		// hop (compile-context walk and bc walk).
+		auto guardRecursion = [&]() {
+			if (numParent > 2 * MAX_OBJECTS_LEVEL)
+				ibBackendCoreException::Error(_("Recursive call of modules!"));
+		};
+
+		// Closure capture state declared before tryEmit so the lambda
+		// can capture by reference. crossedLambda flips to true inside
+		// the parent-walk loop once a lambda boundary is crossed (or
+		// up front if `this` is itself a lambda body). isLambdaFunction
+		// gates the bc walk's topmost-only restriction and the rootCtx
+		// fallback for Context bindings.
+		bool isLambdaFunction = IsReturnLambda(m_numReturn);
+		bool crossedLambda    = isLambdaFunction;
+
+		// Visibility check + emit. Depth is the runtime frame index
+		// (m_pppArrayList layer); blockReturn switches it to
+		// DEF_VAR_TEMP for through-block reach. Returns true (with
+		// `out` filled) only if visibility budget allows.
+		//
+		// Closure capture bypass: once the walk has crossed at least
+		// one lambda boundary (crossedLambda), the
+		// numCanUseLocalInParent budget is shunted — a lambda must
+		// reach any enclosing function's locals regardless of the
+		// "one level up" default. Triple-nested lambdas (inner →
+		// outer through middle) decrement past 0 otherwise.
+		auto tryEmit = [&](const std::shared_ptr<ibVariable>& cur, int depth, bool blockReturn, ibParamUnit& out) {
+			if (!(m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || cur->m_bExport || crossedLambda))
+				return false;
+			out.m_numArray = blockReturn ? (long long)DEF_VAR_TEMP : (long long)depth;
+			out.m_numIndex = cur->m_numVariable;
+			out.m_strType = cur->m_strType;
+			return true;
+		};
 
 		//search in parent contexts (modules)
 		if (bFindInParent) {
-			int numParent = 0;
-			CCompileContext* pCurContext = m_parentContext;
-			while (pCurContext) {
+
+			// (isLambdaFunction / crossedLambda declared above so that
+			// the tryEmit lambda's reference-capture sees a defined
+			// variable. Re-stated here for context: lambda boundary
+			// detection — `this` is the lambda's own functionContext
+			// for top-level lambda body code. Block scopes inside the
+			// lambda hit the boundary by walking up to the containing
+			// functionContext (RETURN_LAMBDA_*). Closure capture is
+			// stamped lazily on the resolved fn's m_needsHeapFrame
+			// when crossedLambda is true at the time of FindVariable
+			// hit.)
+
+			// 1. Compile-context chain (block → function → root of own
+			//    ibCompileCode, then up through parent compile-contexts
+			//    where they are still live).
+			for (ibCompileContext* pCurContext = m_parentContext; pCurContext != nullptr; pCurContext = pCurContext->m_parentContext) {
 				numParent++;
-				if (numParent > MAX_OBJECTS_LEVEL) {
-					//CSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
-					if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-						CBackendCoreException::Error(_("Recursive call of modules!"));
-					}
-				}
-				if (pCurContext->FindVariable(strVarName, currentVariable)) { // found
-					//check if this is an export variable or not (if m_numFindLocalInParent=true, then you can take local variables of the parent)
-					if (numCanUseLocalInParent > 0 ||
-						currentVariable->m_bExport) {
+				if (pCurContext->m_numReturn == RETURN_BLOCK)
+					numContext++;
 
-						CParamUnit variable;
+					guardRecursion();
 
-						//determine the variable number
-						variable.m_numArray = numParent;
-						variable.m_numIndex = currentVariable->m_numVariable;
-						variable.m_strType = currentVariable->m_strType;
-
+				if (pCurContext->FindVariable(strVarName, currentVariable)) {
+					ibParamUnit variable;
+					if (tryEmit(currentVariable, numParent - numContext,
+					            pCurContext->m_numReturn == RETURN_BLOCK, variable)) {
+						// Closure capture mark — stamp the ENCLOSING
+						// function's ibFunction (m_functionContext)
+						// directly. Module-body / block ctxs have
+						// m_functionContext == nullptr; skip them
+						// (block-locals delegate to fn frame anyway,
+						// module body lives in stable descriptor frame).
+						if (crossedLambda && pCurContext->m_functionContext)
+							pCurContext->m_functionContext->m_needsHeapFrame = true;
 						return variable;
 					}
 				}
 				numCanUseLocalInParent--;
-				pCurContext = pCurContext->m_parentContext;
+
+				if (IsReturnLambda(pCurContext->m_numReturn)) {
+					isLambdaFunction = true;
+					crossedLambda    = true;
+				}
+			}
+
+			// 2. Eval host function frame (only when this compile is an
+			//    eval expression opened inside a function). Function
+			//    frame is its own runtime layer between eval and host's
+			//    module body; account for it in numParent so the bc walk
+			//    below emits depths shifted by +1.
+			//    Source: ibCompileCode::GetEvalHostFunction() — virtual,
+			//    returns nullptr for non-eval modules; ibCompileEval
+			//    overrides with the host fn captured at ctor time.
+			if (auto* hostFn = m_compileModule->GetEvalHostFunction()) {
+				const auto& fn = *hostFn;
+				auto fIt = std::find_if(fn.m_listLocals.begin(), fn.m_listLocals.end(),
+					[&strVarName](const auto& v) { return stringUtils::CompareString(strVarName, v.m_strRealName); });
+				if (fIt != fn.m_listLocals.end()) {
+					ibParamUnit variable;
+					variable.m_numArray = (numParent - numContext) + 1;
+					variable.m_numIndex = fIt->m_slotIndex;
+					return variable;
+				}
+				numParent++;  // function frame layer occupied even on miss
+			}
+
+			// 3. Bytecode parent chain (cross-bc — AOT-loaded ancestors
+			//    with no live compile-context, e.g. host module body
+			//    while compiling an eval expression). Emitter decides
+			//    direct OPER_GET vs OPER_GET_A by foundedVar->m_strContext.
+			//    bc.m_parent is constructed genealogically (form →
+			//    object → manager → root for catalogs etc.; eval
+			//    inherits its host's chain) — foreign bcs never appear,
+			//    so scoped bindings (ThisForm / ThisObject) are
+			//    reachable iff they live on a real ancestor.
+			// Walk start: lambda case includes OWN bc (codeRunner-style
+			// flat compile where own bc IS the root with no parent
+			// chain to walk). Non-lambda case starts at m_parent — own
+			// scope was already covered by FindVariable on `this` at
+			// the top of GetVariable.
+			const ibByteCode* startBc = isLambdaFunction
+				? &m_compileModule->m_cByteCode
+				: m_compileModule->m_cByteCode.m_parent;
+			for (const ibByteCode* pCurByteCode = startBc;
+			     pCurByteCode != nullptr; pCurByteCode = pCurByteCode->m_parent) {
+
+				// Lambda discipline: only consult the topmost bc
+				// (m_parent == nullptr — root configuration). Skip
+				// every intermediate ancestor — lambda body sees only
+				// root-level Context bindings, not its definition site's
+				// module-level vars.
+				if (isLambdaFunction && pCurByteCode->m_parent != nullptr)
+					continue;
+
+				numParent++;
+				guardRecursion();
+
+				if (pCurByteCode->FindVariable(strVarName, currentVariable)) {
+					ibParamUnit variable;
+					if (tryEmit(currentVariable, numParent - numContext, /*blockReturn=*/false, variable))
+						return variable;
+				}
+
+				numCanUseLocalInParent--;
+			}
+			// Lambda final fallback: m_rootContext for Context bindings
+			// (Catalogs / Documents / Manager / system functions / host-
+			// injected like codeRunner's ValueOutput). They land in
+			// m_rootContext->m_listVariable via AddContextVariable —
+			// CompileContext layer, not bc layer — so the bc walk above
+			// can't see them. Filter to m_bContext == true so user
+			// module-level vars in rootCtx (codeRunner sandbox case
+			// where module-level declarations land directly in root)
+			// stay invisible. Depth 1 matches the runtime shim's
+			// m_pppArrayList[1] — root frame.
+			if (isLambdaFunction && bFindInParent) {
+				ibCompileContext* rootCtx = m_compileModule
+					? m_compileModule->GetContext() : nullptr;
+				if (rootCtx != nullptr && rootCtx != this) {
+					std::shared_ptr<ibVariable> rootVar = nullptr;
+					if (rootCtx->FindVariable(strVarName, rootVar)
+						&& rootVar && rootVar->m_bContext)
+					{
+						ibParamUnit variable;
+						variable.m_numArray = 1;
+						variable.m_numIndex = rootVar->m_numVariable;
+						variable.m_strType  = rootVar->m_strType;
+						currentVariable = rootVar;
+						return variable;
+					}
+				}
 			}
 		}
 
 		if (bCheckError) {
 			m_compileModule->SetError(ERROR_VAR_NOT_FOUND, strVarName); //display an error message
-			return CParamUnit();
+			return ibParamUnit();
 		}
 
-		// there was no variable declaration yet - add
+		// there was no variable declaration yet - add. AddVariable
+		// itself delegates RETURN_BLOCK -> parent (mirroring CreateVariable),
+		// so implicit `name = expr` inside `{ }` lands in the enclosing
+		// fn/module ctx automatically — no walk-target gymnastics here.
 		return AddVariable(strVarName, wxEmptyString, contextVar, contextVar, tempVar);
 	}
 
 	wxASSERT(currentVariable);
 
-	CParamUnit variable;
+	ibParamUnit variable;
 
-	//determine the number and type of the variable
-	variable.m_numArray = 0;
+	// FindVariable here is own-scope only (no bytecode fallback) —
+	// reaching this branch means the variable lives in this very
+	// compile-context's m_listVariable, so m_numArray=0 is correct.
+	// Cross-frame resolution (host function param / parent module
+	// binding) goes through GetVariable's bytecode fallback below
+	// where found.depth is preserved on ibParamUnit::m_numArray.
+	if (m_numReturn == RETURN_BLOCK)
+		variable.m_numArray = DEF_VAR_TEMP;
+	else
+		variable.m_numArray = 0;
+
 	variable.m_numIndex = currentVariable->m_numVariable;
 	variable.m_strType = currentVariable->m_strType;
 
 	return variable;
 }
 
-void CCompileContext::PushVariable(const wxString& strVarName, const wxString& strContextVar, unsigned int numVariable,
+void ibCompileContext::PushVariable(const wxString& strVarName, const wxString& strContextVar, unsigned int numVariable,
 	const wxString& typeVar, bool exportVar, bool contextVar, bool tempVar)
 {
-	std::shared_ptr<CVariable> currentVariable(
-		new CVariable(stringUtils::MakeUpper(strVarName))
-	);
+	// Map key is the original-cased name — lookups go through
+	// std::find_if + stringUtils::CompareString (case-insensitive),
+	// so there's no need to upper-normalize storage. Renderers
+	// (debugger / catalog object PrepareNames) read the key directly
+	// and now show the user's source casing instead of UPPERCASE.
+	std::shared_ptr<ibVariable> currentVariable(new ibVariable(strVarName));
 
 	currentVariable->m_strRealName = strVarName;
 	currentVariable->m_bExport = exportVar;
@@ -128,16 +317,23 @@ void CCompileContext::PushVariable(const wxString& strVarName, const wxString& s
 	currentVariable->m_bTempVar = tempVar;
 	currentVariable->m_strType = typeVar;
 	currentVariable->m_numVariable = numVariable;
+	// Stamp the scope-nesting depth at the call site. Runtime
+	// debugger Locals filter compares this against an ibRunContext-side
+	// counter pushed by OPER_CTX_BEGIN / popped by OPER_CTX_END.
+	// 0 = fn-frame / module-body (no enclosing `{ }` open at decl time).
+	currentVariable->m_scopeDepth = m_compileModule
+		? m_compileModule->m_compileScopeDepth
+		: 0;
 
 	m_listVariable.insert_or_assign(
 		currentVariable->m_strName, std::move(currentVariable)
 	);
 }
 
-void CCompileContext::PushFunction(const wxString& strFuncName, const wxString& strContextVar, const wxString& strShortDescription, unsigned int numFunction, bool hasRetVal, int argCount)
+void ibCompileContext::PushFunction(const wxString& strFuncName, const wxString& strContextVar, const wxString& strShortDescription, unsigned int numFunction, bool hasRetVal, int argCount)
 {
-	std::shared_ptr<CCompileContext::CFunction> contextFunction(
-		new CFunction(stringUtils::MakeUpper(strFuncName), CreateContext(hasRetVal ? RETURN_FUNCTION : RETURN_PROCEDURE))
+	std::shared_ptr<ibCompileContext::ibFunction> contextFunction(
+		new ibFunction(strFuncName, CreateContext(hasRetVal ? RETURN_FUNCTION : RETURN_PROCEDURE))
 	);
 
 	contextFunction->m_nStart = numFunction;
@@ -149,7 +345,7 @@ void CCompileContext::PushFunction(const wxString& strFuncName, const wxString& 
 	if (argCount > 0) contextFunction->m_listParam.reserve(argCount);
 
 	for (long arg = 0; arg < argCount; arg++) {
-		CFunction::CParamVariable contextVariable;
+		ibFunction::ibParamVariable contextVariable;
 		contextVariable.m_puValue.m_numArray = DEF_VAR_DEFAULT;
 		contextVariable.m_puValue.m_numIndex = DEF_VAR_DEFAULT;
 		contextFunction->m_listParam.emplace_back(std::move(contextVariable));
@@ -168,7 +364,7 @@ void CCompileContext::PushFunction(const wxString& strFuncName, const wxString& 
  * Returns true - if the variable is found
  */
 
-bool CCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<CVariable>& foundedVar, bool contextVar)
+bool ibCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<ibVariable>& foundedVar, bool contextVar)
 {
 	auto it = std::find_if(m_listVariable.begin(), m_listVariable.end(),
 		[strVarName](const auto pair) {return stringUtils::CompareString(strVarName, pair.first); });
@@ -183,12 +379,31 @@ bool CCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<C
 		if (m_parentContext && m_parentContext->FindVariable(strVarName, foundedVar, contextVar))
 			return true;
 
+		// Reached the top compile-context. Drop down to the parent
+		// BYTECODE chain and walk it looking for a context-related
+		// entry. Single-hop wouldn't be enough — there may be an
+		// intermediate bc (form bc, object bc) between the eval and
+		// the root common module that holds the bindings. First match
+		// in any ancestor wins; emitter (compileCode.cpp) checks
+		// foundedVar->m_strContext to decide direct vs OPER_GET_A.
+		if (m_parentContext == nullptr) {
+			for (const ibByteCode* bc = m_compileModule->m_cByteCode.m_parent; bc != nullptr; bc = bc->m_parent) {
+				if (bc->FindVariable(strVarName, foundedVar)) {
+					return foundedVar->IsContextRelated();
+				}
+			}
+		}
+
 		foundedVar = nullptr;
 		return false;
 	}
 	else if (it != m_listVariable.end()) {
 		foundedVar = it->second;
 		return true;
+	}
+
+	if (m_parentContext != nullptr) {
+	} else {
 	}
 
 	foundedVar = nullptr;
@@ -200,7 +415,7 @@ bool CCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<C
  * Returns true - if the variable is found
  */
 
-bool CCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr<CFunction>& foundedFunc, bool contextVar)
+bool ibCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr<ibFunction>& foundedFunc, bool contextVar)
 {
 	auto it = std::find_if(m_listFunction.begin(), m_listFunction.end(),
 		[strFuncName](const auto pair) { return stringUtils::CompareString(strFuncName, pair.first); });
@@ -213,6 +428,18 @@ bool CCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr<
 
 		if (m_parentContext && m_parentContext->FindFunction(strFuncName, foundedFunc, contextVar))
 			return true;
+
+		// Reached the top compile-context. Drop down to the parent
+		// BYTECODE chain — symmetric with FindVariable's fallback.
+		// Emitter (compileCode.cpp) decides direct OPER_CALL vs
+		// OPER_CALL_METHOD based on foundedFunc->m_strContext.
+		if (m_parentContext == nullptr) {
+			for (const ibByteCode* bc = m_compileModule->m_cByteCode.m_parent; bc != nullptr; bc = bc->m_parent) {
+				if (bc->FindFunction(strFuncName, foundedFunc)) {
+					return foundedFunc->IsContextRelated();
+				}
+			}
+		}
 
 		foundedFunc = nullptr;
 		return false;
@@ -229,7 +456,7 @@ bool CCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr<
 /**
  * Linking GOTO statements to labels
  */
-void CCompileContext::DoLabels()
+void ibCompileContext::CreateLabels()
 {
 	wxASSERT(m_compileModule != nullptr);
 	for (unsigned int i = 0; i < m_listLabel.size(); i++) {

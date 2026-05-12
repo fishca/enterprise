@@ -5,8 +5,8 @@
 #pragma warning(push)
 #pragma warning(disable : 4018)
 
-CCompileModule::CCompileModule(const IValueMetaObjectModule* moduleObject, bool onlyFunction) :
-	CCompileCode(moduleObject->GetFullName(), moduleObject->GetDocPath(), onlyFunction),
+ibCompileModule::ibCompileModule(const ibValueMetaObjectModuleBase* moduleObject, bool onlyFunction) :
+	ibCompileCode(moduleObject->GetFullName(), moduleObject->GetDocPath(), onlyFunction),
 	m_moduleObject(moduleObject)
 {
 	InitializeCompileModule();
@@ -19,7 +19,7 @@ CCompileModule::CCompileModule(const IValueMetaObjectModule* moduleObject, bool 
 
 	Load(m_moduleObject->GetModuleText());
 
-	//We don’t look for local variables in parent contexts!
+	//We donâ€™t look for local variables in parent contexts!
 	m_rootContext->m_numFindLocalInParent = 0;
 }
 
@@ -31,7 +31,7 @@ CCompileModule::CCompileModule(const IValueMetaObjectModule* moduleObject, bool 
  * true,false
  */
 
-bool CCompileModule::Compile()
+bool ibCompileModule::Compile()
 {
 	//clear functions & variables 
 	Reset();
@@ -47,16 +47,16 @@ bool CCompileModule::Compile()
 
 		Load(m_moduleObject->GetModuleText());
 
-		return m_parent != nullptr ?
-			m_parent->Compile() : true;
+		return m_parentModule != nullptr ?
+			m_parentModule->Compile() : true;
 	}
 
 	//recursively compile modules in case of any changes
-	if (m_parent != nullptr && appData->DesignerMode()) {
+	if (m_parentModule != nullptr && appData->DesignerMode()) {
 
-		std::stack<CCompileModule*> compileModule; bool callRecompile = false;
+		std::stack<ibCompileModule*> compileModule; bool callRecompile = false;
 
-		CCompileModule* parentModule = GetParent();
+		ibCompileModule* parentModule = GetParent();
 
 		while (parentModule != nullptr) {
 			if (parentModule->m_changedCode) callRecompile = true;
@@ -65,7 +65,7 @@ bool CCompileModule::Compile()
 		}
 
 		while (!compileModule.empty()) {
-			CCompileModule* compileCode = compileModule.top();
+			ibCompileModule* compileCode = compileModule.top();
 			if (!compileCode->Recompile()) return false;
 			compileModule.pop();
 		}
@@ -75,9 +75,9 @@ bool CCompileModule::Compile()
 
 		m_cByteCode.m_strModuleName = m_moduleObject->GetFullName();
 
-		if (m_parent != nullptr) {
-			m_cByteCode.m_parent = &m_parent->m_cByteCode;
-			m_rootContext->m_parentContext = m_parent->m_rootContext;
+		if (m_parentModule != nullptr) {
+			m_cByteCode.m_parent = &m_parentModule->m_cByteCode;
+			m_rootContext->m_parentContext = m_parentModule->m_rootContext;
 		}
 
 		m_strModuleName = m_moduleObject->GetFullName();
@@ -87,7 +87,7 @@ bool CCompileModule::Compile()
 		Load(m_moduleObject->GetModuleText());
 	}
 
-	//prepare lexem 
+	//prepare lexem
 	if (!PrepareLexem()) {
 		return false;
 	}
@@ -95,7 +95,7 @@ bool CCompileModule::Compile()
 	//prepare context variables
 	PrepareModuleData();
 
-	// compilation 
+	// compilation
 	if (CompileModule()) {
 		m_changedCode = false;
 		return true;
@@ -112,12 +112,12 @@ bool CCompileModule::Compile()
  * true,false
  */
 
-bool CCompileModule::Recompile()
+bool ibCompileModule::Recompile()
 {
 	//clear functions & variables 
 	Reset();
 
-	if (m_parent != nullptr) {
+	if (m_parentModule != nullptr) {
 
 		if (m_moduleObject != nullptr &&
 			m_moduleObject->IsGlobalModule()) {
@@ -130,8 +130,8 @@ bool CCompileModule::Recompile()
 
 			Load(m_moduleObject->GetModuleText());
 
-			return m_parent != nullptr ?
-				m_parent->Compile() : true;
+			return m_parentModule != nullptr ?
+				m_parentModule->Compile() : true;
 		}
 	}
 
@@ -139,9 +139,9 @@ bool CCompileModule::Recompile()
 
 		m_cByteCode.m_strModuleName = m_moduleObject->GetFullName();
 
-		if (m_parent) {
-			m_cByteCode.m_parent = &m_parent->m_cByteCode;
-			m_rootContext->m_parentContext = m_parent->m_rootContext;
+		if (m_parentModule) {
+			m_cByteCode.m_parent = &m_parentModule->m_cByteCode;
+			m_rootContext->m_parentContext = m_parentModule->m_rootContext;
 		}
 
 		m_strModuleName = m_moduleObject->GetFullName();

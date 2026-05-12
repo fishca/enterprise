@@ -10,19 +10,19 @@
 //////////////////////////////////////////////////////////////////////
 
 //empty lexem  
-const CLexem gs_nullLexem = {};
+const ibLexem gs_nullLexem = {};
 
 //keywords 
 static std::map<wxString, void*> s_listHelpDescription; //description of keywords and system functions
 static std::map<wxString, void*> s_listHashKeyword;
 
-CTranslateCode::CDefineCollection CTranslateCode::ms_listDefine; //global array of definitions
-std::map<wxString, void*> CTranslateCode::ms_listHashKeyWord; //list of keywords
+ibTranslateCode::ibDefineCollection ibTranslateCode::ms_listDefine; //global array of definitions
+std::map<wxString, void*> ibTranslateCode::ms_listHashKeyWord; //list of keywords
 
 //////////////////////////////////////////////////////////////////////
 // Global array
 //////////////////////////////////////////////////////////////////////
-struct СKeyWords s_listKeyWord[] =
+struct ibKeyWords s_listKeyWord[] =
 {
 	{"If"},
 	{"Then"},
@@ -77,13 +77,32 @@ struct СKeyWords s_listKeyWord[] =
 	{"#Endif"},
 	{"#Region"},
 	{"#EndRegion"},
+
+	// === LINQ keywords ===
+	// Order MUST match codeDef.h's KEY_FROM..KEY_INTO enum block —
+	// translator lookup is by index into s_listKeyWord.
+	{"From"},
+	{"Where"},
+	{"Select"},
+	{"OrderBy"},
+	{"Ascending"},
+	{"Descending"},
+	{"Take"},
+	{"Skip"},
+	{"Distinct"},
+	{"Join"},
+	{"On"},
+	{"Equals"},
+	{"Group"},
+	{"By"},
+	{"Into"},
 };
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-void CTranslateCode::CDefineCollection::RemoveDef(const wxString& strName)
+void ibTranslateCode::ibDefineCollection::RemoveDef(const wxString& strName)
 {
 	auto iterator = std::find_if(m_defineList.begin(), m_defineList.end(),
 		[strName](const auto& pair) { return stringUtils::CompareString(pair.first, strName); }
@@ -92,7 +111,7 @@ void CTranslateCode::CDefineCollection::RemoveDef(const wxString& strName)
 	if (iterator != m_defineList.end()) m_defineList.erase(iterator);
 }
 
-bool CTranslateCode::CDefineCollection::HasDefine(const wxString& strName) const
+bool ibTranslateCode::ibDefineCollection::HasDefine(const wxString& strName) const
 {
 	auto iterator = std::find_if(m_defineList.begin(), m_defineList.end(),
 		[strName](const auto& pair) { return stringUtils::CompareString(pair.first, strName); }
@@ -104,7 +123,7 @@ bool CTranslateCode::CDefineCollection::HasDefine(const wxString& strName) const
 
 	nLevel++;
 
-	if (nLevel > MAX_OBJECTS_LEVEL) CBackendCoreException::Error(_("Recursive module call (#3)"));
+	if (nLevel > MAX_OBJECTS_LEVEL) ibBackendCoreException::Error(_("Recursive module call (#3)"));
 
 	//find in parent
 	bool result = false;
@@ -114,7 +133,7 @@ bool CTranslateCode::CDefineCollection::HasDefine(const wxString& strName) const
 	return result;
 }
 
-CLexemList* CTranslateCode::CDefineCollection::GetDefine(const wxString& strName)
+ibLexemList* ibTranslateCode::ibDefineCollection::GetDefine(const wxString& strName)
 {
 	auto iterator = std::find_if(m_defineList.begin(), m_defineList.end(),
 		[strName](const auto& pair) { return stringUtils::CompareString(pair.first, strName); }
@@ -126,26 +145,26 @@ CLexemList* CTranslateCode::CDefineCollection::GetDefine(const wxString& strName
 	if (m_parentDefine != nullptr && m_parentDefine->HasDefine(strName))
 		return m_parentDefine->GetDefine(strName);
 
-	CLexemList* lexList = new CLexemList();
+	ibLexemList* lexList = new ibLexemList();
 	m_defineList[stringUtils::MakeUpper(strName)] = lexList;
 	return lexList;
 }
 
-void CTranslateCode::CDefineCollection::SetDefine(const wxString& strName, CLexemList* src)
+void ibTranslateCode::ibDefineCollection::SetDefine(const wxString& strName, ibLexemList* src)
 {
-	CLexemList* dst = GetDefine(strName);
+	ibLexemList* dst = GetDefine(strName);
 	dst->clear();
 	if (src != nullptr) {
 		for (unsigned int i = 0; i < src->size(); i++) dst->push_back(*src[i].data());
 	}
 }
 
-void CTranslateCode::CDefineCollection::SetDefine(const wxString& strName, const wxString& strValue)
+void ibTranslateCode::ibDefineCollection::SetDefine(const wxString& strName, const wxString& strValue)
 {
-	CLexemList listLexem;
+	ibLexemList listLexem;
 
 	if (strValue.length() > 0) {
-		CLexem Lex;
+		ibLexem Lex;
 		Lex.m_lexType = CONSTANT;
 		if (strValue[0] == wxT('-') || strValue[0] == wxT('+') || (strValue[0] >= wxT('0') && strValue[0] <= wxT('9'))) //digit
 			Lex.m_valData.SetNumber(strValue);
@@ -160,10 +179,25 @@ void CTranslateCode::CDefineCollection::SetDefine(const wxString& strName, const
 }
 
 //////////////////////////////////////////////////////////////////////
+// ibLexem — out-of-line accessors (need ibTranslateCode definition)
+//////////////////////////////////////////////////////////////////////
+
+const wxString& ibLexem::GetModuleName() const {
+	return m_translateCode ? m_translateCode->m_strModuleName : wxEmptyString;
+}
+const wxString& ibLexem::GetDocPath() const {
+	return m_translateCode ? m_translateCode->m_strDocPath : wxEmptyString;
+}
+const wxString& ibLexem::GetFileName() const {
+	return m_translateCode ? m_translateCode->m_strFileName : wxEmptyString;
+}
+
+//////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CTranslateCode::CTranslateCode() : m_defineList(nullptr),
+ibTranslateCode::ibTranslateCode() : m_defineList(nullptr),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
@@ -171,25 +205,25 @@ m_nModePreparing(LEXEM_ADD)
 	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
 }
 
-CTranslateCode::CTranslateCode(const wxString& strModuleName, const wxString& strDocPath) : m_defineList(nullptr),
+ibTranslateCode::ibTranslateCode(const wxString& strModuleName, const wxString& strDocPath) : m_defineList(nullptr),
 m_strModuleName(strModuleName), m_strDocPath(strDocPath),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
-	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords();
 }
 
-CTranslateCode::CTranslateCode(const wxString& strFileName) : m_defineList(nullptr),
+ibTranslateCode::ibTranslateCode(const wxString& strFileName) : m_defineList(nullptr),
 m_strFileName(strFileName),
+m_current_lex(this),
 m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
-	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords();
 }
 
-CTranslateCode::~CTranslateCode()
+ibTranslateCode::~ibTranslateCode()
 {
 	if (m_bAutoDeleteDefList) wxDELETE(m_defineList);
 }
@@ -198,7 +232,7 @@ CTranslateCode::~CTranslateCode()
 * prepare keyword buffer
 */
 
-void CTranslateCode::LoadKeyWords()
+void ibTranslateCode::LoadKeyWords()
 {
 	ms_listHashKeyWord.clear();
 
@@ -213,6 +247,13 @@ void CTranslateCode::LoadKeyWords()
 	}
 }
 
+// `IsAllowedKey` is declared on ibTranslateCode but its body lives in
+// compileCode.cpp — the gate needs the active code-style (gs_codeStyle,
+// owned by ibCompileCode), and putting the body there keeps the include
+// chain one-way (compile → translate, never the reverse). `IsKeyWord`
+// below dispatches through it so lexer / highlighter / autocomplete /
+// parser all inherit the CES-vs-VES filter from one place.
+
 //////////////////////////////////////////////////////////////////////
 // Translating
 //////////////////////////////////////////////////////////////////////
@@ -225,7 +266,7 @@ void CTranslateCode::LoadKeyWords()
 * none
 */
 
-void CTranslateCode::Clear()
+void ibTranslateCode::Clear()
 {
 	m_strBuffer.clear();
 	m_strBUFFER.clear();
@@ -250,7 +291,7 @@ void CTranslateCode::Clear()
 * none
 */
 
-void CTranslateCode::Load(const wxString& strCode)
+void ibTranslateCode::Load(const wxString& strCode)
 {
 	Clear();
 
@@ -261,7 +302,7 @@ void CTranslateCode::Load(const wxString& strCode)
 		m_strBuffer.assign(strCode);
 		m_strBUFFER.assign(strCode);
 
-		std::transform(std::execution::par,
+		std::transform(
 			m_strBUFFER.begin(), m_strBUFFER.end(),
 			m_strBUFFER.begin(),
 #ifdef wxUSE_UNICODE
@@ -271,9 +312,12 @@ void CTranslateCode::Load(const wxString& strCode)
 #endif // wxUSE_UNICODE
 		);
 
-		const size_t alloc_size = CalcAllocSize();
-		if (alloc_size > m_listLexem.capacity())
-			m_listLexem.reserve(alloc_size + 1000);
+		// Capacity is reserved by the full-PrepareLexem path (after its
+		// clear()) so we don't move stale lexems into a new buffer just
+		// to drop them. Incremental PrepareLexem(line, ...) reuses the
+		// existing capacity; it depends on the previous parse's lexems
+		// being intact for its rewind/patch logic, so Load must not
+		// touch m_listLexem.
 	}
 }
 
@@ -285,7 +329,7 @@ void CTranslateCode::Load(const wxString& strCode)
 * The method does not return control!strCurWord
 */
 
-void CTranslateCode::SetError(int codeError, unsigned int currPos, const wxString& errorDesc) const
+void ibTranslateCode::SetError(int codeError, unsigned int currPos, const wxString& errorDesc) const
 {
 	unsigned int start_pos = 0;
 
@@ -299,7 +343,7 @@ void CTranslateCode::SetError(int codeError, unsigned int currPos, const wxStrin
 	const int currLine = 1 + std::count(
 		m_strBuffer.begin(), m_strBuffer.begin() + start_pos, wxT('\n'));
 
-	CTranslateCode::SetError(codeError,
+	ibTranslateCode::SetError(codeError,
 		m_strFileName, m_strModuleName, m_strDocPath,
 		currPos, currLine,
 		errorDesc
@@ -315,7 +359,7 @@ void CTranslateCode::SetError(int codeError, unsigned int currPos, const wxStrin
 * NONE
 */
 
-void CTranslateCode::SkipSpaces() const
+void ibTranslateCode::SkipSpaces() const
 {
 	unsigned int i = m_currentPos;
 #ifdef UTF8_LEXEM_TRANSLATE
@@ -395,7 +439,7 @@ void CTranslateCode::SkipSpaces() const
 * true,false
 */
 
-bool CTranslateCode::IsByte(const wxUniChar& c) const
+bool ibTranslateCode::IsByte(const wxUniChar& c) const
 {
 	SkipSpaces();
 	if (m_currentPos >= m_bufferSize)
@@ -414,7 +458,7 @@ bool CTranslateCode::IsByte(const wxUniChar& c) const
 * Byte from the buffer
 */
 
-bool CTranslateCode::GetByte(wxUniChar* c) const
+bool ibTranslateCode::GetByte(wxUniChar* c) const
 {
 	SkipSpaces();
 
@@ -440,7 +484,7 @@ bool CTranslateCode::GetByte(wxUniChar* c) const
 * true,false
 */
 
-bool CTranslateCode::IsWord() const
+bool ibTranslateCode::IsWord() const
 {
 	SkipSpaces();
 	if (m_currentPos < m_bufferSize) {
@@ -466,7 +510,7 @@ bool CTranslateCode::IsWord() const
 * Word from the buffer
 */
 
-bool CTranslateCode::GetWord(wxString* strWord, wxString* strRealName, bool realName, bool get_point) const
+bool ibTranslateCode::GetWord(wxString* strWord, wxString* strRealName, bool realName, bool get_point) const
 {
 	SkipSpaces();
 
@@ -544,7 +588,7 @@ bool CTranslateCode::GetWord(wxString* strWord, wxString* strRealName, bool real
 * String
 */
 
-wxString CTranslateCode::GetStrToEndLine() const
+wxString ibTranslateCode::GetStrToEndLine() const
 {
 	unsigned int start_pos = m_currentPos;
 	unsigned int i = m_currentPos;
@@ -586,7 +630,7 @@ wxString CTranslateCode::GetStrToEndLine() const
 * true,false
 */
 
-bool CTranslateCode::IsNumber() const
+bool ibTranslateCode::IsNumber() const
 {
 	SkipSpaces();
 	if (m_currentPos < m_bufferSize)
@@ -603,7 +647,7 @@ bool CTranslateCode::IsNumber() const
 * Number from the buffer
 */
 
-bool CTranslateCode::GetNumber(wxString* strNumber) const
+bool ibTranslateCode::GetNumber(wxString* strNumber) const
 {
 	if (!IsNumber()) {
 		SetError(ERROR_TRANSLATE_NUMBER, m_currentPos);
@@ -656,7 +700,14 @@ bool CTranslateCode::GetNumber(wxString* strNumber) const
 		SetError(ERROR_TRANSLATE_NUMBER, first_pos);
 		return false;
 	}
-	else if (IsWord() && m_strBuffer[next_pos] != wxT(' ')) {
+	else if (IsWord() && !wxIsspace(m_strBuffer[next_pos])) {
+		// Originally compared `!= ' '` — rejected `20\nselect` as
+		// "number-glued-to-word" because newline isn't the literal
+		// space char. IsWord() above calls SkipSpaces() (which advances
+		// past ALL whitespace incl. \n / \t), so the IsWord check
+		// might return true for a far-away identifier after a wide
+		// whitespace gap. Use wxIsspace at next_pos so any whitespace
+		// separator (space / tab / newline / CR) is accepted.
 		SetError(ERROR_TRANSLATE_NUMBER, error_pos);
 		return false;
 	}
@@ -676,7 +727,7 @@ bool CTranslateCode::GetNumber(wxString* strNumber) const
 * true,false
 */
 
-bool CTranslateCode::IsString() const
+bool ibTranslateCode::IsString() const
 {
 	return IsByte(wxT('\"')) || IsByte(wxT('|'));
 }
@@ -690,7 +741,7 @@ bool CTranslateCode::IsString() const
 * String from the buffer
 */
 
-bool CTranslateCode::GetString(wxString* strString) const
+bool ibTranslateCode::GetString(wxString* strString) const
 {
 	if (!IsString()) {
 		SetError(ERROR_TRANSLATE_STRING, m_currentPos);
@@ -800,7 +851,7 @@ bool CTranslateCode::GetString(wxString* strString) const
 * true,false
 */
 
-bool CTranslateCode::IsDate() const
+bool ibTranslateCode::IsDate() const
 {
 	return IsByte(wxT('\''));
 }
@@ -814,7 +865,7 @@ bool CTranslateCode::IsDate() const
 * The date from the buffer, enclosed in quotes
 */
 
-bool CTranslateCode::GetDate(wxString* strDate) const
+bool ibTranslateCode::GetDate(wxString* strDate) const
 {
 	if (!IsDate()) {
 		SetError(ERROR_TRANSLATE_DATE, m_currentPos);
@@ -904,7 +955,7 @@ bool CTranslateCode::GetDate(wxString* strDate) const
 * true,false
 */
 
-bool CTranslateCode::IsEnd() const
+bool ibTranslateCode::IsEnd() const
 {
 	SkipSpaces();
 	if (m_currentPos < m_bufferSize)
@@ -921,30 +972,34 @@ bool CTranslateCode::IsEnd() const
 * greater than or equal to 0: number in the list of service words
 */
 
-int CTranslateCode::IsKeyWord(const wxString& strKeyWord)
+int ibTranslateCode::IsKeyWord(const wxString& strKeyWord)
 {
-	//auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
-	//	[strKeyWord](const std::pair<const wxString, void*>& pair) -> bool {
-	//		return stringUtils::CompareString(pair.first, strKeyWord);
-	//	}
-	//);
-
-	//if (it != ms_listHashKeyWord.end())
-	//	return ((int)it->second) - 1;
-
-	for (auto& pair : ms_listHashKeyWord) {
-		if (stringUtils::CompareString(pair.first, strKeyWord))
-			return reinterpret_cast<int>(pair.second) - 1;
+	// Keys in ms_listHashKeyWord are stored uppercase at load time
+	// (see LoadKeyWords — stringUtils::MakeUpper on every entry). Looking the
+	// query up by the same normalisation lets us use std::map::find's
+	// O(log N) instead of a full linear scan on every lexer token.
+	auto it = ms_listHashKeyWord.find(stringUtils::MakeUpper(strKeyWord));
+	if (it != ms_listHashKeyWord.end()) {
+		const int idx = static_cast<int>(reinterpret_cast<intptr_t>(it->second)) - 1;
+		// Code-style gate: hides VES-only block-fence keywords (Then /
+		// Do / End*) when CES is active. Body lives in compileCode.cpp
+		// so the gate reads gs_codeStyle without flipping the include
+		// chain. Hidden keywords look like plain identifiers to every
+		// consumer of IsKeyWord — lexer, syntax highlighter, the CES
+		// parser (which then rejects them as unknown identifiers).
+		if (!IsAllowedKey(idx))
+			return wxNOT_FOUND;
+		return idx;
 	}
 
 	return wxNOT_FOUND;
 }
 
-wxString CTranslateCode::GetKeyWord(int k)
+wxString ibTranslateCode::GetKeyWord(int k)
 {
-	auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
+	auto it = std::find_if(ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
 		[k](const std::pair<const wxString, void*>& pair) -> bool {
-			return k == ((int)pair.second) - 1;
+			return k == static_cast<int>(reinterpret_cast<intptr_t>(pair.second)) - 1;
 		}
 	);
 
@@ -959,12 +1014,20 @@ wxString CTranslateCode::GetKeyWord(int k)
 * PASS1 - loading lexemes for subsequent quick access during recognition
 */
 
-bool CTranslateCode::PrepareLexem()
+bool ibTranslateCode::PrepareLexem()
 {
 	m_listLexem.clear();
 
+	// Reserve capacity here (after clear) instead of in Load — that way
+	// the reserve grows from an empty vector with no per-element move
+	// work, and incremental PrepareLexem(line, ...) (which depends on
+	// previous-parse lexems being intact) is unaffected.
+	const size_t alloc_size = CalcAllocSize();
+	if (alloc_size > m_listLexem.capacity())
+		m_listLexem.reserve(alloc_size + 1000);
+
 	if (m_defineList == nullptr) {
-		m_defineList = new CDefineCollection();
+		m_defineList = new ibDefineCollection();
 		m_defineList->SetParent(&ms_listDefine);
 		m_bAutoDeleteDefList = true;//indication that the array with definitions was created by us (and not passed as a definition translation)
 	}
@@ -997,9 +1060,8 @@ bool CTranslateCode::PrepareLexem()
 
 	while (!IsEnd()) {
 
-		m_current_lex.m_strModuleName = m_strModuleName;
-		m_current_lex.m_strDocPath = m_strDocPath;
-		m_current_lex.m_strFileName = m_strFileName;
+		// m_current_lex.m_translateCode is bound once in the ctor and
+		// preserved across emplace_back moves — no per-iteration write here.
 
 		m_current_lex.m_numLine = m_currentLine;
 		m_current_lex.m_numString = m_currentPos;//if an error occurs later, this is the string that should be returned to the user
@@ -1014,17 +1076,18 @@ bool CTranslateCode::PrepareLexem()
 
 				//processing user definitions (#define)
 				if (m_defineList->HasDefine(s)) {
-					CLexemList* pDef = m_defineList->GetDefine(s);
+					ibLexemList* pDef = m_defineList->GetDefine(s);
 					for (unsigned int i = 0; i < pDef->size(); i++) {
-						CLexem* m_current_lex = pDef[i].data();
+						ibLexem* m_current_lex = pDef[i].data();
 						m_current_lex->m_numString = m_currentPos;
 						m_current_lex->m_numLine = m_currentLine;//for breakpoints
 #ifdef UTF8_LEXEM_TRANSLATE
 						m_current_lex->m_numUtf8String = m_currentUtf8Pos;
 #endif
-						m_current_lex->m_strModuleName = m_strModuleName;
-						m_current_lex->m_strDocPath = m_strDocPath;
-						m_current_lex->m_strFileName = m_strFileName;
+						// Rebind to consumer's translate so source attribution
+						// follows the expansion site (consumer's module name /
+						// doc path), not the original definition's.
+						m_current_lex->m_translateCode = this;
 						m_listLexem.push_back(*m_current_lex);
 					}
 					continue;
@@ -1035,7 +1098,7 @@ bool CTranslateCode::PrepareLexem()
 				//undefined
 				if (k == KEY_UNDEFINED) {
 					m_current_lex.m_lexType = CONSTANT;
-					m_current_lex.m_valData.SetType(eValueTypes::TYPE_EMPTY);
+					m_current_lex.m_valData.SetType(ibValueTypes::TYPE_EMPTY);
 				}
 				//boolean
 				else if (k == KEY_TRUE || k == KEY_FALSE) {
@@ -1045,7 +1108,7 @@ bool CTranslateCode::PrepareLexem()
 				//null
 				else if (k == KEY_NULL) {
 					m_current_lex.m_lexType = CONSTANT;
-					m_current_lex.m_valData.SetType(eValueTypes::TYPE_NULL);
+					m_current_lex.m_valData.SetType(ibValueTypes::TYPE_NULL);
 				}
 				else {
 
@@ -1248,9 +1311,7 @@ bool CTranslateCode::PrepareLexem()
 	m_current_lex.m_lexType = ENDPROGRAM;
 	m_current_lex.m_numData = 0;
 
-	m_current_lex.m_strModuleName = m_strModuleName;
-	m_current_lex.m_strDocPath = m_strDocPath;
-	m_current_lex.m_strFileName = m_strFileName;
+	// m_translateCode bound at ctor time, kept through moves.
 
 	m_current_lex.m_numLine = total_line + m_currentLine;
 	m_current_lex.m_numString = total_pos + m_currentPos;
@@ -1266,9 +1327,9 @@ bool CTranslateCode::PrepareLexem()
 * create lexemes starting from the current position
 */
 
-void CTranslateCode::PrepareFromCurrent(int nMode, const wxString& strName)
+void ibTranslateCode::PrepareFromCurrent(int nMode, const wxString& strName)
 {
-	CTranslateCode translate;
+	ibTranslateCode translate;
 
 	translate.m_defineList = m_defineList;
 	translate.m_nModePreparing = nMode;
@@ -1298,6 +1359,11 @@ void CTranslateCode::PrepareFromCurrent(int nMode, const wxString& strName)
 	else if (nMode == LEXEM_ADD) {
 		for (unsigned int i = 0; i < translate.m_listLexem.size() - 1; i++) {//excluding ENDPROGRAM
 			m_listLexem.push_back(translate.m_listLexem[i]);
+			// Re-anchor to caller's translate — the local `translate`
+			// object dies when this function returns; lexems' back-pointer
+			// would otherwise dangle. translate.m_strModuleName was set
+			// to ours above so the strings are identical.
+			m_listLexem.back().m_translateCode = this;
 		}
 
 		m_currentLine = translate.m_currentLine;
@@ -1315,7 +1381,7 @@ void CTranslateCode::PrepareFromCurrent(int nMode, const wxString& strName)
 	}
 }
 
-void CTranslateCode::AppendModule(CTranslateCode* module)
+void ibTranslateCode::AppendModule(ibTranslateCode* module)
 {
 	auto iterator = std::find(m_listTranslateCode.begin(), m_listTranslateCode.end(), module);
 	if (iterator != m_listTranslateCode.end())
@@ -1323,7 +1389,7 @@ void CTranslateCode::AppendModule(CTranslateCode* module)
 	m_listTranslateCode.push_back(module);
 }
 
-void CTranslateCode::RemoveModule(CTranslateCode* module)
+void ibTranslateCode::RemoveModule(ibTranslateCode* module)
 {
 	m_listTranslateCode.erase(
 		std::remove(m_listTranslateCode.begin(), m_listTranslateCode.end(), module),
@@ -1331,10 +1397,10 @@ void CTranslateCode::RemoveModule(CTranslateCode* module)
 	);
 }
 
-void CTranslateCode::OnSetParent(CTranslateCode* setParent)
+void ibTranslateCode::OnSetParent(ibTranslateCode* setParent)
 {
 	if (!m_defineList) {
-		m_defineList = new CDefineCollection;
+		m_defineList = new ibDefineCollection;
 		m_defineList->SetParent(&ms_listDefine);
 		m_bAutoDeleteDefList = true;//sign of auto deletion
 	}
@@ -1349,70 +1415,17 @@ void CTranslateCode::OnSetParent(CTranslateCode* setParent)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t CTranslateCode::CalcAllocSize() const {
+size_t ibTranslateCode::CalcAllocSize() const {
 
-	CTranslateCode translate;
-
-	translate.Clear();
-
-	translate.m_strBuffer.assign(m_strBuffer);
-	translate.m_strBUFFER.assign(m_strBUFFER);
-
-	translate.m_bufferSize = m_bufferSize;
-
-	size_t alloc_size = 1;
-
-	while (!translate.IsEnd()) {
-		if (translate.IsWord()) {
-			try {
-				(void)translate.GetWord();
-				alloc_size++;
-			}
-			catch (...)
-			{
-			}
-		}
-		else if (translate.IsNumber() || translate.IsString() || translate.IsDate()) {
-			if (translate.IsNumber()) {
-				try {
-					(void)translate.GetNumber();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-			else if (translate.IsString()) {
-				try {
-					(void)translate.GetString();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-			else if (translate.IsDate()) {
-				try {
-					(void)translate.GetDate();
-					alloc_size++;
-				}
-				catch (...)
-				{
-				}
-			}
-		}
-		else {
-			try {
-				(void)translate.GetByte();
-				alloc_size++;
-			}
-			catch (...)
-			{
-			}
-		}
-	}
-
-	return alloc_size;
+	// Heuristic — average token is ~4 source chars (identifiers, numbers,
+	// short keywords, single-char delimiters; whitespace and comments
+	// don't produce lexems). +16 for tiny inputs. The previous version
+	// ran a full tokenizer pass over a copy of both buffers just to
+	// count and ate ~46% of the Enter-keypress OnTextChange handler.
+	// Slight over-estimate is intentional — vector::reserve takes the
+	// extra capacity without complaint, and one cheap arithmetic op
+	// beats a second tokenization round.
+	return m_bufferSize > 0 ? (m_bufferSize / 4) + 16 : 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1424,7 +1437,7 @@ class wxOESKeywordModule : public wxModule
 public:
 	wxOESKeywordModule() : wxModule() {}
 	virtual bool OnInit() {
-		CTranslateCode::LoadKeyWords();
+		ibTranslateCode::LoadKeyWords();
 		return true;
 	}
 	virtual void OnExit() {}

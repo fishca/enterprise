@@ -4,12 +4,12 @@
 #include "backend/compiler/typeCtor.h"
 
 // object with non-create object
-class IControlTypeCtor : public IValueTypeCtor {
+class ibCtorControlTypeBase : public ibCtorValueTypeBase {
 	wxString m_classType;
 public:
 
-	IControlTypeCtor(const wxString& className, const wxString& classType, wxClassInfo* classInfo, const class_identifier_t& clsid)
-		: IValueTypeCtor(className, classInfo, clsid), m_classType(classType) {
+	ibCtorControlTypeBase(const wxString& className, const wxString& classType, wxClassInfo* classInfo, const ibClassID& clsid)
+		: ibCtorValueTypeBase(className, classInfo, clsid), m_classType(classType) {
 	}
 
 	virtual wxString GetTypeControlName() const {
@@ -23,38 +23,38 @@ public:
 
 // object with non-create object
 template <class T>
-class CControlTypeCtor : public IControlTypeCtor {
+class ibCtorControlType : public ibCtorControlTypeBase {
 public:
 
-	CControlTypeCtor(const wxString& className, const wxString& classType, const class_identifier_t& clsid)
-		: IControlTypeCtor(className, classType, CLASSINFO(T), clsid) {
+	ibCtorControlType(const wxString& className, const wxString& classType, const ibClassID& clsid)
+		: ibCtorControlTypeBase(className, classType, CLASSINFO(T), clsid) {
 	}
 
 	virtual wxIcon GetClassIcon() const {
 		return T::GetIconGroup();
 	}
 
-	virtual eCtorObjectType GetObjectTypeCtor() const {
-		return eCtorObjectType::eCtorObjectType_object_control;
+	virtual ibCtorObjectType GetObjectTypeCtor() const {
+		return ibCtorObjectType::ibCtorObjectType_object_control;
 	}
 
-	virtual void CallAsEvent(eCtorObjectTypeEvent event) {
-		if (event == eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register)
+	virtual void CallAsEvent(ibCtorObjectTypeEvent event) {
+		if (event == ibCtorObjectTypeEvent::ibCtorObjectTypeEvent_Register)
 			T::OnRegisterObject(GetClassName(), this);
-		else if (event == eCtorObjectTypeEvent::eCtorObjectTypeEvent_UnRegister)
+		else if (event == ibCtorObjectTypeEvent::ibCtorObjectTypeEvent_UnRegister)
 			T::OnUnRegisterObject(GetClassName());
 	}
 
-	virtual CValue* CreateObject() const {
+	virtual ibValue* CreateObject() const {
 		return new T();
 	}
 };
 
 template <class T>
-class CSystemControlTypeCtor : public CControlTypeCtor<T> {
+class ibCtorSystemControlType : public ibCtorControlType<T> {
 public:
-	CSystemControlTypeCtor(const wxString& className, const wxString& classType, const class_identifier_t& clsid)
-		: CControlTypeCtor(className, classType, clsid) {
+	ibCtorSystemControlType(const wxString& className, const wxString& classType, const ibClassID& clsid)
+		: ibCtorControlType<T>(className, classType, clsid) {
 	}
 	virtual bool IsControlSystem() const {
 		return true;
@@ -62,9 +62,9 @@ public:
 };
 
 #define CONTROL_TYPE_REGISTER(class_info, class_name, class_type, clsid)\
-GENERATE_REGISTER(wxT(class_name), wxMAKE_UNIQUE_NAME(s_cs_reg_c_), new CControlTypeCtor<class_info>(wxT(class_name), wxT(class_type), clsid))
+GENERATE_REGISTER(wxT(class_name), wxMAKE_UNIQUE_NAME(s_cs_reg_c_), new ibCtorControlType<class_info>(wxT(class_name), wxT(class_type), clsid))
 
 #define S_CONTROL_TYPE_REGISTER(class_info, class_name, class_type, clsid)\
-GENERATE_REGISTER(wxT(class_name), wxMAKE_UNIQUE_NAME(s_cs_reg_sc_), new CSystemControlTypeCtor<class_info>(wxT(class_name), wxT(class_type), clsid))
+GENERATE_REGISTER(wxT(class_name), wxMAKE_UNIQUE_NAME(s_cs_reg_sc_), new ibCtorSystemControlType<class_info>(wxT(class_name), wxT(class_type), clsid))
 
 #endif 

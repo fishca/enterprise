@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 // Name:        src/generic/grid.cpp
-// Purpose:     wxGridExt and related classes
+// Purpose:     ibGrid and related classes
 // Author:      Michael Bedward (based on code by Julian Smart, Robin Dunn)
 // Modified by: Robin Dunn, Vadim Zeitlin, Santiago Palacios
 // Created:     1/08/1999
@@ -58,10 +58,10 @@
 // Required for wxIs... functions
 #include <ctype.h>
 
-const char wxGridExtNameStr[] = "gridext";
+const char ibGridNameStr[] = "gridext";
 
 WX_DECLARE_HASH_SET_WITH_DECL_PTR(int, wxIntegerHash, wxIntegerEqual,
-	wxGridExtFixedIndicesSet, class);
+	ibGridFixedIndicesSet, class);
 
 // ----------------------------------------------------------------------------
 // globals
@@ -82,9 +82,9 @@ namespace
 	// globals
 	struct DefaultHeaderRenderers
 	{
-		wxGridExtColumnHeaderRendererDefault colRenderer;
-		wxGridExtRowHeaderRendererDefault rowRenderer;
-		wxGridExtCornerHeaderRendererDefault cornerRenderer;
+		ibGridColumnHeaderRendererDefault colRenderer;
+		ibGridRowHeaderRendererDefault rowRenderer;
+		ibGridCornerHeaderRendererDefault cornerRenderer;
 	} gs_defaultHeaderRenderers;
 
 } // anonymous namespace
@@ -95,9 +95,9 @@ namespace
 
 const wxArrayString wxEmptyArrayGridString;
 
-wxGridExtCellCoords wxGridExtNoCellCoords(-1, -1);
-wxGridExtBlockCoords wxGridExtNoBlockCoords(-1, -1, -1, -1);
-wxRect wxGridExtNoCellRect(-1, -1, -1, -1);
+ibGridCellCoords ibGridNoCellCoords(-1, -1);
+ibGridBlockCoords ibGridNoBlockCoords(-1, -1, -1, -1);
+wxRect ibGridNoCellRect(-1, -1, -1, -1);
 
 namespace
 {
@@ -123,60 +123,60 @@ namespace
 } // anonymous namespace
 
 
-WX_DEFINE_OBJARRAY(wxGridExtCellCoordsArray)
-WX_DEFINE_OBJARRAY(wxGridExtCellCacheArray)
-WX_DEFINE_OBJARRAY(wxGridExtCellAreaArray)
+WX_DEFINE_OBJARRAY(ibGridCellCoordsArray)
+WX_DEFINE_OBJARRAY(ibGridCellCacheArray)
+WX_DEFINE_OBJARRAY(ibGridCellAreaArray)
 
 // ----------------------------------------------------------------------------
 // events
 // ----------------------------------------------------------------------------
 
-wxDEFINE_EVENT(wxEVT_GRID_CELL_LEFT_CLICK, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_CELL_RIGHT_CLICK, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_CELL_LEFT_DCLICK, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_CELL_RIGHT_DCLICK, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_CELL_BEGIN_DRAG, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_LABEL_LEFT_CLICK, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_LABEL_RIGHT_CLICK, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_LABEL_LEFT_DCLICK, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_LABEL_RIGHT_DCLICK, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_SIZE, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_MODIFIED, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_AUTO_SIZE, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_SIZE, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_MODIFIED, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_AUTO_SIZE, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_MOVE, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_MOVE, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_SORT, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_RANGE_SELECTING, wxGridExtRangeSelectEvent);
-wxDEFINE_EVENT(wxEVT_GRID_RANGE_SELECTED, wxGridExtRangeSelectEvent);
-wxDEFINE_EVENT(wxEVT_GRID_CELL_CHANGING, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_CELL_CHANGED, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_TABLE_MODIFIED, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_TABLE_ATTR_MODIFIED, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_SELECT_CELL, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_EDITOR_SHOWN, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_EDITOR_CREATED, wxGridExtEditorCreatedEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_ADD, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_SET, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_DELETE, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_ADD, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_SET, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_DELETE, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_CREATE, wxGridExtAreaEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_DELETE, wxGridExtAreaEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_SIZE, wxGridExtAreaEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_NAME, wxGridExtAreaEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_CREATE, wxGridExtAreaEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_DELETE, wxGridExtAreaEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_SIZE, wxGridExtAreaEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_NAME, wxGridExtAreaEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ROW_FREEZE, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_COL_FREEZE, wxGridExtSizeEvent);
-wxDEFINE_EVENT(wxEVT_GRID_ZOOM, wxGridExtEvent);
-wxDEFINE_EVENT(wxEVT_GRID_TABBING, wxGridExtEvent);
+wxDEFINE_EVENT(wxEVT_GRID_CELL_LEFT_CLICK, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_CELL_RIGHT_CLICK, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_CELL_LEFT_DCLICK, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_CELL_RIGHT_DCLICK, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_CELL_BEGIN_DRAG, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_LABEL_LEFT_CLICK, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_LABEL_RIGHT_CLICK, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_LABEL_LEFT_DCLICK, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_LABEL_RIGHT_DCLICK, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_SIZE, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_MODIFIED, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AUTO_SIZE, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_SIZE, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_MODIFIED, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AUTO_SIZE, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_MOVE, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_MOVE, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_SORT, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_RANGE_SELECTING, ibGridRangeSelectEvent);
+wxDEFINE_EVENT(wxEVT_GRID_RANGE_SELECTED, ibGridRangeSelectEvent);
+wxDEFINE_EVENT(wxEVT_GRID_CELL_CHANGING, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_CELL_CHANGED, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_TABLE_MODIFIED, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_TABLE_ATTR_MODIFIED, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_SELECT_CELL, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_EDITOR_SHOWN, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_EDITOR_HIDDEN, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_EDITOR_CREATED, ibGridEditorCreatedEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_ADD, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_SET, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_DELETE, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_ADD, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_SET, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_DELETE, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_CREATE, ibGridAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_DELETE, ibGridAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_SIZE, ibGridAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_NAME, ibGridAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_CREATE, ibGridAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_DELETE, ibGridAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_SIZE, ibGridAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_NAME, ibGridAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_FREEZE, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_FREEZE, ibGridSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ZOOM, ibGridEvent);
+wxDEFINE_EVENT(wxEVT_GRID_TABBING, ibGridEvent);
 
 // ============================================================================
 // implementation
@@ -186,94 +186,94 @@ namespace
 {
 
 	// Helper function for consistent cell span determination based on cell size.
-	wxGridExt::CellSpan GetCellSpan(int numRows, int numCols)
+	ibGrid::CellSpan GetCellSpan(int numRows, int numCols)
 	{
 		if (numRows == 1 && numCols == 1)
-			return wxGridExt::CellSpan_None; // just a normal cell
+			return ibGrid::CellSpan_None; // just a normal cell
 
 		if (numRows < 0 || numCols < 0)
-			return wxGridExt::CellSpan_Inside; // covered by a multi-span cell
+			return ibGrid::CellSpan_Inside; // covered by a multi-span cell
 
 		// this cell spans multiple cells to its right/bottom
-		return wxGridExt::CellSpan_Main;
+		return ibGrid::CellSpan_Main;
 	}
 
 } // anonymous namespace
 
-wxIMPLEMENT_ABSTRACT_CLASS(wxGridExtCellEditorEvtHandler, wxEvtHandler);
+wxIMPLEMENT_ABSTRACT_CLASS(ibGridCellEditorEvtHandler, wxEvtHandler);
 
-wxBEGIN_EVENT_TABLE(wxGridExtCellEditorEvtHandler, wxEvtHandler)
-EVT_KILL_FOCUS(wxGridExtCellEditorEvtHandler::OnKillFocus)
-EVT_KEY_DOWN(wxGridExtCellEditorEvtHandler::OnKeyDown)
-EVT_CHAR(wxGridExtCellEditorEvtHandler::OnChar)
+wxBEGIN_EVENT_TABLE(ibGridCellEditorEvtHandler, wxEvtHandler)
+EVT_KILL_FOCUS(ibGridCellEditorEvtHandler::OnKillFocus)
+EVT_KEY_DOWN(ibGridCellEditorEvtHandler::OnKeyDown)
+EVT_CHAR(ibGridCellEditorEvtHandler::OnChar)
 wxEND_EVENT_TABLE()
 
-wxBEGIN_EVENT_TABLE(wxGridExtHeaderCtrl, wxHeaderCtrl)
-EVT_HEADER_CLICK(wxID_ANY, wxGridExtHeaderCtrl::OnClick)
-EVT_HEADER_DCLICK(wxID_ANY, wxGridExtHeaderCtrl::OnDoubleClick)
-EVT_HEADER_RIGHT_CLICK(wxID_ANY, wxGridExtHeaderCtrl::OnRightClick)
+wxBEGIN_EVENT_TABLE(ibGridHeaderCtrl, wxHeaderCtrl)
+EVT_HEADER_CLICK(wxID_ANY, ibGridHeaderCtrl::OnClick)
+EVT_HEADER_DCLICK(wxID_ANY, ibGridHeaderCtrl::OnDoubleClick)
+EVT_HEADER_RIGHT_CLICK(wxID_ANY, ibGridHeaderCtrl::OnRightClick)
 
-EVT_HEADER_BEGIN_RESIZE(wxID_ANY, wxGridExtHeaderCtrl::OnBeginResize)
-EVT_HEADER_RESIZING(wxID_ANY, wxGridExtHeaderCtrl::OnResizing)
-EVT_HEADER_END_RESIZE(wxID_ANY, wxGridExtHeaderCtrl::OnEndResize)
+EVT_HEADER_BEGIN_RESIZE(wxID_ANY, ibGridHeaderCtrl::OnBeginResize)
+EVT_HEADER_RESIZING(wxID_ANY, ibGridHeaderCtrl::OnResizing)
+EVT_HEADER_END_RESIZE(wxID_ANY, ibGridHeaderCtrl::OnEndResize)
 
-EVT_HEADER_BEGIN_REORDER(wxID_ANY, wxGridExtHeaderCtrl::OnBeginReorder)
-EVT_HEADER_END_REORDER(wxID_ANY, wxGridExtHeaderCtrl::OnEndReorder)
+EVT_HEADER_BEGIN_REORDER(wxID_ANY, ibGridHeaderCtrl::OnBeginReorder)
+EVT_HEADER_END_REORDER(wxID_ANY, ibGridHeaderCtrl::OnEndReorder)
 wxEND_EVENT_TABLE()
 
-wxGridExtOperations& wxGridExtRowOperations::Dual() const
+ibGridOperations& ibGridRowOperations::Dual() const
 {
-	static wxGridExtColumnOperations s_colOper;
+	static ibGridColumnOperations s_colOper;
 
 	return s_colOper;
 }
 
-wxGridExtOperations& wxGridExtColumnOperations::Dual() const
+ibGridOperations& ibGridColumnOperations::Dual() const
 {
-	static wxGridExtRowOperations s_rowOper;
+	static ibGridRowOperations s_rowOper;
 
 	return s_rowOper;
 }
 
-int wxGridExtRowOperations::GetNumberOfLines(const wxGridExt* grid, wxGridExtWindow* gridWindow) const
+int ibGridRowOperations::GetNumberOfLines(const ibGrid* grid, ibGridWindow* gridWindow) const
 {
 	if (!gridWindow)
 		return grid->GetNumberRows();
 
-	if (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenRow)
+	if (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenRow)
 		return grid->GetNumberFrozenRows();
 
 	return grid->GetNumberRows() - grid->GetNumberFrozenRows();
 }
 
-int wxGridExtColumnOperations::GetNumberOfLines(const wxGridExt* grid, wxGridExtWindow* gridWindow) const
+int ibGridColumnOperations::GetNumberOfLines(const ibGrid* grid, ibGridWindow* gridWindow) const
 {
 	if (!gridWindow)
 		return grid->GetNumberCols();
 
-	if (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenCol)
+	if (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenCol)
 		return grid->GetNumberFrozenCols();
 
 	return grid->GetNumberCols() - grid->GetNumberFrozenCols();
 }
 
-int wxGridExtRowOperations::GetFirstLine(const wxGridExt* grid, wxGridExtWindow* gridWindow) const
+int ibGridRowOperations::GetFirstLine(const ibGrid* grid, ibGridWindow* gridWindow) const
 {
-	if (!gridWindow || gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenRow)
+	if (!gridWindow || gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenRow)
 		return 0;
 
 	return grid->GetNumberFrozenRows();
 }
 
-int wxGridExtColumnOperations::GetFirstLine(const wxGridExt* grid, wxGridExtWindow* gridWindow) const
+int ibGridColumnOperations::GetFirstLine(const ibGrid* grid, ibGridWindow* gridWindow) const
 {
-	if (!gridWindow || gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenCol)
+	if (!gridWindow || gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenCol)
 		return 0;
 
 	return grid->GetNumberFrozenCols();
 }
 
-void wxGridExtOperations::PrepareDCForLabels(wxGridExt* grid, wxDC& dc) const
+void ibGridOperations::PrepareDCForLabels(ibGrid* grid, wxDC& dc) const
 {
 	// The grid can be scrolled in both directions and so grid->DoPrepareDC
 	// could offset the device context in both directions.
@@ -292,30 +292,30 @@ void wxGridExtOperations::PrepareDCForLabels(wxGridExt* grid, wxDC& dc) const
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellWorker is an (almost) empty common base class for
-// wxGridExtCellRenderer and wxGridExtCellEditor managing ref counting
+// ibGridCellWorker is an (almost) empty common base class for
+// ibGridCellRenderer and ibGridCellEditor managing ref counting
 // ----------------------------------------------------------------------------
 
-wxGridExtCellWorker::wxGridExtCellWorker(const wxGridExtCellWorker& other)
+ibGridCellWorker::ibGridCellWorker(const ibGridCellWorker& other)
 	: wxRefCounter()
 {
 	CopyClientDataContainer(other);
 }
 
-void wxGridExtCellWorker::SetParameters(const wxString& WXUNUSED(params))
+void ibGridCellWorker::SetParameters(const wxString& WXUNUSED(params))
 {
 	// nothing to do
 }
 
-wxGridExtCellWorker::~wxGridExtCellWorker()
+ibGridCellWorker::~ibGridCellWorker()
 {
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtHeaderLabelsRenderer and related classes
+// ibGridHeaderLabelsRenderer and related classes
 // ----------------------------------------------------------------------------
 
-void wxGridExtHeaderLabelsRenderer::DrawLabel(const wxGridExt& grid,
+void ibGridHeaderLabelsRenderer::DrawLabel(const ibGrid& grid,
 	wxDC& dc,
 	const wxString& value,
 	const wxRect& rect,
@@ -330,7 +330,7 @@ void wxGridExtHeaderLabelsRenderer::DrawLabel(const wxGridExt& grid,
 	// is disabled.
 	//
 	// Note that the colours used here are consistent with wxGenericStaticText
-	// rather than our own wxGridExtCellStringRenderer::SetTextColoursAndFont()
+	// rather than our own ibGridCellStringRenderer::SetTextColoursAndFont()
 	// because this results in a better disabled appearance for the default
 	// bold font used for the labels.
 	wxColour colText;
@@ -357,7 +357,7 @@ void wxGridExtHeaderLabelsRenderer::DrawLabel(const wxGridExt& grid,
 }
 
 
-void wxGridExtRowHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
+void ibGridRowHeaderRendererDefault::DrawBorder(const ibGrid& grid,
 	wxDC& dc,
 	wxRect& rect) const
 {
@@ -393,7 +393,7 @@ void wxGridExtRowHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 	rect.Deflate(1 + ofs);
 }
 
-void wxGridExtColumnHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
+void ibGridColumnHeaderRendererDefault::DrawBorder(const ibGrid& grid,
 	wxDC& dc,
 	wxRect& rect) const
 {
@@ -426,7 +426,7 @@ void wxGridExtColumnHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 	rect.Deflate(1 + ofs);
 }
 
-void wxGridExtCornerHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
+void ibGridCornerHeaderRendererDefault::DrawBorder(const ibGrid& grid,
 	wxDC& dc,
 	wxRect& rect) const
 {
@@ -463,17 +463,17 @@ void wxGridExtCornerHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellAttr
+// ibGridCellAttr
 // ----------------------------------------------------------------------------
 
-void wxGridExtCellAttr::Init(wxGridExtCellAttr* attrDefault)
+void ibGridCellAttr::Init(ibGridCellAttr* attrDefault)
 {
 	m_isReadOnly = Unset;
 
 	m_renderer = NULL;
 	m_editor = NULL;
 
-	m_attrkind = wxGridExtCellAttr::Cell;
+	m_attrkind = ibGridCellAttr::Cell;
 
 	m_orientText = -1;
 	m_sizeRows = m_sizeCols = 1;
@@ -481,9 +481,9 @@ void wxGridExtCellAttr::Init(wxGridExtCellAttr* attrDefault)
 	SetDefAttr(attrDefault);
 }
 
-wxGridExtCellAttr* wxGridExtCellAttr::Clone() const
+ibGridCellAttr* ibGridCellAttr::Clone() const
 {
-	wxGridExtCellAttr* attr = new wxGridExtCellAttr(m_defGridAttr);
+	ibGridCellAttr* attr = new ibGridCellAttr(m_defGridAttr);
 
 	if (HasTextColour())
 		attr->SetTextColour(GetTextColour());
@@ -529,7 +529,7 @@ wxGridExtCellAttr* wxGridExtCellAttr::Clone() const
 	return attr;
 }
 
-void wxGridExtCellAttr::MergeWith(wxGridExtCellAttr* mergefrom)
+void ibGridCellAttr::MergeWith(ibGridCellAttr* mergefrom)
 {
 	if (!HasTextColour() && mergefrom->HasTextColour())
 		SetTextColour(mergefrom->GetTextColour());
@@ -585,7 +585,7 @@ void wxGridExtCellAttr::MergeWith(wxGridExtCellAttr* mergefrom)
 	SetDefAttr(mergefrom->m_defGridAttr);
 }
 
-void wxGridExtCellAttr::SetSize(int num_rows, int num_cols)
+void ibGridCellAttr::SetSize(int num_rows, int num_cols)
 {
 	// The size of a cell is normally 1,1
 
@@ -600,41 +600,41 @@ void wxGridExtCellAttr::SetSize(int num_rows, int num_cols)
 	wxASSERT_MSG((!((num_rows > 0) && (num_cols <= 0)) ||
 		!((num_rows <= 0) && (num_cols > 0)) ||
 		!((num_rows == 0) && (num_cols == 0))),
-		wxT("wxGridExtCellAttr::SetSize only takes two positive values or negative/zero values"));
+		wxT("ibGridCellAttr::SetSize only takes two positive values or negative/zero values"));
 
 	m_sizeRows = num_rows;
 	m_sizeCols = num_cols;
 }
 
-void wxGridExtCellAttr::SetBorderLeft(wxPenStyle style, const wxColour& colour, int width)
+void ibGridCellAttr::SetBorderLeft(wxPenStyle style, const wxColour& colour, int width)
 {
 	m_borderLeft.m_style = style;
 	m_borderLeft.m_colour = colour;
 	m_borderLeft.m_width = width;
 }
 
-void wxGridExtCellAttr::SetBorderRight(wxPenStyle style, const wxColour& colour, int width)
+void ibGridCellAttr::SetBorderRight(wxPenStyle style, const wxColour& colour, int width)
 {
 	m_borderRight.m_style = style;
 	m_borderRight.m_colour = colour;
 	m_borderRight.m_width = width;
 }
 
-void wxGridExtCellAttr::SetBorderTop(wxPenStyle style, const wxColour& colour, int width)
+void ibGridCellAttr::SetBorderTop(wxPenStyle style, const wxColour& colour, int width)
 {
 	m_borderTop.m_style = style;
 	m_borderTop.m_colour = colour;
 	m_borderTop.m_width = width;
 }
 
-void wxGridExtCellAttr::SetBorderBottom(wxPenStyle style, const wxColour& colour, int width)
+void ibGridCellAttr::SetBorderBottom(wxPenStyle style, const wxColour& colour, int width)
 {
 	m_borderBottom.m_style = style;
 	m_borderBottom.m_colour = colour;
 	m_borderBottom.m_width = width;
 }
 
-const wxColour& wxGridExtCellAttr::GetTextColour() const
+const wxColour& ibGridCellAttr::GetTextColour() const
 {
 	if (HasTextColour())
 	{
@@ -651,7 +651,7 @@ const wxColour& wxGridExtCellAttr::GetTextColour() const
 	}
 }
 
-const int wxGridExtCellAttr::GetTextOrient() const
+const int ibGridCellAttr::GetTextOrient() const
 {
 	if (HasTextOrient())
 	{
@@ -668,7 +668,7 @@ const int wxGridExtCellAttr::GetTextOrient() const
 	}
 }
 
-const wxColour& wxGridExtCellAttr::GetBackgroundColour() const
+const wxColour& ibGridCellAttr::GetBackgroundColour() const
 {
 	if (HasBackgroundColour())
 	{
@@ -685,7 +685,7 @@ const wxColour& wxGridExtCellAttr::GetBackgroundColour() const
 	}
 }
 
-const wxFont& wxGridExtCellAttr::GetFont(float scale) const
+const wxFont& ibGridCellAttr::GetFont(float scale) const
 {
 	if (HasFont())
 	{
@@ -712,7 +712,7 @@ const wxFont& wxGridExtCellAttr::GetFont(float scale) const
 	}
 }
 
-void wxGridExtCellAttr::GetAlignment(int* hAlign, int* vAlign) const
+void ibGridCellAttr::GetAlignment(int* hAlign, int* vAlign) const
 {
 	if (HasAlignment())
 	{
@@ -731,7 +731,7 @@ void wxGridExtCellAttr::GetAlignment(int* hAlign, int* vAlign) const
 	}
 }
 
-void wxGridExtCellAttr::GetNonDefaultAlignment(int* hAlign, int* vAlign) const
+void ibGridCellAttr::GetNonDefaultAlignment(int* hAlign, int* vAlign) const
 {
 	// The logic here is tricky but necessary to handle all the cases: if we
 	// have non-default alignment on input, we should only override it if this
@@ -769,7 +769,7 @@ void wxGridExtCellAttr::GetNonDefaultAlignment(int* hAlign, int* vAlign) const
 	}
 }
 
-wxGridExtCellBorder wxGridExtCellAttr::GetBorderLeft() const
+ibGridCellBorder ibGridCellAttr::GetBorderLeft() const
 {
 	if (HasBorderLeft())
 	{
@@ -782,11 +782,11 @@ wxGridExtCellBorder wxGridExtCellAttr::GetBorderLeft() const
 	else
 	{
 		wxFAIL_MSG(wxT("Missing default cell attribute"));
-		return wxGridExtCellBorder();
+		return ibGridCellBorder();
 	}
 }
 
-wxGridExtCellBorder wxGridExtCellAttr::GetBorderRight() const
+ibGridCellBorder ibGridCellAttr::GetBorderRight() const
 {
 	if (HasBorderRight())
 	{
@@ -799,11 +799,11 @@ wxGridExtCellBorder wxGridExtCellAttr::GetBorderRight() const
 	else
 	{
 		wxFAIL_MSG(wxT("Missing default cell attribute"));
-		return wxGridExtCellBorder();
+		return ibGridCellBorder();
 	}
 }
 
-wxGridExtCellBorder wxGridExtCellAttr::GetBorderTop() const
+ibGridCellBorder ibGridCellAttr::GetBorderTop() const
 {
 	if (HasBorderTop())
 	{
@@ -816,11 +816,11 @@ wxGridExtCellBorder wxGridExtCellAttr::GetBorderTop() const
 	else
 	{
 		wxFAIL_MSG(wxT("Missing default cell attribute"));
-		return wxGridExtCellBorder();
+		return ibGridCellBorder();
 	}
 }
 
-wxGridExtCellBorder wxGridExtCellAttr::GetBorderBottom() const
+ibGridCellBorder ibGridCellAttr::GetBorderBottom() const
 {
 	if (HasBorderBottom())
 	{
@@ -833,11 +833,11 @@ wxGridExtCellBorder wxGridExtCellAttr::GetBorderBottom() const
 	else
 	{
 		wxFAIL_MSG(wxT("Missing default cell attribute"));
-		return wxGridExtCellBorder();
+		return ibGridCellBorder();
 	}
 }
 
-void wxGridExtCellAttr::GetSize(int* num_rows, int* num_cols) const
+void ibGridCellAttr::GetSize(int* num_rows, int* num_cols) const
 {
 	if (num_rows)
 		*num_rows = m_sizeRows;
@@ -845,7 +845,7 @@ void wxGridExtCellAttr::GetSize(int* num_rows, int* num_cols) const
 		*num_cols = m_sizeCols;
 }
 
-wxGridExtFitMode wxGridExtCellAttr::GetFitMode() const
+ibGridFitMode ibGridCellAttr::GetFitMode() const
 {
 	if (m_fitMode.IsSpecified())
 	{
@@ -858,11 +858,11 @@ wxGridExtFitMode wxGridExtCellAttr::GetFitMode() const
 	else
 	{
 		wxFAIL_MSG(wxT("Missing default cell attribute"));
-		return wxGridExtFitMode();
+		return ibGridFitMode();
 	}
 }
 
-bool wxGridExtCellAttr::CanOverflow() const
+bool ibGridCellAttr::CanOverflow() const
 {
 	// If overflow is disabled anyhow, we definitely can't overflow.
 	if (!GetOverflow())
@@ -884,9 +884,9 @@ bool wxGridExtCellAttr::CanOverflow() const
 // NULL (because the table has a type that the grid does not have in its
 // registry), then the grid's default editor or renderer is used.
 
-wxGridExtCellRenderer* wxGridExtCellAttr::GetRenderer(const wxGridExt* grid, int row, int col) const
+ibGridCellRenderer* ibGridCellAttr::GetRenderer(const ibGrid* grid, int row, int col) const
 {
-	wxGridExtCellRenderer* renderer = NULL;
+	ibGridCellRenderer* renderer = NULL;
 
 	if (m_renderer && this != m_defGridAttr)
 	{
@@ -928,9 +928,9 @@ wxGridExtCellRenderer* wxGridExtCellAttr::GetRenderer(const wxGridExt* grid, int
 }
 
 // same as above, except for s/renderer/editor/g
-wxGridExtCellEditor* wxGridExtCellAttr::GetEditor(const wxGridExt* grid, int row, int col) const
+ibGridCellEditor* ibGridCellAttr::GetEditor(const ibGrid* grid, int row, int col) const
 {
-	wxGridExtCellEditor* editor = NULL;
+	ibGridCellEditor* editor = NULL;
 
 	if (m_editor && this != m_defGridAttr)
 	{
@@ -972,7 +972,7 @@ wxGridExtCellEditor* wxGridExtCellAttr::GetEditor(const wxGridExt* grid, int row
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellAttrData
+// ibGridCellAttrData
 // ----------------------------------------------------------------------------
 
 namespace
@@ -981,14 +981,14 @@ namespace
 	// Helper functions to convert grid coords to a key for the attr map, and
 	// vice versa.
 
-	wxGridExtCoordsToAttrMap::key_type CoordsToKey(int row, int col)
+	ibGridCoordsToAttrMap::key_type CoordsToKey(int row, int col)
 	{
 		// Treat both row and col as unsigned to not cause havoc with (unsupported)
 		// negative coords.
 		return (static_cast<wxULongLong_t>(row) << 32) + static_cast<wxUint32>(col);
 	}
 
-	void KeyToCoords(wxGridExtCoordsToAttrMap::key_type key, int* pRow, int* pCol)
+	void KeyToCoords(ibGridCoordsToAttrMap::key_type key, int* pRow, int* pCol)
 	{
 		*pRow = key >> 32;
 		*pCol = key & wxUINT32_MAX;
@@ -996,9 +996,9 @@ namespace
 
 } // anonymous namespace
 
-wxGridExtCellAttrData::~wxGridExtCellAttrData()
+ibGridCellAttrData::~ibGridCellAttrData()
 {
-	for (wxGridExtCoordsToAttrMap::iterator it = m_attrs.begin();
+	for (ibGridCoordsToAttrMap::iterator it = m_attrs.begin();
 		it != m_attrs.end();
 		++it)
 	{
@@ -1008,9 +1008,9 @@ wxGridExtCellAttrData::~wxGridExtCellAttrData()
 	m_attrs.clear();
 }
 
-void wxGridExtCellAttrData::SetAttr(wxGridExtCellAttr* attr, int row, int col)
+void ibGridCellAttrData::SetAttr(ibGridCellAttr* attr, int row, int col)
 {
-	wxGridExtCoordsToAttrMap::iterator it = FindIndex(row, col);
+	ibGridCoordsToAttrMap::iterator it = FindIndex(row, col);
 	if (it == m_attrs.end())
 	{
 		if (attr)
@@ -1022,7 +1022,7 @@ void wxGridExtCellAttrData::SetAttr(wxGridExtCellAttr* attr, int row, int col)
 	}
 	else // we already have an attribute for this cell
 	{
-		// See note near DecRef() in wxGridExtRowOrColAttrData::SetAttr for why
+		// See note near DecRef() in ibGridRowOrColAttrData::SetAttr for why
 		// this also works when old and new attribute are the same.
 		it->second->DecRef();
 
@@ -1034,11 +1034,11 @@ void wxGridExtCellAttrData::SetAttr(wxGridExtCellAttr* attr, int row, int col)
 	}
 }
 
-wxGridExtCellAttr* wxGridExtCellAttrData::GetAttr(int row, int col) const
+ibGridCellAttr* ibGridCellAttrData::GetAttr(int row, int col) const
 {
-	wxGridExtCellAttr* attr = NULL;
+	ibGridCellAttr* attr = NULL;
 
-	wxGridExtCoordsToAttrMap::iterator it = FindIndex(row, col);
+	ibGridCoordsToAttrMap::iterator it = FindIndex(row, col);
 	if (it != m_attrs.end())
 	{
 		attr = it->second;
@@ -1051,7 +1051,7 @@ wxGridExtCellAttr* wxGridExtCellAttrData::GetAttr(int row, int col) const
 namespace
 {
 
-	void UpdateCellAttrRowsOrCols(wxGridExtCoordsToAttrMap& attrs, int editPos,
+	void UpdateCellAttrRowsOrCols(ibGridCoordsToAttrMap& attrs, int editPos,
 		int editRowCount, int editColCount)
 	{
 		wxASSERT(!editRowCount || !editColCount);
@@ -1066,14 +1066,14 @@ namespace
 		// The updated copy will contain an attrs map with, if applicable: adjusted
 		// coords and cell size, newly inserted attributes (for multicells), and
 		// without now deleted attributes.
-		wxGridExtCoordsToAttrMap newAttrs;
+		ibGridCoordsToAttrMap newAttrs;
 
-		for (wxGridExtCoordsToAttrMap::iterator it = attrs.begin();
+		for (ibGridCoordsToAttrMap::iterator it = attrs.begin();
 			it != attrs.end();
 			++it)
 		{
-			const wxGridExtCoordsToAttrMap::key_type oldCoords = it->first;
-			wxGridExtCellAttr* cellAttr = it->second;
+			const ibGridCoordsToAttrMap::key_type oldCoords = it->first;
+			ibGridCellAttr* cellAttr = it->second;
 
 			int cellRows, cellCols;
 			cellAttr->GetSize(&cellRows, &cellCols);
@@ -1087,7 +1087,7 @@ namespace
 			{
 				// This cell's coords aren't influenced by the editing, however
 				// do adjust a multicell's main size, if needed.
-				if (GetCellSpan(cellRows, cellCols) == wxGridExt::CellSpan_Main)
+				if (GetCellSpan(cellRows, cellCols) == ibGrid::CellSpan_Main)
 				{
 					int mainSize = isEditingRows ? cellRows : cellCols;
 					if (cellPos + mainSize > editPos)
@@ -1163,10 +1163,10 @@ namespace
 				continue;
 			}
 
-			const wxGridExtCoordsToAttrMap::key_type newCoords
+			const ibGridCoordsToAttrMap::key_type newCoords
 				= CoordsToKey(cellRow + editRowCount, cellCol + editColCount);
 
-			if (GetCellSpan(cellRows, cellCols) != wxGridExt::CellSpan_Inside)
+			if (GetCellSpan(cellRows, cellCols) != ibGrid::CellSpan_Inside)
 			{
 				// Rows/cols inserted or deleted (and this cell still exists):
 				// Adjust cell coords.
@@ -1215,7 +1215,7 @@ namespace
 					const int adjustRows = i * isEditingRows,
 						adjustCols = i * !isEditingRows;
 
-					wxGridExtCellAttr* attr = new wxGridExtCellAttr;
+					ibGridCellAttr* attr = new ibGridCellAttr;
 					attr->SetSize(cellRows - adjustRows, cellCols - adjustCols);
 
 					const int row = cellRow + adjustRows,
@@ -1233,27 +1233,27 @@ namespace
 
 } // anonymous namespace
 
-void wxGridExtCellAttrData::UpdateAttrRows(size_t pos, int numRows)
+void ibGridCellAttrData::UpdateAttrRows(size_t pos, int numRows)
 {
 	UpdateCellAttrRowsOrCols(m_attrs, static_cast<int>(pos), numRows, 0);
 }
 
-void wxGridExtCellAttrData::UpdateAttrCols(size_t pos, int numCols)
+void ibGridCellAttrData::UpdateAttrCols(size_t pos, int numCols)
 {
 	UpdateCellAttrRowsOrCols(m_attrs, static_cast<int>(pos), 0, numCols);
 }
 
-wxGridExtCoordsToAttrMap::iterator
-wxGridExtCellAttrData::FindIndex(int row, int col) const
+ibGridCoordsToAttrMap::iterator
+ibGridCellAttrData::FindIndex(int row, int col) const
 {
 	return m_attrs.find(CoordsToKey(row, col));
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtRowOrColAttrData
+// ibGridRowOrColAttrData
 // ----------------------------------------------------------------------------
 
-wxGridExtRowOrColAttrData::~wxGridExtRowOrColAttrData()
+ibGridRowOrColAttrData::~ibGridRowOrColAttrData()
 {
 	size_t count = m_attrs.GetCount();
 	for (size_t n = 0; n < count; n++)
@@ -1262,9 +1262,9 @@ wxGridExtRowOrColAttrData::~wxGridExtRowOrColAttrData()
 	}
 }
 
-wxGridExtCellAttr* wxGridExtRowOrColAttrData::GetAttr(int rowOrCol) const
+ibGridCellAttr* ibGridRowOrColAttrData::GetAttr(int rowOrCol) const
 {
-	wxGridExtCellAttr* attr = NULL;
+	ibGridCellAttr* attr = NULL;
 
 	int n = m_rowsOrCols.Index(rowOrCol);
 	if (n != wxNOT_FOUND)
@@ -1276,7 +1276,7 @@ wxGridExtCellAttr* wxGridExtRowOrColAttrData::GetAttr(int rowOrCol) const
 	return attr;
 }
 
-void wxGridExtRowOrColAttrData::SetAttr(wxGridExtCellAttr* attr, int rowOrCol)
+void ibGridRowOrColAttrData::SetAttr(ibGridCellAttr* attr, int rowOrCol)
 {
 	int i = m_rowsOrCols.Index(rowOrCol);
 	if (i == wxNOT_FOUND)
@@ -1313,7 +1313,7 @@ void wxGridExtRowOrColAttrData::SetAttr(wxGridExtCellAttr* attr, int rowOrCol)
 	}
 }
 
-void wxGridExtRowOrColAttrData::UpdateAttrRowsOrCols(size_t pos, int numRowsOrCols)
+void ibGridRowOrColAttrData::UpdateAttrRowsOrCols(size_t pos, int numRowsOrCols)
 {
 	size_t count = m_attrs.GetCount();
 	for (size_t n = 0; n < count; n++)
@@ -1345,33 +1345,33 @@ void wxGridExtRowOrColAttrData::UpdateAttrRowsOrCols(size_t pos, int numRowsOrCo
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellAttrProvider
+// ibGridCellAttrProvider
 // ----------------------------------------------------------------------------
 
-wxGridExtCellAttrProvider::wxGridExtCellAttrProvider()
+ibGridCellAttrProvider::ibGridCellAttrProvider()
 {
 	m_data = NULL;
 }
 
-wxGridExtCellAttrProvider::~wxGridExtCellAttrProvider()
+ibGridCellAttrProvider::~ibGridCellAttrProvider()
 {
 	delete m_data;
 }
 
-void wxGridExtCellAttrProvider::InitData()
+void ibGridCellAttrProvider::InitData()
 {
-	m_data = new wxGridExtCellAttrProviderData;
+	m_data = new ibGridCellAttrProviderData;
 }
 
-wxGridExtCellAttr* wxGridExtCellAttrProvider::GetAttr(int row, int col,
-	wxGridExtCellAttr::wxAttrKind  kind) const
+ibGridCellAttr* ibGridCellAttrProvider::GetAttr(int row, int col,
+	ibGridCellAttr::wxAttrKind  kind) const
 {
-	wxGridExtCellAttr* attr = NULL;
+	ibGridCellAttr* attr = NULL;
 	if (m_data)
 	{
 		switch (kind)
 		{
-		case (wxGridExtCellAttr::Any):
+		case (ibGridCellAttr::Any):
 			// Get cached merge attributes.
 			// Currently not used as no cache implemented as not mutable
 			// attr = m_data->m_mergeAttr.GetAttr(row, col);
@@ -1379,15 +1379,15 @@ wxGridExtCellAttr* wxGridExtCellAttrProvider::GetAttr(int row, int col,
 			{
 				// Basically implement old version.
 				// Also check merge cache, so we don't have to re-merge every time..
-				wxGridExtCellAttr* attrcell = m_data->m_cellAttrs.GetAttr(row, col);
-				wxGridExtCellAttr* attrrow = m_data->m_rowAttrs.GetAttr(row);
-				wxGridExtCellAttr* attrcol = m_data->m_colAttrs.GetAttr(col);
+				ibGridCellAttr* attrcell = m_data->m_cellAttrs.GetAttr(row, col);
+				ibGridCellAttr* attrrow = m_data->m_rowAttrs.GetAttr(row);
+				ibGridCellAttr* attrcol = m_data->m_colAttrs.GetAttr(col);
 
 				if ((attrcell != attrrow) && (attrrow != attrcol) && (attrcell != attrcol))
 				{
 					// Two or more are non NULL
-					attr = new wxGridExtCellAttr;
-					attr->SetKind(wxGridExtCellAttr::Merged);
+					attr = new ibGridCellAttr;
+					attr->SetKind(ibGridCellAttr::Merged);
 
 					// Order is important..
 					if (attrcell)
@@ -1431,22 +1431,22 @@ wxGridExtCellAttr* wxGridExtCellAttrProvider::GetAttr(int row, int col,
 			}
 			break;
 
-		case (wxGridExtCellAttr::Cell):
+		case (ibGridCellAttr::Cell):
 			attr = m_data->m_cellAttrs.GetAttr(row, col);
 			break;
 
-		case (wxGridExtCellAttr::Col):
+		case (ibGridCellAttr::Col):
 			attr = m_data->m_colAttrs.GetAttr(col);
 			break;
 
-		case (wxGridExtCellAttr::Row):
+		case (ibGridCellAttr::Row):
 			attr = m_data->m_rowAttrs.GetAttr(row);
 			break;
 
 		default:
 			// unused as yet...
-			// (wxGridExtCellAttr::Default):
-			// (wxGridExtCellAttr::Merged):
+			// (ibGridCellAttr::Default):
+			// (ibGridCellAttr::Merged):
 			break;
 		}
 	}
@@ -1454,7 +1454,7 @@ wxGridExtCellAttr* wxGridExtCellAttrProvider::GetAttr(int row, int col,
 	return attr;
 }
 
-void wxGridExtCellAttrProvider::SetAttr(wxGridExtCellAttr* attr,
+void ibGridCellAttrProvider::SetAttr(ibGridCellAttr* attr,
 	int row, int col)
 {
 	if (!m_data)
@@ -1463,7 +1463,7 @@ void wxGridExtCellAttrProvider::SetAttr(wxGridExtCellAttr* attr,
 	m_data->m_cellAttrs.SetAttr(attr, row, col);
 }
 
-void wxGridExtCellAttrProvider::SetRowAttr(wxGridExtCellAttr* attr, int row)
+void ibGridCellAttrProvider::SetRowAttr(ibGridCellAttr* attr, int row)
 {
 	if (!m_data)
 		InitData();
@@ -1471,7 +1471,7 @@ void wxGridExtCellAttrProvider::SetRowAttr(wxGridExtCellAttr* attr, int row)
 	m_data->m_rowAttrs.SetAttr(attr, row);
 }
 
-void wxGridExtCellAttrProvider::SetColAttr(wxGridExtCellAttr* attr, int col)
+void ibGridCellAttrProvider::SetColAttr(ibGridCellAttr* attr, int col)
 {
 	if (!m_data)
 		InitData();
@@ -1479,7 +1479,7 @@ void wxGridExtCellAttrProvider::SetColAttr(wxGridExtCellAttr* attr, int col)
 	m_data->m_colAttrs.SetAttr(attr, col);
 }
 
-void wxGridExtCellAttrProvider::UpdateAttrRows(size_t pos, int numRows)
+void ibGridCellAttrProvider::UpdateAttrRows(size_t pos, int numRows)
 {
 	if (m_data)
 	{
@@ -1488,7 +1488,7 @@ void wxGridExtCellAttrProvider::UpdateAttrRows(size_t pos, int numRows)
 	}
 }
 
-void wxGridExtCellAttrProvider::UpdateAttrCols(size_t pos, int numCols)
+void ibGridCellAttrProvider::UpdateAttrCols(size_t pos, int numCols)
 {
 	if (m_data)
 	{
@@ -1497,32 +1497,32 @@ void wxGridExtCellAttrProvider::UpdateAttrCols(size_t pos, int numCols)
 	}
 }
 
-const wxGridExtColumnHeaderRenderer&
-wxGridExtCellAttrProvider::GetColumnHeaderRenderer(int WXUNUSED(col))
+const ibGridColumnHeaderRenderer&
+ibGridCellAttrProvider::GetColumnHeaderRenderer(int WXUNUSED(col))
 {
 	return gs_defaultHeaderRenderers.colRenderer;
 }
 
-const wxGridExtRowHeaderRenderer&
-wxGridExtCellAttrProvider::GetRowHeaderRenderer(int WXUNUSED(row))
+const ibGridRowHeaderRenderer&
+ibGridCellAttrProvider::GetRowHeaderRenderer(int WXUNUSED(row))
 {
 	return gs_defaultHeaderRenderers.rowRenderer;
 }
 
-const wxGridExtCornerHeaderRenderer& wxGridExtCellAttrProvider::GetCornerRenderer()
+const ibGridCornerHeaderRenderer& ibGridCellAttrProvider::GetCornerRenderer()
 {
 	return gs_defaultHeaderRenderers.cornerRenderer;
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtBlockCoords
+// ibGridBlockCoords
 // ----------------------------------------------------------------------------
 
-wxGridExtBlockDiffResult
-wxGridExtBlockCoords::Difference(const wxGridExtBlockCoords& other,
+ibGridBlockDiffResult
+ibGridBlockCoords::Difference(const ibGridBlockCoords& other,
 	int splitOrientation) const
 {
-	wxGridExtBlockDiffResult result;
+	ibGridBlockDiffResult result;
 
 	// Check whether the blocks intersect.
 	if (!Intersects(other))
@@ -1562,13 +1562,13 @@ wxGridExtBlockCoords::Difference(const wxGridExtBlockCoords& other,
 		// Part[0].
 		if (m_topRow < other.m_topRow)
 			result.m_parts[0] =
-			wxGridExtBlockCoords(m_topRow, m_leftCol,
+			ibGridBlockCoords(m_topRow, m_leftCol,
 				other.m_topRow - 1, m_rightCol);
 
 		// Part[1].
 		if (m_bottomRow > other.m_bottomRow)
 			result.m_parts[1] =
-			wxGridExtBlockCoords(other.m_bottomRow + 1, m_leftCol,
+			ibGridBlockCoords(other.m_bottomRow + 1, m_leftCol,
 				m_bottomRow, m_rightCol);
 
 		const int maxTopRow = wxMax(m_topRow, other.m_topRow);
@@ -1577,13 +1577,13 @@ wxGridExtBlockCoords::Difference(const wxGridExtBlockCoords& other,
 		// Part[2].
 		if (m_leftCol < other.m_leftCol)
 			result.m_parts[2] =
-			wxGridExtBlockCoords(maxTopRow, m_leftCol,
+			ibGridBlockCoords(maxTopRow, m_leftCol,
 				minBottomRow, other.m_leftCol - 1);
 
 		// Part[3].
 		if (m_rightCol > other.m_rightCol)
 			result.m_parts[3] =
-			wxGridExtBlockCoords(maxTopRow, other.m_rightCol + 1,
+			ibGridBlockCoords(maxTopRow, other.m_rightCol + 1,
 				minBottomRow, m_rightCol);
 	}
 	else // wxVERTICAL
@@ -1591,13 +1591,13 @@ wxGridExtBlockCoords::Difference(const wxGridExtBlockCoords& other,
 		// Part[0].
 		if (m_leftCol < other.m_leftCol)
 			result.m_parts[0] =
-			wxGridExtBlockCoords(m_topRow, m_leftCol,
+			ibGridBlockCoords(m_topRow, m_leftCol,
 				m_bottomRow, other.m_leftCol - 1);
 
 		// Part[1].
 		if (m_rightCol > other.m_rightCol)
 			result.m_parts[1] =
-			wxGridExtBlockCoords(m_topRow, other.m_rightCol + 1,
+			ibGridBlockCoords(m_topRow, other.m_rightCol + 1,
 				m_bottomRow, m_rightCol);
 
 		const int maxLeftCol = wxMax(m_leftCol, other.m_leftCol);
@@ -1606,23 +1606,23 @@ wxGridExtBlockCoords::Difference(const wxGridExtBlockCoords& other,
 		// Part[2].
 		if (m_topRow < other.m_topRow)
 			result.m_parts[2] =
-			wxGridExtBlockCoords(m_topRow, maxLeftCol,
+			ibGridBlockCoords(m_topRow, maxLeftCol,
 				other.m_topRow - 1, minRightCol);
 
 		// Part[3].
 		if (m_bottomRow > other.m_bottomRow)
 			result.m_parts[3] =
-			wxGridExtBlockCoords(other.m_bottomRow + 1, maxLeftCol,
+			ibGridBlockCoords(other.m_bottomRow + 1, maxLeftCol,
 				m_bottomRow, minRightCol);
 	}
 
 	return result;
 }
 
-wxGridExtBlockDiffResult
-wxGridExtBlockCoords::SymDifference(const wxGridExtBlockCoords& other) const
+ibGridBlockDiffResult
+ibGridBlockCoords::SymDifference(const ibGridBlockCoords& other) const
 {
-	wxGridExtBlockDiffResult result;
+	ibGridBlockDiffResult result;
 
 	// Check whether the blocks intersect.
 	if (!Intersects(other))
@@ -1655,11 +1655,11 @@ wxGridExtBlockCoords::SymDifference(const wxGridExtBlockCoords& other) const
 	if (m_topRow != other.m_topRow)
 	{
 		const bool block1Min = m_topRow < other.m_topRow;
-		const wxGridExtBlockCoords& minUpper = block1Min ? *this : other;
-		const wxGridExtBlockCoords& maxUpper = block1Min ? other : *this;
+		const ibGridBlockCoords& minUpper = block1Min ? *this : other;
+		const ibGridBlockCoords& maxUpper = block1Min ? other : *this;
 		maxUpperRow = maxUpper.m_topRow;
 
-		result.m_parts[0] = wxGridExtBlockCoords(minUpper.m_topRow,
+		result.m_parts[0] = ibGridBlockCoords(minUpper.m_topRow,
 			minUpper.m_leftCol,
 			maxUpper.m_topRow - 1,
 			minUpper.m_rightCol);
@@ -1674,11 +1674,11 @@ wxGridExtBlockCoords::SymDifference(const wxGridExtBlockCoords& other) const
 	if (m_bottomRow != other.m_bottomRow)
 	{
 		const bool block1Min = m_bottomRow < other.m_bottomRow;
-		const wxGridExtBlockCoords& minLower = block1Min ? *this : other;
-		const wxGridExtBlockCoords& maxLower = block1Min ? other : *this;
+		const ibGridBlockCoords& minLower = block1Min ? *this : other;
+		const ibGridBlockCoords& maxLower = block1Min ? other : *this;
 		minLowerRow = minLower.m_bottomRow;
 
-		result.m_parts[1] = wxGridExtBlockCoords(minLower.m_bottomRow + 1,
+		result.m_parts[1] = ibGridBlockCoords(minLower.m_bottomRow + 1,
 			maxLower.m_leftCol,
 			maxLower.m_bottomRow,
 			maxLower.m_rightCol);
@@ -1691,7 +1691,7 @@ wxGridExtBlockCoords::SymDifference(const wxGridExtBlockCoords& other) const
 	// Part[2].
 	if (m_leftCol != other.m_leftCol)
 	{
-		result.m_parts[2] = wxGridExtBlockCoords(maxUpperRow,
+		result.m_parts[2] = ibGridBlockCoords(maxUpperRow,
 			wxMin(m_leftCol,
 				other.m_leftCol),
 			minLowerRow,
@@ -1702,7 +1702,7 @@ wxGridExtBlockCoords::SymDifference(const wxGridExtBlockCoords& other) const
 	// Part[3].
 	if (m_rightCol != other.m_rightCol)
 	{
-		result.m_parts[3] = wxGridExtBlockCoords(maxUpperRow,
+		result.m_parts[3] = ibGridBlockCoords(maxUpperRow,
 			wxMin(m_rightCol,
 				other.m_rightCol) + 1,
 			minLowerRow,
@@ -1714,40 +1714,40 @@ wxGridExtBlockCoords::SymDifference(const wxGridExtBlockCoords& other) const
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtTableBase
+// ibGridTableBase
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_ABSTRACT_CLASS(wxGridExtTableBase, wxObject);
+wxIMPLEMENT_ABSTRACT_CLASS(ibGridTableBase, wxObject);
 
-wxGridExtTableBase::wxGridExtTableBase()
+ibGridTableBase::ibGridTableBase()
 {
 	m_view = NULL;
 	m_attrProvider = NULL;
 }
 
-wxGridExtTableBase::~wxGridExtTableBase()
+ibGridTableBase::~ibGridTableBase()
 {
 	delete m_attrProvider;
 }
 
-void wxGridExtTableBase::SetAttrProvider(wxGridExtCellAttrProvider* attrProvider)
+void ibGridTableBase::SetAttrProvider(ibGridCellAttrProvider* attrProvider)
 {
 	delete m_attrProvider;
 	m_attrProvider = attrProvider;
 }
 
-bool wxGridExtTableBase::CanHaveAttributes()
+bool ibGridTableBase::CanHaveAttributes()
 {
 	if (!GetAttrProvider())
 	{
 		// use the default attr provider by default
-		SetAttrProvider(new wxGridExtCellAttrProvider);
+		SetAttrProvider(new ibGridCellAttrProvider);
 	}
 
 	return true;
 }
 
-wxGridExtCellAttr* wxGridExtTableBase::GetAttr(int row, int col, wxGridExtCellAttr::wxAttrKind  kind)
+ibGridCellAttr* ibGridTableBase::GetAttr(int row, int col, ibGridCellAttr::wxAttrKind  kind)
 {
 	if (m_attrProvider)
 		return m_attrProvider->GetAttr(row, col, kind);
@@ -1755,12 +1755,12 @@ wxGridExtCellAttr* wxGridExtTableBase::GetAttr(int row, int col, wxGridExtCellAt
 		return NULL;
 }
 
-void wxGridExtTableBase::SetAttr(wxGridExtCellAttr* attr, int row, int col)
+void ibGridTableBase::SetAttr(ibGridCellAttr* attr, int row, int col)
 {
 	if (m_attrProvider)
 	{
 		if (attr)
-			attr->SetKind(wxGridExtCellAttr::Cell);
+			attr->SetKind(ibGridCellAttr::Cell);
 		m_attrProvider->SetAttr(attr, row, col);
 	}
 	else
@@ -1771,12 +1771,12 @@ void wxGridExtTableBase::SetAttr(wxGridExtCellAttr* attr, int row, int col)
 	}
 }
 
-void wxGridExtTableBase::SetRowAttr(wxGridExtCellAttr* attr, int row)
+void ibGridTableBase::SetRowAttr(ibGridCellAttr* attr, int row)
 {
 	if (m_attrProvider)
 	{
 		if (attr)
-			attr->SetKind(wxGridExtCellAttr::Row);
+			attr->SetKind(ibGridCellAttr::Row);
 		m_attrProvider->SetRowAttr(attr, row);
 	}
 	else
@@ -1787,12 +1787,12 @@ void wxGridExtTableBase::SetRowAttr(wxGridExtCellAttr* attr, int row)
 	}
 }
 
-void wxGridExtTableBase::SetColAttr(wxGridExtCellAttr* attr, int col)
+void ibGridTableBase::SetColAttr(ibGridCellAttr* attr, int col)
 {
 	if (m_attrProvider)
 	{
 		if (attr)
-			attr->SetKind(wxGridExtCellAttr::Col);
+			attr->SetKind(ibGridCellAttr::Col);
 		m_attrProvider->SetColAttr(attr, col);
 	}
 	else
@@ -1803,7 +1803,7 @@ void wxGridExtTableBase::SetColAttr(wxGridExtCellAttr* attr, int col)
 	}
 }
 
-bool wxGridExtTableBase::InsertRows(size_t WXUNUSED(pos),
+bool ibGridTableBase::InsertRows(size_t WXUNUSED(pos),
 	size_t WXUNUSED(numRows))
 {
 	wxFAIL_MSG(wxT("Called grid table class function InsertRows\nbut your derived table class does not override this function"));
@@ -1811,14 +1811,14 @@ bool wxGridExtTableBase::InsertRows(size_t WXUNUSED(pos),
 	return false;
 }
 
-bool wxGridExtTableBase::AppendRows(size_t WXUNUSED(numRows))
+bool ibGridTableBase::AppendRows(size_t WXUNUSED(numRows))
 {
 	wxFAIL_MSG(wxT("Called grid table class function AppendRows\nbut your derived table class does not override this function"));
 
 	return false;
 }
 
-bool wxGridExtTableBase::DeleteRows(size_t WXUNUSED(pos),
+bool ibGridTableBase::DeleteRows(size_t WXUNUSED(pos),
 	size_t WXUNUSED(numRows))
 {
 	wxFAIL_MSG(wxT("Called grid table class function DeleteRows\nbut your derived table class does not override this function"));
@@ -1826,7 +1826,7 @@ bool wxGridExtTableBase::DeleteRows(size_t WXUNUSED(pos),
 	return false;
 }
 
-bool wxGridExtTableBase::InsertCols(size_t WXUNUSED(pos),
+bool ibGridTableBase::InsertCols(size_t WXUNUSED(pos),
 	size_t WXUNUSED(numCols))
 {
 	wxFAIL_MSG(wxT("Called grid table class function InsertCols\nbut your derived table class does not override this function"));
@@ -1834,14 +1834,14 @@ bool wxGridExtTableBase::InsertCols(size_t WXUNUSED(pos),
 	return false;
 }
 
-bool wxGridExtTableBase::AppendCols(size_t WXUNUSED(numCols))
+bool ibGridTableBase::AppendCols(size_t WXUNUSED(numCols))
 {
 	wxFAIL_MSG(wxT("Called grid table class function AppendCols\nbut your derived table class does not override this function"));
 
 	return false;
 }
 
-bool wxGridExtTableBase::DeleteCols(size_t WXUNUSED(pos),
+bool ibGridTableBase::DeleteCols(size_t WXUNUSED(pos),
 	size_t WXUNUSED(numCols))
 {
 	wxFAIL_MSG(wxT("Called grid table class function DeleteCols\nbut your derived table class does not override this function"));
@@ -1849,7 +1849,7 @@ bool wxGridExtTableBase::DeleteCols(size_t WXUNUSED(pos),
 	return false;
 }
 
-wxString wxGridExtTableBase::GetRowLabelValue(int row)
+wxString ibGridTableBase::GetRowLabelValue(int row)
 {
 	wxString s;
 
@@ -1860,7 +1860,7 @@ wxString wxGridExtTableBase::GetRowLabelValue(int row)
 	return s;
 }
 
-wxString wxGridExtTableBase::GetColLabelValue(int col)
+wxString ibGridTableBase::GetColLabelValue(int col)
 {
 	// default col labels are:
 	//   cols 0 to 25   : A-Z
@@ -1887,12 +1887,12 @@ wxString wxGridExtTableBase::GetColLabelValue(int col)
 	return s2;
 }
 
-wxString wxGridExtTableBase::GetCornerLabelValue() const
+wxString ibGridTableBase::GetCornerLabelValue() const
 {
 	return wxString();
 }
 
-bool wxGridExtTableBase::GetTypeName(int WXUNUSED(row), int WXUNUSED(col), wxString& typeName)
+bool ibGridTableBase::GetTypeName(int WXUNUSED(row), int WXUNUSED(col), wxString& typeName)
 {
 	static wxString typeCacheName = wxGRID_VALUE_STRING;
 	if (!typeCacheName.IsSameAs(typeName))
@@ -1900,64 +1900,64 @@ bool wxGridExtTableBase::GetTypeName(int WXUNUSED(row), int WXUNUSED(col), wxStr
 	return true;
 }
 
-bool wxGridExtTableBase::CanGetValueAs(int WXUNUSED(row), int WXUNUSED(col),
+bool ibGridTableBase::CanGetValueAs(int WXUNUSED(row), int WXUNUSED(col),
 	const wxString& typeName)
 {
 	return typeName == wxGRID_VALUE_STRING;
 }
 
-bool wxGridExtTableBase::CanSetValueAs(int row, int col, const wxString& typeName)
+bool ibGridTableBase::CanSetValueAs(int row, int col, const wxString& typeName)
 {
 	return CanGetValueAs(row, col, typeName);
 }
 
-long wxGridExtTableBase::GetValueAsLong(int WXUNUSED(row), int WXUNUSED(col))
+long ibGridTableBase::GetValueAsLong(int WXUNUSED(row), int WXUNUSED(col))
 {
 	return 0;
 }
 
-double wxGridExtTableBase::GetValueAsDouble(int WXUNUSED(row), int WXUNUSED(col))
+double ibGridTableBase::GetValueAsDouble(int WXUNUSED(row), int WXUNUSED(col))
 {
 	return 0.0;
 }
 
-bool wxGridExtTableBase::GetValueAsBool(int WXUNUSED(row), int WXUNUSED(col))
+bool ibGridTableBase::GetValueAsBool(int WXUNUSED(row), int WXUNUSED(col))
 {
 	return false;
 }
 
-wxVariant wxGridExtTableBase::GetValueAsVariant(int WXUNUSED(row), int WXUNUSED(col))
+wxVariant ibGridTableBase::GetValueAsVariant(int WXUNUSED(row), int WXUNUSED(col))
 {
 	return wxVariant();
 }
 
-void wxGridExtTableBase::SetValueAsLong(int WXUNUSED(row), int WXUNUSED(col),
+void ibGridTableBase::SetValueAsLong(int WXUNUSED(row), int WXUNUSED(col),
 	long WXUNUSED(value))
 {
 }
 
-void wxGridExtTableBase::SetValueAsDouble(int WXUNUSED(row), int WXUNUSED(col),
+void ibGridTableBase::SetValueAsDouble(int WXUNUSED(row), int WXUNUSED(col),
 	double WXUNUSED(value))
 {
 }
 
-void wxGridExtTableBase::SetValueAsBool(int WXUNUSED(row), int WXUNUSED(col),
+void ibGridTableBase::SetValueAsBool(int WXUNUSED(row), int WXUNUSED(col),
 	bool WXUNUSED(value))
 {
 }
 
-void wxGridExtTableBase::SetValueAsVariant(int WXUNUSED(row), int WXUNUSED(col),
+void ibGridTableBase::SetValueAsVariant(int WXUNUSED(row), int WXUNUSED(col),
 	wxVariant WXUNUSED(value))
 {
 }
 
-void* wxGridExtTableBase::GetValueAsCustom(int WXUNUSED(row), int WXUNUSED(col),
+void* ibGridTableBase::GetValueAsCustom(int WXUNUSED(row), int WXUNUSED(col),
 	const wxString& WXUNUSED(typeName))
 {
 	return NULL;
 }
 
-void  wxGridExtTableBase::SetValueAsCustom(int WXUNUSED(row), int WXUNUSED(col),
+void  ibGridTableBase::SetValueAsCustom(int WXUNUSED(row), int WXUNUSED(col),
 	const wxString& WXUNUSED(typeName),
 	void* WXUNUSED(value))
 {
@@ -1965,7 +1965,7 @@ void  wxGridExtTableBase::SetValueAsCustom(int WXUNUSED(row), int WXUNUSED(col),
 
 //////////////////////////////////////////////////////////////////////
 
-void wxGridExtTableBase::OnGridTableNotify(int row, int col, const wxString& s)
+void ibGridTableBase::OnGridTableNotify(int row, int col, const wxString& s)
 {
 	if (GetView())
 	{
@@ -1979,7 +1979,7 @@ void wxGridExtTableBase::OnGridTableNotify(int row, int col, const wxString& s)
 // to the grid view
 //
 
-wxGridExtTableMessage::wxGridExtTableMessage()
+ibGridTableMessage::ibGridTableMessage()
 {
 	m_table = NULL;
 	m_id = -1;
@@ -1987,7 +1987,7 @@ wxGridExtTableMessage::wxGridExtTableMessage()
 	m_comInt2 = -1;
 }
 
-wxGridExtTableMessage::wxGridExtTableMessage(wxGridExtTableBase* table, int id,
+ibGridTableMessage::ibGridTableMessage(ibGridTableBase* table, int id,
 	int commandInt1, int commandInt2)
 {
 	m_table = table;
@@ -1999,21 +1999,21 @@ wxGridExtTableMessage::wxGridExtTableMessage(wxGridExtTableBase* table, int id,
 //////////////////////////////////////////////////////////////////////
 //
 // A basic grid table for string data. An object of this class will
-// created by wxGridExt if you don't specify an alternative table class.
+// created by ibGrid if you don't specify an alternative table class.
 //
 
-WX_DEFINE_OBJARRAY(wxGridExtStringArray)
+WX_DEFINE_OBJARRAY(ibGridStringArray)
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtStringTable, wxGridExtTableBase);
+wxIMPLEMENT_DYNAMIC_CLASS(ibGridStringTable, ibGridTableBase);
 
-wxGridExtStringTable::wxGridExtStringTable()
-	: wxGridExtTableBase()
+ibGridStringTable::ibGridStringTable()
+	: ibGridTableBase()
 {
 	m_numCols = 0;
 }
 
-wxGridExtStringTable::wxGridExtStringTable(int numRows, int numCols)
-	: wxGridExtTableBase()
+ibGridStringTable::ibGridStringTable(int numRows, int numCols)
+	: ibGridTableBase()
 {
 	m_numCols = numCols;
 
@@ -2026,28 +2026,28 @@ wxGridExtStringTable::wxGridExtStringTable(int numRows, int numCols)
 	m_data.Add(sa, numRows);
 }
 
-void wxGridExtStringTable::GetValue(int row, int col, wxString& value)
+void ibGridStringTable::GetValue(int row, int col, wxString& value)
 {
 	wxCHECK2_MSG((row >= 0 && row < GetNumberRows()) &&
 		(col >= 0 && col < GetNumberCols()),
 		,
-		wxT("invalid row or column index in wxGridExtStringTable"));
+		wxT("invalid row or column index in ibGridStringTable"));
 
 	value = m_data[row][col];
 }
 
-void wxGridExtStringTable::SetValue(int row, int col, const wxString& value)
+void ibGridStringTable::SetValue(int row, int col, const wxString& value)
 {
 	wxCHECK_RET((row >= 0 && row < GetNumberRows()) &&
 		(col >= 0 && col < GetNumberCols()),
-		wxT("invalid row or column index in wxGridExtStringTable"));
+		wxT("invalid row or column index in ibGridStringTable"));
 
 	m_data[row][col] = value;
 
 	OnGridTableNotify(row, col, value);
 }
 
-void wxGridExtStringTable::Clear()
+void ibGridStringTable::Clear()
 {
 	//int numRows;
 	//numRows = m_data.GetCount();
@@ -2070,7 +2070,7 @@ void wxGridExtStringTable::Clear()
 	m_data.Clear();
 }
 
-bool wxGridExtStringTable::InsertRows(size_t pos, size_t numRows)
+bool ibGridStringTable::InsertRows(size_t pos, size_t numRows)
 {
 	if (pos >= m_data.size())
 	{
@@ -2084,7 +2084,7 @@ bool wxGridExtStringTable::InsertRows(size_t pos, size_t numRows)
 
 	if (GetView())
 	{
-		wxGridExtTableMessage msg(this,
+		ibGridTableMessage msg(this,
 			wxGRIDTABLE_NOTIFY_ROWS_INSERTED,
 			pos,
 			numRows);
@@ -2095,7 +2095,7 @@ bool wxGridExtStringTable::InsertRows(size_t pos, size_t numRows)
 	return true;
 }
 
-bool wxGridExtStringTable::AppendRows(size_t numRows)
+bool ibGridStringTable::AppendRows(size_t numRows)
 {
 	wxArrayString sa;
 	if (m_numCols > 0)
@@ -2108,7 +2108,7 @@ bool wxGridExtStringTable::AppendRows(size_t numRows)
 
 	if (GetView())
 	{
-		wxGridExtTableMessage msg(this,
+		ibGridTableMessage msg(this,
 			wxGRIDTABLE_NOTIFY_ROWS_APPENDED,
 			numRows);
 
@@ -2118,7 +2118,7 @@ bool wxGridExtStringTable::AppendRows(size_t numRows)
 	return true;
 }
 
-bool wxGridExtStringTable::DeleteRows(size_t pos, size_t numRows)
+bool ibGridStringTable::DeleteRows(size_t pos, size_t numRows)
 {
 	size_t curNumRows = m_data.GetCount();
 
@@ -2126,7 +2126,7 @@ bool wxGridExtStringTable::DeleteRows(size_t pos, size_t numRows)
 	{
 		wxFAIL_MSG(wxString::Format
 		(
-			wxT("Called wxGridExtStringTable::DeleteRows(pos=%lu, N=%lu)\nPos value is invalid for present table with %lu rows"),
+			wxT("Called ibGridStringTable::DeleteRows(pos=%lu, N=%lu)\nPos value is invalid for present table with %lu rows"),
 			(unsigned long)pos,
 			(unsigned long)numRows,
 			(unsigned long)curNumRows
@@ -2151,7 +2151,7 @@ bool wxGridExtStringTable::DeleteRows(size_t pos, size_t numRows)
 
 	if (GetView())
 	{
-		wxGridExtTableMessage msg(this,
+		ibGridTableMessage msg(this,
 			wxGRIDTABLE_NOTIFY_ROWS_DELETED,
 			pos,
 			numRows);
@@ -2162,7 +2162,7 @@ bool wxGridExtStringTable::DeleteRows(size_t pos, size_t numRows)
 	return true;
 }
 
-bool wxGridExtStringTable::InsertCols(size_t pos, size_t numCols)
+bool ibGridStringTable::InsertCols(size_t pos, size_t numCols)
 {
 	if (pos >= static_cast<size_t>(m_numCols))
 	{
@@ -2174,7 +2174,7 @@ bool wxGridExtStringTable::InsertCols(size_t pos, size_t numCols)
 		m_colLabels.Insert(wxEmptyString, pos, numCols);
 
 		for (size_t i = pos; i < pos + numCols; i++)
-			m_colLabels[i] = wxGridExtTableBase::GetColLabelValue(i);
+			m_colLabels[i] = ibGridTableBase::GetColLabelValue(i);
 	}
 
 	for (size_t row = 0; row < m_data.size(); row++)
@@ -2189,7 +2189,7 @@ bool wxGridExtStringTable::InsertCols(size_t pos, size_t numCols)
 
 	if (GetView())
 	{
-		wxGridExtTableMessage msg(this,
+		ibGridTableMessage msg(this,
 			wxGRIDTABLE_NOTIFY_COLS_INSERTED,
 			pos,
 			numCols);
@@ -2200,7 +2200,7 @@ bool wxGridExtStringTable::InsertCols(size_t pos, size_t numCols)
 	return true;
 }
 
-bool wxGridExtStringTable::AppendCols(size_t numCols)
+bool ibGridStringTable::AppendCols(size_t numCols)
 {
 	for (size_t row = 0; row < m_data.size(); row++)
 	{
@@ -2211,7 +2211,7 @@ bool wxGridExtStringTable::AppendCols(size_t numCols)
 
 	if (GetView())
 	{
-		wxGridExtTableMessage msg(this,
+		ibGridTableMessage msg(this,
 			wxGRIDTABLE_NOTIFY_COLS_APPENDED,
 			numCols);
 
@@ -2221,7 +2221,7 @@ bool wxGridExtStringTable::AppendCols(size_t numCols)
 	return true;
 }
 
-bool wxGridExtStringTable::DeleteCols(size_t pos, size_t numCols)
+bool ibGridStringTable::DeleteCols(size_t pos, size_t numCols)
 {
 	size_t row;
 
@@ -2232,7 +2232,7 @@ bool wxGridExtStringTable::DeleteCols(size_t pos, size_t numCols)
 	{
 		wxFAIL_MSG(wxString::Format
 		(
-			wxT("Called wxGridExtStringTable::DeleteCols(pos=%lu, N=%lu)\nPos value is invalid for present table with %lu cols"),
+			wxT("Called ibGridStringTable::DeleteCols(pos=%lu, N=%lu)\nPos value is invalid for present table with %lu cols"),
 			(unsigned long)pos,
 			(unsigned long)numCols,
 			(unsigned long)curNumCols
@@ -2282,7 +2282,7 @@ bool wxGridExtStringTable::DeleteCols(size_t pos, size_t numCols)
 
 	if (GetView())
 	{
-		wxGridExtTableMessage msg(this,
+		ibGridTableMessage msg(this,
 			wxGRIDTABLE_NOTIFY_COLS_DELETED,
 			pos,
 			numCols);
@@ -2293,13 +2293,13 @@ bool wxGridExtStringTable::DeleteCols(size_t pos, size_t numCols)
 	return true;
 }
 
-wxString wxGridExtStringTable::GetRowLabelValue(int row)
+wxString ibGridStringTable::GetRowLabelValue(int row)
 {
 	if (row > (int)(m_rowLabels.GetCount()) - 1)
 	{
 		// using default label
 		//
-		return wxGridExtTableBase::GetRowLabelValue(row);
+		return ibGridTableBase::GetRowLabelValue(row);
 	}
 	else
 	{
@@ -2307,13 +2307,13 @@ wxString wxGridExtStringTable::GetRowLabelValue(int row)
 	}
 }
 
-wxString wxGridExtStringTable::GetColLabelValue(int col)
+wxString ibGridStringTable::GetColLabelValue(int col)
 {
 	if (col > (int)(m_colLabels.GetCount()) - 1)
 	{
 		// using default label
 		//
-		return wxGridExtTableBase::GetColLabelValue(col);
+		return ibGridTableBase::GetColLabelValue(col);
 	}
 	else
 	{
@@ -2321,7 +2321,7 @@ wxString wxGridExtStringTable::GetColLabelValue(int col)
 	}
 }
 
-void wxGridExtStringTable::SetRowLabelValue(int row, const wxString& value)
+void ibGridStringTable::SetRowLabelValue(int row, const wxString& value)
 {
 	if (row > (int)(m_rowLabels.GetCount()) - 1)
 	{
@@ -2330,14 +2330,14 @@ void wxGridExtStringTable::SetRowLabelValue(int row, const wxString& value)
 
 		for (i = n; i <= row; i++)
 		{
-			m_rowLabels.Add(wxGridExtTableBase::GetRowLabelValue(i));
+			m_rowLabels.Add(ibGridTableBase::GetRowLabelValue(i));
 		}
 	}
 
 	m_rowLabels[row] = value;
 }
 
-void wxGridExtStringTable::SetColLabelValue(int col, const wxString& value)
+void ibGridStringTable::SetColLabelValue(int col, const wxString& value)
 {
 	if (col > (int)(m_colLabels.GetCount()) - 1)
 	{
@@ -2346,19 +2346,19 @@ void wxGridExtStringTable::SetColLabelValue(int col, const wxString& value)
 
 		for (i = n; i <= col; i++)
 		{
-			m_colLabels.Add(wxGridExtTableBase::GetColLabelValue(i));
+			m_colLabels.Add(ibGridTableBase::GetColLabelValue(i));
 		}
 	}
 
 	m_colLabels[col] = value;
 }
 
-void wxGridExtStringTable::SetCornerLabelValue(const wxString& value)
+void ibGridStringTable::SetCornerLabelValue(const wxString& value)
 {
 	m_cornerLabel = value;
 }
 
-wxString wxGridExtStringTable::GetCornerLabelValue() const
+wxString ibGridStringTable::GetCornerLabelValue() const
 {
 	return m_cornerLabel;
 }
@@ -2366,22 +2366,22 @@ wxString wxGridExtStringTable::GetCornerLabelValue() const
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-wxBEGIN_EVENT_TABLE(wxGridExtSubwindow, wxWindow)
-EVT_MOUSE_CAPTURE_LOST(wxGridExtSubwindow::OnMouseCaptureLost)
+wxBEGIN_EVENT_TABLE(ibGridSubwindow, wxWindow)
+EVT_MOUSE_CAPTURE_LOST(ibGridSubwindow::OnMouseCaptureLost)
 wxEND_EVENT_TABLE()
 
-void wxGridExtSubwindow::OnMouseCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event))
+void ibGridSubwindow::OnMouseCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event))
 {
 	m_owner->CancelMouseCapture();
 }
 
-wxBEGIN_EVENT_TABLE(wxGridExtRowAreaWindow, wxGridExtSubwindow)
-EVT_PAINT(wxGridExtRowAreaWindow::OnPaint)
-EVT_MOUSEWHEEL(wxGridExtRowAreaWindow::OnMouseWheel)
-EVT_MOUSE_EVENTS(wxGridExtRowAreaWindow::OnMouseEvent)
+wxBEGIN_EVENT_TABLE(ibGridRowAreaWindow, ibGridSubwindow)
+EVT_PAINT(ibGridRowAreaWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridRowAreaWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridRowAreaWindow::OnMouseEvent)
 wxEND_EVENT_TABLE()
 
-void wxGridExtRowAreaWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
+void ibGridRowAreaWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 
@@ -2392,7 +2392,7 @@ void wxGridExtRowAreaWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 	// m_owner->PrepareDC( dc );
 
 	int x, y;
-	wxGridExtWindow* gridWindow = IsFrozen() ? m_owner->m_frozenRowGridWin :
+	ibGridWindow* gridWindow = IsFrozen() ? m_owner->m_frozenRowGridWin :
 		m_owner->m_gridWin;
 	m_owner->GetGridWindowOffset(gridWindow, x, y);
 	m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, gridWindow);
@@ -2403,12 +2403,12 @@ void wxGridExtRowAreaWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 	m_owner->DrawRowAreas(dc, rows);
 }
 
-void wxGridExtRowAreaWindow::OnMouseEvent(wxMouseEvent& event)
+void ibGridRowAreaWindow::OnMouseEvent(wxMouseEvent& event)
 {
-	m_owner->ProcessRowColAreaMouseEvent(wxGridExtRowOperations(), event, this);
+	m_owner->ProcessRowColAreaMouseEvent(ibGridRowOperations(), event, this);
 }
 
-void wxGridExtRowAreaWindow::OnMouseWheel(wxMouseEvent& event)
+void ibGridRowAreaWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
@@ -2422,13 +2422,13 @@ void wxGridExtRowAreaWindow::OnMouseWheel(wxMouseEvent& event)
 
 //////////////////////////////////////////////////////////////////////
 
-wxBEGIN_EVENT_TABLE(wxGridExtRowLabelWindow, wxGridExtSubwindow)
-EVT_PAINT(wxGridExtRowLabelWindow::OnPaint)
-EVT_MOUSEWHEEL(wxGridExtRowLabelWindow::OnMouseWheel)
-EVT_MOUSE_EVENTS(wxGridExtRowLabelWindow::OnMouseEvent)
+wxBEGIN_EVENT_TABLE(ibGridRowLabelWindow, ibGridSubwindow)
+EVT_PAINT(ibGridRowLabelWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridRowLabelWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridRowLabelWindow::OnMouseEvent)
 wxEND_EVENT_TABLE()
 
-void wxGridExtRowLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
+void ibGridRowLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 
@@ -2439,7 +2439,7 @@ void wxGridExtRowLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 	// m_owner->PrepareDC( dc );
 
 	int x, y;
-	wxGridExtWindow* gridWindow = IsFrozen() ? m_owner->m_frozenRowGridWin :
+	ibGridWindow* gridWindow = IsFrozen() ? m_owner->m_frozenRowGridWin :
 		m_owner->m_gridWin;
 	m_owner->GetGridWindowOffset(gridWindow, x, y);
 	m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, gridWindow);
@@ -2453,12 +2453,12 @@ void wxGridExtRowLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 		m_owner->DrawLabelFrozenBorder(dc, this, true);
 }
 
-void wxGridExtRowLabelWindow::OnMouseEvent(wxMouseEvent& event)
+void ibGridRowLabelWindow::OnMouseEvent(wxMouseEvent& event)
 {
-	m_owner->ProcessRowColLabelMouseEvent(wxGridExtRowOperations(), event, this);
+	m_owner->ProcessRowColLabelMouseEvent(ibGridRowOperations(), event, this);
 }
 
-void wxGridExtRowLabelWindow::OnMouseWheel(wxMouseEvent& event)
+void ibGridRowLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
@@ -2472,13 +2472,13 @@ void wxGridExtRowLabelWindow::OnMouseWheel(wxMouseEvent& event)
 
 //////////////////////////////////////////////////////////////////////
 
-wxBEGIN_EVENT_TABLE(wxGridExtColAreaWindow, wxGridExtSubwindow)
-EVT_PAINT(wxGridExtColAreaWindow::OnPaint)
-EVT_MOUSEWHEEL(wxGridExtColAreaWindow::OnMouseWheel)
-EVT_MOUSE_EVENTS(wxGridExtColAreaWindow::OnMouseEvent)
+wxBEGIN_EVENT_TABLE(ibGridColAreaWindow, ibGridSubwindow)
+EVT_PAINT(ibGridColAreaWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridColAreaWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridColAreaWindow::OnMouseEvent)
 wxEND_EVENT_TABLE()
 
-void wxGridExtColAreaWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
+void ibGridColAreaWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 
@@ -2494,7 +2494,7 @@ void wxGridExtColAreaWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 		return;
 
 	int x, y;
-	wxGridExtWindow* gridWindow = IsFrozen() ? m_owner->m_frozenColGridWin :
+	ibGridWindow* gridWindow = IsFrozen() ? m_owner->m_frozenColGridWin :
 		m_owner->m_gridWin;
 	m_owner->GetGridWindowOffset(gridWindow, x, y);
 	m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, gridWindow);
@@ -2508,12 +2508,12 @@ void wxGridExtColAreaWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 		m_owner->DrawLabelFrozenBorder(dc, this, false);
 }
 
-void wxGridExtColAreaWindow::OnMouseEvent(wxMouseEvent& event)
+void ibGridColAreaWindow::OnMouseEvent(wxMouseEvent& event)
 {
-	m_owner->ProcessRowColAreaMouseEvent(wxGridExtColumnOperations(), event, this);
+	m_owner->ProcessRowColAreaMouseEvent(ibGridColumnOperations(), event, this);
 }
 
-void wxGridExtColAreaWindow::OnMouseWheel(wxMouseEvent& event)
+void ibGridColAreaWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
@@ -2525,13 +2525,13 @@ void wxGridExtColAreaWindow::OnMouseWheel(wxMouseEvent& event)
 	m_owner->Thaw();
 }
 
-wxBEGIN_EVENT_TABLE(wxGridExtColLabelWindow, wxGridExtSubwindow)
-EVT_PAINT(wxGridExtColLabelWindow::OnPaint)
-EVT_MOUSEWHEEL(wxGridExtColLabelWindow::OnMouseWheel)
-EVT_MOUSE_EVENTS(wxGridExtColLabelWindow::OnMouseEvent)
+wxBEGIN_EVENT_TABLE(ibGridColLabelWindow, ibGridSubwindow)
+EVT_PAINT(ibGridColLabelWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridColLabelWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridColLabelWindow::OnMouseEvent)
 wxEND_EVENT_TABLE()
 
-void wxGridExtColLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
+void ibGridColLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 
@@ -2547,7 +2547,7 @@ void wxGridExtColLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 		return;
 
 	int x, y;
-	wxGridExtWindow* gridWindow = IsFrozen() ? m_owner->m_frozenColGridWin :
+	ibGridWindow* gridWindow = IsFrozen() ? m_owner->m_frozenColGridWin :
 		m_owner->m_gridWin;
 	m_owner->GetGridWindowOffset(gridWindow, x, y);
 	m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, gridWindow);
@@ -2561,12 +2561,12 @@ void wxGridExtColLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 		m_owner->DrawLabelFrozenBorder(dc, this, false);
 }
 
-void wxGridExtColLabelWindow::OnMouseEvent(wxMouseEvent& event)
+void ibGridColLabelWindow::OnMouseEvent(wxMouseEvent& event)
 {
-	m_owner->ProcessRowColLabelMouseEvent(wxGridExtColumnOperations(), event, this);
+	m_owner->ProcessRowColLabelMouseEvent(ibGridColumnOperations(), event, this);
 }
 
-void wxGridExtColLabelWindow::OnMouseWheel(wxMouseEvent& event)
+void ibGridColLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
@@ -2580,25 +2580,114 @@ void wxGridExtColLabelWindow::OnMouseWheel(wxMouseEvent& event)
 
 //////////////////////////////////////////////////////////////////////
 
-wxBEGIN_EVENT_TABLE(wxGridExtCornerLabelWindow, wxGridExtSubwindow)
-EVT_MOUSEWHEEL(wxGridExtCornerLabelWindow::OnMouseWheel)
-EVT_MOUSE_EVENTS(wxGridExtCornerLabelWindow::OnMouseEvent)
-EVT_PAINT(wxGridExtCornerLabelWindow::OnPaint)
+wxBEGIN_EVENT_TABLE(ibGridCornerLabelWindow, ibGridSubwindow)
+EVT_MOUSEWHEEL(ibGridCornerLabelWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridCornerLabelWindow::OnMouseEvent)
+EVT_PAINT(ibGridCornerLabelWindow::OnPaint)
 wxEND_EVENT_TABLE()
 
-void wxGridExtCornerLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
+//////////////////////////////////////////////////////////////////////
+// Outline subwindow impls (row + col). Share the same shape as area windows
+// so scrolling / zoom / frozen-aware origin is consistent.
+
+wxBEGIN_EVENT_TABLE(ibGridRowOutlineWindow, ibGridSubwindow)
+EVT_PAINT(ibGridRowOutlineWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridRowOutlineWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridRowOutlineWindow::OnMouseEvent)
+wxEND_EVENT_TABLE()
+
+void ibGridRowOutlineWindow::OnPaint(wxPaintEvent&)
+{
+	wxPaintDC dc(this);
+	// match the scroll offset convention used by RowAreaWindow::OnPaint
+	int x, y;
+	ibGridWindow* gridWindow = m_owner->m_gridWin;
+	m_owner->GetGridWindowOffset(gridWindow, x, y);
+	m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, gridWindow);
+	wxPoint pt = dc.GetDeviceOrigin();
+	dc.SetDeviceOrigin(pt.x, pt.y - y);
+	m_owner->DrawRowOutline(dc);
+}
+
+void ibGridRowOutlineWindow::OnMouseEvent(wxMouseEvent& event)
+{
+	if (event.LeftDown()) {
+		// unscrolled position inside outline pane — y needs un-scrolling
+		int x, y;
+		m_owner->GetGridWindowOffset(m_owner->m_gridWin, x, y);
+		m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, m_owner->m_gridWin);
+		const wxPoint pt(event.GetX(), event.GetY() + y);
+		const int gi = m_owner->HitTestRowOutlineButton(pt);
+		if (gi >= 0) {
+			m_owner->ToggleRowGroup(gi);
+			Refresh();
+			m_owner->CalcDimensions();
+			return;
+		}
+	}
+	event.Skip();
+}
+
+void ibGridRowOutlineWindow::OnMouseWheel(wxMouseEvent& event)
+{
+	if (!m_owner->ProcessWindowEvent(event)) event.Skip();
+}
+
+wxBEGIN_EVENT_TABLE(ibGridColOutlineWindow, ibGridSubwindow)
+EVT_PAINT(ibGridColOutlineWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridColOutlineWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridColOutlineWindow::OnMouseEvent)
+wxEND_EVENT_TABLE()
+
+void ibGridColOutlineWindow::OnPaint(wxPaintEvent&)
+{
+	wxPaintDC dc(this);
+	if (m_owner->GetNumberCols() == 0) return;
+	int x, y;
+	ibGridWindow* gridWindow = m_owner->m_gridWin;
+	m_owner->GetGridWindowOffset(gridWindow, x, y);
+	m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, gridWindow);
+	wxPoint pt = dc.GetDeviceOrigin();
+	dc.SetDeviceOrigin(pt.x - x, pt.y);
+	m_owner->DrawColOutline(dc);
+}
+
+void ibGridColOutlineWindow::OnMouseEvent(wxMouseEvent& event)
+{
+	if (event.LeftDown()) {
+		int x, y;
+		m_owner->GetGridWindowOffset(m_owner->m_gridWin, x, y);
+		m_owner->CalcGridWindowUnscrolledPosition(x, y, &x, &y, m_owner->m_gridWin);
+		const wxPoint pt(event.GetX() + x, event.GetY());
+		const int gi = m_owner->HitTestColOutlineButton(pt);
+		if (gi >= 0) {
+			m_owner->ToggleColGroup(gi);
+			Refresh();
+			m_owner->CalcDimensions();
+			return;
+		}
+	}
+	event.Skip();
+}
+
+void ibGridColOutlineWindow::OnMouseWheel(wxMouseEvent& event)
+{
+	if (!m_owner->ProcessWindowEvent(event)) event.Skip();
+}
+
+void ibGridCornerLabelWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 
 	m_owner->DrawCornerLabel(dc);
 }
 
-void wxGridExtCornerLabelWindow::OnMouseEvent(wxMouseEvent& event)
+void ibGridCornerLabelWindow::OnMouseEvent(wxMouseEvent& event)
 {
 	m_owner->ProcessCornerLabelMouseEvent(event);
 }
 
-void wxGridExtCornerLabelWindow::OnMouseWheel(wxMouseEvent& event)
+void ibGridCornerLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
@@ -2612,45 +2701,45 @@ void wxGridExtCornerLabelWindow::OnMouseWheel(wxMouseEvent& event)
 
 //////////////////////////////////////////////////////////////////////
 
-wxBEGIN_EVENT_TABLE(wxGridExtWindow, wxGridExtSubwindow)
-EVT_PAINT(wxGridExtWindow::OnPaint)
-EVT_MOUSEWHEEL(wxGridExtWindow::OnMouseWheel)
-EVT_MOUSE_EVENTS(wxGridExtWindow::OnMouseEvent)
-EVT_KEY_DOWN(wxGridExtWindow::OnKeyDown)
-EVT_KEY_UP(wxGridExtWindow::OnKeyUp)
-EVT_CHAR(wxGridExtWindow::OnChar)
-EVT_SET_FOCUS(wxGridExtWindow::OnFocus)
-EVT_KILL_FOCUS(wxGridExtWindow::OnFocus)
+wxBEGIN_EVENT_TABLE(ibGridWindow, ibGridSubwindow)
+EVT_PAINT(ibGridWindow::OnPaint)
+EVT_MOUSEWHEEL(ibGridWindow::OnMouseWheel)
+EVT_MOUSE_EVENTS(ibGridWindow::OnMouseEvent)
+EVT_KEY_DOWN(ibGridWindow::OnKeyDown)
+EVT_KEY_UP(ibGridWindow::OnKeyUp)
+EVT_CHAR(ibGridWindow::OnChar)
+EVT_SET_FOCUS(ibGridWindow::OnFocus)
+EVT_KILL_FOCUS(ibGridWindow::OnFocus)
 wxEND_EVENT_TABLE()
 
-void wxGridExtWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
+void ibGridWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxAutoBufferedPaintDC dc(this);
 	m_owner->PrepareDCFor(dc, this);
 	wxRegion reg = GetUpdateRegion();
 
-	wxGridExtCellCoordsArray dirtyCells;
+	ibGridCellCoordsArray dirtyCells;
 
 	m_owner->CalcCellsExposed(reg, dirtyCells, this);
 
-	wxGridExtCellCacheArray storage;
+	ibGridCellCacheArray storage;
 
 	m_owner->DrawGridSpace(dc, this);
 	m_owner->DrawGridCellArea(dc, dirtyCells, storage);
 	m_owner->DrawAllGridWindowLines(dc, reg, this);
 
-	if (m_type != wxGridExtWindow::wxGridExtWindowNormal)
+	if (m_type != ibGridWindow::ibGridWindowNormal)
 		m_owner->DrawFrozenBorder(dc, this);
 
 	m_owner->DrawBorder(dc, storage);
 	m_owner->DrawHighlight(dc, dirtyCells);
 }
 
-void wxGridExt::Render(wxDC& dc,
+void ibGrid::Render(wxDC& dc,
 	const wxPoint& position,
 	const wxSize& size,
-	const wxGridExtCellCoords& topLeft,
-	const wxGridExtCellCoords& bottomRight,
+	const ibGridCellCoords& topLeft,
+	const ibGridCellCoords& bottomRight,
 	int style)
 {
 	wxCHECK_RET(bottomRight.GetCol() < GetNumberCols(),
@@ -2662,7 +2751,7 @@ void wxGridExt::Render(wxDC& dc,
 
 	// remove grid selection, don't paint selection colour
 	// unless we have wxGRID_DRAW_SELECTION
-	wxGridExtSelection* selectionOrig = NULL;
+	ibGridSelection* selectionOrig = NULL;
 	if (m_selection && !(style & wxGRID_DRAW_SELECTION))
 	{
 		// remove the selection temporarily, it will be restored below
@@ -2679,7 +2768,7 @@ void wxGridExt::Render(wxDC& dc,
 	dc.GetUserScale(&scaleUserX, &scaleUserY);
 
 	// set defaults if necessary
-	wxGridExtCellCoords leftTop(topLeft), rightBottom(bottomRight);
+	ibGridCellCoords leftTop(topLeft), rightBottom(bottomRight);
 	if (leftTop.GetCol() < 0)
 		leftTop.SetCol(0);
 	if (leftTop.GetRow() < 0)
@@ -2692,7 +2781,7 @@ void wxGridExt::Render(wxDC& dc,
 	// get grid offset, size and cell parameters
 	wxPoint pointOffSet;
 	wxSize sizeGrid;
-	wxGridExtCellCoordsArray renderCells;
+	ibGridCellCoordsArray renderCells;
 	wxArrayInt arrayCols;
 	wxArrayInt arrayRows;
 
@@ -2800,7 +2889,7 @@ void wxGridExt::Render(wxDC& dc,
 }
 
 void
-wxGridExt::SetRenderScale(wxDC& dc,
+ibGrid::SetRenderScale(wxDC& dc,
 	const wxPoint& pos, const wxSize& size,
 	const wxSize& sizeGrid)
 {
@@ -2826,10 +2915,10 @@ wxGridExt::SetRenderScale(wxDC& dc,
 }
 
 // get grid rendered size, origin offset and fill cell arrays
-void wxGridExt::GetRenderSizes(const wxGridExtCellCoords& topLeft,
-	const wxGridExtCellCoords& bottomRight,
+void ibGrid::GetRenderSizes(const ibGridCellCoords& topLeft,
+	const ibGridCellCoords& bottomRight,
 	wxPoint& pointOffSet, wxSize& sizeGrid,
-	wxGridExtCellCoordsArray& renderCells,
+	ibGridCellCoordsArray& renderCells,
 	wxArrayInt& arrayCols, wxArrayInt& arrayRows) const
 {
 	pointOffSet.x = 0;
@@ -2839,7 +2928,7 @@ void wxGridExt::GetRenderSizes(const wxGridExtCellCoords& topLeft,
 
 	int col, row;
 
-	wxGridExtSizesInfo sizeinfo = GetColSizes();
+	ibGridSizesInfo sizeinfo = GetColSizes();
 	for (col = 0; col <= bottomRight.GetCol(); col++)
 	{
 		if (col < topLeft.GetCol())
@@ -2850,7 +2939,7 @@ void wxGridExt::GetRenderSizes(const wxGridExtCellCoords& topLeft,
 		{
 			for (row = topLeft.GetRow(); row <= bottomRight.GetRow(); row++)
 			{
-				renderCells.Add(wxGridExtCellCoords(row, col));
+				renderCells.Add(ibGridCellCoords(row, col));
 				arrayRows.Add(row); // column labels rendered in DrawColLabels
 			}
 			arrayCols.Add(col); // row labels rendered in DrawRowLabels
@@ -2870,7 +2959,7 @@ void wxGridExt::GetRenderSizes(const wxGridExtCellCoords& topLeft,
 
 // get render start position
 // if position not specified use dc draw extents MaxX and MaxY
-wxPoint wxGridExt::GetRenderPosition(wxDC& dc, const wxPoint& position)
+wxPoint ibGrid::GetRenderPosition(wxDC& dc, const wxPoint& position)
 {
 	wxPoint positionRender(position);
 
@@ -2888,11 +2977,11 @@ wxPoint wxGridExt::GetRenderPosition(wxDC& dc, const wxPoint& position)
 
 // draw render rectangle bounding lines
 // useful where there is multi cell row or col clipping and no cell border
-void wxGridExt::DoRenderBox(wxDC& dc, const int& style,
+void ibGrid::DoRenderBox(wxDC& dc, const int& style,
 	const wxPoint& pointOffSet,
 	const wxSize& sizeCells,
-	const wxGridExtCellCoords& topLeft,
-	const wxGridExtCellCoords& bottomRight)
+	const ibGridCellCoords& topLeft,
+	const ibGridCellCoords& bottomRight)
 {
 	if (!(style & wxGRID_DRAW_BOX_RECT))
 		return;
@@ -2935,15 +3024,15 @@ void wxGridExt::DoRenderBox(wxDC& dc, const int& style,
 	dc.DrawLine(right, pointOffSet.y, right, bottom - 1);
 }
 
-void wxGridExtWindow::ScrollWindow(int dx, int dy, const wxRect* rect)
+void ibGridWindow::ScrollWindow(int dx, int dy, const wxRect* rect)
 {
 	m_owner->ScrollWindow(dx, dy, rect);
 }
 
-void wxGridExt::ScrollWindow(int dx, int dy, const wxRect* rect)
+void ibGrid::ScrollWindow(int dx, int dy, const wxRect* rect)
 {
 	// We must explicitly call wxWindow version to avoid infinite recursion as
-	// wxGridExtWindow::ScrollWindow() calls this method back.
+	// ibGridWindow::ScrollWindow() calls this method back.
 	m_gridWin->wxWindow::ScrollWindow(dx, dy, rect);
 
 	if (m_frozenColGridWin)
@@ -2955,9 +3044,12 @@ void wxGridExt::ScrollWindow(int dx, int dy, const wxRect* rect)
 	m_rowLabelWin->ScrollWindow(0, dy, rect);
 	m_colAreaWin->ScrollWindow(dx, 0, rect);
 	m_colLabelWin->ScrollWindow(dx, 0, rect);
+
+	if (m_rowOutlineWin) m_rowOutlineWin->ScrollWindow(0, dy, rect);
+	if (m_colOutlineWin) m_colOutlineWin->ScrollWindow(dx, 0, rect);
 }
 
-void wxGridExtWindow::OnMouseEvent(wxMouseEvent& event)
+void ibGridWindow::OnMouseEvent(wxMouseEvent& event)
 {
 	if (event.ButtonDown(wxMOUSE_BTN_LEFT) && FindFocus() != this)
 		SetFocus();
@@ -2965,7 +3057,7 @@ void wxGridExtWindow::OnMouseEvent(wxMouseEvent& event)
 	m_owner->ProcessGridCellMouseEvent(event, this);
 }
 
-void wxGridExtWindow::OnMouseWheel(wxMouseEvent& event)
+void ibGridWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
@@ -2980,25 +3072,25 @@ void wxGridExtWindow::OnMouseWheel(wxMouseEvent& event)
 // This seems to be required for wxMotif/wxGTK otherwise the mouse
 // cursor must be in the cell edit control to get key events
 //
-void wxGridExtWindow::OnKeyDown(wxKeyEvent& event)
+void ibGridWindow::OnKeyDown(wxKeyEvent& event)
 {
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 }
 
-void wxGridExtWindow::OnKeyUp(wxKeyEvent& event)
+void ibGridWindow::OnKeyUp(wxKeyEvent& event)
 {
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 }
 
-void wxGridExtWindow::OnChar(wxKeyEvent& event)
+void ibGridWindow::OnChar(wxKeyEvent& event)
 {
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 }
 
-void wxGridExtWindow::OnFocus(wxFocusEvent& event)
+void ibGridWindow::OnFocus(wxFocusEvent& event)
 {
 	// and if we have any selection, it has to be repainted, because it
 	// uses different colour when the grid is not focused:
@@ -3016,11 +3108,11 @@ void wxGridExtWindow::OnFocus(wxFocusEvent& event)
 		//     branch so that it's always executed.
 
 		// current cell cursor {dis,re}appears on focus change:
-		const wxGridExtCellCoords cursorCoords(m_owner->GetGridCursorRow(),
+		const ibGridCellCoords cursorCoords(m_owner->GetGridCursorRow(),
 			m_owner->GetGridCursorCol());
 		const wxRect cursor =
 			m_owner->BlockToDeviceRect(cursorCoords, cursorCoords, this);
-		if (cursor != wxGridExtNoCellRect)
+		if (cursor != ibGridNoCellRect)
 			Refresh(true, &cursor);
 	}
 
@@ -3036,14 +3128,14 @@ void wxGridExtWindow::OnFocus(wxFocusEvent& event)
 
 /////////////////////////////////////////////////////////////////////
 
-wxBEGIN_EVENT_TABLE(wxGridExt, wxScrolledCanvas)
-EVT_SIZE(wxGridExt::OnSize)
-EVT_DPI_CHANGED(wxGridExt::OnDPIChanged)
-EVT_KEY_DOWN(wxGridExt::OnKeyDown)
-EVT_CHAR(wxGridExt::OnChar)
+wxBEGIN_EVENT_TABLE(ibGrid, wxScrolledCanvas)
+EVT_SIZE(ibGrid::OnSize)
+EVT_DPI_CHANGED(ibGrid::OnDPIChanged)
+EVT_KEY_DOWN(ibGrid::OnKeyDown)
+EVT_CHAR(ibGrid::OnChar)
 wxEND_EVENT_TABLE()
 
-bool wxGridExt::Create(wxWindow* parent, wxWindowID id,
+bool ibGrid::Create(wxWindow* parent, wxWindowID id,
 	const wxPoint& pos, const wxSize& size,
 	long style, const wxString& name)
 {
@@ -3061,7 +3153,7 @@ bool wxGridExt::Create(wxWindow* parent, wxWindowID id,
 	return true;
 }
 
-wxGridExt::~wxGridExt()
+ibGrid::~ibGrid()
 {
 	if (m_winCapture)
 		m_winCapture->ReleaseMouse();
@@ -3078,7 +3170,7 @@ wxGridExt::~wxGridExt()
 
 #ifdef DEBUG_ATTR_CACHE
 	size_t total = gs_nAttrCacheHits + gs_nAttrCacheMisses;
-	wxPrintf(wxT("wxGridExt attribute cache statistics: "
+	wxPrintf(wxT("ibGrid attribute cache statistics: "
 		"total: %u, hits: %u (%u%%)\n"),
 		total, gs_nAttrCacheHits,
 		total ? (gs_nAttrCacheHits * 100) / total : 0);
@@ -3106,23 +3198,23 @@ wxGridExt::~wxGridExt()
 // be removed as well as the #else cases below.
 #define _USE_VISATTR 0
 
-void wxGridExt::Create()
+void ibGrid::Create()
 {
 	// create the type registry
-	m_typeRegistry = new wxGridExtTypeRegistry;
+	m_typeRegistry = new ibGridTypeRegistry;
 
 	m_cellEditCtrlEnabled = false;
 
-	m_defaultCellAttr = new wxGridExtCellAttr();
+	m_defaultCellAttr = new ibGridCellAttr();
 
 	// Set default cell attributes
 	m_defaultCellAttr->SetDefAttr(m_defaultCellAttr);
-	m_defaultCellAttr->SetKind(wxGridExtCellAttr::Default);
+	m_defaultCellAttr->SetKind(ibGridCellAttr::Default);
 	m_defaultCellAttr->SetFont(GetFont());
 	m_defaultCellAttr->SetAlignment(wxALIGN_LEFT, wxALIGN_TOP);
-	m_defaultCellAttr->SetRenderer(new wxGridExtCellStringRenderer);
-	m_defaultCellAttr->SetEditor(new wxGridExtCellTextEditor);
-	m_defaultCellAttr->SetFitMode(wxGridExtFitMode::Overflow());
+	m_defaultCellAttr->SetRenderer(new ibGridCellStringRenderer);
+	m_defaultCellAttr->SetEditor(new ibGridCellTextEditor);
+	m_defaultCellAttr->SetFitMode(ibGridFitMode::Overflow());
 
 #if _USE_VISATTR
 	wxVisualAttributes gva = wxListBox::GetClassDefaultAttributes();
@@ -3144,17 +3236,19 @@ void wxGridExt::Create()
 	m_numCols = 0;
 	m_numFrozenRows = 0;
 	m_numFrozenCols = 0;
-	m_currentCellCoords = wxGridExtNoCellCoords;
+	m_currentCellCoords = ibGridNoCellCoords;
 
-	// subwindow components that make up the wxGridExt
+	// subwindow components that make up the ibGrid
 #pragma region area
-	m_rowAreaWin = new wxGridExtRowAreaWindow(this);
-#pragma endregion 
-	m_rowLabelWin = new wxGridExtRowLabelWindow(this);
+	m_rowAreaWin = new ibGridRowAreaWindow(this);
+#pragma endregion
+	m_rowOutlineWin = new ibGridRowOutlineWindow(this);
+	m_colOutlineWin = new ibGridColOutlineWindow(this);
+	m_rowLabelWin = new ibGridRowLabelWindow(this);
 
 	CreateColumnWindow();
-	m_cornerLabelWin = new wxGridExtCornerLabelWindow(this);
-	m_gridWin = new wxGridExtWindow(this, wxGridExtWindow::wxGridExtWindowNormal);
+	m_cornerLabelWin = new ibGridCornerLabelWindow(this);
+	m_gridWin = new ibGridWindow(this, ibGridWindow::ibGridWindowNormal);
 
 	SetTargetWindow(m_gridWin);
 
@@ -3191,7 +3285,7 @@ void wxGridExt::Create()
 	InitPixelFields();
 }
 
-void wxGridExt::InitPixelFields()
+void ibGrid::InitPixelFields()
 {
 	m_defaultRowHeight = m_gridWin->GetCharHeight();
 #if defined(__WXMOTIF__) || defined(__WXGTK__) || defined(__WXQT__)  // see also text ctrl sizing in ShowCellEditControl()
@@ -3222,54 +3316,54 @@ void wxGridExt::InitPixelFields()
 	m_minAcceptableRowHeight = FromDIP(WXGRID_MIN_ROW_HEIGHT);
 }
 
-void wxGridExt::CreateColumnWindow()
+void ibGrid::CreateColumnWindow()
 {
 	if (m_useNativeHeader)
 	{
-		m_colAreaWin = new wxGridExtColAreaWindow(this);
+		m_colAreaWin = new ibGridColAreaWindow(this);
 		m_colAreaHeight = m_colAreaWin->GetBestSize().y;
-		m_colLabelWin = new wxGridExtHeaderCtrl(this);
+		m_colLabelWin = new ibGridHeaderCtrl(this);
 		m_colLabelHeight = m_colLabelWin->GetBestSize().y;
 	}
 	else // draw labels ourselves
 	{
-		m_colAreaWin = new wxGridExtColAreaWindow(this);
+		m_colAreaWin = new ibGridColAreaWindow(this);
 		m_colAreaHeight = FromDIP(WXGRID_DEFAULT_COL_LABEL_HEIGHT);
-		m_colLabelWin = new wxGridExtColLabelWindow(this);
+		m_colLabelWin = new ibGridColLabelWindow(this);
 		m_colLabelHeight = FromDIP(WXGRID_DEFAULT_COL_LABEL_HEIGHT);
 	}
 }
 
-bool wxGridExt::CreateGrid(int numRows, int numCols,
-	wxGridExtSelectionModes selmode)
+bool ibGrid::CreateGrid(int numRows, int numCols,
+	ibGridSelectionModes selmode)
 {
 	wxCHECK_MSG(!m_created,
 		false,
-		wxT("wxGridExt::CreateGrid or wxGridExt::SetTable called more than once"));
+		wxT("ibGrid::CreateGrid or ibGrid::SetTable called more than once"));
 
-	return SetTable(new wxGridExtStringTable(numRows, numCols), true, selmode);
+	return SetTable(new ibGridStringTable(numRows, numCols), true, selmode);
 }
 
-void wxGridExt::SetSelectionMode(wxGridExtSelectionModes selmode)
+void ibGrid::SetSelectionMode(ibGridSelectionModes selmode)
 {
 	wxCHECK_RET(m_created,
-		wxT("Called wxGridExt::SetSelectionMode() before calling CreateGrid()"));
+		wxT("Called ibGrid::SetSelectionMode() before calling CreateGrid()"));
 
 	m_selection->SetSelectionMode(selmode);
 }
 
-wxGridExt::wxGridExtSelectionModes wxGridExt::GetSelectionMode() const
+ibGrid::ibGridSelectionModes ibGrid::GetSelectionMode() const
 {
-	wxCHECK_MSG(m_created, wxGridExtSelectCells,
-		wxT("Called wxGridExt::GetSelectionMode() before calling CreateGrid()"));
+	wxCHECK_MSG(m_created, ibGridSelectCells,
+		wxT("Called ibGrid::GetSelectionMode() before calling CreateGrid()"));
 
 	return m_selection->GetSelectionMode();
 }
 
 bool
-wxGridExt::SetTable(wxGridExtTableBase* table,
+ibGrid::SetTable(ibGridTableBase* table,
 	bool takeOwnership,
-	wxGridExt::wxGridExtSelectionModes selmode)
+	ibGrid::ibGridSelectionModes selmode)
 {
 	if (m_created)
 	{
@@ -3324,11 +3418,11 @@ wxGridExt::SetTable(wxGridExtTableBase* table,
 		m_ownTable = takeOwnership;
 
 		// Notice that this must be called after setting m_table as it uses it
-		// indirectly, via wxGridExt::GetColLabelValue().
+		// indirectly, via ibGrid::GetColLabelValue().
 		if (m_useNativeHeader)
 			SetNativeHeaderColCount();
 
-		m_selection = new wxGridExtSelection(this, selmode);
+		m_selection = new ibGridSelection(this, selmode);
 		CalcDimensions();
 
 		m_created = true;
@@ -3341,15 +3435,15 @@ wxGridExt::SetTable(wxGridExtTableBase* table,
 	return m_created;
 }
 
-void wxGridExt::AssignTable(wxGridExtTableBase* table, wxGridExtSelectionModes selmode)
+void ibGrid::AssignTable(ibGridTableBase* table, ibGridSelectionModes selmode)
 {
 	wxCHECK_RET(table, wxS("Table pointer must be valid"));
-	wxCHECK_RET(!m_created, wxS("wxGridExt already has a table"));
+	wxCHECK_RET(!m_created, wxS("ibGrid already has a table"));
 
 	SetTable(table, true /* take ownership */, selmode);
 }
 
-void wxGridExt::Init()
+void ibGrid::Init()
 {
 	m_created = false;
 
@@ -3358,10 +3452,12 @@ void wxGridExt::Init()
 	m_rowFrozenAreaWin = NULL;
 	m_rowLabelWin = NULL;
 	m_rowFrozenLabelWin = NULL;
+	m_rowOutlineWin = NULL;
 	m_colAreaWin = NULL;
 	m_colFrozenAreaWin = NULL;
 	m_colLabelWin = NULL;
 	m_colFrozenLabelWin = NULL;
+	m_colOutlineWin = NULL;
 	m_gridWin = NULL;
 	m_frozenColGridWin = NULL;
 	m_frozenRowGridWin = NULL;
@@ -3449,7 +3545,7 @@ void wxGridExt::Init()
 	m_rowResizeCursor = wxCursor(wxCURSOR_SIZENS);
 	m_colResizeCursor = wxCursor(wxCURSOR_SIZEWE);
 
-	m_currentCellCoords = wxGridExtNoCellCoords;
+	m_currentCellCoords = ibGridNoCellCoords;
 
 	m_selectionBackground = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
 	m_selectionForeground = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
@@ -3482,108 +3578,108 @@ void wxGridExt::Init()
 // this is not done currently
 // ----------------------------------------------------------------------------
 
-void wxGridExt::InitRowHeights()
+void ibGrid::InitRowHeights()
 {
 	m_rowHeights.Empty();
 	m_rowHeights.Alloc(m_numRows);
 	m_rowHeights.Add(m_defaultRowHeight, m_numRows);
 }
 
-void wxGridExt::InitColWidths()
+void ibGrid::InitColWidths()
 {
 	m_colWidths.Empty();
 	m_colWidths.Alloc(m_numCols);
 	m_colWidths.Add(m_defaultColWidth, m_numCols);
 }
 
-int wxGridExt::GetColWidth(int col, float scale) const
+int ibGrid::GetColWidth(int col, float scale) const
 {
 	if (m_colWidths.IsEmpty())
-		return wxCalcGridScale(m_defaultColWidth, scale);
+		return ibCalcGridScale(m_defaultColWidth, scale);
 
 	const int width = m_colWidths[col];
 
 	// a negative width indicates a hidden column
-	return width > 0 ? wxCalcGridScale(width, scale) : 0;
+	return width > 0 ? ibCalcGridScale(width, scale) : 0;
 }
 
-int wxGridExt::GetColLeft(int col, float scale) const
+int ibGrid::GetColLeft(int col, float scale) const
 {
 	if (m_colWidths.IsEmpty())
-		return GetColPos(col) * wxCalcGridScale(m_defaultColWidth, scale);
+		return GetColPos(col) * ibCalcGridScale(m_defaultColWidth, scale);
 
 	int total_width = 0;
 
 	for (int idx = 0; idx < col; idx++)
 	{
 		const int& width = *(m_colWidths.begin() + idx);
-		if (width > 0) total_width += wxCalcGridScale(width, scale);
+		if (width > 0) total_width += ibCalcGridScale(width, scale);
 	}
 
 	return total_width;
 }
 
-int wxGridExt::GetColRight(int col, float scale) const
+int ibGrid::GetColRight(int col, float scale) const
 {
 	if (m_colWidths.IsEmpty())
-		return (GetColPos(col) + 1) * wxCalcGridScale(m_defaultColWidth, scale);
+		return (GetColPos(col) + 1) * ibCalcGridScale(m_defaultColWidth, scale);
 
 	int total_width = 0;
 
 	for (int idx = 0; idx <= col; idx++)
 	{
 		const int& width = *(m_colWidths.begin() + idx);
-		if (width > 0) total_width += wxCalcGridScale(width, scale);
+		if (width > 0) total_width += ibCalcGridScale(width, scale);
 	}
 
 	return total_width;
 }
 
-int wxGridExt::GetRowHeight(int row, float scale) const
+int ibGrid::GetRowHeight(int row, float scale) const
 {
 	// no custom heights / hidden rows
 	if (m_rowHeights.IsEmpty())
-		return wxCalcGridScale(m_defaultRowHeight, scale);
+		return ibCalcGridScale(m_defaultRowHeight, scale);
 
 	const int height = m_rowHeights[row];
 
 	// a negative height indicates a hidden row
-	return height > 0 ? wxCalcGridScale(height, scale) : 0;
+	return height > 0 ? ibCalcGridScale(height, scale) : 0;
 }
 
-int wxGridExt::GetRowTop(int row, float scale) const
+int ibGrid::GetRowTop(int row, float scale) const
 {
 	if (m_rowHeights.IsEmpty())
-		return GetRowPos(row) * wxCalcGridScale(m_defaultRowHeight, scale);
+		return GetRowPos(row) * ibCalcGridScale(m_defaultRowHeight, scale);
 
 	int total_height = 0;
 
 	for (int idx = 0; idx < row; idx++)
 	{
 		const int& height = *(m_rowHeights.begin() + idx);
-		if (height > 0) total_height += wxCalcGridScale(height, scale);
+		if (height > 0) total_height += ibCalcGridScale(height, scale);
 	}
 
 	return total_height;
 }
 
-int wxGridExt::GetRowBottom(int row, float scale) const
+int ibGrid::GetRowBottom(int row, float scale) const
 {
 	if (m_rowHeights.IsEmpty())
-		return (GetRowPos(row) + 1) * wxCalcGridScale(m_defaultRowHeight, scale);
+		return (GetRowPos(row) + 1) * ibCalcGridScale(m_defaultRowHeight, scale);
 
 	int total_height = 0;
 
 	for (int idx = 0; idx <= row; idx++)
 	{
 		const int& height = *(m_rowHeights.begin() + idx);
-		if (height > 0) total_height += wxCalcGridScale(height, scale);
+		if (height > 0) total_height += ibCalcGridScale(height, scale);
 	}
 
 	return total_height;
 }
 
-void wxGridExt::CalcDimensions()
+void ibGrid::CalcDimensions()
 {
 	// Wait until the window is thawed if it's currently frozen.
 	if (GetBatchCount())
@@ -3630,17 +3726,21 @@ void wxGridExt::CalcDimensions()
 	AdjustScrollbars();
 }
 
-wxSize wxGridExt::GetSizeAvailableForScrollTarget(const wxSize& size)
+wxSize ibGrid::GetSizeAvailableForScrollTarget(const wxSize& size)
 {
 	wxPoint offset = GetGridWindowOffset(m_gridWin);
 	wxSize sizeGridWin(size);
-	sizeGridWin.x -= (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + offset.x;
-	sizeGridWin.y -= (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + offset.y;
+	sizeGridWin.x -= (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0)
+		+ GetRowOutlineSize()
+		+ ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + offset.x;
+	sizeGridWin.y -= (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0)
+		+ GetColOutlineSize()
+		+ ibCalcGridScale(m_colLabelHeight, GetGridZoom()) + offset.y;
 
 	return sizeGridWin;
 }
 
-void wxGridExt::CalcWindowSizes()
+void ibGrid::CalcWindowSizes()
 {
 	// escape if the window is has not been fully created yet
 	if (m_cornerLabelWin == NULL)
@@ -3659,15 +3759,28 @@ void wxGridExt::CalcWindowSizes()
 		fgw += GetColWidth(i, GetGridZoom());
 
 	const int rowAreaWidth =
-		(GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0);
+		(GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0);
 
 	const int colAreaHeight =
-		(GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0);
+		(GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0);
+
+	// Outline pane sizes — independent of the row/col area visibility.
+	// Sit between [rowArea] and [rowLabel] (resp. [colArea] and [colLabel]).
+	const int rowOutlineW = GetRowOutlineSize();
+	const int colOutlineH = GetColOutlineSize();
+
+	const int rowLabelW = ibCalcGridScale(m_rowLabelWidth, GetGridZoom());
+	const int colLabelH = ibCalcGridScale(m_colLabelHeight, GetGridZoom());
+
+	// Outline sits LEFT of area (matching Excel/1C convention). Order left-to-right
+	// for rows: [outline][area][label][frozen][grid]; for cols analogously top-down.
+	const int xAfterChrome = rowOutlineW + rowAreaWidth + rowLabelW;
+	const int yAfterChrome = colOutlineH + colAreaHeight + colLabelH;
 
 	// the grid may be too small to have enough space for the labels yet, don't
 	// size the windows to negative sizes in this case
-	int gw = cw - wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) - fgw;
-	int gh = ch - wxCalcGridScale(m_colLabelHeight, GetGridZoom()) - fgh;
+	int gw = cw - rowLabelW - rowOutlineW - fgw;
+	int gh = ch - colLabelH - colOutlineH - fgh;
 
 	if (gw < 0)
 		gw = 0;
@@ -3675,49 +3788,65 @@ void wxGridExt::CalcWindowSizes()
 		gh = 0;
 
 	if (m_frozenCornerGridWin && m_frozenCornerGridWin->IsShown())
-		m_frozenCornerGridWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()), fgw, fgh);
+		m_frozenCornerGridWin->SetSize(xAfterChrome, yAfterChrome, fgw, fgh);
 
 	if (m_cornerLabelWin && m_cornerLabelWin->IsShown())
-		m_cornerLabelWin->SetSize(rowAreaWidth, colAreaHeight, wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), wxCalcGridScale(m_colLabelHeight, GetGridZoom()));
+		m_cornerLabelWin->SetSize(rowOutlineW + rowAreaWidth, colOutlineH + colAreaHeight, rowLabelW, colLabelH);
 
 	if (m_colAreaWin && m_colAreaWin->IsShown())
-		m_colAreaWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, 0, gw, colAreaHeight);
+		m_colAreaWin->SetSize(xAfterChrome + fgw, colOutlineH, gw, colAreaHeight);
 
 	if (m_colFrozenAreaWin && m_colFrozenAreaWin->IsShown())
-		m_colFrozenAreaWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), 0, rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight);
+		m_colFrozenAreaWin->SetSize(xAfterChrome, colOutlineH, fgw, colAreaHeight);
+
+	// Column outline pane: strip sitting at the very top of the column chrome.
+	if (m_colOutlineWin) {
+		const bool show = GridColOutlineEnabled();
+		m_colOutlineWin->Show(show);
+		if (show)
+			m_colOutlineWin->SetSize(xAfterChrome + fgw, 0, gw, colOutlineH);
+	}
 
 	if (m_colFrozenLabelWin && m_colFrozenLabelWin->IsShown())
-		m_colFrozenLabelWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight, fgw, wxCalcGridScale(m_colLabelHeight, GetGridZoom()));
+		m_colFrozenLabelWin->SetSize(xAfterChrome, colOutlineH + colAreaHeight, fgw, colLabelH);
 
 	if (m_frozenColGridWin && m_frozenColGridWin->IsShown())
-		m_frozenColGridWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, fgw, gh);
+		m_frozenColGridWin->SetSize(xAfterChrome, yAfterChrome + fgh, fgw, gh);
 
 	if (m_colLabelWin && m_colLabelWin->IsShown())
-		m_colLabelWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight, gw, wxCalcGridScale(m_colLabelHeight, GetGridZoom()));
+		m_colLabelWin->SetSize(xAfterChrome + fgw, colOutlineH + colAreaHeight, gw, colLabelH);
 
 	if (m_rowAreaWin && m_rowAreaWin->IsShown())
-		m_rowAreaWin->SetSize(0, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, rowAreaWidth, gh);
+		m_rowAreaWin->SetSize(rowOutlineW, yAfterChrome + fgh, rowAreaWidth, gh);
 
 	if (m_rowFrozenAreaWin && m_rowFrozenAreaWin->IsShown())
-		m_rowFrozenAreaWin->SetSize(0, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()), rowAreaWidth, fgh);
+		m_rowFrozenAreaWin->SetSize(rowOutlineW, yAfterChrome, rowAreaWidth, fgh);
+
+	// Row outline pane: strip at the very left of the row chrome.
+	if (m_rowOutlineWin) {
+		const bool show = GridRowOutlineEnabled();
+		m_rowOutlineWin->Show(show);
+		if (show)
+			m_rowOutlineWin->SetSize(0, yAfterChrome + fgh, rowOutlineW, gh);
+	}
 
 	if (m_rowFrozenLabelWin && m_rowFrozenLabelWin->IsShown())
-		m_rowFrozenLabelWin->SetSize(rowAreaWidth, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()), wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), fgh);
+		m_rowFrozenLabelWin->SetSize(rowOutlineW + rowAreaWidth, yAfterChrome, rowLabelW, fgh);
 
 	if (m_rowLabelWin && m_rowLabelWin->IsShown())
-		m_rowLabelWin->SetSize(rowAreaWidth, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), gh);
+		m_rowLabelWin->SetSize(rowOutlineW + rowAreaWidth, yAfterChrome + fgh, rowLabelW, gh);
 
 	if (m_frozenRowGridWin && m_frozenRowGridWin->IsShown())
-		m_frozenRowGridWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()), gw, fgh);
+		m_frozenRowGridWin->SetSize(xAfterChrome + fgw, yAfterChrome, gw, fgh);
 
 	if (m_gridWin && m_gridWin->IsShown())
-		m_gridWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, gw, gh);
+		m_gridWin->SetSize(xAfterChrome + fgw, yAfterChrome + fgh, gw, gh);
 }
 
 // this is called when the grid table sends a message
 // to indicate that it has been redimensioned
 //
-bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
+bool ibGrid::Redimension(ibGridTableMessage& msg)
 {
 	int i;
 	bool result = false;
@@ -3766,7 +3895,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 
 		if (m_selection)
 			m_selection->UpdateRows(pos, numRows);
-		wxGridExtCellAttrProvider* attrProvider = m_table->GetAttrProvider();
+		ibGridCellAttrProvider* attrProvider = m_table->GetAttrProvider();
 		if (attrProvider)
 			attrProvider->UpdateAttrRows(pos, numRows);
 
@@ -3840,7 +3969,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 
 		if (m_selection)
 			m_selection->UpdateRows(pos, -((int)numRows));
-		wxGridExtCellAttrProvider* attrProvider = m_table->GetAttrProvider();
+		ibGridCellAttrProvider* attrProvider = m_table->GetAttrProvider();
 		if (attrProvider)
 		{
 			attrProvider->UpdateAttrRows(pos, -((int)numRows));
@@ -3903,7 +4032,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 
 		if (m_selection)
 			m_selection->UpdateCols(pos, numCols);
-		wxGridExtCellAttrProvider* attrProvider = m_table->GetAttrProvider();
+		ibGridCellAttrProvider* attrProvider = m_table->GetAttrProvider();
 		if (attrProvider)
 			attrProvider->UpdateAttrCols(pos, numCols);
 
@@ -3988,7 +4117,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 
 		if (m_selection)
 			m_selection->UpdateCols(pos, -((int)numCols));
-		wxGridExtCellAttrProvider* attrProvider = m_table->GetAttrProvider();
+		ibGridCellAttrProvider* attrProvider = m_table->GetAttrProvider();
 		if (attrProvider)
 		{
 			attrProvider->UpdateAttrCols(pos, -((int)numCols));
@@ -4024,7 +4153,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 	return result;
 }
 
-wxArrayInt wxGridExt::CalcRowLabelsExposed(const wxRegion& reg, wxGridExtWindow* gridWindow) const
+wxArrayInt ibGrid::CalcRowLabelsExposed(const wxRegion& reg, ibGridWindow* gridWindow) const
 {
 	wxRect r;
 
@@ -4082,7 +4211,7 @@ wxArrayInt wxGridExt::CalcRowLabelsExposed(const wxRegion& reg, wxGridExtWindow*
 	return rowlabels;
 }
 
-wxArrayInt wxGridExt::CalcColLabelsExposed(const wxRegion& reg, wxGridExtWindow* gridWindow) const
+wxArrayInt ibGrid::CalcColLabelsExposed(const wxRegion& reg, ibGridWindow* gridWindow) const
 {
 	wxRect r;
 
@@ -4141,8 +4270,8 @@ wxArrayInt wxGridExt::CalcColLabelsExposed(const wxRegion& reg, wxGridExtWindow*
 	return colLabels;
 }
 
-void wxGridExt::CalcCellsExposed(const wxRegion& reg,
-	wxGridExtCellCoordsArray& cellsExposed, wxGridExtWindow* gridWindow) const
+void ibGrid::CalcCellsExposed(const wxRegion& reg,
+	ibGridCellCoordsArray& cellsExposed, ibGridWindow* gridWindow) const
 {
 	wxRect r;
 
@@ -4220,27 +4349,27 @@ void wxGridExt::CalcCellsExposed(const wxRegion& reg,
 			cellsExposed.Alloc(count);
 
 			for (size_t n = 0; n < count; n++) {
-				cellsExposed.Add(wxGridExtCellCoords(row, cols[n]));
+				cellsExposed.Add(ibGridCellCoords(row, cols[n]));
 			}
 		}
 	}
 }
 
-void wxGridExt::PrepareDCFor(wxDC& dc, wxGridExtWindow* gridWindow)
+void ibGrid::PrepareDCFor(wxDC& dc, ibGridWindow* gridWindow)
 {
 	wxScrolledCanvas::PrepareDC(dc);
 
 	wxPoint dcOrigin = dc.GetDeviceOrigin() - GetGridWindowOffset(gridWindow);
 
-	if (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenCol)
+	if (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenCol)
 		dcOrigin.x = 0;
-	if (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenRow)
+	if (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenRow)
 		dcOrigin.y = 0;
 
 	dc.SetDeviceOrigin(dcOrigin.x, dcOrigin.y);
 }
 
-void wxGridExt::CheckDoDragScroll(wxGridExtSubwindow* eventGridWindow, wxGridExtSubwindow* gridWindow,
+void ibGrid::CheckDoDragScroll(ibGridSubwindow* eventGridWindow, ibGridSubwindow* gridWindow,
 	wxPoint posEvent, int direction)
 {
 	// helper for Process{Row|Col}LabelMouseEvent, ProcessGridCellMouseEvent:
@@ -4309,7 +4438,7 @@ void wxGridExt::CheckDoDragScroll(wxGridExtSubwindow* eventGridWindow, wxGridExt
 	m_lastMousePos = posEvent;
 }
 
-bool wxGridExt::CheckIfDragCancelled(wxMouseEvent* event)
+bool ibGrid::CheckIfDragCancelled(wxMouseEvent* event)
 {
 	// helper for Process{Row|Col}LabelMouseEvent, ProcessGridCellMouseEvent:
 	// block re-triggering m_isDragging
@@ -4324,7 +4453,7 @@ bool wxGridExt::CheckIfDragCancelled(wxMouseEvent* event)
 	return false;
 }
 
-bool wxGridExt::CheckIfAtDragSourceLine(const wxGridExtOperations& oper, int coord)
+bool ibGrid::CheckIfAtDragSourceLine(const ibGridOperations& oper, int coord)
 {
 	// check whether coord on the dragged line or at max half of a line away
 	// (the sizes of the lines before/after can be 0, if they are hidden)
@@ -4351,12 +4480,12 @@ bool wxGridExt::CheckIfAtDragSourceLine(const wxGridExtOperations& oper, int coo
 	return false;
 }
 
-void wxGridExt::ProcessRowColLabelMouseEvent(const wxGridExtOperations& oper, wxMouseEvent& event, wxGridExtSubwindow* labelWin)
+void ibGrid::ProcessRowColLabelMouseEvent(const ibGridOperations& oper, wxMouseEvent& event, ibGridSubwindow* labelWin)
 {
-	const wxGridExtOperations& dual = oper.Dual();
+	const ibGridOperations& dual = oper.Dual();
 
-	wxGridExtSubwindow* headerWin = (wxGridExtSubwindow*)oper.GetHeaderWindow(this);
-	wxGridExtWindow* gridWindow = labelWin->IsFrozen() ? oper.GetFrozenGrid(this) :
+	ibGridSubwindow* headerWin = (ibGridSubwindow*)oper.GetHeaderWindow(this);
+	ibGridWindow* gridWindow = labelWin->IsFrozen() ? oper.GetFrozenGrid(this) :
 		m_gridWin;
 
 	// store position, before it's modified in the next step
@@ -4684,9 +4813,9 @@ void wxGridExt::ProcessRowColLabelMouseEvent(const wxGridExtOperations& oper, wx
 	}
 }
 
-void wxGridExt::UpdateCurrentCellOnRedim()
+void ibGrid::UpdateCurrentCellOnRedim()
 {
-	if (m_currentCellCoords == wxGridExtNoCellCoords)
+	if (m_currentCellCoords == ibGridNoCellCoords)
 	{
 		// We didn't have any valid selection before, which can only happen
 		// if the grid was empty.
@@ -4704,12 +4833,12 @@ void wxGridExt::UpdateCurrentCellOnRedim()
 			// We have to reset the selection, as it must either use validate
 			// coordinates otherwise, but there are no valid coordinates for
 			// the grid cells any more now that it is empty.
-			m_currentCellCoords = wxGridExtNoCellCoords;
+			m_currentCellCoords = ibGridNoCellCoords;
 		}
 		else
 		{
 			// Check if the current cell coordinates are still valid.
-			wxGridExtCellCoords updatedCoords = m_currentCellCoords;
+			ibGridCellCoords updatedCoords = m_currentCellCoords;
 			if (updatedCoords.GetCol() >= m_numCols)
 				updatedCoords.SetCol(m_numCols - 1);
 			if (updatedCoords.GetRow() >= m_numRows)
@@ -4720,14 +4849,14 @@ void wxGridExt::UpdateCurrentCellOnRedim()
 			{
 				// Prevent SetCurrentCell() from redrawing the previous current
 				// cell whose coordinates are invalid now.
-				m_currentCellCoords = wxGridExtNoCellCoords;
+				m_currentCellCoords = ibGridNoCellCoords;
 				SetCurrentCell(updatedCoords);
 			}
 		}
 	}
 }
 
-void wxGridExt::UpdateColumnSortingIndicator(int col)
+void ibGrid::UpdateColumnSortingIndicator(int col)
 {
 	wxCHECK_RET(col != wxNOT_FOUND, "invalid column index");
 
@@ -4742,7 +4871,7 @@ void wxGridExt::UpdateColumnSortingIndicator(int col)
 	//else: sorting indicator display not yet implemented in grid version
 }
 
-void wxGridExt::SetSortingColumn(int col, bool ascending)
+void ibGrid::SetSortingColumn(int col, bool ascending)
 {
 	if (col == m_sortCol)
 	{
@@ -4774,7 +4903,7 @@ void wxGridExt::SetSortingColumn(int col, bool ascending)
 	}
 }
 
-void wxGridExt::DoColHeaderClick(int col)
+void ibGrid::DoColHeaderClick(int col)
 {
 	// we consider that the grid was resorted if this event is processed and
 	// not vetoed
@@ -4785,22 +4914,22 @@ void wxGridExt::DoColHeaderClick(int col)
 	}
 }
 
-void wxGridExt::DoStartResizeRowOrCol(int col, int size)
+void ibGrid::DoStartResizeRowOrCol(int col, int size)
 {
 	// Hide the editor if it's currently shown to avoid any weird interactions
 	// with it while dragging the row/column separator.
 	AcceptCellEditControlIfShown();
 
 	m_dragRowOrCol = col;
-	m_dragRowOrColOldSize = wxRestoreGridScale(size, GetGridZoom());
+	m_dragRowOrColOldSize = ibRestoreGridScale(size, GetGridZoom());
 }
 
-void wxGridExt::ProcessRowColAreaMouseEvent(const wxGridExtOperations& oper, wxMouseEvent& event, wxGridExtSubwindow* areaWin)
+void ibGrid::ProcessRowColAreaMouseEvent(const ibGridOperations& oper, wxMouseEvent& event, ibGridSubwindow* areaWin)
 {
-	const wxGridExtOperations& dual = oper.Dual();
+	const ibGridOperations& dual = oper.Dual();
 
-	wxGridExtSubwindow* headerWin = (wxGridExtSubwindow*)oper.GetHeaderWindow(this);
-	wxGridExtWindow* gridWindow = areaWin->IsFrozen() ? oper.GetFrozenGrid(this) :
+	ibGridSubwindow* headerWin = (ibGridSubwindow*)oper.GetHeaderWindow(this);
+	ibGridWindow* gridWindow = areaWin->IsFrozen() ? oper.GetFrozenGrid(this) :
 		m_gridWin;
 
 	// store position, before it's modified in the next step
@@ -4857,7 +4986,7 @@ void wxGridExt::ProcessRowColAreaMouseEvent(const wxGridExtOperations& oper, wxM
 	}
 }
 
-void wxGridExt::ProcessCornerLabelMouseEvent(wxMouseEvent& event)
+void ibGrid::ProcessCornerLabelMouseEvent(wxMouseEvent& event)
 {
 	if (event.LeftDown())
 	{
@@ -4895,7 +5024,7 @@ void wxGridExt::ProcessCornerLabelMouseEvent(wxMouseEvent& event)
 	}
 }
 
-void wxGridExt::HandleRowAutosize(int row, const wxMouseEvent& event)
+void ibGrid::HandleRowAutosize(int row, const wxMouseEvent& event)
 {
 	// adjust row height depending on label text
 	//
@@ -4906,7 +5035,7 @@ void wxGridExt::HandleRowAutosize(int row, const wxMouseEvent& event)
 	SendGridSizeEvent(wxEVT_GRID_ROW_SIZE, row, event);
 }
 
-void wxGridExt::HandleColumnAutosize(int col, const wxMouseEvent& event)
+void ibGrid::HandleColumnAutosize(int col, const wxMouseEvent& event)
 {
 	// adjust column width depending on label text
 	//
@@ -4917,7 +5046,7 @@ void wxGridExt::HandleColumnAutosize(int col, const wxMouseEvent& event)
 	SendGridSizeEvent(wxEVT_GRID_COL_SIZE, col, event);
 }
 
-void wxGridExt::CancelMouseCapture()
+void ibGrid::CancelMouseCapture()
 {
 	// cancel operation currently in progress, whatever it is
 	if (m_winCapture)
@@ -4929,7 +5058,7 @@ void wxGridExt::CancelMouseCapture()
 	}
 }
 
-void wxGridExt::DoAfterDraggingEnd()
+void ibGrid::DoAfterDraggingEnd()
 {
 	if (m_isDragging &&
 		(m_cursorMode == WXGRID_CURSOR_SELECT_CELL ||
@@ -4952,7 +5081,7 @@ void wxGridExt::DoAfterDraggingEnd()
 	m_winCapture = NULL;
 }
 
-void wxGridExt::EndDraggingIfNecessary()
+void ibGrid::EndDraggingIfNecessary()
 {
 	if (m_winCapture)
 	{
@@ -4962,7 +5091,7 @@ void wxGridExt::EndDraggingIfNecessary()
 	}
 }
 
-void wxGridExt::ChangeCursorMode(CursorMode mode,
+void ibGrid::ChangeCursorMode(CursorMode mode,
 	wxWindow* win,
 	bool captureMouse)
 {
@@ -4979,7 +5108,7 @@ void wxGridExt::ChangeCursorMode(CursorMode mode,
 	};
 
 	wxLogTrace(wxT("grid"),
-		wxT("wxGridExt cursor mode (mouse capture for %s): %s -> %s"),
+		wxT("ibGrid cursor mode (mouse capture for %s): %s -> %s"),
 		win == m_colLabelWin ? wxT("colLabelWin")
 		: win ? wxT("rowLabelWin")
 		: wxT("gridWin"),
@@ -5039,11 +5168,11 @@ void wxGridExt::ChangeCursorMode(CursorMode mode,
 // ----------------------------------------------------------------------------
 
 bool
-wxGridExt::DoGridCellDrag(wxMouseEvent& event,
-	const wxGridExtCellCoords& coords,
+ibGrid::DoGridCellDrag(wxMouseEvent& event,
+	const ibGridCellCoords& coords,
 	bool isFirstDrag)
 {
-	if (coords == wxGridExtNoCellCoords)
+	if (coords == ibGridNoCellCoords)
 		return false; // we're outside any valid cell
 
 	if (isFirstDrag)
@@ -5092,8 +5221,8 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 		const int colEnd = m_currentCellCoords.GetCol() > coords.GetCol() ?
 			m_currentCellCoords.GetCol() : coords.GetCol();
 
-		wxGridExtCellCoords blockStart(rowStart, colStart);
-		wxGridExtCellCoords blockEnd(rowEnd, colEnd);
+		ibGridCellCoords blockStart(rowStart, colStart);
+		ibGridCellCoords blockEnd(rowEnd, colEnd);
 
 		for (int row = rowStart; row <= rowEnd; row++)
 		{
@@ -5135,10 +5264,10 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 	return true;
 }
 
-bool wxGridExt::DoGridDragEvent(wxMouseEvent& event,
-	const wxGridExtCellCoords& coords,
+bool ibGrid::DoGridDragEvent(wxMouseEvent& event,
+	const ibGridCellCoords& coords,
 	bool isFirstDrag,
-	wxGridExtWindow* gridWindow)
+	ibGridWindow* gridWindow)
 {
 	switch (m_cursorMode)
 	{
@@ -5147,12 +5276,12 @@ bool wxGridExt::DoGridDragEvent(wxMouseEvent& event,
 
 	case WXGRID_CURSOR_RESIZE_ROW:
 		if (m_dragRowOrCol != -1)
-			DoGridDragResize(event.GetPosition(), wxGridExtRowOperations(), gridWindow);
+			DoGridDragResize(event.GetPosition(), ibGridRowOperations(), gridWindow);
 		break;
 
 	case WXGRID_CURSOR_RESIZE_COL:
 		if (m_dragRowOrCol != -1)
-			DoGridDragResize(event.GetPosition(), wxGridExtColumnOperations(), gridWindow);
+			DoGridDragResize(event.GetPosition(), ibGridColumnOperations(), gridWindow);
 		break;
 
 	default:
@@ -5163,8 +5292,8 @@ bool wxGridExt::DoGridDragEvent(wxMouseEvent& event,
 }
 
 void
-wxGridExt::DoGridCellLeftDown(wxMouseEvent& event,
-	const wxGridExtCellCoords& coords,
+ibGrid::DoGridCellLeftDown(wxMouseEvent& event,
+	const ibGridCellCoords& coords,
 	const wxPoint& pos)
 {
 	if (SendEvent(wxEVT_GRID_CELL_LEFT_CLICK, coords, event) != Event_Unhandled)
@@ -5225,7 +5354,7 @@ wxGridExt::DoGridCellLeftDown(wxMouseEvent& event,
 					{
 						// Otherwise deselect it.
 						m_selection->DeselectBlock(
-							wxGridExtBlockCoords(coords.GetRow(), coords.GetCol(),
+							ibGridBlockCoords(coords.GetRow(), coords.GetCol(),
 								coords.GetRow(), coords.GetCol()),
 							event);
 					}
@@ -5243,24 +5372,24 @@ wxGridExt::DoGridCellLeftDown(wxMouseEvent& event,
 					// mode and is compatible with 2.8 behaviour (see #12062).
 					switch (m_selection->GetSelectionMode())
 					{
-					case wxGridExtSelectNone:
-					case wxGridExtSelectCells:
-					case wxGridExtSelectRowsOrColumns:
+					case ibGridSelectNone:
+					case ibGridSelectCells:
+					case ibGridSelectRowsOrColumns:
 						// nothing to do in these cases
 						break;
 
-					case wxGridExtSelectRows:
+					case ibGridSelectRows:
 						m_selection->SelectRow(coords.GetRow());
 						break;
 
-					case wxGridExtSelectColumns:
+					case ibGridSelectColumns:
 						m_selection->SelectCol(coords.GetCol());
 						break;
 					}
 				}
 
 				m_waitForSlowClick = m_currentCellCoords == coords &&
-					coords != wxGridExtNoCellCoords;
+					coords != ibGridNoCellCoords;
 			}
 
 			SetCurrentCell(coords);
@@ -5275,8 +5404,8 @@ wxGridExt::DoGridCellLeftDown(wxMouseEvent& event,
 }
 
 void
-wxGridExt::DoGridCellLeftDClick(wxMouseEvent& event,
-	const wxGridExtCellCoords& coords,
+ibGrid::DoGridCellLeftDClick(wxMouseEvent& event,
+	const ibGridCellCoords& coords,
 	const wxPoint& pos)
 {
 	if (XToEdgeOfCol(pos.x) < 0 && YToEdgeOfRow(pos.y) < 0)
@@ -5291,9 +5420,9 @@ wxGridExt::DoGridCellLeftDClick(wxMouseEvent& event,
 }
 
 void
-wxGridExt::DoGridCellLeftUp(wxMouseEvent& event,
-	const wxGridExtCellCoords& coords,
-	wxGridExtWindow* gridWindow)
+ibGrid::DoGridCellLeftUp(wxMouseEvent& event,
+	const ibGridCellCoords& coords,
+	ibGridWindow* gridWindow)
 {
 	if (m_cursorMode == WXGRID_CURSOR_SELECT_CELL)
 	{
@@ -5301,7 +5430,7 @@ wxGridExt::DoGridCellLeftUp(wxMouseEvent& event,
 		{
 			ClearSelection();
 
-			if (DoEnableCellEditControl(wxGridExtActivationSource::From(event)))
+			if (DoEnableCellEditControl(ibGridActivationSource::From(event)))
 				GetCurrentCellEditorPtr()->StartingClick();
 
 			m_waitForSlowClick = false;
@@ -5324,10 +5453,10 @@ wxGridExt::DoGridCellLeftUp(wxMouseEvent& event,
 }
 
 void
-wxGridExt::DoGridMouseMoveEvent(wxMouseEvent& WXUNUSED(event),
-	const wxGridExtCellCoords& coords,
+ibGrid::DoGridMouseMoveEvent(wxMouseEvent& WXUNUSED(event),
+	const ibGridCellCoords& coords,
 	const wxPoint& pos,
-	wxGridExtWindow* gridWindow)
+	ibGridWindow* gridWindow)
 {
 	if (coords.GetRow() < 0 || coords.GetCol() < 0)
 	{
@@ -5365,7 +5494,7 @@ wxGridExt::DoGridMouseMoveEvent(wxMouseEvent& WXUNUSED(event),
 	}
 }
 
-void wxGridExt::ProcessGridCellMouseEvent(wxMouseEvent& event, wxGridExtWindow* eventGridWindow)
+void ibGrid::ProcessGridCellMouseEvent(wxMouseEvent& event, ibGridWindow* eventGridWindow)
 {
 	// the window receiving the event might not be the same as the one under
 	// the mouse (e.g. in the case of a dragging event started in one window,
@@ -5374,7 +5503,7 @@ void wxGridExt::ProcessGridCellMouseEvent(wxMouseEvent& event, wxGridExtWindow* 
 	if (CheckIfDragCancelled(&event))
 		return;
 
-	wxGridExtWindow* gridWindow =
+	ibGridWindow* gridWindow =
 		DevicePosToGridWindow(event.GetPosition() + eventGridWindow->GetPosition());
 
 	if (!gridWindow)
@@ -5384,12 +5513,12 @@ void wxGridExt::ProcessGridCellMouseEvent(wxMouseEvent& event, wxGridExtWindow* 
 	const wxPoint posEvent = event.GetPosition();
 
 	event.SetPosition(posEvent + eventGridWindow->GetPosition() -
-		wxPoint((GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom())));
+		wxPoint((GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom())));
 
 	wxPoint pos = CalcGridWindowUnscrolledPosition(event.GetPosition(), gridWindow);
 
 	// coordinates of the cell under mouse
-	wxGridExtCellCoords coords = XYToCell(pos, gridWindow);
+	ibGridCellCoords coords = XYToCell(pos, gridWindow);
 
 	int cell_rows, cell_cols;
 	if (GetCellSize(coords.GetRow(), coords.GetCol(), &cell_rows, &cell_cols)
@@ -5479,7 +5608,7 @@ void wxGridExt::ProcessGridCellMouseEvent(wxMouseEvent& event, wxGridExtWindow* 
 	// deal with various button presses
 	if (event.IsButton())
 	{
-		if (coords != wxGridExtNoCellCoords)
+		if (coords != ibGridNoCellCoords)
 		{
 			DisableCellEditControl();
 
@@ -5505,9 +5634,9 @@ void wxGridExt::ProcessGridCellMouseEvent(wxMouseEvent& event, wxGridExtWindow* 
 	}
 }
 
-void wxGridExt::DoGridDragResize(const wxPoint& position,
-	const wxGridExtOperations& oper,
-	wxGridExtWindow* gridWindow)
+void ibGrid::DoGridDragResize(const wxPoint& position,
+	const ibGridOperations& oper,
+	ibGridWindow* gridWindow)
 {
 	wxCHECK_RET(m_dragRowOrCol != -1,
 		"shouldn't be called when not drag resizing");
@@ -5528,13 +5657,13 @@ void wxGridExt::DoGridDragResize(const wxPoint& position,
 	// TODO: generate RESIZING event, see #10754, if the size has changed.
 }
 
-wxPoint wxGridExt::GetPositionForResizeEvent(int width) const
+wxPoint ibGrid::GetPositionForResizeEvent(int width) const
 {
 	wxCHECK_MSG(m_dragRowOrCol != -1, wxPoint(),
 		"shouldn't be called when not drag resizing");
 
 	// Note that we currently always use m_gridWin here as using
-	// wxGridExtHeaderCtrl is incompatible with using frozen rows/columns.
+	// ibGridHeaderCtrl is incompatible with using frozen rows/columns.
 	// This would need to be changed if they're allowed to be used together.
 	int x;
 	CalcGridWindowScrolledPosition(GetColLeft(m_dragRowOrCol, GetGridZoom()) + width, 0,
@@ -5544,13 +5673,13 @@ wxPoint wxGridExt::GetPositionForResizeEvent(int width) const
 	return wxPoint(x, 0);
 }
 
-void wxGridExt::DoEndDragResizeRow(const wxMouseEvent& event, wxGridExtWindow* gridWindow)
+void ibGrid::DoEndDragResizeRow(const wxMouseEvent& event, ibGridWindow* gridWindow)
 {
-	DoGridDragResize(event.GetPosition(), wxGridExtRowOperations(), gridWindow);
+	DoGridDragResize(event.GetPosition(), ibGridRowOperations(), gridWindow);
 
 	SendGridSizeEvent(wxEVT_GRID_ROW_SIZE, m_dragRowOrCol, event);
 
-	PushCommand<wxGridExtCommandRowSize>(m_dragRowOrCol,
+	PushCommand<ibGridCommandRowSize>(m_dragRowOrCol,
 		GetRowHeight(m_dragRowOrCol), m_dragRowOrColOldSize);
 
 	SendGridSizeEvent(wxEVT_GRID_ROW_MODIFIED, m_dragRowOrCol, event);
@@ -5558,13 +5687,13 @@ void wxGridExt::DoEndDragResizeRow(const wxMouseEvent& event, wxGridExtWindow* g
 	m_dragRowOrCol = -1;
 }
 
-void wxGridExt::DoEndDragResizeCol(const wxMouseEvent& event, wxGridExtWindow* gridWindow)
+void ibGrid::DoEndDragResizeCol(const wxMouseEvent& event, ibGridWindow* gridWindow)
 {
-	DoGridDragResize(event.GetPosition(), wxGridExtColumnOperations(), gridWindow);
+	DoGridDragResize(event.GetPosition(), ibGridColumnOperations(), gridWindow);
 
 	SendGridSizeEvent(wxEVT_GRID_COL_SIZE, m_dragRowOrCol, event);
 
-	PushCommand<wxGridExtCommandColSize>(m_dragRowOrCol,
+	PushCommand<ibGridCommandColSize>(m_dragRowOrCol,
 		GetColWidth(m_dragRowOrCol), m_dragRowOrColOldSize);
 
 	SendGridSizeEvent(wxEVT_GRID_COL_MODIFIED, m_dragRowOrCol, event);
@@ -5572,19 +5701,19 @@ void wxGridExt::DoEndDragResizeCol(const wxMouseEvent& event, wxGridExtWindow* g
 	m_dragRowOrCol = -1;
 }
 
-void wxGridExt::DoHeaderStartDragResizeCol(int col)
+void ibGrid::DoHeaderStartDragResizeCol(int col)
 {
 	DoStartResizeRowOrCol(col, GetColSize(col));
 }
 
-void wxGridExt::DoHeaderDragResizeCol(int width)
+void ibGrid::DoHeaderDragResizeCol(int width)
 {
 	DoGridDragResize(GetPositionForResizeEvent(width),
-		wxGridExtColumnOperations(),
+		ibGridColumnOperations(),
 		m_gridWin);
 }
 
-void wxGridExt::DoHeaderEndDragResizeCol(int width)
+void ibGrid::DoHeaderEndDragResizeCol(int width)
 {
 	// We can sometimes be called even when we're not resizing any more,
 	// although it's rather difficult to reproduce: one way to do it is to
@@ -5606,12 +5735,12 @@ void wxGridExt::DoHeaderEndDragResizeCol(int width)
 	DoEndDragResizeCol(e, m_gridWin);
 }
 
-void wxGridExt::DoStartMoveRowOrCol(int col)
+void ibGrid::DoStartMoveRowOrCol(int col)
 {
 	m_dragMoveRowOrCol = col;
 }
 
-void wxGridExt::DoEndMoveRow(int pos)
+void ibGrid::DoEndMoveRow(int pos)
 {
 	wxASSERT_MSG(m_dragMoveRowOrCol != -1, "no matching DoStartMoveRow?");
 
@@ -5621,7 +5750,7 @@ void wxGridExt::DoEndMoveRow(int pos)
 	m_dragMoveRowOrCol = -1;
 }
 
-void wxGridExt::RefreshAfterRowPosChange()
+void ibGrid::RefreshAfterRowPosChange()
 {
 	// and make the changes visible
 	m_rowAreaWin->Refresh();
@@ -5629,14 +5758,14 @@ void wxGridExt::RefreshAfterRowPosChange()
 	m_gridWin->Refresh();
 }
 
-void wxGridExt::SetRowsOrder(const wxArrayInt& order)
+void ibGrid::SetRowsOrder(const wxArrayInt& order)
 {
 	m_rowAt = order;
 
 	RefreshAfterRowPosChange();
 }
 
-void wxGridExt::SetRowPos(int idx, int pos)
+void ibGrid::SetRowPos(int idx, int pos)
 {
 	// we're going to need m_rowAt now, initialize it if needed
 	if (m_rowAt.empty())
@@ -5659,7 +5788,7 @@ void wxGridExt::SetRowPos(int idx, int pos)
 	RefreshAfterRowPosChange();
 }
 
-int wxGridExt::GetRowPos(int idx) const
+int ibGrid::GetRowPos(int idx) const
 {
 	wxASSERT_MSG(idx >= 0 && idx < m_numRows, "invalid row index");
 
@@ -5672,14 +5801,14 @@ int wxGridExt::GetRowPos(int idx) const
 	return pos;
 }
 
-void wxGridExt::ResetRowPos()
+void ibGrid::ResetRowPos()
 {
 	m_rowAt.clear();
 
 	RefreshAfterRowPosChange();
 }
 
-bool wxGridExt::EnableDragRowMove(bool enable)
+bool ibGrid::EnableDragRowMove(bool enable)
 {
 	if (m_canDragRowMove == enable ||
 		(enable && m_rowFrozenLabelWin))
@@ -5694,7 +5823,7 @@ bool wxGridExt::EnableDragRowMove(bool enable)
 	return true;
 }
 
-void wxGridExt::DoEndMoveCol(int pos)
+void ibGrid::DoEndMoveCol(int pos)
 {
 	wxASSERT_MSG(m_dragMoveRowOrCol != -1, "no matching DoStartMoveCol?");
 
@@ -5704,7 +5833,7 @@ void wxGridExt::DoEndMoveCol(int pos)
 	m_dragMoveRowOrCol = -1;
 }
 
-void wxGridExt::RefreshAfterColPosChange()
+void ibGrid::RefreshAfterColPosChange()
 {
 	// and make the changes visible
 	if (m_useNativeHeader)
@@ -5721,14 +5850,14 @@ void wxGridExt::RefreshAfterColPosChange()
 	m_gridWin->Refresh();
 }
 
-void wxGridExt::SetColumnsOrder(const wxArrayInt& order)
+void ibGrid::SetColumnsOrder(const wxArrayInt& order)
 {
 	m_colAt = order;
 
 	RefreshAfterColPosChange();
 }
 
-void wxGridExt::SetColPos(int idx, int pos)
+void ibGrid::SetColPos(int idx, int pos)
 {
 	// we're going to need m_colAt now, initialize it if needed
 	if (m_colAt.empty())
@@ -5743,7 +5872,7 @@ void wxGridExt::SetColPos(int idx, int pos)
 	RefreshAfterColPosChange();
 }
 
-int wxGridExt::GetColPos(int idx) const
+int ibGrid::GetColPos(int idx) const
 {
 	wxASSERT_MSG(idx >= 0 && idx < m_numCols, "invalid column index");
 
@@ -5756,14 +5885,14 @@ int wxGridExt::GetColPos(int idx) const
 	return pos;
 }
 
-void wxGridExt::ResetColPos()
+void ibGrid::ResetColPos()
 {
 	m_colAt.clear();
 
 	RefreshAfterColPosChange();
 }
 
-bool wxGridExt::EnableDragColMove(bool enable)
+bool ibGrid::EnableDragColMove(bool enable)
 {
 	if (m_canDragColMove == enable ||
 		(enable && m_colFrozenLabelWin))
@@ -5789,7 +5918,7 @@ bool wxGridExt::EnableDragColMove(bool enable)
 	return true;
 }
 
-bool wxGridExt::EnableHidingColumns(bool enable)
+bool ibGrid::EnableHidingColumns(bool enable)
 {
 	if (m_canHideColumns == enable || !m_useNativeHeader)
 		return false;
@@ -5801,20 +5930,20 @@ bool wxGridExt::EnableHidingColumns(bool enable)
 	return true;
 }
 
-void wxGridExt::InitializeFrozenWindows()
+void ibGrid::InitializeFrozenWindows()
 {
 	// frozen row windows
 	if (m_numFrozenRows > 0 && !m_frozenRowGridWin)
 	{
-		m_frozenRowGridWin = new wxGridExtWindow(this, wxGridExtWindow::wxGridExtWindowFrozenRow);
+		m_frozenRowGridWin = new ibGridWindow(this, ibGridWindow::ibGridWindowFrozenRow);
 		m_frozenRowGridWin->SetOwnForegroundColour(m_gridWin->GetForegroundColour());
 		m_frozenRowGridWin->SetOwnBackgroundColour(m_gridWin->GetBackgroundColour());
 
-		m_rowFrozenAreaWin = new wxGridExtRowFrozenAreaWindow(this);
+		m_rowFrozenAreaWin = new ibGridRowFrozenAreaWindow(this);
 		m_rowFrozenAreaWin->SetOwnForegroundColour(m_labelTextColour);
 		m_rowFrozenAreaWin->SetOwnBackgroundColour(m_labelBackgroundColour);
 
-		m_rowFrozenLabelWin = new wxGridExtRowFrozenLabelWindow(this);
+		m_rowFrozenLabelWin = new ibGridRowFrozenLabelWindow(this);
 		m_rowFrozenLabelWin->SetOwnForegroundColour(m_labelTextColour);
 		m_rowFrozenLabelWin->SetOwnBackgroundColour(m_labelBackgroundColour);
 	}
@@ -5831,15 +5960,15 @@ void wxGridExt::InitializeFrozenWindows()
 	// frozen column windows
 	if (m_numFrozenCols > 0 && !m_frozenColGridWin)
 	{
-		m_frozenColGridWin = new wxGridExtWindow(this, wxGridExtWindow::wxGridExtWindowFrozenCol);
+		m_frozenColGridWin = new ibGridWindow(this, ibGridWindow::ibGridWindowFrozenCol);
 		m_frozenColGridWin->SetOwnForegroundColour(m_gridWin->GetForegroundColour());
 		m_frozenColGridWin->SetOwnBackgroundColour(m_gridWin->GetBackgroundColour());
 
-		m_colFrozenAreaWin = new wxGridExtColFrozenAreaWindow(this);
+		m_colFrozenAreaWin = new ibGridColFrozenAreaWindow(this);
 		m_colFrozenAreaWin->SetOwnForegroundColour(m_labelTextColour);
 		m_colFrozenAreaWin->SetOwnBackgroundColour(m_labelBackgroundColour);
 
-		m_colFrozenLabelWin = new wxGridExtColFrozenLabelWindow(this);
+		m_colFrozenLabelWin = new ibGridColFrozenLabelWindow(this);
 		m_colFrozenLabelWin->SetOwnForegroundColour(m_labelTextColour);
 		m_colFrozenLabelWin->SetOwnBackgroundColour(m_labelBackgroundColour);
 	}
@@ -5857,7 +5986,7 @@ void wxGridExt::InitializeFrozenWindows()
 	// frozen corner window
 	if (m_numFrozenRows > 0 && m_numFrozenCols > 0 && !m_frozenCornerGridWin)
 	{
-		m_frozenCornerGridWin = new wxGridExtWindow(this, wxGridExtWindow::wxGridExtWindowFrozenCorner);
+		m_frozenCornerGridWin = new ibGridWindow(this, ibGridWindow::ibGridWindowFrozenCorner);
 
 		m_frozenCornerGridWin->SetOwnForegroundColour(m_gridWin->GetForegroundColour());
 		m_frozenCornerGridWin->SetOwnBackgroundColour(m_gridWin->GetBackgroundColour());
@@ -5869,7 +5998,7 @@ void wxGridExt::InitializeFrozenWindows()
 	}
 }
 
-bool wxGridExt::FreezeTo(int row, int col)
+bool ibGrid::FreezeTo(int row, int col)
 {
 	wxCHECK_MSG(row >= 0 && col >= 0, false,
 		"Number of rows or cols can't be negative!");
@@ -5886,8 +6015,8 @@ bool wxGridExt::FreezeTo(int row, int col)
 		//int cw, ch;
 		//GetClientSize(&cw, &ch);
 
-		//cw -= (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
-		//ch -= (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
+		//cw -= (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + ibCalcGridScale(m_rowLabelWidth, GetGridZoom());
+		//ch -= (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom());
 
 		//if ((row > 0 && GetRowBottom(row - 1, GetGridZoom()) >= ch) ||
 		//	(col > 0 && GetColRight(col - 1, GetGridZoom()) >= cw))
@@ -5945,12 +6074,12 @@ bool wxGridExt::FreezeTo(int row, int col)
 	return true;
 }
 
-bool wxGridExt::IsFrozen() const
+bool ibGrid::IsFrozen() const
 {
 	return m_numFrozenRows || m_numFrozenCols;
 }
 
-void wxGridExt::UpdateGridWindows() const
+void ibGrid::UpdateGridWindows() const
 {
 	m_gridWin->Update();
 
@@ -5967,7 +6096,7 @@ void wxGridExt::UpdateGridWindows() const
 //
 // ------ interaction with data model
 //
-bool wxGridExt::ProcessTableMessage(wxGridExtTableMessage& msg)
+bool ibGrid::ProcessTableMessage(ibGridTableMessage& msg)
 {
 	switch (msg.GetId())
 	{
@@ -5985,18 +6114,18 @@ bool wxGridExt::ProcessTableMessage(wxGridExtTableMessage& msg)
 }
 
 // The behaviour of this function depends on the grid table class
-// Clear() function. For the default wxGridExtStringTable class the
+// Clear() function. For the default ibGridStringTable class the
 // behaviour is to replace all cell contents with wxEmptyString.
 //
-void wxGridExt::ClearGrid()
+void ibGrid::ClearGrid()
 {
 	if (m_table)
 	{
 		DisableCellEditControl();
 		m_cellEditCtrlEnabled = false;
 
-		wxGridExtSelectionModes selmode = m_selection ?
-			m_selection->GetSelectionMode() : wxGridExtSelectionModes::wxGridExtSelectRowsOrColumns;
+		ibGridSelectionModes selmode = m_selection ?
+			m_selection->GetSelectionMode() : ibGridSelectionModes::ibGridSelectRowsOrColumns;
 
 		wxDELETE(m_selection);
 
@@ -6030,7 +6159,7 @@ void wxGridExt::ClearGrid()
 		m_rowBrakeAt.Clear();
 		m_colBrakeAt.Clear();
 
-		m_selection = new wxGridExtSelection(this, selmode);
+		m_selection = new ibGridSelection(this, selmode);
 		CalcDimensions();
 
 		if (ShouldRefresh())
@@ -6039,7 +6168,7 @@ void wxGridExt::ClearGrid()
 }
 
 bool
-wxGridExt::DoModifyLines(bool (wxGridExtTableBase::* funcModify)(size_t, size_t),
+ibGrid::DoModifyLines(bool (ibGridTableBase::* funcModify)(size_t, size_t),
 	int pos, int num, bool WXUNUSED(updateLabels))
 {
 	wxCHECK_MSG(m_created, false, "must finish creating the grid first");
@@ -6056,7 +6185,7 @@ wxGridExt::DoModifyLines(bool (wxGridExtTableBase::* funcModify)(size_t, size_t)
 }
 
 bool
-wxGridExt::DoAppendLines(bool (wxGridExtTableBase::* funcAppend)(size_t),
+ibGrid::DoAppendLines(bool (ibGridTableBase::* funcAppend)(size_t),
 	int num, bool WXUNUSED(updateLabels))
 {
 	wxCHECK_MSG(m_created, false, "must finish creating the grid first");
@@ -6072,9 +6201,9 @@ wxGridExt::DoAppendLines(bool (wxGridExtTableBase::* funcAppend)(size_t),
 // ----------------------------------------------------------------------------
 
 bool
-wxGridExt::SendGridAreaEvent(wxEventType type, int rowOrColPos, const wxGridExtCellArea& area)
+ibGrid::SendGridAreaEvent(wxEventType type, int rowOrColPos, const ibGridCellArea& area)
 {
-	wxGridExtAreaEvent gridEvt(GetId(),
+	ibGridAreaEvent gridEvt(GetId(),
 		type,
 		this,
 		rowOrColPos,
@@ -6084,22 +6213,22 @@ wxGridExt::SendGridAreaEvent(wxEventType type, int rowOrColPos, const wxGridExtC
 }
 
 bool
-wxGridExt::SendGridSizeEvent(wxEventType type,
+ibGrid::SendGridSizeEvent(wxEventType type,
 	int rowOrCol,
 	const wxMouseEvent& mouseEv)
 {
-	wxGridExtSizeEvent gridEvt(GetId(),
+	ibGridSizeEvent gridEvt(GetId(),
 		type,
 		this,
 		rowOrCol,
-		mouseEv.GetX() + wxCalcGridScale(GetRowLabelSize(), GetGridZoom()),
-		mouseEv.GetY() + wxCalcGridScale(GetColLabelSize(), GetGridZoom()),
+		mouseEv.GetX() + ibCalcGridScale(GetRowLabelSize(), GetGridZoom()),
+		mouseEv.GetY() + ibCalcGridScale(GetColLabelSize(), GetGridZoom()),
 		mouseEv);
 
 	return ProcessWindowEvent(gridEvt);
 }
 
-wxGridExt::EventResult wxGridExt::DoSendEvent(wxGridExtEvent& gridEvt)
+ibGrid::EventResult ibGrid::DoSendEvent(ibGridEvent& gridEvt)
 {
 	const bool claimed = ProcessWindowEvent(gridEvt);
 
@@ -6119,8 +6248,8 @@ wxGridExt::EventResult wxGridExt::DoSendEvent(wxGridExtEvent& gridEvt)
 }
 
 // Generate a grid event based on a mouse event and call DoSendEvent() with it.
-wxGridExt::EventResult
-wxGridExt::SendEvent(wxEventType type,
+ibGrid::EventResult
+ibGrid::SendEvent(wxEventType type,
 	int row, int col,
 	const wxMouseEvent& mouseEv)
 {
@@ -6133,11 +6262,11 @@ wxGridExt::SendEvent(wxEventType type,
 		wxPoint pos = mouseEv.GetPosition();
 
 		if (mouseEv.GetEventObject() == GetGridRowLabelWindow())
-			pos.y += wxCalcGridScale(GetColLabelSize(), GetGridZoom());
+			pos.y += ibCalcGridScale(GetColLabelSize(), GetGridZoom());
 		if (mouseEv.GetEventObject() == GetGridColLabelWindow())
-			pos.x += wxCalcGridScale(GetRowLabelSize(), GetGridZoom());
+			pos.x += ibCalcGridScale(GetRowLabelSize(), GetGridZoom());
 
-		wxGridExtEvent gridEvt(GetId(),
+		ibGridEvent gridEvt(GetId(),
 			type,
 			this,
 			row, col,
@@ -6150,12 +6279,12 @@ wxGridExt::SendEvent(wxEventType type,
 	}
 	else
 	{
-		wxGridExtEvent gridEvt(GetId(),
+		ibGridEvent gridEvt(GetId(),
 			type,
 			this,
 			row, col,
-			mouseEv.GetX() + wxCalcGridScale(GetRowLabelSize(), GetGridZoom()),
-			mouseEv.GetY() + wxCalcGridScale(GetColLabelSize(), GetGridZoom()),
+			mouseEv.GetX() + ibCalcGridScale(GetRowLabelSize(), GetGridZoom()),
+			mouseEv.GetY() + ibCalcGridScale(GetColLabelSize(), GetGridZoom()),
 			false,
 			mouseEv);
 
@@ -6172,16 +6301,16 @@ wxGridExt::SendEvent(wxEventType type,
 
 // Generate a grid event of specified type, return value same as above
 //
-wxGridExt::EventResult
-wxGridExt::SendEvent(wxEventType type, int row, int col, const wxString& s)
+ibGrid::EventResult
+ibGrid::SendEvent(wxEventType type, int row, int col, const wxString& s)
 {
-	wxGridExtEvent gridEvt(GetId(), type, this, row, col);
+	ibGridEvent gridEvt(GetId(), type, this, row, col);
 	gridEvt.SetString(s);
 
 	return DoSendEvent(gridEvt);
 }
 
-void wxGridExt::Refresh(bool eraseb, const wxRect* rect)
+void ibGrid::Refresh(bool eraseb, const wxRect* rect)
 {
 	// Don't do anything if between Begin/EndBatch...
 	// EndBatch() will do all this on the last nested one anyway.
@@ -6202,34 +6331,34 @@ void wxGridExt::Refresh(bool eraseb, const wxRect* rect)
 			rectWidth = rect->GetWidth();
 			rectHeight = rect->GetHeight();
 
-			width_label = (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) - rect_x;
+			width_label = (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) - rect_x;
 			if (width_label > rectWidth)
 				width_label = rectWidth;
 
-			height_label = (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) - rect_y;
+			height_label = (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom()) - rect_y;
 			if (height_label > rectHeight)
 				height_label = rectHeight;
 
-			if (rect_x > (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()))
+			if (rect_x > (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()))
 			{
-				x = rect_x - (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
+				x = rect_x - (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + ibCalcGridScale(m_rowLabelWidth, GetGridZoom());
 				width_cell = rectWidth;
 			}
 			else
 			{
 				x = 0;
-				width_cell = rectWidth - ((GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) - rect_x);
+				width_cell = rectWidth - ((GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) - rect_x);
 			}
 
-			if (rect_y > (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()))
+			if (rect_y > (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom()))
 			{
-				y = rect_y - m_colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
+				y = rect_y - m_colAreaHeight + ibCalcGridScale(m_colLabelHeight, GetGridZoom());
 				height_cell = rectHeight;
 			}
 			else
 			{
 				y = 0;
-				height_cell = rectHeight - ((GridColAreaEnabled() ? (m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) - rect_y);
+				height_cell = rectHeight - ((GridColAreaEnabled() ? (m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom()) - rect_y);
 			}
 
 			// Paint corner label part intersecting rect.
@@ -6301,17 +6430,17 @@ void wxGridExt::Refresh(bool eraseb, const wxRect* rect)
 	}
 }
 
-void wxGridExt::RefreshBlock(const wxGridExtCellCoords& topLeft,
-	const wxGridExtCellCoords& bottomRight)
+void ibGrid::RefreshBlock(const ibGridCellCoords& topLeft,
+	const ibGridCellCoords& bottomRight)
 {
 	RefreshBlock(topLeft.GetRow(), topLeft.GetCol(),
 		bottomRight.GetRow(), bottomRight.GetCol());
 }
 
-void wxGridExt::RefreshBlock(int topRow, int leftCol,
+void ibGrid::RefreshBlock(int topRow, int leftCol,
 	int bottomRow, int rightCol)
 {
-	// Note that it is valid to call this function with wxGridExtNoCellCoords as
+	// Note that it is valid to call this function with ibGridNoCellCoords as
 	// either or even both arguments, but we can't have a mix of valid and
 	// invalid columns/rows for each corner coordinates.
 	const bool noTopLeft = topRow == -1 || leftCol == -1;
@@ -6347,8 +6476,8 @@ void wxGridExt::RefreshBlock(int topRow, int leftCol,
 		row = wxMin(bottomRow, m_numFrozenRows - 1);
 		col = wxMin(rightCol, m_numFrozenCols - 1);
 
-		wxRect rect = BlockToDeviceRect(wxGridExtCellCoords(topRow, leftCol),
-			wxGridExtCellCoords(row, col),
+		wxRect rect = BlockToDeviceRect(ibGridCellCoords(topRow, leftCol),
+			ibGridCellCoords(row, col),
 			m_frozenCornerGridWin);
 		m_frozenCornerGridWin->Refresh(false, &rect);
 		row++; col++;
@@ -6359,8 +6488,8 @@ void wxGridExt::RefreshBlock(int topRow, int leftCol,
 	{
 		col = wxMin(rightCol, m_numFrozenCols - 1);
 
-		wxRect rect = BlockToDeviceRect(wxGridExtCellCoords(row, leftCol),
-			wxGridExtCellCoords(bottomRow, col),
+		wxRect rect = BlockToDeviceRect(ibGridCellCoords(row, leftCol),
+			ibGridCellCoords(bottomRow, col),
 			m_frozenColGridWin);
 		m_frozenColGridWin->Refresh(false, &rect);
 		col++;
@@ -6371,8 +6500,8 @@ void wxGridExt::RefreshBlock(int topRow, int leftCol,
 	{
 		row = wxMin(bottomRow, m_numFrozenRows - 1);
 
-		wxRect rect = BlockToDeviceRect(wxGridExtCellCoords(topRow, col),
-			wxGridExtCellCoords(row, rightCol),
+		wxRect rect = BlockToDeviceRect(ibGridCellCoords(topRow, col),
+			ibGridCellCoords(row, rightCol),
 			m_frozenRowGridWin);
 		m_frozenRowGridWin->Refresh(false, &rect);
 		row++;
@@ -6381,15 +6510,15 @@ void wxGridExt::RefreshBlock(int topRow, int leftCol,
 	// main grid
 	if (GetRowPos(bottomRow) >= m_numFrozenRows && GetColPos(rightCol) >= m_numFrozenCols)
 	{
-		const wxRect rect = BlockToDeviceRect(wxGridExtCellCoords(row, col),
-			wxGridExtCellCoords(bottomRow, rightCol),
+		const wxRect rect = BlockToDeviceRect(ibGridCellCoords(row, col),
+			ibGridCellCoords(bottomRow, rightCol),
 			m_gridWin);
 		if (!rect.IsEmpty())
 			m_gridWin->Refresh(false, &rect);
 	}
 }
 
-void wxGridExt::OnSize(wxSizeEvent& event)
+void ibGrid::OnSize(wxSizeEvent& event)
 {
 	if (m_targetWindow != this) // check whether initialisation has been done
 	{
@@ -6399,7 +6528,7 @@ void wxGridExt::OnSize(wxSizeEvent& event)
 	}
 }
 
-void wxGridExt::OnDPIChanged(wxDPIChangedEvent& event)
+void ibGrid::OnDPIChanged(wxDPIChangedEvent& event)
 {
 	InitPixelFields();
 
@@ -6456,7 +6585,7 @@ void wxGridExt::OnDPIChanged(wxDPIChangedEvent& event)
 	event.Skip();
 }
 
-void wxGridExt::OnKeyDown(wxKeyEvent& event)
+void ibGrid::OnKeyDown(wxKeyEvent& event)
 {
 	// propagate the event up and see if it gets processed
 	//wxWindow* parent = GetParent();
@@ -6480,7 +6609,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 			DoMoveCursorFromKeyboard
 			(
 				event,
-				wxGridExtBackwardOperations(this, wxGridExtRowOperations())
+				ibGridBackwardOperations(this, ibGridRowOperations())
 			);
 			break;
 
@@ -6488,7 +6617,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 			DoMoveCursorFromKeyboard
 			(
 				event,
-				wxGridExtForwardOperations(this, wxGridExtRowOperations())
+				ibGridForwardOperations(this, ibGridRowOperations())
 			);
 			break;
 
@@ -6496,7 +6625,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 			DoMoveCursorFromKeyboard
 			(
 				event,
-				wxGridExtBackwardOperations(this, wxGridExtColumnOperations())
+				ibGridBackwardOperations(this, ibGridColumnOperations())
 			);
 			break;
 
@@ -6504,7 +6633,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 			DoMoveCursorFromKeyboard
 			(
 				event,
-				wxGridExtForwardOperations(this, wxGridExtColumnOperations())
+				ibGridForwardOperations(this, ibGridColumnOperations())
 			);
 			break;
 
@@ -6544,8 +6673,8 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 				case WXGRID_CURSOR_RESIZE_COL:
 					// reset to size from before dragging
 					(m_cursorMode == WXGRID_CURSOR_RESIZE_ROW
-						? static_cast<const wxGridExtOperations&>(wxGridExtRowOperations())
-						: static_cast<const wxGridExtOperations&>(wxGridExtColumnOperations())
+						? static_cast<const ibGridOperations&>(ibGridRowOperations())
+						: static_cast<const ibGridOperations&>(ibGridColumnOperations())
 						).SetLineSize(this, m_dragRowOrCol, m_dragRowOrColOldSize);
 
 					m_dragRowOrCol = -1;
@@ -6572,7 +6701,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 		case WXK_TAB:
 		{
 			// send an event to the grid's parents for custom handling
-			wxGridExtEvent gridEvt(GetId(), wxEVT_GRID_TABBING, this,
+			ibGridEvent gridEvt(GetId(), wxEVT_GRID_TABBING, this,
 				GetGridCursorRow(), GetGridCursorCol(),
 				-1, -1, false, event);
 			if (ProcessWindowEvent(gridEvt))
@@ -6586,7 +6715,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 
 		case WXK_HOME:
 		case WXK_END:
-			if (m_currentCellCoords != wxGridExtNoCellCoords)
+			if (m_currentCellCoords != ibGridNoCellCoords)
 			{
 				const bool goToBeginning = event.GetKeyCode() == WXK_HOME;
 
@@ -6651,7 +6780,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 					if (m_selection)
 						m_selection->ExtendCurrentBlock(
 							m_currentCellCoords,
-							wxGridExtCellCoords(row, col),
+							ibGridCellCoords(row, col),
 							event);
 					MakeCellVisible(row, col);
 				}
@@ -6667,7 +6796,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 			DoMoveCursorByPage
 			(
 				event,
-				wxGridExtBackwardOperations(this, wxGridExtRowOperations())
+				ibGridBackwardOperations(this, ibGridRowOperations())
 			);
 			break;
 
@@ -6675,7 +6804,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 			DoMoveCursorByPage
 			(
 				event,
-				wxGridExtForwardOperations(this, wxGridExtRowOperations())
+				ibGridForwardOperations(this, ibGridRowOperations())
 			);
 			break;
 
@@ -6685,7 +6814,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 			// Shift-Space -- the current row (or all selection rows) and
 			// Ctrl-Shift-Space -- everything.
 		{
-			wxGridExtCellCoords selStart, selEnd;
+			ibGridCellCoords selStart, selEnd;
 			switch (m_selection ? event.GetModifiers() : wxMOD_NONE)
 			{
 			case wxMOD_CONTROL:
@@ -6717,7 +6846,7 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 				event.Skip();
 			}
 
-			if (selStart != wxGridExtNoCellCoords)
+			if (selStart != ibGridNoCellCoords)
 				m_selection->ExtendCurrentBlock(selStart, selEnd, event);
 		}
 		break;
@@ -6728,23 +6857,23 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 			if (event.GetModifiers() == wxMOD_CONTROL)
 			{
 				// Coordinates of the selected block to copy to clipboard.
-				wxGridExtBlockCoords sel;
+				ibGridBlockCoords sel;
 
 				// Check if we have any selected blocks and if we don't
 				// have too many of them.
-				const wxGridExtBlocks blocks = GetSelectedBlocks();
-				wxGridExtBlocks::iterator iter = blocks.begin();
+				const ibGridBlocks blocks = GetSelectedBlocks();
+				ibGridBlocks::iterator iter = blocks.begin();
 				if (iter == blocks.end())
 				{
 					// No selection, copy just the current cell.
-					if (m_currentCellCoords == wxGridExtNoCellCoords)
+					if (m_currentCellCoords == ibGridNoCellCoords)
 					{
 						// But we don't even have it -- nothing to do then.
 						event.Skip();
 						break;
 					}
 
-					sel = wxGridExtBlockCoords(GetGridCursorRow(),
+					sel = ibGridBlockCoords(GetGridCursorRow(),
 						GetGridCursorCol(),
 						GetGridCursorRow(),
 						GetGridCursorCol());
@@ -6805,20 +6934,20 @@ void wxGridExt::OnKeyDown(wxKeyEvent& event)
 	}
 }
 
-void wxGridExt::OnKeyUp(wxKeyEvent& WXUNUSED(event))
+void ibGrid::OnKeyUp(wxKeyEvent& WXUNUSED(event))
 {
 	// This function is unused and not connected to the corresponding event in
 	// the event table, it is only kept to prevent changing ABI in this branch
 	// and doesn't exist at all in the later wxWidgets versions.
 }
 
-void wxGridExt::OnChar(wxKeyEvent& event)
+void ibGrid::OnChar(wxKeyEvent& event)
 {
 	// is it possible to edit the current cell at all?
 	if (!IsCellEditControlEnabled() && CanEnableCellControl())
 	{
 		// yes, now check whether the cells editor accepts the key
-		wxGridExtCellEditorPtr editor = GetCurrentCellEditorPtr();
+		ibGridCellEditorPtr editor = GetCurrentCellEditorPtr();
 
 		// <F2> is special and will always start editing, for
 		// other keys - ask the editor itself
@@ -6829,7 +6958,7 @@ void wxGridExt::OnChar(wxKeyEvent& event)
 			// ensure cell is visble
 			MakeCellVisible(m_currentCellCoords);
 
-			if (DoEnableCellEditControl(wxGridExtActivationSource::From(event))
+			if (DoEnableCellEditControl(ibGridActivationSource::From(event))
 				&& !specialEditKey)
 				editor->StartingKey(event);
 		}
@@ -6844,7 +6973,7 @@ void wxGridExt::OnChar(wxKeyEvent& event)
 	}
 }
 
-void wxGridExt::DoGridProcessTab(wxKeyboardState& kbdState)
+void ibGrid::DoGridProcessTab(wxKeyboardState& kbdState)
 {
 	const bool isForwardTab = !kbdState.ShiftDown();
 
@@ -6907,7 +7036,7 @@ void wxGridExt::DoGridProcessTab(wxKeyboardState& kbdState)
 	DisableCellEditControl();
 }
 
-bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
+bool ibGrid::SetCurrentCell(const ibGridCellCoords& coords)
 {
 	switch (SendEvent(wxEVT_GRID_SELECT_CELL, coords))
 	{
@@ -6923,7 +7052,7 @@ bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
 		break;
 	}
 
-	if (m_currentCellCoords != wxGridExtNoCellCoords)
+	if (m_currentCellCoords != ibGridNoCellCoords)
 	{
 		DisableCellEditControl();
 
@@ -6932,7 +7061,7 @@ bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
 #if defined(__WXOSX__) || defined(__WXGTK3__)
 			RefreshBlock(m_currentCellCoords, m_currentCellCoords);
 #else
-			wxGridExtWindow* prevGridWindow = CellToGridWindow(m_currentCellCoords);
+			ibGridWindow* prevGridWindow = CellToGridWindow(m_currentCellCoords);
 			wxRect r;
 			r = BlockToDeviceRect(m_currentCellCoords, m_currentCellCoords, prevGridWindow);
 			if (!m_gridLinesEnabled)
@@ -6943,7 +7072,7 @@ bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
 				r.height++;
 			}
 
-			wxGridExtCellCoordsArray cells;
+			ibGridCellCoordsArray cells;
 			CalcCellsExposed(r, cells, prevGridWindow);
 
 			// Otherwise refresh redraws the highlight!
@@ -6955,7 +7084,7 @@ bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
 			DrawGridCellArea(prevDc, cells);
 			DrawAllGridWindowLines(prevDc, r, prevGridWindow);
 
-			if (prevGridWindow->GetType() != wxGridExtWindow::wxGridExtWindowNormal)
+			if (prevGridWindow->GetType() != ibGridWindow::ibGridWindowNormal)
 				DrawFrozenBorder(prevDc, prevGridWindow);
 #endif
 		}
@@ -6968,8 +7097,8 @@ bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
 #else
 	if (ShouldRefresh())
 	{
-		wxGridExtCellAttrPtr attr = GetCellAttrPtr(coords);
-		wxGridExtWindow* currentGridWindow = CellToGridWindow(coords);
+		ibGridCellAttrPtr attr = GetCellAttrPtr(coords);
+		ibGridWindow* currentGridWindow = CellToGridWindow(coords);
 		wxClientDC dc(currentGridWindow);
 		PrepareDCFor(dc, currentGridWindow);
 		DrawCellHighlight(dc, coords.GetRow(), coords.GetCol(), attr.get());
@@ -6983,13 +7112,13 @@ bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
 // exposed cells (usually set from the update region by
 // CalcExposedCells)
 //
-void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells, wxGridExtCellCacheArray& storage)
+void ibGrid::DrawGridCellArea(wxDC& dc, const ibGridCellCoordsArray& cells, ibGridCellCacheArray &storage)
 {
 	if (!m_numRows || !m_numCols)
 		return;
 
 	int i, numCells = cells.GetCount();
-	wxGridExtCellCoordsArray redrawCells;
+	ibGridCellCoordsArray redrawCells;
 
 	storage.Alloc(numCells);
 
@@ -7002,7 +7131,7 @@ void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells
 		// If this cell is part of a multicell block, find owner for repaint
 		if (GetCellSize(row, col, &cell_rows, &cell_cols) == CellSpan_Inside)
 		{
-			wxGridExtCellCoords cell(row + cell_rows, col + cell_cols);
+			ibGridCellCoords cell(row + cell_rows, col + cell_cols);
 			bool marked = false;
 			for (int j = 0; j < numCells; j++)
 			{
@@ -7054,17 +7183,17 @@ void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells
 				{
 					if (!m_table->IsEmptyCell(row + l, j))
 					{
-						wxGridExtCellAttrPtr attr = GetCellAttrPtr(row + l, j);
+						ibGridCellAttrPtr attr = GetCellAttrPtr(row + l, j);
 						int numRows, numCols;
 						attr->GetSize(&numRows, &numCols);
 						if (GetCellSpan(numRows, numCols)
-							== wxGridExt::CellSpan_Inside)
+							== ibGrid::CellSpan_Inside)
 							// As above: don't bother drawing inside cells.
 							continue;
 
 						if (attr->CanOverflow())
 						{
-							wxGridExtCellCoords cell(row + l, j);
+							ibGridCellCoords cell(row + l, j);
 							bool marked = false;
 
 							for (int k = 0; k < numCells; k++)
@@ -7097,7 +7226,7 @@ void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells
 			}
 		}
 
-		wxGridExtCellCache entry;
+		ibGridCellCache entry;
 		DrawCell(dc, cells[i], entry);
 		storage.Add(entry);
 	}
@@ -7106,13 +7235,13 @@ void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells
 
 	for (i = numCells - 1; i >= 0; i--)
 	{
-		wxGridExtCellCache entry;
+		ibGridCellCache entry;
 		DrawCell(dc, redrawCells[i], entry);
 		storage.Add(entry);
 	}
 }
 
-void wxGridExt::DrawGridSpace(wxDC& dc, wxGridExtWindow* gridWindow)
+void ibGrid::DrawGridSpace(wxDC& dc, ibGridWindow* gridWindow)
 {
 	int cw, ch;
 	gridWindow->GetClientSize(&cw, &ch);
@@ -7144,7 +7273,7 @@ void wxGridExt::DrawGridSpace(wxDC& dc, wxGridExtWindow* gridWindow)
 	}
 }
 
-void wxGridExt::DrawCell(wxDC& dc, const wxGridExtCellCoords& coords, wxGridExtCellCache& cache)
+void ibGrid::DrawCell(wxDC& dc, const ibGridCellCoords& coords, ibGridCellCache &cache)
 {
 	int row = coords.GetRow();
 	int col = coords.GetCol();
@@ -7174,13 +7303,13 @@ void wxGridExt::DrawCell(wxDC& dc, const wxGridExtCellCoords& coords, wxGridExtC
 	}
 }
 
-void wxGridExt::DrawCellBorder(wxDC& dc, const wxGridExtCellCoords& coords, const wxRect& rect, const wxGridExtCellAttr* attr)
+void ibGrid::DrawCellBorder(wxDC& dc, const ibGridCellCoords& coords, const wxRect& rect, const ibGridCellAttr* attr)
 {
 	if (GetColWidth(coords.GetCol()) <= 0 || GetRowHeight(coords.GetRow()) <= 0)
 		return;
 
 	//draw border  
-	wxGridExtCellBorder borderLeft = attr->GetBorderLeft();
+	ibGridCellBorder borderLeft = attr->GetBorderLeft();
 	if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT)
 	{
 		dc.SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
@@ -7193,7 +7322,7 @@ void wxGridExt::DrawCellBorder(wxDC& dc, const wxGridExtCellCoords& coords, cons
 				rect.GetLeft(), rect.GetBottom() + 1);
 	}
 
-	wxGridExtCellBorder borderRight = attr->GetBorderRight();
+	ibGridCellBorder borderRight = attr->GetBorderRight();
 	if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT)
 	{
 		dc.SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
@@ -7205,7 +7334,7 @@ void wxGridExt::DrawCellBorder(wxDC& dc, const wxGridExtCellCoords& coords, cons
 				rect.GetRight() + 1, rect.GetBottom() + 1);
 	}
 
-	wxGridExtCellBorder borderTop = attr->GetBorderTop();
+	ibGridCellBorder borderTop = attr->GetBorderTop();
 	if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT)
 	{
 		dc.SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
@@ -7217,7 +7346,7 @@ void wxGridExt::DrawCellBorder(wxDC& dc, const wxGridExtCellCoords& coords, cons
 				rect.GetRight() + 1, rect.GetTop());
 	}
 
-	wxGridExtCellBorder borderBottom = attr->GetBorderBottom();
+	ibGridCellBorder borderBottom = attr->GetBorderBottom();
 	if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT)
 	{
 		dc.SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
@@ -7230,7 +7359,7 @@ void wxGridExt::DrawCellBorder(wxDC& dc, const wxGridExtCellCoords& coords, cons
 	}
 }
 
-void wxGridExt::DrawCellHighlight(wxDC& dc, int row, int col, const wxGridExtCellAttr* attr)
+void ibGrid::DrawCellHighlight(wxDC& dc, int row, int col, const ibGridCellAttr* attr)
 {
 	if (GetColWidth(col) <= 0 || GetRowHeight(row) <= 0)
 		return;
@@ -7274,30 +7403,30 @@ void wxGridExt::DrawCellHighlight(wxDC& dc, int row, int col, const wxGridExtCel
 
 }
 
-wxPen wxGridExt::GetDefaultGridLinePen()
+wxPen ibGrid::GetDefaultGridLinePen()
 {
 	return wxPen(GetGridLineColour());
 }
 
-wxPen wxGridExt::GetRowGridLinePen(int WXUNUSED(row))
+wxPen ibGrid::GetRowGridLinePen(int WXUNUSED(row))
 {
 	return GetDefaultGridLinePen();
 }
 
-wxPen wxGridExt::GetColGridLinePen(int WXUNUSED(col))
+wxPen ibGrid::GetColGridLinePen(int WXUNUSED(col))
 {
 	return GetDefaultGridLinePen();
 }
 
-void wxGridExt::DrawBorder(wxDC& dc, const wxGridExtCellCacheArray& storage)
+void ibGrid::DrawBorder(wxDC& dc, const ibGridCellCacheArray& storage)
 {
 	// if the active cell was repainted, repaint its highlight too because it
 	// might have been damaged by the grid lines
 	size_t count = storage.GetCount();
 	for (size_t n = 0; n < count; n++)
 	{
-		const wxGridExtCellCache& cache = storage[n];
-		const wxGridExtCellAttrPtr& attr = cache.m_attr;
+		const ibGridCellCache& cache = storage[n];
+		const ibGridCellAttrPtr& attr = cache.m_attr;
 
 		if (attr && attr->HasAnyBorder())
 		{
@@ -7306,12 +7435,12 @@ void wxGridExt::DrawBorder(wxDC& dc, const wxGridExtCellCacheArray& storage)
 	}
 }
 
-void wxGridExt::DrawHighlight(wxDC& dc, const wxGridExtCellCoordsArray& cells)
+void ibGrid::DrawHighlight(wxDC& dc, const ibGridCellCoordsArray& cells)
 {
 	// This if block was previously in wxGrid::OnPaint but that doesn't
 	// seem to get called under wxGTK - MB
 	//
-	if (m_currentCellCoords == wxGridExtNoCellCoords &&
+	if (m_currentCellCoords == ibGridNoCellCoords &&
 		m_numRows && m_numCols)
 	{
 		m_currentCellCoords.Set(0, 0);
@@ -7328,16 +7457,16 @@ void wxGridExt::DrawHighlight(wxDC& dc, const wxGridExtCellCoordsArray& cells)
 	size_t count = cells.GetCount();
 	for (size_t n = 0; n < count; n++)
 	{
-		const wxGridExtCellCoords& cell = cells[n];
+		const ibGridCellCoords& cell = cells[n];
 		if (m_currentCellCoords == cell || (m_selection && m_selection->IsInSelection(cell)))
 		{
-			wxGridExtCellAttrPtr attr = GetCellAttrPtr(cell);
+			ibGridCellAttrPtr attr = GetCellAttrPtr(cell);
 			DrawCellHighlight(dc, cell.GetRow(), cell.GetCol(), attr.get());
 		}
 	}
 }
 
-void wxGridExt::DrawFrozenBorder(wxDC& dc, wxGridExtWindow* gridWindow)
+void ibGrid::DrawFrozenBorder(wxDC& dc, ibGridWindow* gridWindow)
 {
 	if (gridWindow && m_numCols && m_numRows)
 	{
@@ -7348,7 +7477,7 @@ void wxGridExt::DrawFrozenBorder(wxDC& dc, wxGridExtWindow* gridWindow)
 		CalcGridWindowUnscrolledPosition(gridOffset.x, gridOffset.y, &left, &top, gridWindow);
 		CalcGridWindowUnscrolledPosition(cw + gridOffset.x, ch + gridOffset.y, &right, &bottom, gridWindow);
 
-		if (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenRow)
+		if (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenRow)
 		{
 			right = wxMin(right, GetColRight(m_numCols - 1, GetGridZoom()));
 
@@ -7357,7 +7486,7 @@ void wxGridExt::DrawFrozenBorder(wxDC& dc, wxGridExtWindow* gridWindow)
 			dc.DrawLine(left, bottom, right, bottom);
 		}
 
-		if (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenCol)
+		if (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenCol)
 		{
 			bottom = wxMin(bottom, GetRowBottom(m_numRows - 1, GetGridZoom()));
 
@@ -7368,7 +7497,7 @@ void wxGridExt::DrawFrozenBorder(wxDC& dc, wxGridExtWindow* gridWindow)
 	}
 }
 
-void wxGridExt::DrawLabelFrozenBorder(wxDC& dc, wxWindow* window, bool isRow)
+void ibGrid::DrawLabelFrozenBorder(wxDC& dc, wxWindow* window, bool isRow)
 {
 	if (window)
 	{
@@ -7385,13 +7514,13 @@ void wxGridExt::DrawLabelFrozenBorder(wxDC& dc, wxWindow* window, bool isRow)
 	}
 }
 
-// Used by wxGridExt::Render() to draw the grid lines only for the cells in the
+// Used by ibGrid::Render() to draw the grid lines only for the cells in the
 // specified range.
 void
-wxGridExt::DrawRangeGridLines(wxDC& dc,
+ibGrid::DrawRangeGridLines(wxDC& dc,
 	const wxRegion& reg,
-	const wxGridExtCellCoords& topLeft,
-	const wxGridExtCellCoords& bottomRight)
+	const ibGridCellCoords& topLeft,
+	const ibGridCellCoords& bottomRight)
 {
 	if (!m_gridLinesEnabled)
 		return;
@@ -7459,7 +7588,7 @@ wxGridExt::DrawRangeGridLines(wxDC& dc,
 // This is used to redraw all grid lines e.g. when the grid line colour
 // has been changed
 //
-void wxGridExt::DrawAllGridWindowLines(wxDC& dc, const wxRegion& WXUNUSED(reg), wxGridExtWindow* gridWindow)
+void ibGrid::DrawAllGridWindowLines(wxDC& dc, const wxRegion& WXUNUSED(reg), ibGridWindow* gridWindow)
 {
 	if (!m_gridLinesEnabled || !gridWindow)
 		return;
@@ -7550,7 +7679,7 @@ void wxGridExt::DrawAllGridWindowLines(wxDC& dc, const wxRegion& WXUNUSED(reg), 
 		topRow, leftCol, m_numRows, m_numCols);
 }
 
-void wxGridExt::DrawAllGridLines()
+void ibGrid::DrawAllGridLines()
 {
 	if (m_gridWin)
 	{
@@ -7586,7 +7715,7 @@ void wxGridExt::DrawAllGridLines()
 }
 
 void
-wxGridExt::DoDrawGridLines(wxDC& dc,
+ibGrid::DoDrawGridLines(wxDC& dc,
 	int top, int left,
 	int bottom, int right,
 	int topRow, int leftCol,
@@ -7632,7 +7761,7 @@ wxGridExt::DoDrawGridLines(wxDC& dc,
 }
 
 void
-wxGridExt::DoDrawGridNonClippingRegionLines(wxDC& dc,
+ibGrid::DoDrawGridNonClippingRegionLines(wxDC& dc,
 	int top, int left,
 	int bottom, int right,
 	int topRow, int leftCol,
@@ -7710,7 +7839,7 @@ wxGridExt::DoDrawGridNonClippingRegionLines(wxDC& dc,
 	}
 }
 
-void wxGridExt::DrawRowAreas(wxDC& dc, const wxArrayInt& rows)
+void ibGrid::DrawRowAreas(wxDC& dc, const wxArrayInt& rows)
 {
 	if (!m_numRows)
 		return;
@@ -7721,42 +7850,42 @@ void wxGridExt::DrawRowAreas(wxDC& dc, const wxArrayInt& rows)
 		DrawRowArea(dc, rows[i]);
 	}
 
-	wxGridExtCellAttrProvider* const
+	ibGridCellAttrProvider* const
 		attrProvider = m_table ? m_table->GetAttrProvider() : NULL;
 
 	int hAlign, vAlign;
-	wxGridExt::GetRowLabelAlignment(&hAlign, &vAlign);
+	ibGrid::GetRowLabelAlignment(&hAlign, &vAlign);
 
 	for (size_t pos = 0; pos < m_rowAreaAt.size(); pos++) {
 
 		size_t rowHeight = 0;
 
-		const wxGridExtCellArea& entry = m_rowAreaAt[pos];
+		const ibGridCellArea& entry = m_rowAreaAt[pos];
 		for (int row = entry.m_start; row <= entry.m_end; row++) {
-			rowHeight += wxGridExt::GetRowHeight(row, GetGridZoom());
+			rowHeight += ibGrid::GetRowHeight(row, GetGridZoom());
 		}
 
 		// notice that an explicit static_cast is needed to avoid a compilation
 		// error with VC7.1 which, for some reason, tries to instantiate (abstract)
-		// wxGridExtRowHeaderRenderer class without it
-		const wxGridExtRowHeaderRenderer&
+		// ibGridRowHeaderRenderer class without it
+		const ibGridRowHeaderRenderer&
 			rend = attrProvider ? attrProvider->GetRowHeaderRenderer(entry.m_start)
-			: static_cast<const wxGridExtRowHeaderRenderer&>
+			: static_cast<const ibGridRowHeaderRenderer&>
 			(gs_defaultHeaderRenderers.rowRenderer);
 
-		wxRect rect(0, GetRowTop(entry.m_start, GetGridZoom()), ((GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0)), rowHeight);
+		wxRect rect(0, GetRowTop(entry.m_start, GetGridZoom()), ((GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0)), rowHeight);
 		rend.DrawLabel(*this, dc, entry.m_areaLabel,
 			rect, hAlign, vAlign, wxHORIZONTAL);
 	}
 }
 
-void wxGridExt::DrawRowArea(wxDC& dc, int row)
+void ibGrid::DrawRowArea(wxDC& dc, int row)
 {
 	if (m_rowAreaWin != NULL) {
 
 		static wxPen sectionPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW));
 
-		wxRect rect(0, GetRowTop(row, GetGridZoom()), (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0), GetRowHeight(row, GetGridZoom()));
+		wxRect rect(0, GetRowTop(row, GetGridZoom()), (GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0), GetRowHeight(row, GetGridZoom()));
 		const int flagSection = GetRowAreaValue(row);
 
 		if (flagSection & 2) {
@@ -7776,7 +7905,7 @@ void wxGridExt::DrawRowArea(wxDC& dc, int row)
 	}
 }
 
-void wxGridExt::DrawRowLabels(wxDC& dc, const wxArrayInt& rows)
+void ibGrid::DrawRowLabels(wxDC& dc, const wxArrayInt& rows)
 {
 	if (!m_numRows)
 		return;
@@ -7788,23 +7917,23 @@ void wxGridExt::DrawRowLabels(wxDC& dc, const wxArrayInt& rows)
 	}
 }
 
-void wxGridExt::DrawRowLabel(wxDC& dc, int row)
+void ibGrid::DrawRowLabel(wxDC& dc, int row)
 {
 	if (GetRowHeight(row) <= 0 || m_rowLabelWidth <= 0)
 		return;
 
-	wxGridExtCellAttrProvider* const
+	ibGridCellAttrProvider* const
 		attrProvider = m_table ? m_table->GetAttrProvider() : NULL;
 
 	// notice that an explicit static_cast is needed to avoid a compilation
 	// error with VC7.1 which, for some reason, tries to instantiate (abstract)
-	// wxGridExtRowHeaderRenderer class without it
-	const wxGridExtRowHeaderRenderer&
+	// ibGridRowHeaderRenderer class without it
+	const ibGridRowHeaderRenderer&
 		rend = attrProvider ? attrProvider->GetRowHeaderRenderer(row)
-		: static_cast<const wxGridExtRowHeaderRenderer&>
+		: static_cast<const ibGridRowHeaderRenderer&>
 		(gs_defaultHeaderRenderers.rowRenderer);
 
-	wxRect rect(0, GetRowTop(row, GetGridZoom()), wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), GetRowHeight(row, GetGridZoom()));
+	wxRect rect(0, GetRowTop(row, GetGridZoom()), ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), GetRowHeight(row, GetGridZoom()));
 
 	if (m_cursorMode == WXGRID_CURSOR_MOVE_ROW)
 	{
@@ -7835,7 +7964,7 @@ void wxGridExt::DrawRowLabel(wxDC& dc, int row)
 		rect, hAlign, vAlign, wxHORIZONTAL);
 }
 
-bool wxGridExt::UseNativeColHeader(bool native)
+bool ibGrid::UseNativeColHeader(bool native)
 {
 	if (native == m_useNativeHeader)
 		return true;
@@ -7864,7 +7993,7 @@ bool wxGridExt::UseNativeColHeader(bool native)
 	return true;
 }
 
-void wxGridExt::SetUseNativeColLabels(bool native)
+void ibGrid::SetUseNativeColLabels(bool native)
 {
 	wxASSERT_MSG(!m_useNativeHeader,
 		"doesn't make sense when using native header");
@@ -7880,7 +8009,7 @@ void wxGridExt::SetUseNativeColLabels(bool native)
 	m_cornerLabelWin->Refresh();
 }
 
-void wxGridExt::DrawColAreas(wxDC& dc, const wxArrayInt& cols)
+void ibGrid::DrawColAreas(wxDC& dc, const wxArrayInt& cols)
 {
 	if (!m_numCols)
 		return;
@@ -7893,40 +8022,40 @@ void wxGridExt::DrawColAreas(wxDC& dc, const wxArrayInt& cols)
 
 	if (m_colAreaWin != NULL) {
 
-		wxGridExtCellAttrProvider* const
+		ibGridCellAttrProvider* const
 			attrProvider = m_table ? m_table->GetAttrProvider() : NULL;
 
 		int hAlign, vAlign;
-		wxGridExt::GetColLabelAlignment(&hAlign, &vAlign);
+		ibGrid::GetColLabelAlignment(&hAlign, &vAlign);
 
 		for (size_t pos = 0; pos < m_colAreaAt.size(); pos++) {
 
 			size_t colWidth = 0;
 
-			const wxGridExtCellArea& entry = m_colAreaAt[pos];
+			const ibGridCellArea& entry = m_colAreaAt[pos];
 			for (int col = entry.m_start; col <= entry.m_end; col++) {
-				colWidth += wxGridExt::GetColWidth(col, GetGridZoom());
+				colWidth += ibGrid::GetColWidth(col, GetGridZoom());
 			}
 
-			const wxGridExtColumnHeaderRenderer&
+			const ibGridColumnHeaderRenderer&
 				rend = attrProvider ? attrProvider->GetColumnHeaderRenderer(entry.m_start)
-				: static_cast<wxGridExtColumnHeaderRenderer&>
+				: static_cast<ibGridColumnHeaderRenderer&>
 				(gs_defaultHeaderRenderers.colRenderer);
 
-			wxRect rect(GetColLeft(entry.m_start, GetGridZoom()), 0, colWidth, (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0));
+			wxRect rect(GetColLeft(entry.m_start, GetGridZoom()), 0, colWidth, (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0));
 			rend.DrawLabel(*this, dc, entry.m_areaLabel,
 				rect, hAlign, vAlign, wxHORIZONTAL);
 		}
 	}
 }
 
-void wxGridExt::DrawColArea(wxDC& dc, int col)
+void ibGrid::DrawColArea(wxDC& dc, int col)
 {
 	if (m_colAreaWin != NULL) {
 
 		static wxPen sectionPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW));
 
-		wxRect rect(GetColLeft(col, GetGridZoom()), 0, GetColWidth(col, GetGridZoom()), (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0));
+		wxRect rect(GetColLeft(col, GetGridZoom()), 0, GetColWidth(col, GetGridZoom()), (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0));
 		const int flagSection = GetColAreaValue(col);
 
 		if (flagSection & 2) {
@@ -7946,7 +8075,7 @@ void wxGridExt::DrawColArea(wxDC& dc, int col)
 	}
 }
 
-void wxGridExt::DrawColLabels(wxDC& dc, const wxArrayInt& cols)
+void ibGrid::DrawColLabels(wxDC& dc, const wxArrayInt& cols)
 {
 	if (!m_numCols)
 		return;
@@ -7958,15 +8087,15 @@ void wxGridExt::DrawColLabels(wxDC& dc, const wxArrayInt& cols)
 	}
 }
 
-void wxGridExt::DrawCornerLabel(wxDC& dc)
+void ibGrid::DrawCornerLabel(wxDC& dc)
 {
-	wxRect rect(wxSize(wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), wxCalcGridScale(m_colLabelHeight, GetGridZoom())));
+	wxRect rect(wxSize(ibCalcGridScale(m_rowLabelWidth, GetGridZoom()), ibCalcGridScale(m_colLabelHeight, GetGridZoom())));
 
-	wxGridExtCellAttrProvider* const
+	ibGridCellAttrProvider* const
 		attrProvider = m_table ? m_table->GetAttrProvider() : NULL;
-	const wxGridExtCornerHeaderRenderer&
+	const ibGridCornerHeaderRenderer&
 		rend = attrProvider ? attrProvider->GetCornerRenderer()
-		: static_cast<wxGridExtCornerHeaderRenderer&>
+		: static_cast<ibGridCornerHeaderRenderer&>
 		(gs_defaultHeaderRenderers.cornerRenderer);
 
 	if (m_nativeColumnLabels)
@@ -7994,20 +8123,20 @@ void wxGridExt::DrawCornerLabel(wxDC& dc)
 	}
 }
 
-void wxGridExt::DrawColLabel(wxDC& dc, int col)
+void ibGrid::DrawColLabel(wxDC& dc, int col)
 {
 	if (GetColWidth(col) <= 0 || m_colLabelHeight <= 0)
 		return;
 
 	int colLeft = GetColLeft(col, GetGridZoom());
 
-	wxRect rect(colLeft, 0, GetColWidth(col, GetGridZoom()), wxCalcGridScale(m_colLabelHeight, GetGridZoom()));
+	wxRect rect(colLeft, 0, GetColWidth(col, GetGridZoom()), ibCalcGridScale(m_colLabelHeight, GetGridZoom()));
 
-	wxGridExtCellAttrProvider* const
+	ibGridCellAttrProvider* const
 		attrProvider = m_table ? m_table->GetAttrProvider() : NULL;
-	const wxGridExtColumnHeaderRenderer&
+	const ibGridColumnHeaderRenderer&
 		rend = attrProvider ? attrProvider->GetColumnHeaderRenderer(col)
-		: static_cast<wxGridExtColumnHeaderRenderer&>
+		: static_cast<ibGridColumnHeaderRenderer&>
 		(gs_defaultHeaderRenderers.colRenderer);
 
 	if (m_nativeColumnLabels)
@@ -8061,7 +8190,7 @@ void wxGridExt::DrawColLabel(wxDC& dc, int col)
 
 // TODO: these 2 functions should be replaced with wxDC::DrawLabel() to which
 //       we just have to add textOrientation support
-void wxGridExt::DrawTextRectangle(wxDC& dc,
+void ibGrid::DrawTextRectangle(wxDC& dc,
 	const wxString& value,
 	const wxRect& rect,
 	int horizAlign,
@@ -8073,7 +8202,7 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 	DrawTextRectangle(dc, lines, rect, horizAlign, vertAlign, textOrientation);
 }
 
-void wxGridExt::DrawTextRectangle(wxDC& dc,
+void ibGrid::DrawTextRectangle(wxDC& dc,
 	const wxArrayString& lines,
 	const wxRect& rect,
 	int horizAlign,
@@ -8177,10 +8306,10 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 	}
 }
 
-void wxGridExt::DrawTextRectangle(wxDC& dc,
+void ibGrid::DrawTextRectangle(wxDC& dc,
 	const wxString& text,
 	const wxRect& rect,
-	const wxGridExtCellAttr& attr,
+	const ibGridCellAttr& attr,
 	int hAlign,
 	int vAlign)
 {
@@ -8211,7 +8340,7 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 // Any existing contents of the string array are preserved.
 //
 // TODO: refactor wxTextFile::Read() and reuse the same code from here
-void wxGridExt::ParseLines(const wxString& value, wxArrayString& lines)
+void ibGrid::ParseLines(const wxString& value, wxArrayString& lines)
 {
 	lines.Empty();
 
@@ -8241,7 +8370,7 @@ void wxGridExt::ParseLines(const wxString& value, wxArrayString& lines)
 	}
 }
 
-void wxGridExt::GetTextBoxSize(const wxDC& dc,
+void ibGrid::GetTextBoxSize(const wxDC& dc,
 	const wxArrayString& lines,
 	wxArrayInt* arrRow, wxArrayInt* arrCol,
 	long* width, long* height)
@@ -8296,7 +8425,7 @@ void wxGridExt::GetTextBoxSize(const wxDC& dc,
 //
 // ------ Batch processing.
 //
-void wxGridExt::EndBatch()
+void ibGrid::EndBatch()
 {
 	if (m_batchCount > 0)
 	{
@@ -8313,13 +8442,13 @@ void wxGridExt::EndBatch()
 // repainting of the grid. Has no effect if you are already inside a
 // BeginBatch / EndBatch block.
 //
-void wxGridExt::ForceRefresh()
+void ibGrid::ForceRefresh()
 {
 	BeginBatch();
 	EndBatch();
 }
 
-void wxGridExt::DoEnable(bool enable)
+void ibGrid::DoEnable(bool enable)
 {
 	wxScrolledCanvas::DoEnable(enable);
 
@@ -8330,7 +8459,7 @@ void wxGridExt::DoEnable(bool enable)
 // ------ Edit control functions
 //
 
-void wxGridExt::EnableEditing(bool edit)
+void ibGrid::EnableEditing(bool edit)
 {
 	if (edit != m_editable)
 	{
@@ -8340,7 +8469,7 @@ void wxGridExt::EnableEditing(bool edit)
 	}
 }
 
-void wxGridExt::EnableCellEditControl(bool enable)
+void ibGrid::EnableCellEditControl(bool enable)
 {
 	if (!m_editable)
 		return;
@@ -8352,7 +8481,7 @@ void wxGridExt::EnableCellEditControl(bool enable)
 			// this should be checked by the caller!
 			wxCHECK_RET(CanEnableCellControl(), wxT("can't enable editing for this cell!"));
 
-			DoEnableCellEditControl(wxGridExtActivationSource::FromProgram());
+			DoEnableCellEditControl(ibGridActivationSource::FromProgram());
 		}
 		else
 		{
@@ -8361,7 +8490,7 @@ void wxGridExt::EnableCellEditControl(bool enable)
 	}
 }
 
-bool wxGridExt::DoEnableCellEditControl(const wxGridExtActivationSource& actSource)
+bool ibGrid::DoEnableCellEditControl(const ibGridActivationSource& actSource)
 {
 	switch (SendEvent(wxEVT_GRID_EDITOR_SHOWN))
 	{
@@ -8390,32 +8519,32 @@ bool wxGridExt::DoEnableCellEditControl(const wxGridExtActivationSource& actSour
 	return true;
 }
 
-void wxGridExt::DoDisableCellEditControl()
+void ibGrid::DoDisableCellEditControl()
 {
 	SendEvent(wxEVT_GRID_EDITOR_HIDDEN);
 
 	DoAcceptCellEditControl();
 }
 
-bool wxGridExt::IsCurrentCellReadOnly() const
+bool ibGrid::IsCurrentCellReadOnly() const
 {
-	return const_cast<wxGridExt*>(this)->
+	return const_cast<ibGrid*>(this)->
 		GetCellAttrPtr(m_currentCellCoords)->IsReadOnly();
 }
 
-bool wxGridExt::CanEnableCellControl() const
+bool ibGrid::CanEnableCellControl() const
 {
-	return m_editable && (m_currentCellCoords != wxGridExtNoCellCoords) &&
+	return m_editable && (m_currentCellCoords != ibGridNoCellCoords) &&
 		!IsCurrentCellReadOnly();
 }
 
-bool wxGridExt::IsCellEditControlShown() const
+bool ibGrid::IsCellEditControlShown() const
 {
 	bool isShown = false;
 
 	if (m_cellEditCtrlEnabled)
 	{
-		if (wxGridExtCellEditorPtr editor = GetCurrentCellEditorPtr())
+		if (ibGridCellEditorPtr editor = GetCurrentCellEditorPtr())
 		{
 			if (editor->IsCreated())
 			{
@@ -8427,7 +8556,7 @@ bool wxGridExt::IsCellEditControlShown() const
 	return isShown;
 }
 
-void wxGridExt::ShowCellEditControl()
+void ibGrid::ShowCellEditControl()
 {
 	if (IsCellEditControlEnabled())
 	{
@@ -8437,24 +8566,24 @@ void wxGridExt::ShowCellEditControl()
 			return;
 		}
 
-		DoShowCellEditControl(wxGridExtActivationSource::FromProgram());
+		DoShowCellEditControl(ibGridActivationSource::FromProgram());
 	}
 }
 
-bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource)
+bool ibGrid::DoShowCellEditControl(const ibGridActivationSource& actSource)
 {
 	wxRect rect = CellToRect(m_currentCellCoords);
 	int row = m_currentCellCoords.GetRow();
 	int col = m_currentCellCoords.GetCol();
 
-	wxGridExtCellAttrPtr attr = GetCellAttrPtr(row, col);
-	wxGridExtCellEditorPtr editor = attr->GetEditorPtr(this, row, col);
+	ibGridCellAttrPtr attr = GetCellAttrPtr(row, col);
+	ibGridCellEditorPtr editor = attr->GetEditorPtr(this, row, col);
 
-	const wxGridExtActivationResult&
+	const ibGridActivationResult&
 		res = editor->TryActivate(row, col, this, actSource);
 	switch (res.GetAction())
 	{
-	case wxGridExtActivationResult::Change:
+	case ibGridActivationResult::Change:
 		// This is somewhat similar to what DoSaveEditControlValue() does.
 		// but we don't allow vetoing CHANGED event here as this code is
 		// new and shouldn't have to support this obsolete usage.
@@ -8481,11 +8610,11 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 		}
 		wxFALLTHROUGH;
 
-	case wxGridExtActivationResult::Ignore:
+	case ibGridActivationResult::Ignore:
 		// In any case, don't start editing normally.
 		return false;
 
-	case wxGridExtActivationResult::ShowEditor:
+	case ibGridActivationResult::ShowEditor:
 		// Continue normally.
 		break;
 	}
@@ -8495,7 +8624,7 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 	// to call EnableCellEditControl() to avoid reentrancy problems.
 	m_cellEditCtrlEnabled = true;
 
-	wxGridExtWindow* gridWindow = CellToGridWindow(row, col);
+	ibGridWindow* gridWindow = CellToGridWindow(row, col);
 
 	// if this is part of a multicell, find owner (topleft)
 	int cell_rows, cell_cols;
@@ -8522,11 +8651,11 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 	if (!editor->IsCreated())
 	{
 		editor->Create(gridWindow, wxID_ANY,
-			new wxGridExtCellEditorEvtHandler(this, editor.get()));
+			new ibGridCellEditorEvtHandler(this, editor.get()));
 
 		// Ensure the editor window has wxWANTS_CHARS flag, so that it
 		// gets Tab, Enter and Esc keys, which need to be processed
-		// specially by wxGridExtCellEditorEvtHandler.
+		// specially by ibGridCellEditorEvtHandler.
 		wxWindow* const editorWindow = editor->GetWindow();
 		if (editorWindow)
 		{
@@ -8534,7 +8663,7 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 				| wxWANTS_CHARS);
 		}
 
-		wxGridExtEditorCreatedEvent evt(GetId(),
+		ibGridEditorCreatedEvent evt(GetId(),
 			wxEVT_GRID_EDITOR_CREATED,
 			this,
 			row,
@@ -8648,7 +8777,7 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 	return true;
 }
 
-void wxGridExt::HideCellEditControl()
+void ibGrid::HideCellEditControl()
 {
 	if (IsCellEditControlEnabled())
 	{
@@ -8656,9 +8785,9 @@ void wxGridExt::HideCellEditControl()
 	}
 }
 
-void wxGridExt::DoHideCellEditControl()
+void ibGrid::DoHideCellEditControl()
 {
-	wxGridExtCellEditorPtr editor = GetCurrentCellEditorPtr();
+	ibGridCellEditorPtr editor = GetCurrentCellEditorPtr();
 	const bool editorHadFocus = editor->GetWindow()->IsDescendant(FindFocus());
 
 	if (editor->GetWindow()->GetParent() != m_gridWin)
@@ -8666,7 +8795,7 @@ void wxGridExt::DoHideCellEditControl()
 
 	editor->Show(false);
 
-	wxGridExtWindow* gridWindow = CellToGridWindow(m_currentCellCoords);
+	ibGridWindow* gridWindow = CellToGridWindow(m_currentCellCoords);
 	// return the focus to the grid itself if the editor had it
 	//
 	// note that we must not do this unconditionally to avoid stealing
@@ -8681,7 +8810,7 @@ void wxGridExt::DoHideCellEditControl()
 	CalcGridWindowScrolledPosition(rect.x, rect.y, &rect.x, &rect.y, gridWindow);
 	rect.width = gridWindow->GetClientSize().GetWidth() - rect.x;
 
-#ifdef __WXMAC__
+#ifdef __WXOSX__
 	// ensure that the pixels under the focus ring get refreshed as well
 	rect.Inflate(10, 10);
 #endif
@@ -8689,10 +8818,10 @@ void wxGridExt::DoHideCellEditControl()
 	gridWindow->Refresh(false, &rect);
 
 	// refresh also the grid to the right
-	wxGridExtWindow* rightGridWindow = NULL;
-	if (gridWindow->GetType() == wxGridExtWindow::wxGridExtWindowFrozenCorner)
+	ibGridWindow* rightGridWindow = NULL;
+	if (gridWindow->GetType() == ibGridWindow::ibGridWindowFrozenCorner)
 		rightGridWindow = m_frozenRowGridWin;
-	else if (gridWindow->GetType() == wxGridExtWindow::wxGridExtWindowFrozenCol)
+	else if (gridWindow->GetType() == ibGridWindow::ibGridWindowFrozenCol)
 		rightGridWindow = m_gridWin;
 
 	if (rightGridWindow)
@@ -8703,7 +8832,7 @@ void wxGridExt::DoHideCellEditControl()
 	}
 }
 
-void wxGridExt::AcceptCellEditControlIfShown()
+void ibGrid::AcceptCellEditControlIfShown()
 {
 	if (IsCellEditControlShown())
 	{
@@ -8711,7 +8840,7 @@ void wxGridExt::AcceptCellEditControlIfShown()
 	}
 }
 
-void wxGridExt::DoAcceptCellEditControl()
+void ibGrid::DoAcceptCellEditControl()
 {
 	// Reset it first to avoid any problems with recursion via
 	// DisableCellEditControl() if it's called from the user-defined event
@@ -8723,7 +8852,7 @@ void wxGridExt::DoAcceptCellEditControl()
 	DoSaveEditControlValue();
 }
 
-void wxGridExt::SaveEditControlValue()
+void ibGrid::SaveEditControlValue()
 {
 	if (IsCellEditControlEnabled())
 	{
@@ -8731,14 +8860,14 @@ void wxGridExt::SaveEditControlValue()
 	}
 }
 
-void wxGridExt::DoSaveEditControlValue()
+void ibGrid::DoSaveEditControlValue()
 {
 	int row = m_currentCellCoords.GetRow();
 	int col = m_currentCellCoords.GetCol();
 
 	wxString oldval = GetCellValue(m_currentCellCoords);
 
-	wxGridExtCellEditorPtr editor = GetCurrentCellEditorPtr();
+	ibGridCellEditorPtr editor = GetCurrentCellEditorPtr();
 
 	wxString newval;
 	if (!editor->EndEdit(row, col, this, oldval, &newval))
@@ -8782,23 +8911,23 @@ void wxGridExt::DoSaveEditControlValue()
 //  coordinates for mouse events etc.
 //
 
-wxGridExtCellCoords wxGridExt::XYToCell(int x, int y, wxGridExtWindow* gridWindow) const
+ibGridCellCoords ibGrid::XYToCell(int x, int y, ibGridWindow* gridWindow) const
 {
 	int row = YToRow(y, false, gridWindow);
 	int col = XToCol(x, false, gridWindow);
 
-	return row == -1 || col == -1 ? wxGridExtNoCellCoords
-		: wxGridExtCellCoords(row, col);
+	return row == -1 || col == -1 ? ibGridNoCellCoords
+		: ibGridCellCoords(row, col);
 }
 
 // compute row or column from some (unscrolled) coordinate value, using either
 // m_defaultRowHeight/m_defaultColWidth or binary search on array of
 // m_rowBottoms/m_colRights to do it quickly in O(log n) time.
 // NOTE: This may not work correctly for reordered columns.
-int wxGridExt::PosToLinePos(int coord,
+int ibGrid::PosToLinePos(int coord,
 	bool clipToMinMax,
-	const wxGridExtOperations& oper,
-	wxGridExtWindow* gridWindow) const
+	const ibGridOperations& oper,
+	ibGridWindow* gridWindow) const
 {
 	const int numLines = oper.GetNumberOfLines(this, gridWindow);
 
@@ -8846,7 +8975,7 @@ int wxGridExt::PosToLinePos(int coord,
 		wxCHECK_MSG(lineEnds[oper.GetLineAt(this, minPos)] <= coord &&
 			coord < lineEnds[oper.GetLineAt(this, maxPos)],
 			-1,
-			"wxGridExt: internal error in PosToLinePos()");
+			"ibGrid: internal error in PosToLinePos()");
 
 		if (coord >= lineEnds[oper.GetLineAt(this, maxPos - 1)])
 			return maxPos;
@@ -8864,34 +8993,34 @@ int wxGridExt::PosToLinePos(int coord,
 }
 
 int
-wxGridExt::PosToLine(int coord,
+ibGrid::PosToLine(int coord,
 	bool clipToMinMax,
-	const wxGridExtOperations& oper,
-	wxGridExtWindow* gridWindow) const
+	const ibGridOperations& oper,
+	ibGridWindow* gridWindow) const
 {
 	int pos = PosToLinePos(coord, clipToMinMax, oper, gridWindow);
 
 	return pos == wxNOT_FOUND ? wxNOT_FOUND : oper.GetLineAt(this, pos);
 }
 
-int wxGridExt::YToRow(int y, bool clipToMinMax, wxGridExtWindow* gridWindow) const
+int ibGrid::YToRow(int y, bool clipToMinMax, ibGridWindow* gridWindow) const
 {
-	return PosToLine(y, clipToMinMax, wxGridExtRowOperations(), gridWindow);
+	return PosToLine(y, clipToMinMax, ibGridRowOperations(), gridWindow);
 }
 
-int wxGridExt::XToCol(int x, bool clipToMinMax, wxGridExtWindow* gridWindow) const
+int ibGrid::XToCol(int x, bool clipToMinMax, ibGridWindow* gridWindow) const
 {
-	return PosToLine(x, clipToMinMax, wxGridExtColumnOperations(), gridWindow);
+	return PosToLine(x, clipToMinMax, ibGridColumnOperations(), gridWindow);
 }
 
-int wxGridExt::YToPos(int y, wxGridExtWindow* gridWindow) const
+int ibGrid::YToPos(int y, ibGridWindow* gridWindow) const
 {
-	return PosToLinePos(y, true /* clip */, wxGridExtRowOperations(), gridWindow);
+	return PosToLinePos(y, true /* clip */, ibGridRowOperations(), gridWindow);
 }
 
-int wxGridExt::XToPos(int x, wxGridExtWindow* gridWindow) const
+int ibGrid::XToPos(int x, ibGridWindow* gridWindow) const
 {
-	return PosToLinePos(x, true /* clip */, wxGridExtColumnOperations(), gridWindow);
+	return PosToLinePos(x, true /* clip */, ibGridColumnOperations(), gridWindow);
 }
 
 // return the row/col number such that the pos is near the edge of, or -1 if
@@ -8901,7 +9030,7 @@ int wxGridExt::XToPos(int x, wxGridExtWindow* gridWindow) const
 // large enough to still allow for an "inner" area that is _not_ near the edge
 // (i.e., if the height/width is smaller than WXGRID_LABEL_EDGE_ZONE, pos will
 // _never_ be considered to be near the edge).
-int wxGridExt::PosToEdgeOfLine(int pos, const wxGridExtOperations& oper) const
+int ibGrid::PosToEdgeOfLine(int pos, const ibGridOperations& oper) const
 {
 	// Get the bottom or rightmost line that could match.
 	int line = oper.PosToLine(this, pos, NULL, true);
@@ -8934,17 +9063,17 @@ int wxGridExt::PosToEdgeOfLine(int pos, const wxGridExtOperations& oper) const
 	return -1;
 }
 
-int wxGridExt::YToEdgeOfRow(int y) const
+int ibGrid::YToEdgeOfRow(int y) const
 {
-	return PosToEdgeOfLine(y, wxGridExtRowOperations());
+	return PosToEdgeOfLine(y, ibGridRowOperations());
 }
 
-int wxGridExt::XToEdgeOfCol(int x) const
+int ibGrid::XToEdgeOfCol(int x) const
 {
-	return PosToEdgeOfLine(x, wxGridExtColumnOperations());
+	return PosToEdgeOfLine(x, ibGridColumnOperations());
 }
 
-wxRect wxGridExt::CellToRect(int row, int col) const
+wxRect ibGrid::CellToRect(int row, int col) const
 {
 	wxRect rect(-1, -1, -1, -1);
 
@@ -8981,7 +9110,7 @@ wxRect wxGridExt::CellToRect(int row, int col) const
 	return rect;
 }
 
-wxGridExtWindow* wxGridExt::CellToGridWindow(int row, int col) const
+ibGridWindow* ibGrid::CellToGridWindow(int row, int col) const
 {
 	// It may happen that we're called during grid creation, when the current
 	// cell still has invalid coordinates -- don't return (possibly null)
@@ -8998,7 +9127,7 @@ wxGridExtWindow* wxGridExt::CellToGridWindow(int row, int col) const
 	return m_gridWin;
 }
 
-void wxGridExt::GetGridWindowOffset(const wxGridExtWindow* gridWindow, int& x, int& y) const
+void ibGrid::GetGridWindowOffset(const ibGridWindow* gridWindow, int& x, int& y) const
 {
 	wxPoint pt = GetGridWindowOffset(gridWindow);
 
@@ -9006,20 +9135,20 @@ void wxGridExt::GetGridWindowOffset(const wxGridExtWindow* gridWindow, int& x, i
 	y = pt.y;
 }
 
-wxPoint wxGridExt::GetGridWindowOffset(const wxGridExtWindow* gridWindow) const
+wxPoint ibGrid::GetGridWindowOffset(const ibGridWindow* gridWindow) const
 {
 	wxPoint pt(0, 0);
 
 	if (gridWindow)
 	{
 		if (m_frozenRowGridWin &&
-			(gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenRow) == 0)
+			(gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenRow) == 0)
 		{
 			pt.y = m_frozenRowGridWin->GetClientSize().y;
 		}
 
 		if (m_frozenColGridWin &&
-			(gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenCol) == 0)
+			(gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenCol) == 0)
 		{
 			pt.x = m_frozenColGridWin->GetClientSize().x;
 		}
@@ -9028,12 +9157,12 @@ wxPoint wxGridExt::GetGridWindowOffset(const wxGridExtWindow* gridWindow) const
 	return pt;
 }
 
-wxGridExtWindow* wxGridExt::DevicePosToGridWindow(wxPoint pos) const
+ibGridWindow* ibGrid::DevicePosToGridWindow(wxPoint pos) const
 {
 	return DevicePosToGridWindow(pos.x, pos.y);
 }
 
-wxGridExtWindow* wxGridExt::DevicePosToGridWindow(int x, int y) const
+ibGridWindow* ibGrid::DevicePosToGridWindow(int x, int y) const
 {
 	if (m_gridWin->GetRect().Contains(x, y))
 		return m_gridWin;
@@ -9047,57 +9176,57 @@ wxGridExtWindow* wxGridExt::DevicePosToGridWindow(int x, int y) const
 	return NULL;
 }
 
-void wxGridExt::CalcGridWindowUnscrolledPosition(int x, int y, int* xx, int* yy,
-	const wxGridExtWindow* gridWindow) const
+void ibGrid::CalcGridWindowUnscrolledPosition(int x, int y, int* xx, int* yy,
+	const ibGridWindow* gridWindow) const
 {
 	CalcUnscrolledPosition(x, y, xx, yy);
 
 	if (gridWindow)
 	{
-		if (yy && (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenRow))
+		if (yy && (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenRow))
 			*yy = y;
-		if (xx && (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenCol))
+		if (xx && (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenCol))
 			*xx = x;
 	}
 }
 
-wxPoint wxGridExt::CalcGridWindowUnscrolledPosition(const wxPoint& pt,
-	const wxGridExtWindow* gridWindow) const
+wxPoint ibGrid::CalcGridWindowUnscrolledPosition(const wxPoint& pt,
+	const ibGridWindow* gridWindow) const
 {
 	wxPoint pt2;
 	CalcGridWindowUnscrolledPosition(pt.x, pt.y, &pt2.x, &pt2.y, gridWindow);
 	return pt2;
 }
 
-void wxGridExt::CalcGridWindowScrolledPosition(int x, int y, int* xx, int* yy,
-	const wxGridExtWindow* gridWindow) const
+void ibGrid::CalcGridWindowScrolledPosition(int x, int y, int* xx, int* yy,
+	const ibGridWindow* gridWindow) const
 {
 	CalcScrolledPosition(x, y, xx, yy);
 
 	if (gridWindow)
 	{
-		if (yy && (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenRow))
+		if (yy && (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenRow))
 			*yy = y;
-		if (xx && (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenCol))
+		if (xx && (gridWindow->GetType() & ibGridWindow::ibGridWindowFrozenCol))
 			*xx = x;
 	}
 }
 
-wxPoint wxGridExt::CalcGridWindowScrolledPosition(const wxPoint& pt,
-	const wxGridExtWindow* gridWindow) const
+wxPoint ibGrid::CalcGridWindowScrolledPosition(const wxPoint& pt,
+	const ibGridWindow* gridWindow) const
 {
 	wxPoint pt2;
 	CalcGridWindowScrolledPosition(pt.x, pt.y, &pt2.x, &pt2.y, gridWindow);
 	return pt2;
 }
 
-bool wxGridExt::IsVisible(int row, int col, bool wholeCellVisible) const
+bool ibGrid::IsVisible(int row, int col, bool wholeCellVisible) const
 {
 	// get the cell rectangle in logical coords
 	//
 	wxRect r(CellToRect(row, col));
 
-	wxGridExtWindow* gridWindow = CellToGridWindow(row, col);
+	ibGridWindow* gridWindow = CellToGridWindow(row, col);
 	r.Offset(-GetGridWindowOffset(gridWindow));
 
 	// convert to device coords
@@ -9128,7 +9257,7 @@ bool wxGridExt::IsVisible(int row, int col, bool wholeCellVisible) const
 // make the specified cell location visible by doing a minimal amount
 // of scrolling
 //
-void wxGridExt::MakeCellVisible(int row, int col)
+void ibGrid::MakeCellVisible(int row, int col)
 {
 	int xpos = -1, ypos = -1;
 
@@ -9142,7 +9271,7 @@ void wxGridExt::MakeCellVisible(int row, int col)
 
 	// Get the cell rectangle in logical coords.
 	wxRect r;
-	wxGridExtWindow* gridWindow;
+	ibGridWindow* gridWindow;
 
 	if (processRow && processCol)
 	{
@@ -9254,7 +9383,7 @@ void wxGridExt::MakeCellVisible(int row, int col)
 	AdjustScrollbars();
 }
 
-int wxGridExt::GetFirstFullyVisibleRow() const
+int ibGrid::GetFirstFullyVisibleRow() const
 {
 	if (m_numRows == 0)
 		return -1;
@@ -9293,7 +9422,7 @@ int wxGridExt::GetFirstFullyVisibleRow() const
 	return row;
 }
 
-int wxGridExt::GetFirstFullyVisibleCol() const
+int ibGrid::GetFirstFullyVisibleCol() const
 {
 	if (m_numCols == 0)
 		return -1;
@@ -9352,8 +9481,8 @@ namespace
 } // anonymous namespace
 
 void
-wxGridExt::DoMoveCursorFromKeyboard(const wxKeyboardState& kbdState,
-	const wxGridExtDirectionOperations& diroper)
+ibGrid::DoMoveCursorFromKeyboard(const wxKeyboardState& kbdState,
+	const ibGridDirectionOperations& diroper)
 {
 	if (kbdState.ControlDown())
 		DoMoveCursorByBlock(kbdState, diroper);
@@ -9362,10 +9491,10 @@ wxGridExt::DoMoveCursorFromKeyboard(const wxKeyboardState& kbdState,
 }
 
 bool
-wxGridExt::DoMoveCursor(const wxKeyboardState& kbdState,
-	const wxGridExtDirectionOperations& diroper)
+ibGrid::DoMoveCursor(const wxKeyboardState& kbdState,
+	const ibGridDirectionOperations& diroper)
 {
-	if (m_currentCellCoords == wxGridExtNoCellCoords)
+	if (m_currentCellCoords == ibGridNoCellCoords)
 		return false;
 
 	// Expand selection if Shift is pressed.
@@ -9374,7 +9503,7 @@ wxGridExt::DoMoveCursor(const wxKeyboardState& kbdState,
 		if (!m_selection)
 			return false;
 
-		wxGridExtCellCoords coords(m_selection->GetExtensionAnchor());
+		ibGridCellCoords coords(m_selection->GetExtensionAnchor());
 		if (!diroper.TryToAdvance(coords))
 			return false;
 
@@ -9392,7 +9521,7 @@ wxGridExt::DoMoveCursor(const wxKeyboardState& kbdState,
 	{
 		ClearSelection();
 
-		wxGridExtCellCoords coords = m_currentCellCoords;
+		ibGridCellCoords coords = m_currentCellCoords;
 		if (!diroper.TryToAdvance(coords))
 			return false;
 
@@ -9402,33 +9531,33 @@ wxGridExt::DoMoveCursor(const wxKeyboardState& kbdState,
 	return true;
 }
 
-bool wxGridExt::MoveCursorUp(bool expandSelection)
+bool ibGrid::MoveCursorUp(bool expandSelection)
 {
 	return DoMoveCursor(DummyKeyboardState(expandSelection),
-		wxGridExtBackwardOperations(this, wxGridExtRowOperations()));
+		ibGridBackwardOperations(this, ibGridRowOperations()));
 }
 
-bool wxGridExt::MoveCursorDown(bool expandSelection)
+bool ibGrid::MoveCursorDown(bool expandSelection)
 {
 	return DoMoveCursor(DummyKeyboardState(expandSelection),
-		wxGridExtForwardOperations(this, wxGridExtRowOperations()));
+		ibGridForwardOperations(this, ibGridRowOperations()));
 }
 
-bool wxGridExt::MoveCursorLeft(bool expandSelection)
+bool ibGrid::MoveCursorLeft(bool expandSelection)
 {
 	return DoMoveCursor(DummyKeyboardState(expandSelection),
-		wxGridExtBackwardOperations(this, wxGridExtColumnOperations()));
+		ibGridBackwardOperations(this, ibGridColumnOperations()));
 }
 
-bool wxGridExt::MoveCursorRight(bool expandSelection)
+bool ibGrid::MoveCursorRight(bool expandSelection)
 {
 	return DoMoveCursor(DummyKeyboardState(expandSelection),
-		wxGridExtForwardOperations(this, wxGridExtColumnOperations()));
+		ibGridForwardOperations(this, ibGridColumnOperations()));
 }
 
 bool
-wxGridExt::AdvanceByPage(wxGridExtCellCoords& coords,
-	const wxGridExtDirectionOperations& diroper)
+ibGrid::AdvanceByPage(ibGridCellCoords& coords,
+	const ibGridDirectionOperations& diroper)
 {
 	if (diroper.IsAtBoundary(coords))
 		return false;
@@ -9442,10 +9571,10 @@ wxGridExt::AdvanceByPage(wxGridExtCellCoords& coords,
 }
 
 bool
-wxGridExt::DoMoveCursorByPage(const wxKeyboardState& kbdState,
-	const wxGridExtDirectionOperations& diroper)
+ibGrid::DoMoveCursorByPage(const wxKeyboardState& kbdState,
+	const ibGridDirectionOperations& diroper)
 {
-	if (m_currentCellCoords == wxGridExtNoCellCoords)
+	if (m_currentCellCoords == ibGridNoCellCoords)
 		return false;
 
 	// We don't handle Ctrl-PageUp/Down, it's not really clear what are they
@@ -9458,7 +9587,7 @@ wxGridExt::DoMoveCursorByPage(const wxKeyboardState& kbdState,
 		if (!m_selection)
 			return false;
 
-		wxGridExtCellCoords coords = m_selection->GetExtensionAnchor();
+		ibGridCellCoords coords = m_selection->GetExtensionAnchor();
 		if (!AdvanceByPage(coords, diroper))
 			return false;
 
@@ -9467,7 +9596,7 @@ wxGridExt::DoMoveCursorByPage(const wxKeyboardState& kbdState,
 	}
 	else
 	{
-		wxGridExtCellCoords coords(m_currentCellCoords);
+		ibGridCellCoords coords(m_currentCellCoords);
 		if (!AdvanceByPage(coords, diroper))
 			return false;
 
@@ -9478,23 +9607,23 @@ wxGridExt::DoMoveCursorByPage(const wxKeyboardState& kbdState,
 	return true;
 }
 
-bool wxGridExt::MovePageUp()
+bool ibGrid::MovePageUp()
 {
 	return DoMoveCursorByPage(DummyKeyboardState(false),
-		wxGridExtBackwardOperations(this, wxGridExtRowOperations()));
+		ibGridBackwardOperations(this, ibGridRowOperations()));
 }
 
-bool wxGridExt::MovePageDown()
+bool ibGrid::MovePageDown()
 {
 	return DoMoveCursorByPage(DummyKeyboardState(false),
-		wxGridExtForwardOperations(this, wxGridExtRowOperations()));
+		ibGridForwardOperations(this, ibGridRowOperations()));
 }
 
 // helper of DoMoveCursorByBlock(): advance the cell coordinates using diroper
 // until we find a non-empty cell or reach the grid end
 void
-wxGridExt::AdvanceToNextNonEmpty(wxGridExtCellCoords& coords,
-	const wxGridExtDirectionOperations& diroper)
+ibGrid::AdvanceToNextNonEmpty(ibGridCellCoords& coords,
+	const ibGridDirectionOperations& diroper)
 {
 	while (!diroper.IsAtBoundary(coords))
 	{
@@ -9505,8 +9634,8 @@ wxGridExt::AdvanceToNextNonEmpty(wxGridExtCellCoords& coords,
 }
 
 bool
-wxGridExt::AdvanceByBlock(wxGridExtCellCoords& coords,
-	const wxGridExtDirectionOperations& diroper)
+ibGrid::AdvanceByBlock(ibGridCellCoords& coords,
+	const ibGridDirectionOperations& diroper)
 {
 	if (m_table->IsEmpty(coords))
 	{
@@ -9529,7 +9658,7 @@ wxGridExt::AdvanceByBlock(wxGridExtCellCoords& coords,
 			// empty one
 			while (!diroper.IsAtBoundary(coords))
 			{
-				wxGridExtCellCoords coordsNext(coords);
+				ibGridCellCoords coordsNext(coords);
 				diroper.Advance(coordsNext);
 				if (m_table->IsEmpty(coordsNext))
 					break;
@@ -9543,13 +9672,13 @@ wxGridExt::AdvanceByBlock(wxGridExtCellCoords& coords,
 }
 
 bool
-wxGridExt::DoMoveCursorByBlock(const wxKeyboardState& kbdState,
-	const wxGridExtDirectionOperations& diroper)
+ibGrid::DoMoveCursorByBlock(const wxKeyboardState& kbdState,
+	const ibGridDirectionOperations& diroper)
 {
 	if (!m_table)
 		return false;
 
-	wxGridExtCellCoords coords(m_currentCellCoords);
+	ibGridCellCoords coords(m_currentCellCoords);
 	if (kbdState.ShiftDown())
 	{
 		if (!m_selection)
@@ -9570,7 +9699,7 @@ wxGridExt::DoMoveCursorByBlock(const wxKeyboardState& kbdState,
 		//
 		// So instead of using the anchor itself here, use only its component
 		// component in "our" direction with the current cell component.
-		const wxGridExtCellCoords anchor = m_selection->GetExtensionAnchor();
+		const ibGridCellCoords anchor = m_selection->GetExtensionAnchor();
 
 		// This is a really ugly hack that we use to check if we're moving by
 		// rows or columns here, but it's not worth adding a specific method
@@ -9621,35 +9750,35 @@ wxGridExt::DoMoveCursorByBlock(const wxKeyboardState& kbdState,
 	return true;
 }
 
-bool wxGridExt::MoveCursorUpBlock(bool expandSelection)
+bool ibGrid::MoveCursorUpBlock(bool expandSelection)
 {
 	return DoMoveCursorByBlock(
 		DummyKeyboardState(expandSelection),
-		wxGridExtBackwardOperations(this, wxGridExtRowOperations())
+		ibGridBackwardOperations(this, ibGridRowOperations())
 	);
 }
 
-bool wxGridExt::MoveCursorDownBlock(bool expandSelection)
+bool ibGrid::MoveCursorDownBlock(bool expandSelection)
 {
 	return DoMoveCursorByBlock(
 		DummyKeyboardState(expandSelection),
-		wxGridExtForwardOperations(this, wxGridExtRowOperations())
+		ibGridForwardOperations(this, ibGridRowOperations())
 	);
 }
 
-bool wxGridExt::MoveCursorLeftBlock(bool expandSelection)
+bool ibGrid::MoveCursorLeftBlock(bool expandSelection)
 {
 	return DoMoveCursorByBlock(
 		DummyKeyboardState(expandSelection),
-		wxGridExtBackwardOperations(this, wxGridExtColumnOperations())
+		ibGridBackwardOperations(this, ibGridColumnOperations())
 	);
 }
 
-bool wxGridExt::MoveCursorRightBlock(bool expandSelection)
+bool ibGrid::MoveCursorRightBlock(bool expandSelection)
 {
 	return DoMoveCursorByBlock(
 		DummyKeyboardState(expandSelection),
-		wxGridExtForwardOperations(this, wxGridExtColumnOperations())
+		ibGridForwardOperations(this, ibGridColumnOperations())
 	);
 }
 
@@ -9657,7 +9786,7 @@ bool wxGridExt::MoveCursorRightBlock(bool expandSelection)
 // ------ Label values and formatting
 //
 
-void wxGridExt::GetRowLabelAlignment(int* horiz, int* vert) const
+void ibGrid::GetRowLabelAlignment(int* horiz, int* vert) const
 {
 	if (horiz)
 		*horiz = m_rowLabelHorizAlign;
@@ -9665,7 +9794,7 @@ void wxGridExt::GetRowLabelAlignment(int* horiz, int* vert) const
 		*vert = m_rowLabelVertAlign;
 }
 
-void wxGridExt::GetColLabelAlignment(int* horiz, int* vert) const
+void ibGrid::GetColLabelAlignment(int* horiz, int* vert) const
 {
 	if (horiz)
 		*horiz = m_colLabelHorizAlign;
@@ -9673,12 +9802,12 @@ void wxGridExt::GetColLabelAlignment(int* horiz, int* vert) const
 		*vert = m_colLabelVertAlign;
 }
 
-int wxGridExt::GetColLabelTextOrientation() const
+int ibGrid::GetColLabelTextOrientation() const
 {
 	return m_colLabelTextOrientation;
 }
 
-void wxGridExt::GetCornerLabelAlignment(int* horiz, int* vert) const
+void ibGrid::GetCornerLabelAlignment(int* horiz, int* vert) const
 {
 	if (horiz)
 		*horiz = m_cornerLabelHorizAlign;
@@ -9686,18 +9815,18 @@ void wxGridExt::GetCornerLabelAlignment(int* horiz, int* vert) const
 		*vert = m_cornerLabelVertAlign;
 }
 
-int wxGridExt::GetCornerLabelTextOrientation() const
+int ibGrid::GetCornerLabelTextOrientation() const
 {
 	return m_cornerLabelTextOrientation;
 }
 
-int wxGridExt::GetRowAreaValue(int row, wxString* areaLabel) const
+int ibGrid::GetRowAreaValue(int row, wxString* areaLabel) const
 {
 	int result = 0;
 
 	for (unsigned int n = 0; n < m_rowAreaAt.size(); n++) {
 
-		const wxGridExtCellArea& entry = m_rowAreaAt[n];
+		const ibGridCellArea& entry = m_rowAreaAt[n];
 
 		if (row >= entry.m_start && row <= entry.m_end)
 			result += 1;
@@ -9716,7 +9845,7 @@ int wxGridExt::GetRowAreaValue(int row, wxString* areaLabel) const
 	return result;
 }
 
-wxString wxGridExt::GetRowLabelValue(int row) const
+wxString ibGrid::GetRowLabelValue(int row) const
 {
 	if (m_table)
 	{
@@ -9730,13 +9859,13 @@ wxString wxGridExt::GetRowLabelValue(int row) const
 	}
 }
 
-int wxGridExt::GetColAreaValue(int col, wxString* areaLabel) const
+int ibGrid::GetColAreaValue(int col, wxString* areaLabel) const
 {
 	int result = 0;
 
 	for (unsigned int n = 0; n < m_colAreaAt.size(); n++) {
 
-		const wxGridExtCellArea& entry = m_colAreaAt[n];
+		const ibGridCellArea& entry = m_colAreaAt[n];
 
 		if (col >= entry.m_start && col <= entry.m_end)
 			result += 1;
@@ -9755,7 +9884,7 @@ int wxGridExt::GetColAreaValue(int col, wxString* areaLabel) const
 	return result;
 }
 
-wxString wxGridExt::GetColLabelValue(int col) const
+wxString ibGrid::GetColLabelValue(int col) const
 {
 	if (m_table)
 	{
@@ -9769,7 +9898,7 @@ wxString wxGridExt::GetColLabelValue(int col) const
 	}
 }
 
-wxString wxGridExt::GetCornerLabelValue() const
+wxString ibGrid::GetCornerLabelValue() const
 {
 	if (m_table)
 	{
@@ -9781,7 +9910,7 @@ wxString wxGridExt::GetCornerLabelValue() const
 	}
 }
 
-void wxGridExt::SetRowLabelSize(int width)
+void ibGrid::SetRowLabelSize(int width)
 {
 	wxASSERT(width >= 0 || width == wxGRID_AUTOSIZE);
 
@@ -9790,7 +9919,7 @@ void wxGridExt::SetRowLabelSize(int width)
 		width = CalcColOrRowLabelAreaMinSize(wxGRID_ROW);
 	}
 
-	if (width != wxCalcGridScale(m_rowLabelWidth, GetGridZoom()))
+	if (width != ibCalcGridScale(m_rowLabelWidth, GetGridZoom()))
 	{
 		if (width == 0)
 		{
@@ -9798,7 +9927,7 @@ void wxGridExt::SetRowLabelSize(int width)
 			m_rowLabelWin->Show(false);
 			m_cornerLabelWin->Show(false);
 		}
-		else if (wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) == 0)
+		else if (ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) == 0)
 		{
 			if (GridRowAreaEnabled())
 				m_rowAreaWin->Show(true);
@@ -9814,7 +9943,7 @@ void wxGridExt::SetRowLabelSize(int width)
 	}
 }
 
-void wxGridExt::SetColLabelSize(int height)
+void ibGrid::SetColLabelSize(int height)
 {
 	wxASSERT(height >= 0 || height == wxGRID_AUTOSIZE);
 
@@ -9838,7 +9967,7 @@ void wxGridExt::SetColLabelSize(int height)
 
 			m_colLabelWin->Show(true);
 
-			if (wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) > 0)
+			if (ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) > 0)
 				m_cornerLabelWin->Show(true);
 		}
 
@@ -9849,7 +9978,7 @@ void wxGridExt::SetColLabelSize(int height)
 	}
 }
 
-void wxGridExt::SetLabelBackgroundColour(const wxColour& colour)
+void ibGrid::SetLabelBackgroundColour(const wxColour& colour)
 {
 	if (m_labelBackgroundColour != colour)
 	{
@@ -9889,7 +10018,7 @@ void wxGridExt::SetLabelBackgroundColour(const wxColour& colour)
 	}
 }
 
-void wxGridExt::SetLabelTextColour(const wxColour& colour)
+void ibGrid::SetLabelTextColour(const wxColour& colour)
 {
 	if (m_labelTextColour != colour)
 	{
@@ -9908,7 +10037,7 @@ void wxGridExt::SetLabelTextColour(const wxColour& colour)
 	}
 }
 
-void wxGridExt::SetLabelFont(const wxFont& font)
+void ibGrid::SetLabelFont(const wxFont& font)
 {
 	m_labelFont = font;
 
@@ -9924,7 +10053,7 @@ void wxGridExt::SetLabelFont(const wxFont& font)
 	}
 }
 
-void wxGridExt::SetRowLabelAlignment(int horiz, int vert)
+void ibGrid::SetRowLabelAlignment(int horiz, int vert)
 {
 	// allow old (incorrect) defs to be used
 	switch (horiz)
@@ -9958,7 +10087,7 @@ void wxGridExt::SetRowLabelAlignment(int horiz, int vert)
 	}
 }
 
-void wxGridExt::SetColLabelAlignment(int horiz, int vert)
+void ibGrid::SetColLabelAlignment(int horiz, int vert)
 {
 	// allow old (incorrect) defs to be used
 	switch (horiz)
@@ -9992,7 +10121,7 @@ void wxGridExt::SetColLabelAlignment(int horiz, int vert)
 	}
 }
 
-void wxGridExt::SetCornerLabelAlignment(int horiz, int vert)
+void ibGrid::SetCornerLabelAlignment(int horiz, int vert)
 {
 	// allow old (incorrect) defs to be used
 	switch (horiz)
@@ -10025,7 +10154,7 @@ void wxGridExt::SetCornerLabelAlignment(int horiz, int vert)
 	}
 }
 
-void wxGridExt::SetGridZoom(int point)
+void ibGrid::SetGridZoom(int point)
 {
 	const float zoomScale = m_zoomScale + (point * 0.25f);
 
@@ -10054,7 +10183,7 @@ void wxGridExt::SetGridZoom(int point)
 //      pGrid->SetLabelFont(wxFontInfo(9).Family(wxFONTFAMILY_SWISS));
 //      pGrid->SetColLabelTextOrientation(wxVERTICAL);
 //
-void wxGridExt::SetColLabelTextOrientation(int textOrientation)
+void ibGrid::SetColLabelTextOrientation(int textOrientation)
 {
 	if (textOrientation == wxHORIZONTAL || textOrientation == wxVERTICAL)
 		m_colLabelTextOrientation = textOrientation;
@@ -10066,7 +10195,7 @@ void wxGridExt::SetColLabelTextOrientation(int textOrientation)
 	}
 }
 
-void wxGridExt::SetCornerLabelTextOrientation(int textOrientation)
+void ibGrid::SetCornerLabelTextOrientation(int textOrientation)
 {
 	if (textOrientation == wxHORIZONTAL || textOrientation == wxVERTICAL)
 		m_cornerLabelTextOrientation = textOrientation;
@@ -10075,7 +10204,7 @@ void wxGridExt::SetCornerLabelTextOrientation(int textOrientation)
 		m_cornerLabelWin->Refresh();
 }
 
-void wxGridExt::SetRowLabelValue(int row, const wxString& s)
+void ibGrid::SetRowLabelValue(int row, const wxString& s)
 {
 	if (m_table)
 	{
@@ -10088,7 +10217,7 @@ void wxGridExt::SetRowLabelValue(int row, const wxString& s)
 				CalcScrolledPosition(0, rect.y, &rect.x, &rect.y);
 
 				rect.x = 0;
-				rect.width = wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
+				rect.width = ibCalcGridScale(m_rowLabelWidth, GetGridZoom());
 
 				m_rowAreaWin->Refresh(true, &rect);
 				m_rowLabelWin->Refresh(true, &rect);
@@ -10097,7 +10226,7 @@ void wxGridExt::SetRowLabelValue(int row, const wxString& s)
 	}
 }
 
-void wxGridExt::SetColLabelValue(int col, const wxString& s)
+void ibGrid::SetColLabelValue(int col, const wxString& s)
 {
 	if (m_table)
 	{
@@ -10115,7 +10244,7 @@ void wxGridExt::SetColLabelValue(int col, const wxString& s)
 				{
 					CalcScrolledPosition(rect.x, 0, &rect.x, &rect.y);
 					rect.y = 0;
-					rect.height = (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
+					rect.height = (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom());
 					GetColLabelWindow()->Refresh(true, &rect);
 				}
 			}
@@ -10123,7 +10252,7 @@ void wxGridExt::SetColLabelValue(int col, const wxString& s)
 	}
 }
 
-void wxGridExt::SetCornerLabelValue(const wxString& s)
+void ibGrid::SetCornerLabelValue(const wxString& s)
 {
 	if (m_table)
 	{
@@ -10136,7 +10265,7 @@ void wxGridExt::SetCornerLabelValue(const wxString& s)
 	}
 }
 
-void wxGridExt::SetGridLineColour(const wxColour& colour)
+void ibGrid::SetGridLineColour(const wxColour& colour)
 {
 	if (m_gridLineColour != colour)
 	{
@@ -10147,7 +10276,7 @@ void wxGridExt::SetGridLineColour(const wxColour& colour)
 	}
 }
 
-void wxGridExt::SetCellHighlightColour(const wxColour& colour)
+void ibGrid::SetCellHighlightColour(const wxColour& colour)
 {
 	if (m_cellHighlightColour != colour)
 	{
@@ -10157,7 +10286,7 @@ void wxGridExt::SetCellHighlightColour(const wxColour& colour)
 	}
 }
 
-void wxGridExt::SetCellHighlightPenWidth(int width)
+void ibGrid::SetCellHighlightPenWidth(int width)
 {
 	if (m_cellHighlightPenWidth != width)
 	{
@@ -10171,12 +10300,12 @@ void wxGridExt::SetCellHighlightPenWidth(int width)
 			return;
 
 		wxRect rect = CellToRect(row, col);
-		wxGridExtWindow* gridWindow = CellToGridWindow(row, col);
+		ibGridWindow* gridWindow = CellToGridWindow(row, col);
 		gridWindow->Refresh(true, &rect);
 	}
 }
 
-void wxGridExt::SetCellHighlightROPenWidth(int width)
+void ibGrid::SetCellHighlightROPenWidth(int width)
 {
 	if (m_cellHighlightROPenWidth != width)
 	{
@@ -10191,12 +10320,12 @@ void wxGridExt::SetCellHighlightROPenWidth(int width)
 			return;
 
 		wxRect rect = CellToRect(row, col);
-		wxGridExtWindow* gridWindow = CellToGridWindow(row, col);
+		ibGridWindow* gridWindow = CellToGridWindow(row, col);
 		gridWindow->Refresh(true, &rect);
 	}
 }
 
-void wxGridExt::SetGridFrozenBorderColour(const wxColour& colour)
+void ibGrid::SetGridFrozenBorderColour(const wxColour& colour)
 {
 	if (m_gridFrozenBorderColour != colour)
 	{
@@ -10212,7 +10341,7 @@ void wxGridExt::SetGridFrozenBorderColour(const wxColour& colour)
 	}
 }
 
-void wxGridExt::SetGridFrozenBorderPenWidth(int width)
+void ibGrid::SetGridFrozenBorderPenWidth(int width)
 {
 	if (m_gridFrozenBorderPenWidth != width)
 	{
@@ -10228,7 +10357,7 @@ void wxGridExt::SetGridFrozenBorderPenWidth(int width)
 	}
 }
 
-void wxGridExt::RedrawGridLines()
+void ibGrid::RedrawGridLines()
 {
 	// the lines will be redrawn when the window is thawed or shown
 	if (!ShouldRefresh())
@@ -10244,7 +10373,7 @@ void wxGridExt::RedrawGridLines()
 		m_frozenCornerGridWin->Refresh();
 }
 
-void wxGridExt::EnableGridLines(bool enable)
+void ibGrid::EnableGridLines(bool enable)
 {
 	if (enable != m_gridLinesEnabled)
 	{
@@ -10254,7 +10383,7 @@ void wxGridExt::EnableGridLines(bool enable)
 	}
 }
 
-void wxGridExt::DoClipGridLines(bool& var, bool clip)
+void ibGrid::DoClipGridLines(bool& var, bool clip)
 {
 	if (clip != var)
 	{
@@ -10265,24 +10394,24 @@ void wxGridExt::DoClipGridLines(bool& var, bool clip)
 	}
 }
 
-int wxGridExt::GetDefaultRowSize(float scale) const
+int ibGrid::GetDefaultRowSize(float scale) const
 {
-	return wxCalcGridScale(m_defaultRowHeight, scale);
+	return ibCalcGridScale(m_defaultRowHeight, scale);
 }
 
-int wxGridExt::GetRowSize(int row, float scale) const
+int ibGrid::GetRowSize(int row, float scale) const
 {
 	wxCHECK_MSG(row >= 0 && row < m_numRows, 0, wxT("invalid row index"));
 
 	return GetRowHeight(row, scale);
 }
 
-int wxGridExt::GetDefaultColSize(float scale) const
+int ibGrid::GetDefaultColSize(float scale) const
 {
-	return wxCalcGridScale(m_defaultColWidth, scale);
+	return ibCalcGridScale(m_defaultColWidth, scale);
 }
 
-int wxGridExt::GetColSize(int col, float scale) const
+int ibGrid::GetColSize(int col, float scale) const
 {
 	wxCHECK_MSG(col >= 0 && col < m_numCols, 0, wxT("invalid column index"));
 
@@ -10298,7 +10427,7 @@ int wxGridExt::GetColSize(int col, float scale) const
 // setting default attributes
 // ----------------------------------------------------------------------------
 
-void wxGridExt::SetDefaultCellBackgroundColour(const wxColour& col)
+void ibGrid::SetDefaultCellBackgroundColour(const wxColour& col)
 {
 	m_defaultCellAttr->SetBackgroundColour(col);
 #if defined(__WXGTK__) || defined(__WXQT__)
@@ -10306,47 +10435,47 @@ void wxGridExt::SetDefaultCellBackgroundColour(const wxColour& col)
 #endif
 }
 
-void wxGridExt::SetDefaultCellTextColour(const wxColour& col)
+void ibGrid::SetDefaultCellTextColour(const wxColour& col)
 {
 	m_defaultCellAttr->SetTextColour(col);
 }
 
-void wxGridExt::SetDefaultCellTextOrient(const int& orient)
+void ibGrid::SetDefaultCellTextOrient(const int& orient)
 {
 	m_defaultCellAttr->SetTextOrient(orient);
 }
 
-void wxGridExt::SetDefaultCellAlignment(int horiz, int vert)
+void ibGrid::SetDefaultCellAlignment(int horiz, int vert)
 {
 	m_defaultCellAttr->SetAlignment(horiz, vert);
 }
 
-void wxGridExt::SetDefaultCellFitMode(wxGridExtFitMode fitMode)
+void ibGrid::SetDefaultCellFitMode(ibGridFitMode fitMode)
 {
 	m_defaultCellAttr->SetFitMode(fitMode);
 }
 
-void wxGridExt::SetDefaultCellFont(const wxFont& font)
+void ibGrid::SetDefaultCellFont(const wxFont& font)
 {
 	m_defaultCellAttr->SetFont(font);
 }
 
-void wxGridExt::SetDefaultCellBorderLeft(wxPenStyle style, const wxColour& colour, int width)
+void ibGrid::SetDefaultCellBorderLeft(wxPenStyle style, const wxColour& colour, int width)
 {
 	m_defaultCellAttr->SetBorderLeft(style, colour, width);
 }
 
-void wxGridExt::SetDefaultCellBorderRight(wxPenStyle style, const wxColour& colour, int width)
+void ibGrid::SetDefaultCellBorderRight(wxPenStyle style, const wxColour& colour, int width)
 {
 	m_defaultCellAttr->SetBorderRight(style, colour, width);
 }
 
-void wxGridExt::SetDefaultCellBorderTop(wxPenStyle style, const wxColour& colour, int width)
+void ibGrid::SetDefaultCellBorderTop(wxPenStyle style, const wxColour& colour, int width)
 {
 	m_defaultCellAttr->SetBorderTop(style, colour, width);
 }
 
-void wxGridExt::SetDefaultCellBorderBottom(wxPenStyle style, const wxColour& colour, int width)
+void ibGrid::SetDefaultCellBorderBottom(wxPenStyle style, const wxColour& colour, int width)
 {
 	m_defaultCellAttr->SetBorderBottom(style, colour, width);
 }
@@ -10356,14 +10485,14 @@ void wxGridExt::SetDefaultCellBorderBottom(wxPenStyle style, const wxColour& col
 // data type in order to make setting a default editor/renderer appear to
 // work correctly.
 
-void wxGridExt::SetDefaultRenderer(wxGridExtCellRenderer* renderer)
+void ibGrid::SetDefaultRenderer(ibGridCellRenderer* renderer)
 {
 	RegisterDataType(wxGRID_VALUE_STRING,
 		renderer,
 		GetDefaultEditorForType(wxGRID_VALUE_STRING));
 }
 
-void wxGridExt::SetDefaultEditor(wxGridExtCellEditor* editor)
+void ibGrid::SetDefaultEditor(ibGridCellEditor* editor)
 {
 	RegisterDataType(wxGRID_VALUE_STRING,
 		GetDefaultRendererForType(wxGRID_VALUE_STRING),
@@ -10374,57 +10503,57 @@ void wxGridExt::SetDefaultEditor(wxGridExtCellEditor* editor)
 // access to the default attributes
 // ----------------------------------------------------------------------------
 
-wxColour wxGridExt::GetDefaultCellBackgroundColour() const
+wxColour ibGrid::GetDefaultCellBackgroundColour() const
 {
 	return m_defaultCellAttr->GetBackgroundColour();
 }
 
-wxColour wxGridExt::GetDefaultCellTextColour() const
+wxColour ibGrid::GetDefaultCellTextColour() const
 {
 	return m_defaultCellAttr->GetTextColour();
 }
 
-wxFont wxGridExt::GetDefaultCellFont() const
+wxFont ibGrid::GetDefaultCellFont() const
 {
 	return m_defaultCellAttr->GetFont();
 }
 
-void wxGridExt::GetDefaultCellAlignment(int* horiz, int* vert) const
+void ibGrid::GetDefaultCellAlignment(int* horiz, int* vert) const
 {
 	m_defaultCellAttr->GetAlignment(horiz, vert);
 }
 
-wxGridExtCellBorder wxGridExt::GetDefaultCellBorderLeft() const
+ibGridCellBorder ibGrid::GetDefaultCellBorderLeft() const
 {
 	return m_defaultCellAttr->GetBorderLeft();
 }
 
-wxGridExtCellBorder wxGridExt::GetDefaultCellBorderRight() const
+ibGridCellBorder ibGrid::GetDefaultCellBorderRight() const
 {
 	return m_defaultCellAttr->GetBorderRight();
 }
 
-wxGridExtCellBorder wxGridExt::GetDefaultCellBorderTop() const
+ibGridCellBorder ibGrid::GetDefaultCellBorderTop() const
 {
 	return m_defaultCellAttr->GetBorderTop();
 }
 
-wxGridExtCellBorder wxGridExt::GetDefaultCellBorderBottom() const
+ibGridCellBorder ibGrid::GetDefaultCellBorderBottom() const
 {
 	return m_defaultCellAttr->GetBorderBottom();
 }
 
-wxGridExtFitMode wxGridExt::GetDefaultCellFitMode() const
+ibGridFitMode ibGrid::GetDefaultCellFitMode() const
 {
 	return m_defaultCellAttr->GetFitMode();
 }
 
-wxGridExtCellRenderer* wxGridExt::GetDefaultRenderer() const
+ibGridCellRenderer* ibGrid::GetDefaultRenderer() const
 {
 	return m_defaultCellAttr->GetRenderer(NULL, 0, 0);
 }
 
-wxGridExtCellEditor* wxGridExt::GetDefaultEditor() const
+ibGridCellEditor* ibGrid::GetDefaultEditor() const
 {
 	return m_defaultCellAttr->GetEditor(NULL, 0, 0);
 }
@@ -10433,60 +10562,60 @@ wxGridExtCellEditor* wxGridExt::GetDefaultEditor() const
 // access to cell attributes
 // ----------------------------------------------------------------------------
 
-wxColour wxGridExt::GetCellBackgroundColour(int row, int col) const
+wxColour ibGrid::GetCellBackgroundColour(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetBackgroundColour();
 }
 
-wxColour wxGridExt::GetCellTextColour(int row, int col) const
+wxColour ibGrid::GetCellTextColour(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetTextColour();
 }
 
-int wxGridExt::GetCellTextOrient(int row, int col) const
+int ibGrid::GetCellTextOrient(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetTextOrient();
 }
 
-wxFont wxGridExt::GetCellFont(int row, int col, float scale) const
+wxFont ibGrid::GetCellFont(int row, int col, float scale) const
 {
 	return GetCellAttrPtr(row, col)->GetFont(scale);
 }
 
-void wxGridExt::GetCellAlignment(int row, int col, int* horiz, int* vert) const
+void ibGrid::GetCellAlignment(int row, int col, int* horiz, int* vert) const
 {
 	return  GetCellAttrPtr(row, col)->GetAlignment(horiz, vert);
 }
 
-wxGridExtCellBorder wxGridExt::GetCellBorderLeft(int row, int col) const
+ibGridCellBorder ibGrid::GetCellBorderLeft(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetBorderLeft();
 }
 
-wxGridExtCellBorder wxGridExt::GetCellBorderRight(int row, int col) const
+ibGridCellBorder ibGrid::GetCellBorderRight(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetBorderRight();
 }
 
-wxGridExtCellBorder wxGridExt::GetCellBorderTop(int row, int col) const
+ibGridCellBorder ibGrid::GetCellBorderTop(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetBorderTop();
 }
 
-wxGridExtCellBorder wxGridExt::GetCellBorderBottom(int row, int col) const
+ibGridCellBorder ibGrid::GetCellBorderBottom(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetBorderBottom();
 }
 
-wxGridExtFitMode wxGridExt::GetCellFitMode(int row, int col) const
+ibGridFitMode ibGrid::GetCellFitMode(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetFitMode();
 }
 
-wxGridExtCellArea* wxGridExt::GetRowArea(int row) const
+ibGridCellArea* ibGrid::GetRowArea(int row) const
 {
 	for (size_t pos = 0; pos < m_rowAreaAt.size(); pos++) {
-		wxGridExtCellArea& entry = m_rowAreaAt[pos];
+		ibGridCellArea& entry = m_rowAreaAt[pos];
 		if (entry.m_start <= row && entry.m_end >= row)
 			return &entry;
 	}
@@ -10494,10 +10623,10 @@ wxGridExtCellArea* wxGridExt::GetRowArea(int row) const
 	return NULL;
 }
 
-wxGridExtCellArea* wxGridExt::GetColArea(int col) const
+ibGridCellArea* ibGrid::GetColArea(int col) const
 {
 	for (size_t pos = 0; pos < m_colAreaAt.size(); pos++) {
-		wxGridExtCellArea& entry = m_colAreaAt[pos];
+		ibGridCellArea& entry = m_colAreaAt[pos];
 		if (entry.m_start <= col && entry.m_end >= col)
 			return &entry;
 	}
@@ -10505,25 +10634,25 @@ wxGridExtCellArea* wxGridExt::GetColArea(int col) const
 	return NULL;
 }
 
-wxGridExt::CellSpan
-wxGridExt::GetCellSize(int row, int col, int* num_rows, int* num_cols) const
+ibGrid::CellSpan
+ibGrid::GetCellSize(int row, int col, int* num_rows, int* num_cols) const
 {
 	GetCellAttrPtr(row, col)->GetSize(num_rows, num_cols);
 
 	return GetCellSpan(*num_rows, *num_cols);
 }
 
-wxGridExtCellRenderer* wxGridExt::GetCellRenderer(int row, int col) const
+ibGridCellRenderer* ibGrid::GetCellRenderer(int row, int col) const
 {
 	return  GetCellAttrPtr(row, col)->GetRenderer(this, row, col);
 }
 
-wxGridExtCellEditor* wxGridExt::GetCellEditor(int row, int col) const
+ibGridCellEditor* ibGrid::GetCellEditor(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->GetEditor(this, row, col);
 }
 
-bool wxGridExt::IsCellReadOnly(int row, int col) const
+bool ibGrid::IsCellReadOnly(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->IsReadOnly();
 }
@@ -10532,7 +10661,7 @@ bool wxGridExt::IsCellReadOnly(int row, int col) const
 // area support: cache, automatic creation, ...
 // ----------------------------------------------------------------------------
 
-void wxGridExt::InsertRowArea(size_t index, wxGridExtCellArea& entry)
+void ibGrid::InsertRowArea(size_t index, ibGridCellArea& entry)
 {
 	m_rowAreaAt.Insert(entry, index);
 
@@ -10542,7 +10671,7 @@ void wxGridExt::InsertRowArea(size_t index, wxGridExtCellArea& entry)
 	CalcDimensions();
 }
 
-void wxGridExt::InsertColArea(size_t index, wxGridExtCellArea& entry)
+void ibGrid::InsertColArea(size_t index, ibGridCellArea& entry)
 {
 	m_colAreaAt.Insert(entry, index);
 
@@ -10552,7 +10681,7 @@ void wxGridExt::InsertColArea(size_t index, wxGridExtCellArea& entry)
 	CalcDimensions();
 }
 
-void wxGridExt::SetRowAreaStartSize(int idx, int w)
+void ibGrid::SetRowAreaStartSize(int idx, int w)
 {
 	if (idx > (int)m_rowAreaAt.Count())
 		return;
@@ -10562,7 +10691,7 @@ void wxGridExt::SetRowAreaStartSize(int idx, int w)
 	CalcDimensions();
 }
 
-void wxGridExt::SetRowAreaEndSize(int idx, int w)
+void ibGrid::SetRowAreaEndSize(int idx, int w)
 {
 	if (idx > (int)m_rowAreaAt.Count())
 		return;
@@ -10572,7 +10701,7 @@ void wxGridExt::SetRowAreaEndSize(int idx, int w)
 	CalcDimensions();
 }
 
-int wxGridExt::GetRowAreaStartSize(int idx)
+int ibGrid::GetRowAreaStartSize(int idx)
 {
 	if (idx > (int)m_rowAreaAt.Count())
 		return -1;
@@ -10580,7 +10709,7 @@ int wxGridExt::GetRowAreaStartSize(int idx)
 	return m_rowAreaAt[idx].m_start;
 }
 
-int wxGridExt::GetRowAreaEndSize(int idx)
+int ibGrid::GetRowAreaEndSize(int idx)
 {
 	if (idx > (int)m_rowAreaAt.Count())
 		return -1;
@@ -10588,7 +10717,7 @@ int wxGridExt::GetRowAreaEndSize(int idx)
 	return m_rowAreaAt[idx].m_end;
 }
 
-void wxGridExt::SetColAreaStartSize(int idx, int w)
+void ibGrid::SetColAreaStartSize(int idx, int w)
 {
 	if (idx > (int)m_colAreaAt.Count())
 		return;
@@ -10598,7 +10727,7 @@ void wxGridExt::SetColAreaStartSize(int idx, int w)
 	CalcDimensions();
 }
 
-void wxGridExt::SetColAreaEndSize(int idx, int w)
+void ibGrid::SetColAreaEndSize(int idx, int w)
 {
 	if (idx > (int)m_colAreaAt.Count())
 		return;
@@ -10608,7 +10737,7 @@ void wxGridExt::SetColAreaEndSize(int idx, int w)
 	CalcDimensions();
 }
 
-int wxGridExt::GetColAreaStartSize(int idx)
+int ibGrid::GetColAreaStartSize(int idx)
 {
 	if (idx > (int)m_colAreaAt.Count())
 		return -1;
@@ -10616,7 +10745,7 @@ int wxGridExt::GetColAreaStartSize(int idx)
 	return m_colAreaAt[idx].m_start;
 }
 
-int wxGridExt::GetColAreaEndSize(int idx)
+int ibGrid::GetColAreaEndSize(int idx)
 {
 	if (idx > (int)m_colAreaAt.Count())
 		return -1;
@@ -10624,7 +10753,7 @@ int wxGridExt::GetColAreaEndSize(int idx)
 	return m_colAreaAt[idx].m_end;
 }
 
-void wxGridExt::SetRowAreaLabel(int idx, const wxString& label)
+void ibGrid::SetRowAreaLabel(int idx, const wxString& label)
 {
 	if (idx > (int)m_rowAreaAt.Count())
 		return;
@@ -10634,7 +10763,7 @@ void wxGridExt::SetRowAreaLabel(int idx, const wxString& label)
 	CalcDimensions();
 }
 
-void wxGridExt::SetColAreaLabel(int idx, const wxString& label)
+void ibGrid::SetColAreaLabel(int idx, const wxString& label)
 {
 	if (idx > (int)m_colAreaAt.Count())
 		return;
@@ -10644,7 +10773,7 @@ void wxGridExt::SetColAreaLabel(int idx, const wxString& label)
 	CalcDimensions();
 }
 
-wxString wxGridExt::GetRowAreaLabel(int idx)
+wxString ibGrid::GetRowAreaLabel(int idx)
 {
 	if (idx > (int)m_rowAreaAt.Count())
 		return wxT("");
@@ -10652,7 +10781,7 @@ wxString wxGridExt::GetRowAreaLabel(int idx)
 	return m_rowAreaAt[idx].m_areaLabel;
 }
 
-wxString wxGridExt::GetColAreaLabel(int idx)
+wxString ibGrid::GetColAreaLabel(int idx)
 {
 	if (idx > (int)m_colAreaAt.Count())
 		return wxT("");
@@ -10660,7 +10789,7 @@ wxString wxGridExt::GetColAreaLabel(int idx)
 	return m_colAreaAt[idx].m_areaLabel;
 }
 
-void wxGridExt::CreateArea()
+void ibGrid::CreateArea()
 {
 	if (m_selection != NULL)
 	{
@@ -10691,7 +10820,7 @@ void wxGridExt::CreateArea()
 	}
 }
 
-void wxGridExt::DeleteRowArea(size_t index)
+void ibGrid::DeleteRowArea(size_t index)
 {
 	if (index > m_rowAreaAt.GetCount())
 		return;
@@ -10701,7 +10830,7 @@ void wxGridExt::DeleteRowArea(size_t index)
 	CalcDimensions();
 }
 
-void wxGridExt::DeleteColArea(size_t index)
+void ibGrid::DeleteColArea(size_t index)
 {
 	if (index > m_colAreaAt.GetCount())
 		return;
@@ -10711,7 +10840,201 @@ void wxGridExt::DeleteColArea(size_t index)
 	CalcDimensions();
 }
 
-void wxGridExt::DeleteArea()
+// ----- outline groups (separate from areas) -------------------------------
+
+int ibGrid::AddRowGroup(int first, int last, int level, bool collapsed)
+{
+	ibGridCellGroup g; g.m_start = first; g.m_end = last;
+	g.m_level = wxMax(1, level); g.m_collapsed = collapsed;
+	m_rowGroupAt.push_back(g);
+	if (collapsed) for (int r = first; r <= last; ++r) HideRow(r);
+	return (int)m_rowGroupAt.size() - 1;
+}
+
+int ibGrid::AddColGroup(int first, int last, int level, bool collapsed)
+{
+	ibGridCellGroup g; g.m_start = first; g.m_end = last;
+	g.m_level = wxMax(1, level); g.m_collapsed = collapsed;
+	m_colGroupAt.push_back(g);
+	if (collapsed) for (int c = first; c <= last; ++c) HideCol(c);
+	return (int)m_colGroupAt.size() - 1;
+}
+
+void ibGrid::DeleteRowGroup(int idx)
+{
+	if (idx < 0 || (size_t)idx >= m_rowGroupAt.size()) return;
+	const ibGridCellGroup g = m_rowGroupAt[idx];
+	if (g.m_collapsed) for (int r = g.m_start; r <= g.m_end; ++r) ShowRow(r);
+	m_rowGroupAt.erase(m_rowGroupAt.begin() + idx);
+}
+
+void ibGrid::DeleteColGroup(int idx)
+{
+	if (idx < 0 || (size_t)idx >= m_colGroupAt.size()) return;
+	const ibGridCellGroup g = m_colGroupAt[idx];
+	if (g.m_collapsed) for (int c = g.m_start; c <= g.m_end; ++c) ShowCol(c);
+	m_colGroupAt.erase(m_colGroupAt.begin() + idx);
+}
+
+void ibGrid::SetRowGroupCollapsed(int idx, bool collapsed)
+{
+	if (idx < 0 || (size_t)idx >= m_rowGroupAt.size()) return;
+	ibGridCellGroup& g = m_rowGroupAt[idx];
+	if (g.m_collapsed == collapsed) return;
+	g.m_collapsed = collapsed;
+	for (int r = g.m_start; r <= g.m_end; ++r) {
+		if (collapsed) HideRow(r); else ShowRow(r);
+	}
+	if (m_rowOutlineWin) m_rowOutlineWin->Refresh();
+}
+
+void ibGrid::SetColGroupCollapsed(int idx, bool collapsed)
+{
+	if (idx < 0 || (size_t)idx >= m_colGroupAt.size()) return;
+	ibGridCellGroup& g = m_colGroupAt[idx];
+	if (g.m_collapsed == collapsed) return;
+	g.m_collapsed = collapsed;
+	for (int c = g.m_start; c <= g.m_end; ++c) {
+		if (collapsed) HideCol(c); else ShowCol(c);
+	}
+	if (m_colOutlineWin) m_colOutlineWin->Refresh();
+}
+
+bool ibGrid::ToggleRowGroup(int idx)
+{
+	if (idx < 0 || (size_t)idx >= m_rowGroupAt.size()) return false;
+	SetRowGroupCollapsed(idx, !m_rowGroupAt[idx].m_collapsed);
+	return m_rowGroupAt[idx].m_collapsed;
+}
+
+bool ibGrid::ToggleColGroup(int idx)
+{
+	if (idx < 0 || (size_t)idx >= m_colGroupAt.size()) return false;
+	SetColGroupCollapsed(idx, !m_colGroupAt[idx].m_collapsed);
+	return m_colGroupAt[idx].m_collapsed;
+}
+
+int ibGrid::GetMaxRowGroupLevel() const {
+	int mx = 0; for (const auto& g : m_rowGroupAt) mx = wxMax(mx, g.m_level); return mx;
+}
+int ibGrid::GetMaxColGroupLevel() const {
+	int mx = 0; for (const auto& g : m_colGroupAt) mx = wxMax(mx, g.m_level); return mx;
+}
+
+// Size of the outline button in pixels (square).
+static const int kOutlineBtnSize = 14;
+// Space taken per nesting level along the outline axis.
+static const int kOutlineLevelStep = 18;
+
+int ibGrid::GetRowOutlineSize() const {
+	const int mx = GetMaxRowGroupLevel();
+	return mx > 0 ? (mx * kOutlineLevelStep + 4) : 0;
+}
+int ibGrid::GetColOutlineSize() const {
+	const int mx = GetMaxColGroupLevel();
+	return mx > 0 ? (mx * kOutlineLevelStep + 4) : 0;
+}
+
+// Button rectangles are expressed in outline-pane local coords. Level 1 is
+// drawn furthest from the cells; deeper levels closer to the cells.
+wxRect ibGrid::GetRowGroupButtonRect(int idx) const
+{
+	if (idx < 0 || (size_t)idx >= m_rowGroupAt.size()) return wxRect();
+	const ibGridCellGroup& g = m_rowGroupAt[idx];
+	ibGrid* self = const_cast<ibGrid*>(this);
+	const int x = (g.m_level - 1) * kOutlineLevelStep + 2;
+	const int y = self->GetRowTop(g.m_start, self->GetGridZoom()) + 2;
+	return wxRect(x, y, kOutlineBtnSize, kOutlineBtnSize);
+}
+
+wxRect ibGrid::GetColGroupButtonRect(int idx) const
+{
+	if (idx < 0 || (size_t)idx >= m_colGroupAt.size()) return wxRect();
+	const ibGridCellGroup& g = m_colGroupAt[idx];
+	ibGrid* self = const_cast<ibGrid*>(this);
+	const int y = (g.m_level - 1) * kOutlineLevelStep + 2;
+	const int x = self->GetColLeft(g.m_start, self->GetGridZoom()) + 2;
+	return wxRect(x, y, kOutlineBtnSize, kOutlineBtnSize);
+}
+
+int ibGrid::HitTestRowOutlineButton(const wxPoint& pt) const
+{
+	for (size_t i = 0; i < m_rowGroupAt.size(); ++i) {
+		const wxRect r = GetRowGroupButtonRect((int)i);
+		if (!r.IsEmpty() && r.Contains(pt)) return (int)i;
+	}
+	return -1;
+}
+
+int ibGrid::HitTestColOutlineButton(const wxPoint& pt) const
+{
+	for (size_t i = 0; i < m_colGroupAt.size(); ++i) {
+		const wxRect r = GetColGroupButtonRect((int)i);
+		if (!r.IsEmpty() && r.Contains(pt)) return (int)i;
+	}
+	return -1;
+}
+
+static void DrawOutlineButton(wxDC& dc, const wxRect& btn, bool collapsed)
+{
+	// Flat, neat 10x10 button: thin 3D-shadow border, light background,
+	// centred minus bar (always) plus a vertical bar when collapsed — same
+	// visual language as Excel's outline buttons, no decorative brackets.
+	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW)));
+	dc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE)));
+	dc.DrawRectangle(btn);
+
+	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT)));
+	const int cy = btn.y + btn.height / 2;
+	const int cx = btn.x + btn.width / 2;
+	dc.DrawLine(btn.x + 2, cy, btn.GetRight() - 1, cy);
+	if (collapsed)
+		dc.DrawLine(cx, btn.y + 2, cx, btn.GetBottom() - 1);
+}
+
+void ibGrid::DrawRowOutline(wxDC& dc)
+{
+	const wxColour railColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
+	dc.SetPen(wxPen(railColour));
+	for (size_t i = 0; i < m_rowGroupAt.size(); ++i) {
+		const ibGridCellGroup& g = m_rowGroupAt[i];
+		if (g.m_collapsed) continue;
+		const wxRect btn = GetRowGroupButtonRect((int)i);
+		if (btn.IsEmpty()) continue;
+		const int railX = btn.x + btn.width / 2;
+		const int railTop = btn.GetBottom() + 1;
+		const int rowBottom = GetRowTop(g.m_end, GetGridZoom())
+			+ GetRowHeight(g.m_end, GetGridZoom()) - 1;
+		if (rowBottom > railTop) dc.DrawLine(railX, railTop, railX, rowBottom);
+	}
+	for (size_t i = 0; i < m_rowGroupAt.size(); ++i) {
+		const wxRect btn = GetRowGroupButtonRect((int)i);
+		if (!btn.IsEmpty()) DrawOutlineButton(dc, btn, m_rowGroupAt[i].m_collapsed);
+	}
+}
+
+void ibGrid::DrawColOutline(wxDC& dc)
+{
+	const wxColour railColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
+	dc.SetPen(wxPen(railColour));
+	for (size_t i = 0; i < m_colGroupAt.size(); ++i) {
+		const ibGridCellGroup& g = m_colGroupAt[i];
+		if (g.m_collapsed) continue;
+		const wxRect btn = GetColGroupButtonRect((int)i);
+		if (btn.IsEmpty()) continue;
+		const int railY = btn.y + btn.height / 2;
+		const int railLeft = btn.GetRight() + 1;
+		const int colRight = GetColLeft(g.m_end, GetGridZoom())
+			+ GetColWidth(g.m_end, GetGridZoom()) - 1;
+		if (colRight > railLeft) dc.DrawLine(railLeft, railY, colRight, railY);
+	}
+	for (size_t i = 0; i < m_colGroupAt.size(); ++i) {
+		const wxRect btn = GetColGroupButtonRect((int)i);
+		if (!btn.IsEmpty()) DrawOutlineButton(dc, btn, m_colGroupAt[i].m_collapsed);
+	}
+}
+
+void ibGrid::DeleteArea()
 {
 	if (m_selection != NULL)
 	{
@@ -10743,11 +11066,11 @@ void wxGridExt::DeleteArea()
 }
 
 //make new name
-bool wxGridExt::MakeRowAreaLabel(wxGridExtCellArea* rowArea)
+bool ibGrid::MakeRowAreaLabel(ibGridCellArea* rowArea)
 {
 	if (rowArea != NULL)
 	{
-		wxGridExtDialogInputArea dlg(this);
+		ibGridDialogInputArea dlg(this);
 		dlg.SetAreaLabel(rowArea->m_areaLabel);
 
 		if (dlg.ShowModal() == wxID_OK)
@@ -10786,7 +11109,7 @@ bool wxGridExt::MakeRowAreaLabel(wxGridExtCellArea* rowArea)
 				{
 					SendGridAreaEvent(wxEVT_GRID_ROW_AREA_NAME, index, *rowArea);
 
-					PushCommand<wxGridExtCommandAreaName>(index, wxGridExtCommandAreaName::AreaRow, newValue, oldValue);
+					PushCommand<ibGridCommandAreaName>(index, ibGridCommandAreaName::AreaRow, newValue, oldValue);
 				}
 
 				return true;
@@ -10799,11 +11122,11 @@ bool wxGridExt::MakeRowAreaLabel(wxGridExtCellArea* rowArea)
 	return false;
 }
 
-bool wxGridExt::MakeColAreaLabel(wxGridExtCellArea* colArea)
+bool ibGrid::MakeColAreaLabel(ibGridCellArea* colArea)
 {
 	if (colArea != NULL)
 	{
-		wxGridExtDialogInputArea dlg(this);
+		ibGridDialogInputArea dlg(this);
 		dlg.SetAreaLabel(colArea->m_areaLabel);
 
 		if (dlg.ShowModal() == wxID_OK)
@@ -10842,7 +11165,7 @@ bool wxGridExt::MakeColAreaLabel(wxGridExtCellArea* colArea)
 				{
 					SendGridAreaEvent(wxEVT_GRID_COL_AREA_NAME, index, *colArea);
 
-					PushCommand<wxGridExtCommandAreaName>(index, wxGridExtCommandAreaName::AreaCol, newValue, oldValue);
+					PushCommand<ibGridCommandAreaName>(index, ibGridCommandAreaName::AreaCol, newValue, oldValue);
 				}
 
 				return true;
@@ -10855,7 +11178,7 @@ bool wxGridExt::MakeColAreaLabel(wxGridExtCellArea* colArea)
 	return false;
 }
 
-void wxGridExt::AddRowBrake(int row)
+void ibGrid::AddRowBrake(int row)
 {
 	int index = m_rowBrakeAt.Index(row);
 	if (index != -1)
@@ -10872,7 +11195,7 @@ void wxGridExt::AddRowBrake(int row)
 	SendGridSizeEvent(wxEVT_GRID_ROW_BRAKE_ADD, row, e);
 }
 
-void wxGridExt::SetRowBrake(int row)
+void ibGrid::SetRowBrake(int row)
 {
 	if (m_table)
 	{
@@ -10896,7 +11219,7 @@ void wxGridExt::SetRowBrake(int row)
 	}
 }
 
-void wxGridExt::AddColBrake(int col)
+void ibGrid::AddColBrake(int col)
 {
 	int index = m_colBrakeAt.Index(col);
 	if (index != -1)
@@ -10913,7 +11236,7 @@ void wxGridExt::AddColBrake(int col)
 	SendGridSizeEvent(wxEVT_GRID_COL_BRAKE_ADD, col, e);
 }
 
-void wxGridExt::DeleteRowBrake(int row)
+void ibGrid::DeleteRowBrake(int row)
 {
 	int index = m_rowBrakeAt.Index(row);
 	if (index == -1)
@@ -10930,7 +11253,7 @@ void wxGridExt::DeleteRowBrake(int row)
 	SendGridSizeEvent(wxEVT_GRID_ROW_BRAKE_DELETE, row, e);
 }
 
-void wxGridExt::DeleteColBrake(int col)
+void ibGrid::DeleteColBrake(int col)
 {
 	int index = m_colBrakeAt.Index(col);
 	if (index == -1)
@@ -10948,7 +11271,7 @@ void wxGridExt::DeleteColBrake(int col)
 
 }
 
-void wxGridExt::SetColBrake(int col)
+void ibGrid::SetColBrake(int col)
 {
 	if (m_table)
 	{
@@ -10976,7 +11299,7 @@ void wxGridExt::SetColBrake(int col)
 // attribute support: cache, automatic provider creation, ...
 // ----------------------------------------------------------------------------
 
-bool wxGridExt::CanHaveAttributes() const
+bool ibGrid::CanHaveAttributes() const
 {
 	if (!m_table)
 	{
@@ -10986,11 +11309,11 @@ bool wxGridExt::CanHaveAttributes() const
 	return m_table->CanHaveAttributes();
 }
 
-void wxGridExt::ClearAttrCache()
+void ibGrid::ClearAttrCache()
 {
 	if (m_attrCache.row != -1)
 	{
-		wxGridExtCellAttr* oldAttr = m_attrCache.attr;
+		ibGridCellAttr* oldAttr = m_attrCache.attr;
 		m_attrCache.attr = NULL;
 		m_attrCache.row = -1;
 		// wxSafeDecRec(...) might cause event processing that accesses
@@ -11001,18 +11324,18 @@ void wxGridExt::ClearAttrCache()
 	}
 }
 
-void wxGridExt::RefreshAttr(int row, int col)
+void ibGrid::RefreshAttr(int row, int col)
 {
 	if (m_attrCache.row == row && m_attrCache.col == col)
 		ClearAttrCache();
 }
 
 
-void wxGridExt::CacheAttr(int row, int col, wxGridExtCellAttr* attr) const
+void ibGrid::CacheAttr(int row, int col, ibGridCellAttr* attr) const
 {
 	if (attr != NULL)
 	{
-		wxGridExt* const self = const_cast<wxGridExt*>(this);
+		ibGrid* const self = const_cast<ibGrid*>(this);
 
 		self->ClearAttrCache();
 		self->m_attrCache.row = row;
@@ -11022,7 +11345,7 @@ void wxGridExt::CacheAttr(int row, int col, wxGridExtCellAttr* attr) const
 	}
 }
 
-bool wxGridExt::LookupAttr(int row, int col, wxGridExtCellAttr** attr) const
+bool ibGrid::LookupAttr(int row, int col, ibGridCellAttr** attr) const
 {
 	if (row == m_attrCache.row && col == m_attrCache.col)
 	{
@@ -11045,16 +11368,16 @@ bool wxGridExt::LookupAttr(int row, int col, wxGridExtCellAttr** attr) const
 	}
 }
 
-wxGridExtCellAttr* wxGridExt::GetCellAttr(int row, int col) const
+ibGridCellAttr* ibGrid::GetCellAttr(int row, int col) const
 {
-	wxGridExtCellAttr* attr = NULL;
+	ibGridCellAttr* attr = NULL;
 	// Additional test to avoid looking at the cache e.g. for
 	// wxNoCellCoords, as this will confuse memory management.
 	if (row >= 0)
 	{
 		if (!LookupAttr(row, col, &attr))
 		{
-			attr = m_table ? m_table->GetAttr(row, col, wxGridExtCellAttr::Any)
+			attr = m_table ? m_table->GetAttr(row, col, ibGridCellAttr::Any)
 				: NULL;
 			CacheAttr(row, col, attr);
 		}
@@ -11073,18 +11396,18 @@ wxGridExtCellAttr* wxGridExt::GetCellAttr(int row, int col) const
 	return attr;
 }
 
-wxGridExtCellAttr* wxGridExt::GetOrCreateCellAttr(int row, int col) const
+ibGridCellAttr* ibGrid::GetOrCreateCellAttr(int row, int col) const
 {
-	wxGridExtCellAttr* attr = NULL;
+	ibGridCellAttr* attr = NULL;
 	const bool canHave = CanHaveAttributes();
 
 	wxCHECK_MSG(canHave, attr, wxT("Cell attributes not allowed"));
 	wxCHECK_MSG(m_table, attr, wxT("must have a table"));
 
-	attr = m_table->GetAttr(row, col, wxGridExtCellAttr::Cell);
+	attr = m_table->GetAttr(row, col, ibGridCellAttr::Cell);
 	if (!attr)
 	{
-		attr = new wxGridExtCellAttr(m_defaultCellAttr);
+		attr = new ibGridCellAttr(m_defaultCellAttr);
 
 		// artificially inc the ref count to match DecRef() in caller
 		attr->IncRef();
@@ -11098,17 +11421,17 @@ wxGridExtCellAttr* wxGridExt::GetOrCreateCellAttr(int row, int col) const
 // setting column attributes (wrappers around SetColAttr)
 // ----------------------------------------------------------------------------
 
-void wxGridExt::SetColFormatBool(int col)
+void ibGrid::SetColFormatBool(int col)
 {
 	SetColFormatCustom(col, wxGRID_VALUE_BOOL);
 }
 
-void wxGridExt::SetColFormatNumber(int col)
+void ibGrid::SetColFormatNumber(int col)
 {
 	SetColFormatCustom(col, wxGRID_VALUE_NUMBER);
 }
 
-void wxGridExt::SetColFormatFloat(int col, int width, int precision)
+void ibGrid::SetColFormatFloat(int col, int width, int precision)
 {
 	wxString typeName = wxGRID_VALUE_FLOAT;
 	if ((width != -1) || (precision != -1))
@@ -11119,7 +11442,7 @@ void wxGridExt::SetColFormatFloat(int col, int width, int precision)
 	SetColFormatCustom(col, typeName);
 }
 
-void wxGridExt::SetColFormatDate(int col, const wxString& format)
+void ibGrid::SetColFormatDate(int col, const wxString& format)
 {
 	wxString typeName = wxGRID_VALUE_DATE;
 	if (!format.empty())
@@ -11129,14 +11452,14 @@ void wxGridExt::SetColFormatDate(int col, const wxString& format)
 	SetColFormatCustom(col, typeName);
 }
 
-void wxGridExt::SetColFormatCustom(int col, const wxString& typeName)
+void ibGrid::SetColFormatCustom(int col, const wxString& typeName)
 {
-	wxGridExtCellAttr* attr = m_table->GetAttr(-1, col, wxGridExtCellAttr::Col);
+	ibGridCellAttr* attr = m_table->GetAttr(-1, col, ibGridCellAttr::Col);
 	if (!attr)
-		attr = new wxGridExtCellAttr;
-	wxGridExtCellRenderer* renderer = GetDefaultRendererForType(typeName);
+		attr = new ibGridCellAttr;
+	ibGridCellRenderer* renderer = GetDefaultRendererForType(typeName);
 	attr->SetRenderer(renderer);
-	wxGridExtCellEditor* editor = GetDefaultEditorForType(typeName);
+	ibGridCellEditor* editor = GetDefaultEditorForType(typeName);
 	attr->SetEditor(editor);
 
 	SetColAttr(col, attr);
@@ -11147,7 +11470,7 @@ void wxGridExt::SetColFormatCustom(int col, const wxString& typeName)
 // setting cell attributes: this is forwarded to the table
 // ----------------------------------------------------------------------------
 
-void wxGridExt::SetAttr(int row, int col, wxGridExtCellAttr* attr)
+void ibGrid::SetAttr(int row, int col, ibGridCellAttr* attr)
 {
 	if (CanHaveAttributes())
 	{
@@ -11160,7 +11483,7 @@ void wxGridExt::SetAttr(int row, int col, wxGridExtCellAttr* attr)
 	}
 }
 
-void wxGridExt::SetRowAttr(int row, wxGridExtCellAttr* attr)
+void ibGrid::SetRowAttr(int row, ibGridCellAttr* attr)
 {
 	if (CanHaveAttributes())
 	{
@@ -11174,7 +11497,7 @@ void wxGridExt::SetRowAttr(int row, wxGridExtCellAttr* attr)
 
 }
 
-void wxGridExt::SetColAttr(int col, wxGridExtCellAttr* attr)
+void ibGrid::SetColAttr(int col, ibGridCellAttr* attr)
 {
 	if (CanHaveAttributes())
 	{
@@ -11188,14 +11511,14 @@ void wxGridExt::SetColAttr(int col, wxGridExtCellAttr* attr)
 
 }
 
-void wxGridExt::SetCellBackgroundColour(int row, int col, const wxColour& colour, bool sendUndoCommand)
+void ibGrid::SetCellBackgroundColour(int row, int col, const wxColour& colour, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrBackgroundColour>(row, col, colour, GetCellBackgroundColour(row, col));
+			PushCommand<ibGridCommandAttrBackgroundColour>(row, col, colour, GetCellBackgroundColour(row, col));
 
 		attr->SetBackgroundColour(colour);
 
@@ -11207,12 +11530,12 @@ void wxGridExt::SetCellBackgroundColour(int row, int col, const wxColour& colour
 	}
 }
 
-void wxGridExt::SetCellBackgroundColour(const wxGridExtBlockCoords& coords, const wxColour& colour, bool sendUndoCommand)
+void ibGrid::SetCellBackgroundColour(const ibGridBlockCoords& coords, const wxColour& colour, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBackgroundColour>>(this, coords, colour);
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrBackgroundColour>>(this, coords, colour);
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11230,14 +11553,14 @@ void wxGridExt::SetCellBackgroundColour(const wxGridExtBlockCoords& coords, cons
 	}
 }
 
-void wxGridExt::SetCellTextColour(int row, int col, const wxColour& colour, bool sendUndoCommand)
+void ibGrid::SetCellTextColour(int row, int col, const wxColour& colour, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrTextColour>(row, col, colour, attr->GetTextColour());
+			PushCommand<ibGridCommandAttrTextColour>(row, col, colour, attr->GetTextColour());
 
 		attr->SetTextColour(colour);
 
@@ -11249,12 +11572,12 @@ void wxGridExt::SetCellTextColour(int row, int col, const wxColour& colour, bool
 	}
 }
 
-void wxGridExt::SetCellTextColour(const wxGridExtBlockCoords& coords, const wxColour& colour, bool sendUndoCommand)
+void ibGrid::SetCellTextColour(const ibGridBlockCoords& coords, const wxColour& colour, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrTextColour>>(this, coords, colour);
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrTextColour>>(this, coords, colour);
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11272,14 +11595,14 @@ void wxGridExt::SetCellTextColour(const wxGridExtBlockCoords& coords, const wxCo
 	}
 }
 
-void wxGridExt::SetCellTextOrient(int row, int col, const int& orient, bool sendUndoCommand)
+void ibGrid::SetCellTextOrient(int row, int col, const int& orient, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrTextOrient>(row, col, orient, attr->GetTextOrient());
+			PushCommand<ibGridCommandAttrTextOrient>(row, col, orient, attr->GetTextOrient());
 
 		attr->SetTextOrient(orient);
 
@@ -11291,12 +11614,12 @@ void wxGridExt::SetCellTextOrient(int row, int col, const int& orient, bool send
 	}
 }
 
-void wxGridExt::SetCellTextOrient(const wxGridExtBlockCoords& coords, const int& orient, bool sendUndoCommand)
+void ibGrid::SetCellTextOrient(const ibGridBlockCoords& coords, const int& orient, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrTextOrient>>(this, coords, orient);
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrTextOrient>>(this, coords, orient);
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11314,14 +11637,14 @@ void wxGridExt::SetCellTextOrient(const wxGridExtBlockCoords& coords, const int&
 	}
 }
 
-void wxGridExt::SetCellFont(int row, int col, const wxFont& font, bool sendUndoCommand)
+void ibGrid::SetCellFont(int row, int col, const wxFont& font, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrFont>(row, col, font, attr->GetFont());
+			PushCommand<ibGridCommandAttrFont>(row, col, font, attr->GetFont());
 
 		attr->SetFont(font);
 
@@ -11333,12 +11656,12 @@ void wxGridExt::SetCellFont(int row, int col, const wxFont& font, bool sendUndoC
 	}
 }
 
-void wxGridExt::SetCellFont(const wxGridExtBlockCoords& coords, const wxFont& font, bool sendUndoCommand)
+void ibGrid::SetCellFont(const ibGridBlockCoords& coords, const wxFont& font, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrFont>>(this, coords, font);
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrFont>>(this, coords, font);
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11356,16 +11679,16 @@ void wxGridExt::SetCellFont(const wxGridExtBlockCoords& coords, const wxFont& fo
 	}
 }
 
-void wxGridExt::SetCellAlignment(int row, int col, int horiz, int vert, bool sendUndoCommand)
+void ibGrid::SetCellAlignment(int row, int col, int horiz, int vert, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		wxSize alignment; attr->GetAlignment(&alignment.x, &alignment.y);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrAlignment>(row, col, wxSize{ horiz, vert }, alignment);
+			PushCommand<ibGridCommandAttrAlignment>(row, col, wxSize{ horiz, vert }, alignment);
 
 		attr->SetAlignment(horiz, vert);
 
@@ -11377,12 +11700,12 @@ void wxGridExt::SetCellAlignment(int row, int col, int horiz, int vert, bool sen
 	}
 }
 
-void wxGridExt::SetCellAlignment(const wxGridExtBlockCoords& coords, int horiz, int vert, bool sendUndoCommand)
+void ibGrid::SetCellAlignment(const ibGridBlockCoords& coords, int horiz, int vert, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrAlignment>>(this, coords, wxSize{ horiz, vert });
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrAlignment>>(this, coords, wxSize{ horiz, vert });
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11400,14 +11723,14 @@ void wxGridExt::SetCellAlignment(const wxGridExtBlockCoords& coords, int horiz, 
 	}
 }
 
-void wxGridExt::SetCellBorderLeft(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+void ibGrid::SetCellBorderLeft(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrBorderLeft>(row, col, wxGridExtCellBorder{ style, colour, width }, attr->GetBorderLeft());
+			PushCommand<ibGridCommandAttrBorderLeft>(row, col, ibGridCellBorder{ style, colour, width }, attr->GetBorderLeft());
 
 		attr->SetBorderLeft(style, colour, width);
 
@@ -11419,12 +11742,12 @@ void wxGridExt::SetCellBorderLeft(int row, int col, wxPenStyle style, const wxCo
 	}
 }
 
-void wxGridExt::SetCellBorderLeft(const wxGridExtBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+void ibGrid::SetCellBorderLeft(const ibGridBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBorderLeft>>(this, coords, wxGridExtCellBorder{ style, colour, width });
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrBorderLeft>>(this, coords, ibGridCellBorder{ style, colour, width });
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11442,14 +11765,14 @@ void wxGridExt::SetCellBorderLeft(const wxGridExtBlockCoords& coords, wxPenStyle
 	}
 }
 
-void wxGridExt::SetCellBorderRight(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+void ibGrid::SetCellBorderRight(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrBorderRight>(row, col, wxGridExtCellBorder{ style, colour, width }, attr->GetBorderRight());
+			PushCommand<ibGridCommandAttrBorderRight>(row, col, ibGridCellBorder{ style, colour, width }, attr->GetBorderRight());
 
 		attr->SetBorderRight(style, colour, width);
 
@@ -11461,12 +11784,12 @@ void wxGridExt::SetCellBorderRight(int row, int col, wxPenStyle style, const wxC
 	}
 }
 
-void wxGridExt::SetCellBorderRight(const wxGridExtBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+void ibGrid::SetCellBorderRight(const ibGridBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBorderRight>>(this, coords, wxGridExtCellBorder{ style, colour, width });
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrBorderRight>>(this, coords, ibGridCellBorder{ style, colour, width });
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11484,14 +11807,14 @@ void wxGridExt::SetCellBorderRight(const wxGridExtBlockCoords& coords, wxPenStyl
 	}
 }
 
-void wxGridExt::SetCellBorderTop(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+void ibGrid::SetCellBorderTop(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrBorderTop>(row, col, wxGridExtCellBorder{ style, colour, width }, attr->GetBorderTop());
+			PushCommand<ibGridCommandAttrBorderTop>(row, col, ibGridCellBorder{ style, colour, width }, attr->GetBorderTop());
 
 		attr->SetBorderTop(style, colour, width);
 
@@ -11503,12 +11826,12 @@ void wxGridExt::SetCellBorderTop(int row, int col, wxPenStyle style, const wxCol
 	}
 }
 
-void wxGridExt::SetCellBorderTop(const wxGridExtBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+void ibGrid::SetCellBorderTop(const ibGridBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBorderTop>>(this, coords, wxGridExtCellBorder{ style, colour, width });
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrBorderTop>>(this, coords, ibGridCellBorder{ style, colour, width });
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11526,14 +11849,14 @@ void wxGridExt::SetCellBorderTop(const wxGridExtBlockCoords& coords, wxPenStyle 
 	}
 }
 
-void wxGridExt::SetCellBorderBottom(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+void ibGrid::SetCellBorderBottom(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrBorderBottom>(row, col, wxGridExtCellBorder{ style, colour, width }, attr->GetBorderBottom());
+			PushCommand<ibGridCommandAttrBorderBottom>(row, col, ibGridCellBorder{ style, colour, width }, attr->GetBorderBottom());
 
 		attr->SetBorderBottom(style, colour, width);
 
@@ -11545,12 +11868,12 @@ void wxGridExt::SetCellBorderBottom(int row, int col, wxPenStyle style, const wx
 	}
 }
 
-void wxGridExt::SetCellBorderBottom(const wxGridExtBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+void ibGrid::SetCellBorderBottom(const ibGridBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBorderBottom>>(this, coords, wxGridExtCellBorder{ style, colour, width });
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrBorderBottom>>(this, coords, ibGridCellBorder{ style, colour, width });
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11568,14 +11891,14 @@ void wxGridExt::SetCellBorderBottom(const wxGridExtBlockCoords& coords, wxPenSty
 	}
 }
 
-void wxGridExt::SetCellFitMode(int row, int col, wxGridExtFitMode fitMode, bool sendUndoCommand)
+void ibGrid::SetCellFitMode(int row, int col, ibGridFitMode fitMode, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrFitMode>(row, col, fitMode, attr->GetFitMode());
+			PushCommand<ibGridCommandAttrFitMode>(row, col, fitMode, attr->GetFitMode());
 
 		attr->SetFitMode(fitMode);
 
@@ -11587,12 +11910,12 @@ void wxGridExt::SetCellFitMode(int row, int col, wxGridExtFitMode fitMode, bool 
 	}
 }
 
-void wxGridExt::SetCellFitMode(const wxGridExtBlockCoords& coords, wxGridExtFitMode fitMode, bool sendUndoCommand)
+void ibGrid::SetCellFitMode(const ibGridBlockCoords& coords, ibGridFitMode fitMode, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrFitMode>>(this, coords, fitMode);
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrFitMode>>(this, coords, fitMode);
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11610,13 +11933,13 @@ void wxGridExt::SetCellFitMode(const wxGridExtBlockCoords& coords, wxGridExtFitM
 	}
 }
 
-void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols, bool sendUndoCommand)
+void ibGrid::SetCellSize(int row, int col, int num_rows, int num_cols, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		int cell_rows, cell_cols;
 
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 		attr->GetSize(&cell_rows, &cell_cols);
 		attr->SetSize(num_rows, num_cols);
 
@@ -11625,9 +11948,9 @@ void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols, bool s
 		// handle all the possibilies, do it by hand by getting the CellAttr.
 		// You can only set the size of a cell to 1,1 or greater with this fn
 		wxASSERT_MSG(!((cell_rows < 1) || (cell_cols < 1)),
-			wxT("wxGridExt::SetCellSize setting cell size that is already part of another cell"));
+			wxT("ibGrid::SetCellSize setting cell size that is already part of another cell"));
 		wxASSERT_MSG(!((num_rows < 1) || (num_cols < 1)),
-			wxT("wxGridExt::SetCellSize setting cell size to < 1"));
+			wxT("ibGrid::SetCellSize setting cell size to < 1"));
 
 		// if this was already a multicell then "turn off" the other cells first
 		if ((cell_rows > 1) || (cell_cols > 1))
@@ -11667,7 +11990,7 @@ void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols, bool s
 		}
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrSize>(row, col,
+			PushCommand<ibGridCommandAttrSize>(row, col,
 				wxSize{ num_rows, num_cols }, wxSize{ cell_rows, cell_cols });
 
 		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
@@ -11678,7 +12001,7 @@ void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols, bool s
 	}
 }
 
-void wxGridExt::SetCellRenderer(int row, int col, wxGridExtCellRenderer* renderer)
+void ibGrid::SetCellRenderer(int row, int col, ibGridCellRenderer* renderer)
 {
 	if (CanHaveAttributes())
 	{
@@ -11686,7 +12009,7 @@ void wxGridExt::SetCellRenderer(int row, int col, wxGridExtCellRenderer* rendere
 	}
 }
 
-void wxGridExt::SetCellEditor(int row, int col, wxGridExtCellEditor* editor)
+void ibGrid::SetCellEditor(int row, int col, ibGridCellEditor* editor)
 {
 	if (CanHaveAttributes())
 	{
@@ -11694,14 +12017,14 @@ void wxGridExt::SetCellEditor(int row, int col, wxGridExtCellEditor* editor)
 	}
 }
 
-void wxGridExt::SetCellReadOnly(int row, int col, bool isReadOnly, bool sendUndoCommand)
+void ibGrid::SetCellReadOnly(int row, int col, bool isReadOnly, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+		ibGridCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandAttrReadOnly>(row, col, isReadOnly, attr->IsReadOnly());
+			PushCommand<ibGridCommandAttrReadOnly>(row, col, isReadOnly, attr->IsReadOnly());
 
 		attr->SetReadOnly(isReadOnly);
 
@@ -11713,12 +12036,12 @@ void wxGridExt::SetCellReadOnly(int row, int col, bool isReadOnly, bool sendUndo
 	}
 }
 
-void wxGridExt::SetCellReadOnly(const wxGridExtBlockCoords& coords, bool isReadOnly, bool sendUndoCommand)
+void ibGrid::SetCellReadOnly(const ibGridBlockCoords& coords, bool isReadOnly, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrReadOnly>>(this, coords, isReadOnly);
+			PushCommand<ibGridCommandCompositeAttr<ibGridCommandAttrReadOnly>>(this, coords, isReadOnly);
 
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
@@ -11740,14 +12063,14 @@ void wxGridExt::SetCellReadOnly(const wxGridExtBlockCoords& coords, bool isReadO
 // Data type registration
 // ----------------------------------------------------------------------------
 
-void wxGridExt::RegisterDataType(const wxString& typeName,
-	wxGridExtCellRenderer* renderer,
-	wxGridExtCellEditor* editor)
+void ibGrid::RegisterDataType(const wxString& typeName,
+	ibGridCellRenderer* renderer,
+	ibGridCellEditor* editor)
 {
 	m_typeRegistry->RegisterDataType(typeName, renderer, editor);
 }
 
-wxGridExtCellEditor* wxGridExt::GetDefaultEditorForCell(int row, int col) const
+ibGridCellEditor* ibGrid::GetDefaultEditorForCell(int row, int col) const
 {
 	if (!m_table)
 		return NULL;
@@ -11758,7 +12081,7 @@ wxGridExtCellEditor* wxGridExt::GetDefaultEditorForCell(int row, int col) const
 	return GetDefaultEditorForType(typeName);
 }
 
-wxGridExtCellRenderer* wxGridExt::GetDefaultRendererForCell(int row, int col) const
+ibGridCellRenderer* ibGrid::GetDefaultRendererForCell(int row, int col) const
 {
 	if (!m_table)
 		return NULL;
@@ -11770,7 +12093,7 @@ wxGridExtCellRenderer* wxGridExt::GetDefaultRendererForCell(int row, int col) co
 	return GetDefaultRendererForType(typeName);
 }
 
-wxGridExtCellEditor* wxGridExt::GetDefaultEditorForType(const wxString& typeName) const
+ibGridCellEditor* ibGrid::GetDefaultEditorForType(const wxString& typeName) const
 {
 	int index = m_typeRegistry->FindOrCloneDataType(typeName);
 	if (index == wxNOT_FOUND)
@@ -11783,7 +12106,7 @@ wxGridExtCellEditor* wxGridExt::GetDefaultEditorForType(const wxString& typeName
 	return m_typeRegistry->GetEditor(index);
 }
 
-wxGridExtCellRenderer* wxGridExt::GetDefaultRendererForType(const wxString& typeName) const
+ibGridCellRenderer* ibGrid::GetDefaultRendererForType(const wxString& typeName) const
 {
 	int index = m_typeRegistry->FindOrCloneDataType(typeName);
 	if (index == wxNOT_FOUND)
@@ -11800,45 +12123,45 @@ wxGridExtCellRenderer* wxGridExt::GetDefaultRendererForType(const wxString& type
 // row/col size
 // ----------------------------------------------------------------------------
 
-void wxGridExt::DoDisableLineResize(int line, wxGridExtFixedIndicesSet*& setFixed)
+void ibGrid::DoDisableLineResize(int line, ibGridFixedIndicesSet*& setFixed)
 {
 	if (!setFixed)
 	{
-		setFixed = new wxGridExtFixedIndicesSet;
+		setFixed = new ibGridFixedIndicesSet;
 	}
 
 	setFixed->insert(line);
 }
 
 bool
-wxGridExt::DoCanResizeLine(int line, const wxGridExtFixedIndicesSet* setFixed) const
+ibGrid::DoCanResizeLine(int line, const ibGridFixedIndicesSet* setFixed) const
 {
 	return !setFixed || !setFixed->count(line);
 }
 
-void wxGridExt::EnableDragRowSize(bool enable)
+void ibGrid::EnableDragRowSize(bool enable)
 {
 	m_canDragRowSize = enable;
 }
 
-void wxGridExt::EnableDragColSize(bool enable)
+void ibGrid::EnableDragColSize(bool enable)
 {
 	m_canDragColSize = enable;
 }
 
-void wxGridExt::EnableDragGridSize(bool enable)
+void ibGrid::EnableDragGridSize(bool enable)
 {
 	m_canDragGridSize = enable;
 }
 
-void wxGridExt::EnableDragCell(bool enable)
+void ibGrid::EnableDragCell(bool enable)
 {
 	m_canDragCell = enable;
 }
 
-void wxGridExt::SetDefaultRowSize(int height, float scale, bool resizeExistingRows)
+void ibGrid::SetDefaultRowSize(int height, float scale, bool resizeExistingRows)
 {
-	m_defaultRowHeight = wxMax(wxRestoreGridScale(height, scale), m_minAcceptableRowHeight);
+	m_defaultRowHeight = wxMax(ibRestoreGridScale(height, scale), m_minAcceptableRowHeight);
 
 	if (resizeExistingRows)
 	{
@@ -11910,9 +12233,9 @@ namespace
 
 } // anonymous namespace
 
-void wxGridExt::SetRowSize(int row, int height, float scale, bool sendUndoCommand)
+void ibGrid::SetRowSize(int row, int height, float scale, bool sendUndoCommand)
 {
-	height = wxRestoreGridScale(height, scale);
+	height = ibRestoreGridScale(height, scale);
 
 	// See comment in SetColSize
 	if (height > 0 && height < GetRowMinimalAcceptableHeight())
@@ -11940,11 +12263,11 @@ void wxGridExt::SetRowSize(int row, int height, float scale, bool sendUndoComman
 	if (!sendUndoCommand || m_dragRowOrCol != -1 || height == size)
 		return;
 
-	PushCommand<wxGridExtCommandRowSize>(row,
+	PushCommand<ibGridCommandRowSize>(row,
 		height, size);
 }
 
-void wxGridExt::HideRow(int row)
+void ibGrid::HideRow(int row)
 {
 	const int size = GetRowSize(row);
 
@@ -11953,10 +12276,10 @@ void wxGridExt::HideRow(int row)
 	if (m_dragRowOrCol != -1)
 		return;
 
-	PushCommand<wxGridExtCommandRowSize>(row, 0, size);
+	PushCommand<ibGridCommandRowSize>(row, 0, size);
 }
 
-void wxGridExt::ShowRow(int row)
+void ibGrid::ShowRow(int row)
 {
 	const int size = GetRowSize(row);
 
@@ -11965,10 +12288,10 @@ void wxGridExt::ShowRow(int row)
 	if (m_dragRowOrCol != -1)
 		return;
 
-	PushCommand<wxGridExtCommandRowSize>(row, -1, size);
+	PushCommand<ibGridCommandRowSize>(row, -1, size);
 }
 
-void wxGridExt::DoSetRowSize(int row, int height)
+void ibGrid::DoSetRowSize(int row, int height)
 {
 	wxCHECK_RET(row >= 0 && row < m_numRows, wxT("invalid row index"));
 
@@ -12091,10 +12414,10 @@ void wxGridExt::DoSetRowSize(int row, int height)
 	SetRowBrake(row);
 }
 
-void wxGridExt::SetDefaultColSize(int width, float scale, bool resizeExistingCols)
+void ibGrid::SetDefaultColSize(int width, float scale, bool resizeExistingCols)
 {
 	// we dont allow zero default column width
-	m_defaultColWidth = wxMax(wxMax(wxRestoreGridScale(width, scale), m_minAcceptableColWidth), 1);
+	m_defaultColWidth = wxMax(wxMax(ibRestoreGridScale(width, scale), m_minAcceptableColWidth), 1);
 
 	if (resizeExistingCols)
 	{
@@ -12108,9 +12431,9 @@ void wxGridExt::SetDefaultColSize(int width, float scale, bool resizeExistingCol
 	}
 }
 
-void wxGridExt::SetColSize(int col, int width, float scale, bool sendUndoCommand)
+void ibGrid::SetColSize(int col, int width, float scale, bool sendUndoCommand)
 {
-	width = wxRestoreGridScale(width, scale);
+	width = ibRestoreGridScale(width, scale);
 
 	// we intentionally don't test whether the width is less than
 	// GetColMinimalWidth() here but we do compare it with
@@ -12162,11 +12485,11 @@ void wxGridExt::SetColSize(int col, int width, float scale, bool sendUndoCommand
 	if (!sendUndoCommand || m_dragRowOrCol != -1 || width == size)
 		return;
 
-	PushCommand<wxGridExtCommandColSize>(col,
+	PushCommand<ibGridCommandColSize>(col,
 		width, size);
 }
 
-void wxGridExt::HideCol(int col)
+void ibGrid::HideCol(int col)
 {
 	const int size = GetColSize(col);
 
@@ -12175,11 +12498,11 @@ void wxGridExt::HideCol(int col)
 	if (m_dragRowOrCol != -1)
 		return;
 
-	PushCommand<wxGridExtCommandColSize>(col,
+	PushCommand<ibGridCommandColSize>(col,
 		0, size);
 }
 
-void wxGridExt::ShowCol(int col)
+void ibGrid::ShowCol(int col)
 {
 	const int size = GetColSize(col);
 
@@ -12188,11 +12511,11 @@ void wxGridExt::ShowCol(int col)
 	if (m_dragRowOrCol != -1)
 		return;
 
-	PushCommand<wxGridExtCommandColSize>(col,
+	PushCommand<ibGridCommandColSize>(col,
 		-1, size);
 }
 
-void wxGridExt::DoSetColSize(int col, int width)
+void ibGrid::DoSetColSize(int col, int width)
 {
 	wxCHECK_RET(col >= 0 && col < m_numCols, wxT("invalid column index"));
 
@@ -12215,7 +12538,7 @@ void wxGridExt::DoSetColSize(int col, int width)
 		// flicker, so take care to call the special method of our header
 		// control checking for whether it's being resized interactively
 		// instead of the usual UpdateColumn().
-		static_cast<wxGridExtHeaderCtrl*>(m_colLabelWin)->UpdateIfNotResizing(col);
+		static_cast<ibGridHeaderCtrl*>(m_colLabelWin)->UpdateIfNotResizing(col);
 	}
 	//else: will be refreshed when the header is redrawn
 
@@ -12323,67 +12646,67 @@ void wxGridExt::DoSetColSize(int col, int width)
 	}
 }
 
-void wxGridExt::SetColMinimalWidth(int col, int width, float scale)
+void ibGrid::SetColMinimalWidth(int col, int width, float scale)
 {
 	if (width > GetColMinimalAcceptableWidth())
 	{
 		wxLongToLongHashMap::key_type key = (wxLongToLongHashMap::key_type)col;
-		m_colMinWidths[key] = wxRestoreGridScale(width, scale);
+		m_colMinWidths[key] = ibRestoreGridScale(width, scale);
 	}
 }
 
-void wxGridExt::SetRowMinimalHeight(int row, int width, float scale)
+void ibGrid::SetRowMinimalHeight(int row, int width, float scale)
 {
 	if (width > GetRowMinimalAcceptableHeight())
 	{
 		wxLongToLongHashMap::key_type key = (wxLongToLongHashMap::key_type)row;
-		m_rowMinHeights[key] = wxRestoreGridScale(width, scale);
+		m_rowMinHeights[key] = ibRestoreGridScale(width, scale);
 	}
 }
 
-int wxGridExt::GetColMinimalWidth(int col, float scale) const
+int ibGrid::GetColMinimalWidth(int col, float scale) const
 {
 	wxLongToLongHashMap::key_type key = (wxLongToLongHashMap::key_type)col;
 	wxLongToLongHashMap::const_iterator it = m_colMinWidths.find(key);
 
-	return it != m_colMinWidths.end() ? wxCalcGridScale(it->second, scale) : wxCalcGridScale(m_minAcceptableColWidth, scale);
+	return it != m_colMinWidths.end() ? ibCalcGridScale(it->second, scale) : ibCalcGridScale(m_minAcceptableColWidth, scale);
 }
 
-int wxGridExt::GetRowMinimalHeight(int row, float scale) const
+int ibGrid::GetRowMinimalHeight(int row, float scale) const
 {
 	wxLongToLongHashMap::key_type key = (wxLongToLongHashMap::key_type)row;
 	wxLongToLongHashMap::const_iterator it = m_rowMinHeights.find(key);
 
-	return it != m_rowMinHeights.end() ? wxCalcGridScale(it->second, scale) : wxCalcGridScale(m_minAcceptableRowHeight, scale);
+	return it != m_rowMinHeights.end() ? ibCalcGridScale(it->second, scale) : ibCalcGridScale(m_minAcceptableRowHeight, scale);
 }
 
-void wxGridExt::SetColMinimalAcceptableWidth(int width, float scale)
+void ibGrid::SetColMinimalAcceptableWidth(int width, float scale)
 {
 	// We do allow a width of 0 since this gives us
 	// an easy way to temporarily hiding columns.
 	if (width >= 0)
-		m_minAcceptableColWidth = wxRestoreGridScale(width, scale);
+		m_minAcceptableColWidth = ibRestoreGridScale(width, scale);
 }
 
-void wxGridExt::SetRowMinimalAcceptableHeight(int height, float scale)
+void ibGrid::SetRowMinimalAcceptableHeight(int height, float scale)
 {
 	// We do allow a height of 0 since this gives us
 	// an easy way to temporarily hiding rows.
 	if (height >= 0)
-		m_minAcceptableRowHeight = wxRestoreGridScale(height, scale);
+		m_minAcceptableRowHeight = ibRestoreGridScale(height, scale);
 }
 
-int  wxGridExt::GetColMinimalAcceptableWidth(float scale) const
+int  ibGrid::GetColMinimalAcceptableWidth(float scale) const
 {
-	return wxCalcGridScale(m_minAcceptableColWidth, scale);
+	return ibCalcGridScale(m_minAcceptableColWidth, scale);
 }
 
-int  wxGridExt::GetRowMinimalAcceptableHeight(float scale) const
+int  ibGrid::GetRowMinimalAcceptableHeight(float scale) const
 {
-	return wxCalcGridScale(m_minAcceptableRowHeight, scale);
+	return ibCalcGridScale(m_minAcceptableRowHeight, scale);
 }
 
-void wxGridExt::SetNativeHeaderColCount()
+void ibGrid::SetNativeHeaderColCount()
 {
 	wxASSERT_MSG(m_useNativeHeader, "no column header window");
 
@@ -12392,7 +12715,7 @@ void wxGridExt::SetNativeHeaderColCount()
 	SetNativeHeaderColOrder();
 }
 
-void wxGridExt::SetNativeHeaderColOrder()
+void ibGrid::SetNativeHeaderColOrder()
 {
 	wxASSERT_MSG(m_useNativeHeader, "no column header window");
 
@@ -12407,7 +12730,7 @@ void wxGridExt::SetNativeHeaderColOrder()
 // ----------------------------------------------------------------------------
 
 void
-wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection direction)
+ibGrid::AutoSizeColOrRow(int colOrRow, bool setAsMin, ibGridDirection direction)
 {
 	const bool column = direction == wxGRID_COLUMN;
 
@@ -12448,8 +12771,8 @@ wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection dire
 	// AutoSizeColumns()) as finding the attribute and renderer for the cell
 	// are very slow operations, due to the number of steps involved in them.
 	const bool canReuseAttr = column && m_table->CanMeasureColUsingSameAttr(col);
-	wxGridExtCellAttrPtr attr;
-	wxGridExtCellRendererPtr renderer;
+	ibGridCellAttrPtr attr;
+	ibGridCellRendererPtr renderer;
 
 	wxCoord extent, extentMax = 0;
 	int max = column ? m_numRows : m_numCols;
@@ -12620,7 +12943,7 @@ wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection dire
 				rect.y = 0;
 				CalcScrolledPosition(rect.x, 0, &rect.x, &dummy);
 				rect.width = cw - rect.x;
-				rect.height = (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
+				rect.height = (GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom());
 				GetColLabelWindow()->Refresh(true, &rect);
 			}
 		}
@@ -12641,7 +12964,7 @@ wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection dire
 			wxRect rect(CellToRect(colOrRow, 0));
 			rect.x = 0;
 			CalcScrolledPosition(0, rect.y, &dummy, &rect.y);
-			rect.width = wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
+			rect.width = ibCalcGridScale(m_rowLabelWidth, GetGridZoom());
 			rect.height = ch - rect.y;
 
 			m_rowAreaWin->Refresh(true, &rect);
@@ -12658,7 +12981,7 @@ wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection dire
 	}
 }
 
-wxCoord wxGridExt::CalcColOrRowLabelAreaMinSize(wxGridExtDirection direction)
+wxCoord ibGrid::CalcColOrRowLabelAreaMinSize(ibGridDirection direction)
 {
 	// calculate size for the rows or columns?
 	const bool calcRows = direction == wxGRID_ROW;
@@ -12711,25 +13034,25 @@ wxCoord wxGridExt::CalcColOrRowLabelAreaMinSize(wxGridExtDirection direction)
 	return extentMax;
 }
 
-void wxGridExt::AutoSizeColumns(bool setAsMin)
+void ibGrid::AutoSizeColumns(bool setAsMin)
 {
-	wxGridExtUpdateLocker locker(this);
+	ibGridUpdateLocker locker(this);
 
 	for (int col = 0; col < m_numCols; col++)
 		AutoSizeColumn(col, setAsMin);
 }
 
-void wxGridExt::AutoSizeRows(bool setAsMin)
+void ibGrid::AutoSizeRows(bool setAsMin)
 {
-	wxGridExtUpdateLocker locker(this);
+	ibGridUpdateLocker locker(this);
 
 	for (int row = 0; row < m_numRows; row++)
 		AutoSizeRow(row, setAsMin);
 }
 
-void wxGridExt::AutoSize()
+void ibGrid::AutoSize()
 {
-	wxGridExtUpdateLocker locker(this);
+	ibGridUpdateLocker locker(this);
 
 	AutoSizeColumns();
 	AutoSizeRows();
@@ -12743,7 +13066,7 @@ void wxGridExt::AutoSize()
 	SetSize(DoGetBestSize());
 }
 
-void wxGridExt::AutoSizeRowLabelSize(int row)
+void ibGrid::AutoSizeRowLabelSize(int row)
 {
 	// Hide the edit control, so it
 	// won't interfere with drag-shrinking.
@@ -12755,7 +13078,7 @@ void wxGridExt::AutoSizeRowLabelSize(int row)
 	ForceRefresh();
 }
 
-void wxGridExt::AutoSizeColLabelSize(int col)
+void ibGrid::AutoSizeColLabelSize(int col)
 {
 	// Hide the edit control, so it
 	// won't interfere with drag-shrinking.
@@ -12767,14 +13090,14 @@ void wxGridExt::AutoSizeColLabelSize(int col)
 	ForceRefresh();
 }
 
-wxSize wxGridExt::DoGetBestSize() const
+wxSize ibGrid::DoGetBestSize() const
 {
-	wxSize size((GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + m_extraWidth,
-		(GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + m_extraHeight);
+	wxSize size((GridRowAreaEnabled() ? ibCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + ibCalcGridScale(m_rowLabelWidth, GetGridZoom()) + m_extraWidth,
+		(GridColAreaEnabled() ? ibCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + ibCalcGridScale(m_colLabelHeight, GetGridZoom()) + m_extraHeight);
 
 	if (m_colWidths.empty())
 	{
-		size.x += wxCalcGridScale(m_defaultColWidth, GetGridZoom()) * m_numRows * m_numCols;
+		size.x += ibCalcGridScale(m_defaultColWidth, GetGridZoom()) * m_numRows * m_numCols;
 	}
 	else
 	{
@@ -12784,7 +13107,7 @@ wxSize wxGridExt::DoGetBestSize() const
 
 	if (m_rowHeights.empty())
 	{
-		size.y += wxCalcGridScale(m_defaultRowHeight, GetGridZoom()) * m_numRows;
+		size.y += ibCalcGridScale(m_defaultRowHeight, GetGridZoom()) * m_numRows;
 	}
 	else
 	{
@@ -12795,24 +13118,24 @@ wxSize wxGridExt::DoGetBestSize() const
 	return size + GetWindowBorderSize();
 }
 
-void wxGridExt::Fit()
+void ibGrid::Fit()
 {
 	AutoSize();
 }
 
-void wxGridExt::SetFocus()
+void ibGrid::SetFocus()
 {
 	m_gridWin->SetFocus();
 }
 
-const wxArrayInt& wxGridExt::GetRowBottoms(float scale) const
+const wxArrayInt& ibGrid::GetRowBottoms(float scale) const
 {
 	m_rowBottoms.Alloc(m_rowHeights.Count());
 	m_rowBottoms.SetCount(0);
 
 	int total_height = 0;
 	for (const int& height : m_rowHeights) {
-		const int scaled_height = wxCalcGridScale(height, scale);
+		const int scaled_height = ibCalcGridScale(height, scale);
 		if (height > 0)
 		{
 			total_height += scaled_height;
@@ -12828,14 +13151,14 @@ const wxArrayInt& wxGridExt::GetRowBottoms(float scale) const
 	return m_rowBottoms;
 }
 
-const wxArrayInt& wxGridExt::GetColRights(float scale) const
+const wxArrayInt& ibGrid::GetColRights(float scale) const
 {
 	m_colRights.Alloc(m_colWidths.Count());
 	m_colRights.SetCount(0);
 
 	int total_width = 0;
 	for (const int& width : m_colWidths) {
-		const int scaled_width = wxCalcGridScale(width, scale);
+		const int scaled_width = ibCalcGridScale(width, scale);
 		if (width > 0)
 		{
 			total_width += scaled_width;
@@ -12851,10 +13174,10 @@ const wxArrayInt& wxGridExt::GetColRights(float scale) const
 	return m_colRights;
 }
 
-bool wxGridExt::Undo()
+bool ibGrid::Undo()
 {
 	if (!m_undoStack.empty()) {
-		wxSharedPtr<wxGridExtCommand> command = m_undoStack.back();
+		wxSharedPtr<ibGridCommand> command = m_undoStack.back();
 		m_undoStack.pop_back();
 		command->Restore(this);
 		m_redoStack.push_back(command);
@@ -12864,10 +13187,10 @@ bool wxGridExt::Undo()
 	return true;
 }
 
-bool wxGridExt::Redo()
+bool ibGrid::Redo()
 {
 	if (!m_redoStack.empty()) {
-		wxSharedPtr<wxGridExtCommand> command = m_redoStack.back();
+		wxSharedPtr<ibGridCommand> command = m_redoStack.back();
 		m_redoStack.pop_back();
 		command->Execute(this);
 		m_undoStack.push_back(command);
@@ -12877,12 +13200,12 @@ bool wxGridExt::Redo()
 	return true;
 }
 
-bool wxGridExt::CanUndo() const
+bool ibGrid::CanUndo() const
 {
 	return (!m_undoStack.empty());
 }
 
-bool wxGridExt::CanRedo() const
+bool ibGrid::CanRedo() const
 {
 	return (!m_redoStack.empty());
 }
@@ -12891,7 +13214,7 @@ bool wxGridExt::CanRedo() const
 // cell value accessor functions
 // ----------------------------------------------------------------------------
 
-void wxGridExt::SetCellValue(int row, int col, const wxString& newValue, bool sendUndoCommand)
+void ibGrid::SetCellValue(int row, int col, const wxString& newValue, bool sendUndoCommand)
 {
 	const wxString& oldValue = GetCellValue(row, col);
 
@@ -12904,7 +13227,7 @@ void wxGridExt::SetCellValue(int row, int col, const wxString& newValue, bool se
 	if (m_table)
 	{
 		if (sendUndoCommand)
-			PushCommand<wxGridExtCommandCellValue>(row, col, newValue, oldValue);
+			PushCommand<ibGridCommandCellValue>(row, col, newValue, oldValue);
 
 		m_table->SetValue(row, col, newValue);
 
@@ -12935,10 +13258,10 @@ void wxGridExt::SetCellValue(int row, int col, const wxString& newValue, bool se
 	}
 }
 
-void wxGridExt::SetCellValue(const wxGridExtBlockCoords& coords, const wxString& newValue, bool sendUndoCommand)
+void ibGrid::SetCellValue(const ibGridBlockCoords& coords, const wxString& newValue, bool sendUndoCommand)
 {
 	if (sendUndoCommand)
-		PushCommand<wxGridExtCommandCompositeCell<wxGridExtCommandCellValue>>(this, coords, newValue);
+		PushCommand<ibGridCommandCompositeCell<ibGridCommandCellValue>>(this, coords, newValue);
 
 	for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 	{
@@ -12988,7 +13311,7 @@ void wxGridExt::SetCellValue(const wxGridExtBlockCoords& coords, const wxString&
 // block, row and column selection
 // ----------------------------------------------------------------------------
 
-void wxGridExt::SelectRow(int row, bool addToSelected)
+void ibGrid::SelectRow(int row, bool addToSelected)
 {
 	if (!m_selection)
 		return;
@@ -12999,7 +13322,7 @@ void wxGridExt::SelectRow(int row, bool addToSelected)
 	m_selection->SelectRow(row);
 }
 
-void wxGridExt::SelectCol(int col, bool addToSelected)
+void ibGrid::SelectCol(int col, bool addToSelected)
 {
 	if (!m_selection)
 		return;
@@ -13010,7 +13333,7 @@ void wxGridExt::SelectCol(int col, bool addToSelected)
 	m_selection->SelectCol(col);
 }
 
-void wxGridExt::SelectBlock(int topRow, int leftCol, int bottomRow, int rightCol,
+void ibGrid::SelectBlock(int topRow, int leftCol, int bottomRow, int rightCol,
 	bool addToSelected)
 {
 	if (!m_selection)
@@ -13022,7 +13345,7 @@ void wxGridExt::SelectBlock(int topRow, int leftCol, int bottomRow, int rightCol
 	m_selection->SelectBlock(topRow, leftCol, bottomRow, rightCol);
 }
 
-void wxGridExt::SelectAll()
+void ibGrid::SelectAll()
 {
 	if (m_selection)
 		m_selection->SelectAll();
@@ -13032,58 +13355,58 @@ void wxGridExt::SelectAll()
 // cell, row and col deselection
 // ----------------------------------------------------------------------------
 
-void wxGridExt::DeselectRow(int row)
+void ibGrid::DeselectRow(int row)
 {
 	wxCHECK_RET(row >= 0 && row < m_numRows, wxT("invalid row index"));
 
 	if (m_selection)
-		m_selection->DeselectBlock(wxGridExtBlockCoords(row, 0, row, m_numCols - 1));
+		m_selection->DeselectBlock(ibGridBlockCoords(row, 0, row, m_numCols - 1));
 }
 
-void wxGridExt::DeselectCol(int col)
+void ibGrid::DeselectCol(int col)
 {
 	wxCHECK_RET(col >= 0 && col < m_numCols, wxT("invalid column index"));
 
 	if (m_selection)
-		m_selection->DeselectBlock(wxGridExtBlockCoords(0, col, m_numRows - 1, col));
+		m_selection->DeselectBlock(ibGridBlockCoords(0, col, m_numRows - 1, col));
 }
 
-void wxGridExt::DeselectCell(int row, int col)
+void ibGrid::DeselectCell(int row, int col)
 {
 	wxCHECK_RET(row >= 0 && row < m_numRows &&
 		col >= 0 && col < m_numCols,
 		wxT("invalid cell coords"));
 
 	if (m_selection)
-		m_selection->DeselectBlock(wxGridExtBlockCoords(row, col, row, col));
+		m_selection->DeselectBlock(ibGridBlockCoords(row, col, row, col));
 }
 
-bool wxGridExt::IsSelection() const
+bool ibGrid::IsSelection() const
 {
 	return m_selection && m_selection->IsSelection();
 }
 
-bool wxGridExt::IsInSelection(int row, int col) const
+bool ibGrid::IsInSelection(int row, int col) const
 {
 	return m_selection && m_selection->IsInSelection(row, col);
 }
 
-wxGridExtBlocks wxGridExt::GetSelectedBlocks() const
+ibGridBlocks ibGrid::GetSelectedBlocks() const
 {
 	if (!m_selection)
-		return wxGridExtBlocks();
+		return ibGridBlocks();
 
 	const wxVectorGridBlockCoords& blocks = m_selection->GetBlocks();
-	return wxGridExtBlocks(blocks.begin(), blocks.end());
+	return ibGridBlocks(blocks.begin(), blocks.end());
 }
 
 static
-wxGridExtBlockCoordsVector
-DoGetRowOrColBlocks(wxGridExtBlocks blocks, const wxGridExtOperations& oper)
+ibGridBlockCoordsVector
+DoGetRowOrColBlocks(ibGridBlocks blocks, const ibGridOperations& oper)
 {
-	wxGridExtBlockCoordsVector res;
+	ibGridBlockCoordsVector res;
 
-	for (wxGridExtBlocks::iterator it = blocks.begin(); it != blocks.end(); ++it)
+	for (ibGridBlocks::iterator it = blocks.begin(); it != blocks.end(); ++it)
 	{
 		const int firstNew = oper.SelectFirst(*it);
 		const int lastNew = oper.SelectLast(*it);
@@ -13104,7 +13427,7 @@ DoGetRowOrColBlocks(wxGridExtBlocks blocks, const wxGridExtOperations& oper)
 				break;
 			}
 
-			wxGridExtBlockCoords& block = res[n];
+			ibGridBlockCoords& block = res[n];
 			const int firstThis = oper.SelectFirst(block);
 			const int lastThis = oper.SelectLast(block);
 
@@ -13138,7 +13461,7 @@ DoGetRowOrColBlocks(wxGridExtBlocks blocks, const wxGridExtOperations& oper)
 			size_t n2 = n;
 			for (;; )
 			{
-				const wxGridExtBlockCoords& block2 = res[n2];
+				const ibGridBlockCoords& block2 = res[n2];
 				if (lastNew < oper.SelectFirst(block2))
 				{
 					oper.SetLast(block, lastNew);
@@ -13196,28 +13519,28 @@ DoGetRowOrColBlocks(wxGridExtBlocks blocks, const wxGridExtOperations& oper)
 	return res;
 }
 
-wxGridExtBlockCoordsVector wxGridExt::GetSelectedRowBlocks() const
+ibGridBlockCoordsVector ibGrid::GetSelectedRowBlocks() const
 {
-	if (!m_selection || m_selection->GetSelectionMode() != wxGridExtSelectRows)
-		return wxGridExtBlockCoordsVector();
+	if (!m_selection || m_selection->GetSelectionMode() != ibGridSelectRows)
+		return ibGridBlockCoordsVector();
 
-	return DoGetRowOrColBlocks(GetSelectedBlocks(), wxGridExtRowOperations());
+	return DoGetRowOrColBlocks(GetSelectedBlocks(), ibGridRowOperations());
 }
 
-wxGridExtBlockCoordsVector wxGridExt::GetSelectedColBlocks() const
+ibGridBlockCoordsVector ibGrid::GetSelectedColBlocks() const
 {
-	if (!m_selection || m_selection->GetSelectionMode() != wxGridExtSelectColumns)
-		return wxGridExtBlockCoordsVector();
+	if (!m_selection || m_selection->GetSelectionMode() != ibGridSelectColumns)
+		return ibGridBlockCoordsVector();
 
-	return DoGetRowOrColBlocks(GetSelectedBlocks(), wxGridExtColumnOperations());
+	return DoGetRowOrColBlocks(GetSelectedBlocks(), ibGridColumnOperations());
 }
 
-wxGridExtBlockCoords wxGridExt::GetSelectedCellRange() const
+ibGridBlockCoords ibGrid::GetSelectedCellRange() const
 {
 	int row1 = m_numRows, col1 = m_numCols,
 		row2 = 0, col2 = 0; bool hasBlocks = false;
 
-	for (const auto& coords : wxGridExt::GetSelectedBlocks()) {
+	for (const auto& coords : ibGrid::GetSelectedBlocks()) {
 		if (row1 > coords.GetTopRow()) row1 = coords.GetTopRow();
 		if (col1 > coords.GetLeftCol()) col1 = coords.GetLeftCol();
 		if (row2 < coords.GetBottomRow()) row2 = coords.GetBottomRow();
@@ -13227,49 +13550,49 @@ wxGridExtBlockCoords wxGridExt::GetSelectedCellRange() const
 
 	if (!hasBlocks) {
 
-		if (row1 > wxGridExt::GetGridCursorRow() && wxGridExt::GetGridCursorRow() >= 0) row1 = wxGridExt::GetGridCursorRow(); else row1 = 0;
-		if (col1 > wxGridExt::GetGridCursorCol() && wxGridExt::GetGridCursorCol() >= 0) col1 = wxGridExt::GetGridCursorCol(); else col1 = 0;
-		if (row2 < wxGridExt::GetGridCursorRow()) row2 = wxGridExt::GetGridCursorRow();
-		if (col2 < wxGridExt::GetGridCursorCol()) col2 = wxGridExt::GetGridCursorCol();
+		if (row1 > ibGrid::GetGridCursorRow() && ibGrid::GetGridCursorRow() >= 0) row1 = ibGrid::GetGridCursorRow(); else row1 = 0;
+		if (col1 > ibGrid::GetGridCursorCol() && ibGrid::GetGridCursorCol() >= 0) col1 = ibGrid::GetGridCursorCol(); else col1 = 0;
+		if (row2 < ibGrid::GetGridCursorRow()) row2 = ibGrid::GetGridCursorRow();
+		if (col2 < ibGrid::GetGridCursorCol()) col2 = ibGrid::GetGridCursorCol();
 	}
 
-	return wxGridExtBlockCoords(row1, col1, row2, col2);
+	return ibGridBlockCoords(row1, col1, row2, col2);
 }
 
-wxGridExtCellCoordsArray wxGridExt::GetSelectedCells() const
+ibGridCellCoordsArray ibGrid::GetSelectedCells() const
 {
 	if (!m_selection)
 	{
-		wxGridExtCellCoordsArray a;
+		ibGridCellCoordsArray a;
 		return a;
 	}
 
 	return m_selection->GetCellSelection();
 }
 
-wxGridExtCellCoordsArray wxGridExt::GetSelectionBlockTopLeft() const
+ibGridCellCoordsArray ibGrid::GetSelectionBlockTopLeft() const
 {
 	if (!m_selection)
 	{
-		wxGridExtCellCoordsArray a;
+		ibGridCellCoordsArray a;
 		return a;
 	}
 
 	return m_selection->GetBlockSelectionTopLeft();
 }
 
-wxGridExtCellCoordsArray wxGridExt::GetSelectionBlockBottomRight() const
+ibGridCellCoordsArray ibGrid::GetSelectionBlockBottomRight() const
 {
 	if (!m_selection)
 	{
-		wxGridExtCellCoordsArray a;
+		ibGridCellCoordsArray a;
 		return a;
 	}
 
 	return m_selection->GetBlockSelectionBottomRight();
 }
 
-wxArrayInt wxGridExt::GetSelectedRows() const
+wxArrayInt ibGrid::GetSelectedRows() const
 {
 	if (!m_selection)
 	{
@@ -13280,7 +13603,7 @@ wxArrayInt wxGridExt::GetSelectedRows() const
 	return m_selection->GetRowSelection();
 }
 
-wxArrayInt wxGridExt::GetSelectedCols() const
+wxArrayInt ibGrid::GetSelectedCols() const
 {
 	if (!m_selection)
 	{
@@ -13291,7 +13614,7 @@ wxArrayInt wxGridExt::GetSelectedCols() const
 	return m_selection->GetColSelection();
 }
 
-void wxGridExt::ClearSelection()
+void ibGrid::ClearSelection()
 {
 	if (m_selection)
 		m_selection->ClearSelection();
@@ -13300,13 +13623,13 @@ void wxGridExt::ClearSelection()
 // This function returns the rectangle that encloses the given block
 // in device coords clipped to the client size of the grid window.
 //
-wxRect wxGridExt::BlockToDeviceRect(const wxGridExtCellCoords& topLeft,
-	const wxGridExtCellCoords& bottomRight,
-	const wxGridExtWindow* gridWindow) const
+wxRect ibGrid::BlockToDeviceRect(const ibGridCellCoords& topLeft,
+	const ibGridCellCoords& bottomRight,
+	const ibGridWindow* gridWindow) const
 {
 	wxRect resultRect;
 	wxRect tempCellRect = CellToRect(topLeft);
-	if (tempCellRect != wxGridExtNoCellRect)
+	if (tempCellRect != ibGridNoCellRect)
 	{
 		resultRect = tempCellRect;
 	}
@@ -13316,14 +13639,14 @@ wxRect wxGridExt::BlockToDeviceRect(const wxGridExtCellCoords& topLeft,
 	}
 
 	tempCellRect = CellToRect(bottomRight);
-	if (tempCellRect != wxGridExtNoCellRect)
+	if (tempCellRect != ibGridNoCellRect)
 	{
 		resultRect += tempCellRect;
 	}
 	else
 	{
-		// If both inputs were "wxGridExtNoCellRect," then there's nothing to do.
-		return wxGridExtNoCellRect;
+		// If both inputs were "ibGridNoCellRect," then there's nothing to do.
+		return ibGridNoCellRect;
 	}
 
 	// Ensure that left/right and top/bottom pairs are in order.
@@ -13431,8 +13754,8 @@ wxRect wxGridExt::BlockToDeviceRect(const wxGridExtCellCoords& topLeft,
 	return resultRect;
 }
 
-void wxGridExt::DoSetSizes(const wxGridExtSizesInfo& sizeInfo,
-	const wxGridExtOperations& oper)
+void ibGrid::DoSetSizes(const ibGridSizesInfo& sizeInfo,
+	const ibGridOperations& oper)
 {
 	BeginBatch();
 	oper.SetDefaultLineSize(this, sizeInfo.m_sizeDefault, true);
@@ -13446,17 +13769,17 @@ void wxGridExt::DoSetSizes(const wxGridExtSizesInfo& sizeInfo,
 	EndBatch();
 }
 
-void wxGridExt::SetColSizes(const wxGridExtSizesInfo& sizeInfo)
+void ibGrid::SetColSizes(const ibGridSizesInfo& sizeInfo)
 {
-	DoSetSizes(sizeInfo, wxGridExtColumnOperations());
+	DoSetSizes(sizeInfo, ibGridColumnOperations());
 }
 
-void wxGridExt::SetRowSizes(const wxGridExtSizesInfo& sizeInfo)
+void ibGrid::SetRowSizes(const ibGridSizesInfo& sizeInfo)
 {
-	DoSetSizes(sizeInfo, wxGridExtRowOperations());
+	DoSetSizes(sizeInfo, ibGridRowOperations());
 }
 
-wxGridExtSizesInfo::wxGridExtSizesInfo(int defSize, const wxArrayInt& allSizes)
+ibGridSizesInfo::ibGridSizesInfo(int defSize, const wxArrayInt& allSizes)
 {
 	m_sizeDefault = defSize;
 	for (size_t i = 0; i < allSizes.size(); i++)
@@ -13466,7 +13789,7 @@ wxGridExtSizesInfo::wxGridExtSizesInfo(int defSize, const wxArrayInt& allSizes)
 	}
 }
 
-int wxGridExtSizesInfo::GetSize(unsigned pos) const
+int ibGridSizesInfo::GetSize(unsigned pos) const
 {
 	wxUnsignedToIntHashMap::const_iterator it = m_customSizes.find(pos);
 
@@ -13482,17 +13805,17 @@ int wxGridExtSizesInfo::GetSize(unsigned pos) const
 	return it->second;
 }
 
-void wxGridExt::DoRowAreaCreate(int start, int end)
+void ibGrid::DoRowAreaCreate(int start, int end)
 {
 	for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++) {
 
-		wxGridExtCellArea& item = m_rowAreaAt[idx];
+		ibGridCellArea& item = m_rowAreaAt[idx];
 
 		if (start >= item.m_start && start <= item.m_end) {
 			if (end > item.m_end) { //expand the bottom border
 
-				PushCommand<wxGridExtCommandAreaSize>(idx,
-					wxGridExtCommandAreaSize::AreaRow, item.m_end - end, wxGridExtCommandAreaSize::FromEndArea);
+				PushCommand<ibGridCommandAreaSize>(idx,
+					ibGridCommandAreaSize::AreaRow, item.m_end - end, ibGridCommandAreaSize::FromEndArea);
 
 				item.m_end = end;
 
@@ -13507,8 +13830,8 @@ void wxGridExt::DoRowAreaCreate(int start, int end)
 
 			if (start < item.m_start) { //extending the upper bound
 
-				PushCommand<wxGridExtCommandAreaSize>(idx,
-					wxGridExtCommandAreaSize::AreaRow, item.m_start - start, wxGridExtCommandAreaSize::FromStartArea);
+				PushCommand<ibGridCommandAreaSize>(idx,
+					ibGridCommandAreaSize::AreaRow, item.m_start - start, ibGridCommandAreaSize::FromStartArea);
 
 				item.m_start = start;
 
@@ -13527,7 +13850,7 @@ void wxGridExt::DoRowAreaCreate(int start, int end)
 	unsigned int countRec = 1;
 
 	//adding a new section
-	wxGridExtCellArea entry;
+	ibGridCellArea entry;
 
 	entry.m_start = start;
 	entry.m_end = end;
@@ -13555,8 +13878,8 @@ void wxGridExt::DoRowAreaCreate(int start, int end)
 
 	if (MakeRowAreaLabel(&entry))
 	{
-		PushCommand<wxGridExtCommandArea>(m_rowAreaAt.Count(),
-			wxGridExtCommandArea::AreaRow, wxGridExtCommandArea::AddArea, entry);
+		PushCommand<ibGridCommandArea>(m_rowAreaAt.Count(),
+			ibGridCommandArea::AreaRow, ibGridCommandArea::AddArea, entry);
 
 		AddRowArea(entry);
 
@@ -13564,17 +13887,17 @@ void wxGridExt::DoRowAreaCreate(int start, int end)
 	}
 }
 
-void wxGridExt::DoColAreaCreate(int start, int end)
+void ibGrid::DoColAreaCreate(int start, int end)
 {
 	for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++) {
 
-		wxGridExtCellArea& item = m_colAreaAt[idx];
+		ibGridCellArea& item = m_colAreaAt[idx];
 
 		if (start >= item.m_start && start <= item.m_end) {
 			if (end > item.m_end) {//expand the bottom border
 
-				PushCommand<wxGridExtCommandAreaSize>(idx,
-					wxGridExtCommandAreaSize::AreaCol, item.m_end - end, wxGridExtCommandAreaSize::FromEndArea);
+				PushCommand<ibGridCommandAreaSize>(idx,
+					ibGridCommandAreaSize::AreaCol, item.m_end - end, ibGridCommandAreaSize::FromEndArea);
 
 				item.m_end = end;
 
@@ -13589,8 +13912,8 @@ void wxGridExt::DoColAreaCreate(int start, int end)
 
 			if (start < item.m_start) { //extending the upper bound
 
-				PushCommand<wxGridExtCommandAreaSize>(idx,
-					wxGridExtCommandAreaSize::AreaCol, item.m_start - start, wxGridExtCommandAreaSize::FromStartArea);
+				PushCommand<ibGridCommandAreaSize>(idx,
+					ibGridCommandAreaSize::AreaCol, item.m_start - start, ibGridCommandAreaSize::FromStartArea);
 
 				item.m_start = start;
 
@@ -13609,7 +13932,7 @@ void wxGridExt::DoColAreaCreate(int start, int end)
 	unsigned int countRec = 1;
 
 	//adding a new section
-	wxGridExtCellArea entry;
+	ibGridCellArea entry;
 
 	entry.m_start = start;
 	entry.m_end = end;
@@ -13636,8 +13959,8 @@ void wxGridExt::DoColAreaCreate(int start, int end)
 
 	if (MakeColAreaLabel(&entry))
 	{
-		PushCommand<wxGridExtCommandArea>(m_colAreaAt.Count(),
-			wxGridExtCommandArea::AreaCol, wxGridExtCommandArea::AddArea, entry);
+		PushCommand<ibGridCommandArea>(m_colAreaAt.Count(),
+			ibGridCommandArea::AreaCol, ibGridCommandArea::AddArea, entry);
 
 		AddColArea(entry);
 
@@ -13645,16 +13968,16 @@ void wxGridExt::DoColAreaCreate(int start, int end)
 	}
 }
 
-void wxGridExt::DoRowAreaDelete(int start, int end)
+void ibGrid::DoRowAreaDelete(int start, int end)
 {
 	for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++)
 	{
-		wxGridExtCellArea& item = m_rowAreaAt[idx];
+		ibGridCellArea& item = m_rowAreaAt[idx];
 
 		if (start == item.m_start && end == item.m_end) { //deleting a section
 
-			PushCommand<wxGridExtCommandArea>(idx,
-				wxGridExtCommandArea::AreaRow, wxGridExtCommandArea::DeleteArea, item);
+			PushCommand<ibGridCommandArea>(idx,
+				ibGridCommandArea::AreaRow, ibGridCommandArea::DeleteArea, item);
 
 			SendGridAreaEvent(wxEVT_GRID_ROW_AREA_DELETE, idx, item);
 
@@ -13675,16 +13998,16 @@ void wxGridExt::DoRowAreaDelete(int start, int end)
 	CalcDimensions();
 }
 
-void wxGridExt::DoColAreaDelete(int start, int end)
+void ibGrid::DoColAreaDelete(int start, int end)
 {
 	for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++)
 	{
-		wxGridExtCellArea& item = m_colAreaAt[idx];
+		ibGridCellArea& item = m_colAreaAt[idx];
 
 		if (start == item.m_start && end == item.m_end) { //deleting a section
 
-			PushCommand<wxGridExtCommandArea>(idx,
-				wxGridExtCommandArea::AreaCol, wxGridExtCommandArea::DeleteArea, item);
+			PushCommand<ibGridCommandArea>(idx,
+				ibGridCommandArea::AreaCol, ibGridCommandArea::DeleteArea, item);
 
 			SendGridAreaEvent(wxEVT_GRID_COL_AREA_DELETE, idx, item);
 
@@ -13711,8 +14034,8 @@ void wxGridExt::DoColAreaDelete(int start, int end)
 
 #if wxUSE_DRAG_AND_DROP
 
-// this allow setting drop target directly on wxGridExt
-void wxGridExt::SetDropTarget(wxDropTarget* dropTarget)
+// this allow setting drop target directly on ibGrid
+void ibGrid::SetDropTarget(wxDropTarget* dropTarget)
 {
 	GetGridWindow()->SetDropTarget(dropTarget);
 }
@@ -13723,9 +14046,9 @@ void wxGridExt::SetDropTarget(wxDropTarget* dropTarget)
 // grid event classes
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtEvent, wxNotifyEvent);
+wxIMPLEMENT_DYNAMIC_CLASS(ibGridEvent, wxNotifyEvent);
 
-wxGridExtEvent::wxGridExtEvent(int id, wxEventType type, wxObject* obj,
+ibGridEvent::ibGridEvent(int id, wxEventType type, wxObject* obj,
 	int row, int col, int x, int y, bool sel,
 	bool control, bool shift, bool alt, bool meta)
 	: wxNotifyEvent(type, id),
@@ -13736,9 +14059,9 @@ wxGridExtEvent::wxGridExtEvent(int id, wxEventType type, wxObject* obj,
 	SetEventObject(obj);
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtSizeEvent, wxNotifyEvent);
+wxIMPLEMENT_DYNAMIC_CLASS(ibGridSizeEvent, wxNotifyEvent);
 
-wxGridExtSizeEvent::wxGridExtSizeEvent(int id, wxEventType type, wxObject* obj,
+ibGridSizeEvent::ibGridSizeEvent(int id, wxEventType type, wxObject* obj,
 	int rowOrCol, int x, int y,
 	bool control, bool shift, bool alt, bool meta)
 	: wxNotifyEvent(type, id),
@@ -13749,11 +14072,11 @@ wxGridExtSizeEvent::wxGridExtSizeEvent(int id, wxEventType type, wxObject* obj,
 	SetEventObject(obj);
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtRangeSelectEvent, wxNotifyEvent);
+wxIMPLEMENT_DYNAMIC_CLASS(ibGridRangeSelectEvent, wxNotifyEvent);
 
-wxGridExtRangeSelectEvent::wxGridExtRangeSelectEvent(int id, wxEventType type, wxObject* obj,
-	const wxGridExtCellCoords& topLeft,
-	const wxGridExtCellCoords& bottomRight,
+ibGridRangeSelectEvent::ibGridRangeSelectEvent(int id, wxEventType type, wxObject* obj,
+	const ibGridCellCoords& topLeft,
+	const ibGridCellCoords& bottomRight,
 	bool sel, bool control,
 	bool shift, bool alt, bool meta)
 	: wxNotifyEvent(type, id),
@@ -13764,9 +14087,9 @@ wxGridExtRangeSelectEvent::wxGridExtRangeSelectEvent(int id, wxEventType type, w
 	SetEventObject(obj);
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtEditorCreatedEvent, wxCommandEvent);
+wxIMPLEMENT_DYNAMIC_CLASS(ibGridEditorCreatedEvent, wxCommandEvent);
 
-wxGridExtEditorCreatedEvent::wxGridExtEditorCreatedEvent(int id, wxEventType type,
+ibGridEditorCreatedEvent::ibGridEditorCreatedEvent(int id, wxEventType type,
 	wxObject* obj, int row,
 	int col, wxWindow* window)
 	: wxCommandEvent(type, id)
@@ -13777,10 +14100,10 @@ wxGridExtEditorCreatedEvent::wxGridExtEditorCreatedEvent(int id, wxEventType typ
 	m_window = window;
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtAreaEvent, wxNotifyEvent);
+wxIMPLEMENT_DYNAMIC_CLASS(ibGridAreaEvent, wxNotifyEvent);
 
-wxGridExtAreaEvent::wxGridExtAreaEvent(int id, wxEventType type,
-	wxObject* obj, int rowOrColPos, const wxGridExtCellArea& area)
+ibGridAreaEvent::ibGridAreaEvent(int id, wxEventType type,
+	wxObject* obj, int rowOrColPos, const ibGridCellArea& area)
 	: wxNotifyEvent(type, id)
 {
 	SetEventObject(obj);
@@ -13790,21 +14113,21 @@ wxGridExtAreaEvent::wxGridExtAreaEvent(int id, wxEventType type,
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtTypeRegistry
+// ibGridTypeRegistry
 // ----------------------------------------------------------------------------
 
-wxGridExtTypeRegistry::~wxGridExtTypeRegistry()
+ibGridTypeRegistry::~ibGridTypeRegistry()
 {
 	size_t count = m_typeinfo.GetCount();
 	for (size_t i = 0; i < count; i++)
 		delete m_typeinfo[i];
 }
 
-void wxGridExtTypeRegistry::RegisterDataType(const wxString& typeName,
-	wxGridExtCellRenderer* renderer,
-	wxGridExtCellEditor* editor)
+void ibGridTypeRegistry::RegisterDataType(const wxString& typeName,
+	ibGridCellRenderer* renderer,
+	ibGridCellEditor* editor)
 {
-	wxGridExtDataTypeInfo* info = new wxGridExtDataTypeInfo(typeName, renderer, editor);
+	ibGridDataTypeInfo* info = new ibGridDataTypeInfo(typeName, renderer, editor);
 
 	// is it already registered?
 	int loc = FindRegisteredDataType(typeName);
@@ -13819,7 +14142,7 @@ void wxGridExtTypeRegistry::RegisterDataType(const wxString& typeName,
 	}
 }
 
-int wxGridExtTypeRegistry::FindRegisteredDataType(const wxString& typeName)
+int ibGridTypeRegistry::FindRegisteredDataType(const wxString& typeName)
 {
 	size_t count = m_typeinfo.GetCount();
 	for (size_t i = 0; i < count; i++)
@@ -13833,7 +14156,7 @@ int wxGridExtTypeRegistry::FindRegisteredDataType(const wxString& typeName)
 	return wxNOT_FOUND;
 }
 
-int wxGridExtTypeRegistry::FindDataType(const wxString& typeName)
+int ibGridTypeRegistry::FindDataType(const wxString& typeName)
 {
 	int index = FindRegisteredDataType(typeName);
 	if (index == wxNOT_FOUND)
@@ -13844,8 +14167,8 @@ int wxGridExtTypeRegistry::FindDataType(const wxString& typeName)
 		if (typeName == wxGRID_VALUE_STRING)
 		{
 			RegisterDataType(wxGRID_VALUE_STRING,
-				new wxGridExtCellStringRenderer,
-				new wxGridExtCellTextEditor);
+				new ibGridCellStringRenderer,
+				new ibGridCellTextEditor);
 		}
 		else
 #endif // wxUSE_TEXTCTRL
@@ -13853,8 +14176,8 @@ int wxGridExtTypeRegistry::FindDataType(const wxString& typeName)
 			if (typeName == wxGRID_VALUE_BOOL)
 			{
 				RegisterDataType(wxGRID_VALUE_BOOL,
-					new wxGridExtCellBoolRenderer,
-					new wxGridExtCellBoolEditor);
+					new ibGridCellBoolRenderer,
+					new ibGridCellBoolEditor);
 			}
 			else
 #endif // wxUSE_CHECKBOX
@@ -13862,14 +14185,14 @@ int wxGridExtTypeRegistry::FindDataType(const wxString& typeName)
 				if (typeName == wxGRID_VALUE_NUMBER)
 				{
 					RegisterDataType(wxGRID_VALUE_NUMBER,
-						new wxGridExtCellNumberRenderer,
-						new wxGridExtCellNumberEditor);
+						new ibGridCellNumberRenderer,
+						new ibGridCellNumberEditor);
 				}
 				else if (typeName == wxGRID_VALUE_FLOAT)
 				{
 					RegisterDataType(wxGRID_VALUE_FLOAT,
-						new wxGridExtCellFloatRenderer,
-						new wxGridExtCellFloatEditor);
+						new ibGridCellFloatRenderer,
+						new ibGridCellFloatEditor);
 				}
 				else
 #endif // wxUSE_TEXTCTRL
@@ -13877,8 +14200,8 @@ int wxGridExtTypeRegistry::FindDataType(const wxString& typeName)
 					if (typeName == wxGRID_VALUE_CHOICE)
 					{
 						RegisterDataType(wxGRID_VALUE_CHOICE,
-							new wxGridExtCellChoiceRenderer,
-							new wxGridExtCellChoiceEditor);
+							new ibGridCellChoiceRenderer,
+							new ibGridCellChoiceEditor);
 					}
 					else
 #endif // wxUSE_COMBOBOX
@@ -13886,8 +14209,8 @@ int wxGridExtTypeRegistry::FindDataType(const wxString& typeName)
 						if (typeName == wxGRID_VALUE_DATE)
 						{
 							RegisterDataType(wxGRID_VALUE_DATE,
-								new wxGridExtCellDateRenderer,
-								new wxGridExtCellDateEditor);
+								new ibGridCellDateRenderer,
+								new ibGridCellDateEditor);
 						}
 						else
 #endif // wxUSE_DATEPICKCTRL
@@ -13903,7 +14226,7 @@ int wxGridExtTypeRegistry::FindDataType(const wxString& typeName)
 	return index;
 }
 
-int wxGridExtTypeRegistry::FindOrCloneDataType(const wxString& typeName)
+int ibGridTypeRegistry::FindOrCloneDataType(const wxString& typeName)
 {
 	int index = FindDataType(typeName);
 	if (index == wxNOT_FOUND)
@@ -13916,11 +14239,11 @@ int wxGridExtTypeRegistry::FindOrCloneDataType(const wxString& typeName)
 			return wxNOT_FOUND;
 		}
 
-		wxGridExtCellRenderer* const
-			renderer = wxGridExtCellRendererPtr(GetRenderer(index))->Clone();
+		ibGridCellRenderer* const
+			renderer = ibGridCellRendererPtr(GetRenderer(index))->Clone();
 
-		wxGridExtCellEditor* const
-			editor = wxGridExtCellEditorPtr(GetEditor(index))->Clone();
+		ibGridCellEditor* const
+			editor = ibGridCellEditorPtr(GetEditor(index))->Clone();
 
 		// do it even if there are no parameters to reset them to defaults
 		wxString params = typeName.AfterFirst(wxT(':'));
@@ -13937,18 +14260,18 @@ int wxGridExtTypeRegistry::FindOrCloneDataType(const wxString& typeName)
 	return index;
 }
 
-wxGridExtCellRenderer* wxGridExtTypeRegistry::GetRenderer(int index)
+ibGridCellRenderer* ibGridTypeRegistry::GetRenderer(int index)
 {
-	wxGridExtCellRenderer* renderer = m_typeinfo[index]->m_renderer;
+	ibGridCellRenderer* renderer = m_typeinfo[index]->m_renderer;
 	if (renderer)
 		renderer->IncRef();
 
 	return renderer;
 }
 
-wxGridExtCellEditor* wxGridExtTypeRegistry::GetEditor(int index)
+ibGridCellEditor* ibGridTypeRegistry::GetEditor(int index)
 {
-	wxGridExtCellEditor* editor = m_typeinfo[index]->m_editor;
+	ibGridCellEditor* editor = m_typeinfo[index]->m_editor;
 	if (editor)
 		editor->IncRef();
 

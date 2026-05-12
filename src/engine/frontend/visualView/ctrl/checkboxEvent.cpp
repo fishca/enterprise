@@ -7,15 +7,16 @@
 //*                             Events                              *
 //*******************************************************************
 
-void CValueCheckbox::OnClickedCheckbox(wxCommandEvent& event)
+void ibValueCheckbox::OnClickedCheckbox(wxCommandEvent& event)
 {
-	wxCheckBox* checkbox =
-		wxDynamicCast(event.GetEventObject(), wxCheckBox);
-
-	m_selValue = checkbox->GetValue();
+	// Both wx (desktop wxCheckBox) and our web path set event.GetInt()
+	// to the new checked state — read from there to keep a single
+	// handler body across platforms, no dynamic_cast to a native class
+	// that isn't present in the web build.
+	m_selValue = event.GetInt() != 0;
 
 	if (!m_propertySource->IsEmptyProperty()) {
-		ISourceDataObject* srcData = m_formOwner->GetSourceObject();
+		ibSourceDataObject* srcData = m_formOwner->GetSourceObject();
 		wxASSERT(srcData);
 		srcData->SetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
 	}

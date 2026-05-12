@@ -3,8 +3,8 @@
 
 #include "backend/compiler/value.h"
 
-class BACKEND_API CValueContainer : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CValueContainer);
+class BACKEND_API ibValueContainer : public ibValue {
+	wxDECLARE_DYNAMIC_CLASS(ibValueContainer);
 private:
 	enum Func  {
 		enCount = 0,
@@ -18,8 +18,8 @@ public:
 	//Attribute -> String key
 	//working with an array as an aggregate object:
 
-	virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
-	virtual bool SetAt(const CValue& varKeyValue, const CValue& cValue);
+	virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
+	virtual bool SetAt(const ibValue& varKeyValue, const ibValue& cValue);
 
 	//check is empty
 	virtual bool IsEmpty() const { 
@@ -28,99 +28,103 @@ public:
 
 public:
 
-	class BACKEND_API CValueReturnContainer : public CValue {
+	class BACKEND_API ibValueReturnContainer : public ibValue {
 		
 		enum Prop {
 			enKey,
 			enValue
 		};
 		
-		CValue m_key;
-		CValue m_value;
+		ibValue m_key;
+		ibValue m_value;
 	
-		static CMethodHelper m_methodHelper;
+		static ibValueMethodHelper m_methodHelper;
 
 	public:
 
-		CValueReturnContainer() : CValue(eValueTypes::TYPE_VALUE, true) { 
+		ibValueReturnContainer() : ibValue(ibValueTypes::TYPE_VALUE, true) { 
 			PrepareNames(); 
 		}
 		
-		CValueReturnContainer(const CValue& key, CValue& value) : CValue(eValueTypes::TYPE_VALUE, true), m_key(key), m_value(value) { 
+		ibValueReturnContainer(const ibValue& key, ibValue& value) : ibValue(ibValueTypes::TYPE_VALUE, true), m_key(key), m_value(value) { 
 			PrepareNames();
 		}
 
-		virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+		virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 			//PrepareNames(); 
 			return &m_methodHelper;
 		}
 		virtual void PrepareNames() const;
 
-		virtual bool SetPropVal(const long lPropNum, CValue& cValue);        //setting attribute
-		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+		virtual bool SetPropVal(const long lPropNum, ibValue& cValue);        //setting attribute
+		virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 	};
 
 public:
 
-	CValueContainer();
-	CValueContainer(const std::map<CValue, CValue>& containerValues);
-	CValueContainer(bool readOnly);
+	ibValueContainer();
+	ibValueContainer(const std::map<ibValue, ibValue>& containerValues);
+	ibValueContainer(bool readOnly);
 
-	virtual ~CValueContainer();
+	virtual ~ibValueContainer();
 
-	virtual bool SetPropVal(const long lPropNum, const CValue& cValue);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const ibValue& cValue);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 
-	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);       //method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);       //method call
 
-	//Расширенные методы:
-	virtual void Insert(const CValue& varKeyValue, const CValue& cValue);
-	virtual void Delete(const CValue& varKeyValue);
-	virtual bool Property(const CValue& varKeyValue, CValue& cValueFound);
+	//Р Р°СЃС€РёСЂРµРЅРЅС‹Рµ РјРµС‚РѕРґС‹:
+	virtual void Insert(const ibValue& varKeyValue, const ibValue& cValue);
+	virtual void Delete(const ibValue& varKeyValue);
+	virtual bool Property(const ibValue& varKeyValue, ibValue& cValueFound);
 	unsigned int Count() const { return m_containerValues.size(); }
 	void Clear() { m_containerValues.clear(); }
 
-	//Работа с итераторами:
-	virtual bool HasIterator() const { return true; }
-	virtual CValue GetIteratorEmpty();
-	virtual CValue GetIteratorAt(unsigned int idx);
-	virtual unsigned int GetIteratorCount() const { return m_containerValues.size(); }
+	//Р Р°Р±РѕС‚Р° СЃ РёС‚РµСЂР°С‚РѕСЂР°РјРё:
+	virtual std::shared_ptr<ibValueIteratorState> CreateIterator() override;
 
 protected:
 
-	CMethodHelper* m_methodHelper;
+	ibValueMethodHelper* m_methodHelper;
 
 	struct ContainerComparator {
-		bool operator()(const CValue& lhs, const CValue& rhs) const;
+		bool operator()(const ibValue& lhs, const ibValue& rhs) const;
 	};
 
-	std::map<const CValue, CValue, ContainerComparator> m_containerValues;
+	std::map<const ibValue, ibValue, ContainerComparator> m_containerValues;
 };
 
 // structure  
-class BACKEND_API CValueStructure : public CValueContainer {
-	wxDECLARE_DYNAMIC_CLASS(CValueStructure);
+class BACKEND_API ibValueStructure : public ibValueContainer {
+	wxDECLARE_DYNAMIC_CLASS(ibValueStructure);
 public:
 
-	CValueStructure() : CValueContainer(false) {}
-	CValueStructure(const std::map<wxString, CValue>& structureValues) : CValueContainer(true) {
+	ibValueStructure() : ibValueContainer(false) {}
+	ibValueStructure(const std::map<wxString, ibValue>& structureValues) : ibValueContainer(true) {
 		for (auto& strBVal : structureValues) m_containerValues.insert_or_assign(strBVal.first, strBVal.second); 
 		PrepareNames();
 	}
 
-	CValueStructure(bool readOnly) : CValueContainer(readOnly) {}
+	ibValueStructure(bool readOnly) : ibValueContainer(readOnly) {}
 
-	virtual void Delete(const CValue& varKeyValue) override;
-	virtual void Insert(const CValue& varKeyValue, const CValue& cValue = CValue()) override;
-	virtual bool Property(const CValue& varKeyValue, CValue& cValueFound) override;
+	// `New Structure("Field1, Field2, ...", value1, value2, ...)` вЂ”
+	// 1C-style ctor: first arg is comma-separated field-name list,
+	// subsequent args are corresponding values (missing values default
+	// to TYPE_EMPTY). No-arg form `New Structure` produces an empty
+	// structure to be populated via Insert(name, value) later.
+	virtual bool Init(ibValue** paParams, const long lSizeArray) override;
 
-	virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
-	virtual bool SetAt(const CValue& varKeyValue, const CValue& cValue);
+	virtual void Delete(const ibValue& varKeyValue) override;
+	virtual void Insert(const ibValue& varKeyValue, const ibValue& cValue = ibValue()) override;
+	virtual bool Property(const ibValue& varKeyValue, ibValue& cValueFound) override;
+
+	virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
+	virtual bool SetAt(const ibValue& varKeyValue, const ibValue& cValue);
 };
 
 #include <locale>

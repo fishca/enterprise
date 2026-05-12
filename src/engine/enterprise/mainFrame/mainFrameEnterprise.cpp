@@ -8,11 +8,11 @@
 
 ///////////////////////////////////////////////////////////////////
 
-CFrontendDocMDIFrameEnterprise* CFrontendDocMDIFrameEnterprise::GetFrame() {
-	CFrontendDocMDIFrame* instance = CFrontendDocMDIFrame::GetFrame();
+ibFrontendDocMDIFrameEnterprise* ibFrontendDocMDIFrameEnterprise::GetFrame() {
+	ibFrontendDocMDIFrame* instance = ibFrontendDocMDIFrame::GetFrame();
 	if (instance != nullptr) {
-		CFrontendDocMDIFrameEnterprise* enterprise_instance =
-			dynamic_cast<CFrontendDocMDIFrameEnterprise*>(instance);
+		ibFrontendDocMDIFrameEnterprise* enterprise_instance =
+			dynamic_cast<ibFrontendDocMDIFrameEnterprise*>(instance);
 		wxASSERT(enterprise_instance);
 		return enterprise_instance;
 	}
@@ -21,16 +21,16 @@ CFrontendDocMDIFrameEnterprise* CFrontendDocMDIFrameEnterprise::GetFrame() {
 
 ///////////////////////////////////////////////////////////////////
 
-CFrontendDocMDIFrameEnterprise::CFrontendDocMDIFrameEnterprise(const wxString& title,
+ibFrontendDocMDIFrameEnterprise::ibFrontendDocMDIFrameEnterprise(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size) :
-	CFrontendDocMDIFrame(title, pos, size),
-	m_outputWindow(new COutputWindow(this, wxID_ANY))
+	ibFrontendDocMDIFrame(title, pos, size),
+	m_outputWindow(new ibOutputWindow(this, wxID_ANY))
 {
-	m_docManager = new CEnterpriseDocManager;
+	m_docManager = new ibMetaDocManagerEnterprise;
 }
 
-CFrontendDocMDIFrameEnterprise::~CFrontendDocMDIFrameEnterprise()
+ibFrontendDocMDIFrameEnterprise::~ibFrontendDocMDIFrameEnterprise()
 {
 	wxDELETE(m_docManager);
 }
@@ -39,11 +39,12 @@ CFrontendDocMDIFrameEnterprise::~CFrontendDocMDIFrameEnterprise()
 #include "frontend/win/dlgs/errorDialog.h"
 
 #include "backend/appData.h"
+#include "backend/session/sessionRegistry.h"
 
-void CFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, const wxString& strDocPath, const long currLine, const wxString& strErrorMessage) const
+void ibFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, const wxString& strDocPath, const long currLine, const wxString& strErrorMessage) const
 {
 	//open error dialog
-	std::shared_ptr<CDialogError> errDlg(new CDialogError(mainFrame, wxID_ANY));
+	std::shared_ptr<ibDialogError> errDlg(new ibDialogError(mainFrame, wxID_ANY));
 	
 	//set message 
 	errDlg->SetErrorMessage(strErrorMessage);
@@ -66,20 +67,24 @@ void CFrontendDocMDIFrameEnterprise::BackendError(const wxString& strFileName, c
 		);
 	}
 
-	//close window
+	//close window — force-close every session the registry owns:
+	// each session's m_forceExit flag interrupts any running script,
+	// OnForceExit (overridden on ibGUISession) schedules wxTheApp::Exit
+	// once, Remove submitted for each session row. GUI ends with the
+	// app exiting through wx's normal teardown.
 	if (retCode == 3) {
-		CApplicationData::ForceExit();
+		ibSessionRegistry::Instance().CloseAll(true);
 	}
 }
 
-void CFrontendDocMDIFrameEnterprise::CreateGUI()
+void ibFrontendDocMDIFrameEnterprise::CreateGUI()
 {
 	CreateWideGui();
 }
 
-bool CFrontendDocMDIFrameEnterprise::Show(bool show)
+bool ibFrontendDocMDIFrameEnterprise::Show(bool show)
 {
-	bool ret = CFrontendDocMDIFrame::Show(show);
+	bool ret = ibFrontendDocMDIFrame::Show(show);
 	if (ret) {
 		if (!outputWindow->IsEmpty()) {
 			outputWindow->SetFocus();
@@ -93,20 +98,28 @@ bool CFrontendDocMDIFrameEnterprise::Show(bool show)
 ///////////////////////////////////////////////////////////////////////////
 
 #include "backend/metadataConfiguration.h"
+#include "backend/session/session.h"
+#include "backend/moduleManager/moduleManager.h"
 
-bool CFrontendDocMDIFrameEnterprise::AllowRun() const
+bool ibFrontendDocMDIFrameEnterprise::AllowRun() const
 {
-	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
-		return true;
-
+	// StartMainModule fires BeforeStart / OnStart on the session's
+	// root. BeforeStart veto returns false → frame show blocked.
+	if (ibSession* s = GetSession()) {
+		if (auto* root = s->GetManagerModule())
+			return root->StartMainModule();
+	}
 	return false;
 }
 
-bool CFrontendDocMDIFrameEnterprise::AllowClose() const
+bool ibFrontendDocMDIFrameEnterprise::AllowClose() const
 {
-	if (activeMetaData != nullptr && activeMetaData->ExitMainModule())
-		return true;
-
+	// ExitMainModule fires BeforeExit / OnExit. BeforeExit veto blocks
+	// close (user sees "cancelled by script" banner / modal).
+	if (ibSession* s = GetSession()) {
+		if (auto* root = s->GetManagerModule())
+			return root->ExitMainModule();
+	}
 	return false;
 }
 

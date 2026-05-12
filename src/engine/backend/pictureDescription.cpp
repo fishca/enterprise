@@ -6,24 +6,24 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-bool CPictureDescriptionMemory::LoadData(CMemoryReader& reader, CPictureDescription& pictureDesc)
+bool ibPictureDescriptionMemory::LoadData(ibReaderMemory& reader, ibPictureDescription& pictureDesc)
 {
-	pictureDesc.m_type = static_cast<EPictureType>(reader.r_u32());
+	pictureDesc.m_type = static_cast<ibPictureType>(reader.r_u32());
 
-	if (pictureDesc.m_type == EPictureType::eFromBackend) {
+	if (pictureDesc.m_type == ibPictureType::eFromBackend) {
 		pictureDesc.m_class_identifier = reader.r_u64();
 	}
-	else if (pictureDesc.m_type == EPictureType::eFromConfiguration) {
+	else if (pictureDesc.m_type == ibPictureType::eFromConfiguration) {
 		pictureDesc.m_meta_guid = reader.r_stringZ();
 	}
-	else if (pictureDesc.m_type == EPictureType::eFromFile) {
-		CExternalPictureDescriptionMemory::LoadData(reader, pictureDesc.m_img_data);
+	else if (pictureDesc.m_type == ibPictureType::eFromFile) {
+		ibExternalPictureDescriptionMemory::LoadData(reader, pictureDesc.m_img_data);
 	}
 
 	return true;
 }
 
-bool CExternalPictureDescriptionMemory::LoadData(CMemoryReader& reader, CExternalPictureDescription& pictureDesc)
+bool ibExternalPictureDescriptionMemory::LoadData(ibReaderMemory& reader, ibExternalPictureDescription& pictureDesc)
 {
 	wxMemoryBuffer namePicture, bufferPicture;
 
@@ -46,24 +46,24 @@ bool CExternalPictureDescriptionMemory::LoadData(CMemoryReader& reader, CExterna
 	return true;
 }
 
-bool CPictureDescriptionMemory::SaveData(CMemoryWriter& writer, CPictureDescription& pictureDesc)
+bool ibPictureDescriptionMemory::SaveData(ibWriterMemory& writer, ibPictureDescription& pictureDesc)
 {
 	writer.w_u32(pictureDesc.m_type);
 
-	if (pictureDesc.m_type == EPictureType::eFromBackend) {
+	if (pictureDesc.m_type == ibPictureType::eFromBackend) {
 		writer.w_u64(pictureDesc.m_class_identifier);
 	}
-	else if (pictureDesc.m_type == EPictureType::eFromConfiguration) {
+	else if (pictureDesc.m_type == ibPictureType::eFromConfiguration) {
 		writer.w_stringZ(pictureDesc.m_meta_guid);
 	}
-	else if (pictureDesc.m_type == EPictureType::eFromFile) {
-		CExternalPictureDescriptionMemory::SaveData(writer, pictureDesc.m_img_data);
+	else if (pictureDesc.m_type == ibPictureType::eFromFile) {
+		ibExternalPictureDescriptionMemory::SaveData(writer, pictureDesc.m_img_data);
 	}
 
 	return true;
 }
 
-bool CExternalPictureDescriptionMemory::SaveData(CMemoryWriter& writer, CExternalPictureDescription& pictureDesc)
+bool ibExternalPictureDescriptionMemory::SaveData(ibWriterMemory& writer, ibExternalPictureDescription& pictureDesc)
 {
 	wxMemoryBuffer namePicture, bufferPicture;
 

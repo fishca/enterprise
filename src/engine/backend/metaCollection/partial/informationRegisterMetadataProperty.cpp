@@ -1,25 +1,25 @@
 #include "informationRegister.h"
 
-void CValueMetaObjectInformationRegister::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueMetaObjectInformationRegister::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+	if (GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
 		(*m_propertyAttributeLineActive)->ClearFlag(metaDisableFlag);
 		(*m_propertyAttributeRecorder)->ClearFlag(metaDisableFlag);
 		(*m_propertyAttributeLineNumber)->ClearFlag(metaDisableFlag);
 	}
-	else if (GetWriteRegisterMode() == eWriteRegisterMode::eIndependent) {
+	else if (GetWriteRegisterMode() == ibWriteRegisterMode::eIndependent) {
 		(*m_propertyAttributeLineActive)->SetFlag(metaDisableFlag);
 		(*m_propertyAttributeRecorder)->SetFlag(metaDisableFlag);
 		(*m_propertyAttributeLineNumber)->SetFlag(metaDisableFlag);
 	}
 
-	if (GetPeriodicity() != ePeriodicity::eNonPeriodic ||
-		GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+	if (GetPeriodicity() != ibPeriodicity::eNonPeriodic ||
+		GetWriteRegisterMode() == ibWriteRegisterMode::eSubordinateRecorder) {
 		(*m_propertyAttributePeriod)->ClearFlag(metaDisableFlag);
 	}
 	else {
 		(*m_propertyAttributePeriod)->SetFlag(metaDisableFlag);
 	}
 
-	IValueMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);
+	ibValueMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);
 }

@@ -9,17 +9,14 @@
 
 #include "backend/backend_mainFrame.h"
 #include "frontend/frontend.h"
+#include "frontend/frontendTypes.h"   // ibFrontendWindow typedef
 
-#if defined(backend_mainFrame)
-#undef backend_mainFrame
-#endif
+class ibMetaView;
 
-class CMetaView;
-
-#define mainFrame            		 (CFrontendDocMDIFrame::GetFrame())
-#define mainFrameCreate(frame)       (CFrontendDocMDIFrame::InitFrame(new frame))
-#define mainFrameShow()				 (CFrontendDocMDIFrame::ShowFrame())
-#define mainFrameDestroy()  		 (CFrontendDocMDIFrame::DestroyFrame())
+#define mainFrame            		 (ibFrontendDocMDIFrame::GetFrame())
+#define mainFrameCreate(frame)       (ibFrontendDocMDIFrame::InitFrame(new frame))
+#define mainFrameShow()				 (ibFrontendDocMDIFrame::ShowFrame())
+#define mainFrameDestroy()  		 (ibFrontendDocMDIFrame::DestroyFrame())
 
 #include "objinspect/objinspect.h"
 
@@ -36,8 +33,8 @@ class CMetaView;
 #define wxAUI_DEFAULT_COLOUR wxColour(41, 57, 85) 
 #define wxAUI_WHITE_COLOUR wxColour(255, 255, 255) 
 
-class FRONTEND_API CFrontendDocMDIFrame :
-	public IBackendDocMDIFrame, public wxAuiMDIParentFrame,
+class FRONTEND_API ibFrontendDocMDIFrame :
+	public ibBackendDocFrame, public wxAuiMDIParentFrame,
 	public wxDocParentFrameAnyBase {
 public:
 
@@ -48,49 +45,80 @@ public:
 	virtual void Modify(bool modify) {}
 	virtual bool IsModified() const { return false; }
 
-	virtual bool AuthenticationUser(const wxString& userName, const wxString& userPassword) const;
+	// Session this frame was initialized for. Set once via Initialize()
+	// (see below) right after OpenSession in the phased startup flow.
+	// Frames that go through the legacy monolithic Connect() read it
+	// through the base-class fallback to appData's main ticket.
+	virtual ibSession* GetSession() const override { return m_session; }
 
-	virtual IMetaData* FindMetadataByPath(const wxString& strFileName) const;
+	// GUI-session back-link — populated by ibGUISession::AttachFrame.
+	// Null until the derived session claims this frame; stays null for
+	// frames built by the legacy mainFrameCreate path. Use GetSession()
+	// for plain ibSession*-typed code; reach for ibGUISession* only
+	// when GUI-specific plumbing (module manager per-session, debugger
+	// hooks) matters.
+	void SetGUISession(class ibGUISession* s) { m_guiSession = s; }
+	class ibGUISession* GetGUISession() const { return m_guiSession; }
+
+	// Bind session to this frame. Called once right after session->Open
+	// succeeds, BEFORE LoadMetadata — so AllowRun/AllowClose and any
+	// session-aware UI already see the session even while metadata is
+	// being compiled. Runtime start (CreateRoot + AttachRuntime)
+	// is deferred to Show() so activeMetaData is guaranteed populated.
+	virtual bool Initialize(ibSession* session);
+
+	virtual ibMetaData* FindMetadataByPath(const wxString& strFileName) const;
 
 #pragma region _frontend_call_h__
 
 	// Form support
-	virtual IBackendValueForm* ActiveWindow() const override;
-	virtual IBackendValueForm* CreateNewForm(const IValueMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
-		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) override;
+	virtual ibBackendValueForm* ActiveWindow() const override;
+	virtual ibBackendValueForm* CreateNewForm(const ibValueMetaObjectFormBase* creator, class ibBackendControlFrame* ownerControl = nullptr,
+		class ibSourceDataObject* srcObject = nullptr, const ibUniqueKey& formGuid = wxNullUniqueKey) override;
 
-	virtual CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
-		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
+	virtual ibUniqueKey CreateFormUniqueKey(const ibBackendControlFrame* ownerControl,
+		const ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid);
 
-	virtual class IBackendValueForm* FindFormByUniqueKey(const IBackendControlFrame* ownerControl,
-		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
+	virtual class ibBackendValueForm* FindFormByUniqueKey(const ibBackendControlFrame* ownerControl,
+		const ibSourceDataObject* sourceObject, const ibUniqueKey& formGuid);
 
-	virtual class IBackendValueForm* FindFormByUniqueKey(const CUniqueKey& guid) override;
-	virtual class IBackendValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid) override;
-	virtual class IBackendValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid) override;
+	virtual class ibBackendValueForm* FindFormByUniqueKey(const ibUniqueKey& guid) override;
+	virtual class ibBackendValueForm* FindFormByControlUniqueKey(const ibUniqueKey& guid) override;
+	virtual class ibBackendValueForm* FindFormBySourceUniqueKey(const ibUniqueKey& guid) override;
 
-	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) override;
+	virtual bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid) override;
 
 	// Grid support
-	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument) override;
-	virtual bool PrintSpreadSheetDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, bool showPrintDlg = true) override;
+	virtual bool ShowSpreadsheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument) override;
+	virtual bool PrintSpreadsheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg = true) override;
 
 #pragma endregion 
 
 	virtual void RefreshFrame() override;
 	virtual void RaiseFrame() override;
 
+	// Desktop modal-message primitive — wxMessageBox with this frame
+	// as the parent so the dialog stays attached. Backend callers use
+	// session->GetFrame()->ShowModalMessage(...) instead of raw
+	// wxMessageBox so the backend stays wx-ignorant.
+	int ShowModalMessage(const wxString& message, const wxString& caption, int style) override {
+		return wxMessageBox(message, caption, style, this);
+	}
+
 	virtual wxAuiToolBar* GetMainFrameToolbar() const { return m_mainFrameToolbar; }
 	virtual wxAuiToolBar* GetDocToolbar() const { return m_docToolbar; }
 
 	virtual wxFrame* GetFrameHandler() const { return s_instance; }
 
-	virtual IPropertyObject* GetProperty() const;
-	virtual bool SetProperty(IPropertyObject* prop);
+	virtual ibPropertyObject* GetProperty() const;
+	virtual bool SetProperty(ibPropertyObject* prop);
 
 	virtual void SetTitle(const wxString& title) override { wxAuiMDIParentFrame::SetTitle(title); }
 	virtual void SetStatusText(const wxString& text, int number = 0) override { wxAuiMDIParentFrame::SetStatusText(text, number); }
-	virtual bool Show(bool show = true) override { return (show && AllowRun() || !show && AllowClose()) && wxAuiMDIParentFrame::Show(show); }
+	virtual bool Show(bool show = true) override {
+		if (show && !EnsureRuntime()) return false;
+		return (show && AllowRun() || !show && AllowClose()) && wxAuiMDIParentFrame::Show(show);
+	}
 
 #if wxUSE_MENUS
 	virtual void SetMenuBar(wxMenuBar* pMenuBar) override;
@@ -108,7 +136,7 @@ public:
 	void UpdateManager() {
 		if (!m_callUpdateFrameManager) {
 			m_callUpdateFrameManager = true;
-			CallAfter(&CFrontendDocMDIFrame::UpdateFrameManager);
+			CallAfter(&ibFrontendDocMDIFrame::UpdateFrameManager);
 		}
 	}
 
@@ -124,9 +152,26 @@ protected:
 	}
 
 	virtual bool AllowRun() const { return true; }
+
+public:
+	// Soft-close veto hook. Called from wx's EVT_CLOSE_WINDOW handler when
+	// the user clicks [X], and from ibGUISession::OnDestroySession when
+	// EndJob(false) lands from script — both flows must consult the same
+	// veto (BeforeExit script for enterprise; unsaved-config dialog for
+	// designer). Default true means "allow close"; subclass returns false
+	// to cancel.
 	virtual bool AllowClose() const { return true; }
 
-	CFrontendDocMDIFrame(const wxString& title,
+protected:
+
+	// Lazy runtime start — first Show() after LoadMetadata creates the
+	// root module manager and wires per-session ProcUnits onto the
+	// metadata descriptors. No-op on later shows (re-enter guarded by
+	// session->GetManagerModule()) and on kinds that don't run scripts
+	// (Designer / Launcher / WebServer). Called from Show().
+	bool EnsureRuntime();
+
+	ibFrontendDocMDIFrame(const wxString& title,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxDEFAULT_FRAME_STYLE,
@@ -140,28 +185,33 @@ protected:
 
 public:
 
-	virtual ~CFrontendDocMDIFrame();
+	virtual ~ibFrontendDocMDIFrame();
 
-	static wxWindow* CreateChildFrame(CMetaView* view,
+	// Returns ibFrontendWindow* (typedef → wxWindow on desktop,
+	// ibWebWindow on web) so the signature reads the same across
+	// builds even though this static is desktop-only today. Keeps the
+	// door open for a shared signature if the web frame ever adopts
+	// the same factory entry point.
+	static ibFrontendWindow* CreateChildFrame(ibMetaView* view,
 		const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
 
-	static CObjectInspector* GetObjectInspector() {
+	static ibObjectInspector* GetObjectInspector() {
 		if (s_instance != nullptr)
 			return s_instance->m_objectInspector;
 		return nullptr;
 	}
 
-	static CFrontendDocMDIFrame* GetFrame() { return s_instance; }
+	static ibFrontendDocMDIFrame* GetFrame() { return s_instance; }
 
 	// Force the static appData instance to Init()
-	static void InitFrame(CFrontendDocMDIFrame* mf);
+	static void InitFrame(ibFrontendDocMDIFrame* mf);
 	static bool ShowFrame();
 
 	static void DestroyFrame();
 
-	CKeyBinder             GetKeyBinder() const { return m_keyBinder; }
-	CFontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
-	CEditorSettings        GetEditorSettings() const { return m_editorSettings; }
+	ibKeyBinder             GetKeyBinder() const { return m_keyBinder; }
+	ibFontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
+	ibEditorSettings        GetEditorSettings() const { return m_editorSettings; }
 
 	/**
 	* Show property in mainFrame
@@ -170,7 +220,7 @@ public:
 	void ShowInspector();
 
 	// Activate view 
-	void ActivateView(CMetaView* view, bool activate = true);
+	void ActivateView(ibMetaView* view, bool activate = true);
 
 protected:
 
@@ -182,9 +232,9 @@ protected:
 
 	virtual void CreatePropertyPane();
 
-	class CFrameManager : public wxAuiManager {
+	class ibFrameManager : public wxAuiManager {
 	public:
-		CFrameManager(wxWindow* managedWnd = nullptr,
+		ibFrameManager(wxWindow* managedWnd = nullptr,
 			unsigned int flags = wxAUI_MGR_DEFAULT) :
 			wxAuiManager(managedWnd, flags) {
 		}
@@ -192,13 +242,27 @@ protected:
 		void Refresh() { Repaint(); }
 	};
 
-	static CFrontendDocMDIFrame* s_instance;
+	static ibFrontendDocMDIFrame* s_instance;
 
-	CObjectInspector* m_objectInspector;
+	// Bound at Initialize(). Drives AllowRun/AllowClose and any
+	// session-aware UI actions. Raw pointer — session outlives frame
+	// (registry's m_own keeps it alive until ibSession::Close()).
+	ibSession* m_session = nullptr;
 
-	CKeyBinder             m_keyBinder;
-	CFontColorSettings     m_fontColorSettings;
-	CEditorSettings        m_editorSettings;
+	// GUI-session back-link — set by ibGUISession::AttachFrame when the
+	// derived session (ibEnterpriseSession / ibDesignerSession) instantiates
+	// this frame in its OnCreateSession. Lets frame handlers reach the
+	// per-session runtime (module manager, ProcUnit map, ibValueSystemFunction
+	// once it goes non-static) without routing through wxApp singletons.
+	// Non-owning; session owns the frame and clears this pointer on its
+	// dtor via SetGUISession(nullptr) before `delete m_frame`.
+	class ibGUISession* m_guiSession = nullptr;
+
+	ibObjectInspector* m_objectInspector;
+
+	ibKeyBinder             m_keyBinder;
+	ibFontColorSettings     m_fontColorSettings;
+	ibEditorSettings        m_editorSettings;
 
 	bool m_callRaiseFrame, m_callUpdateFrameManager;
 
@@ -206,16 +270,16 @@ protected:
 	wxAuiToolBar* m_docToolbar;
 
 	// Create frame manager 
-	CFrameManager m_mgr;
+	ibFrameManager m_mgr;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CDocBottomStatusBar : public wxStatusBar {
+class ibDocBottomStatusBar : public wxStatusBar {
 public:
 
-	CDocBottomStatusBar() : wxStatusBar() {};
-	CDocBottomStatusBar(wxWindow* parent,
+	ibDocBottomStatusBar() : wxStatusBar() {};
+	ibDocBottomStatusBar(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		long style = wxSTB_DEFAULT_STYLE,
 		const wxString& name = wxStatusBarNameStr)
@@ -240,9 +304,9 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CProcessSplashScreen : public wxSplashScreen {
+class ibProcessSplashScreen : public wxSplashScreen {
 public:
-	CProcessSplashScreen(const wxBitmap& bitmap, long splashStyle = wxSPLASH_CENTRE_ON_SCREEN, int milliseconds = -1,
+	ibProcessSplashScreen(const wxBitmap& bitmap, long splashStyle = wxSPLASH_CENTRE_ON_SCREEN, int milliseconds = -1,
 		wxWindow* parent = nullptr, wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,

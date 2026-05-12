@@ -5,32 +5,35 @@
 
 #include "reference.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/metaCollection/partial/tabularSection/tabularSection.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
 
-bool CValueReferenceDataObject::ReadData(bool createData)
+bool ibValueReferenceDataObject::ReadData(bool createData)
 {
 	if (m_metaObject == nullptr || !m_objGuid.isValid())
 		return false;
 
+	// Cache the conn locally — every ses_query call Acquires a fresh
+	// shared_ptr; multiple ses_query->X(...) in one function would each
+	// route through Checkout and pin a different pool entry, leaving rs
+	// orphaned on a conn that the next Close runs on the wrong handle.
+	const auto db = ses_query;
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 
-	if (db_query->TableExists(tableName)) {
-		IDatabaseResultSet* resultSet = nullptr;	
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			resultSet = db_query->RunQueryWithResults("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1;", tableName, m_objGuid.str());
-		else
-			resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM %s WHERE uuid = '%s';", tableName, m_objGuid.str());
+	if (db->TableExists(tableName)) {
+		ibDatabaseResultSet* resultSet = (db->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD)
+			? db->RunQueryWithResults("SELECT FIRST 1 * FROM %s WHERE uuid = '%s';", tableName, m_objGuid.str())
+			: db->RunQueryWithResults("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1;", tableName, m_objGuid.str());
 		if (resultSet == nullptr)
 			return false;
 		bool readRef = false;
-		if (resultSet->Next()) {			
-			//load attributes 
+		if (resultSet->Next()) {
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
-					IValueMetaObjectAttribute::GetValueAttribute(
+					ibValueMetaObjectAttributeBase::GetValueAttribute(
 						object,
 						m_listObjectValue[object->GetMetaID()],
 						resultSet,
@@ -38,58 +41,48 @@ bool CValueReferenceDataObject::ReadData(bool createData)
 					);
 				}
 			}
-			// table is collection values 
-			//for (const auto object : m_metaObject->GetTableArrayObject()) {
-			//	m_listObjectValue.insert_or_assign(object->GetMetaID(), 
-			//		CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectRef>(this, object, true));
-			//}
-
 			readRef = true;
-		}	
-		db_query->CloseResultSet(resultSet);
+		}
+		db->CloseResultSet(resultSet);
 		return readRef;
 	}
 	return false;
 }
 
-bool CValueReferenceDataObject::FindValue(const wxString& findData, std::vector<CValue>& listValue) const
+bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector<ibValue>& listValue) const
 {
-	class CObjectComparatorValue : public IValueDataObject {
+	class ibValueDataObjectComparator : public ibValueDataObject {
 		bool ReadValues() {
 			if (m_metaObject == nullptr || m_newObject)
 				return false;
+			const auto db = ses_query;
 			const wxString& tableName = m_metaObject->GetTableNameDB();
-			if (db_query->TableExists(tableName)) {
-
-				IDatabaseResultSet* resultSet = nullptr;
-				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-					resultSet = db_query->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "' LIMIT 1;");
-				else
-					resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "';");
-
+			if (db->TableExists(tableName)) {
+				ibDatabaseResultSet* resultSet = (db->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD)
+					? db->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "';")
+					: db->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "' LIMIT 1;");
 				if (!resultSet)
 					return false;
 				if (resultSet->Next()) {
-					//load other attributes 
 					for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 						if (m_metaObject->IsDataReference(object->GetMetaID()))
 							continue;
-						IValueMetaObjectAttribute::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
+						ibValueMetaObjectAttributeBase::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 					}
 				}
-				db_query->CloseResultSet(resultSet);
+				db->CloseResultSet(resultSet);
 				return true;
 			}
 			return false;
 		}
-		IValueMetaObjectRecordDataRef* m_metaObject;
+		const ibValueMetaObjectRecordDataRef* m_metaObject;
 	private:
-		CObjectComparatorValue(IValueMetaObjectRecordDataRef* metaObject, const CGuid& guid) : IValueDataObject(guid, false), m_metaObject(metaObject) {}
+		ibValueDataObjectComparator(const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) : ibValueDataObject(guid, false), m_metaObject(metaObject) {}
 	public:
 
-		static bool CompareValue(const wxString& findData, IValueMetaObjectRecordDataRef* metaObject, const CGuid& guid) {
+		static bool CompareValue(const wxString& findData, const ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) {
 			bool allow = false;
-			CObjectComparatorValue* comparator = new CObjectComparatorValue(metaObject, guid);
+			ibValueDataObjectComparator* comparator = new ibValueDataObjectComparator(metaObject, guid);
 			if (comparator->ReadValues()) {
 				for (const auto object : metaObject->GetSearchedAttributeObjectArray()) {
 					const wxString& fieldCompare = comparator->m_listObjectValue[object->GetMetaID()].GetString();
@@ -108,26 +101,27 @@ bool CValueReferenceDataObject::FindValue(const wxString& findData, std::vector<
 			return allow;
 		}
 
-		//get metaData from object 
-		virtual IValueMetaObjectRecordData* GetMetaObject() const {
+		//get metaData from object
+		virtual const ibValueMetaObjectRecordData* GetMetaObject() const {
 			return m_metaObject;
 		}
 	};
+	const auto db = ses_query;
 	const wxString& tableName = m_metaObject->GetTableNameDB();
-	if (db_query->TableExists(tableName)) {
-		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT * FROM %s ORDER BY uuid; ", tableName);
+	if (db->TableExists(tableName)) {
+		ibDatabaseResultSet* resultSet = db->RunQueryWithResults("SELECT * FROM %s ORDER BY uuid; ", tableName);
 		if (resultSet == nullptr)
 			return false;
 		while (resultSet->Next()) {
-			const CGuid& currentGuid = resultSet->GetResultString(guidName);
-			if (CObjectComparatorValue::CompareValue(findData, m_metaObject, currentGuid)) {
+			const ibGuid& currentGuid = resultSet->GetResultString(guidName);
+			if (ibValueDataObjectComparator::CompareValue(findData, m_metaObject, currentGuid)) {
 				listValue.push_back(
-					CValueReferenceDataObject::Create(m_metaObject, currentGuid)
+					ibValueReferenceDataObject::Create(m_metaObject, currentGuid)
 				);
 			}
 		}
-		std::sort(listValue.begin(), listValue.end(), [](const CValue& a, const CValue& b) { return a.GetString() < b.GetString(); });
-		db_query->CloseResultSet(resultSet);
+		std::sort(listValue.begin(), listValue.end(), [](const ibValue& a, const ibValue& b) { return a.GetString() < b.GetString(); });
+		db->CloseResultSet(resultSet);
 		return listValue.size() > 0;
 	}
 

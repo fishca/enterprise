@@ -3,14 +3,14 @@
 
 #include "metaObject.h"
 
-class BACKEND_API CValueMetaObjectLanguage : public IValueMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectLanguage);
+class BACKEND_API ibValueMetaObjectLanguage : public ibValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectLanguage);
 public:
 
 	wxString GetLangCode() const { return m_propertyCode->GetValueAsString(); }
 	void SetLangCode(const wxString& strCode) { m_propertyCode->SetValue(strCode); }
 
-	CValueMetaObjectLanguage(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	ibValueMetaObjectLanguage(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -27,17 +27,17 @@ public:
 	/**
 	* Property events
 	*/
-	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
+	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue);
 
 protected:
 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 
 	bool IsValidCode(const wxString& strLangCode);
 
 private:
-	CPropertyUString* m_propertyCode = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryContext, wxT("Code"), _("Code"), wxT("en"));
+	ibPropertyUString* m_propertyCode = ibPropertyObject::CreateProperty<ibPropertyUString>(m_categoryContext, wxT("Code"), _("Code"), wxT("en"));
 };
 
 #endif 

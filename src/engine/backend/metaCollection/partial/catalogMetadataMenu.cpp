@@ -6,29 +6,29 @@
 #include "catalog.h"
 #include "backend/metaData.h"
 
-bool CValueMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
+bool ibValueMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = nullptr;
 	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open object module"));
-	menuItem->SetBitmap((*m_propertyModuleObject)->GetIcon());
+	menuItem->SetBitmap((*m_propertyObjectModule)->GetIcon());
 	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MANAGER, _("Open manager module"));
-	menuItem->SetBitmap((*m_propertyModuleManager)->GetIcon());
+	menuItem->SetBitmap((*m_propertyManagerModule)->GetIcon());
 	defaultMenu->AppendSeparator();
 	menuItem = defaultMenu->Append(ID_METATREE_EDIT_PREDEFINED, _("Open predefined values"));
-	menuItem->SetBitmap(CBackendPicture::GetPicture(g_metaAttributeCLSID));
+	menuItem->SetBitmap(ibBackendPicture::GetPicture(g_metaAttributeCLSID));
 	defaultMenu->AppendSeparator();
 	return false;
 }
 
-void CValueMetaObjectCatalog::ProcessCommand(unsigned int id)
+void ibValueMetaObjectCatalog::ProcessCommand(unsigned int id)
 {
-	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
+	ibBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_MODULE)
-		metaTree->OpenFormMDI(m_propertyModuleObject->GetMetaObject());
+		metaTree->OpenFormMDI(m_propertyObjectModule->GetMetaObject());
 	else if (id == ID_METATREE_OPEN_MANAGER)
-		metaTree->OpenFormMDI(m_propertyModuleManager->GetMetaObject());
+		metaTree->OpenFormMDI(m_propertyManagerModule->GetMetaObject());
 	else if (id == ID_METATREE_EDIT_PREDEFINED)
 		metaTree->EditPredefinedValues(this);
 }

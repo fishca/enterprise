@@ -1,351 +1,18 @@
 #include "appData.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
+#include "backend/databaseLayer/connectionPool.h"
 
-#include "backend/backend_mainFrame.h"
 #include "backend/backend_exception.h"
 
-///////////////////////////////////////////////////////////////////////////////
-#define timeInterval 5
-///////////////////////////////////////////////////////////////////////////////
+#include "backend/session/sessionRegistry.h"
 
-wxCriticalSection CApplicationData::CApplicationDataSessionUpdater::ms_sessionLocker;
 
 ///////////////////////////////////////////////////////////////////////////////
-//								CApplicationDataSessionUpdater
+//								ibApplicationData
 ///////////////////////////////////////////////////////////////////////////////
 
-void CApplicationData::CApplicationDataSessionUpdater::Job_ClearLostSession()
-{
-	m_session_db->BeginTransaction();
-
-	wxDateTime prevDateTime = m_currentDateTime.GetValue();
-	(void)prevDateTime.Subtract(wxTimeSpan(0, 0, timeInterval));
-
-	const wxString& strLastActive = prevDateTime.FormatISOCombined(' ');
-	IDatabaseResultSet* dbResultSetRecord = m_session_db->RunQueryWithResults(
-		//wxT("SELECT lastActive FROM %s WHERE lastActive < '%s' FOR UPDATE WITH LOCK SKIP LOCKED;"),
-		wxT("SELECT lastActive FROM %s WHERE lastActive < '%s' FOR UPDATE;"),
-		session_table,
-		strLastActive
-	);
-
-	//clear 
-	m_session_db->RunQuery(
-		wxT("DELETE FROM %s WHERE lastActive < '%s';"),
-		session_table,
-		strLastActive
-	);
-
-	m_session_db->Commit();
-
-	if (dbResultSetRecord != nullptr)
-		dbResultSetRecord->Close();
-
-	m_session_db->CloseResultSet(dbResultSetRecord);
-}
-
-void CApplicationData::CApplicationDataSessionUpdater::Job_CalcActiveSession()
-{
-	m_session_db->BeginTransaction();
-
-	auto dbSessionCountResult = m_session_db->RunQueryWithResults(
-		//wxT("SELECT session, userName, lastActive FROM %s WHERE session = '%s' FOR UPDATE WITH LOCK SKIP LOCKED;"),
-		wxT("SELECT session, userName, lastActive FROM %s WHERE session = '%s' FOR UPDATE;"),
-		session_table,
-		m_session.str()
-	);
-
-	const wxDateTime& currentTime = wxDateTime::Now();
-
-	if (dbSessionCountResult != nullptr &&
-		dbSessionCountResult->Next()) {
-
-		m_session_db->RunQuery(
-			wxT("UPDATE %s SET lastActive = '%s', userName = '%s' WHERE session = '%s';"),
-			session_table,
-			currentTime.FormatISOCombined(' '),
-			appData->GetUserName(),
-			m_session.str()
-		);
-	}
-	else {
-
-		//start lost session 
-		IPreparedStatement* dbSessionPrepareData = m_session_db->PrepareStatement(
-			wxT("INSERT INTO %s (session, userName, application, started, lastActive, computer) VALUES (?,?,?,?,?,?);"),
-			session_table
-		);
-
-		dbSessionPrepareData->SetParamString(1, m_session.str());
-		dbSessionPrepareData->SetParamString(2, appData->GetUserName()); //empty user!
-		dbSessionPrepareData->SetParamInt(3, appData->GetAppMode());
-		dbSessionPrepareData->SetParamDate(4, appData->GetStartedDate());
-		dbSessionPrepareData->SetParamDate(5, currentTime);
-		dbSessionPrepareData->SetParamString(6, appData->GetComputerName());
-
-		dbSessionPrepareData->RunQuery();
-
-		if (dbSessionPrepareData != nullptr)
-			dbSessionPrepareData->Close();
-
-		m_session_db->CloseStatement(dbSessionPrepareData);
-	}
-
-	m_session_db->Commit();
-
-	if (dbSessionCountResult != nullptr)
-		dbSessionCountResult->Close();
-
-	m_session_db->CloseResultSet(dbSessionCountResult);
-}
-
-void CApplicationData::CApplicationDataSessionUpdater::Job_UpdateActiveSession()
-{
-	//append sessions 
-	IDatabaseResultSet* dbSessionResult = m_session_db->RunQueryWithResults(
-		//wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session WITH LOCK SKIP LOCKED;"),
-		wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session;"),
-		session_table
-	);
-
-	wxCriticalSectionLocker enter(ms_sessionLocker);
-
-	if (dbSessionResult != nullptr) {
-		m_sessionArray.ClearSession();
-		while (dbSessionResult->Next()) {
-			m_sessionArray.AppendSession(
-				static_cast<eRunMode>(dbSessionResult->GetResultInt("application")),
-				dbSessionResult->GetResultDate("started"),
-				dbSessionResult->GetResultString("userName"),
-				dbSessionResult->GetResultString("computer"),
-				dbSessionResult->GetResultString("session")
-			);
-		}
-
-		dbSessionResult->Close();
-	}
-
-	m_session_db->CloseResultSet(dbSessionResult);
-}
-
-void CApplicationData::CApplicationDataSessionUpdater::ClearLostSessionUpdater()
-{
-	wxCriticalSectionLocker enter(ms_sessionLocker);
-
-	m_session_db->BeginTransaction();
-
-	const wxDateTime& currentTime = wxDateTime::Now();
-	IDatabaseResultSet* dbResultSetRecord = m_session_db->RunQueryWithResults(
-		//wxT("SELECT lastActive FROM %s WHERE lastActive < '%s' FOR UPDATE WITH LOCK SKIP LOCKED;"),
-		wxT("SELECT lastActive FROM %s WHERE lastActive < '%s' FOR UPDATE;"),
-		session_table,
-		currentTime.Subtract(wxTimeSpan(0, 0, timeInterval)).FormatISOCombined(' ')
-	);
-
-	//clear 
-	m_session_db->RunQuery(
-		wxT("DELETE FROM %s WHERE lastActive < '%s';"),
-		session_table,
-		currentTime.Subtract(wxTimeSpan(0, 0, timeInterval)).FormatISOCombined(' ')
-	);
-
-	m_session_db->Commit();
-
-	if (dbResultSetRecord != nullptr)
-		dbResultSetRecord->Close();
-
-	m_session_db->CloseResultSet(dbResultSetRecord);
-
-	//clear session 
-	m_sessionArray.ClearSession();
-
-	//append sessions 
-	IDatabaseResultSet* dbSessionResult = m_session_db->RunQueryWithResults(
-		//wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session WITH LOCK SKIP LOCKED;"),
-		wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session;"),
-		session_table
-	);
-
-	if (dbSessionResult != nullptr) {
-		while (dbSessionResult->Next()) {
-			m_sessionArray.AppendSession(
-				static_cast<eRunMode>(dbSessionResult->GetResultInt("application")),
-				dbSessionResult->GetResultDate("started"),
-				dbSessionResult->GetResultString("userName"),
-				dbSessionResult->GetResultString("computer"),
-				dbSessionResult->GetResultString("session")
-			);
-		}
-		dbSessionResult->Close();
-	}
-
-	m_session_db->CloseResultSet(dbSessionResult);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-CApplicationData::CApplicationDataSessionUpdater::CApplicationDataSessionUpdater(CApplicationData* application, const CGuid& session) :
-	wxThread(wxTHREAD_JOINABLE),
-	m_session_db(application->m_db != nullptr ? application->m_db->Clone() : nullptr),
-	m_session(session),
-	m_sessionCreated(false), m_sessionStarted(false),
-	m_sessionUpdaterLoop(false)
-{
-	wxThread::SetPriority(wxPRIORITY_MIN);
-}
-
-bool CApplicationData::CApplicationDataSessionUpdater::InitSessionUpdater()
-{
-	if (m_session_db == nullptr)
-		return false;
-
-	if (wxThread::Run() != wxThreadError::wxTHREAD_NO_ERROR)
-		return false;
-
-	m_sessionUpdaterLoop = true;
-
-	while (m_sessionUpdaterLoop) {
-
-		if (m_sessionCreated)
-			break;
-
-		wxMilliSleep(50);
-	}
-
-	m_sessionUpdaterLoop = false;
-	return m_sessionCreated;
-}
-
-void CApplicationData::CApplicationDataSessionUpdater::StartSessionUpdater()
-{
-	m_sessionStarted = true;
-}
-
-const CApplicationDataSessionArray CApplicationData::CApplicationDataSessionUpdater::GetSessionArray() const
-{
-	wxCriticalSectionLocker enter(ms_sessionLocker);
-	return m_sessionArray;
-}
-
-bool CApplicationData::CApplicationDataSessionUpdater::VerifySessionUpdater() const
-{
-	if (appData->GetAppMode() == eDESIGNER_MODE) {
-		for (unsigned int idx = 0; idx < m_sessionArray.GetSessionCount(); idx++) {
-			if (eDESIGNER_MODE == m_sessionArray.GetSessionApplication(idx)) {
-				try {
-					CBackendCoreException::Error(
-						_("Another designer process is already running:\n%s, %s, %s"),
-						m_sessionArray.GetStartedDate(idx),
-						m_sessionArray.GetComputerName(idx),
-						m_sessionArray.GetUserName(idx)
-					);
-				}
-				catch (...) {
-				}
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
-
-CApplicationData::CApplicationDataSessionUpdater::~CApplicationDataSessionUpdater()
-{
-	if (m_session_db != nullptr) m_session_db->Close();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-wxThread::ExitCode CApplicationData::CApplicationDataSessionUpdater::Entry()
-{
-	//�lear lost session 
-	ClearLostSessionUpdater();
-
-	Job_UpdateActiveSession();
-
-	//verify session updater
-	if (!VerifySessionUpdater())
-		return (wxThread::ExitCode)1;
-
-	//start empty session 
-	IPreparedStatement* dbSessionPrepareData = m_session_db->PrepareStatement(
-		wxT("INSERT INTO %s (session, userName, application, started, lastActive, computer) VALUES (?,?,?,?,?,?);"),
-		session_table
-	);
-
-	if (dbSessionPrepareData == nullptr)
-		return (wxThread::ExitCode)1;
-
-	dbSessionPrepareData->SetParamString(1, m_session.str());
-	dbSessionPrepareData->SetParamString(2, wxEmptyString); //empty user!
-	dbSessionPrepareData->SetParamInt(3, appData->GetAppMode());
-	dbSessionPrepareData->SetParamDate(4, appData->GetStartedDate());
-	dbSessionPrepareData->SetParamDate(5, wxDateTime::Now());
-	dbSessionPrepareData->SetParamString(6, appData->GetComputerName());
-
-	dbSessionPrepareData->RunQuery();
-	dbSessionPrepareData->Close();
-
-	m_sessionArray.AppendSession(
-		appData->GetAppMode(), appData->GetStartedDate(), appData->GetUserName(), appData->GetComputerName(), m_session.str()
-	);
-
-	if (dbSessionPrepareData != nullptr)
-		dbSessionPrepareData->Close();
-
-	m_session_db->CloseStatement(dbSessionPrepareData);
-	m_sessionCreated = true;
-
-	bool lastSessionStarted = m_sessionStarted;
-	while (!TestDestroy()) {
-
-		m_currentDateTime = std::move(wxDateTime::UNow());
-
-		Job_ClearLostSession();
-		Job_CalcActiveSession();
-		Job_UpdateActiveSession();
-
-		const wxTimeSpan& job_allTotal_done = wxDateTime::UNow() - m_currentDateTime;
-
-		for (unsigned int milliseconds =
-			job_allTotal_done.GetMilliseconds().GetValue();
-			milliseconds < 3000;
-			milliseconds += 250)
-		{
-			if (m_sessionStarted != lastSessionStarted)
-				break;
-
-			if (TestDestroy())
-				break;
-
-			wxMilliSleep(250);
-		}
-
-		lastSessionStarted = m_sessionStarted;
-	};
-
-	const int result = m_session_db->RunQuery(
-		wxT("DELETE FROM %s WHERE session = '%s';"),
-		session_table,
-		m_session.str()
-	);
-
-	m_sessionArray.ClearSession();
-	m_sessionCreated = m_sessionStarted = false;
-
-	if (result != DATABASE_LAYER_QUERY_RESULT_ERROR)
-		return (wxThread::ExitCode)1;
-
-	return (wxThread::ExitCode)0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//								CApplicationData
-///////////////////////////////////////////////////////////////////////////////
-
-bool CApplicationData::TableAlreadyCreated()
+bool ibApplicationData::TableAlreadyCreated()
 {
 	return db_query->TableExists(user_table) &&
 		db_query->TableExists(session_table);
@@ -353,7 +20,7 @@ bool CApplicationData::TableAlreadyCreated()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void CApplicationData::CreateTableUser()
+void ibApplicationData::CreateTableUser()
 {
 	if (!db_query->TableExists(user_table)) {
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
@@ -378,7 +45,7 @@ void CApplicationData::CreateTableUser()
 	}
 }
 
-void CApplicationData::CreateTableSession()
+void ibApplicationData::CreateTableSession()
 {
 	if (!db_query->TableExists(session_table)) {
 
@@ -388,11 +55,22 @@ void CApplicationData::CreateTableSession()
 			"application	   INTEGER  NOT NULL,"
 			"started		   TIMESTAMP  NOT NULL,"
 			"lastActive		   TIMESTAMP  NOT NULL,"
-			"computer          VARCHAR(128) NOT NULL);"),
+			"computer          VARCHAR(128) NOT NULL,"
+			// --- session-registry extensions (2026-04-20) ---
+			// pid             = owner process id (for admin / kick / debugger attach)
+			// address         = "host:port" for web processes; "" for desktop
+			// currentActivity = last scripted/engine label ("idle", "running:OnStart", "reload", ...)
+			// exclusive       = 1 when this session holds process-wide monopoly mode; 0 otherwise.
+			//                   Cluster-aware exclusive gate reads this column from peer rows
+			//                   to block new Connects when another process is exclusive.
+			"pid               INTEGER,"
+			"address           VARCHAR(256),"
+			"currentActivity   VARCHAR(128),"
+			"exclusive         INTEGER);"),
 			session_table
 		);
 
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
 
 			db_query->RunQuery(
 				wxT("create index if not exists session_index_1 on %s (session, userName);"),
@@ -429,15 +107,102 @@ void CApplicationData::CreateTableSession()
 	}
 }
 
-void CApplicationData::CreateTableEvent()
+void ibApplicationData::CreateTableEvent()
 {
 	if (!db_query->TableExists(event_table)) {
 	}
 }
 
-bool CApplicationData::ClearTableUser()
+// Additive column migration for sys_session. Existing databases created
+// before the session-registry refactor (pid / address / currentActivity
+// added 2026-04-20) are transparently upgraded on startup — registry
+// writes / reads assume these columns exist, so an old schema would
+// trip INSERT and snapshot SELECT otherwise. Columns are nullable, so
+// legacy rows stay valid until the next heartbeat rewrite.
+void ibApplicationData::MigrateTableSession()
 {
-	if (!db_query->TableExists(user_table)) 
+	if (!db_query->TableExists(session_table))
+		return;
+
+	wxArrayString cols = db_query->GetColumns(session_table);
+	auto has = [&](const wxString& col) {
+		for (std::size_t i = 0; i < cols.GetCount(); ++i)
+			if (cols[i].CmpNoCase(col) == 0) return true;
+		return false;
+	};
+
+	if (!has(wxT("pid"))) {
+		try { db_query->RunQuery(wxT("ALTER TABLE %s ADD pid INTEGER"), session_table); }
+		catch (...) { /* best-effort — driver may not support this DDL */ }
+	}
+	if (!has(wxT("address"))) {
+		try { db_query->RunQuery(wxT("ALTER TABLE %s ADD address VARCHAR(256)"), session_table); }
+		catch (...) {}
+	}
+	if (!has(wxT("currentActivity"))) {
+		try { db_query->RunQuery(wxT("ALTER TABLE %s ADD currentActivity VARCHAR(128)"), session_table); }
+		catch (...) {}
+	}
+	if (!has(wxT("kind"))) {
+		// ibSessionKind — session-level role (WebServer=5, WebClient=100,
+		// desktop kinds share numeric values with ibRunMode). Distinct
+		// from `application` which stores process-level ibRunMode.
+		try { db_query->RunQuery(wxT("ALTER TABLE %s ADD kind INTEGER"), session_table); }
+		catch (...) {}
+	}
+	if (!has(wxT("signal"))) {
+		// Admin → registry control channel. A non-empty value is picked
+		// up by the session's owning process on its next JobCheckSignal
+		// tick; the handler acts and clears the signal. "kick" is the
+		// first supported value — more (reload, refresh) may follow.
+		try { db_query->RunQuery(wxT("ALTER TABLE %s ADD signal VARCHAR(32)"), session_table); }
+		catch (...) {}
+	}
+	if (!has(wxT("exclusive"))) {
+		// Process-wide monopoly mode marker. 1 = this session holds
+		// exclusive; cluster-aware gate in ProcessAdd / ProcessSetExclusive
+		// reads peer rows to detect another process holding it.
+		try { db_query->RunQuery(wxT("ALTER TABLE %s ADD exclusive INTEGER"), session_table); }
+		catch (...) {}
+	}
+}
+
+// Bring up sys_bytecode_cache. Independent of the user/session/event
+// triple — runs in any runMode after the existing-tables gate, so DBs
+// initialised before AOT cache landed pick the table up on the next
+// open of any process. Idempotent; second call is a no-op once the
+// table exists.
+//
+// Per-driver column types: PostgreSQL uses BYTEA for the binary blob,
+// every other driver (Firebird embedded, SQLite, MySQL, ODBC) takes
+// plain BLOB. Firebird's BLOB SUB_TYPE 0 is implicit when no sub-type
+// is named.
+void ibApplicationData::MigrateTableBytecodeCache()
+{
+	if (db_query->TableExists(bytecode_cache_table))
+		return;
+
+	const bool isPG =
+		db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL;
+	const wxString blobType = isPG ? wxT("BYTEA") : wxT("BLOB");
+
+	try {
+		db_query->RunQuery(
+			wxT("CREATE TABLE %s ("
+			    "descriptor_id     VARCHAR(36) NOT NULL PRIMARY KEY,"
+			    "bytecode_version  VARCHAR(36) NOT NULL,"
+			    "bc_blob           ") + blobType + wxT(" NOT NULL);"),
+			bytecode_cache_table);
+	}
+	catch (...) {
+		// Best-effort — DDL failure leaves Save / Load in their
+		// "no table" no-op branch; runtime falls back to compile path.
+	}
+}
+
+bool ibApplicationData::ClearTableUser()
+{
+	if (!db_query->TableExists(user_table))
 		return false;
 
 	db_query->RunQuery(wxT("DELETE FROM %s;"), user_table);
@@ -446,174 +211,28 @@ bool CApplicationData::ClearTableUser()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-enum
-{
-	eBlockPswd = 0x0234530,
-	eBlockRole = 0x0234540,
-	eBlockLang = 0x0234550,
-};
-
 #include "fileSystem/fs.h"
 
-CApplicationDataUserInfo CApplicationData::ReadUserData(const CGuid& userGuid) const
-{
-	CApplicationDataUserInfo userInfo;
-	if (!userGuid.isValid())
-		return userInfo;
-
-	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT * FROM %s WHERE guid = '%s';"), user_table, userGuid.str());
-
-	if (dbUserResult != nullptr && dbUserResult->Next()) {
-
-		userInfo.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
-		userInfo.m_strUserName = dbUserResult->GetResultString(wxT("name"));
-		userInfo.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
-
-		wxMemoryBuffer buffer;
-		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
-		CMemoryReader userReader(buffer);
-
-		wxMemoryBuffer bufferPassword;
-		if (userReader.r_chunk(eBlockPswd, bufferPassword)) {
-			ReadUserData_Password(bufferPassword, userInfo);
-		}
-
-		wxMemoryBuffer bufferRole;
-		if (userReader.r_chunk(eBlockRole, bufferRole)) {
-			ReadUserData_Role(bufferRole, userInfo);
-		}
-
-		wxMemoryBuffer bufferLang;
-		if (userReader.r_chunk(eBlockLang, bufferLang)) {
-			ReadUserData_Language(bufferLang, userInfo);
-		}
-
-		if (dbUserResult != nullptr)
-			dbUserResult->Close();
-
-		db_query->CloseResultSet(dbUserResult);
-	}
-
-	return userInfo;
-}
-
-CApplicationDataUserInfo CApplicationData::ReadUserData(const wxString& strUserName) const
-{
-	CApplicationDataUserInfo userInfo;
-	if (strUserName.IsEmpty())
-		return userInfo;
-
-	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT * FROM %s WHERE name = '%s';"), user_table, strUserName);
-
-	if (dbUserResult != nullptr && dbUserResult->Next()) {
-
-		userInfo.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
-
-		userInfo.m_strUserName = dbUserResult->GetResultString(wxT("name"));
-		userInfo.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
-
-		wxMemoryBuffer buffer;
-		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
-		CMemoryReader userReader(buffer);
-
-		wxMemoryBuffer bufferPassword;
-		if (userReader.r_chunk(eBlockPswd, bufferPassword)) {
-			ReadUserData_Password(bufferPassword, userInfo);
-		}
-
-		wxMemoryBuffer bufferRole;
-		if (userReader.r_chunk(eBlockRole, bufferRole)) {
-			ReadUserData_Role(bufferRole, userInfo);
-		}
-
-		wxMemoryBuffer bufferLang;
-		if (userReader.r_chunk(eBlockLang, bufferLang)) {
-			ReadUserData_Language(bufferLang, userInfo);
-		}
-
-		if (dbUserResult != nullptr)
-			dbUserResult->Close();
-
-		db_query->CloseResultSet(dbUserResult);
-	}
-
-	return userInfo;
-}
-
-bool CApplicationData::SaveUserData(const CApplicationDataUserInfo& userInfo) const
-{
-	IPreparedStatement* dbUserPrepareData = nullptr;
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-		dbUserPrepareData = db_query->PrepareStatement(
-			wxT("INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT (guid) DO UPDATE SET guid = excluded.guid, name = excluded.name, fullName = excluded.fullName, changed = excluded.changed, dataSize = excluded.dataSize, binaryData = excluded.binaryData; "), user_table);
-	else
-		dbUserPrepareData = db_query->PrepareStatement(
-			wxT("UPDATE OR INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) MATCHING (guid);"), user_table);
-
-	if (dbUserPrepareData == nullptr)
-		return false;
-
-	dbUserPrepareData->SetParamString(1, userInfo.m_strUserGuid);
-	dbUserPrepareData->SetParamString(2, userInfo.m_strUserName);
-	dbUserPrepareData->SetParamString(3, userInfo.m_strUserFullName);
-	dbUserPrepareData->SetParamDate(4, wxDateTime::Now());
-
-	CMemoryWriter writer;
-
-	writer.w_chunk(eBlockPswd, SaveUserData_Password(userInfo));
-	writer.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
-	writer.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
-
-	dbUserPrepareData->SetParamNumber(5, writer.size());
-	dbUserPrepareData->SetParamBlob(6, writer.pointer(), writer.size());
-
-	const int result = dbUserPrepareData->RunQuery();
-
-	if (dbUserPrepareData != nullptr)
-		dbUserPrepareData->Close();
-
-	db_query->CloseStatement(dbUserPrepareData);
-	return result != DATABASE_LAYER_QUERY_RESULT_ERROR;
-}
+// User-record DB I/O moved onto ibUserInfo as static factories; see
+// backend/userInfo.{h,cpp}. ibApplicationData no longer mediates the
+// sys_user round-trip — call sites use ibUserInfo::Read / Save / Serialize
+// / Deserialize directly.
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool CApplicationData::LoadUserInfoFromBuffer(wxMemoryBuffer& buffer)
+bool ibApplicationData::LoadUserInfoFromBuffer(wxMemoryBuffer& buffer)
 {
-	CMemoryReader reader = buffer;
+	ibReaderMemory reader = buffer;
 
-	CMemoryReader* prevReaderMemory = nullptr; u64 meta_id = 0;
+	ibReaderMemory* prevReaderMemory = nullptr; u64 meta_id = 0;
 
 	while (!reader.eof()) {
 
-		CMemoryReader* readerMemory = reader.open_chunk_iterator(meta_id, &*prevReaderMemory);
+		ibReaderMemory* readerMemory = reader.open_chunk_iterator(meta_id, &*prevReaderMemory);
 		if (!readerMemory)
 			break;
 
-		CApplicationDataUserInfo userInfo;
-
-		userInfo.m_strUserGuid = readerMemory->r_stringZ();
-		userInfo.m_strUserName = readerMemory->r_stringZ();
-		userInfo.m_strUserFullName = readerMemory->r_stringZ();
-
-		wxMemoryBuffer bufferPassword;
-		if (readerMemory->r_chunk(eBlockPswd, bufferPassword)) {
-			ReadUserData_Password(bufferPassword, userInfo);
-		}
-
-		wxMemoryBuffer bufferRole;
-		if (readerMemory->r_chunk(eBlockRole, bufferRole)) {
-			ReadUserData_Role(bufferRole, userInfo);
-		}
-
-		wxMemoryBuffer bufferLang;
-		if (readerMemory->r_chunk(eBlockLang, bufferLang)) {
-			ReadUserData_Language(bufferLang, userInfo);
-		}
-
-		SaveUserData(userInfo);
+		ibUserInfo::Save(ibUserInfo::Deserialize(*readerMemory));
 
 		prevReaderMemory = readerMemory;
 	};
@@ -621,128 +240,48 @@ bool CApplicationData::LoadUserInfoFromBuffer(wxMemoryBuffer& buffer)
 	return true;
 }
 
-bool CApplicationData::SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const
+bool ibApplicationData::SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const
 {
-	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(wxT("SELECT guid FROM %s;"), user_table);
+	ibResultSetGuard result(db_query,
+		db_query->RunQueryWithResults(wxT("SELECT guid FROM %s;"), user_table));
 
-	if (dbUserResult == nullptr)
+	if (!result)
 		return false;
 
-	CMemoryWriter writer; unsigned int idx = 0;
+	ibWriterMemory writer; unsigned int idx = 0;
 
-	while (dbUserResult->Next()) {
-
-		const CApplicationDataUserInfo& userInfo = ReadUserData(CGuid(dbUserResult->GetResultString(wxT("guid"))));
-
-		CMemoryWriter userWriter;
-
-		userWriter.w_stringZ(userInfo.m_strUserGuid);
-		userWriter.w_stringZ(userInfo.m_strUserName);
-		userWriter.w_stringZ(userInfo.m_strUserFullName);
-
-		userWriter.w_chunk(eBlockPswd, SaveUserData_Password(userInfo));
-		userWriter.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
-		userWriter.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
-
+	while (result->Next()) {
+		ibWriterMemory userWriter;
+		ibUserInfo::Read(ibGuid(result->GetResultString(wxT("guid"))))
+			.Serialize(userWriter);
 		writer.w_chunk(idx++, userWriter.buffer());
 	}
 
 	buffer = writer.buffer();
-
-	if (dbUserResult != nullptr)
-		dbUserResult->Close();
-
-	db_query->CloseResultSet(dbUserResult);
 	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool CApplicationData::HasAllowedUser() const
+// HasAllowedUser / GetAllowedUser moved onto ibUserInfo as
+// ibUserInfo::HasAny / ibUserInfo::ListAll — sys_user table-wide
+// queries belong with the type, not on the singleton.
+
+// -----------------------------------------------------------------------
+// Phased session lifecycle — apps compose CreateSession (or the typed
+// CreateSession<T>) with session->Open() so the registry ticket
+// stays visible during login-retry loops. There is no one-shot
+// "Connect/StartSession" anymore; failed Open keeps the anonymous row
+// in sys_session until the caller drops the ticket explicitly.
+// -----------------------------------------------------------------------
+
+ibSession* ibApplicationData::CreateSession()
 {
-	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT name FROM %s;"), user_table);
-
-	if (dbUserResult == nullptr) return false;
-	bool hasUsers = false;
-	if (dbUserResult->Next()) hasUsers = true;
-
-	if (dbUserResult != nullptr)
-		dbUserResult->Close();
-
-	db_query->CloseResultSet(dbUserResult);
-	return hasUsers;
+	// Default-factory passthrough — registry builds a plain ibSession.
+	// Used by codeRunner / daemon / headless callers and by the wes
+	// process's own system session bring-up. GUI apps go through the
+	// typed CreateSession<T>() template overload (defined in
+	// sessionRegistry.h after the registry class).
+	return m_sessionRegistry->CreateSessionWithFactory(m_runMode, m_strComputer, {});
 }
 
-std::vector<CApplicationDataShortUserInfo> CApplicationData::GetAllowedUser() const
-{
-	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT guid, name, fullName FROM %s;"), user_table);
-
-	std::vector<CApplicationDataShortUserInfo> userInfo;
-
-	if (dbUserResult == nullptr)
-		return userInfo;
-
-	while (dbUserResult->Next()) {
-
-		CApplicationDataShortUserInfo entry;
-		entry.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
-		entry.m_strUserName = dbUserResult->GetResultString(wxT("name"));
-		entry.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
-		userInfo.push_back(entry);
-	}
-
-	if (dbUserResult != nullptr)
-		dbUserResult->Close();
-
-	db_query->CloseResultSet(dbUserResult);
-	return userInfo;
-}
-
-bool CApplicationData::StartSession(const wxString& strUserName, const wxString& strUserPassword)
-{
-	if (!CloseSession())
-		return false;
-
-	m_sessionUpdater = std::shared_ptr<CApplicationDataSessionUpdater>(
-		new CApplicationDataSessionUpdater(this, m_sessionGuid)
-	);
-
-	bool succes = true;
-
-	if (!m_sessionUpdater->InitSessionUpdater())
-		return false;
-
-	if (!AuthenticationAndSetUser(strUserName, strUserPassword)) {
-
-		succes = false;
-
-		if (backend_mainFrame != nullptr &&
-			backend_mainFrame->AuthenticationUser(strUserName, strUserPassword)) {
-			succes = true;
-		}
-	}
-
-	if (succes)
-		m_sessionUpdater->StartSessionUpdater();
-	else if (!succes && !CloseSession())
-		return false;
-
-	m_connected_to_db = succes;
-	return succes;
-}
-
-bool CApplicationData::CloseSession()
-{
-	if (m_sessionUpdater != nullptr) {
-
-		if (m_sessionUpdater->Delete() != wxTHREAD_NO_ERROR)
-			return false;
-
-		m_sessionUpdater = nullptr;
-	}
-
-	m_connected_to_db = false;
-	return true;
-}

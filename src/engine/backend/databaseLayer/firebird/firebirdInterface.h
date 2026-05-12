@@ -63,10 +63,10 @@ typedef void (ISC_EXPORT *isc_decode_sql_timeType)(const ISC_TIME*, void*);
 typedef ISC_STATUS(ISC_EXPORT *isc_get_segmentType)(ISC_STATUS*, isc_blob_handle*,
 	unsigned short*, unsigned short, ISC_SCHAR*);
 
-class CFirebirdInterface
+class ibInterfaceFirebird
 {
 public:
-	CFirebirdInterface() { }
+	ibInterfaceFirebird() = default;
 	bool Init();
 
 	fb_interpretType GetFbInterpret() { return m_pFbInterpret; }
@@ -105,38 +105,44 @@ public:
 private:
 	wxDynamicLibrary m_FirebirdDLL;
 
-	fb_interpretType m_pFbInterpret;
-	isc_expand_dpbType m_pIscExpandDpb;
-	isc_modify_dpbType m_pIscModifyDpb;
-	isc_create_databaseType m_pIscCreateDatabase;
-	isc_attach_databaseType m_pIscAttachDatabase;
-	isc_detach_databaseType m_pIscDetachDatabase;
-	isc_start_transactionType m_pIscStartTransaction;
-	isc_commit_transactionType m_pIscCommitTransaction;
-	isc_rollback_transactionType m_pIscRollbackTransaction;
-	isc_dsql_execute_immediateType m_pIscDsqlExecuteImmediate;
-	isc_dsql_allocate_statementType m_pIscDsqlAllocateStatement;
-	isc_dsql_prepareType m_pIscDsqlPrepare;
-	isc_dsql_describeType m_pIscDsqlDescribe;
-	isc_sql_interpreteType m_pIscSqlInterprete;
-	isc_sqlcodeType m_pIscSqlcode;
-	isc_encode_timestampType m_pIscEncodeTimestamp;
-	isc_create_blob2Type m_pIscCreateBlob2;
-	isc_open_blob2Type m_pIscOpenBlob2;
-	isc_put_segmentType m_pIscPutSegment;
-	isc_close_blobType m_pIscCloseBlob;
-	isc_commit_retainingType m_pIscCommitRetaining;
-	isc_dsql_free_statementType m_pIscDsqlFreeStatement;
-	isc_dsql_describe_bindType m_pIscDsqlDescribeBind;
-	isc_dsql_executeType m_pIscDsqlExecute;
-	isc_dsql_sql_infoType m_pIscDsqlSqlInfo;
-	isc_vax_integerType m_pIscVaxInteger;
-	isc_dsql_execute2Type m_pIscDsqlExecute2;
-	isc_dsql_fetchType m_pIscDsqlFetch;
-	isc_decode_timestampType m_pIscDecodeTimestamp;
-	isc_decode_sql_dateType m_pIscDecodeSqlDate;
-	isc_decode_sql_timeType m_pIscDecodeSqlTime;
-	isc_get_segmentType m_pIscGetSegment;
+	// Default-init to nullptr so a partial Init() (DLL loads but a symbol
+	// is missing) leaves uninitialised pointers as nullptr instead of
+	// random stack garbage. The Init() failure path bails before any
+	// caller can dereference them — but if a future change forgets to
+	// check the Init() return, the crash will be a clean nullptr deref
+	// rather than a jump into the heap.
+	fb_interpretType m_pFbInterpret = nullptr;
+	isc_expand_dpbType m_pIscExpandDpb = nullptr;
+	isc_modify_dpbType m_pIscModifyDpb = nullptr;
+	isc_create_databaseType m_pIscCreateDatabase = nullptr;
+	isc_attach_databaseType m_pIscAttachDatabase = nullptr;
+	isc_detach_databaseType m_pIscDetachDatabase = nullptr;
+	isc_start_transactionType m_pIscStartTransaction = nullptr;
+	isc_commit_transactionType m_pIscCommitTransaction = nullptr;
+	isc_rollback_transactionType m_pIscRollbackTransaction = nullptr;
+	isc_dsql_execute_immediateType m_pIscDsqlExecuteImmediate = nullptr;
+	isc_dsql_allocate_statementType m_pIscDsqlAllocateStatement = nullptr;
+	isc_dsql_prepareType m_pIscDsqlPrepare = nullptr;
+	isc_dsql_describeType m_pIscDsqlDescribe = nullptr;
+	isc_sql_interpreteType m_pIscSqlInterprete = nullptr;
+	isc_sqlcodeType m_pIscSqlcode = nullptr;
+	isc_encode_timestampType m_pIscEncodeTimestamp = nullptr;
+	isc_create_blob2Type m_pIscCreateBlob2 = nullptr;
+	isc_open_blob2Type m_pIscOpenBlob2 = nullptr;
+	isc_put_segmentType m_pIscPutSegment = nullptr;
+	isc_close_blobType m_pIscCloseBlob = nullptr;
+	isc_commit_retainingType m_pIscCommitRetaining = nullptr;
+	isc_dsql_free_statementType m_pIscDsqlFreeStatement = nullptr;
+	isc_dsql_describe_bindType m_pIscDsqlDescribeBind = nullptr;
+	isc_dsql_executeType m_pIscDsqlExecute = nullptr;
+	isc_dsql_sql_infoType m_pIscDsqlSqlInfo = nullptr;
+	isc_vax_integerType m_pIscVaxInteger = nullptr;
+	isc_dsql_execute2Type m_pIscDsqlExecute2 = nullptr;
+	isc_dsql_fetchType m_pIscDsqlFetch = nullptr;
+	isc_decode_timestampType m_pIscDecodeTimestamp = nullptr;
+	isc_decode_sql_dateType m_pIscDecodeSqlDate = nullptr;
+	isc_decode_sql_timeType m_pIscDecodeSqlTime = nullptr;
+	isc_get_segmentType m_pIscGetSegment = nullptr;
 };
 
 #endif // __FIREBIRD_INTERFACES_H__

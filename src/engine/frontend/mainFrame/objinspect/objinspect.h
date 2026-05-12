@@ -21,15 +21,15 @@ enum {
 	wxOES_OI_SINGLE_PAGE_STYLE
 };
 
-#define objectInspector  CObjectInspector::GetObjectInspector()
+#define objectInspector  ibObjectInspector::GetObjectInspector()
 
-class FRONTEND_API CObjectInspector final : public wxPanel {
+class FRONTEND_API ibObjectInspector final : public wxPanel {
 
-	CObjectInspector(wxWindow* parent, int id, int style = wxOES_OI_DEFAULT_STYLE);
+	ibObjectInspector(wxWindow* parent, int id, int style = wxOES_OI_DEFAULT_STYLE);
 
 public:
 
-	virtual ~CObjectInspector();
+	virtual ~ibObjectInspector();
 
 	wxPropertyGridManager* GetPropertyManager() const { return m_pg; }
 
@@ -39,19 +39,19 @@ public:
 	//   wxPG_DONT_RECURSE to prevent this.
 	bool HideProperty(wxPGPropArg id,
 		bool hide = true,
-		int flags = wxPG_RECURSE) { return m_pg->HideProperty(id, hide, flags); }
+		wxPGPropertyValuesFlags flags = wxPGPropertyValuesFlags::Recurse) { return m_pg->HideProperty(id, hide, flags); }
 
 	bool ShowProperty(wxPGPropArg id,
 		bool show = true,
-		int flags = wxPG_RECURSE) {
+		wxPGPropertyValuesFlags flags = wxPGPropertyValuesFlags::Recurse) {
 		return m_pg->HideProperty(id, !show, flags);
 	}
 
-	wxPGProperty* GetProperty(IProperty* prop) const;
-	wxPGProperty* GetEvent(IEvent* event) const;
+	wxPGProperty* GetProperty(ibProperty* prop) const;
+	wxPGProperty* GetEvent(ibEvent* event) const;
 
 	// Servicios para los observadores
-	void SelectObject(IPropertyObject* selobj, bool force = false) {
+	void SelectObject(ibPropertyObject* selobj, bool force = false) {
 
 		if (IsShownInspector() && (force || m_currentSel != selobj)) {
 			Create(selobj, force);
@@ -63,14 +63,14 @@ public:
 			wxLogDebug(wxT("! <debug> clear property"));
 	}
 
-	IPropertyObject* GetSelectedObject() const { return m_currentSel; }
+	ibPropertyObject* GetSelectedObject() const { return m_currentSel; }
 
 	bool IsShownInspector() const;
 	void ShowInspector();
 
 	void SavePosition();
 
-	static CObjectInspector* GetObjectInspector();
+	static ibObjectInspector* GetObjectInspector();
 
 protected:
 
@@ -106,9 +106,9 @@ private:
 	}
 
 	template < class ValueT >
-	void CreateCategory(const wxString& name, IPropertyObject* obj, std::map< wxString, ValueT >& itemMap, bool addingEvents) {
+	void CreateCategory(const wxString& name, ibPropertyObject* obj, std::map< wxString, ValueT >& itemMap, bool addingEvents) {
 		// Get Category
-		CPropertyCategory* category = obj->GetCategory();
+		ibPropertyCategory* category = obj->GetCategory();
 		if (category == nullptr)
 			return;
 		// Prevent page creation if there are no properties
@@ -150,12 +150,12 @@ private:
 		pg->SetPropertyAttributeAll(wxPG_BOOL_USE_CHECKBOX, (long)1);
 	}
 
-	void AddItems(const wxString& name, IPropertyObject* obj, CPropertyCategory* category, std::map<wxString, IProperty*>& properties) {
+	void AddItems(const wxString& name, ibPropertyObject* obj, ibPropertyCategory* category, std::map<wxString, ibProperty*>& properties) {
 		unsigned int propCount = category->GetPropertyCount();
 		for (unsigned int i = 0; i < propCount; i++) {
 
 			const wxString& strPropName = category->GetPropertyName(i);
-			IProperty* prop = obj->GetProperty(strPropName);
+			ibProperty* prop = obj->GetProperty(strPropName);
 
 			if (!prop)
 				continue;
@@ -191,8 +191,8 @@ private:
 
 					id->RefreshChildren();
 
-					properties.insert(std::map<wxString, IProperty*>::value_type(strPropName, prop));
-					m_propMap.insert(std::map< wxPGProperty*, IProperty*>::value_type(id, prop));
+					properties.insert(std::map<wxString, ibProperty*>::value_type(strPropName, prop));
+					m_propMap.insert(std::map< wxPGProperty*, ibProperty*>::value_type(id, prop));
 				}
 
 				if (m_currentSel != nullptr) {
@@ -204,7 +204,7 @@ private:
 		unsigned int catCount = category->GetCategoryCount();
 		for (unsigned int i = 0; i < catCount; i++) {
 
-			CPropertyCategory* nextCat = category->GetCategory(i);
+			ibPropertyCategory* nextCat = category->GetCategory(i);
 			if (0 == nextCat->GetCategoryCount() && 0 == nextCat->GetPropertyCount()) {
 				continue;
 			}
@@ -231,12 +231,12 @@ private:
 		}
 	}
 
-	void AddItems(const wxString& name, IPropertyObject* obj, CPropertyCategory* category, std::map<wxString, IEvent*>& events) {
+	void AddItems(const wxString& name, ibPropertyObject* obj, ibPropertyCategory* category, std::map<wxString, ibEvent*>& events) {
 		unsigned int eventCount = category->GetEventCount();
 		for (unsigned int i = 0; i < eventCount; i++) {
 
 			const wxString& eventName = category->GetEventName(i);
-			IEvent* event = obj->GetEvent(eventName);
+			ibEvent* event = obj->GetEvent(eventName);
 
 			if (!event)
 				continue;
@@ -266,8 +266,8 @@ private:
 							m_pg->Collapse(id);
 						}
 					}
-					events.insert(std::map<wxString, IEvent*>::value_type(eventName, event));
-					m_eventMap.insert(std::map< wxPGProperty*, IEvent*>::value_type(id, event));
+					events.insert(std::map<wxString, ibEvent*>::value_type(eventName, event));
+					m_eventMap.insert(std::map< wxPGProperty*, ibEvent*>::value_type(id, event));
 				}
 			}
 		}
@@ -275,7 +275,7 @@ private:
 		unsigned int catCount = category->GetCategoryCount();
 		for (unsigned int i = 0; i < catCount; i++)
 		{
-			CPropertyCategory* nextCat = category->GetCategory(i);
+			ibPropertyCategory* nextCat = category->GetCategory(i);
 			if (0 == nextCat->GetCategoryCount() && 0 == nextCat->GetEventCount()) {
 				continue;
 			}
@@ -301,14 +301,14 @@ private:
 		}
 	}
 
-	friend class CFrontendDocMDIFrame;
+	friend class ibFrontendDocMDIFrame;
 
 	wxPropertyGridManager* CreatePropertyGridManager(wxWindow* parent, wxWindowID id) const;
 
-	void Create(IPropertyObject* object, bool force = false);
+	void Create(ibPropertyObject* object, bool force = false);
 
-	bool ModifyProperty(IProperty* prop, const wxVariant& newValue);
-	bool ModifyEvent(IEvent* event, const wxVariant& newValue);
+	bool ModifyProperty(ibProperty* prop, const wxVariant& newValue);
+	bool ModifyEvent(ibEvent* event, const wxVariant& newValue);
 
 	void RestoreLastSelectedPropItem() {
 
@@ -317,9 +317,9 @@ private:
 
 			m_pg->SelectProperty(propPtr, false);
 
-			std::map< wxPGProperty*, IProperty*>::iterator itProperty = m_propMap.find(propPtr);
+			std::map< wxPGProperty*, ibProperty*>::iterator itProperty = m_propMap.find(propPtr);
 			if (itProperty != m_propMap.end()) {
-				IProperty* prop_ptr = itProperty->second;
+				ibProperty* prop_ptr = itProperty->second;
 				// Update displayed description for the new selection
 				const wxString& helpString = prop_ptr->GetHelp();
 				const wxString& localized = wxGetTranslation(helpString);
@@ -328,9 +328,9 @@ private:
 				return;
 			}
 
-			std::map< wxPGProperty*, IEvent*>::iterator itEvent = m_eventMap.find(propPtr);
+			std::map< wxPGProperty*, ibEvent*>::iterator itEvent = m_eventMap.find(propPtr);
 			if (itEvent != m_eventMap.end()) {
-				IEvent* event_ptr = itEvent->second;
+				ibEvent* event_ptr = itEvent->second;
 				// Update displayed description for the new selection
 				const wxString& helpString = event_ptr->GetHelp();
 				const wxString& localized = wxGetTranslation(helpString);
@@ -347,10 +347,10 @@ private:
 
 	std::map< wxString, bool > m_isExpanded;
 
-	std::map< wxPGProperty*, IProperty*> m_propMap;
-	std::map< wxPGProperty*, IEvent*> m_eventMap;
+	std::map< wxPGProperty*, ibProperty*> m_propMap;
+	std::map< wxPGProperty*, ibEvent*> m_eventMap;
 
-	IPropertyObject* m_currentSel;
+	ibPropertyObject* m_currentSel;
 
 	int m_style;
 

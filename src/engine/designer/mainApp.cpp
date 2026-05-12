@@ -5,14 +5,74 @@
 
 #include "mainApp.h"
 #include "backend/appData.h"
+#include "backend/backend_exception.h"
+#include "backend/backend_mainFrame.h"
+#include "backend/debugger/debugClientBridge.h"
+#include "frontend/session/guiSession.h"   // transitively pulls backend/session/session.h
+#include "backend/session/sessionRegistry.h"
+#include "mainFrame/debugger/debugClientImpl.h"
 
 #include <wx/clipbrd.h>
 #include <wx/cmdline.h>
 #include <wx/debugrpt.h>
+#include <wx/filename.h>
 #include <wx/fs_arc.h>
 #include <wx/fs_filter.h>
 #include <wx/fs_mem.h>
 #include <wx/stdpaths.h>
+
+#ifdef __WXMSW__
+#include <windows.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+
+namespace {
+// See enterprise/mainApp.cpp for rationale — persists a minidump before
+// wxDebugReport wipes its temp directory on dialog close.
+static LPTOP_LEVEL_EXCEPTION_FILTER s_prevFilter = nullptr;
+
+static LONG WINAPI PersistentCrashDumpFilter(EXCEPTION_POINTERS* ep)
+{
+	wxString exePath = wxStandardPaths::Get().GetExecutablePath();
+	wxString crashDir = wxFileName(exePath).GetPath() + wxFILE_SEP_PATH + wxT("crashdumps");
+	wxFileName::Mkdir(crashDir, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
+
+	const wxString stamp = wxDateTime::Now().Format(wxT("%Y%m%dT%H%M%S"));
+	const wxString dumpPath = wxString::Format(wxT("%s%cdesigner_%u_%s.dmp"),
+		crashDir, wxFILE_SEP_PATH,
+		static_cast<unsigned>(::GetCurrentProcessId()),
+		stamp);
+
+	HANDLE hFile = ::CreateFileW(dumpPath.wc_str(), GENERIC_WRITE, 0, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if (hFile != INVALID_HANDLE_VALUE) {
+		MINIDUMP_EXCEPTION_INFORMATION mei = {};
+		mei.ThreadId = ::GetCurrentThreadId();
+		mei.ExceptionPointers = ep;
+		mei.ClientPointers = FALSE;
+
+		const MINIDUMP_TYPE type = static_cast<MINIDUMP_TYPE>(
+			MiniDumpWithDataSegs |
+			MiniDumpWithHandleData |
+			MiniDumpWithUnloadedModules |
+			MiniDumpWithThreadInfo |
+			MiniDumpWithFullMemory);
+
+		::MiniDumpWriteDump(::GetCurrentProcess(), ::GetCurrentProcessId(),
+			hFile, type, ep ? &mei : nullptr, nullptr, nullptr);
+		::CloseHandle(hFile);
+	}
+
+	return s_prevFilter ? s_prevFilter(ep) : EXCEPTION_CONTINUE_SEARCH;
+}
+
+static void InstallPersistentCrashDump()
+{
+	if (s_prevFilter == nullptr)
+		s_prevFilter = ::SetUnhandledExceptionFilter(PersistentCrashDumpFilter);
+}
+} // namespace
+#endif // __WXMSW__
 
 #include "resources/splashLogo.xpm"
 
@@ -22,7 +82,7 @@
 #include <wx/xrc/xh_aui.h>
 #endif
 
-wxIMPLEMENT_APP(CDesignerApp);
+wxIMPLEMENT_APP(ibAppDesigner);
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -33,29 +93,24 @@ wxIMPLEMENT_APP(CDesignerApp);
 #if wxUSE_CMDLINE_PARSER
 #include <wx/cmdline.h>
 
-void CDesignerApp::OnInitCmdLine(wxCmdLineParser& parser)
+void ibAppDesigner::OnInitCmdLine(wxCmdLineParser& parser)
 {
-	// FILE ENTRY 
-	parser.AddOption(wxT("file"), wxT("pwd"), "Start from current dir", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
-
-	// SERVER ENTRY 
-	parser.AddOption(wxT("srv"), wxT("srv"), "Start using server address", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
-	parser.AddOption(wxT("p"), wxT("p"), "Start using port", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
-	parser.AddOption(wxT("db"), wxT("db"), "Start from current database", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
-	parser.AddOption(wxT("usr"), wxT("usr"), "Start from current user", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
-	parser.AddOption(wxT("pwd"), wxT("pwd"), "Start from current password", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
-
-	// USER 
-	parser.AddOption(wxT("ib_usr"), wxT("ib_usr"), "Start from current user", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
-	parser.AddOption(wxT("ib_pwd"), wxT("ib_pwd"), "Start from current password", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
-
-	// LOCALE
-	parser.AddOption(wxT("lc"), wxT("lc"), "Start from current locale", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	// Same layout as enterprise.exe — short names legacy, long names match
+	// wenterprise-server so RunApplication emits flags that parse in all bins.
+	parser.AddOption(wxT("file"),   wxT("file"),     "Database file path",      wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	parser.AddOption(wxT("srv"),    wxT("server"),   "Database server address", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	parser.AddOption(wxT("p"),      wxT("dbport"),   "Database server port",    wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	parser.AddOption(wxT("db"),     wxT("db"),       "Database name",           wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	parser.AddOption(wxT("usr"),    wxT("user"),     "Database user",           wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	parser.AddOption(wxT("pwd"),    wxT("password"), "Database password",       wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	parser.AddOption(wxT("ib_usr"), wxT("ibuser"),   "IB user",                 wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	parser.AddOption(wxT("ib_pwd"), wxT("ibpwd"),    "IB password",             wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+	parser.AddOption(wxT("lc"),     wxT("locale"),   "UI locale",               wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 
 	return wxApp::OnInitCmdLine(parser);
 }
 
-bool CDesignerApp::OnCmdLineParsed(wxCmdLineParser& parser)
+bool ibAppDesigner::OnCmdLineParsed(wxCmdLineParser& parser)
 {
 	// FILE ENTRY 
 	parser.Found(wxT("file"), &m_strFile);
@@ -80,41 +135,73 @@ bool CDesignerApp::OnCmdLineParsed(wxCmdLineParser& parser)
 
 //////////////////////////////////////////////////////////////////////////////////
 
-bool CDesignerApp::OnInit()
+// ibDesignerSession — concrete GUI session for designer.exe. OnCreateSession
+// instantiates the exe-specific frame class (ibFrontendDocMDIFrameDesigner),
+// which is not exported to frontend.dll. Declared here so designer.exe owns
+// its own concrete session type.
+class ibDesignerSession : public ibGUISession {
+public:
+	using ibGUISession::ibGUISession;
+
+	bool OnCreateSession() override {
+		AttachFrame(new ibFrontendDocMDIFrameDesigner);
+		return m_frame != nullptr;
+	}
+};
+
+bool ibAppDesigner::OnInit()
 {
 	wxSocketBase::Initialize();
 	return wxApp::OnInit();
 }
 
-int CDesignerApp::OnRun()
+int ibAppDesigner::OnRun()
 {
 	// Abnormal Termination Handling
 #if wxUSE_ON_FATAL_EXCEPTION && wxUSE_STACKWALKER
 	::wxHandleFatalExceptions(true);
 #endif
+#ifdef __WXMSW__
+	// Install our top-level SEH filter after wx's so ours runs first and
+	// writes a persistent minidump to <exe>/crashdumps/ before wx's dialog
+	// wipes its temp folder.
+	InstallPersistentCrashDump();
+#endif
 
 	// Get the data directory
 	bool ret = false;
 
+	if (m_strFile.IsEmpty() && m_strServer.IsEmpty()) {
+		// No command-line args — show folder picker
+		wxDirDialog dlg(nullptr, _("Select configuration database folder"),
+			wxStandardPaths::Get().GetDocumentsDir(),
+			wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST | wxDD_NEW_DIR_BUTTON);
+		if (dlg.ShowModal() == wxID_OK) {
+			m_strFile = dlg.GetPath();
+		} else {
+			return 0; // user cancelled
+		}
+	}
+
 	if (m_strFile.IsEmpty()) {
-		ret = appDataCreateServer(eRunMode::eDESIGNER_MODE,
+		ret = appDataCreateServer(ibRunMode::eDESIGNER_MODE,
 			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase, m_strLocale
 		);
 	}
 	else {
-		ret = appDataCreateFile(eRunMode::eDESIGNER_MODE,
+		ret = appDataCreateFile(ibRunMode::eDESIGNER_MODE,
 			m_strFile, m_strLocale
 		);
 	}
 
 	if (!ret) {
-		const wxString& strLastError = CBackendException::GetLastError();
+		const wxString& strLastError = ibBackendException::GetLastError();
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		return 1;
 	}
 
-	CProcessSplashScreen* splashScreenLoader =
-		new CProcessSplashScreen(wxBitmap(splashLogo_xpm),
+	ibProcessSplashScreen* splashScreenLoader =
+		new ibProcessSplashScreen(wxBitmap(splashLogo_xpm),
 			wxSPLASH_CENTRE_ON_SCREEN,
 			-1, nullptr, -1, wxDefaultPosition, wxDefaultSize,
 			wxBORDER_SIMPLE
@@ -167,36 +254,89 @@ int CDesignerApp::OnRun()
 #if wxUSE_LIBPNG
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
-	mainFrameCreate(CFrontendDocMDIFrameDesigner);
-	if (!appData->Connect(m_strIBUser, m_strIBPassword)) {
-		const wxString& strLastError = CBackendException::GetLastError();
-		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
-		mainFrameDestroy();
+	// Flow (designer IDE):
+	//   1. CreateSession<ibDesignerSession> — registry Add plus
+	//      OnCreateSession hook that instantiates the designer frame on
+	//      the main thread (DesignerExclusivePolicy veto happens inside
+	//      the registry Connect before OnCreateSession runs).
+	//   2. Authenticate — creds, dialog fallback via session->GetFrame().
+	//   3. LoadMetadata — compile descriptors (intellisense).
+	//   4. mainFrameShow — Designer kind → EnsureRuntime no-op;
+	//                      AllowRun = true unconditionally.
+
+	// AccessMode was set by appData's ctor based on runMode. Registry
+	// listeners (wired in appData ctor) handle BindSessionToThread,
+	// LoadMetadata, CreateRoot + CompileRoot through OnFirstConnect /
+	// OnAuthenticated — nothing to compose here.
+	ibSession* session = nullptr;
+	wxString openError;
+	try {
+		session = appData->CreateSession<ibDesignerSession>();
+		if (session != nullptr && !session->Open(m_strIBUser, m_strIBPassword)) {
+			session->Close();
+			session = nullptr;
+		}
+	} catch (const ibBackendException& e) {
+		openError = e.GetErrorDescription();
+		session   = nullptr;
+	} catch (const std::exception& e) {
+		openError = wxString::FromUTF8(e.what());
+		session   = nullptr;
+	}
+
+	if (session == nullptr) {
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
+		const wxString message = openError.IsEmpty()
+			? wxString(_("Authentication failed"))
+			: openError;
+		wxMessageBox(message, _("OES Designer"), wxOK | wxICON_ERROR);
 		return 1;
 	}
+
+	// Wire the debug-client bridge AFTER m_session->Open(): debugClient
+	// (the global ms_debugClient) is constructed inside metadataCreate
+	// which fires from the OnFirstConnect listener during NotifyAuthenticated.
+	// Calling SetDebuggerClientBridge before that point silently no-ops
+	// (debugClient == nullptr branch in debugClientBridge.cpp), so
+	// ibDebuggerClient's adapter never gets the bridge and OnEnterLoop /
+	// OnSessionStart fire into the void — F5 then hits a breakpoint that
+	// the IDE never displays.
+	ibDebuggerClientBridge::SetDebuggerClientBridge(
+		new ibDebuggerClientBridgeDesigner);
+
 	if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
-	bool allow = mainFrameShow();
-	if (!allow) return 1;
+	if (!session->ShowFrame()) return 1;
 	return wxApp::OnRun();
 }
 
-void CDesignerApp::OnUnhandledException()
+void ibAppDesigner::OnUnhandledException()
 {
+	// Reached when a C++ exception escapes to wxApp's event loop (not a
+	// structured exception — that goes through OnFatalException).
+	wxDebugReportCompress report;
+	report.AddAll(wxDebugReport::Context_Current);
+
+	wxDebugReportPreviewStd preview;
+	if (preview.Show(report)) report.Process();
 }
 
+#ifdef __WXMSW__
 #include "backend/system/value/valueOLE.h"
+#endif
 
-void CDesignerApp::OnFatalException()
+void ibAppDesigner::OnFatalException()
 {
-	//generate dump
-	wxDebugReport report;
-
-	report.AddCurrentDump();
-	report.AddExceptionDump();
+	// Collect everything at the exception context: XML report + minidump.
+	// AddAll(Context_Exception) captures state at the fault point (register
+	// values, stack, loaded modules), which is what a debugger needs to
+	// resolve the real crash site.
+	wxDebugReportCompress report;
+	report.AddAll(wxDebugReport::Context_Exception);
 
 	//release all created com-objects
-	CValueOLE::ReleaseComObjects();
+#ifdef __WXMSW__
+	ibValueOLE::ReleaseComObjects();
+#endif
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
@@ -208,23 +348,37 @@ void CDesignerApp::OnFatalException()
 	if (preview.Show(report)) report.Process();
 }
 
-int CDesignerApp::OnExit()
+int ibAppDesigner::OnExit()
 {
 	//release all created com-objects
-	CValueOLE::ReleaseComObjects();
+#ifdef __WXMSW__
+	ibValueOLE::ReleaseComObjects();
+#endif
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
 
-	mainFrameDestroy();
+	// Tear every session down through the session manager BEFORE
+	// wxApp::OnExit. registry->Stop() submits Remove@Urgent for each
+	// session in m_own and drains the queue — OnDisconnect listeners
+	// fire while the wx event loop is still alive, so any frame-Destroy
+	// scheduled from there gets dispatched. Without this the event
+	// loop dies first and the Destroy events stay queued. Idempotent —
+	// ~ibApplicationData calls Stop again best-effort.
+	if (appData != nullptr) {
+		auto* registry = appData->GetSessionRegistry();
+		if (registry != nullptr) registry->Stop();
+	}
 
-	bool su�cess_exit = wxApp::OnExit();
+	bool suсcess_exit = wxApp::OnExit();
 
 	appDataDestroy();
 
 	// Allow clipboard data to persist after close
-	wxTheClipboard->Flush();
-	wxTheClipboard->Close();
+	if (wxTheClipboard->Open()) {
+		wxTheClipboard->Flush();
+		wxTheClipboard->Close();
+	}
 
-	return su�cess_exit;
+	return suсcess_exit;
 }

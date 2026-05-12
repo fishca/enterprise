@@ -4,30 +4,30 @@
 #include "pictureDescription.h"
 #include "picturePredefined.h"
 
-struct CBackendPictureEntry {
+struct ibBackendPictureEntry {
 	wxString m_name;
 	wxBitmap m_data;
-	picture_identifier_t m_id;
+	ibPictureID m_id;
 };
 
-class BACKEND_API CBackendPicture {
-	CBackendPicture() = delete;
+class BACKEND_API ibBackendPicture {
+	ibBackendPicture() = delete;
 public:
 
-	static void RegisterPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap);
+	static void RegisterPicture(const wxString name, const ibPictureID& id, const wxBitmap& bitmap);
 
-	static bool LoadFromFile(const wxString& strFileName, CExternalPictureDescription& pictureDesc);
-	static bool LoadFromFile(const wxString& strFileName, CPictureDescription& pictureDesc);
+	static bool LoadFromFile(const wxString& strFileName, ibExternalPictureDescription& pictureDesc);
+	static bool LoadFromFile(const wxString& strFileName, ibPictureDescription& pictureDesc);
 
-	static wxBitmap CreatePicture(const CExternalPictureDescription& pictureDesc, const wxSize& size = wxSize(16, 16));
-	static wxBitmap CreatePicture(const CPictureDescription& pictureDesc,
-		const class IMetaData* metaData = nullptr, const wxSize& size = wxSize(16, 16));
+	static wxBitmap CreatePicture(const ibExternalPictureDescription& pictureDesc, const wxSize& size = wxSize(16, 16));
+	static wxBitmap CreatePicture(const ibPictureDescription& pictureDesc,
+		const class ibMetaData* metaData = nullptr, const wxSize& size = wxSize(16, 16));
 
 #pragma region __picture_factory_h__
-	static bool IsRegisterPicture(const picture_identifier_t& id);
-	static wxBitmap GetPicture(const picture_identifier_t& id);
-	static wxIcon GetPictureAsIcon(const picture_identifier_t& id);
-	static std::vector<CBackendPictureEntry> GetArrayPicture();
+	static bool IsRegisterPicture(const ibPictureID& id);
+	static wxBitmap GetPicture(const ibPictureID& id);
+	static wxIcon GetPictureAsIcon(const ibPictureID& id);
+	static std::vector<ibBackendPictureEntry> GetArrayPicture();
 #pragma endregion 
 
 #pragma region __picture_conv_h__

@@ -1,6 +1,6 @@
 #include "control.h"
 
-bool IValueControl::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool ibValueControl::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
 {
 	if (m_propertyName == property && FindControlByName(newValue.GetString()) != nullptr)
 		return false;
@@ -8,8 +8,12 @@ bool IValueControl::OnPropertyChanging(IProperty* property, const wxVariant& new
 	return true;
 }
 
-void IValueControl::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueControl::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
+#ifndef OES_USE_WEB
 	if (g_visualHostContext != nullptr)
 		g_visualHostContext->ModifyProperty(property, oldValue, newValue);
+#else
+	(void)property; (void)oldValue; (void)newValue;
+#endif
 }

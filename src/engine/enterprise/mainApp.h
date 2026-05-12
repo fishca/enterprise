@@ -5,10 +5,12 @@
 #include <wx/aui/framemanager.h>
 #include <wx/socket.h>
 
-class CEnterpriseApp : public wxApp {
+#include <memory>
+
+class ibAppEnterprise : public wxApp {
 
 	bool m_debugEnable;
-	
+
 	// FILE ENTRY
 	wxString m_strFile;
 
@@ -26,12 +28,13 @@ class CEnterpriseApp : public wxApp {
 #ifdef DEBUG
 	//LOCALE
 	wxString m_strLocale = wxT("en");
-#else 
+#else
 	//LOCALE
 	wxString m_strLocale;
 #endif // wxDEBUG
 
 public:
+
 	virtual bool OnInit();
 #if wxUSE_ON_FATAL_EXCEPTION
 	virtual void OnUnhandledException() override;
@@ -59,6 +62,6 @@ protected:
 	void OnSetFocus(wxFocusEvent &event);
 };
 
-wxDECLARE_APP(CEnterpriseApp);
+wxDECLARE_APP(ibAppEnterprise);
 
 #endif 

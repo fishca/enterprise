@@ -5,17 +5,17 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueChartBox, IValueWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueChartBox, ibValueWindow);
 
 //***********************************************************************************
 //*                                 Value Notebook                                  *
 //***********************************************************************************
 
-CValueChartBox::CValueChartBox() : IValueWindow()
+ibValueChartBox::ibValueChartBox() : ibValueWindow()
 {
 }
 
-wxObject* CValueChartBox::Create(wxWindow* wxparent, IVisualHost *visualHost)
+wxObject* ibValueChartBox::Create(wxWindow* wxparent, ibVisualHost *visualHost)
 {
 	/*wxMath2DPlotData chartData;
 	wxSharedPtr<wxMath2DPlotOptions> options(new wxMath2DPlotOptions());
@@ -127,16 +127,16 @@ wxObject* CValueChartBox::Create(wxWindow* wxparent, IVisualHost *visualHost)
 	return m_chartBox;
 }
 
-void CValueChartBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost *visualHost, bool first—reated)
+void ibValueChartBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost *visualHost, bool first–°reated)
 {
 	wxWindow *m_chartBox = dynamic_cast<wxWindow *>(wxobject);
 }
 
-void CValueChartBox::OnSelected(wxObject* wxobject)
+void ibValueChartBox::OnSelected(wxObject* wxobject)
 {
 }
 
-void CValueChartBox::Update(wxObject* wxobject, IVisualHost *visualHost)
+void ibValueChartBox::Update(wxObject* wxobject, ibVisualHost *visualHost)
 {
 	wxWindow *m_chartBox = dynamic_cast<wxWindow *>(wxobject);
 
@@ -147,7 +147,7 @@ void CValueChartBox::Update(wxObject* wxobject, IVisualHost *visualHost)
 	UpdateWindow(m_chartBox);
 }
 
-void CValueChartBox::Cleanup(wxObject* obj, IVisualHost *visualHost)
+void ibValueChartBox::Cleanup(wxObject* obj, ibVisualHost *visualHost)
 {
 }
 
@@ -155,18 +155,18 @@ void CValueChartBox::Cleanup(wxObject* obj, IVisualHost *visualHost)
 //*                                   Data		                                   *
 //**********************************************************************************
 
-bool CValueChartBox::LoadData(CMemoryReader &reader)
+bool ibValueChartBox::LoadData(ibReaderMemory &reader)
 {
-	return IValueWindow::LoadData(reader);
+	return ibValueWindow::LoadData(reader);
 }
 
-bool CValueChartBox::SaveData(CMemoryWriter &writer)
+bool ibValueChartBox::SaveData(ibWriterMemory& writer)
 {
-	return IValueWindow::SaveData(writer);
+	return ibValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueChartBox, "Chartbox", "Container", string_to_clsid("CT_CHRB"));
+CONTROL_TYPE_REGISTER(ibValueChartBox, "Chartbox", "Container", string_to_clsid("CT_CHRB"));

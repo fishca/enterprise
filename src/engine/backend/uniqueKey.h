@@ -3,93 +3,106 @@
 
 #include "backend/compiler/value.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// ibUniqueKey      — GUID-based identity.  One field (m_objGuid) covers
+//                    Catalogs, Documents, Charts, Enums and any other
+//                    object whose row is keyed by a single GUID.
+//                    Also serves as the FORM-INSTANCE identity for any
+//                    open form (each form holds exactly one).
+//
+// ibUniqueKeyPair  — composite-key identity.  State is `m_keyValues`
+//                    (a metaID → ibValue map); the schema is implicit
+//                    in the metaIDs used as map keys.  This class is
+//                    metadata-agnostic by design — the keys can be
+//                    constructed by any source.  Metadata-side helpers
+//                    (e.g. ibValueMetaObjectRegisterData::CreateUniqueKeyPair)
+//                    seed the map from a register's dimension list and
+//                    hand the resulting Pair to the caller.
+//
+//                    Inherited m_objGuid is set to wxNewUniqueGuid per
+//                    Pair instance and is used by FindFormBySourceUniqueKey
+//                    / UpdateFormUniqueKey as the STABLE form-instance
+//                    identity (so the form can be located after a save
+//                    mutates m_keyValues).
+//
+// Equality is virtual via the EqualsImpl hook — base compares m_objGuid;
+// Pair extends to compare m_keyValues when both sides are Pair, and falls
+// back to the GUID compare otherwise.  Ordering operators stay GUID-based.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API IValueMetaObjectRegisterData;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//class keys 
-class BACKEND_API CUniqueKey {
-protected:
-
-	enum class enUniqueData {
-		enUniqueKey = 10,
-		enUniqueGuid
-	} m_uniqueData;
-
+class BACKEND_API ibUniqueKey {
 public:
+
+	ibUniqueKey();
+	ibUniqueKey(const ibGuid& guid);
+	virtual ~ibUniqueKey();
 
 	bool isValid() const;
 	void reset();
 
-	CGuid GetGuid() const { return m_objGuid; }
+	ibGuid GetGuid() const { return m_objGuid; }
 
-	CUniqueKey();
-	CUniqueKey(const CGuid& guid);
+	// Default validity check is "GUID is non-zero".  Pair overrides to
+	// require a populated composite key instead.
+	virtual bool IsOk() const;
 
-	virtual bool IsOk() const {
-		return m_metaObject != nullptr;
-	}
+	bool operator < (const ibUniqueKey& other) const;
+	bool operator > (const ibUniqueKey& other) const;
+	bool operator <=(const ibUniqueKey& other) const;
+	bool operator >=(const ibUniqueKey& other) const;
 
-	bool operator > (const CUniqueKey& other) const;
-	bool operator >= (const CUniqueKey& other) const;
-	bool operator < (const CUniqueKey& other) const;
-	bool operator <= (const CUniqueKey& other) const;
+	bool operator==(const ibUniqueKey& other) const;
+	bool operator!=(const ibUniqueKey& other) const;
+	bool operator==(const ibGuid& other) const;
+	bool operator!=(const ibGuid& other) const;
 
-	// overload equality and inequality operator
-	virtual bool operator==(const CUniqueKey& other) const;
-	virtual bool operator!=(const CUniqueKey& other) const;
-
-	virtual bool operator==(const CGuid& other) const;
-	virtual bool operator!=(const CGuid& other) const;
-
-	operator wxString() const { return GetGuid().str(); }
-	operator CGuid() const { return GetGuid(); }
-	operator guid_t() const { return GetGuid(); }
+	operator wxString()   const { return m_objGuid.str(); }
+	operator ibGuid()     const { return m_objGuid; }
+	operator ibGuidImpl() const { return m_objGuid; }
 
 protected:
 
-	CUniqueKey(enUniqueData uniqueData) : m_uniqueData(uniqueData) {}
+	// Equality hook.  Override in subclasses to extend semantics; the
+	// public operator== / != funnel through this single virtual.
+	virtual bool EqualsImpl(const ibUniqueKey& other) const;
 
-protected:
-
-	CGuid m_objGuid;
-	const IValueMetaObjectRegisterData* m_metaObject;
-	valueArray_t m_keyValues;
+	ibGuid m_objGuid;
 };
 
-class BACKEND_API CUniquePairKey : public CUniqueKey {
+class BACKEND_API ibUniqueKeyPair : public ibUniqueKey {
 public:
 
-	CUniquePairKey(const IValueMetaObjectRegisterData* metaObject = nullptr);
-	CUniquePairKey(const IValueMetaObjectRegisterData* metaObject, const valueArray_t& keyValues);
+	ibUniqueKeyPair();
+	explicit ibUniqueKeyPair(const ibMetaValueArray& keyValues);
+	virtual ~ibUniqueKeyPair();
 
-	bool IsOk() const {
-		return m_metaObject != nullptr && m_keyValues.size() > 0;
-	}
+	bool IsOk() const override;
 
-	void SetKeyPair(const IValueMetaObjectRegisterData* metaObject,
-		valueArray_t& keys) {
-		m_metaObject = metaObject; m_keyValues = keys;
-	}
+	const ibMetaValueArray& GetKeyValues() const { return m_keyValues; }
+	void SetKeyValues(const ibMetaValueArray& keys) { m_keyValues = keys; }
 
-	bool FindKey(const meta_identifier_t& id) const {
-		auto& it = m_keyValues.find(id);
-		return it != m_keyValues.end();
-	}
+	bool FindKey(const ibMetaID& id) const;
+	ibValue GetKey(const ibMetaID& id) const;
 
-	CValue GetKey(const meta_identifier_t& id) const {
-		auto& it = m_keyValues.find(id);
-		if (it != m_keyValues.end())
-			return it->second;
-		return CValue();
-	}
+	operator ibMetaValueArray() const { return m_keyValues; }
 
-	operator valueArray_t() const { return m_keyValues; }
+protected:
+
+	// Composite-key compare when both sides are Pair; fall through to
+	// base GUID compare otherwise.  Note: comparing a Pair against a
+	// plain GUID-key almost never matches because Pair's m_objGuid is a
+	// fresh wxNewUniqueGuid per instance — that's intentional, mixing
+	// the two is a programming error.
+	bool EqualsImpl(const ibUniqueKey& other) const override;
+
+private:
+
+	ibMetaValueArray m_keyValues;
 };
 
-#define wxNullUniqueKey CUniqueKey()
-#define wxNullUniquePairKey CUniquePairKey()
+#define wxNullUniqueKey     ibUniqueKey()
+#define wxNullUniquePairKey ibUniqueKeyPair()
 
 #endif // !_UNIQUE_KEY_H__

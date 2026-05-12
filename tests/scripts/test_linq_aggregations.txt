@@ -1,0 +1,41 @@
+// LINQ aggregations smoke test — 2026-05-11 PM
+// Tests no-arg Sum/Min/Max/Average on Array and combined with GROUP BY.
+//
+// Expected output:
+//   --- numeric array ---
+//   sum=15
+//   min=1
+//   max=5
+//   avg=3
+//   --- group by country sums ---
+//   FR amount sum: 100
+//   UK amount sum: 50
+//   USA amount sum: 75
+
+var nums = New Array;
+nums.Add(1);
+nums.Add(2);
+nums.Add(3);
+nums.Add(4);
+nums.Add(5);
+
+Message("--- numeric array ---");
+Message("sum=" + nums.Sum());
+Message("min=" + nums.Min());
+Message("max=" + nums.Max());
+Message("avg=" + nums.Average());
+
+var orders = New Array;
+orders.Add(New Structure("Country, Amount", "USA", 25));
+orders.Add(New Structure("Country, Amount", "UK",  30));
+orders.Add(New Structure("Country, Amount", "USA", 50));
+orders.Add(New Structure("Country, Amount", "FR",  100));
+orders.Add(New Structure("Country, Amount", "UK",  20));
+
+Message("--- group by country sums ---");
+var q = from o in orders
+        group o.Amount by o.Country;
+
+foreach (g in q) {
+    Message(g.Key + " amount sum: " + g.Values.Sum());
+}

@@ -10,10 +10,10 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API CDialogAuthentication : public wxDialog {
+class FRONTEND_API ibDialogAuthentication : public wxDialog {
 public:
 
-	CDialogAuthentication(wxWindow* parent = nullptr, wxWindowID id = wxID_ANY, const wxString& title = _("Authentication to information base"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(420, 130), long style = wxDEFAULT_DIALOG_STYLE);
+	ibDialogAuthentication(wxWindow* parent = nullptr, wxWindowID id = wxID_ANY, const wxString& title = _("Authentication to information base"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(420, 130), long style = wxDEFAULT_DIALOG_STYLE);
 
 	wxString GetLogin() const { return m_comboBoxLogin->GetValue(); }
 	void SetLogin(const wxString& login) { m_comboBoxLogin->SetValue(login); }
@@ -30,4 +30,15 @@ private:
 	wxButton* m_buttonCancel;
 };
 
-#endif 
+// Standalone interactive-auth entry point. Shows ibDialogAuthentication
+// modal with the prefilled user/password; dialog's OK handler calls
+// AuthenticateUser + InstallUser itself under the main thread's
+// ibSessionScope, so m_userInfo / m_sessionRawPassword on the scoped
+// session are populated on confirm. Returns true if user confirmed
+// (ShowModal != wxID_CANCEL), false on cancel. Registered as
+// ibApplicationData's InteractiveAuthHook by GUI apps (enterprise /
+// designer) at startup so the Authenticate() fallback can prompt
+// without depending on the main frame's lifecycle.
+FRONTEND_API bool ibPromptAuthenticationDialog(const wxString& userName, const wxString& userPassword);
+
+#endif

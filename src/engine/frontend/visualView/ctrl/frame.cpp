@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////
+﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
 //	Description : base control
 ////////////////////////////////////////////////////////////////////////////
@@ -7,40 +7,44 @@
 #include "form.h"
 #include "backend/compiler/procUnit.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueFrame, CValue);
+#ifdef OES_USE_WEB
+#include <iostream>
+#endif
+
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueFrame, ibValue);
 
 //*************************************************************************
 //*                          ValueControl		                          *
 //*************************************************************************
 
-IValueFrame::IValueFrame() : CValue(eValueTypes::TYPE_VALUE),
-m_methodHelper(new CMethodHelper()),
-m_valEventContainer(CValue::CreateAndPrepareValueRef<CValueEventContainer>(this)),
-m_controlId(0), m_controlGuid(CGuid::newGuid())
+ibValueFrame::ibValueFrame() : ibValue(ibValueTypes::TYPE_VALUE),
+m_methodHelper(new ibValueMethodHelper()),
+m_valEventContainer(ibValue::CreateAndPrepareValueRef<ibValueEventContainer>(this)),
+m_controlId(0), m_controlGuid(ibGuid::newGuid())
 {
 }
 
-IValueFrame::~IValueFrame()
+ibValueFrame::~ibValueFrame()
 {
 	wxDELETE(m_methodHelper);
 }
 
-wxString IValueFrame::GetClassName() const
+wxString ibValueFrame::GetClassName() const
 {
-	const class_identifier_t& clsid = GetClassType();
+	const ibClassID& clsid = GetClassType();
 	if (clsid == 0)
 		return _("Class not registered");
 
-	const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+	const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
 	if (typeCtor != nullptr)
 		return typeCtor->GetClassName();
 	return _("Class not registered");
 }
 
-wxString IValueFrame::GetObjectTypeName() const
+wxString ibValueFrame::GetObjectTypeName() const
 {
-	const IControlTypeCtor* typeCtor =
-		static_cast<const IControlTypeCtor*>(CValue::GetAvailableCtor(GetClassInfo()));
+	const ibCtorControlTypeBase* typeCtor =
+		static_cast<const ibCtorControlTypeBase*>(ibValue::GetAvailableCtor(GetClassInfo()));
 
 	if (typeCtor != nullptr)
 		return typeCtor->GetTypeControlName();
@@ -52,42 +56,58 @@ wxString IValueFrame::GetObjectTypeName() const
 #define	childBlock 0x012270
 #define	frameBlock 0x012290
 
-bool IValueFrame::IsEditable() const
+bool ibValueFrame::IsEditable() const
 {
-	const CValueForm* handler = GetOwnerForm();
+	const ibValueForm* handler = GetOwnerForm();
 	if (handler != nullptr)
 		return handler->IsEditable();
 	return false;
 }
 
-bool IValueFrame::LoadControl(const IValueMetaObjectForm* metaForm, CMemoryReader& dataReader)
+bool ibValueFrame::LoadControl(const ibValueMetaObjectFormBase* metaForm, ibReaderMemory& dataReader)
 {
-	//save meta version 
-	const version_identifier_t& version = dataReader.r_u32(); //reserved 
+#ifdef OES_USE_WEB
+	std::cerr << "[LoadControl] enter this=" << this
+		<< " metaForm=" << metaForm << std::endl;
+#endif
+	//save meta version
+	const ibVersionID& version = dataReader.r_u32(); //reserved
+
+#ifdef OES_USE_WEB
+	std::cerr << "[LoadControl] version ok, reading m_controlId" << std::endl;
+#endif
 
 	//Load meta id
 	m_controlId = dataReader.r_u32();
 
+#ifdef OES_USE_WEB
+	std::cerr << "[LoadControl] m_controlId=" << m_controlId << std::endl;
+#endif
+
 	//Load standart fields
 	SetControlName(dataReader.r_stringZ());
 
-	//default value 
+#ifdef OES_USE_WEB
+	std::cerr << "[LoadControl] name set" << std::endl;
+#endif
+
+	//default value
 	m_expanded = dataReader.r_u8();
 
-	//load frame 
+	//load frame
 	wxMemoryBuffer buffer_chunk;
 	if (!dataReader.r_chunk(frameBlock, buffer_chunk))
 		return false;
 
-	CMemoryReader dataObjectReader(buffer_chunk);
+	ibReaderMemory dataObjectReader(buffer_chunk);
 	dataObjectReader.r_u32(); //reserved flags
 	if (!LoadData(dataObjectReader))
 		return false;
-	
+
 	return true;
 }
 
-bool IValueFrame::SaveControl(const IValueMetaObjectForm* metaForm, CMemoryWriter& dataWritter, bool copy_form)
+bool ibValueFrame::SaveControl(const ibValueMetaObjectFormBase* metaForm, ibWriterMemory& dataWritter, bool copy_form)
 {
 	//save meta version 
 	dataWritter.w_u32(version_oes_last); //reserved 
@@ -102,7 +122,7 @@ bool IValueFrame::SaveControl(const IValueMetaObjectForm* metaForm, CMemoryWrite
 	dataWritter.w_u8(m_expanded);
 
 	//save frame 
-	CMemoryWriter dataObjectWritter;
+	ibWriterMemory dataObjectWritter;
 	dataObjectWritter.w_u32(0); //reserved flags
 	if (!SaveData(dataObjectWritter))
 		return false;
@@ -113,18 +133,18 @@ bool IValueFrame::SaveControl(const IValueMetaObjectForm* metaForm, CMemoryWrite
 
 //*******************************************************************
 
-bool IValueFrame::Init()
+bool ibValueFrame::Init()
 {
 	// always false
 	return false;
 }
 
-bool IValueFrame::Init(CValue** paParams, const long lSizeArray)
+bool ibValueFrame::Init(ibValue** paParams, const long lSizeArray)
 {
 	if (lSizeArray < 2)
 		return false;
-	CValueForm* ownerForm = nullptr;
-	IValueFrame* controlParent = nullptr;
+	ibValueForm* ownerForm = nullptr;
+	ibValueFrame* controlParent = nullptr;
 	if (paParams[0]->ConvertToValue(ownerForm) &&
 		paParams[1]->ConvertToValue(controlParent)) {
 		if (controlParent != nullptr) {
@@ -143,43 +163,43 @@ bool IValueFrame::Init(CValue** paParams, const long lSizeArray)
 
 //*******************************************************************
 
-bool IValueFrame::ChangeChildPosition(IValueFrame* obj, unsigned int pos)
+bool ibValueFrame::ChangeChildPosition(ibValueFrame* obj, unsigned int pos)
 {
 	OnChangeChildPosition(obj, pos);
-	return IPropertyObjectHelper::ChangeChildPosition(obj, pos);
+	return ibPropertyObjectHelper::ChangeChildPosition(obj, pos);
 }
 
 //*******************************************************************
 
-IValueFrame* IValueFrame::CreatePasteObject(const CMemoryReader& reader,
-	CValueForm* dstForm, IValueFrame* dstParent)
+ibValueFrame* ibValueFrame::CreatePasteObject(const ibReaderMemory& reader,
+	ibValueForm* dstForm, ibValueFrame* dstParent)
 {
-	std::shared_ptr <CMemoryReader>readerHeaderMemory(reader.open_chunk(headerBlock));
+	std::shared_ptr <ibReaderMemory>readerHeaderMemory(reader.open_chunk(headerBlock));
 	if (readerHeaderMemory == nullptr)
 		return nullptr;
 
-	const version_identifier_t& version = readerHeaderMemory->r_s32();
-	const class_identifier_t& clsid = readerHeaderMemory->r_u64();
+	const ibVersionID& version = readerHeaderMemory->r_s32();
+	const ibClassID& clsid = readerHeaderMemory->r_u64();
 
 	return dstForm->NewObject(clsid, dstParent);
 }
 
 //*******************************************************************
 
-bool IValueFrame::CopyObject(CMemoryWriter& writer) const
+bool ibValueFrame::CopyObject(ibWriterMemory& writer) const
 {
-	CMemoryWriter writerHeaderMemory;
+	ibWriterMemory writerHeaderMemory;
 	writerHeaderMemory.w_s32(0); //reserved
 	writerHeaderMemory.w_u64(GetClassType()); //get class type 
 	writer.w_chunk(headerBlock, writerHeaderMemory.pointer(), writerHeaderMemory.size());
-	CMemoryWriter writerDataMemory;
+	ibWriterMemory writerDataMemory;
 	if (!CopyProperty(writerDataMemory))
 		return false;
 	writer.w_chunk(dataBlock, writerDataMemory.pointer(), writerDataMemory.size());
-	CMemoryWriter writerChildMemory;
+	ibWriterMemory writerChildMemory;
 	for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
-		CMemoryWriter writerMemory;
-		IValueFrame* obj = GetChild(idx);
+		ibWriterMemory writerMemory;
+		ibValueFrame* obj = GetChild(idx);
 		if (!obj->CopyObject(writerMemory))
 			return false;
 		writerChildMemory.w_chunk(obj->GetClassType(), writerMemory.pointer(), writerMemory.size());
@@ -188,26 +208,26 @@ bool IValueFrame::CopyObject(CMemoryWriter& writer) const
 	return true;
 }
 
-bool IValueFrame::PasteObject(CMemoryReader& reader)
+bool ibValueFrame::PasteObject(ibReaderMemory& reader)
 {
-	CValueForm* valueForm = GetOwnerForm();
+	ibValueForm* valueForm = GetOwnerForm();
 	if (valueForm == nullptr) return false;
 
-	std::shared_ptr <CMemoryReader>readerHeaderMemory(reader.open_chunk(headerBlock));
+	std::shared_ptr <ibReaderMemory>readerHeaderMemory(reader.open_chunk(headerBlock));
 
-	const version_identifier_t& version = readerHeaderMemory->r_s32(); //reserved
-	const class_identifier_t& clsid = readerHeaderMemory->r_u64();
+	const ibVersionID& version = readerHeaderMemory->r_s32(); //reserved
+	const ibClassID& clsid = readerHeaderMemory->r_u64();
 
-	std::shared_ptr <CMemoryReader> readerChildMemory(reader.open_chunk(childBlock));
+	std::shared_ptr <ibReaderMemory> readerChildMemory(reader.open_chunk(childBlock));
 	if (readerChildMemory != nullptr) {
-		CMemoryReader* prevReaderMemory = nullptr;
+		ibReaderMemory* prevReaderMemory = nullptr;
 		do {
-			class_identifier_t founded_clsid = 0;
-			CMemoryReader* readerMemory = readerChildMemory->open_chunk_iterator(founded_clsid, &*prevReaderMemory);
+			ibClassID founded_clsid = 0;
+			ibReaderMemory* readerMemory = readerChildMemory->open_chunk_iterator(founded_clsid, &*prevReaderMemory);
 			if (readerMemory == nullptr)
 				break;
 			if (founded_clsid > 0) {
-				IValueFrame* valueFrame = valueForm->NewObject(founded_clsid, this, false);
+				ibValueFrame* valueFrame = valueForm->NewObject(founded_clsid, this, false);
 				if (valueFrame != nullptr && !valueFrame->PasteObject(*readerMemory))
 					return false;
 			}
@@ -215,7 +235,7 @@ bool IValueFrame::PasteObject(CMemoryReader& reader)
 		} while (true);
 	}
 
-	std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
+	std::shared_ptr <ibReaderMemory>readerDataMemory(reader.open_chunk(dataBlock));
 	if (!PasteProperty(*readerDataMemory))
 		return false;
 
@@ -223,24 +243,35 @@ bool IValueFrame::PasteObject(CMemoryReader& reader)
 	return true;
 }
 
+std::shared_ptr<ibProcUnit> ibValueFrame::GetFormProcUnit() const
+{
+	const ibValueForm* valueForm =
+		GetOwnerForm();
+
+	if (valueForm == nullptr) 
+		return nullptr;
+
+	return valueForm->GetProcUnit();
+}
+
 //*******************************************************************
 
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-bool IValueFrame::HasQuickChoice() const {
-	IMetaData* metaData = GetMetaData();
+bool ibValueFrame::HasQuickChoice() const {
+	ibMetaData* metaData = GetMetaData();
 	if (metaData == nullptr)
 		return false;
-	CValue selValue; GetControlValue(selValue);
-	const IAbstractTypeCtor* so = metaData->GetAvailableCtor(selValue.GetClassType());
-	if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_primitive) {
+	ibValue selValue; GetControlValue(selValue);
+	const ibCtorAbstractType* so = metaData->GetAvailableCtor(selValue.GetClassType());
+	if (so != nullptr && so->GetObjectTypeCtor() == ibCtorObjectType_object_primitive) {
 		return true;
 	}
-	else if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_meta_value) {
-		const IMetaValueTypeCtor* meta_so = dynamic_cast<const IMetaValueTypeCtor*>(so);
+	else if (so != nullptr && so->GetObjectTypeCtor() == ibCtorObjectType_object_meta_value) {
+		const ibCtorMetaValueType* meta_so = dynamic_cast<const ibCtorMetaValueType*>(so);
 		if (meta_so != nullptr) {
-			IValueMetaObjectRecordDataRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
+			const ibValueMetaObjectRecordDataRef* metaObject = dynamic_cast<const ibValueMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
 			if (metaObject != nullptr)
 				return metaObject->HasQuickChoice();
 		}
@@ -250,25 +281,27 @@ bool IValueFrame::HasQuickChoice() const {
 
 //*******************************************************************
 
-IBackendValueForm* IValueFrame::GetBackendForm() const
+ibBackendValueForm* ibValueFrame::GetBackendForm() const
 {
 	return GetOwnerForm();
 }
 
 //*******************************************************************
 
-CFormVisualDocument* IValueFrame::GetVisualDocument() const
+ibFormVisualDocument* ibValueFrame::GetVisualDocument() const
 {
-	CValueForm* const valueForm = GetOwnerForm();
+	ibValueForm* const valueForm = GetOwnerForm();
 	if (valueForm == nullptr)
 		return nullptr;
 	return valueForm->GetVisualDocument();
 }
 
-IVisualEditorNotebook* IValueFrame::FindVisualEditor() const
+#ifndef OES_USE_WEB
+ibFrontendVisualEditorNotebook* ibValueFrame::FindVisualEditor() const
 {
-	return IVisualEditorNotebook::FindEditorByForm(GetOwnerForm());
+	return ibFrontendVisualEditorNotebook::FindEditorByForm(GetOwnerForm());
 }
+#endif
 
 //*******************************************************************
 //*                          Runtime                                *
@@ -276,32 +309,40 @@ IVisualEditorNotebook* IValueFrame::FindVisualEditor() const
 
 #include "frontend/visualView/visualHostClient.h"
 
-wxObject* IValueFrame::GetWxObject() const
+wxObject* ibValueFrame::GetWxObject() const
 {
-	CValueForm* const valueForm = GetOwnerForm();
+	// Unified path: form в†’ visualDoc в†’ view в†’ host в†’ GetWxObject(this).
+	// Web's ibVisualHostClient also populates m_baseObjects (walker
+	// inserts ibWebWindow* per ibValueFrame), so the same lookup works
+	// on both builds. Previously web returned nullptr unconditionally,
+	// which silently broke SetControlValue's editor-poke — Clear couldn't
+	// reach the ibWebTextCtrl to reset m_value (2026-04-19).
+	ibValueForm* const valueForm = GetOwnerForm();
 	if (valueForm != nullptr) {
 
-		CFormVisualDocument* const visualDoc = valueForm->GetVisualDocument();
+		ibFormVisualDocument* const visualDoc = valueForm->GetVisualDocument();
 		if (visualDoc != nullptr) {
 
-			const CFormVisualEditView* visualView = visualDoc->GetFirstView();
-			const IVisualHost* visualHost = visualView ?
+			const ibFormVisualEditView* visualView = visualDoc->GetFirstView();
+			const ibVisualHost* visualHost = visualView ?
 				visualView->GetVisualHost() : nullptr;
 
 			if (visualHost == nullptr)
 				return nullptr;
 
-			return visualHost->GetWxObject((IValueFrame*)this);
+			return visualHost->GetWxObject((ibValueFrame*)this);
 
 		}
+#ifndef OES_USE_WEB
 		else if (g_visualHostContext != nullptr) {
 
-			//if run designer form search in own visualHost 
-			const IVisualHost* visualHost =
+			//if run designer form search in own visualHost
+			const ibVisualHost* visualHost =
 				g_visualHostContext->GetVisualHost();
 
-			return visualHost->GetWxObject((IValueFrame*)this);
+			return visualHost->GetWxObject((ibValueFrame*)this);
 		}
+#endif
 	}
 
 	return nullptr;
@@ -313,23 +354,23 @@ wxObject* IValueFrame::GetWxObject() const
 //*                              Support methods                             *
 //****************************************************************************
 
-void IValueFrame::PrepareNames() const
+void ibValueFrame::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	{
 		wxString propertyName;
-		for (unsigned int idx = 0; idx < IPropertyObject::GetPropertyCount(); idx++) {
-			IProperty* property = IPropertyObject::GetProperty(idx);
+		for (unsigned int idx = 0; idx < ibPropertyObject::GetPropertyCount(); idx++) {
+			ibProperty* property = ibPropertyObject::GetProperty(idx);
 			if (property == nullptr)
 				continue;
 			property->GetName(propertyName);
 			m_methodHelper->AppendProp(propertyName, idx, eProperty);
 		}
 		//if we have sizerItem then call him  
-		IValueFrame* sizeritem = GetParent();
+		ibValueFrame* sizeritem = GetParent();
 		if (sizeritem != nullptr && sizeritem->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 			for (unsigned int idx = 0; idx < sizeritem->GetPropertyCount(); idx++) {
-				IProperty* property = sizeritem->GetProperty(idx);
+				ibProperty* property = sizeritem->GetProperty(idx);
 				if (property == nullptr)
 					continue;
 				property->GetName(propertyName);
@@ -343,34 +384,40 @@ void IValueFrame::PrepareNames() const
 	if (m_valEventContainer != nullptr) m_valEventContainer->PrepareNames();
 }
 
-bool IValueFrame::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueFrame::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProperty) {
 		unsigned int idx = m_methodHelper->GetPropData(lPropNum);
-		IProperty* property = GetPropertyByIndex(idx);
+		ibProperty* property = GetPropertyByIndex(idx);
 		if (property != nullptr)
 			property->SetDataValue(varPropVal);
 	}
 	else if (lPropAlias == eSizerItem) {
 		//if we have sizerItem then call him savepropery 
-		IValueFrame* sizerItem = GetParent();
+		ibValueFrame* sizerItem = GetParent();
 		if (sizerItem != nullptr &&
 			sizerItem->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-			IProperty* property = sizerItem->GetPropertyByIndex(lPropNum);
+			ibProperty* property = sizerItem->GetPropertyByIndex(lPropNum);
 			if (property != nullptr)
 				property->SetDataValue(varPropVal);
 		}
 	}
 
-	CValueForm* ownerForm = GetOwnerForm();
+	ibValueForm* ownerForm = GetOwnerForm();
 	if (ownerForm == nullptr)
 		return false;
 
-	CFormVisualDocument* visualDoc = ownerForm->GetVisualDocument();
+#ifndef OES_USE_WEB
+	// Live-update path: find the existing wxWindow for this control,
+	// re-apply properties via Update(), re-layout the parent. Web path
+	// rebuilds from scratch on each HTTP response (stateless render),
+	// so there's no live object to poke — return true and let the next
+	// ClearVisualHost+CreateVisualHost pass do the work.
+	ibFormVisualDocument* visualDoc = ownerForm->GetVisualDocument();
 	if (visualDoc != nullptr) {
 
-		CVisualClientHost* visualView = visualDoc->GetFirstView() ?
+		ibVisualHostClient* visualView = visualDoc->GetFirstView() ?
 			visualDoc->GetFirstView()->GetVisualHost() : nullptr;
 
 		if (visualView == nullptr)
@@ -381,7 +428,7 @@ bool IValueFrame::SetPropVal(const long lPropNum, const CValue& varPropVal)
 		if (wxobject != nullptr) {
 			wxWindow* wxparent = nullptr;
 			Update(wxobject, visualView);
-			IValueFrame* nextParent = GetParent();
+			ibValueFrame* nextParent = GetParent();
 			while (wxparent == nullptr && nextParent != nullptr) {
 				if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
 					wxObject* wxobject = visualView->GetWxObject(nextParent);
@@ -395,20 +442,21 @@ bool IValueFrame::SetPropVal(const long lPropNum, const CValue& varPropVal)
 			if (wxparent != nullptr) wxparent->Layout();
 		}
 	}
+#endif
 
 	return true;
 }
 
-bool IValueFrame::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueFrame::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eSizerItem) {
 		//if we have sizerItem then call him savepropery 
-		IValueFrame* sizerItem = GetParent();
+		ibValueFrame* sizerItem = GetParent();
 		if (sizerItem != nullptr &&
 			sizerItem->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 			unsigned int idx = m_methodHelper->GetPropData(lPropNum);
-			IProperty* property = sizerItem->GetPropertyByIndex(idx);
+			ibProperty* property = sizerItem->GetPropertyByIndex(idx);
 			if (property != nullptr)
 				return property->GetDataValue(pvarPropVal);
 			return false;
@@ -420,7 +468,7 @@ bool IValueFrame::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	}
 	else {
 		unsigned int idx = m_methodHelper->GetPropData(lPropNum);
-		IProperty* property = GetPropertyByIndex(idx);
+		ibProperty* property = GetPropertyByIndex(idx);
 		if (property != nullptr)
 			return property->GetDataValue(pvarPropVal);
 		return false;

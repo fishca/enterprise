@@ -1,37 +1,37 @@
-#ifndef _CONSTANTS_MANAGER_H__
+﻿#ifndef _CONSTANTS_MANAGER_H__
 #define _CONSTANTS_MANAGER_H__
 
 #include "constant.h"
 
-class CValueManagerDataObjectConstant :
-	public IValueManagerObject {
+class ibValueManagerDataObjectConstant :
+	public ibValueManagerObject {
 public:
 
-	CValueManagerDataObjectConstant(CValueMetaObjectConstant* metaConst = nullptr) : m_metaObject(metaConst) {}
-	virtual ~CValueManagerDataObjectConstant() {}
+	ibValueManagerDataObjectConstant(ibValueMetaObjectConstant* metaConst = nullptr) : m_metaObject(metaConst) {}
+	virtual ~ibValueManagerDataObjectConstant() {}
 
-	virtual CValueMetaObjectConstant* GetMetaObject() const { return m_metaObject; }
+	virtual const ibValueMetaObjectConstant* GetMetaObject() const { return m_metaObject; }
 
-	virtual CMethodHelper* GetPMethods() const {
+	virtual ibValueMethodHelper* GetPMethods() const {
 		//PrepareNames();  
 		return &m_methodHelper;
 	}
 
 	virtual void PrepareNames() const;
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
 	//Get ref class 
-	virtual class_identifier_t GetClassType() const;
+	virtual ibClassID GetClassType() const;
 
 	//types 
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
 
 protected:
-	CValueMetaObjectConstant* m_metaObject;
-	static CMethodHelper m_methodHelper;
+	const ibValueMetaObjectConstant* m_metaObject;
+	static ibValueMethodHelper m_methodHelper;
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectConstant);
+	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectConstant);
 };
 
 

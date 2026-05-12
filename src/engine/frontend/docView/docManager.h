@@ -3,7 +3,7 @@
 
 #include "docView.h"
 
-#define docManager CMetaDocManager::GetDocumentManager()
+#define docManager ibMetaDocManager::GetDocumentManager()
 
 #include <wx/fdrepdlg.h>
 
@@ -14,13 +14,13 @@ enum
 	wxTEMPLATE_SAVE_AS_FILE = 8
 };
 
-class FRONTEND_API CMetaDocManager : public wxDocManager {
+class FRONTEND_API ibMetaDocManager : public wxDocManager {
 
-	class CMetaDocTemplate : public wxDocTemplate {
+	class ibMetaDocTemplate : public wxDocTemplate {
 	public:
 		// Associate document and view types. They're for identifying what view is
 		// associated with what template/document type
-		CMetaDocTemplate(wxDocManager* manager,
+		ibMetaDocTemplate(wxDocManager* manager,
 			const wxString& descr,
 			const wxString& filter,
 			const wxString& dir,
@@ -49,23 +49,23 @@ class FRONTEND_API CMetaDocManager : public wxDocManager {
 			long flags = 0);
 	};
 
-	struct CMetaDocManagerItem {
-		class_identifier_t m_clsid;
+	struct ibMetaDocManagerItem {
+		ibClassID m_clsid;
 		wxString m_className;
 		wxString m_classDescr;
-		CGuid m_guidTemplate;
-		CMetaDocTemplate* m_docTemplate;
+		ibGuid m_guidTemplate;
+		ibMetaDocTemplate* m_docTemplate;
 		wxIcon m_classIcon;
 	};
 
-	std::vector <CMetaDocManagerItem> m_templateVector;
+	std::vector <ibMetaDocManagerItem> m_templateVector;
 
 	wxFindReplaceData m_findData;
 	wxFindReplaceDialog* m_findDialog;
 
 private:
 
-	CMetaDocument* OpenForm(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags);
+	ibMetaDocument* OpenForm(ibValueMetaObject* metaObject, ibMetaDocument* docParent, long flags);
 
 	// Handlers for common user commands
 	void OnFileClose(wxCommandEvent& event);
@@ -114,18 +114,18 @@ public:
 		return nullptr;
 	}
 
-	static CMetaDocument* OpenFormMDI(IValueMetaObject* metaObject, long flags = wxDOC_NEW);
-	static CMetaDocument* OpenFormMDI(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags = wxDOC_NEW);
+	static ibMetaDocument* OpenFormMDI(ibValueMetaObject* metaObject, long flags = wxDOC_NEW);
+	static ibMetaDocument* OpenFormMDI(ibValueMetaObject* metaObject, ibMetaDocument* docParent, long flags = wxDOC_NEW);
 
 	// Get the current document manager
-	static CMetaDocManager* GetDocumentManager() {
-		return dynamic_cast<CMetaDocManager*>(sm_docManager);
+	static ibMetaDocManager* GetDocumentManager() {
+		return dynamic_cast<ibMetaDocManager*>(sm_docManager);
 	}
 
-	CMetaDocManager();
-	virtual ~CMetaDocManager();
+	ibMetaDocManager();
+	virtual ~ibMetaDocManager();
 
-	void AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
+	void AddDocTemplate(const ibPictureID& id, const wxString& descr,
 		const wxString& filter,
 		const wxString& dir,
 		const wxString& ext,
@@ -136,7 +136,7 @@ public:
 		long flags = wxTEMPLATE_VISIBLE
 	);
 
-	void AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
+	void AddDocTemplate(const ibPictureID& id, const wxString& descr,
 		const wxString& filter,
 		const wxString& ext,
 		const wxString& docTypeName,
@@ -146,7 +146,7 @@ public:
 		long flags = wxTEMPLATE_VISIBLE
 	);
 
-	void AddDocTemplate(const class_identifier_t& id,
+	void AddDocTemplate(const ibClassID& id,
 		const wxString& descr,
 		const wxString& filter,
 		const wxString& ext,
@@ -154,12 +154,12 @@ public:
 		wxClassInfo* viewClassInfo
 	);
 
-	void AddDocTemplate(const class_identifier_t& id,
+	void AddDocTemplate(const ibClassID& id,
 		wxClassInfo* docClassInfo,
 		wxClassInfo* viewClassInfo
 	);
 
-	CMetaDocument* GetCurrentDocument() const;
+	ibMetaDocument* GetCurrentDocument() const;
 
 	virtual wxDocument* CreateDocument(const wxString& pathOrig, long flags) override;
 	virtual wxDocTemplate* SelectDocumentPath(wxDocTemplate** templates,
@@ -175,8 +175,8 @@ public:
 
 protected:
 
-	wxDECLARE_DYNAMIC_CLASS(CMetaDocManager);
-	wxDECLARE_NO_COPY_CLASS(CMetaDocManager);
+	wxDECLARE_DYNAMIC_CLASS(ibMetaDocManager);
+	wxDECLARE_NO_COPY_CLASS(ibMetaDocManager);
 
 	wxDECLARE_EVENT_TABLE();
 };

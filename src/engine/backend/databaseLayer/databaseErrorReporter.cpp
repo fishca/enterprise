@@ -2,36 +2,36 @@
 #include "databaseErrorCodes.h"
 #include "databaseLayerException.h"
 
-CDatabaseErrorReporter::CDatabaseErrorReporter()
+ibDatabaseErrorReporter::ibDatabaseErrorReporter()
 {
 	ResetErrorCodes();
 }
 
-CDatabaseErrorReporter::~CDatabaseErrorReporter()
+ibDatabaseErrorReporter::~ibDatabaseErrorReporter()
 {
 }
 
-const wxString& CDatabaseErrorReporter::GetErrorMessage()
+const wxString& ibDatabaseErrorReporter::GetErrorMessage()
 {
 	return m_strErrorMessage;
 }
 
-int CDatabaseErrorReporter::GetErrorCode()
+int ibDatabaseErrorReporter::GetErrorCode()
 {
 	return m_nErrorCode;
 }
 
-void CDatabaseErrorReporter::SetErrorMessage(const wxString& strErrorMessage)
+void ibDatabaseErrorReporter::SetErrorMessage(const wxString& strErrorMessage)
 {
 	m_strErrorMessage = strErrorMessage;
 }
 
-void CDatabaseErrorReporter::SetErrorCode(int nErrorCode)
+void ibDatabaseErrorReporter::SetErrorCode(int nErrorCode)
 {
 	m_nErrorCode = nErrorCode;
 }
 
-void CDatabaseErrorReporter::ResetErrorCodes()
+void ibDatabaseErrorReporter::ResetErrorCodes()
 {
 	m_strErrorMessage.Clear();
 	m_nErrorCode = DATABASE_LAYER_OK;
@@ -40,14 +40,14 @@ void CDatabaseErrorReporter::ResetErrorCodes()
 #include "backend/backend_exception.h"
 #include "backend/system/systemManager.h"
 
-void CDatabaseErrorReporter::ThrowDatabaseException()
+void ibDatabaseErrorReporter::ThrowDatabaseException()
 {
-	CSystemFunction::Message(GetErrorMessage());
+	ibValueSystemFunction::Message(GetErrorMessage());
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 0
 	try {
 #endif
-		CBackendCoreException::Error(GetErrorMessage());
+		ibBackendCoreException::Error(GetErrorMessage());
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 0
 	}
 	catch (...) {

@@ -5,7 +5,7 @@
 
 #include "titleFrame.h"
 
-CPanelTitle::CPanelTitle(wxWindow *parent, const wxString &title) : wxPanel(parent, wxID_ANY)
+ibPanelTitle::ibPanelTitle(wxWindow *parent, const wxString &title) : wxPanel(parent, wxID_ANY)
 {
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
@@ -21,12 +21,12 @@ CPanelTitle::CPanelTitle(wxWindow *parent, const wxString &title) : wxPanel(pare
 	Fit();
 }
 
-wxWindow * CPanelTitle::CreateTitle(wxWindow *inner, const wxString &title)
+wxWindow * ibPanelTitle::CreateTitle(wxWindow *inner, const wxString &title)
 {
 	wxWindow *parent = inner->GetParent();
 
 	wxPanel *container = new wxPanel(parent, wxID_ANY);
-	CPanelTitle *titleWin = new CPanelTitle(container, title);
+	ibPanelTitle *titleWin = new ibPanelTitle(container, title);
 	inner->Reparent(container);
 
 	wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);

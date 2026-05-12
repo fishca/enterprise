@@ -15,12 +15,12 @@
 
 #include <wx/timer.h>
 
-class CDialogDebugItem : public wxDialog {
+class ibDialogDebugItem : public wxDialog {
 public:
 
-	CDialogDebugItem(wxWindow* parent, wxWindowID id = wxID_ANY,
+	ibDialogDebugItem(wxWindow* parent, wxWindowID id = wxID_ANY,
 		const wxString& title = _("Debug items"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500, 400), long style = wxDEFAULT_DIALOG_STYLE);
-	virtual ~CDialogDebugItem();
+	virtual ~ibDialogDebugItem();
 
 protected:
 

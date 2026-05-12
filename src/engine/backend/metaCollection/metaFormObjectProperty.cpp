@@ -8,36 +8,31 @@
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
 
-void CValueMetaObjectForm::OnPropertyCreated(IProperty* property)
+void ibValueMetaObjectForm::OnPropertyCreated(ibProperty* property)
 {
-	IValueMetaObjectForm::OnPropertyCreated(property);
+	ibValueMetaObjectFormBase::OnPropertyCreated(property);
 }
 
-void CValueMetaObjectForm::OnPropertySelected(IProperty* property)
+void ibValueMetaObjectForm::OnPropertySelected(ibProperty* property)
 {
-	IValueMetaObjectForm::OnPropertySelected(property);
+	ibValueMetaObjectFormBase::OnPropertySelected(property);
 }
 
-void CValueMetaObjectForm::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueMetaObjectForm::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (property == m_properyFormType) {
-		if (appData->DesignerMode()) {
-			IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
-			wxASSERT(moduleManager);
-			IValueMetaObjectGenericData* metaObjectValue = wxDynamicCast(m_parent, IValueMetaObjectGenericData);
+		if (auto* cc = m_metaData->GetCompileCache()) {
+			ibValueMetaObjectGenericData* metaObjectValue = wxDynamicCast(m_parent, ibValueMetaObjectGenericData);
 			wxASSERT(metaObjectValue);
-			IBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
-			if (metaTree != nullptr) {
+			if (auto* metaTree = m_metaData->GetMetaTree())
 				metaTree->CloseMetaObject(this);
+			if (cc->RemoveCompileModule(this)) {
+				cc->AddCompileModule(this, formWrapper::inl::cast_value(metaObjectValue->CreateObjectForm(this)));
 			}
-			if (moduleManager->RemoveCompileModule(this)) {
-				moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(metaObjectValue->CreateObjectForm(this)));
-			}
-			if (metaTree != nullptr) {
+			if (auto* metaTree = m_metaData->GetMetaTree())
 				metaTree->UpdateChoiceSelection();
-			}
 		}
 	}
 
-	IValueMetaObjectForm::OnPropertyChanged(property, oldValue, newValue);
+	ibValueMetaObjectFormBase::OnPropertyChanged(property, oldValue, newValue);
 }

@@ -6,21 +6,21 @@
 #include "value.h"
 #include "backend/backend_exception.h"
 
-static std::vector<IAbstractTypeCtor*>* s_factoryCtors = nullptr;
+static std::vector<ibCtorAbstractType*>* s_factoryCtors = nullptr;
 static std::atomic<unsigned int> s_factoryCtorCountChanges = 0;
 
 //*******************************************************************************
 //*                      Support dynamic object                                 *
 //*******************************************************************************
 
-CValue* CValue::CreateObjectRef(const class_identifier_t& clsid, CValue** paParams, const long lSizeArray)
+ibValue* ibValue::CreateObjectRef(const ibClassID& clsid, ibValue** paParams, const long lSizeArray)
 {
-	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(clsid);
+	const ibCtorAbstractType* typeCtor = GetAvailableCtor(clsid);
 
 	if (typeCtor != nullptr) {
-		CValue* created_value = typeCtor->CreateObject();
+		ibValue* created_value = typeCtor->CreateObject();
 		wxASSERT(created_value);
-		if (typeCtor->GetObjectTypeCtor() != eCtorObjectType::eCtorObjectType_object_system) {
+		if (typeCtor->GetObjectTypeCtor() != ibCtorObjectType::ibCtorObjectType_object_system) {
 			bool succes = true;
 			if (lSizeArray > 0)
 				succes = created_value->Init(paParams, lSizeArray);
@@ -28,30 +28,30 @@ CValue* CValue::CreateObjectRef(const class_identifier_t& clsid, CValue** paPara
 				succes = created_value->Init();
 			if (!succes) {
 				wxDELETE(created_value);
-				CBackendCoreException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
+				ibBackendCoreException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
 			}
 			created_value->PrepareNames();
 		}
 		return created_value;
 	}
 	else {
-		CBackendCoreException::Error(_("Error creating object '%llu'"), clsid);
+		ibBackendCoreException::Error(_("Error creating object '%llu'"), clsid);
 	}
 
 	return nullptr;
 }
 
-void CValue::RegisterCtor(IAbstractTypeCtor* typeCtor)
+void ibValue::RegisterCtor(ibCtorAbstractType* typeCtor)
 {
-	if (s_factoryCtors == nullptr) s_factoryCtors = new std::vector<IAbstractTypeCtor*>;
+	if (s_factoryCtors == nullptr) s_factoryCtors = new std::vector<ibCtorAbstractType*>;
 
 	if (typeCtor != nullptr) {
 
-		if (CValue::IsRegisterCtor(typeCtor->GetClassType())) {
-			CBackendCoreException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
+		if (ibValue::IsRegisterCtor(typeCtor->GetClassType())) {
+			ibBackendCoreException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
 		}
-		else if (CValue::IsRegisterCtor(typeCtor->GetClassName())) {
-			CBackendCoreException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
+		else if (ibValue::IsRegisterCtor(typeCtor->GetClassName())) {
+			ibBackendCoreException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
 		}
 
 #ifdef DEBUG
@@ -61,16 +61,16 @@ void CValue::RegisterCtor(IAbstractTypeCtor* typeCtor)
 
 		s_factoryCtorCountChanges++;
 
-		typeCtor->CallEvent(eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register);
+		typeCtor->CallEvent(ibCtorObjectTypeEvent::ibCtorObjectTypeEvent_Register);
 		s_factoryCtors->emplace_back(typeCtor);
 	}
 }
 
-void CValue::UnRegisterCtor(IAbstractTypeCtor*& typeCtor)
+void ibValue::UnRegisterCtor(ibCtorAbstractType*& typeCtor)
 {
 	if (typeCtor != nullptr && IsRegisterCtor(typeCtor->GetClassType())) {
 
-		typeCtor->CallEvent(eCtorObjectTypeEvent::eCtorObjectTypeEvent_UnRegister);
+		typeCtor->CallEvent(ibCtorObjectTypeEvent::ibCtorObjectTypeEvent_UnRegister);
 
 #ifdef DEBUG
 		if (wxTheApp != NULL)
@@ -84,25 +84,25 @@ void CValue::UnRegisterCtor(IAbstractTypeCtor*& typeCtor)
 		s_factoryCtorCountChanges++;
 	}
 	else if (typeCtor != nullptr) {
-		CBackendCoreException::Error(_("Object '%s' is not register"), typeCtor->GetClassName());
+		ibBackendCoreException::Error(_("Object '%s' is not register"), typeCtor->GetClassName());
 	}
 
 	if (s_factoryCtors->size() == 0) wxDELETE(s_factoryCtors);
 }
 
-void CValue::UnRegisterCtor(const wxString& className)
+void ibValue::UnRegisterCtor(const wxString& className)
 {
-	IAbstractTypeCtor* typeCtor = GetAvailableCtor(className);
+	ibCtorAbstractType* typeCtor = GetAvailableCtor(className);
 
 	if (typeCtor == nullptr) {
-		CBackendCoreException::Error(_("Object '%s' is not exist"), className);
+		ibBackendCoreException::Error(_("Object '%s' is not exist"), className);
 		return;
 	}
 
 	UnRegisterCtor(typeCtor);
 }
 
-bool CValue::IsRegisterCtor(const wxString& className)
+bool ibValue::IsRegisterCtor(const wxString& className)
 {
 	if (s_factoryCtors == nullptr || className.IsEmpty())
 		return false;
@@ -112,7 +112,7 @@ bool CValue::IsRegisterCtor(const wxString& className)
 	return false;
 }
 
-bool CValue::IsRegisterCtor(const wxString& className, eCtorObjectType objectType)
+bool ibValue::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType)
 {
 	if (s_factoryCtors == nullptr)
 		return false;
@@ -122,7 +122,7 @@ bool CValue::IsRegisterCtor(const wxString& className, eCtorObjectType objectTyp
 	return false;
 }
 
-bool CValue::IsRegisterCtor(const class_identifier_t& clsid)
+bool ibValue::IsRegisterCtor(const ibClassID& clsid)
 {
 	if (s_factoryCtors == nullptr)
 		return false;
@@ -132,19 +132,28 @@ bool CValue::IsRegisterCtor(const class_identifier_t& clsid)
 	return false;
 }
 
-class_identifier_t CValue::GetTypeIDByRef(const wxClassInfo* classInfo)
+ibClassID ibValue::GetTypeIDByRef(const wxClassInfo* classInfo)
 {
-	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(classInfo);
+	const ibCtorAbstractType* typeCtor = GetAvailableCtor(classInfo);
 	wxASSERT(typeCtor);
 	return typeCtor != nullptr ?
 		typeCtor->GetClassType() : 0;
 }
 
-class_identifier_t CValue::GetTypeIDByRef(const CValue* objectRef)
+ibClassID ibValue::GetTypeIDByRef(const ibValue* objectRef)
 {
-	if (objectRef->m_typeClass != eValueTypes::TYPE_VALUE &&
-		objectRef->m_typeClass != eValueTypes::TYPE_OLE &&
-		objectRef->m_typeClass != eValueTypes::TYPE_ENUM) {
+	// All "object-reference" tags resolve through wxClassInfo (the
+	// subclass's wxDECLARE_DYNAMIC_CLASS registration). Any tag NOT
+	// in this set falls through to objectRef->GetClassType() — which
+	// for primitive types returns the right id, but for unrecognized
+	// reference-shaped tags causes infinite recursion through
+	// GetClassType ↔ GetTypeIDByRef. Add new TYPE_* here when adding
+	// to ibValueTypes enum.
+	if (objectRef->m_typeClass != ibValueTypes::TYPE_VALUE &&
+		objectRef->m_typeClass != ibValueTypes::TYPE_OLE &&
+		objectRef->m_typeClass != ibValueTypes::TYPE_ENUM &&
+		objectRef->m_typeClass != ibValueTypes::TYPE_FUNCTION &&
+		objectRef->m_typeClass != ibValueTypes::TYPE_ITERATOR) {
 		return objectRef->GetClassType();
 	}
 	const wxClassInfo* classInfo = objectRef->GetClassInfo();
@@ -154,32 +163,32 @@ class_identifier_t CValue::GetTypeIDByRef(const CValue* objectRef)
 	return 0;
 }
 
-class_identifier_t CValue::GetIDObjectFromString(const wxString& className)
+ibClassID ibValue::GetIDObjectFromString(const wxString& className)
 {
-	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(className);
+	const ibCtorAbstractType* typeCtor = GetAvailableCtor(className);
 	if (typeCtor != nullptr)
 		return typeCtor->GetClassType();
-	CBackendCoreException::Error(_("Object '%s' is not exist"), className);
+	ibBackendCoreException::Error(_("Object '%s' is not exist"), className);
 	return 0;
 }
 
-wxString CValue::GetNameObjectFromID(const class_identifier_t& clsid, bool upper)
+wxString ibValue::GetNameObjectFromID(const ibClassID& clsid, bool upper)
 {
-	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(clsid);
+	const ibCtorAbstractType* typeCtor = GetAvailableCtor(clsid);
 	if (typeCtor != nullptr) {
 		return upper ? typeCtor->GetClassName().Upper() :
 			typeCtor->GetClassName();
 	}
-	CBackendCoreException::Error(_("Object with id '%llu' is not exist"), clsid);
+	ibBackendCoreException::Error(_("Object with id '%llu' is not exist"), clsid);
 	return wxEmptyString;
 }
 
-wxString CValue::GetNameObjectFromVT(eValueTypes valueType, bool upper)
+wxString ibValue::GetNameObjectFromVT(ibValueTypes valueType, bool upper)
 {
-	if (valueType > eValueTypes::TYPE_REFFER)
+	if (valueType > ibValueTypes::TYPE_REFFER)
 		return wxEmptyString;
 	for (auto& typeCtor : *s_factoryCtors) {
-		const IPrimitiveTypeCtor* simpleSingleObject = dynamic_cast<IPrimitiveTypeCtor*>(typeCtor);
+		const ibCtorSingleType* simpleSingleObject = dynamic_cast<ibCtorSingleType*>(typeCtor);
 		if (simpleSingleObject != nullptr &&
 			valueType == simpleSingleObject->GetValueType()) {
 			return upper ? typeCtor->GetClassName().Upper() :
@@ -189,97 +198,97 @@ wxString CValue::GetNameObjectFromVT(eValueTypes valueType, bool upper)
 	return wxEmptyString;
 }
 
-eValueTypes CValue::GetVTByID(const class_identifier_t& clsid)
+ibValueTypes ibValue::GetVTByID(const ibClassID& clsid)
 {
 	if (clsid == g_valueUndefinedCLSID)
-		return eValueTypes::TYPE_EMPTY;
+		return ibValueTypes::TYPE_EMPTY;
 	else if (clsid == g_valueBooleanCLSID)
-		return eValueTypes::TYPE_BOOLEAN;
+		return ibValueTypes::TYPE_BOOLEAN;
 	else if (clsid == g_valueNumberCLSID)
-		return eValueTypes::TYPE_NUMBER;
+		return ibValueTypes::TYPE_NUMBER;
 	else if (clsid == g_valueDateCLSID)
-		return eValueTypes::TYPE_DATE;
+		return ibValueTypes::TYPE_DATE;
 	else if (clsid == g_valueStringCLSID)
-		return eValueTypes::TYPE_STRING;
+		return ibValueTypes::TYPE_STRING;
 	else if (clsid == g_valueNullCLSID)
-		return eValueTypes::TYPE_NULL;
+		return ibValueTypes::TYPE_NULL;
 
-	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(clsid);
+	const ibCtorAbstractType* typeCtor = GetAvailableCtor(clsid);
 
-	if (typeCtor != nullptr && typeCtor->GetObjectTypeCtor() == eCtorObjectType_object_enum)
-		return eValueTypes::TYPE_ENUM;
+	if (typeCtor != nullptr && typeCtor->GetObjectTypeCtor() == ibCtorObjectType_object_enum)
+		return ibValueTypes::TYPE_ENUM;
 	else if (typeCtor != nullptr)
-		return eValueTypes::TYPE_VALUE;
+		return ibValueTypes::TYPE_VALUE;
 
-	return eValueTypes::TYPE_EMPTY;
+	return ibValueTypes::TYPE_EMPTY;
 }
 
-class_identifier_t CValue::GetIDByVT(const eValueTypes& valueType)
+ibClassID ibValue::GetIDByVT(const ibValueTypes& valueType)
 {
-	if (valueType == eValueTypes::TYPE_EMPTY)
+	if (valueType == ibValueTypes::TYPE_EMPTY)
 		return g_valueUndefinedCLSID;
-	else if (valueType == eValueTypes::TYPE_BOOLEAN)
+	else if (valueType == ibValueTypes::TYPE_BOOLEAN)
 		return g_valueBooleanCLSID;
-	else if (valueType == eValueTypes::TYPE_NUMBER)
+	else if (valueType == ibValueTypes::TYPE_NUMBER)
 		return g_valueNumberCLSID;
-	else if (valueType == eValueTypes::TYPE_DATE)
+	else if (valueType == ibValueTypes::TYPE_DATE)
 		return g_valueDateCLSID;
-	else if (valueType == eValueTypes::TYPE_STRING)
+	else if (valueType == ibValueTypes::TYPE_STRING)
 		return g_valueStringCLSID;
-	else if (valueType == eValueTypes::TYPE_NULL)
+	else if (valueType == ibValueTypes::TYPE_NULL)
 		return g_valueNullCLSID;
 
 	return 0;
 }
 
-IAbstractTypeCtor* CValue::GetAvailableCtor(const wxString& className)
+ibCtorAbstractType* ibValue::GetAvailableCtor(const wxString& className)
 {
 	if (s_factoryCtors == nullptr)
 		return nullptr;
 	for (auto& typeCtor : *s_factoryCtors)
 		if (stringUtils::CompareString(className, typeCtor->GetClassName()))
 			return typeCtor;
-	//CBackendCoreException::Error("Object '%s' is not exist", className);
+	//ibBackendCoreException::Error("Object '%s' is not exist", className);
 	return nullptr;
 }
 
-IAbstractTypeCtor* CValue::GetAvailableCtor(const class_identifier_t& clsid)
+ibCtorAbstractType* ibValue::GetAvailableCtor(const ibClassID& clsid)
 {
 	if (s_factoryCtors == nullptr)
 		return nullptr;
 	for (auto& typeCtor : *s_factoryCtors)
 		if (clsid == typeCtor->GetClassType())
 			return typeCtor;
-	//CBackendCoreException::Error("Object id '%llu' is not exist", clsid);
+	//ibBackendCoreException::Error("Object id '%llu' is not exist", clsid);
 	return nullptr;
 }
 
-IAbstractTypeCtor* CValue::GetAvailableCtor(const wxClassInfo* classInfo)
+ibCtorAbstractType* ibValue::GetAvailableCtor(const wxClassInfo* classInfo)
 {
 	if (s_factoryCtors == nullptr)
 		return nullptr;
 	for (auto& typeCtor : *s_factoryCtors)
 		if (classInfo == typeCtor->GetClassInfo())
 			return typeCtor;
-	//CBackendCoreException::Error("Object '%s' is not exist", classInfo->GetClassName());
+	//ibBackendCoreException::Error("Object '%s' is not exist", classInfo->GetClassName());
 	return nullptr;
 }
 
-std::vector<IAbstractTypeCtor*> CValue::GetListCtorsByType(eCtorObjectType objectType)
+std::vector<ibCtorAbstractType*> ibValue::GetListCtorsByType(ibCtorObjectType objectType)
 {
-	std::vector<IAbstractTypeCtor*> retVector;
+	std::vector<ibCtorAbstractType*> retVector;
 	std::copy_if(s_factoryCtors->begin(), s_factoryCtors->end(),
-		std::back_inserter(retVector), [objectType](IAbstractTypeCtor* t) { return objectType == t->GetObjectTypeCtor(); }
+		std::back_inserter(retVector), [objectType](ibCtorAbstractType* t) { return objectType == t->GetObjectTypeCtor(); }
 	);
 	std::sort(retVector.begin(), retVector.end(),
-		[](IAbstractTypeCtor* a, IAbstractTypeCtor* b) { return a->GetClassName() > b->GetClassName(); }
+		[](ibCtorAbstractType* a, ibCtorAbstractType* b) { return a->GetClassName() > b->GetClassName(); }
 	);
 	return retVector;
 }
 
 //*******************************************************************************
 
-unsigned int CValue::GetFactoryCountChanges()
+unsigned int ibValue::GetFactoryCountChanges()
 {
 	return s_factoryCtorCountChanges;
 }

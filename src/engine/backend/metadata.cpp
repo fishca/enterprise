@@ -1,30 +1,174 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
-//	Description : metaData 
+//	Description : metaData
 ////////////////////////////////////////////////////////////////////////////
 
 #include "metaData.h"
 
+#include "backend/metaCollection/metaModuleObject.h"
+#include "backend/metaCollection/metaFormObject.h"
+
+#include <algorithm>
+
 //**************************************************************************************************
-//*                                          IMetaData											   *
+//*                                       ibModuleStorage                                          *
+//**************************************************************************************************
+
+bool ibModuleStorage::AddCommonModule(ibValueMetaObjectCommonModule* commonModule)
+{
+	if (commonModule == nullptr)
+		return false;
+	auto it = std::find(m_initModules.begin(), m_initModules.end(), commonModule);
+	if (it == m_initModules.end())
+		m_initModules.emplace_back(commonModule);
+	return true;
+}
+
+bool ibModuleStorage::RenameCommonModule(ibValueMetaObjectCommonModule* /*commonModule*/, const wxString& /*newName*/)
+{
+	// Descriptor name is owned by the descriptor itself; storage indexes
+	// by raw pointer, so rename is a no-op. Kept on the API as a single
+	// notification point — runtime mm picks up name changes on its own
+	// during compile.
+	return true;
+}
+
+bool ibModuleStorage::RemoveCommonModule(ibValueMetaObjectCommonModule* commonModule)
+{
+	if (commonModule == nullptr)
+		return false;
+	auto it = std::find(m_initModules.begin(), m_initModules.end(), commonModule);
+	if (it != m_initModules.end())
+		m_initModules.erase(it);
+	return true;
+}
+
+//**************************************************************************************************
+//*                                    ibCompileValueCache                                         *
+//**************************************************************************************************
+
+bool ibCompileValueCache::AddCompileModule(const ibValueMetaObject* moduleObject, ibValue* object)
+{
+	if (object == nullptr)
+		return true;
+	auto it = m_cache.find(moduleObject);
+	if (it == m_cache.end()) {
+		ibCompileEntry entry;
+		entry.m_value = ibValuePtr<ibValue>(object);
+		m_cache.emplace(moduleObject, std::move(entry));
+		return true;
+	}
+	return false;
+}
+
+bool ibCompileValueCache::AddCompileModule(const ibValueMetaObject* moduleObject, ibDeferredForm deferred)
+{
+	if (moduleObject == nullptr)
+		return false;
+	// Insert/replace — second registration for the same descriptor (e.g.
+	// after a designer rename + re-run) overrides the prior rebuilder
+	// and drops any built value so the next Find rebuilds from scratch.
+	ibCompileEntry entry;
+	entry.m_deferred = deferred;
+	m_cache.insert_or_assign(moduleObject, std::move(entry));
+	return true;
+}
+
+bool ibCompileValueCache::RemoveCompileModule(const ibValueMetaObject* moduleObject)
+{
+	auto it = m_cache.find(moduleObject);
+	if (it != m_cache.end()) {
+		m_cache.erase(it);
+		return true;
+	}
+	return false;
+}
+
+bool ibCompileValueCache::InvalidateCompileModule(const ibValueMetaObject* moduleObject)
+{
+	auto it = m_cache.find(moduleObject);
+	if (it == m_cache.end()) return false;
+
+	// No rebuilder — entry was registered as an already-built value
+	// (e.g. catalog/document module). Nothing to invalidate; rebuild
+	// requires a fresh AddCompileModule(meta, value) by the registering
+	// side.
+	if (!it->second.m_deferred.has_value())
+		return false;
+
+	// Drop the cached built value; rebuilder stays so the next Find
+	// triggers a Construct.
+	it->second.m_value = ibValuePtr<ibValue>();
+	return true;
+}
+
+ibValue* ibCompileValueCache::FindCompileModuleRef(const ibValueMetaObject* moduleObject) const
+{
+	auto it = m_cache.find(moduleObject);
+	if (it == m_cache.end())
+		return nullptr;
+
+	// Cached built value — return directly.
+	if (it->second.m_value)
+		return &(*it->second.m_value);
+
+	// Pending or invalidated — try the rebuilder. mm should be ready by
+	// the time the first lookup arrives; on Construct failure the cache
+	// entry is dropped to avoid retrying on every subsequent lookup.
+	if (!it->second.m_deferred.has_value())
+		return nullptr;
+
+	// Re-entrancy guard: Construct internally calls
+	// CreateObjectForm → CreateAndBuildForm → back into FindCompileModule
+	// for the same creator. Without this guard the lookup would trigger
+	// another Construct on the still-empty entry and recurse forever
+	// (stack-overflow on first new-form add).
+	if (it->second.m_constructing)
+		return nullptr;
+	it->second.m_constructing = true;
+
+	ibValue* value = it->second.m_deferred->Construct();
+
+	// Re-find: Construct may have called Invalidate / erase along the way.
+	it = m_cache.find(moduleObject);
+	if (it == m_cache.end())
+		return value;  // cache cleared; just return what we built (may be null)
+
+	it->second.m_constructing = false;
+	if (value == nullptr) {
+		m_cache.erase(it);
+		return nullptr;
+	}
+	it->second.m_value = ibValuePtr<ibValue>(value);
+	return value;
+}
+
+ibValue* ibCompileValueCache::FindParentCompileModuleRef(const ibValueMetaObject* moduleObject) const
+{
+	ibValueMetaObject* parent = moduleObject ? moduleObject->GetParent() : nullptr;
+	return parent ? FindCompileModuleRef(parent) : nullptr;
+}
+
+//**************************************************************************************************
+//*                                          ibMetaData											   *
 //**************************************************************************************************
 
 //ID's 
-meta_identifier_t IMetaData::GenerateNewID() const
+ibMetaID ibMetaData::GenerateNewID() const
 {
-	IValueMetaObject* commonObject = GetCommonMetaObject();
+	ibValueMetaObject* commonObject = GetCommonMetaObject();
 	wxASSERT(commonObject);
-	meta_identifier_t id = commonObject->GetMetaID() + 1;
+	ibMetaID id = commonObject->GetMetaID() + 1;
 	DoGenerateNewID(id, commonObject);
 	return id;
 }
 
-void IMetaData::DoGenerateNewID(meta_identifier_t& id, IValueMetaObject* top) const
+void ibMetaData::DoGenerateNewID(ibMetaID& id, ibValueMetaObject* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IValueMetaObject* child = top->GetChild(idx);
+		ibValueMetaObject* child = top->GetChild(idx);
 		wxASSERT(child);
-		meta_identifier_t newID = child->GetMetaID() + 1;
+		ibMetaID newID = child->GetMetaID() + 1;
 		if (newID > id) {
 			id = newID;
 		}
@@ -32,15 +176,15 @@ void IMetaData::DoGenerateNewID(meta_identifier_t& id, IValueMetaObject* top) co
 	}
 }
 
-IValueMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IValueMetaObject* parent, bool runObject)
+ibValueMetaObject* ibMetaData::CreateMetaObject(const ibClassID& clsid, ibValueMetaObject* parent, bool runObject)
 {
 	wxASSERT(clsid != 0);
 
-	CValue* ppParams[] = { parent };
-	IValueMetaObject* newMetaObject = nullptr;
+	ibValue* ppParams[] = { parent };
+	ibValueMetaObject* newMetaObject = nullptr;
 
 	try {
-		newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
+		newMetaObject = ibValue::CreateAndConvertObjectRef<ibValueMetaObject>(clsid, ppParams, 1);
 		newMetaObject->IncrRef();
 	}
 	catch (...) {
@@ -88,7 +232,7 @@ IValueMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, I
 	return newMetaObject;
 }
 
-wxString IMetaData::GetNewName(const class_identifier_t& clsid, IValueMetaObject* parent, const wxString& strPrefix, bool forConstructor)
+wxString ibMetaData::GetNewName(const ibClassID& clsid, ibValueMetaObject* parent, const wxString& strPrefix, bool forConstructor)
 {
 	unsigned int countRec = forConstructor ?
 		0 : 1;
@@ -135,7 +279,7 @@ wxString IMetaData::GetNewName(const class_identifier_t& clsid, IValueMetaObject
 	return newName;
 }
 
-bool IMetaData::RenameMetaObject(IValueMetaObject* metaObject, const wxString& newName)
+bool ibMetaData::RenameMetaObject(ibValueMetaObject* metaObject, const wxString& newName)
 {
 	bool foundedName = false;
 
@@ -157,7 +301,7 @@ bool IMetaData::RenameMetaObject(IValueMetaObject* metaObject, const wxString& n
 	return false;
 }
 
-void IMetaData::RemoveMetaObject(IValueMetaObject* object, IValueMetaObject* parent)
+void ibMetaData::RemoveMetaObject(ibValueMetaObject* object, ibValueMetaObject* parent)
 {
 	if (object->OnAfterCloseMetaObject()) {
 		if (object->OnDeleteMetaObject()) {

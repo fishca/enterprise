@@ -2,16 +2,31 @@
 #define __METAOBJECT_METADATA_ENUM_H__
 
 #include "backend/compiler/enumUnit.h"
-class CValueEnumVersion : public IEnumeration<eProgramVersion> {
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumVersion);
+class ibValueEnumVersion : public ibValueEnumeration<ibProgramVersion> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumVersion);
 public:
 
-	CValueEnumVersion() : IEnumeration() {}
-	//CValueEnumVersion(eProgramVersion v) : IEnumeration(v) {}
+	ibValueEnumVersion() : ibValueEnumeration<ibProgramVersion>() {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(version_oes_1_0_0, wxT("OES_1_0_0"), _("1.0.0"));
-		AddEnumeration(version_oes_last, wxT("OES_Last"), _("Don't use compatibility"));
+		this->AddEnumeration(version_oes_1_0_0, wxT("OES_1_0_0"), _("1.0.0"));
+		this->AddEnumeration(version_oes_last, wxT("OES_Last"), _("Don't use compatibility"));
+	};
+};
+
+class ibValueEnumSyntax : public ibValueEnumeration<ibProgramSyntax> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumSyntax);
+public:
+
+	ibValueEnumSyntax() : ibValueEnumeration<ibProgramSyntax>() {}
+
+	virtual void CreateEnumeration() {
+		// Wire string stays "vbs" for back-compat with existing serialised
+		// configs; the user-visible label is "ves" — Visual Basic-style
+		// ES + 1С/BSL mix. Renaming the wire token would force migration
+		// of every stored module's syntax property.
+		this->AddEnumeration(syntax_ves, wxT("vbs"), _("ves"));
+		this->AddEnumeration(syntax_ces, wxT("ces"), _("ces"));
 	};
 };
 

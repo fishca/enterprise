@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 // Name:        src/generic/grideditors.cpp
-// Purpose:     wxGridExtCellEditorEvtHandler and wxGridExt editors
+// Purpose:     ibGridCellEditorEvtHandler and ibGrid editors
 // Author:      Michael Bedward (based on code by Julian Smart, Robin Dunn)
 // Modified by: Robin Dunn, Vadim Zeitlin, Santiago Palacios
 // Created:     1/08/1999
@@ -66,19 +66,19 @@
 	// ============================================================================
 
 	// ----------------------------------------------------------------------------
-	// wxGridExtCellEditorEvtHandler
+	// ibGridCellEditorEvtHandler
 	// ----------------------------------------------------------------------------
 
-void wxGridExtCellEditorEvtHandler::DismissEditor()
+void ibGridCellEditorEvtHandler::DismissEditor()
 {
 	// Tell the grid to dismiss the control but don't do it immediately as it
 	// could result in the editor being destroyed right now and a crash in the
 	// code searching for the next event handler, so tell the grid to close it
 	// after this event is processed.
-	m_grid->CallAfter(&wxGridExt::DisableCellEditControl);
+	m_grid->CallAfter(&ibGrid::DisableCellEditControl);
 }
 
-void wxGridExtCellEditorEvtHandler::OnKillFocus(wxFocusEvent& event)
+void ibGridCellEditorEvtHandler::OnKillFocus(wxFocusEvent& event)
 {
 	// We must let the native control have this event so in any case don't mark
 	// it as handled, otherwise various weird problems can happen (see #11681).
@@ -91,7 +91,7 @@ void wxGridExtCellEditorEvtHandler::OnKillFocus(wxFocusEvent& event)
 	DismissEditor();
 }
 
-void wxGridExtCellEditorEvtHandler::OnKeyDown(wxKeyEvent& event)
+void ibGridCellEditorEvtHandler::OnKeyDown(wxKeyEvent& event)
 {
 	switch (event.GetKeyCode())
 	{
@@ -116,7 +116,7 @@ void wxGridExtCellEditorEvtHandler::OnKeyDown(wxKeyEvent& event)
 	}
 }
 
-void wxGridExtCellEditorEvtHandler::OnChar(wxKeyEvent& event)
+void ibGridCellEditorEvtHandler::OnChar(wxKeyEvent& event)
 {
 	int row = m_grid->GetGridCursorRow();
 	int col = m_grid->GetGridCursorCol();
@@ -225,11 +225,11 @@ void wxGridExtCellEditorEvtHandler::OnChar(wxKeyEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellEditor
+// ibGridCellEditor
 // ----------------------------------------------------------------------------
 
-wxGridExtCellEditor::wxGridExtCellEditor(const wxGridExtCellEditor& other)
-	: wxGridExtCellWorker(other),
+ibGridCellEditor::ibGridCellEditor(const ibGridCellEditor& other)
+	: ibGridCellWorker(other),
 	m_control(other.m_control),
 	m_colFgOld(other.m_colFgOld),
 	m_colBgOld(other.m_colBgOld),
@@ -238,12 +238,12 @@ wxGridExtCellEditor::wxGridExtCellEditor(const wxGridExtCellEditor& other)
 	m_attr = other.m_attr ? other.m_attr->Clone() : NULL;
 }
 
-wxGridExtCellEditor::~wxGridExtCellEditor()
+ibGridCellEditor::~ibGridCellEditor()
 {
 	Destroy();
 }
 
-void wxGridExtCellEditor::Create(wxWindow* WXUNUSED(parent),
+void ibGridCellEditor::Create(wxWindow* WXUNUSED(parent),
 	wxWindowID WXUNUSED(id),
 	wxEvtHandler* evtHandler)
 {
@@ -251,9 +251,9 @@ void wxGridExtCellEditor::Create(wxWindow* WXUNUSED(parent),
 		m_control->PushEventHandler(evtHandler);
 }
 
-void wxGridExtCellEditor::PaintBackground(wxDC& dc,
+void ibGridCellEditor::PaintBackground(wxDC& dc,
 	const wxRect& rectCell,
-	const wxGridExtCellAttr& attr)
+	const ibGridCellAttr& attr)
 {
 	// erase the background because we might not fill the cell
 	dc.SetPen(*wxTRANSPARENT_PEN);
@@ -261,7 +261,7 @@ void wxGridExtCellEditor::PaintBackground(wxDC& dc,
 	dc.DrawRectangle(rectCell);
 }
 
-void wxGridExtCellEditor::Destroy()
+void ibGridCellEditor::Destroy()
 {
 	if (m_control)
 	{
@@ -272,9 +272,9 @@ void wxGridExtCellEditor::Destroy()
 	}
 }
 
-void wxGridExtCellEditor::Show(bool show, wxGridExtCellAttr* attr, float scale)
+void ibGridCellEditor::Show(bool show, ibGridCellAttr* attr, float scale)
 {
-	wxASSERT_MSG(m_control, wxT("The wxGridExtCellEditor must be created first!"));
+	wxASSERT_MSG(m_control, wxT("The ibGridCellEditor must be created first!"));
 
 	m_control->Show(show);
 
@@ -325,14 +325,14 @@ void wxGridExtCellEditor::Show(bool show, wxGridExtCellAttr* attr, float scale)
 	}
 }
 
-void wxGridExtCellEditor::SetSize(const wxRect& rect)
+void ibGridCellEditor::SetSize(const wxRect& rect)
 {
-	wxASSERT_MSG(m_control, wxT("The wxGridExtCellEditor must be created first!"));
+	wxASSERT_MSG(m_control, wxT("The ibGridCellEditor must be created first!"));
 
 	m_control->SetSize(rect, wxSIZE_ALLOW_MINUS_ONE);
 }
 
-void wxGridExtCellEditor::DoPositionEditor(const wxSize& size,
+void ibGridCellEditor::DoPositionEditor(const wxSize& size,
 	const wxRect& rectCell,
 	int hAlign,
 	int vAlign)
@@ -385,26 +385,26 @@ void wxGridExtCellEditor::DoPositionEditor(const wxSize& size,
 	if (centerDir)
 		rect = rect.CenterIn(rectCell, centerDir);
 
-	wxGridExtCellEditor::SetSize(rect);
+	ibGridCellEditor::SetSize(rect);
 }
 
-void wxGridExtCellEditor::HandleReturn(wxKeyEvent& event)
+void ibGridCellEditor::HandleReturn(wxKeyEvent& event)
 {
 	event.Skip();
 }
 
-bool wxGridExtCellEditor::IsAcceptedKey(wxKeyEvent& event)
+bool ibGridCellEditor::IsAcceptedKey(wxKeyEvent& event)
 {
 	bool ctrl = event.ControlDown();
 	bool alt;
 
-#ifdef __WXMAC__
+#ifdef __WXOSX__
 	// On the Mac the Alt key is more like shift and is used for entry of
 	// valid characters, so check for Ctrl and Meta instead.
 	alt = event.MetaDown();
-#else // !__WXMAC__
+#else // !__WXOSX__
 	alt = event.AltDown();
-#endif // __WXMAC__/!__WXMAC__
+#endif // __WXOSX__/!__WXOSX__
 
 	// Assume it's not a valid char if ctrl or alt is down, but if both are
 	// down then it may be because of an AltGr key combination, so let them
@@ -423,23 +423,23 @@ bool wxGridExtCellEditor::IsAcceptedKey(wxKeyEvent& event)
 	return true;
 }
 
-void wxGridExtCellEditor::StartingKey(wxKeyEvent& event)
+void ibGridCellEditor::StartingKey(wxKeyEvent& event)
 {
 	event.Skip();
 }
 
-void wxGridExtCellEditor::StartingClick()
+void ibGridCellEditor::StartingClick()
 {
 }
 
 #if wxUSE_TEXTCTRL
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellTextEditor
+// ibGridCellTextEditor
 // ----------------------------------------------------------------------------
 
-wxGridExtCellTextEditor::wxGridExtCellTextEditor(const wxGridExtCellTextEditor& other)
-	: wxGridExtCellEditor(other),
+ibGridCellTextEditor::ibGridCellTextEditor(const ibGridCellTextEditor& other)
+	: ibGridCellEditor(other),
 	m_maxChars(other.m_maxChars),
 	m_value(other.m_value)
 {
@@ -451,14 +451,14 @@ wxGridExtCellTextEditor::wxGridExtCellTextEditor(const wxGridExtCellTextEditor& 
 #endif
 }
 
-void wxGridExtCellTextEditor::Create(wxWindow* parent,
+void ibGridCellTextEditor::Create(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
 	DoCreate(parent, id, evtHandler);
 }
 
-void wxGridExtCellTextEditor::DoCreate(wxWindow* parent,
+void ibGridCellTextEditor::DoCreate(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler,
 	long style)
@@ -484,10 +484,10 @@ void wxGridExtCellTextEditor::DoCreate(wxWindow* parent,
 	}
 #endif
 
-	wxGridExtCellEditor::Create(parent, id, evtHandler);
+	ibGridCellEditor::Create(parent, id, evtHandler);
 }
 
-void wxGridExtCellTextEditor::SetSize(const wxRect& rectOrig)
+void ibGridCellTextEditor::SetSize(const wxRect& rectOrig)
 {
 	wxRect rect(rectOrig);
 
@@ -516,19 +516,19 @@ void wxGridExtCellTextEditor::SetSize(const wxRect& rectOrig)
 	rect.SetBottom(rect.GetBottom() + 2 * extra_y);
 #endif
 
-	wxGridExtCellEditor::SetSize(rect);
+	ibGridCellEditor::SetSize(rect);
 }
 
-void wxGridExtCellTextEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void ibGridCellTextEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
-	wxASSERT_MSG(m_control, wxT("The wxGridExtCellEditor must be created first!"));
+	wxASSERT_MSG(m_control, wxT("The ibGridCellEditor must be created first!"));
 
 	m_value = grid->GetTable()->GetValue(row, col);
 
 	DoBeginEdit(m_value);
 }
 
-void wxGridExtCellTextEditor::DoBeginEdit(const wxString& startValue)
+void ibGridCellTextEditor::DoBeginEdit(const wxString& startValue)
 {
 	Text()->SetValue(startValue);
 	Text()->SetInsertionPointEnd();
@@ -536,14 +536,14 @@ void wxGridExtCellTextEditor::DoBeginEdit(const wxString& startValue)
 	Text()->SetFocus();
 }
 
-bool wxGridExtCellTextEditor::EndEdit(int WXUNUSED(row),
+bool ibGridCellTextEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& WXUNUSED(oldval),
 	wxString* newval)
 {
 	wxCHECK_MSG(m_control, false,
-		"wxGridExtCellTextEditor must be created first!");
+		"ibGridCellTextEditor must be created first!");
 
 	const wxString value = Text()->GetValue();
 	if (value == m_value)
@@ -557,26 +557,26 @@ bool wxGridExtCellTextEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void wxGridExtCellTextEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void ibGridCellTextEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
 	grid->GetTable()->SetValue(row, col, m_value);
 	m_value.clear();
 }
 
-void wxGridExtCellTextEditor::Reset()
+void ibGridCellTextEditor::Reset()
 {
-	wxASSERT_MSG(m_control, "wxGridExtCellTextEditor must be created first!");
+	wxASSERT_MSG(m_control, "ibGridCellTextEditor must be created first!");
 
 	DoReset(m_value);
 }
 
-void wxGridExtCellTextEditor::DoReset(const wxString& startValue)
+void ibGridCellTextEditor::DoReset(const wxString& startValue)
 {
 	Text()->SetValue(startValue);
 	Text()->SetInsertionPointEnd();
 }
 
-bool wxGridExtCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
+bool ibGridCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
 {
 	switch (event.GetKeyCode())
 	{
@@ -585,11 +585,11 @@ bool wxGridExtCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
 		return true;
 
 	default:
-		return wxGridExtCellEditor::IsAcceptedKey(event);
+		return ibGridCellEditor::IsAcceptedKey(event);
 	}
 }
 
-void wxGridExtCellTextEditor::StartingKey(wxKeyEvent& event)
+void ibGridCellTextEditor::StartingKey(wxKeyEvent& event)
 {
 	// Since this is now happening in the EVT_CHAR event EmulateKeyPress is no
 	// longer an appropriate way to get the character into the text control.
@@ -634,7 +634,7 @@ void wxGridExtCellTextEditor::StartingKey(wxKeyEvent& event)
 	}
 }
 
-void wxGridExtCellTextEditor::HandleReturn(wxKeyEvent&
+void ibGridCellTextEditor::HandleReturn(wxKeyEvent&
 	WXUNUSED_GTK(WXUNUSED_MOTIF(event)))
 {
 #if defined(__WXMOTIF__) || defined(__WXGTK__)
@@ -651,7 +651,7 @@ void wxGridExtCellTextEditor::HandleReturn(wxKeyEvent&
 #endif
 }
 
-void wxGridExtCellTextEditor::SetParameters(const wxString& params)
+void ibGridCellTextEditor::SetParameters(const wxString& params)
 {
 	if (!params)
 	{
@@ -667,13 +667,13 @@ void wxGridExtCellTextEditor::SetParameters(const wxString& params)
 		}
 		else
 		{
-			wxLogDebug(wxT("Invalid wxGridExtCellTextEditor parameter string '%s' ignored"), params);
+			wxLogDebug(wxT("Invalid ibGridCellTextEditor parameter string '%s' ignored"), params);
 		}
 	}
 }
 
 #if wxUSE_VALIDATORS
-void wxGridExtCellTextEditor::SetValidator(const wxValidator& validator)
+void ibGridCellTextEditor::SetValidator(const wxValidator& validator)
 {
 	m_validator.reset(static_cast<wxValidator*>(validator.Clone()));
 	if (m_validator && IsCreated())
@@ -682,16 +682,16 @@ void wxGridExtCellTextEditor::SetValidator(const wxValidator& validator)
 #endif
 
 // return the value in the text control
-wxString wxGridExtCellTextEditor::GetValue() const
+wxString ibGridCellTextEditor::GetValue() const
 {
 	return Text()->GetValue();
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellNumberEditor
+// ibGridCellNumberEditor
 // ----------------------------------------------------------------------------
 
-void wxGridExtCellNumberEditor::Create(wxWindow* parent,
+void ibGridCellNumberEditor::Create(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
@@ -708,13 +708,13 @@ void wxGridExtCellNumberEditor::Create(wxWindow* parent,
 			style,
 			m_min, m_max);
 
-		wxGridExtCellEditor::Create(parent, id, evtHandler);
+		ibGridCellEditor::Create(parent, id, evtHandler);
 	}
 	else
 #endif
 	{
 		// just a text control
-		wxGridExtCellTextEditor::Create(parent, id, evtHandler);
+		ibGridCellTextEditor::Create(parent, id, evtHandler);
 
 #if wxUSE_VALIDATORS
 		Text()->SetValidator(wxIntegerValidator<int>());
@@ -722,7 +722,7 @@ void wxGridExtCellNumberEditor::Create(wxWindow* parent,
 	}
 }
 
-void wxGridExtCellNumberEditor::SetSize(const wxRect& rectCell)
+void ibGridCellNumberEditor::SetSize(const wxRect& rectCell)
 {
 #if wxUSE_SPINCTRL
 	if (HasRange())
@@ -745,14 +745,14 @@ void wxGridExtCellNumberEditor::SetSize(const wxRect& rectCell)
 	else
 #endif // wxUSE_SPINCTRL
 	{
-		wxGridExtCellTextEditor::SetSize(rectCell);
+		ibGridCellTextEditor::SetSize(rectCell);
 	}
 }
 
-void wxGridExtCellNumberEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void ibGridCellNumberEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
 	// first get the value
-	wxGridExtTableBase* table = grid->GetTable();
+	ibGridTableBase* table = grid->GetTable();
 	if (table->CanGetValueAs(row, col, wxGRID_VALUE_NUMBER))
 	{
 		m_value = table->GetValueAsLong(row, col);
@@ -784,9 +784,9 @@ void wxGridExtCellNumberEditor::BeginEdit(int row, int col, wxGridExt* grid)
 	}
 }
 
-bool wxGridExtCellNumberEditor::EndEdit(int WXUNUSED(row),
+bool ibGridCellNumberEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& oldval, wxString* newval)
 {
 	long value = 0;
@@ -830,16 +830,16 @@ bool wxGridExtCellNumberEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void wxGridExtCellNumberEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void ibGridCellNumberEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
-	wxGridExtTableBase* const table = grid->GetTable();
+	ibGridTableBase* const table = grid->GetTable();
 	if (table->CanSetValueAs(row, col, wxGRID_VALUE_NUMBER))
 		table->SetValueAsLong(row, col, m_value);
 	else
 		table->SetValue(row, col, wxString::Format("%ld", m_value));
 }
 
-void wxGridExtCellNumberEditor::Reset()
+void ibGridCellNumberEditor::Reset()
 {
 #if wxUSE_SPINCTRL
 	if (HasRange())
@@ -853,9 +853,9 @@ void wxGridExtCellNumberEditor::Reset()
 	}
 }
 
-bool wxGridExtCellNumberEditor::IsAcceptedKey(wxKeyEvent& event)
+bool ibGridCellNumberEditor::IsAcceptedKey(wxKeyEvent& event)
 {
-	if (wxGridExtCellEditor::IsAcceptedKey(event))
+	if (ibGridCellEditor::IsAcceptedKey(event))
 	{
 		int keycode = event.GetKeyCode();
 		switch (keycode)
@@ -877,14 +877,14 @@ bool wxGridExtCellNumberEditor::IsAcceptedKey(wxKeyEvent& event)
 	return false;
 }
 
-void wxGridExtCellNumberEditor::StartingKey(wxKeyEvent& event)
+void ibGridCellNumberEditor::StartingKey(wxKeyEvent& event)
 {
 	int keycode = event.GetKeyCode();
 	if (!HasRange())
 	{
 		if (wxIsdigit(keycode) || keycode == '+' || keycode == '-')
 		{
-			wxGridExtCellTextEditor::StartingKey(event);
+			ibGridCellTextEditor::StartingKey(event);
 
 			// skip Skip() below
 			return;
@@ -906,7 +906,7 @@ void wxGridExtCellNumberEditor::StartingKey(wxKeyEvent& event)
 	event.Skip();
 }
 
-void wxGridExtCellNumberEditor::SetParameters(const wxString& params)
+void ibGridCellNumberEditor::SetParameters(const wxString& params)
 {
 	if (!params)
 	{
@@ -930,12 +930,12 @@ void wxGridExtCellNumberEditor::SetParameters(const wxString& params)
 			}
 		}
 
-		wxLogDebug(wxT("Invalid wxGridExtCellNumberEditor parameter string '%s' ignored"), params);
+		wxLogDebug(wxT("Invalid ibGridCellNumberEditor parameter string '%s' ignored"), params);
 	}
 }
 
 // return the value in the spin control if it is there (the text control otherwise)
-wxString wxGridExtCellNumberEditor::GetValue() const
+wxString ibGridCellNumberEditor::GetValue() const
 {
 	wxString s;
 
@@ -955,24 +955,24 @@ wxString wxGridExtCellNumberEditor::GetValue() const
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellFloatEditor
+// ibGridCellFloatEditor
 // ----------------------------------------------------------------------------
 
-void wxGridExtCellFloatEditor::Create(wxWindow* parent,
+void ibGridCellFloatEditor::Create(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
-	wxGridExtCellTextEditor::Create(parent, id, evtHandler);
+	ibGridCellTextEditor::Create(parent, id, evtHandler);
 
 #if wxUSE_VALIDATORS
 	Text()->SetValidator(wxFloatingPointValidator<double>(m_precision));
 #endif
 }
 
-void wxGridExtCellFloatEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void ibGridCellFloatEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
 	// first get the value
-	wxGridExtTableBase* const table = grid->GetTable();
+	ibGridTableBase* const table = grid->GetTable();
 	if (table->CanGetValueAs(row, col, wxGRID_VALUE_FLOAT))
 	{
 		m_value = table->GetValueAsDouble(row, col);
@@ -995,9 +995,9 @@ void wxGridExtCellFloatEditor::BeginEdit(int row, int col, wxGridExt* grid)
 	DoBeginEdit(GetString());
 }
 
-bool wxGridExtCellFloatEditor::EndEdit(int WXUNUSED(row),
+bool ibGridCellFloatEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& oldval, wxString* newval)
 {
 	const wxString text(Text()->GetValue());
@@ -1029,9 +1029,9 @@ bool wxGridExtCellFloatEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void wxGridExtCellFloatEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void ibGridCellFloatEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
-	wxGridExtTableBase* const table = grid->GetTable();
+	ibGridTableBase* const table = grid->GetTable();
 
 	if (table->CanSetValueAs(row, col, wxGRID_VALUE_FLOAT))
 		table->SetValueAsDouble(row, col, m_value);
@@ -1039,19 +1039,19 @@ void wxGridExtCellFloatEditor::ApplyEdit(int row, int col, wxGridExt* grid)
 		table->SetValue(row, col, Text()->GetValue());
 }
 
-void wxGridExtCellFloatEditor::Reset()
+void ibGridCellFloatEditor::Reset()
 {
 	DoReset(GetString());
 }
 
-void wxGridExtCellFloatEditor::StartingKey(wxKeyEvent& event)
+void ibGridCellFloatEditor::StartingKey(wxKeyEvent& event)
 {
 	int keycode = event.GetKeyCode();
 
 	if (wxIsdigit(keycode) || keycode == '+' || keycode == '-'
 		|| keycode == static_cast<int>(wxNumberFormatter::GetDecimalSeparator()))
 	{
-		wxGridExtCellTextEditor::StartingKey(event);
+		ibGridCellTextEditor::StartingKey(event);
 
 		// skip Skip() below
 		return;
@@ -1060,7 +1060,7 @@ void wxGridExtCellFloatEditor::StartingKey(wxKeyEvent& event)
 	event.Skip();
 }
 
-void wxGridExtCellFloatEditor::SetParameters(const wxString& params)
+void ibGridCellFloatEditor::SetParameters(const wxString& params)
 {
 	if (!params)
 	{
@@ -1083,7 +1083,7 @@ void wxGridExtCellFloatEditor::SetParameters(const wxString& params)
 			}
 			else
 			{
-				wxLogDebug(wxT("Invalid wxGridExtCellFloatRenderer width parameter string '%s ignored"), params);
+				wxLogDebug(wxT("Invalid ibGridCellFloatRenderer width parameter string '%s ignored"), params);
 			}
 		}
 
@@ -1097,7 +1097,7 @@ void wxGridExtCellFloatEditor::SetParameters(const wxString& params)
 			}
 			else
 			{
-				wxLogDebug(wxT("Invalid wxGridExtCellFloatRenderer precision parameter string '%s ignored"), params);
+				wxLogDebug(wxT("Invalid ibGridCellFloatRenderer precision parameter string '%s ignored"), params);
 			}
 		}
 
@@ -1133,14 +1133,14 @@ void wxGridExtCellFloatEditor::SetParameters(const wxString& params)
 			}
 			else
 			{
-				wxLogDebug("Invalid wxGridExtCellFloatRenderer format "
+				wxLogDebug("Invalid ibGridCellFloatRenderer format "
 					"parameter string '%s ignored", params);
 			}
 		}
 	}
 }
 
-wxString wxGridExtCellFloatEditor::GetString()
+wxString ibGridCellFloatEditor::GetString()
 {
 	if (!m_format)
 	{
@@ -1176,9 +1176,9 @@ wxString wxGridExtCellFloatEditor::GetString()
 	return wxNumberFormatter::Format(m_format, m_value);
 }
 
-bool wxGridExtCellFloatEditor::IsAcceptedKey(wxKeyEvent& event)
+bool ibGridCellFloatEditor::IsAcceptedKey(wxKeyEvent& event)
 {
-	if (wxGridExtCellEditor::IsAcceptedKey(event))
+	if (ibGridCellEditor::IsAcceptedKey(event))
 	{
 		const int keycode = event.GetKeyCode();
 		if (wxIsascii(keycode))
@@ -1203,34 +1203,34 @@ bool wxGridExtCellFloatEditor::IsAcceptedKey(wxKeyEvent& event)
 #if wxUSE_CHECKBOX
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellBoolEditor
+// ibGridCellBoolEditor
 // ----------------------------------------------------------------------------
 
 // the default values for GetValue()
-wxString wxGridExtCellBoolEditor::ms_stringValues[2] = { wxT(""), wxT("1") };
+wxString ibGridCellBoolEditor::ms_stringValues[2] = { wxT(""), wxT("1") };
 
-wxGridExtActivationResult
-wxGridExtCellBoolEditor::TryActivate(int row, int col, wxGridExt* grid,
-	const wxGridExtActivationSource& actSource)
+ibGridActivationResult
+ibGridCellBoolEditor::TryActivate(int row, int col, ibGrid* grid,
+	const ibGridActivationSource& actSource)
 {
 	SetValueFromGrid(row, col, grid);
 
 	switch (actSource.GetOrigin())
 	{
-	case wxGridExtActivationSource::Program:
+	case ibGridActivationSource::Program:
 		// It's not really clear what should happen in this case, so for
 		// now show the editor interactively to avoid making the choice.
-		return wxGridExtActivationResult::DoEdit();
+		return ibGridActivationResult::DoEdit();
 
-	case wxGridExtActivationSource::Mouse:
+	case ibGridActivationSource::Mouse:
 		m_value = !m_value;
-		return wxGridExtActivationResult::DoChange(GetStringValue());
+		return ibGridActivationResult::DoChange(GetStringValue());
 
-	case wxGridExtActivationSource::Key:
+	case ibGridActivationSource::Key:
 		switch (actSource.GetKeyEvent().GetKeyCode())
 		{
 			// Handle F2 as space here because we must handle it somehow,
-			// because pressing it always starts editing in wxGridExt, and
+			// because pressing it always starts editing in ibGrid, and
 			// it's not really clear what else could it do.
 		case WXK_F2:
 		case WXK_SPACE:
@@ -1239,32 +1239,32 @@ wxGridExtCellBoolEditor::TryActivate(int row, int col, wxGridExt* grid,
 
 		case '+':
 			if (m_value)
-				return wxGridExtActivationResult::DoNothing();
+				return ibGridActivationResult::DoNothing();
 
 			m_value = true;
 			break;
 
 		case '-':
 			if (!m_value)
-				return wxGridExtActivationResult::DoNothing();
+				return ibGridActivationResult::DoNothing();
 
 			m_value = false;
 			break;
 		}
 
-		return wxGridExtActivationResult::DoChange(GetStringValue());
+		return ibGridActivationResult::DoChange(GetStringValue());
 	}
 
 	wxFAIL_MSG("unknown activation source origin");
-	return wxGridExtActivationResult::DoNothing();
+	return ibGridActivationResult::DoNothing();
 }
 
-void wxGridExtCellBoolEditor::DoActivate(int row, int col, wxGridExt* grid)
+void ibGridCellBoolEditor::DoActivate(int row, int col, ibGrid* grid)
 {
 	SetGridFromValue(row, col, grid);
 }
 
-void wxGridExtCellBoolEditor::Create(wxWindow* parent,
+void ibGridCellBoolEditor::Create(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
@@ -1272,10 +1272,10 @@ void wxGridExtCellBoolEditor::Create(wxWindow* parent,
 		wxDefaultPosition, wxDefaultSize,
 		wxNO_BORDER);
 
-	wxGridExtCellEditor::Create(parent, id, evtHandler);
+	ibGridCellEditor::Create(parent, id, evtHandler);
 }
 
-void wxGridExtCellBoolEditor::SetSize(const wxRect& r)
+void ibGridCellBoolEditor::SetSize(const wxRect& r)
 {
 	int hAlign = wxALIGN_LEFT;
 	int vAlign = wxALIGN_CENTRE_VERTICAL;
@@ -1290,7 +1290,7 @@ void wxGridExtCellBoolEditor::SetSize(const wxRect& r)
 	m_control->Move(checkBoxRect.GetPosition());
 }
 
-void wxGridExtCellBoolEditor::Show(bool show, wxGridExtCellAttr* attr, float scale)
+void ibGridCellBoolEditor::Show(bool show, ibGridCellAttr* attr, float scale)
 {
 	m_control->Show(show);
 
@@ -1303,7 +1303,7 @@ void wxGridExtCellBoolEditor::Show(bool show, wxGridExtCellAttr* attr, float sca
 	// theme, making this a rather serious problem.
 	//
 	// One possible workaround would be to set the foreground colour too, but
-	// wxRendererNative methods used in wxGridExtCellBoolRenderer don't currently
+	// wxRendererNative methods used in ibGridCellBoolRenderer don't currently
 	// take the colours into account, so this would mean that starting to edit
 	// a boolean field would change its colours, which would be jarring (and
 	// especially so as we currently set custom colours for all cells, not just
@@ -1324,10 +1324,10 @@ void wxGridExtCellBoolEditor::Show(bool show, wxGridExtCellAttr* attr, float sca
 	}
 }
 
-void wxGridExtCellBoolEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void ibGridCellBoolEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
 	wxASSERT_MSG(m_control,
-		wxT("The wxGridExtCellEditor must be created first!"));
+		wxT("The ibGridCellEditor must be created first!"));
 
 	SetValueFromGrid(row, col, grid);
 
@@ -1335,9 +1335,9 @@ void wxGridExtCellBoolEditor::BeginEdit(int row, int col, wxGridExt* grid)
 	CBox()->SetFocus();
 }
 
-bool wxGridExtCellBoolEditor::EndEdit(int WXUNUSED(row),
+bool ibGridCellBoolEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& WXUNUSED(oldval),
 	wxString* newval)
 {
@@ -1353,27 +1353,27 @@ bool wxGridExtCellBoolEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void wxGridExtCellBoolEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void ibGridCellBoolEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
 	SetGridFromValue(row, col, grid);
 }
 
-void wxGridExtCellBoolEditor::Reset()
+void ibGridCellBoolEditor::Reset()
 {
 	wxASSERT_MSG(m_control,
-		wxT("The wxGridExtCellEditor must be created first!"));
+		wxT("The ibGridCellEditor must be created first!"));
 
 	CBox()->SetValue(m_value);
 }
 
-void wxGridExtCellBoolEditor::StartingClick()
+void ibGridCellBoolEditor::StartingClick()
 {
 	CBox()->SetValue(!CBox()->GetValue());
 }
 
-bool wxGridExtCellBoolEditor::IsAcceptedKey(wxKeyEvent& event)
+bool ibGridCellBoolEditor::IsAcceptedKey(wxKeyEvent& event)
 {
-	if (wxGridExtCellEditor::IsAcceptedKey(event))
+	if (ibGridCellEditor::IsAcceptedKey(event))
 	{
 		int keycode = event.GetKeyCode();
 		switch (keycode)
@@ -1388,7 +1388,7 @@ bool wxGridExtCellBoolEditor::IsAcceptedKey(wxKeyEvent& event)
 	return false;
 }
 
-void wxGridExtCellBoolEditor::StartingKey(wxKeyEvent& event)
+void ibGridCellBoolEditor::StartingKey(wxKeyEvent& event)
 {
 	int keycode = event.GetKeyCode();
 	switch (keycode)
@@ -1407,13 +1407,13 @@ void wxGridExtCellBoolEditor::StartingKey(wxKeyEvent& event)
 	}
 }
 
-wxString wxGridExtCellBoolEditor::GetValue() const
+wxString ibGridCellBoolEditor::GetValue() const
 {
 	return GetStringValue(CBox()->GetValue());
 }
 
 /* static */ void
-wxGridExtCellBoolEditor::UseStringValues(const wxString& valueTrue,
+ibGridCellBoolEditor::UseStringValues(const wxString& valueTrue,
 	const wxString& valueFalse)
 {
 	ms_stringValues[false] = valueFalse;
@@ -1421,12 +1421,12 @@ wxGridExtCellBoolEditor::UseStringValues(const wxString& valueTrue,
 }
 
 /* static */ bool
-wxGridExtCellBoolEditor::IsTrueValue(const wxString& value)
+ibGridCellBoolEditor::IsTrueValue(const wxString& value)
 {
 	return value == ms_stringValues[true];
 }
 
-void wxGridExtCellBoolEditor::SetValueFromGrid(int row, int col, wxGridExt* grid)
+void ibGridCellBoolEditor::SetValueFromGrid(int row, int col, ibGrid* grid)
 {
 	if (grid->GetTable()->CanGetValueAs(row, col, wxGRID_VALUE_BOOL))
 	{
@@ -1454,9 +1454,9 @@ void wxGridExtCellBoolEditor::SetValueFromGrid(int row, int col, wxGridExt* grid
 	}
 }
 
-void wxGridExtCellBoolEditor::SetGridFromValue(int row, int col, wxGridExt* grid) const
+void ibGridCellBoolEditor::SetGridFromValue(int row, int col, ibGrid* grid) const
 {
-	wxGridExtTableBase* const table = grid->GetTable();
+	ibGridTableBase* const table = grid->GetTable();
 	if (table->CanSetValueAs(row, col, wxGRID_VALUE_BOOL))
 		table->SetValueAsBool(row, col, m_value);
 	else
@@ -1468,13 +1468,13 @@ void wxGridExtCellBoolEditor::SetGridFromValue(int row, int col, wxGridExt* grid
 #if wxUSE_COMBOBOX
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellChoiceEditor
+// ibGridCellChoiceEditor
 // ----------------------------------------------------------------------------
 
-wxGridExtCellChoiceEditor::wxGridExtCellChoiceEditor(size_t count,
+ibGridCellChoiceEditor::ibGridCellChoiceEditor(size_t count,
 	const wxString choices[],
 	bool allowOthers)
-	: wxGridExtCellEditor(),
+	: ibGridCellEditor(),
 	m_allowOthers(allowOthers)
 {
 	if (count)
@@ -1487,7 +1487,7 @@ wxGridExtCellChoiceEditor::wxGridExtCellChoiceEditor(size_t count,
 	}
 }
 
-void wxGridExtCellChoiceEditor::Create(wxWindow* parent,
+void ibGridCellChoiceEditor::Create(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
@@ -1502,13 +1502,13 @@ void wxGridExtCellChoiceEditor::Create(wxWindow* parent,
 		m_choices,
 		style);
 
-	wxGridExtCellEditor::Create(parent, id, evtHandler);
+	ibGridCellEditor::Create(parent, id, evtHandler);
 }
 
-void wxGridExtCellChoiceEditor::SetSize(const wxRect& rect)
+void ibGridCellChoiceEditor::SetSize(const wxRect& rect)
 {
 	wxASSERT_MSG(m_control,
-		wxT("The wxGridExtCellChoiceEditor must be created first!"));
+		wxT("The ibGridCellChoiceEditor must be created first!"));
 
 	// Use normal wxChoice size, except for extending it to fill the cell
 	// width: we can't be smaller because this could make the control unusable
@@ -1520,17 +1520,17 @@ void wxGridExtCellChoiceEditor::SetSize(const wxRect& rect)
 	DoPositionEditor(size, rect);
 }
 
-void wxGridExtCellChoiceEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void ibGridCellChoiceEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
 	wxASSERT_MSG(m_control,
-		wxT("The wxGridExtCellEditor must be created first!"));
+		wxT("The ibGridCellEditor must be created first!"));
 
-	wxGridExtCellEditorEvtHandler* evtHandler = NULL;
+	ibGridCellEditorEvtHandler* evtHandler = NULL;
 	if (m_control)
 	{
 		// This event handler is needed to properly dismiss the editor when the popup is closed
-		m_control->Bind(wxEVT_COMBOBOX_CLOSEUP, &wxGridExtCellChoiceEditor::OnComboCloseUp, this);
-		evtHandler = wxDynamicCast(m_control->GetEventHandler(), wxGridExtCellEditorEvtHandler);
+		m_control->Bind(wxEVT_COMBOBOX_CLOSEUP, &ibGridCellChoiceEditor::OnComboCloseUp, this);
+		evtHandler = wxDynamicCast(m_control->GetEventHandler(), ibGridCellEditorEvtHandler);
 	}
 
 	// Don't immediately end if we get a kill focus event within BeginEdit
@@ -1547,7 +1547,7 @@ void wxGridExtCellChoiceEditor::BeginEdit(int row, int col, wxGridExt* grid)
 	// This is a work around for the combobox being simply dismissed when a
 	// choice is made in it under OS X. The bug is almost certainly due to a
 	// problem in focus events generation logic but it's not obvious to fix and
-	// for now this at least allows to use wxGridExt.
+	// for now this at least allows to use ibGrid.
 	Combo()->Popup();
 #endif
 
@@ -1561,9 +1561,9 @@ void wxGridExtCellChoiceEditor::BeginEdit(int row, int col, wxGridExt* grid)
 	}
 }
 
-bool wxGridExtCellChoiceEditor::EndEdit(int WXUNUSED(row),
+bool ibGridCellChoiceEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& WXUNUSED(oldval),
 	wxString* newval)
 {
@@ -1579,12 +1579,12 @@ bool wxGridExtCellChoiceEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void wxGridExtCellChoiceEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void ibGridCellChoiceEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
 	grid->GetTable()->SetValue(row, col, m_value);
 }
 
-void wxGridExtCellChoiceEditor::Reset()
+void ibGridCellChoiceEditor::Reset()
 {
 	if (m_allowOthers)
 	{
@@ -1601,7 +1601,7 @@ void wxGridExtCellChoiceEditor::Reset()
 	}
 }
 
-void wxGridExtCellChoiceEditor::SetParameters(const wxString& params)
+void ibGridCellChoiceEditor::SetParameters(const wxString& params)
 {
 	if (!params)
 	{
@@ -1625,15 +1625,15 @@ void wxGridExtCellChoiceEditor::SetParameters(const wxString& params)
 }
 
 // return the value in the text control
-wxString wxGridExtCellChoiceEditor::GetValue() const
+wxString ibGridCellChoiceEditor::GetValue() const
 {
 	return Combo()->GetValue();
 }
 
-void wxGridExtCellChoiceEditor::OnComboCloseUp(wxCommandEvent& WXUNUSED(evt))
+void ibGridCellChoiceEditor::OnComboCloseUp(wxCommandEvent& WXUNUSED(evt))
 {
-	wxGridExtCellEditorEvtHandler* evtHandler = wxDynamicCast(m_control->GetEventHandler(),
-		wxGridExtCellEditorEvtHandler);
+	ibGridCellEditorEvtHandler* evtHandler = wxDynamicCast(m_control->GetEventHandler(),
+		ibGridCellEditorEvtHandler);
 
 	if (!evtHandler)
 		return;
@@ -1648,35 +1648,35 @@ void wxGridExtCellChoiceEditor::OnComboCloseUp(wxCommandEvent& WXUNUSED(evt))
 #if wxUSE_COMBOBOX
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellEnumEditor
+// ibGridCellEnumEditor
 // ----------------------------------------------------------------------------
 
 // A cell editor which displays an enum number as a textual equivalent. eg
 // data in cell is 0,1,2 ... n the cell could be displayed as
 // "John","Fred"..."Bob" in the combo choice box
 
-wxGridExtCellEnumEditor::wxGridExtCellEnumEditor(const wxString& choices)
-	: wxGridExtCellChoiceEditor(),
+ibGridCellEnumEditor::ibGridCellEnumEditor(const wxString& choices)
+	: ibGridCellChoiceEditor(),
 	m_index(-1)
 {
 	if (!choices.empty())
 		SetParameters(choices);
 }
 
-void wxGridExtCellEnumEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void ibGridCellEnumEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
 	wxASSERT_MSG(m_control,
-		wxT("The wxGridExtCellEnumEditor must be Created first!"));
+		wxT("The ibGridCellEnumEditor must be Created first!"));
 
-	wxGridExtCellEditorEvtHandler* evtHandler = NULL;
+	ibGridCellEditorEvtHandler* evtHandler = NULL;
 	if (m_control)
-		evtHandler = wxDynamicCast(m_control->GetEventHandler(), wxGridExtCellEditorEvtHandler);
+		evtHandler = wxDynamicCast(m_control->GetEventHandler(), ibGridCellEditorEvtHandler);
 
 	// Don't immediately end if we get a kill focus event within BeginEdit
 	if (evtHandler)
 		evtHandler->SetInSetFocus(true);
 
-	wxGridExtTableBase* table = grid->GetTable();
+	ibGridTableBase* table = grid->GetTable();
 
 	if (table->CanGetValueAs(row, col, wxGRID_VALUE_NUMBER))
 	{
@@ -1702,7 +1702,7 @@ void wxGridExtCellEnumEditor::BeginEdit(int row, int col, wxGridExt* grid)
 	// This is a work around for the combobox being simply dismissed when a
 	// choice is made in it under OS X. The bug is almost certainly due to a
 	// problem in focus events generation logic but it's not obvious to fix and
-	// for now this at least allows to use wxGridExt.
+	// for now this at least allows to use ibGrid.
 	Combo()->Popup();
 #endif
 
@@ -1716,9 +1716,9 @@ void wxGridExtCellEnumEditor::BeginEdit(int row, int col, wxGridExt* grid)
 	}
 }
 
-bool wxGridExtCellEnumEditor::EndEdit(int WXUNUSED(row),
+bool ibGridCellEnumEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& WXUNUSED(oldval),
 	wxString* newval)
 {
@@ -1734,9 +1734,9 @@ bool wxGridExtCellEnumEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void wxGridExtCellEnumEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void ibGridCellEnumEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
-	wxGridExtTableBase* const table = grid->GetTable();
+	ibGridTableBase* const table = grid->GetTable();
 	if (table->CanSetValueAs(row, col, wxGRID_VALUE_NUMBER))
 		table->SetValueAsLong(row, col, m_index);
 	else
@@ -1746,22 +1746,22 @@ void wxGridExtCellEnumEditor::ApplyEdit(int row, int col, wxGridExt* grid)
 #endif // wxUSE_COMBOBOX
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellAutoWrapStringEditor
+// ibGridCellAutoWrapStringEditor
 // ----------------------------------------------------------------------------
 
 void
-wxGridExtCellAutoWrapStringEditor::Create(wxWindow* parent,
+ibGridCellAutoWrapStringEditor::Create(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
-	wxGridExtCellTextEditor::DoCreate(parent, id, evtHandler,
+	ibGridCellTextEditor::DoCreate(parent, id, evtHandler,
 		wxTE_MULTILINE | wxTE_RICH);
 }
 
 #if wxUSE_DATEPICKCTRL
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellDateEditor
+// ibGridCellDateEditor
 // ----------------------------------------------------------------------------
 
 #if defined ( __WXGTK__ )
@@ -1770,9 +1770,9 @@ wxGridExtCellAutoWrapStringEditor::Create(wxWindow* parent,
 // for that, but on wxGTK a bit of special processing is required to forward
 // some of the key events from wxDatePickerCtrl to the generic cell editor
 // event handler.
-struct wxGridExtCellDateEditorKeyHandler
+struct ibGridCellDateEditorKeyHandler
 {
-	explicit wxGridExtCellDateEditorKeyHandler(wxGridExtCellEditorEvtHandler* handler)
+	explicit ibGridCellDateEditorKeyHandler(ibGridCellEditorEvtHandler* handler)
 		: m_handler(handler)
 	{
 	}
@@ -1797,7 +1797,7 @@ struct wxGridExtCellDateEditorKeyHandler
 		}
 	}
 
-	wxGridExtCellEditorEvtHandler* m_handler;
+	ibGridCellEditorEvtHandler* m_handler;
 
 #ifdef wxNO_RTTI
 	// wxEventFunctorFunction used when an object of this class is passed to
@@ -1805,18 +1805,18 @@ struct wxGridExtCellDateEditorKeyHandler
 	// see the comment before WX_DECLARE_TYPEINFO_INLINE() in wx/typeinfo.h)
 	// and this, in turn, requires a default ctor of this class -- which will
 	// never be actually used, but must nevertheless exist.
-	wxGridExtCellDateEditorKeyHandler() : m_handler(NULL) {}
+	ibGridCellDateEditorKeyHandler() : m_handler(NULL) {}
 #endif // wxNO_RTTI
 };
 #endif // __WXGTK__
 
-wxGridExtCellDateEditor::wxGridExtCellDateEditor(const wxString& format)
-	: wxGridExtCellEditor()
+ibGridCellDateEditor::ibGridCellDateEditor(const wxString& format)
+	: ibGridCellEditor()
 {
 	SetParameters(format);
 }
 
-void wxGridExtCellDateEditor::SetParameters(const wxString& params)
+void ibGridCellDateEditor::SetParameters(const wxString& params)
 {
 	if (params.empty())
 		m_format = wxGetUIDateFormat();
@@ -1824,7 +1824,7 @@ void wxGridExtCellDateEditor::SetParameters(const wxString& params)
 		m_format = params;
 }
 
-void wxGridExtCellDateEditor::Create(wxWindow* parent, wxWindowID id,
+void ibGridCellDateEditor::Create(wxWindow* parent, wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
 	m_control = new wxDatePickerCtrl(parent, id,
@@ -1835,22 +1835,22 @@ void wxGridExtCellDateEditor::Create(wxWindow* parent, wxWindowID id,
 		wxDP_SHOWCENTURY |
 		wxWANTS_CHARS);
 
-	wxGridExtCellEditor::Create(parent, id, evtHandler);
+	ibGridCellEditor::Create(parent, id, evtHandler);
 
 #if defined ( __WXGTK__ )
 	// Install a handler for ESC and ENTER keys.
-	wxGridExtCellEditorEvtHandler* handler =
-		wxDynamicCast(evtHandler, wxGridExtCellEditorEvtHandler);
+	ibGridCellEditorEvtHandler* handler =
+		wxDynamicCast(evtHandler, ibGridCellEditorEvtHandler);
 	if (handler)
 	{
-		handler->Bind(wxEVT_CHAR, wxGridExtCellDateEditorKeyHandler(handler));
+		handler->Bind(wxEVT_CHAR, ibGridCellDateEditorKeyHandler(handler));
 	}
 #endif // __WXGTK__
 }
 
-void wxGridExtCellDateEditor::SetSize(const wxRect& r)
+void ibGridCellDateEditor::SetSize(const wxRect& r)
 {
-	wxASSERT_MSG(m_control, "The wxGridExtCellDateEditor must be created first!");
+	wxASSERT_MSG(m_control, "The ibGridCellDateEditor must be created first!");
 
 	wxSize size = DatePicker()->GetBestSize();
 
@@ -1866,11 +1866,11 @@ void wxGridExtCellDateEditor::SetSize(const wxRect& r)
 	DoPositionEditor(size, r, wxALIGN_RIGHT);
 }
 
-void wxGridExtCellDateEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void ibGridCellDateEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
-	wxASSERT_MSG(m_control, "The wxGridExtCellDateEditor must be created first!");
+	wxASSERT_MSG(m_control, "The ibGridCellDateEditor must be created first!");
 
-	using namespace wxGridExtPrivate;
+	using namespace ibGridPrivate;
 
 	if (!TryGetValueAsDate(m_value, DateParseParams::WithFallback(m_format),
 		*grid, row, col))
@@ -1887,12 +1887,12 @@ void wxGridExtCellDateEditor::BeginEdit(int row, int col, wxGridExt* grid)
 	DatePicker()->SetFocus();
 }
 
-bool wxGridExtCellDateEditor::EndEdit(int WXUNUSED(row), int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+bool ibGridCellDateEditor::EndEdit(int WXUNUSED(row), int WXUNUSED(col),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& WXUNUSED(oldval),
 	wxString* newval)
 {
-	wxASSERT_MSG(m_control, "The wxGridExtCellDateEditor must be created first!");
+	wxASSERT_MSG(m_control, "The ibGridCellDateEditor must be created first!");
 
 	const wxDateTime date = DatePicker()->GetValue();
 
@@ -1911,26 +1911,26 @@ bool wxGridExtCellDateEditor::EndEdit(int WXUNUSED(row), int WXUNUSED(col),
 	return true;
 }
 
-void wxGridExtCellDateEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void ibGridCellDateEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
 	grid->GetTable()->SetValue(row, col, m_value.FormatISODate());
 }
 
-void wxGridExtCellDateEditor::Reset()
+void ibGridCellDateEditor::Reset()
 {
-	wxASSERT_MSG(m_control, "The wxGridExtCellDateEditor must be created first!");
+	wxASSERT_MSG(m_control, "The ibGridCellDateEditor must be created first!");
 
 	m_value = DatePicker()->GetValue();
 }
 
-wxString wxGridExtCellDateEditor::GetValue() const
+wxString ibGridCellDateEditor::GetValue() const
 {
-	wxASSERT_MSG(m_control, "The wxGridExtCellDateEditor must be created first!");
+	wxASSERT_MSG(m_control, "The ibGridCellDateEditor must be created first!");
 
 	return DatePicker()->GetValue().FormatISODate();
 }
 
-wxDatePickerCtrl* wxGridExtCellDateEditor::DatePicker() const
+wxDatePickerCtrl* ibGridCellDateEditor::DatePicker() const
 {
 	return static_cast<wxDatePickerCtrl*>(m_control);
 }

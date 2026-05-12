@@ -16,21 +16,27 @@
 #include "backend/guid.h"
 #include "frontend/frontend.h"
 
-class FRONTEND_API CDialogActiveUser : public wxDialog {
+class FRONTEND_API ibDialogActiveUser : public wxDialog {
 	wxListCtrl* m_activeTable;
 	std::shared_ptr<wxTimer> m_activeTableScanner;
-	CGuid m_sessionArrayHash; 
+	ibGuid m_sessionArrayHash;
 public:
 
 	void RefreshActiveUserTable();
 
-	CDialogActiveUser(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Active users"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(600, 250), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
-	virtual ~CDialogActiveUser();
+	ibDialogActiveUser(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Active users"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(600, 250), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+	virtual ~ibDialogActiveUser();
 
 protected:
-	void OnIdleHandler(wxTimerEvent& event) { 
+	void OnIdleHandler(wxTimerEvent& event) {
 		RefreshActiveUserTable();
 	}
+	// Right-click on a row → context menu with Kick / Reload. Both
+	// write to sys_session.signal via ibSessionRegistry; the owning
+	// process picks the directive up on its next JobCheckSignal tick.
+	void OnContextMenu(wxListEvent& event);
+	void OnKickSelected(wxCommandEvent& event);
+	void OnReloadSelected(wxCommandEvent& event);
 };
 
 #endif 

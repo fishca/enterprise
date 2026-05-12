@@ -2,44 +2,50 @@
 #define __PROPERTY_GENERATION_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropGeneration.h"
+#include "backend/backend_type.h"
 
 //base property for "generation"
-class BACKEND_API CPropertyGeneration : public IProperty {
-	wxVariantData* CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc = CMetaDescription()) const;
+class BACKEND_API ibPropertyGeneration : public ibProperty {
+	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibMetaDescription& typeDesc = ibMetaDescription()) const;
 public:
 
-	CMetaDescription& GetValueAsMetaDesc() const;
-	void SetValue(const CMetaDescription& val);
+	ibMetaDescription& GetValueAsMetaDesc() const;
+	void SetValue(const ibMetaDescription& val);
 
 
-	CPropertyGeneration(CPropertyCategory* cat, const wxString& name)
-		: IProperty(cat, name, CreateVariantData(cat->GetPropertyObject()))
+	ibPropertyGeneration(ibPropertyCategory* cat, const wxString& name)
+		: ibProperty(cat, name, CreateVariantData(cat->GetPropertyObject()))
 	{
 	}
 
-	CPropertyGeneration(CPropertyCategory* cat, const wxString& name, const wxString& label)
-		: IProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject()))
+	ibPropertyGeneration(ibPropertyCategory* cat, const wxString& name, const wxString& label)
+		: ibProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject()))
 	{
 	}
 
-	CPropertyGeneration(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
-		: IProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject()))
+	ibPropertyGeneration(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
+		: ibProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject()))
 	{
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGGenerationProperty(m_owner, m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyGeneration != nullptr)
+			return ms_propertyGeneration(m_owner, m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyGeneration)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&);
 };
 
 #endif

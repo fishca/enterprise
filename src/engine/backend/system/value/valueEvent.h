@@ -4,28 +4,28 @@
 #include "backend/compiler/value.h"
 
 //event support
-class BACKEND_API CValueEvent : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CValueEvent);
+class BACKEND_API ibValueEvent : public ibValue {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEvent);
 public:
 
-	CValueEvent();
-	CValueEvent(const wxString &eventName);
+	ibValueEvent();
+	ibValueEvent(const wxString &eventName);
 
 	virtual bool IsEmpty() const { return m_eventName.IsEmpty(); }
 
-	virtual bool Init(CValue **paParams, const long lSizeArray);
+	virtual bool Init(ibValue **paParams, const long lSizeArray);
 	virtual wxString GetString() const{ return m_eventName; }
 
 protected:
 	wxString m_eventName;
 };
 
-class BACKEND_API CValueActionEvent : public CValueEvent {
-	wxDECLARE_DYNAMIC_CLASS(CValueActionEvent);
+class BACKEND_API ibValueActionEvent : public ibValueEvent {
+	wxDECLARE_DYNAMIC_CLASS(ibValueActionEvent);
 public:
-	CValueActionEvent();
-	CValueActionEvent(const wxString& eventName, action_identifier_t eventId);
+	ibValueActionEvent();
+	ibValueActionEvent(const wxString& eventName, ibActionID eventId);
 private:
-	action_identifier_t m_eventId;
+	ibActionID m_eventId;
 };
 #endif

@@ -6,11 +6,11 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueFile, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueFile, ibValue);
 
-CValue::CMethodHelper CValueFile::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueFile::m_methodHelper;
 
-void CValueFile::PrepareNames() const
+void ibValueFile::PrepareNames() const
 {
 	m_methodHelper.AppendConstructor(1, wxT("File(path : string)"));
 
@@ -34,7 +34,7 @@ void CValueFile::PrepareNames() const
 
 #include "backend/appData.h"
 
-bool CValueFile::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueFile::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	wxFileName strFileName(m_fileName);
 
@@ -59,7 +59,7 @@ bool CValueFile::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue*
 		//case enSetReadOnly: break;
 	case enSize: {
 		const wxULongLong& size = strFileName.GetSize();
-		pvarRetValue = number_t(size.GetValue());
+		pvarRetValue = ibNumber(size.GetValue());
 		return true;
 	}
 	}
@@ -67,12 +67,12 @@ bool CValueFile::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue*
 	return false;
 }
 
-bool CValueFile::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueFile::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool CValueFile::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueFile::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	wxFileName strFileName(m_fileName);
 
@@ -98,15 +98,15 @@ bool CValueFile::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	return false;
 }
 
-CValueFile::CValueFile() : CValue(eValueTypes::TYPE_VALUE)
+ibValueFile::ibValueFile() : ibValue(ibValueTypes::TYPE_VALUE)
 {
 }
 
-CValueFile::~CValueFile()
+ibValueFile::~ibValueFile()
 {
 }
 
-bool CValueFile::Init(CValue** paParams, const long lSizeArray)
+bool ibValueFile::Init(ibValue** paParams, const long lSizeArray)
 {
 	if (lSizeArray < 1)
 		return false;
@@ -118,4 +118,4 @@ bool CValueFile::Init(CValue** paParams, const long lSizeArray)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueFile, "File", string_to_clsid("VL_FILE"));
+VALUE_TYPE_REGISTER(ibValueFile, "File", string_to_clsid("VL_FILE"));

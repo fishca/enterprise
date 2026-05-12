@@ -67,13 +67,13 @@ enum { //Error message numbers
 
 #include "backend/backend.h"
 
-class BACKEND_API CBackendException {
+class BACKEND_API ibBackendException {
 protected:
 
 	class wxFormatErrorString : public wxFormatString {
 	public:
 		wxFormatErrorString(int codeError)
-			: wxFormatString(CBackendException::GetErrorDesc(codeError)) {
+			: wxFormatString(ibBackendException::GetErrorDesc(codeError)) {
 		}
 
 #ifndef wxNO_IMPLICIT_WXSTRING_ENCODING
@@ -100,9 +100,14 @@ protected:
 		}
 	};
 
-	CBackendException(const wxString& strErrorDescription);
+	ibBackendException(const wxString& strErrorDescription);
 
 public:
+
+	// Thrown by value, caught by const reference. Virtual destructor keeps
+	// polymorphic dynamic-cast/catch-by-base behaviour well-defined across
+	// ibBackendCoreException / ibBackendInterruptException / ibBackendAccessException.
+	virtual ~ibBackendException() = default;
 
 	WX_DEFINE_VARARG_FUNC(static wxString, Format, 1, (const wxFormatErrorString&),
 		DoFormatWchar, DoFormatUtf8);
@@ -110,8 +115,8 @@ public:
 	//get error description
 	const wxString GetErrorDescription() const { return m_strErrorDescription; }
 
-	//error from proc unit/compile module 
-	static void ProcessError(const CBackendException* err, const struct CByteUnit& error);
+	//error from proc unit/compile module
+	static void ProcessError(const ibBackendException& err, const struct ibByteUnit& error);
 	static void ProcessError(const wxString& strFileName,
 		const wxString& strModuleName, const wxString& strDocPath,
 		const unsigned int currPos, const unsigned int currLine,
@@ -129,6 +134,30 @@ public:
 
 	static void SetEvalMode(bool mode = true);
 	static bool IsEvalMode();
+
+	// Saves the current eval-mode flag in ctor, restores it in dtor.
+	// Use to wrap ibProcUnit::Evaluate so an inner throw doesn't leak
+	// the flag onto the session.
+	class ibEvalModeScope {
+	public:
+		explicit ibEvalModeScope(bool newMode = true)
+			: m_previous(ibBackendException::IsEvalMode())
+		{
+			if (m_previous != newMode)
+				ibBackendException::SetEvalMode(newMode);
+		}
+
+		~ibEvalModeScope() {
+			if (ibBackendException::IsEvalMode() != m_previous)
+				ibBackendException::SetEvalMode(m_previous);
+		}
+
+		ibEvalModeScope(const ibEvalModeScope&) = delete;
+		ibEvalModeScope& operator=(const ibEvalModeScope&) = delete;
+
+	private:
+		const bool m_previous;
+	};
 
 protected:
 
@@ -158,9 +187,9 @@ private:
 
 #pragma region _exception_h_
 
-class BACKEND_API CBackendCoreException : public CBackendException {
+class BACKEND_API ibBackendCoreException : public ibBackendException {
 protected:
-	CBackendCoreException(const wxString& strErrorDescription) : CBackendException(strErrorDescription) {}
+	ibBackendCoreException(const wxString& strErrorDescription) : ibBackendException(strErrorDescription) {}
 public:
 
 	WX_DEFINE_VARARG_FUNC(static void, Error, 1, (const wxFormatErrorString&),
@@ -176,18 +205,18 @@ private:
 #endif
 };
 
-class BACKEND_API CBackendInterruptException : public CBackendException {
-	CBackendInterruptException() : CBackendException(_("The program was stopped by the user!")) {}
+class BACKEND_API ibBackendInterruptException : public ibBackendException {
+	ibBackendInterruptException() : ibBackendException(_("The program was stopped by the user!")) {}
 public:
 	static void Error();
 };
 
-class BACKEND_API CBackendAccessException : public CBackendException {
-	CBackendAccessException() : CBackendException(_("Not enough access rights for this user!")) {}
+class BACKEND_API ibBackendAccessException : public ibBackendException {
+	ibBackendAccessException() : ibBackendException(_("Not enough access rights for this user!")) {}
 public:
 	static void Error();
 };
 
-#pragma endregion 
+#pragma endregion
 
-#endif 
+#endif

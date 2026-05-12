@@ -20,21 +20,21 @@
 
 #include "engine/libpq-fe.h"
 
-class IDatabaseResultSet;
+class ibDatabaseResultSet;
 
-class CPostgresPreparedStatementWrapper : public CDatabaseErrorReporter, public CDatabaseStringConverter
+class ibPreparedStatementPostgresWrapper : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
 {
 public:
 	// ctor
-	CPostgresPreparedStatementWrapper(CPostgresInterface* pInterface, PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName);
+	ibPreparedStatementPostgresWrapper(ibInterfacePostgres* pInterface, PGconn* pDatabase, const wxString& strSQL, const wxString& strStatementName);
 
 	// dtor
-	virtual ~CPostgresPreparedStatementWrapper();
+	virtual ~ibPreparedStatementPostgresWrapper();
 
 	// set field
 	void SetParam(int nPosition, int nValue);
 	void SetParam(int nPosition, double dblValue);
-	void SetParam(int nPosition, const number_t& dblValue);
+	void SetParam(int nPosition, const ibNumber& dblValue);
 	void SetParam(int nPosition, const wxString& strValue);
 	void SetParam(int nPosition);
 	void SetParam(int nPosition, const void* pData, long nDataLength);
@@ -43,15 +43,15 @@ public:
 	int GetParameterCount();
 
 	int DoRunQuery();
-	IDatabaseResultSet* DoRunQueryWithResults();
+	ibDatabaseResultSet* DoRunQueryWithResults();
 
 private:
-	CPostgresInterface* m_pInterface;
+	ibInterfacePostgres* m_pInterface;
 	PGconn* m_pDatabase;
 	wxString m_strSQL;
 	wxString m_strStatementName;
 
-	CPostgresPreparedStatementParameterCollection m_Parameters;
+	ibPreparedStatementPostgresParameterCollection m_Parameters;
 };
 
 #endif // __POSTGRESQL_PREPARED_STATEMENT_WRAPPER_H__

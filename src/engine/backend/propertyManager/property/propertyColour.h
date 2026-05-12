@@ -3,10 +3,8 @@
 
 #include "backend/propertyManager/propertyObject.h"
 
-#include <wx/propgrid/advprops.h>
-
 //base property for "colour"
-class BACKEND_API CPropertyColour : public IProperty {
+class BACKEND_API ibPropertyColour : public ibProperty {
 	wxVariant CreateVariantData(const wxColour& val) const {
 		wxVariant newValue;
 		newValue << val;
@@ -19,39 +17,45 @@ public:
 		colour << m_propValue;
 		return colour;
 	}
-	
+
 	wxString GetValueAsString() const { return typeConv::ColourToString(GetValueAsColour()); }
 
-	void SetValue(const wxColour& val) { IProperty::SetValue(CreateVariantData(val)); }
+	void SetValue(const wxColour& val) { ibProperty::SetValue(CreateVariantData(val)); }
 	void SetValue(const wxString& val) { SetValue(typeConv::StringToColour(val)); }
 
-	CPropertyColour(CPropertyCategory* cat, const wxString& name, const wxColour& c = wxNullColour)
-		: IProperty(cat, name, CreateVariantData(c))
+	ibPropertyColour(ibPropertyCategory* cat, const wxString& name, const wxColour& c = wxNullColour)
+		: ibProperty(cat, name, CreateVariantData(c))
 	{
 	}
 
-	CPropertyColour(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxColour& c = wxNullColour)
-		: IProperty(cat, name, label, CreateVariantData(c))
+	ibPropertyColour(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxColour& c = wxNullColour)
+		: ibProperty(cat, name, label, CreateVariantData(c))
 	{
 	}
 
-	CPropertyColour(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxColour& c = wxNullColour)
-		: IProperty(cat, name, label, helpString, CreateVariantData(c))
+	ibPropertyColour(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxColour& c = wxNullColour)
+		: ibProperty(cat, name, label, helpString, CreateVariantData(c))
 	{
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxColourProperty(m_propLabel, m_propName, GetValueAsColour());
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyColour != nullptr)
+			return ms_propertyColour(m_propLabel, m_propName, GetValueAsColour());
+		return nullptr;
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyColour)(const wxString&, const wxString&, const wxColour&);
 };
 
 #endif

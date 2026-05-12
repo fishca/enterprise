@@ -18,17 +18,17 @@
 
 #include "backend/metaData.h"
 
-class CDialogGeneration : public wxDialog {
+class ibDialogGeneration : public wxDialog {
 	wxListCtrl* m_listData;
 	wxButton* m_buttonOk;
 	wxButton* m_buttonCancel;
-	CMetaDescription m_metaDesc;
+	ibMetaDescription m_metaDesc;
 public:
 
-	bool ShowModal(meta_identifier_t& id);
+	bool ShowModal(ibMetaID& id);
 
-	CDialogGeneration(IMetaData* metaData, const CMetaDescription& metaType);
-	virtual ~CDialogGeneration();
+	ibDialogGeneration(ibMetaData* metaData, const ibMetaDescription& metaType);
+	virtual ~ibDialogGeneration();
 
 protected:
 	virtual void OnListItemSelected(wxListEvent& event);

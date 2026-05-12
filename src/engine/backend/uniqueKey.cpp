@@ -1,116 +1,104 @@
 #include "uniqueKey.h"
-#include "metaCollection/partial/commonObject.h"
 
-bool CUniqueKey::isValid() const
+ibUniqueKey::ibUniqueKey() = default;
+
+ibUniqueKey::ibUniqueKey(const ibGuid& guid) : m_objGuid(guid) {}
+
+ibUniqueKey::~ibUniqueKey() = default;
+
+bool ibUniqueKey::isValid() const
 {
 	return m_objGuid.isValid();
 }
 
-void CUniqueKey::reset()
+void ibUniqueKey::reset()
 {
 	m_objGuid.reset();
 }
 
-bool CUniqueKey::operator>(const CUniqueKey& other) const
+bool ibUniqueKey::IsOk() const
 {
-	return m_objGuid > other.m_objGuid;
+	return m_objGuid.isValid();
 }
 
-bool CUniqueKey::operator>=(const CUniqueKey& other) const
-{
-	return m_objGuid >= other.m_objGuid;
-}
-
-bool CUniqueKey::operator<(const CUniqueKey& other) const
+bool ibUniqueKey::operator<(const ibUniqueKey& other) const
 {
 	return m_objGuid < other.m_objGuid;
 }
 
-bool CUniqueKey::operator<=(const CUniqueKey& other) const
+bool ibUniqueKey::operator>(const ibUniqueKey& other) const
+{
+	return m_objGuid > other.m_objGuid;
+}
+
+bool ibUniqueKey::operator<=(const ibUniqueKey& other) const
 {
 	return m_objGuid <= other.m_objGuid;
 }
 
-bool CUniqueKey::operator==(const CUniqueKey& other) const
+bool ibUniqueKey::operator>=(const ibUniqueKey& other) const
 {
-	if (m_uniqueData == enUniqueData::enUniqueGuid) {
-		return m_objGuid == other.m_objGuid;
-	}
-	else if (m_uniqueData == enUniqueData::enUniqueKey) {
-		if (other.m_uniqueData == enUniqueData::enUniqueKey) {
-			if ((m_metaObject == nullptr && other.m_metaObject == nullptr) &&
-				(m_keyValues.size() == 0 && other.m_keyValues.size() == 0))
-				return m_objGuid == other.m_objGuid; // new object 
-			return m_metaObject == other.m_metaObject &&
-				m_keyValues == other.m_keyValues;
-		}
-		else if (m_uniqueData == enUniqueData::enUniqueGuid) {
-			return m_objGuid == other.m_objGuid;
-		}
-	}
-	return false;
+	return m_objGuid >= other.m_objGuid;
 }
 
-bool CUniqueKey::operator!=(const CUniqueKey& other) const
+bool ibUniqueKey::operator==(const ibUniqueKey& other) const
 {
-	return !((*this) == other);
+	return EqualsImpl(other);
 }
 
-bool CUniqueKey::operator==(const CGuid& other) const
+bool ibUniqueKey::operator!=(const ibUniqueKey& other) const
+{
+	return !EqualsImpl(other);
+}
+
+bool ibUniqueKey::operator==(const ibGuid& other) const
 {
 	return m_objGuid == other;
 }
 
-bool CUniqueKey::operator!=(const CGuid& other) const
+bool ibUniqueKey::operator!=(const ibGuid& other) const
 {
 	return m_objGuid != other;
 }
 
-CUniqueKey::CUniqueKey() : CUniqueKey(enUniqueData::enUniqueGuid)
+bool ibUniqueKey::EqualsImpl(const ibUniqueKey& other) const
 {
-	m_objGuid = wxNullGuid;
-	m_metaObject = nullptr;
-	m_keyValues = {};
+	return m_objGuid == other.m_objGuid;
 }
 
-CUniqueKey::CUniqueKey(const CGuid& guid) : CUniqueKey(enUniqueData::enUniqueGuid)
+//////////////////////////////////////////////////////////////////////////////
+
+ibUniqueKeyPair::ibUniqueKeyPair() : ibUniqueKey(wxNewUniqueGuid)
 {
-	m_objGuid = guid;
-	m_metaObject = nullptr;
-	m_keyValues = {};
 }
 
-CUniquePairKey::CUniquePairKey(const IValueMetaObjectRegisterData* metaObject) : CUniqueKey(enUniqueData::enUniqueKey)
+ibUniqueKeyPair::ibUniqueKeyPair(const ibMetaValueArray& keyValues)
+	: ibUniqueKey(wxNewUniqueGuid)
+	, m_keyValues(keyValues)
 {
-	m_objGuid = wxNewUniqueGuid;
-	m_metaObject = metaObject;
-	m_keyValues = {};
-
-	if (metaObject == nullptr) 
-		return;
-
-	for (const auto object : metaObject->GetGenericDimentionArrayObject()) {
-		m_keyValues.insert_or_assign(
-			object->GetMetaID(), object->CreateValue()
-		);
-	}
 }
 
-CUniquePairKey::CUniquePairKey(const IValueMetaObjectRegisterData* metaObject, const valueArray_t& keyValues) : CUniqueKey(enUniqueData::enUniqueKey)
+ibUniqueKeyPair::~ibUniqueKeyPair() = default;
+
+bool ibUniqueKeyPair::IsOk() const
 {
-	m_objGuid = wxNewUniqueGuid;
-	m_metaObject = metaObject;
-	m_keyValues = {};
+	return !m_keyValues.empty();
+}
 
-	if (metaObject == nullptr) 
-		return;
+bool ibUniqueKeyPair::FindKey(const ibMetaID& id) const
+{
+	return m_keyValues.find(id) != m_keyValues.end();
+}
 
-	for (const auto object : metaObject->GetGenericDimentionArrayObject()) {
-		auto iterator = keyValues.find(object->GetMetaID());
-		if (iterator != keyValues.end()) {
-			m_keyValues.insert_or_assign(
-				object->GetMetaID(), keyValues.at(object->GetMetaID())
-			);
-		}
-	}
+ibValue ibUniqueKeyPair::GetKey(const ibMetaID& id) const
+{
+	const auto it = m_keyValues.find(id);
+	return (it != m_keyValues.end()) ? it->second : ibValue();
+}
+
+bool ibUniqueKeyPair::EqualsImpl(const ibUniqueKey& other) const
+{
+	if (const auto* o = dynamic_cast<const ibUniqueKeyPair*>(&other))
+		return m_keyValues == o->m_keyValues;
+	return ibUniqueKey::EqualsImpl(other);
 }

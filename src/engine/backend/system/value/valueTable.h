@@ -6,11 +6,11 @@
 
 #include "backend/tableInfo.h"
 
-const class_identifier_t g_valueTableCLSID = string_to_clsid("VL_TABL");
+const ibClassID g_valueTableCLSID = string_to_clsid("VL_TABL");
 
 //Table support
-class BACKEND_API CValueTableMemory : public IValueTable {
-	wxDECLARE_DYNAMIC_CLASS(CValueTableMemory);
+class BACKEND_API ibValueModelTable : public ibValueModelRamTableBase {
+	wxDECLARE_DYNAMIC_CLASS(ibValueModelTable);
 private:
 	// methods:
 	enum Func {
@@ -27,8 +27,8 @@ private:
 		enColumns = 0,
 	};
 public:
-	class CValueTableColumnCollection : public IValueTable::IValueModelColumnCollection {
-		wxDECLARE_DYNAMIC_CLASS(CValueTableColumnCollection);
+	class ibValueModelTableColumnCollection : public ibValueModelTableBase::ibValueModelColumnCollection {
+		wxDECLARE_DYNAMIC_CLASS(ibValueModelTableColumnCollection);
 	private:
 		enum Func {
 			enAddColumn = 0,
@@ -36,21 +36,21 @@ public:
 		};
 	public:
 
-		class CValueTableColumnInfo : public IValueTable::IValueModelColumnCollection::IValueModelColumnInfo {
-			wxDECLARE_DYNAMIC_CLASS(CValueTableColumnInfo);
+		class ibValueModelTableColumnInfo : public ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo {
+			wxDECLARE_DYNAMIC_CLASS(ibValueModelTableColumnInfo);
 		private:
 
 			unsigned int m_columnID;
 			wxString m_columnName;
-			CTypeDescription m_columnType;
+			ibTypeDescription m_columnType;
 			wxString m_columnCaption;
 			int m_columnWidth;
 
 		public:
 
-			CValueTableColumnInfo();
-			CValueTableColumnInfo(unsigned int colId, const wxString& colName, const CTypeDescription& typeDescription, const wxString& caption, int width);
-			virtual ~CValueTableColumnInfo();
+			ibValueModelTableColumnInfo();
+			ibValueModelTableColumnInfo(unsigned int colId, const wxString& colName, const ibTypeDescription& typeDescription, const wxString& caption, int width);
+			virtual ~ibValueModelTableColumnInfo();
 
 			virtual unsigned int GetColumnID() const { return m_columnID; }
 			virtual void SetColumnID(unsigned int col) { m_columnID = col; }
@@ -58,21 +58,21 @@ public:
 			virtual void SetColumnName(const wxString& name) { m_columnName = name; }
 			virtual wxString GetColumnCaption() const { return m_columnCaption; }
 			virtual void SetColumnCaption(const wxString& caption) { m_columnCaption = caption; }
-			virtual const CTypeDescription GetColumnType() const { return m_columnType; }
-			virtual void SetColumnType(const CTypeDescription& typeDescription) { m_columnType = typeDescription; }
+			virtual const ibTypeDescription GetColumnType() const { return m_columnType; }
+			virtual void SetColumnType(const ibTypeDescription& typeDescription) { m_columnType = typeDescription; }
 			virtual int GetColumnWidth() const { return m_columnWidth; }
 			virtual void SetColumnWidth(int width) { m_columnWidth = width; }
 
-			friend CValueTableColumnCollection;
+			friend ibValueModelTableColumnCollection;
 		};
 
 	public:
 
-		CValueTableColumnCollection(CValueTableMemory* ownerTable = nullptr);
-		virtual ~CValueTableColumnCollection();
+		ibValueModelTableColumnCollection(ibValueModelTable* ownerTable = nullptr);
+		virtual ~ibValueModelTableColumnCollection();
 
-		IValueModelColumnInfo* AddColumn(const wxString& colName,
-			const CTypeDescription& typeData,
+		ibValueModelColumnInfo* AddColumn(const wxString& colName,
+			const ibTypeDescription& typeData,
 			const wxString& caption,
 			int width = wxDVC_DEFAULT_WIDTH) override {
 
@@ -85,34 +85,34 @@ public:
 			}
 
 			for (long row = 0; row < m_ownerTable->GetRowCount(); row++) {
-				wxValueTableRow* node = m_ownerTable->GetViewData<wxValueTableRow>(m_ownerTable->GetItem(row));
+				ibValueTableRow* node = m_ownerTable->GetViewData<ibValueTableRow>(m_ownerTable->GetItem(row));
 				wxASSERT(node);
-				node->SetValue(max_id + 1, CValueTypeDescription::AdjustValue(typeData));
+				node->SetValue(max_id + 1, ibValueTypeDescription::AdjustValue(typeData));
 			}
 
 			return m_listColumnInfo.emplace_back(
-				CValue::CreateAndPrepareValueRef<CValueTableColumnInfo>(max_id + 1, colName, typeData, caption, width));
+				ibValue::CreateAndPrepareValueRef<ibValueModelTableColumnInfo>(max_id + 1, colName, typeData, caption, width));
 		}
 
-		const CTypeDescription GetColumnType(unsigned int col) const {
+		const ibTypeDescription GetColumnType(unsigned int col) const {
 			for (auto& colInfo : m_listColumnInfo) {
 				if (col == colInfo->GetColumnID()) {
 					return colInfo->GetColumnType();
 				}
 			}
-			return CTypeDescription();
+			return ibTypeDescription();
 		}
 
 		virtual void RemoveColumn(unsigned int col) {
 
 			for (long row = 0; row < m_ownerTable->GetRowCount(); row++) {
-				wxValueTableRow* node = m_ownerTable->GetViewData<wxValueTableRow>(m_ownerTable->GetItem(row));
+				ibValueTableRow* node = m_ownerTable->GetViewData<ibValueTableRow>(m_ownerTable->GetItem(row));
 				wxASSERT(node);
 				node->EraseValue(col);
 			}
 
-			auto& it = std::find_if(m_listColumnInfo.begin(), m_listColumnInfo.end(),
-				[col](CValueTableColumnInfo* colInfo) {
+			auto it = std::find_if(m_listColumnInfo.begin(), m_listColumnInfo.end(),
+				[col](ibValueModelTableColumnInfo* colInfo) {
 					return col == colInfo->GetColumnID();
 				}
 			);
@@ -120,17 +120,17 @@ public:
 			m_listColumnInfo.erase(it);
 		}
 
-		virtual IValueModelColumnInfo* GetColumnInfo(unsigned int idx) const {
+		virtual ibValueModelColumnInfo* GetColumnInfo(unsigned int idx) const {
 			if (m_listColumnInfo.size() < idx)
 				return nullptr;
-			auto& it = m_listColumnInfo.begin();
+			auto it = m_listColumnInfo.begin();
 			std::advance(it, idx);
 			return *it;
 		}
 
 		virtual unsigned int GetColumnCount() const { return m_listColumnInfo.size(); }
 
-		virtual CMethodHelper* GetPMethods() const {
+		virtual ibValueMethodHelper* GetPMethods() const {
 			//PrepareNames();
 			return m_methodHelper;
 		}
@@ -139,85 +139,84 @@ public:
 
 
 		//WORK AS AN AGGREGATE OBJECT
-		virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
-		virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+		virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray);
+		virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
 		//array support 
-		virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
-		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
+		virtual bool SetAt(const ibValue& varKeyValue, const ibValue& varValue);
+		virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
 
-		friend class CValueTableMemory;
+		friend class ibValueModelTable;
 
 	protected:
 
-		CValueTableMemory* m_ownerTable;
-		std::vector<CValuePtr<CValueTableColumnInfo>> m_listColumnInfo;
-		CMethodHelper* m_methodHelper;
+		ibValueModelTable* m_ownerTable;
+		std::vector<ibValuePtr<ibValueModelTableColumnInfo>> m_listColumnInfo;
+		ibValueMethodHelper* m_methodHelper;
 	};
 
-	class CValueTableReturnLine : public IValueModelReturnLine {
-		wxDECLARE_DYNAMIC_CLASS(CValueTableReturnLine);
+	class ibValueModelTableReturnLine : public ibValueModelReturnLine {
+		wxDECLARE_DYNAMIC_CLASS(ibValueModelTableReturnLine);
 	public:
 
-		CValueTableReturnLine(CValueTableMemory* ownerTable = nullptr, const wxDataViewExtItem& line = wxDataViewExtItem(nullptr));
-		virtual ~CValueTableReturnLine();
+		ibValueModelTableReturnLine(ibValueModelTable* ownerTable = nullptr, const ibDataViewItem& line = ibDataViewItem(nullptr));
+		virtual ~ibValueModelTableReturnLine();
 
-		virtual IValueTable* GetOwnerModel() const { return m_ownerTable; }
+		virtual ibValueModelTableBase* GetOwnerModel() const { return m_ownerTable; }
 
-		virtual CMethodHelper* GetPMethods() const {
+		virtual ibValueMethodHelper* GetPMethods() const {
 			//PrepareNames();
 			return m_methodHelper;
 		}
 
 		virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
-		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal); //setting attribute
-		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
+		virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal); //setting attribute
+		virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal); //attribute value
 
 	private:
-		CValueTableMemory* m_ownerTable;
-		CMethodHelper* m_methodHelper;
+		ibValueModelTable* m_ownerTable;
+		ibValueMethodHelper* m_methodHelper;
 	};
 
 public:
 
-	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const;
+	virtual ibDataViewItem FindRowValue(const ibValue& varValue, const wxString& colName = wxEmptyString) const;
 
 	virtual bool AutoCreateColumn() const { return true; }
 
-	virtual IValueModelColumnCollection* GetColumnCollection() const { return m_tableColumnCollection; }
+	virtual ibValueModelColumnCollection* GetColumnCollection() const { return m_tableColumnCollection; }
 
-	virtual CValueTableReturnLine* GetRowAt(const long& line) {
+	virtual ibValueModelTableReturnLine* GetRowAt(const long& line) {
 		if (line > GetRowCount())
 			return nullptr;
-		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, GetItem(line));
+		return ibValue::CreateAndPrepareValueRef<ibValueModelTableReturnLine>(this, GetItem(line));
 	}
 
-	virtual IValueModelReturnLine* GetRowAt(const wxDataViewExtItem& line) {
+	virtual ibValueModelReturnLine* GetRowAt(const ibDataViewItem& line) {
 		if (!line.IsOk())
 			return nullptr;
 		return GetRowAt(GetRow(line));
 	}
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal) {
-		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+	virtual bool SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal) {
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 		if (node == nullptr)
 			return false;
-		return node->SetValue(id, CValueTypeDescription::AdjustValue(m_tableColumnCollection->GetColumnType(id), varMetaVal), true);
+		return node->SetValue(id, ibValueTypeDescription::AdjustValue(m_tableColumnCollection->GetColumnType(id), varMetaVal), true);
 	}
 
-	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const {
-		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+	virtual bool GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& pvarMetaVal) const {
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 		if (node == nullptr)
 			return false;
 		return node->GetValue(id, pvarMetaVal);
 	}
 
-	CValueTableMemory();
-	CValueTableMemory(const CValueTableMemory& val);
-	virtual ~CValueTableMemory();
+	ibValueModelTable();
+	ibValueModelTable(const ibValueModelTable& val);
+	virtual ~ibValueModelTable();
 
 	virtual void AddValue(unsigned int before = 0) {
 		long row = GetRow(GetSelection());
@@ -231,26 +230,26 @@ public:
 	virtual void DeleteValue() { DeleteRow(); }
 
 	//array
-	virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
+	virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
 
 	//check is empty
 	virtual bool IsEmpty() const { return GetRowCount() == 0; }
 
-	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();
 		return &m_methodHelper;
 	}
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); // attribute value
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);       // method call
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal); // attribute value
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);       // method call
 
 	// implementation of base class virtuals to define model
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewExtItem& row, unsigned int col) const override;
+		const ibDataViewItem& row, unsigned int col) const override;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewExtItem& row, unsigned int col) override;
+		const ibDataViewItem& row, unsigned int col) override;
 
 	//support def. methods (in runtime)
 	long AppendRow(unsigned int before = 0);
@@ -258,39 +257,33 @@ public:
 	void EditRow();
 	void DeleteRow();
 
-	CValueTableMemory* Clone() { return CValue::CreateAndPrepareValueRef<CValueTableMemory>(*this); }
+	ibValueModelTable* Clone() { return ibValue::CreateAndPrepareValueRef<ibValueModelTable>(*this); }
 	unsigned int Count() { return GetRowCount(); }
 	void Clear();
 
 #pragma region _tabular_data_
 	//get metaData from object 
-	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const { return nullptr; }
+	virtual const ibValueMetaObjectCompositeData* GetSourceMetaObject() const { return nullptr; }
 
 	//Get ref class 
-	virtual class_identifier_t GetSourceClassType() const { return g_valueTableCLSID; }
+	virtual ibClassID GetSourceClassType() const { return g_valueTableCLSID; }
 #pragma endregion 
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
-	//Working with iterators
-	virtual bool HasIterator() const override { return true; }
-	virtual CValue GetIteratorEmpty() override {
-		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, wxDataViewExtItem(nullptr));
+	// Iterator runtime path lives on ibValueModel — drives Get*Fetch
+	// in batches. GetEmptyRow yields the typed skeleton for the
+	// IntelliSense type hint that the iterator state surfaces.
+	virtual ibValue GetEmptyRow() override {
+		return ibValue::CreateAndPrepareValueRef<ibValueModelTableReturnLine>(this, ibDataViewItem(nullptr));
 	}
-	virtual CValue GetIteratorAt(unsigned int idx) override {
-		if (idx > (unsigned int)GetRowCount())
-			return CValue();
-		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, GetItem(idx));
-	}
-
-	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
 
 private:
 
-	CValuePtr<CValueTableColumnCollection> m_tableColumnCollection;
-	static CMethodHelper m_methodHelper;
+	ibValuePtr<ibValueModelTableColumnCollection> m_tableColumnCollection;
+	static ibValueMethodHelper m_methodHelper;
 };
 
 #endif

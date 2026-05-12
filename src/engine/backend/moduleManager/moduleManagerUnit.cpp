@@ -7,95 +7,80 @@
 
 #include "backend/system/systemManager.h"
 #include "backend/appData.h"
+#include "backend/session/session.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueModuleManager::CValueModuleUnit, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModuleManager::ibValueModuleUnit, ibValue);
 
-IValueModuleManager::CValueModuleUnit::CValueModuleUnit(IValueModuleManager *moduleManager, IValueMetaObjectModule *moduleObject, bool managerModule) :
-	CValue(eValueTypes::TYPE_VALUE, true), IModuleDataObject(new CCompileCommonModule(moduleObject)),
-	m_methodHelper(new CMethodHelper()),
+ibValueModuleManager::ibValueModuleUnit::ibValueModuleUnit(ibValueModuleManager *moduleManager, ibValueMetaObjectModuleBase *moduleObject, bool managerModule) :
+	ibValue(ibValueTypes::TYPE_VALUE, true), ibRuntimeModuleDataObject(new ibCompileCommonModule(moduleObject)),
+	m_methodHelper(new ibValueMethodHelper()),
 	m_moduleManager(moduleManager),
 	m_moduleObject(moduleObject)
 {
+	// Parent chain in the runtime tree вЂ” common module sits directly
+	// under its owning root module manager. Enables GetSession() walks
+	// from nested scripts without relying on ambient ibSessionScope.
+	SetParent(moduleManager);
 }
 
-IValueModuleManager::CValueModuleUnit::~CValueModuleUnit()
+ibValueModuleManager::ibValueModuleUnit::~ibValueModuleUnit()
 {
 	wxDELETE(m_methodHelper);
 }
 
 #define objectManager wxT("Manager")
 
-//common module 
-bool IValueModuleManager::CValueModuleUnit::CreateCommonModule()
+//common module
+bool ibValueModuleManager::ibValueModuleUnit::CreateCommonModule()
 {
 	wxASSERT(m_moduleManager != nullptr);
 
-	m_compileModule->SetParent(m_moduleManager->GetCompileModule());
-	//create singleton "manager"
-	m_compileModule->AddContextVariable(objectManager, m_moduleManager->GetObjectManager());
+	// Parent already wired in ctor (SetParent(moduleManager)). Bind
+	// the module-scope "Manager" singleton that scripts reach via
+	// Manager.<method>() inside common modules.
+	BindContextVariable(objectManager, m_moduleManager->GetObjectManager());
 
-	wxDELETE(m_procUnit);
-
-	if (!appData->DesignerMode()) {
-		try {
-			m_compileModule->Compile();
-			// у глобального модуля код исполняется в главном модуле! 
-			if (!CValueModuleUnit::IsGlobalModule()) {
-				m_procUnit = new CProcUnit();
-				m_procUnit->SetParent(m_moduleManager->GetProcUnit());
-				m_procUnit->Execute(m_compileModule->m_cByteCode, false);
-			}
-		}
-		catch (const CBackendException *){
-			return false;
-		};
+	// Compile only вЂ” per-session ProcUnit comes from AttachRuntime.
+	try {
+		Compile();
 	}
+	catch (const ibBackendException& err) {
+		wxLogWarning(_("Common module init failed: %s"), err.GetErrorDescription());
+		return false;
+	};
 
-	CValueModuleUnit::PrepareNames();
+	ibValueModuleUnit::PrepareNames();
 	return true;
 }
 
-bool IValueModuleManager::CValueModuleUnit::DestroyCommonModule()
+bool ibValueModuleManager::ibValueModuleUnit::DestroyCommonModule()
 {
 	wxASSERT(m_moduleManager != nullptr);
 
 	m_compileModule->RemoveVariable(objectManager);
 	m_compileModule->Reset();
 
-	wxDELETE(m_procUnit);
+	m_procUnit.reset();
 	return true;
 }
 
-void IValueModuleManager::CValueModuleUnit::PrepareNames() const
+void ibValueModuleManager::ibValueModuleUnit::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	if (m_procUnit != nullptr) {
-		CByteCode* byteCode = m_procUnit->GetByteCode();
-		if (byteCode != nullptr) {
-			for (auto exportFunction : byteCode->m_listExportFunc) {
-				m_methodHelper->AppendMethod(
-					exportFunction.first,
-					byteCode->GetNParams(exportFunction.second),
-					byteCode->HasRetVal(exportFunction.second),
-					exportFunction.second,
-					eProcUnit
-				);
-			}
-		}
-	}
+	ExportNamesToHelper(m_methodHelper, eProcUnit);
 }
 
-bool IValueModuleManager::CValueModuleUnit::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool ibValueModuleManager::ibValueModuleUnit::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
-	return IModuleDataObject::ExecuteProc(
+	return ibRuntimeModuleDataObject::ExecAsProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
-bool IValueModuleManager::CValueModuleUnit::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueModuleManager::ibValueModuleUnit::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	return IModuleDataObject::ExecuteFunc(
+	return ibRuntimeModuleDataObject::ExecAsFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }

@@ -75,12 +75,12 @@ static char* s_tool_xpm[] = {
 	"        zxcvb   "
 };
 
-wxIcon CValueToolBarItem::GetIcon() const
+wxIcon ibValueToolBarItem::GetIcon() const
 {
 	return wxIcon(s_tool_xpm);
 }
 
-wxIcon CValueToolBarItem::GetIconGroup()
+wxIcon ibValueToolBarItem::GetIconGroup()
 {
 	return wxIcon(s_tool_xpm);
 }
@@ -140,12 +140,12 @@ static char* s_toolSeparator_xpm[] = {
 	"                "
 };
 
-wxIcon CValueToolBarSeparator::GetIcon() const
+wxIcon ibValueToolBarSeparator::GetIcon() const
 {
 	return wxIcon(s_toolSeparator_xpm);
 }
 
-wxIcon CValueToolBarSeparator::GetIconGroup()
+wxIcon ibValueToolBarSeparator::GetIconGroup()
 {
 	return wxIcon(s_toolSeparator_xpm);
 }

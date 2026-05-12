@@ -1,7 +1,7 @@
 #include "debugItem.h"
 #include "backend/debugger/debugClient.h"
 
-void CDialogDebugItem::RefreshDebugList()
+void ibDialogDebugItem::RefreshDebugList()
 {
 	m_listAvailable.clear(); m_listAttached.clear();
 
@@ -59,7 +59,7 @@ void CDialogDebugItem::RefreshDebugList()
 	}
 }
 
-CDialogDebugItem::CDialogDebugItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style)
+ibDialogDebugItem::ibDialogDebugItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style)
 	: wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -67,14 +67,14 @@ CDialogDebugItem::CDialogDebugItem(wxWindow* parent, wxWindowID id, const wxStri
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 	wxStaticBoxSizer* sbSizerAvailable = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Available debug items:")), wxVERTICAL);
 	m_availableList = new wxListCtrl(sbSizerAvailable->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
-	m_availableList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &CDialogDebugItem::OnAvailableItemSelected, this);
+	m_availableList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &ibDialogDebugItem::OnAvailableItemSelected, this);
 
 	sbSizerAvailable->Add(m_availableList, 1, wxEXPAND);
 	mainSizer->Add(sbSizerAvailable, 1, wxEXPAND);
 
 	wxStaticBoxSizer* sbSizerAttached = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Attached debug items:")), wxVERTICAL);
 	m_attachedList = new wxListCtrl(sbSizerAttached->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
-	m_attachedList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &CDialogDebugItem::OnAttachedItemSelected, this);
+	m_attachedList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &ibDialogDebugItem::OnAttachedItemSelected, this);
 	sbSizerAttached->Add(m_attachedList, 1, wxEXPAND);
 
 	mainSizer->Add(sbSizerAttached, 1, wxEXPAND);
@@ -86,23 +86,23 @@ CDialogDebugItem::CDialogDebugItem(wxWindow* parent, wxWindowID id, const wxStri
 	RefreshDebugList();
 
 	m_connectionScanner = new wxTimer;
-	m_connectionScanner->Bind(wxEVT_TIMER, &CDialogDebugItem::OnIdleHandler, this);
+	m_connectionScanner->Bind(wxEVT_TIMER, &ibDialogDebugItem::OnIdleHandler, this);
 	m_connectionScanner->Start(1000);
 }
 
-CDialogDebugItem::~CDialogDebugItem()
+ibDialogDebugItem::~ibDialogDebugItem()
 {
-	m_attachedList->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &CDialogDebugItem::OnAttachedItemSelected, this);
-	m_availableList->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &CDialogDebugItem::OnAvailableItemSelected, this);
+	m_attachedList->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &ibDialogDebugItem::OnAttachedItemSelected, this);
+	m_availableList->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &ibDialogDebugItem::OnAvailableItemSelected, this);
 
 	if (m_connectionScanner->IsRunning()) 
 		m_connectionScanner->Stop();
 
-	m_connectionScanner->Unbind(wxEVT_TIMER, &CDialogDebugItem::OnIdleHandler, this);
+	m_connectionScanner->Unbind(wxEVT_TIMER, &ibDialogDebugItem::OnIdleHandler, this);
 	wxDELETE(m_connectionScanner);
 }
 
-void CDialogDebugItem::OnAttachedItemSelected(wxListEvent& event)
+void ibDialogDebugItem::OnAttachedItemSelected(wxListEvent& event)
 {
 	if (debugClient != nullptr) {
 		
@@ -116,7 +116,7 @@ void CDialogDebugItem::OnAttachedItemSelected(wxListEvent& event)
 	}
 }
 
-void CDialogDebugItem::OnAvailableItemSelected(wxListEvent& event)
+void ibDialogDebugItem::OnAvailableItemSelected(wxListEvent& event)
 {
 	if (debugClient != nullptr) {
 		

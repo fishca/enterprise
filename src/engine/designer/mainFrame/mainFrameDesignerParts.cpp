@@ -8,22 +8,22 @@
 
 #include "frontend/artProvider/artProvider.h"
 
-void CFrontendDocMDIFrameDesigner::CreateWideGui()
+void ibFrontendDocMDIFrameDesigner::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
 	m_mainFrameToolbar->SetToolBitmapSize(wxSize(16, 16));
-	m_mainFrameToolbar->AddTool(wxID_NEW, _("New"), wxArtProvider::GetBitmap(wxART_NEW, wxART_MENU, wxSize(16, 16)), _("New"), wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_OPEN, _("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_FRAME_ICON, wxSize(16, 16)), _("Open"), wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_SAVE, _("Save"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_FRAME_ICON, wxSize(16, 16)), _("Save"), wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_SAVEAS, _("Save as"), wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS, wxART_FRAME_ICON, wxSize(16, 16)), _("Save as"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_NEW, _("New"), wxArtProvider::GetBitmapBundle(wxART_NEW, wxART_MENU, wxSize(16, 16)), _("New"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_OPEN, _("Open"), wxArtProvider::GetBitmapBundle(wxART_FILE_OPEN, wxART_FRAME_ICON, wxSize(16, 16)), _("Open"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_SAVE, _("Save"), wxArtProvider::GetBitmapBundle(wxART_FILE_SAVE, wxART_FRAME_ICON, wxSize(16, 16)), _("Save"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_SAVEAS, _("Save as"), wxArtProvider::GetBitmapBundle(wxART_FILE_SAVE_AS, wxART_FRAME_ICON, wxSize(16, 16)), _("Save as"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_FIND, _("Find"), wxArtProvider::GetBitmap(wxART_FIND, wxART_FRAME_ICON, wxSize(16, 16)), _("Find"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_FIND, _("Find"), wxArtProvider::GetBitmapBundle(wxART_FIND, wxART_FRAME_ICON, wxSize(16, 16)), _("Find"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmap(wxART_REDO, wxART_FRAME_ICON, wxSize(16, 16)), _("Redo"), wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmap(wxART_UNDO, wxART_FRAME_ICON, wxSize(16, 16)), _("Undo"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmapBundle(wxART_REDO, wxART_FRAME_ICON, wxSize(16, 16)), _("Redo"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmapBundle(wxART_UNDO, wxART_FRAME_ICON, wxSize(16, 16)), _("Undo"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
 
-	m_mainFrameToolbar->AddTool(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database"), wxArtProvider::GetBitmap(wxART_DATABASE_APPLY, wxART_FRONTEND, wxSize(16, 16)), _("Update database"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database"), wxArtProvider::GetBitmapBundle(wxART_DATABASE_APPLY, wxART_FRONTEND, wxSize(16, 16)), _("Update database"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->Realize();
 
 	wxAuiPaneInfo paneInfoMainTool;
@@ -58,7 +58,7 @@ void CFrontendDocMDIFrameDesigner::CreateWideGui()
 
 	InitializeDefaultMenu();
 
-	SetStatusBar(new CDocBottomStatusBar(this));
+	SetStatusBar(new ibDocBottomStatusBar(this));
 	SetStatusText(_("Ready"));
 	GetNotebook()->GetAuiManager().GetArtProvider()->SetColour(wxAUI_DOCKART_BACKGROUND_COLOUR, wxAUI_DEFAULT_COLOUR);
 	SetMinSize(wxSize(400, 380));
@@ -70,7 +70,7 @@ void CFrontendDocMDIFrameDesigner::CreateWideGui()
 #include "frontend/win/ctrls/floatingNotebook.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-void CFrontendDocMDIFrameDesigner::CreateBottomPane()
+void ibFrontendDocMDIFrameDesigner::CreateBottomPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_BOTTOM).IsOk())
 		return;
@@ -84,7 +84,7 @@ void CFrontendDocMDIFrameDesigner::CreateBottomPane()
 	paneInfo.Movable(false);
 	paneInfo.MinSize(-1, 30);
 
-	wxFloatingNotebook* auiNotebook = new wxFloatingNotebook(&m_mgr, paneInfo.name,
+	ibFloatingNotebook* auiNotebook = new ibFloatingNotebook(&m_mgr, paneInfo.name,
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
@@ -93,10 +93,10 @@ void CFrontendDocMDIFrameDesigner::CreateBottomPane()
 	auiNotebook->SetArtProvider(new wxAuiLunaTabArt());
 	auiNotebook->Freeze();
 
-	auiNotebook->AddPage(m_outputWindow, _("Messages"), false, wxArtProvider::GetBitmap(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16)));
-	auiNotebook->AddPage(m_localWindow, _("Local variable"), false, wxArtProvider::GetBitmap(wxART_LOCAL_VARIABLE, wxART_SERVICE, wxSize(16, 16)));
-	auiNotebook->AddPage(m_stackWindow, _("Call stack"), false, wxArtProvider::GetBitmap(wxART_STACK, wxART_SERVICE, wxSize(16, 16)));
-	auiNotebook->AddPage(m_watchWindow, _("Watch"), false, wxArtProvider::GetBitmap(wxART_WATCH, wxART_SERVICE, wxSize(16, 16)));
+	auiNotebook->AddPage(m_outputWindow, _("Messages"), false, wxArtProvider::GetBitmapBundle(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16)));
+	auiNotebook->AddPage(m_localWindow, _("Local variable"), false, wxArtProvider::GetBitmapBundle(wxART_LOCAL_VARIABLE, wxART_SERVICE, wxSize(16, 16)));
+	auiNotebook->AddPage(m_stackWindow, _("Call stack"), false, wxArtProvider::GetBitmapBundle(wxART_STACK, wxART_SERVICE, wxSize(16, 16)));
+	auiNotebook->AddPage(m_watchWindow, _("Watch"), false, wxArtProvider::GetBitmapBundle(wxART_WATCH, wxART_SERVICE, wxSize(16, 16)));
 
 	auiNotebook->Refresh();
 	auiNotebook->SetNullSelection();
@@ -105,12 +105,12 @@ void CFrontendDocMDIFrameDesigner::CreateBottomPane()
 	m_mgr.AddPane(auiNotebook, paneInfo);
 }
 
-void CFrontendDocMDIFrameDesigner::CreateMetadataPane()
+void ibFrontendDocMDIFrameDesigner::CreateMetadataPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_METADATA).IsOk())
 		return;
 
-	m_metaWindow = new CMetadataTree(this, wxID_ANY);
+	m_metaWindow = new ibMetadataTree(this, wxID_ANY);
 
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxAUI_PANE_METADATA);
@@ -123,7 +123,7 @@ void CFrontendDocMDIFrameDesigner::CreateMetadataPane()
 	m_mgr.AddPane(m_metaWindow, paneInfo);
 }
 
-void CFrontendDocMDIFrameDesigner::UpdateEditorOptions()
+void ibFrontendDocMDIFrameDesigner::UpdateEditorOptions()
 {
 	for (auto& doc : m_docManager->GetDocumentsVector())
 		doc->UpdateAllViews();

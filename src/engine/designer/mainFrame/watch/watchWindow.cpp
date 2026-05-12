@@ -9,26 +9,26 @@
 #include "backend/debugger/debugClient.h"
 #include "backend/fileSystem/fs.h"
 
-BEGIN_EVENT_TABLE(CWatchWindow, CWatchCtrl)
-EVT_TREE_BEGIN_LABEL_EDIT(wxID_ANY, CWatchWindow::OnBeginLabelEdit)
-EVT_TREE_END_LABEL_EDIT(wxID_ANY, CWatchWindow::OnEndLabelEdit)
-EVT_TREE_ITEM_ACTIVATED(wxID_ANY, CWatchWindow::OnItemSelected)
-EVT_TREE_DELETE_ITEM(wxID_ANY, CWatchWindow::OnItemDeleted)
-EVT_TREE_KEY_DOWN(wxID_ANY, CWatchWindow::OnKeyDown)
-EVT_TREE_ITEM_EXPANDING(wxID_ANY, CWatchWindow::OnItemExpanding)
+BEGIN_EVENT_TABLE(ibWatchWindow, ibWatchCtrl)
+EVT_TREE_BEGIN_LABEL_EDIT(wxID_ANY, ibWatchWindow::OnBeginLabelEdit)
+EVT_TREE_END_LABEL_EDIT(wxID_ANY, ibWatchWindow::OnEndLabelEdit)
+EVT_TREE_ITEM_ACTIVATED(wxID_ANY, ibWatchWindow::OnItemSelected)
+EVT_TREE_DELETE_ITEM(wxID_ANY, ibWatchWindow::OnItemDeleted)
+EVT_TREE_KEY_DOWN(wxID_ANY, ibWatchWindow::OnKeyDown)
+EVT_TREE_ITEM_EXPANDING(wxID_ANY, ibWatchWindow::OnItemExpanding)
 END_EVENT_TABLE()
 
 //
 // Constructor
 //
 
-CWatchWindow::CWatchWindow(wxWindow* parent, wxWindowID winid)
-	: CWatchCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
+ibWatchWindow::ibWatchWindow(wxWindow* parent, wxWindowID winid)
+	: ibWatchCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
 {
 	m_root = AddRoot(_T("Root"));
 	SetItemText(m_root, 1, _T("Root"));
 
-	SetDropTarget(new CWatchDropTarget(this));
+	SetDropTarget(new ibWatchDropTarget(this));
 
 	CreateEmptySlotIfNeeded();
 
@@ -38,28 +38,29 @@ CWatchWindow::CWatchWindow(wxWindow* parent, wxWindowID winid)
 
 #include "mainFrame/mainFrameDesigner.h"
 
-CWatchWindow* CWatchWindow::GetWatchWindow()
+ibWatchWindow* ibWatchWindow::GetWatchWindow()
 {
-	if (CFrontendDocMDIFrameDesigner::GetFrame())
+	if (ibFrontendDocMDIFrameDesigner::GetFrame())
 		return mainFrame->GetWatchWindow();
 	return nullptr;
 }
 
-void CWatchWindow::SetVariable(const CWatchWindowData& watchData)
+void ibWatchWindow::SetVariable(const ibWatchWindowData& watchData)
 {
 	m_updating = true;
+	Freeze();
 
 	for (unsigned int i = 0; i < watchData.GetWatchCount(); i++) {
-		
+
 		const wxTreeItemId& item = watchData.GetItem(i);
-	
+
 		SetItemText(item, 1, watchData.GetValue(i));
 		SetItemText(item, 2, watchData.GetType(i));
 
-		//collapse childern items 
+		//collapse childern items
 		Collapse(item);
 
-		//delete children elements 
+		//delete children elements
 		DeleteChildren(item);
 
 		if (watchData.HasAttributes(i)) {
@@ -67,20 +68,19 @@ void CWatchWindow::SetVariable(const CWatchWindowData& watchData)
 		}
 	}
 
+	Thaw();
 	m_updating = false;
-
-	// update watch window 
-	mainFrame->Update();
 }
 
-void CWatchWindow::SetExpanded(const CWatchWindowData& watchData)
+void ibWatchWindow::SetExpanded(const ibWatchWindowData& watchData)
 {
 	const wxTreeItemId& item = watchData.GetItem();
 
-	//delete children elements 
-	DeleteChildren(item);
-
 	m_updating = true;
+	Freeze();
+
+	//delete children elements
+	DeleteChildren(item);
 
 	for (unsigned int i = 0; i < watchData.GetWatchCount(); i++) {
 
@@ -95,10 +95,11 @@ void CWatchWindow::SetExpanded(const CWatchWindowData& watchData)
 	}
 
 	Expand(item);
+	Thaw();
 	m_updating = false;
 }
 
-void CWatchWindow::UpdateItem(const wxTreeItemId& item)
+void ibWatchWindow::UpdateItem(const wxTreeItemId& item)
 {
 	const wxString& expression = GetItemText(item);
 
@@ -114,12 +115,15 @@ void CWatchWindow::UpdateItem(const wxTreeItemId& item)
 
 	SetItemFont(item, m_valueFont);
 
-	SetItemText(item, 1, wxEmptyString);
-	SetItemText(item, 2, wxEmptyString);
+	// Keep the previous value/type visible until the debugger replies with
+	// fresh data. Clearing them here caused the columns to blank out for the
+	// full round-trip, producing the "values disappear, then reappear" flicker.
 }
 
-void CWatchWindow::UpdateItems()
+void ibWatchWindow::UpdateItems()
 {
+	Freeze();
+
 	wxTreeItemIdValue cookie;
 	wxTreeItemId item = GetFirstChild(m_root, cookie);
 
@@ -127,9 +131,11 @@ void CWatchWindow::UpdateItems()
 		UpdateItem(item);
 		item = GetNextSibling(item);
 	}
+
+	Thaw();
 }
 
-void CWatchWindow::AddWatch(const wxString& expression)
+void ibWatchWindow::AddWatch(const wxString& expression)
 {
 	wxString temp = expression;
 	temp.Trim().Trim(false);
@@ -156,7 +162,7 @@ void CWatchWindow::AddWatch(const wxString& expression)
 	}
 }
 
-void CWatchWindow::OnKeyDown(wxTreeEvent& event)
+void ibWatchWindow::OnKeyDown(wxTreeEvent& event)
 {
 	if (event.GetKeyCode() == WXK_DELETE ||
 		event.GetKeyCode() == WXK_BACK)
@@ -212,7 +218,7 @@ void CWatchWindow::OnKeyDown(wxTreeEvent& event)
 	}
 }
 
-void CWatchWindow::OnBeginLabelEdit(wxTreeEvent& event)
+void ibWatchWindow::OnBeginLabelEdit(wxTreeEvent& event)
 {
 	if (GetItemParent(event.GetItem()) == m_root)
 	{
@@ -224,7 +230,7 @@ void CWatchWindow::OnBeginLabelEdit(wxTreeEvent& event)
 	}
 }
 
-void CWatchWindow::OnEndLabelEdit(wxTreeEvent& event)
+void ibWatchWindow::OnEndLabelEdit(wxTreeEvent& event)
 {
 	if (!event.IsEditCancelled())
 	{
@@ -260,14 +266,14 @@ void CWatchWindow::OnEndLabelEdit(wxTreeEvent& event)
 	m_editing = false;
 }
 
-void CWatchWindow::OnItemSelected(wxTreeEvent& event)
+void ibWatchWindow::OnItemSelected(wxTreeEvent& event)
 {
 	// Initiate the label editing.
 	EditLabel(event.GetItem());
 	event.Skip();
 }
 
-void CWatchWindow::OnItemDeleted(wxTreeEvent& event)
+void ibWatchWindow::OnItemDeleted(wxTreeEvent& event)
 {
 	wxTreeItemId item = event.GetItem();
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
@@ -282,7 +288,7 @@ void CWatchWindow::OnItemDeleted(wxTreeEvent& event)
 	event.Skip();
 }
 
-void CWatchWindow::OnItemExpanding(wxTreeEvent& event)
+void ibWatchWindow::OnItemExpanding(wxTreeEvent& event)
 {
 	wxTreeItemId item = event.GetItem();
 	wxString expression = GetItemText(item);
@@ -311,7 +317,7 @@ void CWatchWindow::OnItemExpanding(wxTreeEvent& event)
 	else event.Skip();
 }
 
-void CWatchWindow::CreateEmptySlotIfNeeded()
+void ibWatchWindow::CreateEmptySlotIfNeeded()
 {
 	unsigned int numItems = GetChildrenCount(m_root, false); bool needsEmptySlot = true;
 

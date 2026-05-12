@@ -16,11 +16,11 @@
 
 ///////////////////////////////////////////////////////////////////
 
-CFrontendDocMDIFrameDesigner* CFrontendDocMDIFrameDesigner::GetFrame() {
-	CFrontendDocMDIFrame* instance = CFrontendDocMDIFrame::GetFrame();
+ibFrontendDocMDIFrameDesigner* ibFrontendDocMDIFrameDesigner::GetFrame() {
+	ibFrontendDocMDIFrame* instance = ibFrontendDocMDIFrame::GetFrame();
 	if (instance != nullptr) {
-		CFrontendDocMDIFrameDesigner* designer_instance =
-			dynamic_cast<CFrontendDocMDIFrameDesigner*>(instance);
+		ibFrontendDocMDIFrameDesigner* designer_instance =
+			dynamic_cast<ibFrontendDocMDIFrameDesigner*>(instance);
 		wxASSERT(designer_instance);
 		return designer_instance;
 	}
@@ -29,33 +29,33 @@ CFrontendDocMDIFrameDesigner* CFrontendDocMDIFrameDesigner::GetFrame() {
 
 ///////////////////////////////////////////////////////////////////
 
-CFrontendDocMDIFrameDesigner::CFrontendDocMDIFrameDesigner(const wxString& title,
+ibFrontendDocMDIFrameDesigner::ibFrontendDocMDIFrameDesigner(const wxString& title,
 	const wxPoint& pos,
-	const wxSize& size) : CFrontendDocMDIFrame(title, pos, size),
+	const wxSize& size) : ibFrontendDocMDIFrame(title, pos, size),
 
 	m_metaWindow(nullptr),
 
-	m_outputWindow(new COutputWindow(this, wxID_ANY)),
-	m_localWindow(new CLocalWindow(this, wxID_ANY)),
-	m_stackWindow(new CStackWindow(this, wxID_ANY)),
-	m_watchWindow(new CWatchWindow(this, wxID_ANY))
+	m_outputWindow(new ibOutputWindow(this, wxID_ANY)),
+	m_localWindow(new ibLocalWindow(this, wxID_ANY)),
+	m_stackWindow(new ibStackWindow(this, wxID_ANY)),
+	m_watchWindow(new ibWatchWindow(this, wxID_ANY))
 {
-	m_docManager = new CDesignerDocManager;
+	m_docManager = new ibMetaDocManagerDesigner;
 }
 
-CFrontendDocMDIFrameDesigner::~CFrontendDocMDIFrameDesigner()
+ibFrontendDocMDIFrameDesigner::~ibFrontendDocMDIFrameDesigner()
 {
 	wxDELETE(m_docManager);
 }
 
-void CFrontendDocMDIFrameDesigner::CreateGUI()
+void ibFrontendDocMDIFrameDesigner::CreateGUI()
 {
 	CreateWideGui();
 }
 
 static bool s_setModify = false, s_modified = false;
 
-void CFrontendDocMDIFrameDesigner::Modify(bool modify)
+void ibFrontendDocMDIFrameDesigner::Modify(bool modify)
 {
 	wxAuiPaneInfo& paneInfo = m_mgr.GetPane(wxAUI_PANE_METADATA);
 
@@ -88,12 +88,12 @@ void CFrontendDocMDIFrameDesigner::Modify(bool modify)
 	}
 }
 
-bool CFrontendDocMDIFrameDesigner::IsModified() const
+bool ibFrontendDocMDIFrameDesigner::IsModified() const
 {
 	return s_modified;
 }
 
-void CFrontendDocMDIFrameDesigner::LoadOptions()
+void ibFrontendDocMDIFrameDesigner::LoadOptions()
 {
 	// Disable logging since it's ok if the options file is not there.
 	wxLogNull logNo;
@@ -147,7 +147,7 @@ void CFrontendDocMDIFrameDesigner::LoadOptions()
 	UpdateEditorOptions();
 }
 
-void CFrontendDocMDIFrameDesigner::SaveOptions()
+void ibFrontendDocMDIFrameDesigner::SaveOptions()
 {
 	// Disable logging since it's ok if the options file saving isn't successful.
 	wxLogNull logNo;
@@ -177,7 +177,7 @@ void CFrontendDocMDIFrameDesigner::SaveOptions()
 }
 
 #pragma region debugger 
-void CFrontendDocMDIFrameDesigner::Debugger_OnSessionStart()
+void ibFrontendDocMDIFrameDesigner::Debugger_OnSessionStart()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_INTO, true);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_OVER, true);
@@ -187,7 +187,7 @@ void CFrontendDocMDIFrameDesigner::Debugger_OnSessionStart()
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, false);
 }
 
-void CFrontendDocMDIFrameDesigner::Debugger_OnSessionEnd()
+void ibFrontendDocMDIFrameDesigner::Debugger_OnSessionEnd()
 {
 	if (!debugClient->HasConnections()) {
 		m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_INTO, false);
@@ -199,25 +199,25 @@ void CFrontendDocMDIFrameDesigner::Debugger_OnSessionEnd()
 	}
 }
 
-void CFrontendDocMDIFrameDesigner::Debugger_OnEnterLoop()
+void ibFrontendDocMDIFrameDesigner::Debugger_OnEnterLoop()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_PAUSE, false);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, true);
 }
 
-void CFrontendDocMDIFrameDesigner::Debugger_OnLeaveLoop()
+void ibFrontendDocMDIFrameDesigner::Debugger_OnLeaveLoop()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_PAUSE, true);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, false);
 }
 #pragma endregion 
 
-bool CFrontendDocMDIFrameDesigner::Show(bool show)
+bool ibFrontendDocMDIFrameDesigner::Show(bool show)
 {
 	if (show && !m_metaWindow->Load())
 		return false;
 
-	bool ret = CFrontendDocMDIFrame::Show(show);
+	bool ret = ibFrontendDocMDIFrame::Show(show);
 	if (ret) {
 		if (!outputWindow->IsEmpty()) {
 			outputWindow->SetFocus();
@@ -230,50 +230,26 @@ bool CFrontendDocMDIFrameDesigner::Show(bool show)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CFrontendDocMDIFrameDesigner::OnInitializeConfiguration(eConfigType cfg)
-{
-	IDebuggerClientBridge::SetDebuggerClientBridge(new CDebuggerClientBridge);
-}
-
-void CFrontendDocMDIFrameDesigner::OnDestroyConfiguration(eConfigType cfg)
-{
-	IDebuggerClientBridge::SetDebuggerClientBridge(nullptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include "backend/metadataConfiguration.h"
 
-bool CFrontendDocMDIFrameDesigner::AllowRun() const
+bool ibFrontendDocMDIFrameDesigner::AllowRun() const
 {
-	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
-		return true;
-
-	return false;
+	// Designer is compile-only — no session runtime, no BeforeStart /
+	// OnStart script events. Always allow frame show.
+	return true;
 }
 
-bool CFrontendDocMDIFrameDesigner::AllowClose() const
+bool ibFrontendDocMDIFrameDesigner::AllowClose() const
 {
-	if (activeMetaData != nullptr) {
-
-		bool allowClose = true;
-
-		if (IsModified()) {
-			const int answer = wxMessageBox(wxString::Format(_("Configuration '%s' has been changed. Save?"), activeMetaData->GetConfigName()),
-				wxTheApp->GetAppDisplayName(), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
-			if (answer == wxYES) {
-				allowClose = activeMetaData->SaveDatabase();
-			}
-			else if (answer == wxCANCEL) {
-				allowClose = false;
-			}
-			else {
-				allowClose = true;
-			}
-		}
-
-		return allowClose && activeMetaData->ExitMainModule();
+	// Unsaved-config confirmation is a designer-only concern; no
+	// BeforeExit / OnExit script events (no runtime to fire them on).
+	if (activeMetaData != nullptr && IsModified()) {
+		const int answer = wxMessageBox(wxString::Format(_("Configuration '%s' has been changed. Save?"), activeMetaData->GetConfigName()),
+			wxTheApp->GetAppDisplayName(), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
+		if (answer == wxYES)
+			return activeMetaData->SaveDatabase();
+		if (answer == wxCANCEL)
+			return false;
 	}
-
 	return true;
 }
